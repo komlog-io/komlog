@@ -1,3 +1,5 @@
+from komws import exceptions as wsex
+
 def check(data, context):
     """
     The purpose of these functions is to check whether the received data contains the
@@ -29,13 +31,13 @@ def wsupload_sample(data):
                     continue
                 else:
                     print "No existe el elemento "+str(key)
-                    raise exceptions.InvalidData()
+                    raise wsex.InvalidData()
         else:
             print "Numero de elementos incorrecto: "+str(len(data))
-            raise exceptions.InvalidData()
+            raise wsex.InvalidData()
     except:
         print "  Error en los datos recibidos"
-        raise exceptions.InvalidData()
+        raise wsex.InvalidData()
     else:
         print "  Datos OK"
         return True

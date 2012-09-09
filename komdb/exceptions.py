@@ -5,3 +5,5 @@ class AlreadyExistingUserError(Exception): pass
 
 class NotFoundAgentError(Exception): pass
 class AlreadyExistingAgentError(Exception): pass
+
+class NotFoundDatasourceError(Exception): pass

@@ -140,7 +140,7 @@ class Agent(object):
 
     def delete(self):
         """By now, delete means a state change"""
-        return self.setState(configuration.states.STATE_VALUE_AGENT_DELETED)
+        return self.setState(states.STATE_VALUE_AGENT_DELETED)
 
     def getInfo(self):
         info = {}
@@ -217,7 +217,7 @@ class Datasource(object):
 
     def delete(self):
         """By now, delete means a state change"""
-        return self.setState(configuration.states.STATE_VALUE_DATASOURCE_DELETED)
+        return self.setState(states.STATE_VALUE_DATASOURCE_DELETED)
 
     def getInfo(self):
         info = {}
@@ -247,7 +247,7 @@ class Datasource(object):
             samples = []
             sids = []
             try:
-                for sample in session.query(schema.Samples).filter_by(did=self.did).limit(limit):
+                for sample in session.query(schema.Sample).filter_by(did=self.did).limit(limit):
                     sids.append(sample.sid)
                 for sid in sids:
                     sample = Sample(sid)
@@ -310,7 +310,7 @@ class Datapoint(object):
 
     def delete(self):
         """By now, delete means a state change"""
-        return self.setState(configuration.states.STATE_VALUE_DATAPOINT_DELETED)
+        return self.setState(states.STATE_VALUE_DATAPOINT_DELETED)
 
     def getInfo(self):
         info = {}
@@ -375,7 +375,7 @@ class Sample(object):
 
     def delete(self):
         """By now, delete means a state change"""
-        return self.setState(configuration.states.STATE_VALUE_SAMPLE_DELETED)
+        return self.setState(states.STATE_VALUE_SAMPLE_DELETED)
 
     def getInfo(self):
         info = {}
