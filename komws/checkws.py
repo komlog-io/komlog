@@ -42,3 +42,34 @@ def wsupload_sample(data):
         print "  Datos OK"
         return True
 
+def wsdownload_config(data):
+    """
+    data:
+            - username
+            - password
+            - agentid
+    """
+    print "Inicio wsdownload_config()"
+    needed_keys = ['username','password','agentid']
+    try:
+        print "Inicio try"
+        print "Numero de elementos recibidos: "+str(len(data))
+        print "Numero de elementos necesarios: "+str(len(needed_keys))
+        if len(data)==len(needed_keys):
+            print "Numero de elementos correcto"
+            for key in needed_keys:
+                if hasattr(data,key):
+                    continue
+                else:
+                    print "No existe el elemento "+str(key)
+                    raise wsex.InvalidData()
+        else:
+            print "Numero de elementos incorrecto: "+str(len(data))
+            raise wsex.InvalidData()
+    except:
+        print "  Error en los datos recibidos"
+        raise wsex.InvalidData()
+    else:
+        print "  Datos OK"
+        return True
+

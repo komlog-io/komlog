@@ -183,6 +183,7 @@ class Datasource(object):
                 self.__datapoints = None
                 self.__samples = None
                 self.__agent = None
+                self.__config = None
                 self.aid = self.__db_datasource.aid
                 self.did = self.__db_datasource.did
                 self.datasourcename = self.__db_datasource.datasourcename
@@ -261,6 +262,15 @@ class Datasource(object):
         if self.__agent is None:
             self.__agent = Agent(self.aid)
         return self.__agent
+    
+    def getConfig(self):
+        if self.__config is None:
+            try:
+                self.__config = self.__db_datasource.config
+            except:
+                pass
+        return self.__config
+            
 
 
 ###############################################

@@ -145,6 +145,19 @@ class DatasourceType(Base):
         self.type = type
         self.description = description
 
+class DatasourceConfig(Base):
+    __tablename__ = 'datasource_config'
+    
+    did = Column(Integer, ForeignKey('datasources.did'))
+    sec = Column(String)
+    min = Column(String)
+    hour = Column(String)
+    dom = Column(String)
+    mon = Column(String)
+    dow = Column(String)
+    command = Column(String)
+    
+
 class Datasource(Base):
     __tablename__ = 'datasources'
 
@@ -159,6 +172,7 @@ class Datasource(Base):
 
     datapoints= relationship("Datapoint", backref="datasource")
     samples = relationship("Sample", backref="datasource")
+    config = relationship("DatasourceConfig", uselist=False, backref="datasource")
 
 
     def __init__(self, aid, datasourcename, datefrom, state, type):

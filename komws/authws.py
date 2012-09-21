@@ -42,5 +42,31 @@ def wsupload_sample(data):
         print "AUTH ERROR"
         raise wsex.AuthenticationError
 
+def wsdownload_config(data):
+    """
+    data:
+            - username
+            - password
+            - agentid
+    We need to:
+        - authenticate user
+        - authenticate agent
+    """
+    print "Init wsdownload_config()"
+    try:
+        user = api.User(data.username)
+        if user.validate(data.password):
+            agents = user.getAgents()
+            for agent in agents:
+                if agent.validate(data.agentid):
+                    print "AUTH OK"
+                    return True
+    except:
+        print "AUTH ERROR"
+        raise wsex.AuthenticationError
+    else:
+        print "AUTH ERROR"
+        raise wsex.AuthenticationError
+
 
 

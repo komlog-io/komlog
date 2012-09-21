@@ -37,4 +37,26 @@ def wsupload_sample(data):
     else:
         return True
 
+def wsdownload_config(data):
+    """
+    data:
+            - username
+            - password
+            - agentid
+    We need to:
+            - For each agent's datasource get its configuration
+            - return all configuration to the agent
+            
+    """
+    print "DATOS RECIBIDOS"
+    print data
+    configuration = []
+    agent = dbapi.Agent(data.agentid)
+    datasources = agent.getDatasources()
+    for datasource in datasources:
+        ds_config = datasource.getConfig()
+        configuration.append(ds_config)
+    return configuration
+    
+
 
