@@ -7,6 +7,7 @@ function notify_by_mail {
 cd $HOME/komlog
 
 git fetch
+git merge origin/master
 
 SHA=`git log --pretty=format:"%H" -n1`
 
@@ -19,6 +20,7 @@ fi
 if [ "$SHA" == "$OLD_SHA" ]; then
    echo "CHANGES: NO" > $HOME/tmp/appdater.log
    echo "VERSION: $SHA" >> $HOME/tmp/appdater.log
+   echo "" >> $HOME/tmp/appdater.log
    exit
 else
    echo "CHANGES: YES" > $HOME/tmp/appdater.log
