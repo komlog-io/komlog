@@ -4,7 +4,7 @@ import schema
 
 tablespace_relations = {'tbs_users':['users','user_types','user_states','user_capabilities'],
                         'tbs_agents':['agents','agent_types','agent_states','agent_capabilities'],
-                        'tbs_datasources':['datasources','datasource_types','datasource_states','datasource_capabilities'],
+                        'tbs_datasources':['datasources','datasource_types','datasource_states','datasource_capabilities','datasource_config'],
                         'tbs_datapoints':['datapoints','datapoint_types','datapoint_states','datapoint_capabilities'],
                         'tbs_samples':['samples','sample_types','sample_states','sample_capabilities']}
 
