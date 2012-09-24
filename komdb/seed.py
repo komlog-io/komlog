@@ -37,3 +37,10 @@ def configure_db():
     """ This function loads the configuration to the db"""
     return True
 
+def main():
+    """main funcion when seed.py called from console"""
+    create_db()
+    configure_db()
+
+if __name__=='__main__':
+    main()
