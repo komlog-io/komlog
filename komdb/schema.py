@@ -148,7 +148,7 @@ class DatasourceType(Base):
 class DatasourceConfig(Base):
     __tablename__ = 'datasource_config'
     
-    did = Column(Integer, ForeignKey('datasources.did'))
+    did = Column(Integer, ForeignKey('datasources.did'), primary_key=True)
     sec = Column(String)
     min = Column(String)
     hour = Column(String)
