@@ -4,6 +4,14 @@ function notify_by_mail {
    mail -s "AppDater Execution - `date +"%Y/%m/%d - %T"`" jcazor@gmail.com < $HOME/tmp/appdater.log
 }
 
+function exec_tests {
+   cd $HOME/komlog/tests
+   for file in `ls test_*.py`
+   do
+      python $file >> $HOME/tmp/appdater.log
+   done
+}
+
 cd $HOME/komlog
 
 git fetch
@@ -27,6 +35,7 @@ else
    echo "VERSION: $SHA" >> $HOME/tmp/appdater.log
    echo "" >> $HOME/tmp/appdater.log
    echo $SHA > $HOME/tmp/komlog.vrs
+   exec_tests
    notify_by_mail
 fi
 
