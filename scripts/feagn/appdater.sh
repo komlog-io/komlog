@@ -12,6 +12,8 @@ function exec_tests {
    done
 }
 
+. $HOME/.bash_profile
+
 cd $HOME/komlog
 
 git fetch
