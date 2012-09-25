@@ -8,7 +8,7 @@ function exec_tests {
    cd $HOME/komlog/tests
    for file in `ls test_*.py`
    do
-      python $file >> $HOME/tmp/appdater.log
+      python $file >> $HOME/tmp/appdater.log 2>&1
    done
 }
 
