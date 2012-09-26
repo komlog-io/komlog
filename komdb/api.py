@@ -478,3 +478,61 @@ def create_sample(did, date_generated, state=states.STATE_VALUE_SAMPLE_INITIAL, 
     sid = sample.sid
     session.close()
     return sid
+
+""" Functions used to delete objects from database (intended for testing purposes only)"""
+
+def delete_user(user_object):
+    if user_object:
+        try:
+            session.delete(user_object)
+            session.commit()
+        except:
+            return False
+        else:
+            return True
+    return True
+
+def delete_agent(agent_object):
+    if agent_object:
+        try:
+            session.delete(agent_object)
+            session.commit()
+        except:
+            return False
+        else:
+            return True
+    return True
+
+def delete_datasource(ds_object):
+    if ds_object:
+        try:
+            session.delete(ds_object)
+            session.commit()
+        except:
+            return False
+        else:
+            return True
+    return True
+
+def delete_datapoint(dp_object):
+    if dp_object:
+        try:
+            session.delete(dp_object)
+            session.commit()
+        except:
+            return False
+        else:
+            return True
+    return True
+
+def delete_sample(sample_object):
+    if sample_object:
+        try:
+            session.delete(sample_object)
+            session.commit()
+        except:
+            return False
+        else:
+            return True
+    return True
+
