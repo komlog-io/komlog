@@ -37,7 +37,7 @@ class User(Base):
     state = Column(Integer, ForeignKey('user_states.state'))
     type = Column(Integer, ForeignKey('user_types.type'))
 
-    agents = relationship("Agent", backref="user")
+    agents = relationship("Agent", cascade="all, delete, delete-orphan", backref="user")
 
     def __init__(self, username, password, datefrom, state, type):
         self.username = username
@@ -97,7 +97,7 @@ class Agent(Base):
 
     uid = Column(Integer, ForeignKey('users.uid'))
 
-    datasources = relationship("Datasource", backref="agent")
+    datasources = relationship("Datasource", cascade="all, delete, delete-orphan", backref="agent")
 
 
     def __init__(self, uid, agentname, password, datefrom, state, type):
@@ -170,9 +170,9 @@ class Datasource(Base):
 
     aid = Column(Integer, ForeignKey('agents.aid'))
 
-    datapoints= relationship("Datapoint", backref="datasource")
-    samples = relationship("Sample", backref="datasource")
-    config = relationship("DatasourceConfig", uselist=False, backref="datasource")
+    datapoints= relationship("Datapoint", cascade="all, delete, delete-orphan", backref="datasource")
+    samples = relationship("Sample", cascade="all, delete, delete-orphan", backref="datasource")
+    config = relationship("DatasourceConfig", cascade="all, delete, delete-orphan", uselist=False, backref="datasource")
 
 
     def __init__(self, aid, datasourcename, datefrom, state, type):
