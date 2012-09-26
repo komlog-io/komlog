@@ -1,44 +1,49 @@
 #!/bin/bash
 
+MAILTO="jcazor@gmail.com"
+REPOBASEDIR= $HOME/komlog
+LOGFILE=$HOME/tmp/appdater.log
+TESTDIR=${REPOBASEDIR}/tests
+
+
+
 function notify_by_mail {
-   mail -s "AppDater Execution - `date +"%Y/%m/%d - %T"`" jcazor@gmail.com < $HOME/tmp/appdater.log
+   mail -s "AppDater Execution - `date +"%Y/%m/%d - %T"`" $MAILTO < $LOGFILE
 }
 
 function exec_tests {
-   cd $HOME/komlog/tests
+   cd $TESTDIR
    for file in `ls test_*.py`
    do
-      python $file >> $HOME/tmp/appdater.log 2>&1
+      python $file >> $LOGFILE 2>&1
    done
 }
 
+function fetch {
+   cd $REPOBASEDIR
+   OLD_SHA=`git log --pretty=format:"%H" -n1`
+   OLD_CKSUM=`cksum $HOME/komlog/scripts/feagn/appdater.sh`
+   git fetch
+   git merge origin/master
+   NEW_SHA=`git log --pretty=format:"%H" -n1`
+   NEW_CKSUM=`cksum $HOME/komlog/scripts/feagn/appdater.sh`
+
 . $HOME/.bash_profile
-
-cd $HOME/komlog
-
-git fetch
-git merge origin/master
-
-SHA=`git log --pretty=format:"%H" -n1`
-
-if [ -f $HOME/tmp/komlog.vrs ]; then
-   OLD_SHA=`cat $HOME/tmp/komlog.vrs`
-else
-   OLD_SHA=0
-fi
+fetch
 
 if [ "$SHA" == "$OLD_SHA" ]; then
-   echo "CHANGES: NO" > $HOME/tmp/appdater.log
-   echo "VERSION: $SHA" >> $HOME/tmp/appdater.log
-   echo "" >> $HOME/tmp/appdater.log
+   echo "CHANGES: NO" > $LOGFILE
+   echo "VERSION: $SHA" >> $LOGFILE
+   echo "" >> $LOGFILE
    exit
-else
-   echo "CHANGES: YES" > $HOME/tmp/appdater.log
-   echo "VERSION: $SHA" >> $HOME/tmp/appdater.log
-   echo "" >> $HOME/tmp/appdater.log
-   echo $SHA > $HOME/tmp/komlog.vrs
+elif [ "$OLD_CKSUM" == "$NEW_CKSUM" ]; then
+   echo "CHANGES: YES" > $LOGFILE
+   echo "VERSION: $SHA" >> $LOGFILE
+   echo "" >> $LOGFILE
    exec_tests
    notify_by_mail
+else 
+   $HOME/komlog/scripts/feagn/appdater.sh
 fi
 
 
