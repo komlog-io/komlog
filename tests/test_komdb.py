@@ -38,5 +38,13 @@ class KomdbFunctionalTestCase(unittest.TestCase):
         user = dbapi.User(self.username)
         self.assertRaises(exceptions.NotFoundUserError, user)
         
+    def test_agent_creation(self):
+        user_id = dbapi.create_user(self.username, self.password)
+        self.agent = dbapi.create_agent(self.username, self.agentname, self.password)
+        self.assertGreater(self.agent, 0, "test_agent_creation aid>0")
+    
+
+    
+        
 if __name__ == '__main__':
     unittest.main()
