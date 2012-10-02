@@ -1,5 +1,7 @@
-import connection
-import schema
+from komdb import connection
+from komdb import schema
+from komdb.config import mappings
+import imp, os
 
 
 tablespace_relations = {'tbs_users':['users','user_types','user_states','user_capabilities'],
@@ -35,6 +37,35 @@ def create_db():
 
 def configure_db():
     """ This function loads the configuration to the db"""
+    constants = []
+    objects = []
+    db = connection.Session()
+    module_dir = os.path.dirname(mappings.__file__)
+    for module_name in mappings.MAPPING_MODULES:
+        fp, pathname, description = imp.find_module(module_dir+'/'+module_name)
+        try:
+            module = imp.load_module(module_name, fp, pathname, description)
+        except:
+            print "Module loading exception: "+str(module_name)
+            break
+        finally:
+            if fp:
+                fp.close()
+        for variable in dir(module):
+            if isinstance(getattr(module,variable),int) or isinstance(getattr(module,variable),str):
+                constant = (variable,getattr(module,variable))
+                constants.append(constant)
+        
+    entry_list = mappings.map_messages_to_objects(constants)
+    
+    for entry in entry_list:
+        try:
+            new_object = getattr(schema,entry[0])(*entry[1:])
+            db.add(new_object)
+            db.commit()
+        except:
+            pass
+    db.close()
     return True
 
 def main():
