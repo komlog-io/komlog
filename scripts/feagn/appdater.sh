@@ -1,7 +1,7 @@
 #!/bin/bash
 
 MAILTO="jcazor@gmail.com"
-REPOBASEDIR= $HOME/komlog
+REPOBASEDIR=$HOME/komlog
 LOGFILE=$HOME/tmp/appdater.log
 TESTDIR=${REPOBASEDIR}/tests
 
@@ -27,6 +27,7 @@ function fetch {
    git merge origin/master
    NEW_SHA=`git log --pretty=format:"%H" -n1`
    NEW_CKSUM=`cksum $HOME/komlog/scripts/feagn/appdater.sh`
+}
 
 . $HOME/.bash_profile
 fetch
