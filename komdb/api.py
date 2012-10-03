@@ -66,8 +66,16 @@ class User(object):
             return True
 
     def delete(self):
-        """By now, delete means a change of state"""
-        return self.setState(states.STATE_VALUE_USER_DELETED)
+        if self.__db_user is not None:
+            try:
+                session.delete(self.__db_user)
+                session.commit()
+            except:
+                session.rollback()
+                return False
+            return True
+        else:
+            return False 
 
     def getInfo(self):
         info = {}
@@ -139,8 +147,16 @@ class Agent(object):
             return True
 
     def delete(self):
-        """By now, delete means a state change"""
-        return self.setState(states.STATE_VALUE_AGENT_DELETED)
+        if self.__db_agemt is not None:
+            try:
+                session.delete(self.__db_agent)
+                session.commit()
+            except:
+                session.rollback()
+                return False
+            return True
+        else:
+            return False 
 
     def getInfo(self):
         info = {}
@@ -217,8 +233,16 @@ class Datasource(object):
             return True
 
     def delete(self):
-        """By now, delete means a state change"""
-        return self.setState(states.STATE_VALUE_DATASOURCE_DELETED)
+        if self.__db_datasource is not None:
+            try:
+                session.delete(self.__db_datasource)
+                session.commit()
+            except:
+                session.rollback()
+                return False
+            return True
+        else:
+            return False 
 
     def getInfo(self):
         info = {}
@@ -319,8 +343,16 @@ class Datapoint(object):
             return True
 
     def delete(self):
-        """By now, delete means a state change"""
-        return self.setState(states.STATE_VALUE_DATAPOINT_DELETED)
+        if self.__db_datapoint is not None:
+            try:
+                session.delete(self.__db_datapoint)
+                session.commit()
+            except:
+                session.rollback()
+                return False
+            return True
+        else:
+            return False 
 
     def getInfo(self):
         info = {}
@@ -384,8 +416,16 @@ class Sample(object):
             return True
 
     def delete(self):
-        """By now, delete means a state change"""
-        return self.setState(states.STATE_VALUE_SAMPLE_DELETED)
+        if self.__db_sample is not None:
+            try:
+                session.delete(self.__db_sample)
+                session.commit()
+            except:
+                session.rollback()
+                return False
+            return True
+        else:
+            return False 
 
     def getInfo(self):
         info = {}
@@ -484,8 +524,7 @@ def create_sample(did, date_generated, state=states.STATE_VALUE_SAMPLE_INITIAL, 
 def delete_user(user_object):
     if user_object:
         try:
-            session.delete(user_object)
-            session.commit()
+            user_object.delete()
         except:
             return False
         else:
@@ -495,8 +534,7 @@ def delete_user(user_object):
 def delete_agent(agent_object):
     if agent_object:
         try:
-            session.delete(agent_object)
-            session.commit()
+            agent_object.delete()
         except:
             return False
         else:
@@ -506,8 +544,7 @@ def delete_agent(agent_object):
 def delete_datasource(ds_object):
     if ds_object:
         try:
-            session.delete(ds_object)
-            session.commit()
+            ds_object.delete()
         except:
             return False
         else:
@@ -517,8 +554,7 @@ def delete_datasource(ds_object):
 def delete_datapoint(dp_object):
     if dp_object:
         try:
-            session.delete(dp_object)
-            session.commit()
+            dp_object.delete()
         except:
             return False
         else:
@@ -528,8 +564,7 @@ def delete_datapoint(dp_object):
 def delete_sample(sample_object):
     if sample_object:
         try:
-            session.delete(sample_object)
-            session.commit()
+            sample_object.delete()
         except:
             return False
         else:
