@@ -23,7 +23,7 @@ def wsupload_sample(data):
         - authenticate agent
         - confirm datasource belonging
     """
-    print "Init wsupload_sample()"
+    print "Init auth.wsupload_sample()"
     try:
         user = api.User(data.username)
         if user.validate(data.password):
@@ -33,13 +33,10 @@ def wsupload_sample(data):
                     datasources = agent.getDatasources()
                     for ds in datasources:
                         if ds.did == data.datasourceid:
-                            print "AUTH OK"
                             return True
-    except:
-        print "AUTH ERROR"
+    except Exception, e:
         raise wsex.AuthenticationError
     else:
-        print "AUTH ERROR"
         raise wsex.AuthenticationError
 
 def wsdownload_config(data):

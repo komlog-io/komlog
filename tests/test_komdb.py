@@ -21,10 +21,14 @@ class KomdbFunctionalTestCase(unittest.TestCase):
         self.password = None
         self.agentname = None
         self.dsname = None
-        dbapi.delete_sample(self.smpl)
-        dbapi.delete_datasource(self.ds)
-        dbapi.delete_agent(self.agent)
-        dbapi.delete_user(self.user)
+        if self.smpl is not None:
+            dbapi.delete_sample(self.smpl)
+        if self.ds is not None:
+            dbapi.delete_datasource(self.ds)
+        if self.agent is not None:
+            dbapi.delete_agent(self.agent)
+        if self.user is not None:
+            dbapi.delete_user(self.user)
         
     def test_user_creation(self):
         self.user = dbapi.create_user(self.username, self.password)
@@ -32,14 +36,13 @@ class KomdbFunctionalTestCase(unittest.TestCase):
     
     def test_user_duplicate(self):
         self.user = dbapi.create_user(self.username, self.password)
-        self.assertRaises(exceptions.AlreadyExistingAgentError, dbapi.create_user(self.username, self.password))
+        self.assertRaises(exceptions.AlreadyExistingUserError, dbapi.create_user, self.username, self.password)
 
     def test_user_not_found(self):
-        user = dbapi.User(self.username)
-        self.assertRaises(exceptions.NotFoundUserError, user)
+        self.assertRaises(exceptions.NotFoundUserError, dbapi.User, self.username)
         
     def test_agent_creation(self):
-        user_id = dbapi.create_user(self.username, self.password)
+        self.user = dbapi.create_user(self.username, self.password)
         self.agent = dbapi.create_agent(self.username, self.agentname, self.password)
         self.assertGreater(self.agent, 0, "test_agent_creation aid>0")
     

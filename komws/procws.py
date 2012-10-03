@@ -24,8 +24,6 @@ def wsupload_sample(data):
             - Register this sample on db
             - Copy the sample (filecontent) to the destfile
     """
-    print "DATOS RECIBIDOS"
-    print data
     try:
         sid = dbapi.create_sample(data.datasourceid, data.date)
         if sid > 0:
@@ -48,14 +46,13 @@ def wsdownload_config(data):
             - return all configuration to the agent
             
     """
-    print "DATOS RECIBIDOS"
-    print data
     configuration = []
     agent = dbapi.Agent(data.agentid)
     datasources = agent.getDatasources()
     for datasource in datasources:
         ds_config = datasource.getConfig()
         configuration.append(ds_config)
+    
     return configuration
     
 

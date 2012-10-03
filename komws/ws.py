@@ -16,27 +16,20 @@ class Services(soap.SOAPPublisher):
         print "Recibida peticion al servicio wsUploadSample"
         context='wsupload_sample'
         try:
-            print "Inicio check"
             checkws.check(data, context)
         except exceptions.InvalidData:
-            print "Excepcion en check"
             return codes.INVALID_DATA_ERROR
 
         try:
-            print "Inicio auth"
             authws.authenticate(data, context)
         except exceptions.AuthenticationError:
-            print "Excepcion en auth"
             return codes.AUTHENTICATION_ERROR
 
         try:
-            print "Inicio proc"
             procws.process(data, context)
         except exceptions.ProcessingError:
-            print "Excepcion en proc"
             return codes.SERVICE_ERROR
         else:
-            print "Service OK"
             return(codes.SERVICE_OK)
         return codes.SERVICE_ERROR
     
@@ -53,27 +46,20 @@ class Services(soap.SOAPPublisher):
         print "Recibida peticion al servicio wsDownloadConfig"
         context='wsdownload_config'
         try:
-            print "Inicio check"
             checkws.check(data, context)
         except exceptions.InvalidData:
-            print "Excepcion en check"
             return codes.INVALID_DATA_ERROR
 
         try:
-            print "Inicio auth"
             authws.authenticate(data, context)
         except exceptions.AuthenticationError:
-            print "Excepcion en auth"
             return codes.AUTHENTICATION_ERROR
 
         try:
-            print "Inicio proc"
             config = procws.process(data, context)
         except exceptions.ProcessingError:
-            print "Excepcion en proc"
             return codes.SERVICE_ERROR
         else:
-            print "Service OK"
             return(config)
         return codes.SERVICE_ERROR        
             

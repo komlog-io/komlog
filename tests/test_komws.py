@@ -9,6 +9,16 @@ from komws import checkws, authws, procws
 from komws import exceptions as wsex
 from datetime import datetime
 
+class dict2data(object):
+    def __init__(self,dictionary):
+        self.len = 0
+        for k,v in dictionary.items():
+            setattr(self,k,v)
+            self.len += 1
+    
+    def __len__(self):
+        return self.len
+
 
 class komwsFunctionalTestCase(unittest.TestCase):
 
@@ -30,37 +40,43 @@ class komwsFunctionalTestCase(unittest.TestCase):
         self.password = None
         self.agentname = None
         self.dsname = None
-        dbapi.delete_sample(self.smpl)
-        dbapi.delete_datasource(self.did)
-        dbapi.delete_agent(self.aid)
-        dbapi.delete_user(self.uid)
+        if self.smpl is not None:
+            dbapi.delete_sample(self.smpl)
+        if self.did is not None:
+            dbapi.delete_datasource(self.did)
+        if self.aid is not None:
+            dbapi.delete_agent(self.aid)
+        if self.uid is not None:
+            dbapi.delete_user(self.uid)
 
 
     def test_wsUploadSample_checkws_OK(self):
         """
         Fill in data structure and call checking
         """
-        self.aid = 0
-        self.did = 0
+        aid = 0
+        did = 0
         
-        data = {'username':self.username,'password':self.password,
-                'agentid':self.aid,'datasourceid':self.did,'date':self.date,
+        dictdata = {'username':self.username,'password':self.password,
+                'agentid':aid,'datasourceid':did,'date':self.date,
                 'filecontent':self.filecontent}
         
+        data = dict2data(dictdata)
         self.assertTrue(checkws.wsupload_sample(data))
 
     def test_wsUploadSample_checkws_invalid_data(self):
         """
         Fill in data structure without one field and call checking
         """
-        self.aid = 0
-        self.did = 0
+        aid = 0
+        did = 0
         
-        data = {'password':self.password,
-                'agentid':self.aid,'datasourceid':self.did,'date':self.date,
+        dictdata = {'password':self.password,
+                'agentid':aid,'datasourceid':did,'date':self.date,
                 'filecontent':self.filecontent}
         
-        self.assertRaises(wsex.InvalidData, checkws.wsupload_sample(data))
+        data = dict2data(dictdata)
+        self.assertRaises(wsex.InvalidData, checkws.wsupload_sample,data)
         
     
     def test_wsUploadSample_authws_OK(self):
@@ -74,10 +90,11 @@ class komwsFunctionalTestCase(unittest.TestCase):
         self.aid = dbapi.create_agent(self.username, self.agentname, self.password)
         self.did = dbapi.create_datasource(self.aid, self.dsname)
         
-        data = {'username':self.username, 'password':self.password,
-                'agentid':self.aid, 'datasourceid':self.did,
+        dictdata = {'username':self.username, 'password':self.password,
+                'agentid':self.password, 'datasourceid':self.did,
                 'date':self.date, 'filecontent':self.filecontent}
-              
+        
+        data = dict2data(dictdata)      
         self.assertTrue(authws.wsupload_sample(data))
         
     def test_wsUploadSample_authws_authentication_error(self):
@@ -87,11 +104,12 @@ class komwsFunctionalTestCase(unittest.TestCase):
         self.uid = dbapi.create_user(self.username, self.password)
         self.aid = dbapi.create_agent(self.username, self.agentname, self.password)
         
-        data = {'username':self.username, 'password':self.password,
+        dictdata = {'username':self.username, 'password':self.password,
                 'agentid':self.aid, 'datasourceid':0,
                 'date':self.date, 'filecontent':self.filecontent}
-              
-        self.assertRaises(wsex.AuthenticationError, authws.wsupload_sample(data))
+        
+        data = dict2data(dictdata)      
+        self.assertRaises(wsex.AuthenticationError, authws.wsupload_sample,data)
         
 
     
@@ -106,22 +124,23 @@ class komwsFunctionalTestCase(unittest.TestCase):
         self.aid = dbapi.create_agent(self.username, self.agentname, self.password)
         self.did = dbapi.create_datasource(self.aid, self.dsname)
         
-        data = {'username':self.username, 'password':self.password,
-                'agentid':self.aid, 'datasourceid':self.did,
+        dictdata = {'username':self.username, 'password':self.password,
+                'agentid':self.password, 'datasourceid':self.did,
                 'date':self.date, 'filecontent':self.filecontent}
-              
+        
+        data = dict2data(dictdata)      
         self.assertTrue(procws.wsupload_sample(data))
 
     def test_wsUploadSample_procws_processing_error(self):
         """
         In this case, we use a nonexistent datasourceid        
         """
-        
-        data = {'username':self.username, 'password':self.password,
+        dictdata = {'username':self.username, 'password':self.password,
                 'agentid':self.aid, 'datasourceid':0,
                 'date':self.date, 'filecontent':self.filecontent}
-              
-        self.assertRaises(wsex.ProcessingError, procws.wsupload_sample(data))
+        
+        data = dict2data(dictdata)      
+        self.assertRaises(wsex.ProcessingError, procws.wsupload_sample,data)
 
         
     

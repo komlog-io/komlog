@@ -147,7 +147,7 @@ class Agent(object):
             return True
 
     def delete(self):
-        if self.__db_agemt is not None:
+        if self.__db_agent is not None:
             try:
                 session.delete(self.__db_agent)
                 session.commit()
@@ -521,53 +521,29 @@ def create_sample(did, date_generated, state=states.STATE_VALUE_SAMPLE_INITIAL, 
 
 """ Functions used to delete objects from database (intended for testing purposes only)"""
 
-def delete_user(user_object):
-    if user_object:
-        try:
-            user_object.delete()
-        except:
-            return False
-        else:
-            return True
+def delete_user(uid):
+    db_user = session.query(schema.User).filter_by(uid=uid).first()
+    user_object = User(db_user.username)       
+    user_object.delete()
     return True
 
-def delete_agent(agent_object):
-    if agent_object:
-        try:
-            agent_object.delete()
-        except:
-            return False
-        else:
-            return True
+def delete_agent(aid):
+    agent_object = Agent(aid)
+    agent_object.delete()
     return True
 
-def delete_datasource(ds_object):
-    if ds_object:
-        try:
-            ds_object.delete()
-        except:
-            return False
-        else:
-            return True
+def delete_datasource(did):
+    ds_object = Datasource(did)
+    ds_object.delete()
     return True
 
-def delete_datapoint(dp_object):
-    if dp_object:
-        try:
-            dp_object.delete()
-        except:
-            return False
-        else:
-            return True
+def delete_datapoint(pid):
+    dp_object = Datapoint(pid)
+    dp_object.delete()
     return True
 
-def delete_sample(sample_object):
-    if sample_object:
-        try:
-            sample_object.delete()
-        except:
-            return False
-        else:
-            return True
+def delete_sample(sid):
+    sample_object = Sample(sid)
+    sample_object.delete()
     return True
 

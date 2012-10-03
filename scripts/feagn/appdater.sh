@@ -32,9 +32,9 @@ function fetch {
 . $HOME/.bash_profile
 fetch
 
-if [ "$SHA" == "$OLD_SHA" ]; then
+if [ "$NEW_SHA" == "$OLD_SHA" ]; then
    echo "CHANGES: NO" > $LOGFILE
-   echo "VERSION: $SHA" >> $LOGFILE
+   echo "VERSION: $NEW_SHA" >> $LOGFILE
    echo "" >> $LOGFILE
    exit
 elif [ "$OLD_CKSUM" == "$NEW_CKSUM" ]; then
