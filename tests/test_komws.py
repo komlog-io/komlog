@@ -145,5 +145,5 @@ class komwsFunctionalTestCase(unittest.TestCase):
         
     
 if __name__ == "__main__":
-    #import sys;sys.argv = ['', 'Test.testName']
-    unittest.main()
+    suite = unittest.TestLoader().loadTestsFromTestCase(komwsFunctionalTestCase)
+    unittest.TextTestRunner(verbosity=2).run(suite)

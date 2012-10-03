@@ -504,7 +504,6 @@ def create_sample(did, date_generated, state=states.STATE_VALUE_SAMPLE_INITIAL, 
     """
     This function registers a new sample asociated to a datasource passed in the arguments
     """
-    print "creamos sample en BD"
     try:
         ds = Datasource(did)
     except exceptions.NotFoundDatasourceError:

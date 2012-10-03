@@ -6,7 +6,6 @@ def authenticate(data, context):
     """
     The purpose of these functions is to authenticate the client who queries the web service
     """
-    print "Auth Dispatch"
     globals()[context.lower()](data)
 
 def wsupload_sample(data):
@@ -23,7 +22,6 @@ def wsupload_sample(data):
         - authenticate agent
         - confirm datasource belonging
     """
-    print "Init auth.wsupload_sample()"
     try:
         user = api.User(data.username)
         if user.validate(data.password):
@@ -49,20 +47,16 @@ def wsdownload_config(data):
         - authenticate user
         - authenticate agent
     """
-    print "Init wsdownload_config()"
     try:
         user = api.User(data.username)
         if user.validate(data.password):
             agents = user.getAgents()
             for agent in agents:
                 if agent.validate(data.agentid):
-                    print "AUTH OK"
                     return True
     except:
-        print "AUTH ERROR"
         raise wsex.AuthenticationError
     else:
-        print "AUTH ERROR"
         raise wsex.AuthenticationError
 
 

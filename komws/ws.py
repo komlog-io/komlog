@@ -13,7 +13,6 @@ class Services(soap.SOAPPublisher):
             - date
             - filecontent
         """
-        print "Recibida peticion al servicio wsUploadSample"
         context='wsupload_sample'
         try:
             checkws.check(data, context)
@@ -43,7 +42,6 @@ class Services(soap.SOAPPublisher):
                 - password
                 - agentid
         """
-        print "Recibida peticion al servicio wsDownloadConfig"
         context='wsdownload_config'
         try:
             checkws.check(data, context)
