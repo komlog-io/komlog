@@ -288,12 +288,45 @@ class Datasource(object):
         return self.__agent
     
     def getConfig(self):
+        config = {}
         if self.__config is None:
             try:
                 self.__config = self.__db_datasource.config
             except:
-                pass
-        return self.__config
+                return None
+        config = {}
+        for attribute in ('did','sec','min','hour','dom','mon','dow','command'):
+            config[attribute]=getattr(self.__config,attribute)
+        return config
+    
+    def setConfig(self,config):
+        for key in ('did','sec','min','hour','dom','mon','dow','command'):
+            if config.haskey(key) is not True:
+                return False
+                
+        if self.__config is None:
+            try:
+                self.__config = self.__db_datasource.config
+            except:
+                self.__config = schema.DatasourceConfig(config['did'],config['sec'], config['min'],
+                                                        config['hour'], config['dom'], config['mon'],
+                                                        config['dow'], config['command'])
+                session.add(self.__config)
+                session.commit()
+                return True
+        
+        session.delete(self.__config)
+        self.__config = schema.DatasourceConfig(config['did'],config['sec'], config['min'],
+                                                config['hour'], config['dom'], config['mon'],
+                                                config['dow'], config['command'])
+
+        session.add(self.__config)
+        session.commit()
+        return True
+            
+            
+        
+        
             
 
 

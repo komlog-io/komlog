@@ -157,6 +157,16 @@ class DatasourceConfig(Base):
     dow = Column(String)
     command = Column(String)
     
+    def __init__(self, did, sec, min, hour, dom, mon, dow, command):
+        self.did = did
+        self.sec = sec
+        self.min = min
+        self.hour = hour
+        self.dom = dom
+        self.mon = mon
+        self.dow = dow
+        self.command = command
+    
 
 class Datasource(Base):
     __tablename__ = 'datasources'

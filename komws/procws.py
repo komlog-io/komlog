@@ -43,17 +43,19 @@ def wsdownload_config(data):
             - agentid
     We need to:
             - For each agent's datasource get its configuration
-            - return all configuration to the agent
-            
+            - return all configuration to the agent            
     """
     configuration = []
-    agent = dbapi.Agent(data.agentid)
-    datasources = agent.getDatasources()
-    for datasource in datasources:
-        ds_config = datasource.getConfig()
-        configuration.append(ds_config)
-    
-    return configuration
+    try:
+        agent = dbapi.Agent(data.agentid)
+        datasources = agent.getDatasources()
+        for datasource in datasources:
+            ds_config = datasource.getConfig()
+            configuration.append(ds_config)
+    except:
+        raise wsex.ProcessingError()
+    else:
+        return configuration
     
 
 
