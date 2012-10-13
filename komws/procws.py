@@ -30,7 +30,7 @@ def wsupload_sample(data):
             fsapi.create_sample(sid, data.filecontent)
         else:
             raise wsex.ProcessingError()
-    except:
+    except Exception as e:
         raise wsex.ProcessingError()
     else:
         return True
@@ -47,12 +47,14 @@ def wsdownload_config(data):
     """
     configuration = []
     try:
-        agent = dbapi.Agent(data.agentid)
-        datasources = agent.getDatasources()
-        for datasource in datasources:
-            ds_config = datasource.getConfig()
-            configuration.append(ds_config)
-    except:
+        user = dbapi.User(data.username)
+        for agent in user.getAgents():
+            if agent.validate(data.agentid):
+                datasources = agent.getDatasources()
+                for datasource in datasources:
+                    ds_config = datasource.getConfig()
+                    configuration.append(ds_config)
+    except Exception as e:
         raise wsex.ProcessingError()
     else:
         return configuration

@@ -207,7 +207,7 @@ class Datasource(object):
                 self.state = self.__db_datasource.state
                 self.type = self.__db_datasource.type
             else:
-                self.did = 0
+                raise exceptions.NotFoundDatasourceError()
 
     def __eq__(self, datasource):
         return self.did == datasource.did
@@ -491,7 +491,7 @@ def create_user(username, password, state=states.STATE_VALUE_USER_ACTIVE, type=t
         session.commit()
         uid = user.uid
         return uid
-    except:
+    except Exception as e:
         session.rollback()
         return -1
     else:
@@ -539,7 +539,7 @@ def create_sample(did, date_generated, state=states.STATE_VALUE_SAMPLE_INITIAL, 
         ds = Datasource(did)
     except exceptions.NotFoundDatasourceError:
         return -1
-    except:
+    except Exception as e:
         return -1
     now = datetime.datetime.utcnow()
     sample = schema.Sample(ds.did, "NoName", date_generated, now, 0,state, type)

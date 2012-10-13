@@ -170,7 +170,6 @@ class komwsFunctionalTestCase(unittest.TestCase):
         """
         self.uid = dbapi.create_user(self.username, self.password)
         self.aid = dbapi.create_agent(self.username, self.agentname, self.password)
-        
         dictdata = {'username':self.username, 'password':self.password,
                     'agentid':self.password}
         
@@ -201,7 +200,7 @@ class komwsFunctionalTestCase(unittest.TestCase):
         self.aid = dbapi.create_agent(self.username, self.agentname, self.password)
         self.did = dbapi.create_datasource(self.aid, self.dsname)
         ds = dbapi.Datasource(self.did)
-        ds_config = {'did':ds, 'sec':'*','min':'*','hour':'*','dom':'*','mon':'*','dow':'*','command':'*'}
+        ds_config = {'did':ds.did, 'sec':'*','min':'*','hour':'*','dom':'*','mon':'*','dow':'*','command':'*'}
         ds.setConfig(ds_config)
         
         dictdata = {'username':self.username, 'password':self.password,
