@@ -314,20 +314,22 @@ class Datasource(object):
                 session.add(self.__config)
                 session.commit()
                 return True
-        
-        session.delete(self.__config)
-        self.__config = schema.DatasourceConfig(config['did'],config['sec'], config['min'],
+            if self.__config is None:
+                self.__config = schema.DatasourceConfig(config['did'],config['sec'], config['min'],
+                                                        config['hour'], config['dom'], config['mon'],
+                                                        config['dow'], config['command'])
+                session.add(self.__config)
+                session.commit()
+                return True
+        else:
+            session.delete(self.__config)
+            self.__config = schema.DatasourceConfig(config['did'],config['sec'], config['min'],
                                                 config['hour'], config['dom'], config['mon'],
                                                 config['dow'], config['command'])
 
-        session.add(self.__config)
-        session.commit()
-        return True
-            
-            
-        
-        
-            
+            session.add(self.__config)
+            session.commit()
+            return True
 
 
 ###############################################
@@ -488,13 +490,11 @@ def create_user(username, password, state=states.STATE_VALUE_USER_ACTIVE, type=t
         session.add(user)
         session.commit()
         uid = user.uid
-        session.close()
         return uid
     except:
         session.rollback()
         return -1
     else:
-        session.close()
         raise exceptions.AlreadyExistingUserError()
 
 def create_agent(username, agentname, password, state=states.STATE_VALUE_AGENT_ACTIVE, type=types.TYPE_VALUE_AGENT_DEFAULT):
@@ -514,7 +514,6 @@ def create_agent(username, agentname, password, state=states.STATE_VALUE_AGENT_A
         session.add(agent)
         session.commit()
         aid = agent.aid
-        session.close()
         return aid
 
 def create_datasource(aid, datasourcename, state=states.STATE_VALUE_DATASOURCE_ACTIVE, type=types.TYPE_VALUE_DATASOURCE_DEFAULT):
@@ -530,7 +529,6 @@ def create_datasource(aid, datasourcename, state=states.STATE_VALUE_DATASOURCE_A
     session.add(datasource)
     session.commit()
     did = datasource.did
-    session.close()
     return did
 
 def create_sample(did, date_generated, state=states.STATE_VALUE_SAMPLE_INITIAL, type=types.TYPE_VALUE_SAMPLE_DEFAULT):
@@ -548,7 +546,6 @@ def create_sample(did, date_generated, state=states.STATE_VALUE_SAMPLE_INITIAL, 
     session.add(sample)
     session.commit()
     sid = sample.sid
-    session.close()
     return sid
 
 """ Functions used to delete objects from database (intended for testing purposes only)"""
