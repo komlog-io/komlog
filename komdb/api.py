@@ -301,7 +301,7 @@ class Datasource(object):
     
     def setConfig(self,config):
         for key in ('did','sec','min','hour','dom','mon','dow','command'):
-            if config.haskey(key) is not True:
+            if config.has_key(key) is not True:
                 return False
                 
         if self.__config is None:

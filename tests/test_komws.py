@@ -109,9 +109,7 @@ class komwsFunctionalTestCase(unittest.TestCase):
         
         data = dict2data(dictdata)      
         self.assertRaises(wsex.AuthenticationError, authws.wsupload_sample,data)
-        
-
-    
+           
     def test_wsUploadSample_procws_OK(self):
         """
         Processing implies data to exist on DB, so, 
@@ -209,8 +207,10 @@ class komwsFunctionalTestCase(unittest.TestCase):
         dictdata = {'username':self.username, 'password':self.password,
                     'agentid':self.password}
         
-        data = dict2data(dictdata)      
-        self.assertEqual(procws.wsdownload_config(data),ds_config)
+        data = dict2data(dictdata) 
+        configuration=[]
+        configuration.append(ds_config)     
+        self.assertEqual(procws.wsdownload_config(data),configuration)
 
     def test_wsdownload_config_procws_processing_error(self):
         """
