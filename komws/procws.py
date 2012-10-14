@@ -9,7 +9,7 @@ def process(data, context):
     The purpose of these functions is to process the service call
     """
     print "Proc Dispatch"
-    globals()[context.lower()](data)
+    return globals()[context.lower()](data)
 
 def wsupload_sample(data):
     """
