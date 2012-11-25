@@ -30,7 +30,7 @@ def wsupload_sample(data):
                 if agent.validate(data.agentid):
                     datasources = agent.getDatasources()
                     for ds in datasources:
-                        if ds.did == data.datasourceid:
+                        if int(ds.did) == int(data.datasourceid):
                             return True
     except Exception, e:
         raise wsex.AuthenticationError
