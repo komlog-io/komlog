@@ -20,7 +20,7 @@ def wsupload_sample(data):
     """
     needed_keys = ['username','password','agentid','datasourceid','date','filecontent']
     try:
-        did = int(data['datasourceid'])
+        did = int(data.datasourceid)
         if len(data)==len(needed_keys):
             for key in needed_keys:
                 if hasattr(data,key):
