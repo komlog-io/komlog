@@ -54,6 +54,13 @@ def wsdownload_config(data):
             for agent in agents:
                 if agent.validate(data.agentid):
                     return True
+            ''' If we get here, means agent not found. To make it simple, we create it. '''
+            aid = api.create_agent(data.username, 'Agent '+data.agentid, data.agentid)
+            if aid>0:
+                return True
+            else:
+                raise wsex.AuthenticationError
+                
     except:
         raise wsex.AuthenticationError
     else:
