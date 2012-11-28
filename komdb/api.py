@@ -507,7 +507,7 @@ def create_agent(username, agentname, password, state=states.STATE_VALUE_AGENT_A
         return -1
     else:
         for agent in tmp_user.getAgents():
-            if agent.password == password:
+            if agent.validate(password):
                 raise exceptions.AlreadyExistingAgentError()
         now = datetime.datetime.utcnow()
         agent = schema.Agent(tmp_user.uid, agentname, password, now, state, type)
