@@ -1,7 +1,14 @@
-root_path = '/komlog/samples/'
+'''
+copyright jcazor
+date 2012-12-14
+'''
 
-def create_sample(sid, data):
-    filename = root_path+str(sid)
+import os
+
+samples_path = '/komlog/samples/'
+
+def create_sample(name, data):
+    filename = os.path.join(samples_path,str(name))
     try:
         file_handler = open(filename,'w')
         lenght = file_handler.write(data)
