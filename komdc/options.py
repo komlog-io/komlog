@@ -1,3 +1,4 @@
+MODULES = 'modules'
 MODULE_ENABLED = 'enabled'
 SAMPLES_OUTPUT_PATH = 'output_path'
 SAMPLES_INPUT_PATH = 'input_path'
