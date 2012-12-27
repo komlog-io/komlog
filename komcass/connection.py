@@ -6,11 +6,12 @@ Created on 14/12/2012
 
 import pycassa
 
-pool = pycassa.ConnectionPool('komlog', ['be1:9160'], pool_size=5)
-
+class Pool(object):
+    def __init__(self, keyspace=None, server_list=None, pool_size=None):
+        self.connection_pool = pycassa.ConnectionPool(keyspace,server_list,pool_size=pool_size)
 
 class CF(object):
-    def __init__(self, keyspace):
+    def __init__(self, pool, keyspace):
         self.cf = pycassa.ColumnFamily(pool, keyspace)
     
     def get(self, key):
@@ -20,9 +21,6 @@ class CF(object):
         self.cf.insert(key,cols)
 
 class SamplesCF(CF):
-    def __init__(self):
+    def __init__(self, pool):
         self.keyspace = 'samples'
-        super(SamplesCF,self).__init__(self.keyspace)
-        
-
-samples_cf = SamplesCF()
+        super(SamplesCF,self).__init__(pool, self.keyspace)
