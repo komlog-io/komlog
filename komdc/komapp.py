@@ -19,7 +19,8 @@ class Komapp(object):
         
     def start(self):
         self.__load_conf_file()
-        self.logger = komlogger.getLogger(self.config.conf_file, __name__)
+        self.logger = komlogger.getLogger(os.path.join(self.path, self.conf_file), __name__)
+        self.logger.info('Configuration file loaded successfully')
         self.__load_modules()
         self.__start_modules()
         self.__loop()
@@ -31,7 +32,7 @@ class Komapp(object):
         if os.path.exists(self.path):
             if os.path.isdir(self.path):
                 if os.path.isfile(os.path.join(self.path, self.conf_file)):
-                    self.config = config.Config(self.path, self.conf_file)
+                    self.config = config.Config(os.path.join(self.path, self.conf_file))
                 else:
                     print "Not a file: "+os.path.join(self.path, self.conf_file)
                     exit()
@@ -44,7 +45,7 @@ class Komapp(object):
        
     def __load_modules(self):
         modules_enabled = []
-        for module in self.config.safe_get(sections.MAIN,options.MODULES):
+        for module in self.config.safe_get(sections.MAIN,options.MODULES).split(','):
             mod_section='module_'+module
             if str(self.config.safe_get(mod_section, options.MODULE_ENABLED)).lower() == 'yes':
                 modobj = getattr(modules,module[0].upper()+module[1:])(self.config)
@@ -55,6 +56,7 @@ class Komapp(object):
         if not module:
             for i,module in enumerate(self.modules):
                 p = Process(target=module.start,name=module.__class__.__name__)
+                print 'starting module: '+str(p)
                 self.logger.info('Starting module: '+str(p))
                 p.start()
                 self.processes.insert(i,p)

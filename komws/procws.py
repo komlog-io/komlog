@@ -20,15 +20,15 @@ def wsupload_sample(data):
             - datasourceid
             - date
             - filecontent
+            - encoding
     We need to:
-            #- Register this sample on db
             - Copy the sample (filecontent) to the destfile
     """
     try:
         name = data.date.isoformat()+'_'+str(data.datasourceid)+'.pspl' 
         #sid = dbapi.create_sample(data.datasourceid, data.date)
         #if sid > 0:
-        fsapi.create_sample(name, data.filecontent)
+        fsapi.create_sample(name, data.filecontent, data.encoding)
         #else:
         #    raise wsex.ProcessingError()
     except Exception as e:

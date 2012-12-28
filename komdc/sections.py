@@ -1,3 +1,3 @@
 MAIN = 'main'
-STORING = 'storing'
-VALIDATION = 'validation'
+STORING = 'module_storing'
+VALIDATION = 'module_validation'

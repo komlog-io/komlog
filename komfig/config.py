@@ -6,9 +6,9 @@ DEFAULT_FILE = 'komlogd.cfg'
 PASSWD_FILE = '/etc/passwd'
 
 class Config(ConfigParser.ConfigParser):
-    def __init__(self, confpath, conffile):
+    def __init__(self, conf_file):
         ConfigParser.ConfigParser.__init__(self)
-        self.conf_file = os.path.join(confpath, conffile)
+        self.conf_file = conf_file
         try: self.readfp(open(self.conf_file), 'r')
         except IOError as Err:
             if Err.errno == 2: pass
