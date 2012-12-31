@@ -49,8 +49,10 @@ class Komapp(object):
             mod_section='module_'+module
             if str(self.config.safe_get(mod_section, options.MODULE_ENABLED)).lower() == 'yes':
                 try:
-                    modobj = eval('modules.Module.__subclasses__().'+module[0].upper()+module[1:])(self.config)
-                    modules_enabled.append(modobj)
+                    for c in modules.Module.__subclasses__():
+                        if c.__name__ == module[0].upper()+module[1:]:
+                            modobj = c(self.config)
+                            modules_enabled.append(modobj)
                 except NameError as e:
                     self.logger.exception('Module not found: '+str(e))
         self.modules = modules_enabled
