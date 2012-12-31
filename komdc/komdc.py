@@ -4,8 +4,9 @@ Created on 26/12/2012
 @author: jcazor
 '''
 
-import komapp
+from komapp import komapp
 import os
+import modules
 
 def main():
     """ Program Init.

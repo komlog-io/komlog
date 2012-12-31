@@ -531,7 +531,7 @@ def create_datasource(aid, datasourcename, state=states.STATE_VALUE_DATASOURCE_A
     did = datasource.did
     return did
 
-def create_sample(did, date_generated, state=states.STATE_VALUE_SAMPLE_INITIAL, type=types.TYPE_VALUE_SAMPLE_DEFAULT):
+def create_sample(did, date_generated, state=states.STATE_VALUE_SAMPLE_INITIAL, type=types.TYPE_VALUE_SAMPLE_DEFAULT, local_session=None):
     """
     This function registers a new sample asociated to a datasource passed in the arguments
     """
@@ -543,8 +543,12 @@ def create_sample(did, date_generated, state=states.STATE_VALUE_SAMPLE_INITIAL, 
         return -1
     now = datetime.datetime.utcnow()
     sample = schema.Sample(ds.did, "NoName", date_generated, now, 0,state, type)
-    session.add(sample)
-    session.commit()
+    if not local_session:
+        session.add(sample)
+        session.commit()
+    else:
+        local_session.add(sample)
+        local_session.commit()
     sid = sample.sid
     return sid
 

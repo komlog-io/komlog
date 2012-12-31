@@ -1,5 +1,5 @@
 '''
-Created on 26/12/2012
+Created on 31/12/2012
 
 @author: jcazor
 '''
@@ -48,8 +48,11 @@ class Komapp(object):
         for module in self.config.safe_get(sections.MAIN,options.MODULES).split(','):
             mod_section='module_'+module
             if str(self.config.safe_get(mod_section, options.MODULE_ENABLED)).lower() == 'yes':
-                modobj = getattr(modules,module[0].upper()+module[1:])(self.config)
-                modules_enabled.append(modobj)
+                try:
+                    modobj = eval('modules.Module.__subclasses__().'+module[0].upper()+module[1:])(self.config)
+                    modules_enabled.append(modobj)
+                except NameError as e:
+                    self.logger.exception('Module not found: '+str(e))
         self.modules = modules_enabled
         
     def __start_modules(self, module=None):
