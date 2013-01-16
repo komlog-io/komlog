@@ -7,3 +7,7 @@ class NotFoundAgentError(Exception): pass
 class AlreadyExistingAgentError(Exception): pass
 
 class NotFoundDatasourceError(Exception): pass
+
+class InvalidParameterValueError(Exception):
+    def __init__(self, parameter):
+        self.parameter = parameter

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MAILTO="jcazor@gmail.com"
+MAILTO="jcazor@komlog.org"
 REPOBASEDIR=$HOME/komlog
 LOGFILE=$HOME/tmp/appdater.log
 TESTDIR=${REPOBASEDIR}/tests

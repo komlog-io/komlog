@@ -45,7 +45,7 @@ class Validation(modules.Module):
 
 class Storing(modules.Module):
     def __init__(self, config):
-        super(Storing,self).__init__(config, self.__class__.__name__)
+        super(Storing,self).__init__(config, 'Storing')
         self.cass_keyspace = self.config.safe_get(sections.STORING,options.CASS_KEYSPACE)
         self.cass_servlist = self.config.safe_get(sections.STORING,options.CASS_SERVLIST).split(',')
         try:
@@ -58,6 +58,7 @@ class Storing(modules.Module):
         self.outputdir = self.config.safe_get(sections.STORING, options.SAMPLES_OUTPUT_PATH)
  
     def start(self):
+        print 'Storing module started'
         self.logger.info('Storing module started')
         if not self.cass_keyspace or not self.cass_poolsize or not self.cass_servlist:
             self.logger.error('Cassandra connection configuration keys not found')
@@ -70,7 +71,7 @@ class Storing(modules.Module):
         else:
             self.cass_pool = casscon.Pool(keyspace=self.cass_keyspace, server_list=self.cass_servlist, pool_size=self.cass_poolsize)
             self.samples_cf = casscon.SamplesCF(self.cass_pool.connection_pool)
-            self.sql_session = dbcon.Connection(self.sql_uri)
+            self.sql_connection = dbcon.Connection(self.sql_uri)
             self.__loop()
         self.logger.info('Storing module exiting')
     
@@ -80,7 +81,9 @@ class Storing(modules.Module):
             files.sort(key=lambda x: os.path.getmtime(x))
             if len(files)>0:
                 for f in files:
+                    print 'Storing file: '+f
                     if self.store(f):
+                        print 'File Stored successfully: '+f
                         os.rename(f,os.path.join(self.outputdir,os.path.basename(f)[:-5]+'.sspl'))                    
             else:
                 time.sleep(5)
@@ -90,23 +93,28 @@ class Storing(modules.Module):
         datasourceid = filename.split('_')[1].split('.')[0]
         date = dateutil.parser.parse(os.path.basename(filename).split('_')[0])
         udata = fsapi.get_file_content(filename)
+        print 'Get the file content before storing'
         # Register the sample
         try:
             sid = 0
-            sid = dbapi.create_sample(datasourceid, date, local_session=self.sql_session)
+            sid = dbapi.create_sample(datasourceid, date, local_session=self.sql_connection.session)
+            print 'Sample created on pgsql: '+str(sid)
             if sid > 0:
                 cassapi.create_sample(sid, udata, self.samples_cf)
+                print 'Stored successfully on cassandra'
                 self.logger.debug(filename+' stored successfully with sid: '+str(sid))
                 return True
             else:
+                print 'Error, sid<0'
                 self.logger.error('Storing '+filename)
                 return False
         except Exception as e:
             #rollback
+            print 'Exception Storing: '+str(e)
             self.logger.exception('Exception storing sample '+filename+': '+str(e))
             try:
                 if sid > 0:
-                    dbapi.delete_sample(sid, self.sql_session)
+                    dbapi.delete_sample(sid, self.sql_connection.session)
                 cassapi.remove_sample(sid, self.samples_cf)
             except Exception as e:
                 self.logger.exception('Exception in Rollback storing sample '+filename+': '+str(e))

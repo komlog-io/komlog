@@ -1,8 +1,11 @@
-from twisted.web import soap, server
-from komws import checkws, authws, procws, codes, exceptions
+from twisted.web import soap
+import checkws, authws, procws, codes, exceptions
 
 
 class Services(soap.SOAPPublisher):
+    def __init__(self, sql_connection):
+        self.sql_connection = sql_connection
+        
     """Here we publish our methods"""
     def soap_wsUploadSample(self,data):
         """data:
@@ -13,19 +16,23 @@ class Services(soap.SOAPPublisher):
             - date
             - filecontent
         """
+        
         context='wsupload_sample'
         try:
+            print 'check called'
             checkws.check(data, context)
         except exceptions.InvalidData:
             return codes.INVALID_DATA_ERROR
 
         try:
-            authws.authenticate(data, context)
+            print 'auth called'
+            authws.authenticate(data, context, self.sql_connection.session)
         except exceptions.AuthenticationError:
             return codes.AUTHENTICATION_ERROR
 
         try:
-            procws.process(data, context)
+            print 'proc called'
+            procws.process(data, context, self.sql_connection.session)
         except exceptions.ProcessingError:
             return codes.SERVICE_ERROR
         else:
@@ -44,25 +51,23 @@ class Services(soap.SOAPPublisher):
         """
         context='wsdownload_config'
         try:
+            print 'check called'
             checkws.check(data, context)
         except exceptions.InvalidData:
             return codes.INVALID_DATA_ERROR
 
         try:
-            authws.authenticate(data, context)
+            print 'auth called'
+            authws.authenticate(data, context, self.sql_connection.session)
         except exceptions.AuthenticationError:
             return codes.AUTHENTICATION_ERROR
 
         try:
-            config = procws.process(data, context)
+            print 'proc called'
+            config = procws.process(data, context, self.sql_connection.session)
         except exceptions.ProcessingError:
             return codes.SERVICE_ERROR
         else:
             return(config)
-        return codes.SERVICE_ERROR        
-            
-
-if __name__ == '__main__':
-    from twisted.internet import reactor
-    reactor.listenTCP(8008,server.Site(Services()))
-    reactor.run()
+        return codes.SERVICE_ERROR
+    

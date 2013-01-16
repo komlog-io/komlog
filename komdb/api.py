@@ -4,29 +4,30 @@ API to access DB
 """
 import datetime
 from komdb import schema
-from komdb import connection
 from komdb import exceptions
 from komdb.config import states,types
 
 
-session = connection.Session()
-
 class User(object):
-    def __init__(self, username):
-        try: self.__db_user = session.query(schema.User).filter_by(username=username).first()
-        except:
-            raise
+    def __init__(self, username=None,uid=None, session=None):
+        if not session:
+            exceptions.InvalidParameterValueError('session')
+        if username:
+            self.__db_user = session.query(schema.User).filter_by(username=username).first()
+        elif uid:
+            self.__db_user = session.query(schema.User).filter_by(uid=uid).first()
         else:
-            if self.__db_user is not None:
-                self.__agents = None
-                self.uid = self.__db_user.uid
-                self.username = self.__db_user.username
-                self.__password = self.__db_user.password
-                self.datefrom = self.__db_user.datefrom
-                self.state = self.__db_user.state
-                self.type = self.__db_user.type
-            else:
-                raise exceptions.NotFoundUserError()
+            raise exceptions.InvalidParameterValueError('username')
+        if self.__db_user is not None:
+            self.__agents = None
+            self.uid = self.__db_user.uid
+            self.username = self.__db_user.username
+            self.__password = self.__db_user.password
+            self.datefrom = self.__db_user.datefrom
+            self.state = self.__db_user.state
+            self.type = self.__db_user.type
+        else:
+            raise exceptions.NotFoundUserError()
     
     def __eq__(self, user):
         return self.uid == user.uid
@@ -34,7 +35,7 @@ class User(object):
     def validate(self, password):
         return  self.__password == password
 
-    def changePassword(self, old, new):
+    def changePassword(self, old, new, session):
         if self.validate(old) is True:
             try:
                 self.__db_user.password = new
@@ -45,7 +46,7 @@ class User(object):
                 self.__password = new
                 return True
 
-    def setType(self, type):
+    def setType(self, type, session):
         try:
             self.__db_user.type = type
             session.commit()
@@ -55,7 +56,7 @@ class User(object):
             self.type = type
             return True
 
-    def setState(self, state):
+    def setState(self, state, session):
         try:
             self.__db_user.state = state
             session.commit()
@@ -65,7 +66,7 @@ class User(object):
             self.state = state
             return True
 
-    def delete(self):
+    def delete(self, session):
         if self.__db_user is not None:
             try:
                 session.delete(self.__db_user)
@@ -85,7 +86,7 @@ class User(object):
         info['datefrom'] = self.datefrom
         return info
 
-    def getAgents(self):
+    def getAgents(self, session):
         if self.__agents is None:
             agents = []
             aids = []
@@ -93,7 +94,7 @@ class User(object):
                 for agent in self.__db_user.agents:
                     aids.append(agent.aid)
                 for aid in aids:
-                    agent = Agent(aid)
+                    agent = Agent(aid, session)
                     agents.append(agent)
                 self.__agents = agents
             except:
@@ -102,7 +103,7 @@ class User(object):
 
 
 class Agent(object):
-    def __init__(self, aid):
+    def __init__(self, aid, session):
         try: self.__db_agent = session.query(schema.Agent).filter_by(aid=aid).first()
         except: 
             raise
@@ -126,7 +127,7 @@ class Agent(object):
     def validate(self, password):
         return self.__password == password
 
-    def setState(self, state):
+    def setState(self, state, session):
         try:
             self.__db_agent.state=state
             session.commit()
@@ -136,7 +137,7 @@ class Agent(object):
             self.state = state
             return True
 
-    def setType(self, type):
+    def setType(self, type, session):
         try:
             self.__db_agent.type=type
             session.commit()
@@ -146,7 +147,7 @@ class Agent(object):
             self.type = type
             return True
 
-    def delete(self):
+    def delete(self, session):
         if self.__db_agent is not None:
             try:
                 session.delete(self.__db_agent)
@@ -166,7 +167,7 @@ class Agent(object):
         info['datefrom'] = self.datefrom
         return info
 
-    def getDatasources(self):
+    def getDatasources(self, session):
         if self.__datasources is None:
             datasources = []
             dids = []
@@ -174,7 +175,7 @@ class Agent(object):
                 for datasource in self.__db_agent.datasources:
                     dids.append(datasource.did)
                 for did in dids:
-                    datasource = Datasource(did)
+                    datasource = Datasource(did, session)
                     datasources.append(datasource)
                 self.__datasources = datasources
             except:
@@ -191,7 +192,7 @@ class Agent(object):
 #####################################################
 
 class Datasource(object):
-    def __init__(self, did):
+    def __init__(self, did, session):
         try: self.__db_datasource = session.query(schema.Datasource).filter_by(did=did).first()
         except: self.did = -1
         else:
@@ -212,7 +213,7 @@ class Datasource(object):
     def __eq__(self, datasource):
         return self.did == datasource.did
 
-    def setState(self, state):
+    def setState(self, state, session):
         try:
             self.__db_datasource.state=state
             session.commit()
@@ -222,7 +223,7 @@ class Datasource(object):
             self.state = state
             return True
 
-    def setType(self, type):
+    def setType(self, type, session):
         try:
             self.__db_datasource.type=type
             session.commit()
@@ -232,7 +233,7 @@ class Datasource(object):
             self.type = type
             return True
 
-    def delete(self):
+    def delete(self, session):
         if self.__db_datasource is not None:
             try:
                 session.delete(self.__db_datasource)
@@ -252,7 +253,7 @@ class Datasource(object):
         info['datefrom'] = self.datefrom
         return info
 
-    def getDatapoints(self):
+    def getDatapoints(self, session):
         if self.__datapoints is None:
             datapoints = []
             pids = []
@@ -260,34 +261,34 @@ class Datasource(object):
                 for datapoint in self.__db_datasource.datapoints:
                     pids.append(datapoint.pid)
                 for pid in pids:
-                    datapoint = Datapoint(pid)
+                    datapoint = Datapoint(pid, session)
                     datapoints.append(datapoint)
                 self.__datapoints = datapoints
             except:
                 pass
         return self.__datapoints
 
-    def getSamples(self, limit=25):
+    def getSamples(self, from_date, to_date, session):
         if self.__samples is None:
             samples = []
             sids = []
             try:
-                for sample in session.query(schema.Sample).filter_by(did=self.did).limit(limit):
+                for sample in session.query(schema.Sample).filter_by(did=self.did):
                     sids.append(sample.sid)
                 for sid in sids:
-                    sample = Sample(sid)
+                    sample = Sample(sid, session)
                     samples.append(sample)
                 self.__samples = samples
             except:
                 pass
         return self.__samples
 
-    def getAgent(self):
+    def getAgent(self, session):
         if self.__agent is None:
-            self.__agent = Agent(self.aid)
+            self.__agent = Agent(self.aid, session)
         return self.__agent
     
-    def getConfig(self):
+    def getConfig(self, session):
         config = {}
         if self.__config is None:
             try:
@@ -299,7 +300,7 @@ class Datasource(object):
             config[attribute]=getattr(self.__config,attribute)
         return config
     
-    def setConfig(self,config):
+    def setConfig(self,config, session):
         for key in ('did','sec','min','hour','dom','mon','dow','command'):
             if config.has_key(key) is not True:
                 return False
@@ -338,7 +339,7 @@ class Datasource(object):
 
 
 class Datapoint(object):
-    def __init__(self, pid):
+    def __init__(self, pid, session):
         try:    self.__db_datapoint = session.query(schema.Datapoint).filter_by(pid=pid).first()
         except: self.pid = -1
         else:
@@ -357,7 +358,7 @@ class Datapoint(object):
     def __eq__(self, datapoint):
         return self.pid == datapoint.pid
 
-    def setState(self, state):
+    def setState(self, state, session):
         try:
             self.__db_datapoint.state=state
             session.commit()
@@ -367,7 +368,7 @@ class Datapoint(object):
             self.state = state
             return True
 
-    def setType(self, type):
+    def setType(self, type, session):
         try:
             self.__db_datapoint.type=type
             session.commit()
@@ -377,7 +378,7 @@ class Datapoint(object):
             self.type = type
             return True
 
-    def delete(self):
+    def delete(self, session):
         if self.__db_datapoint is not None:
             try:
                 session.delete(self.__db_datapoint)
@@ -397,9 +398,9 @@ class Datapoint(object):
         info['datefrom'] = self.datefrom
         return info
     
-    def getDatasource(self):
+    def getDatasource(self, session):
         if self.__datasource == None:
-            self.__datasource = Datasource(self.did)
+            self.__datasource = Datasource(self.did, session)
         return self.__datasource
 
 
@@ -410,7 +411,7 @@ class Datapoint(object):
 
 
 class Sample(object):
-    def __init__(self, sid):
+    def __init__(self, sid, session):
         try:  self.__db_sample = session.query(schema.Sample).filter_by(sid=sid).first()
         except: self.sid = -1
         else:
@@ -430,7 +431,7 @@ class Sample(object):
     def __eq__(self, sample):
         return self.sid == sample.sid
 
-    def setState(self, state):
+    def setState(self, state, session):
         try:
             self.__db_sample.state=state
             session.commit()
@@ -440,7 +441,7 @@ class Sample(object):
             self.state = state
             return True
 
-    def setType(self, type):
+    def setType(self, type, session):
         try:
             self.__db_sample.type=type
             session.commit()
@@ -450,7 +451,7 @@ class Sample(object):
             self.type = type
             return True
 
-    def delete(self):
+    def delete(self, session):
         if self.__db_sample is not None:
             try:
                 session.delete(self.__db_sample)
@@ -472,18 +473,22 @@ class Sample(object):
         info['size'] = self.size
         return info
     
-    def getDatasource(self):
+    def getDatasource(self, session):
         if self.__datasource == None:
-            self.__datasource = Datasource(self.did)
+            self.__datasource = Datasource(self.did, session)
         return self.__datasource
 
 
 """ Functions used to create elements on DB """
 
-def create_user(username, password, state=states.STATE_VALUE_USER_ACTIVE, type=types.TYPE_VALUE_USER_DEFAULT):
+def create_user(username, password, session, state=states.STATE_VALUE_USER_ACTIVE, type=types.TYPE_VALUE_USER_DEFAULT):
     """ Create a new user on database """
+    if not username:
+        raise exceptions.InvalidParameterValueError('username')
+    if not password:
+        raise exceptions.InvalidParameterValueError('password')
     try:
-        user = User(username)
+        user = User(username=username, session=session)
     except exceptions.NotFoundUserError:
         now = datetime.datetime.utcnow()
         user = schema.User(username, password, now, state, type)
@@ -493,33 +498,38 @@ def create_user(username, password, state=states.STATE_VALUE_USER_ACTIVE, type=t
         return uid
     except Exception as e:
         session.rollback()
-        return -1
+        raise e
     else:
         raise exceptions.AlreadyExistingUserError()
 
-def create_agent(username, agentname, password, state=states.STATE_VALUE_AGENT_ACTIVE, type=types.TYPE_VALUE_AGENT_DEFAULT):
+def create_agent(username, agentname, password, session, state=states.STATE_VALUE_AGENT_ACTIVE, type=types.TYPE_VALUE_AGENT_DEFAULT):
     """ Create a new agent on database associated to a given user """ 
+    if not username:
+        raise exceptions.InvalidParameterValueError('username')
+    if not agentname:
+        raise exceptions.InvalidParameterValueError('agentname')
+    if not password:
+        raise exceptions.InvalidParameterValueError('password')
+    tmp_user = User(username=username, session=session)
+    for agent in tmp_user.getAgents(session):
+        if agent.validate(password):
+            raise exceptions.AlreadyExistingAgentError()
+    now = datetime.datetime.utcnow()
     try:
-        tmp_user = User(username)
-    except exceptions.NotFoundUserError:
-        return -1
-    except:
-        return -1
-    else:
-        for agent in tmp_user.getAgents():
-            if agent.validate(password):
-                raise exceptions.AlreadyExistingAgentError()
-        now = datetime.datetime.utcnow()
         agent = schema.Agent(tmp_user.uid, agentname, password, now, state, type)
         session.add(agent)
         session.commit()
         aid = agent.aid
         return aid
+    except Exception as e:
+        session.rollback()
+        raise e
+    
 
-def create_datasource(aid, datasourcename, state=states.STATE_VALUE_DATASOURCE_ACTIVE, type=types.TYPE_VALUE_DATASOURCE_DEFAULT):
+def create_datasource(aid, datasourcename, session, state=states.STATE_VALUE_DATASOURCE_ACTIVE, type=types.TYPE_VALUE_DATASOURCE_DEFAULT):
     """ Create a new datasource on database associated to a given user-agent """
     try:
-        tmp_agent = Agent(aid)
+        tmp_agent = Agent(aid, session)
     except exceptions.NotFoundAgentError:
         return -1
     except:
@@ -531,52 +541,74 @@ def create_datasource(aid, datasourcename, state=states.STATE_VALUE_DATASOURCE_A
     did = datasource.did
     return did
 
-def create_sample(did, date_generated, state=states.STATE_VALUE_SAMPLE_INITIAL, type=types.TYPE_VALUE_SAMPLE_DEFAULT, local_session=None):
+def create_sample(did, date_generated, session, state=states.STATE_VALUE_SAMPLE_INITIAL, type=types.TYPE_VALUE_SAMPLE_DEFAULT):
     """
     This function registers a new sample asociated to a datasource passed in the arguments
     """
     try:
-        ds = Datasource(did)
+        ds = Datasource(did, session)
     except exceptions.NotFoundDatasourceError:
         return -1
     except Exception as e:
         return -1
     now = datetime.datetime.utcnow()
     sample = schema.Sample(ds.did, "NoName", date_generated, now, 0,state, type)
-    if not local_session:
-        session.add(sample)
-        session.commit()
-    else:
-        local_session.add(sample)
-        local_session.commit()
+    session.add(sample)
+    session.commit()
     sid = sample.sid
     return sid
 
 """ Functions used to delete objects from database (intended for testing purposes only)"""
 
-def delete_user(uid):
-    db_user = session.query(schema.User).filter_by(uid=uid).first()
-    user_object = User(db_user.username)       
-    user_object.delete()
-    return True
+def delete_user(username=None, uid=None, session=None):
+    if not session:
+        raise exceptions.InvalidParameterValueError('session')
+    if uid:
+        user_object = User(uid=uid, session=session)
+    elif username:
+        user_object = User(username=username, session=session)
+    else:
+        raise exceptions.InvalidParameterValueError('username')
+    try:
+        user_object.delete(session)
+        return True
+    except Exception as e:
+        session.rollback()
+        raise e
 
-def delete_agent(aid):
-    agent_object = Agent(aid)
-    agent_object.delete()
-    return True
+def delete_agent(aid, session):
+    agent_object = Agent(aid, session)
+    try:
+        agent_object.delete(session)
+        return True
+    except Exception as e:
+        session.rollback()
+        raise e
 
-def delete_datasource(did):
-    ds_object = Datasource(did)
-    ds_object.delete()
-    return True
+def delete_datasource(did, session):
+    ds_object = Datasource(did, session)
+    try:
+        ds_object.delete(session)
+        return True
+    except Exception as e:
+        session.rollback()
+        raise e
 
-def delete_datapoint(pid):
-    dp_object = Datapoint(pid)
-    dp_object.delete()
-    return True
+def delete_datapoint(pid, session):
+    dp_object = Datapoint(pid, session)
+    try:
+        dp_object.delete(session)
+        return True
+    except Exception as e:
+        session.rollback()
+        raise e
 
-def delete_sample(sid):
-    sample_object = Sample(sid)
-    sample_object.delete()
-    return True
+def delete_sample(sid, session):
+    sample_object = Sample(sid, session)
+    try:
+        sample_object.delete(session)
+        return True
+    except Exception as e:
+        session.rollback()
+        raise e
 

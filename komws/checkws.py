@@ -1,11 +1,10 @@
-from komws import exceptions as wsex
+import exceptions as wsex
 
 def check(data, context):
     """
     The purpose of these functions is to check whether the received data contains the
     necessary fields for each service
     """
-    print "Check Dispatch"
     globals()[context.lower()](data)
 
 def wsupload_sample(data):
@@ -17,6 +16,7 @@ def wsupload_sample(data):
             - datasourceid
             - date
             - filecontent
+            - encoding
     """
     needed_keys = ['username','password','agentid','datasourceid','date','filecontent']
     try:
