@@ -97,7 +97,7 @@ class Storing(modules.Module):
         # Register the sample
         try:
             sid = 0
-            sid = dbapi.create_sample(datasourceid, date, local_session=self.sql_connection.session)
+            sid = dbapi.create_sample(datasourceid, date, self.sql_connection.session)
             print 'Sample created on pgsql: '+str(sid)
             if sid > 0:
                 cassapi.create_sample(sid, udata, self.samples_cf)
