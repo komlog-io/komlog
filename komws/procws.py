@@ -2,6 +2,7 @@ import exceptions as wsex
 from komdb import api as dbapi
 from komdb import exceptions as dbex
 from komfs import api as fsapi
+import os
 
 
 
@@ -11,7 +12,7 @@ def process(data, context, sql_session):
     """
     return globals()[context.lower()](data, sql_session)
 
-def wsupload_sample(data, sql_session):
+def wsupload_sample(data, dir, sql_session):
     """
     data:
             - username
@@ -24,8 +25,9 @@ def wsupload_sample(data, sql_session):
             - Copy the sample (filecontent) to the destfile
     """
     try:
-        name = data.date+'_'+str(data.datasourceid)+'.pspl' 
-        fsapi.create_sample(name, data.filecontent)
+        name = data.date+'_'+str(data.datasourceid)+'.pspl'
+        dest_file = os.path.join(dir,name) 
+        fsapi.create_sample(dest_file, data.filecontent)
     except Exception as e:
         print str(e)
         raise wsex.ProcessingError()
