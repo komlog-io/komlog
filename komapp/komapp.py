@@ -48,11 +48,15 @@ class Komapp(object):
         for module in self.config.safe_get(sections.MAIN,options.MODULES).split(','):
             mod_section='module_'+module
             if str(self.config.safe_get(mod_section, options.MODULE_ENABLED)).lower() == 'yes':
+                instances = int(self.config.safe_get(mod_section, options.MODULE_INSTANCES))
+                if not instances:
+                    instances=1
                 try:
                     for c in modules.Module.__subclasses__():
                         if c.__name__ == module[0].upper()+module[1:]:
-                            modobj = c(self.config)
-                            modules_enabled.append(modobj)
+                            for i in instances:
+                                modobj = (c(self.config),i)
+                                modules_enabled.append(modobj)
                 except NameError as e:
                     self.logger.exception('Module not found: '+str(e))
         self.modules = modules_enabled
@@ -60,7 +64,7 @@ class Komapp(object):
     def __start_modules(self, module=None):
         if not module:
             for i,module in enumerate(self.modules):
-                p = Process(target=module.start,name=module.__class__.__name__)
+                p = Process(target=module[0].start,name=module[0].__class__.__name__+'-'+str(module[1]))
                 print 'starting module: '+str(p)
                 self.logger.info('Starting module: '+str(p))
                 p.start()
@@ -68,7 +72,7 @@ class Komapp(object):
         else:
             i = self.modules.index(module)
             if not self.processes[i].is_alive():
-                p = Process(target=module.start,name=module.__class__.__name__)
+                p = Process(target=module[0].start,name=module[0].__class__.__name__+'-'+str(module[1]))
                 p.start()
                 self.logger.info('Starting module: '+str(p))
                 self.processes.pop(i)
