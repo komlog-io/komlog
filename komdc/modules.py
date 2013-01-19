@@ -81,10 +81,20 @@ class Storing(modules.Module):
             files.sort(key=lambda x: os.path.getmtime(x))
             if len(files)>0:
                 for f in files:
-                    print 'Storing file: '+f
-                    if self.store(f):
-                        print 'File Stored successfully: '+f
-                        os.rename(f,os.path.join(self.outputdir,os.path.basename(f)[:-5]+'.sspl'))                    
+                    try:
+                        os.rename(f,f[:-5]+'.wspl')
+                    except OSError:
+                        #other instance took it firts
+                        self.logger.error('File already treated by other module instance: '+f)
+                    else:
+                        print 'Storing file: '+f
+                        fi = f[:-5]+'.wspl'
+                        if self.store(fi):
+                            print 'File Stored successfully: '+f
+                            os.rename(fi,os.path.join(self.outputdir,os.path.basename(fi)[:-5]+'.sspl'))
+                        else:
+                            os.rename(fi,fi[:-5]+'.vspl')
+                                                
             else:
                 time.sleep(5)
     
