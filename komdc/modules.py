@@ -7,7 +7,6 @@ from komdb import api as dbapi
 from komdb import connection as dbcon
 from komcass import api as cassapi
 from komcass import connection as casscon
-from komfig import komlogger
 from komfs import api as fsapi
 from komapp import modules
         
@@ -34,8 +33,19 @@ class Validation(modules.Module):
             files.sort(key=lambda x: os.path.getmtime(x))
             if len(files)>0:
                 for f in files:
-                    if self.validate(f):
-                        os.rename(f,os.path.join(self.outputdir,os.path.basename(f)[:-5]+'.vspl'))                    
+                    try:
+                        os.rename(f,f[:-5]+'.qspl')
+                    except OSError:
+                        #other instance took it firts
+                        self.logger.error('File already treated by other module instance: '+f)
+                    else:
+                        print 'validating file: '+f
+                        fi = f[:-5]+'.qspl'
+                        if self.validate(fi):
+                            self.logger.debug('File validated successfully: '+f)
+                            os.rename(fi,os.path.join(self.outputdir,os.path.basename(fi)[:-5]+'.vspl'))
+                        else:
+                            os.rename(fi,fi[:-5]+'.pspl')                                            
             else:
                 time.sleep(5)
     
