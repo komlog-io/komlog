@@ -9,16 +9,16 @@ from komcass import api as cassapi
 from komcass import connection as casscon
 from komfs import api as fsapi
 from komapp import modules
+from komfig import komlogger
         
 class Validation(modules.Module):
     def __init__(self, config):
         super(Validation,self).__init__(config, self.__class__.__name__)
         self.watchdir = self.config.safe_get(sections.VALIDATION, options.SAMPLES_INPUT_PATH)
-        print self.watchdir
         self.outputdir = self.config.safe_get(sections.VALIDATION, options.SAMPLES_OUTPUT_PATH)
-        print self.outputdir
             
     def start(self):
+        self.logger = komlogger.getLogger(self.config.conf_file, self.name)
         self.logger.info('Module started')
         if not self.watchdir:
             self.logger.error('Key '+options.SAMPLES_INPUT_PATH+' not found')
@@ -39,7 +39,6 @@ class Validation(modules.Module):
                         #other instance took it firts
                         self.logger.error('File already treated by other module instance: '+f)
                     else:
-                        print 'validating file: '+f
                         fi = f[:-5]+'.qspl'
                         if self.validate(fi):
                             self.logger.debug('File validated successfully: '+f)
@@ -55,7 +54,7 @@ class Validation(modules.Module):
 
 class Storing(modules.Module):
     def __init__(self, config):
-        super(Storing,self).__init__(config, 'Storing')
+        super(Storing,self).__init__(config, self.__class__.__name__)
         self.cass_keyspace = self.config.safe_get(sections.STORING,options.CASS_KEYSPACE)
         self.cass_servlist = self.config.safe_get(sections.STORING,options.CASS_SERVLIST).split(',')
         try:
@@ -68,7 +67,7 @@ class Storing(modules.Module):
         self.outputdir = self.config.safe_get(sections.STORING, options.SAMPLES_OUTPUT_PATH)
  
     def start(self):
-        print 'Storing module started'
+        self.logger = komlogger.getLogger(self.config.conf_file, self.name)
         self.logger.info('Storing module started')
         if not self.cass_keyspace or not self.cass_poolsize or not self.cass_servlist:
             self.logger.error('Cassandra connection configuration keys not found')
@@ -97,10 +96,8 @@ class Storing(modules.Module):
                         #other instance took it firts
                         self.logger.error('File already treated by other module instance: '+f)
                     else:
-                        print 'Storing file: '+f
                         fi = f[:-5]+'.wspl'
                         if self.store(fi):
-                            print 'File Stored successfully: '+f
                             os.rename(fi,os.path.join(self.outputdir,os.path.basename(fi)[:-5]+'.sspl'))
                         else:
                             os.rename(fi,fi[:-5]+'.vspl')
@@ -113,24 +110,19 @@ class Storing(modules.Module):
         datasourceid = filename.split('_')[1].split('.')[0]
         date = dateutil.parser.parse(os.path.basename(filename).split('_')[0])
         udata = fsapi.get_file_content(filename)
-        print 'Get the file content before storing'
         # Register the sample
         try:
             sid = 0
             sid = dbapi.create_sample(datasourceid, date, self.sql_connection.session)
-            print 'Sample created on pgsql: '+str(sid)
             if sid > 0:
                 cassapi.create_sample(sid, udata, self.samples_cf)
-                print 'Stored successfully on cassandra'
                 self.logger.debug(filename+' stored successfully with sid: '+str(sid))
                 return True
             else:
-                print 'Error, sid<0'
                 self.logger.error('Storing '+filename)
                 return False
         except Exception as e:
             #rollback
-            print 'Exception Storing: '+str(e)
             self.logger.exception('Exception storing sample '+filename+': '+str(e))
             try:
                 if sid > 0:

@@ -52,13 +52,14 @@ class Komapp(object):
                 if not instances:
                     instances=1
                 else:
-                    instances=int(instances)-1 if int(instances)>0 else 0
+                    instances=int(instances)
                 try:
                     for c in modules.Module.__subclasses__():
                         if c.__name__ == module[0].upper()+module[1:]:
                             for i in range(instances):
                                 modobj = (c(self.config),i)
                                 modules_enabled.append(modobj)
+                                modobj = None
                 except NameError as e:
                     self.logger.exception('Module not found: '+str(e))
         self.modules = modules_enabled
