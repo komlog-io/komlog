@@ -1,3 +1,3 @@
 MODULES = 'modules'
 MODULE_ENABLED = 'enabled'
-MODULE_INSTANCES = 'instances_number'
+MODULE_INSTANCES = 'instances'

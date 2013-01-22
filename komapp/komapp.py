@@ -48,13 +48,15 @@ class Komapp(object):
         for module in self.config.safe_get(sections.MAIN,options.MODULES).split(','):
             mod_section='module_'+module
             if str(self.config.safe_get(mod_section, options.MODULE_ENABLED)).lower() == 'yes':
-                instances = int(self.config.safe_get(mod_section, options.MODULE_INSTANCES))
+                instances = self.config.safe_get(mod_section, options.MODULE_INSTANCES)
                 if not instances:
                     instances=1
+                else:
+                    instances=int(instances)-1 if int(instances)>0 else 0
                 try:
                     for c in modules.Module.__subclasses__():
                         if c.__name__ == module[0].upper()+module[1:]:
-                            for i in instances:
+                            for i in range(instances):
                                 modobj = (c(self.config),i)
                                 modules_enabled.append(modobj)
                 except NameError as e:

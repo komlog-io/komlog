@@ -6,11 +6,11 @@ import os
 
 
 
-def process(data, context, sql_session):
+def process(data, context, dir, sql_session):
     """
     The purpose of these functions is to process the service call
     """
-    return globals()[context.lower()](data, sql_session)
+    return globals()[context.lower()](data, dir, sql_session)
 
 def wsupload_sample(data, dir, sql_session):
     """

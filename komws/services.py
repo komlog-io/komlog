@@ -20,16 +20,19 @@ class Services(soap.SOAPPublisher):
         
         context='wsupload_sample'
         try:
+            print 'check'
             checkws.check(data, context)
         except exceptions.InvalidData:
             return codes.INVALID_DATA_ERROR
 
         try:
+            print 'auth'
             authws.authenticate(data, context, self.sql_connection.session)
         except exceptions.AuthenticationError:
             return codes.AUTHENTICATION_ERROR
 
         try:
+            print 'proc'
             procws.process(data, context, self.data_dir, self.sql_connection.session)
         except exceptions.ProcessingError:
             return codes.SERVICE_ERROR
