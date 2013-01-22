@@ -68,7 +68,6 @@ class Komapp(object):
         if not module:
             for i,module in enumerate(self.modules):
                 p = Process(target=module[0].start,name=module[0].__class__.__name__+'-'+str(module[1]))
-                print 'starting module: '+str(p)
                 self.logger.info('Starting module: '+str(p))
                 p.start()
                 self.processes.insert(i,p)
