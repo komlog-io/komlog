@@ -57,7 +57,7 @@ class Komapp(object):
                     for c in modules.Module.__subclasses__():
                         if c.__name__ == module[0].upper()+module[1:]:
                             for i in range(instances):
-                                modobj = (c(self.config),i)
+                                modobj = (c(self.config,i),i)
                                 modules_enabled.append(modobj)
                                 modobj = None
                 except NameError as e:

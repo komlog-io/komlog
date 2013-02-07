@@ -12,8 +12,8 @@ from komapp import modules
 from komfig import komlogger
         
 class Validation(modules.Module):
-    def __init__(self, config):
-        super(Validation,self).__init__(config, self.__class__.__name__)
+    def __init__(self, config, instance_number):
+        super(Validation,self).__init__(config, self.__class__.__name__, instance_number)
         self.watchdir = self.config.safe_get(sections.VALIDATION, options.SAMPLES_INPUT_PATH)
         self.outputdir = self.config.safe_get(sections.VALIDATION, options.SAMPLES_OUTPUT_PATH)
             
@@ -53,8 +53,8 @@ class Validation(modules.Module):
         return True
 
 class Storing(modules.Module):
-    def __init__(self, config):
-        super(Storing,self).__init__(config, self.__class__.__name__)
+    def __init__(self, config, instance_number):
+        super(Storing,self).__init__(config, self.__class__.__name__, instance_number)
         self.cass_keyspace = self.config.safe_get(sections.STORING,options.CASS_KEYSPACE)
         self.cass_servlist = self.config.safe_get(sections.STORING,options.CASS_SERVLIST).split(',')
         try:
