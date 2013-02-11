@@ -12,6 +12,7 @@ import exceptions
 from qpid.messaging import Message
 
 BASE_IMC_ADDRESS = 'pro.komlog.internal.imc.address'
+QPID_ADDR_OPTIONS='; {create:always}'
 
 STORE_SAMPLE_MESSAGE='STOSMP'
 
@@ -37,6 +38,7 @@ def get_address(type, module_id, module_instance, running_host):
     address = address.replace('%m',module_id)
     address = address.replace('%i',module_instance)
     address = '.'.join(BASE_IMC_ADDRESS,address)
+    address = address+QPID_ADDR_OPTIONS
     return address
 
     
