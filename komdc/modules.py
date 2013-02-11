@@ -48,10 +48,14 @@ class Validation(modules.Module):
                     else:
                         fi = f[:-5]+'.qspl'
                         if self.validate(fi):
-                            self.logger.debug('File validated successfully: '+f)
-                            fo = os.path.join(self.outputdir,os.path.basename(fi)[:-5]+'.vspl')
-                            os.rename(fi, fo)
-                            self.message_bus.sendMessage(messages.StoreSampleMessage(sample_file=fo))
+                            try:
+                                self.logger.debug('File validated successfully: '+f)
+                                fo = os.path.join(self.outputdir,os.path.basename(fi)[:-5]+'.vspl')
+                                os.rename(fi, fo)
+                                self.message_bus.sendMessage(messages.StoreSampleMessage(sample_file=fo))
+                            except Exception:
+                                self.logger.exception('Error sending: STORE_SAMPLE_MESSAGE')
+                                os.rename(fo,fi)
                         else:
                             os.rename(fi,fi[:-5]+'.pspl')                                            
             else:
@@ -102,6 +106,7 @@ class Storing(modules.Module):
     def __loop(self):
         while True:
             message = self.message_bus.retrieveMessage(messages.STORE_SAMPLE_MESSAGE)
+            self.message_bus.ackMessage()
             f = message.sample_file
             try:
                 os.rename(f,f[:-5]+'.wspl')

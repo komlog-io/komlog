@@ -11,7 +11,7 @@ messages: komlog custom messages class implementations for inter module communic
 import exceptions
 from qpid.messaging import Message
 
-BASE_IMC_ADDRESS = 'pro.komlog.internal.imc.address'
+BASE_IMC_ADDRESS = 'pro.komlog.internal.imc.address.'
 QPID_ADDR_OPTIONS='; {create:always}'
 
 STORE_SAMPLE_MESSAGE='STOSMP'
@@ -36,8 +36,8 @@ def get_address(type, module_id, module_instance, running_host):
     address = MESSAGE_TO_ADDRESS_MAPPING[type]
     address = address.replace('%h',running_host)
     address = address.replace('%m',module_id)
-    address = address.replace('%i',module_instance)
-    address = '.'.join(BASE_IMC_ADDRESS,address)
+    address = address.replace('%i',str(module_instance))
+    address = BASE_IMC_ADDRESS+address
     address = address+QPID_ADDR_OPTIONS
     return address
 
