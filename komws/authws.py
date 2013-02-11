@@ -2,13 +2,13 @@ from komdb import api
 from komdb import exceptions as dbex
 import exceptions as wsex
 
-def authenticate(data, context, sql_session):
+def authenticate(data, context, extra_vars):
     """
     The purpose of these functions is to authenticate the client who queries the web service
     """
-    globals()[context.lower()](data, sql_session)
+    globals()[context.lower()](data, extra_vars)
 
-def wsupload_sample(data, sql_session):
+def wsupload_sample(data, extra_vars):
     """
     data:
             - username
@@ -22,6 +22,7 @@ def wsupload_sample(data, sql_session):
         - authenticate agent
         - confirm datasource belonging
     """
+    sql_session=extra_vars['sql_session']
     try:
         user = api.User(username=data.username, session=sql_session)
         if user.validate(data.password):
@@ -37,7 +38,7 @@ def wsupload_sample(data, sql_session):
     else:
         raise wsex.AuthenticationError
 
-def wsdownload_config(data, sql_session):
+def wsdownload_config(data, extra_vars):
     """
     data:
             - username
@@ -47,6 +48,7 @@ def wsdownload_config(data, sql_session):
         - authenticate user
         - authenticate agent
     """
+    sql_session=extra_vars['sql_session']
     try:
         user = api.User(username=data.username,session=sql_session)
         if user.validate(data.password):

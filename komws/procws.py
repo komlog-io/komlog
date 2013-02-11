@@ -6,13 +6,13 @@ import os
 
 
 
-def process(data, context, dir, sql_session):
+def process(data, context, extra_vars):
     """
     The purpose of these functions is to process the service call
     """
-    return globals()[context.lower()](data, dir, sql_session)
-
-def wsupload_sample(data, dir, sql_session):
+    return globals()[context.lower()](data, extra_vars)
+    
+def wsupload_sample(data, extra_vars):
     """
     data:
             - username
@@ -26,6 +26,7 @@ def wsupload_sample(data, dir, sql_session):
     """
     try:
         name = data.date+'_'+str(data.datasourceid)+'.pspl'
+        dir = extra_vars['dir']
         dest_file = os.path.join(dir,name) 
         fsapi.create_sample(dest_file, data.filecontent)
     except Exception as e:
@@ -34,7 +35,7 @@ def wsupload_sample(data, dir, sql_session):
     else:
         return True
 
-def wsdownload_config(data, sql_session):
+def wsdownload_config(data, extra_vars):
     """
     data:
             - username
@@ -45,6 +46,7 @@ def wsdownload_config(data, sql_session):
             - return all configuration to the agent            
     """
     configuration = []
+    sql_session=extra_vars['sql_session']
     try:
         user = dbapi.User(username=data.username, session=sql_session)
         for agent in user.getAgents(sql_session):

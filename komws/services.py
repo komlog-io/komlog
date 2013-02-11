@@ -3,9 +3,10 @@ import checkws, authws, procws, codes, exceptions
 
 
 class Services(soap.SOAPPublisher):
-    def __init__(self, sql_connection, data_dir):
+    def __init__(self, sql_connection, data_dir, logger):
         self.sql_connection = sql_connection
         self.data_dir = data_dir
+        self.logger = logger
         
     """Here we publish our methods"""
     def soap_wsUploadSample(self,data):
@@ -19,21 +20,24 @@ class Services(soap.SOAPPublisher):
         """
         
         context='wsupload_sample'
+        self.logger.debug('Service called: '+context)
+        self.logger.debug('Received data: '+str(data))
+        extras = {'dir':self.data_dir,'sql_session':self.sql_connection.session}
         try:
-            print 'check'
+            self.logger.debug('check')
             checkws.check(data, context)
         except exceptions.InvalidData:
             return codes.INVALID_DATA_ERROR
 
         try:
             print 'auth'
-            authws.authenticate(data, context, self.sql_connection.session)
+            authws.authenticate(data, context, extras)
         except exceptions.AuthenticationError:
             return codes.AUTHENTICATION_ERROR
 
         try:
             print 'proc'
-            procws.process(data, context, self.data_dir, self.sql_connection.session)
+            procws.process(data, context, extras)
         except exceptions.ProcessingError:
             return codes.SERVICE_ERROR
         else:
@@ -51,24 +55,32 @@ class Services(soap.SOAPPublisher):
                 - agentid
         """
         context='wsdownload_config'
+        self.logger.debug('Service called: '+context)
+        self.logger.debug('Received data: '+str(data))
+        extras = {'sql_session':self.sql_connection.session}
         try:
-            print 'check called'
+            self.logger.debug('check called')
             checkws.check(data, context)
         except exceptions.InvalidData:
             return codes.INVALID_DATA_ERROR
 
         try:
-            print 'auth called'
-            authws.authenticate(data, context, self.sql_connection.session)
+            self.logger.debug('auth called')
+            authws.authenticate(data, context, extras)
+            self.logger.debug('auth finished')
         except exceptions.AuthenticationError:
             return codes.AUTHENTICATION_ERROR
 
         try:
-            print 'proc called'
-            config = procws.process(data, context, self.sql_connection.session)
+            self.logger.debug('proc called')
+            config = procws.process(data, context, extras)
+            self.logger.debug('proc finished')
         except exceptions.ProcessingError:
+            self.logger.debug('Service Response: SERVICE_ERROR (ProcessingError)')
             return codes.SERVICE_ERROR
         else:
-            return(config)
+            self.logger.debug('Service Response: '+str(config))
+            return config
+        self.logger.debug('Service Response: SERVICE_ERROR')
         return codes.SERVICE_ERROR
     

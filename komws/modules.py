@@ -39,7 +39,7 @@ class Soapserver(modules.Module):
     def __loop(self):
         while True:
             self.logger.info('Starting web server')
-            reactor.listenTCP(int(self.listen_port),server.Site(services.Services(self.sql_connection, self.data_dir)),interface=self.listen_addr)
+            reactor.listenTCP(int(self.listen_port),server.Site(services.Services(self.sql_connection, self.data_dir, self.logger)),interface=self.listen_addr)
             reactor.run()
             self.logger.critical('Detected web server failure, restarting in 3 seconds')
             time.sleep(3)
