@@ -1,6 +1,7 @@
 from komdb import connection as dbcon
 import sections, options, services
 from komapp import modules
+from komfig import komlogger
 import time
 from twisted.internet import reactor
 from twisted.web import server
@@ -9,14 +10,15 @@ import sys
 
 
 class Soapserver(modules.Module):
-    def __init__(self, config):
-        super(Soapserver,self).__init__(config, 'SOAPServer')
+    def __init__(self, config, instance_number):
+        super(Soapserver,self).__init__(config, 'SOAPServer', instance_number)
         self.sql_uri = self.config.safe_get(sections.SOAPSERVER, options.SQL_URI)
         self.listen_port = self.config.safe_get(sections.SOAPSERVER, options.LISTEN_PORT)
         self.listen_addr = self.config.safe_get(sections.SOAPSERVER, options.LISTEN_ADDR)
         self.data_dir = self.config.safe_get(sections.SOAPSERVER, options.DATA_DIR)
         
     def start(self):
+        self.logger = komlogger.getLogger(self.config.conf_file, self.name)
         self.logger.info('SOAPServer module started')
         if not self.sql_uri:
             self.logger.error('Key '+options.SQL_URI+' not found, stablishing default: localhost')
