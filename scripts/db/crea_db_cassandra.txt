@@ -1,0 +1,5 @@
+bin/cassandra-cli --host localhost
+create keyspace komlog;
+use komlog;
+create column family samples with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UTF8Type;
+create column family sample_m with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UTF8Type;
