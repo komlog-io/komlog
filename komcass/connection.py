@@ -14,9 +14,9 @@ class CF(object):
     def __init__(self, pool, keyspace):
         self.cf = pycassa.ColumnFamily(pool, keyspace)
     
-    def get(self, obj):
+    def get(self, obj,column_count=100):
         key = obj.key
-        dbdict = self.cf.get(key)
+        dbdict = self.cf.get(key,column_count=column_count)
         obj.dbdict = dbdict        
         return obj
     
@@ -30,3 +30,9 @@ class SamplesCF(CF):
     __keyspace__ = 'samples'
     def __init__(self, pool):
         super(SamplesCF,self).__init__(pool, self.__keyspace__)
+
+class SampleMapCF(CF):
+    __keyspace__ = 'sample_m'
+    def __init__(self, pool):
+        super(SampleMapCF,self).__init__(pool, self.__keyspace__)
+

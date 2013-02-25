@@ -115,9 +115,11 @@ class Storing(modules.Module):
                 self.logger.error('File already treated by other module instance: '+f)
             else:
                 fi = f[:-5]+'.wspl'
-                if self.store(fi):
+                sid=self.store(fi)
+                if sid>0:
                     fo = os.path.join(self.outputdir,os.path.basename(fi)[:-5]+'.sspl')
                     os.rename(fi,fo)
+                    self.message_bus.sendMessage(messages.MapVarsMessage(sid=sid))
                 else:
                     fo = fi[:-5]+'.xspl'
                     os.rename(fi,fo)
@@ -134,10 +136,10 @@ class Storing(modules.Module):
             if sid > 0:
                 cassapi.create_sample(sid, udata, self.samples_cf)
                 self.logger.debug(filename+' stored successfully with sid: '+str(sid))
-                return True
+                return sid
             else:
                 self.logger.error('Storing '+filename)
-                return False
+                return -1
         except Exception as e:
             #rollback
             self.logger.exception('Exception storing sample '+filename+': '+str(e))
@@ -147,7 +149,7 @@ class Storing(modules.Module):
                 cassapi.remove_sample(sid, self.samples_cf)
             except Exception as e:
                 self.logger.exception('Exception in Rollback storing sample '+filename+': '+str(e))
-                return False
+                return -1
             else:
-                return False
+                return -1
         

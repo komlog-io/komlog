@@ -7,3 +7,5 @@ Created on 14/12/2012
 
 class AlreadyExistingSample(Exception):
     pass
+class AlreadyExistingSampleMap(Exception):
+    pass

@@ -10,10 +10,10 @@ from pycassa.cassandra.ttypes import NotFoundException
 class Sample(object):
     def __init__(self, sid, content=None, session=None):
         if session:
-            self.dbsample = session.get(schema.SampleORM(key=str(sid)))
-            self.sid = self.dbsample.sid
-            self.dbdict = self.dbsample.dbdict #utf-8 format
-            self.content = ''.join(self.dbdict.values()).decode('utf8')
+            self.dbsample = session.get(schema.SampleORM(key=str(sid)),column_count=10000)
+            self.sid = self.dbsample.key
+            self.dbdict = self.dbsample.dbdict #unicode? no se por que
+            self.content=u''.join(self.dbdict.values())
         else:
             self.dbsample = None
             self.sid = str(sid)
@@ -26,7 +26,10 @@ class Sample(object):
                 index+=1
     
 def get_sample(sid, session):
-    return Sample(sid=sid, session=session)
+    try:
+        return Sample(sid=sid, session=session)
+    except NotFoundException:
+        return None
 
 def get_sample_list(sids, session):
     samples = []
@@ -53,5 +56,45 @@ def remove_sample(sid, session):
     else:
         session.remove(schema.SampleORM(key=sample.sid))
         return True
-        
-            
+
+class SampleMap(object):
+    def __init__(self, sid, content=None, session=None):
+        if session:
+            self.dbsample = session.get(schema.SampleMapORM(key=str(sid)), column_count=100000)
+            self.sid = self.dbsample.key
+            self.dbdict = self.dbsample.dbdict #utf-8 format
+            self.content={}
+            for key in self.dbdict.keys():
+                col_name=key.decode('utf-8')
+                self.content[key]=self.dbdict[key].decode('utf-8')
+        else:
+            self.dbsample = None
+            self.sid = str(sid)
+            self.content = content # unicode
+            self.dbdict = {}
+            for key in self.content.keys():
+                col_name = str(key)
+                self.dbdict[col_name]=self.content[key].encode('utf8')
+          
+def get_sample_map(sid, session):
+    return SampleMap(sid=sid, session=session)
+
+def create_sample_map(sid, content, session):
+    try:
+        print 'Creando sample Map'
+        sample_m = SampleMap(sid=sid,session=session)
+    except NotFoundException:
+        print 'No existe el sample map en cassandra, correcto lo creamos'
+        sample_m = SampleMap(sid=sid, content=content)
+        session.insert(schema.SampleMapORM(key=sample_m.sid, dbdict=sample_m.dbdict))
+    else:
+        raise exceptions.AlreadyExistingSampleMap()
+
+def remove_sample_map(sid, session):
+    try:
+        sample_m = SampleMap(sid=sid, session=session)
+    except NotFoundException:
+        return True
+    else:
+        session.remove(schema.SampleMapORM(key=sample_m.sid))
+        return True

@@ -16,4 +16,8 @@ class SampleORM(CassandraBase):
         super(SampleORM,self).__init__(key, dbdict)
         
         
-            
+class SampleMapORM(CassandraBase):
+    __keyspace__ = 'sample_m'
+
+    def __init__(self, key=None, dbdict=None):
+        super(SampleMapORM,self).__init__(key, dbdict)
