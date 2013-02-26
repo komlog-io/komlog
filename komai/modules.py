@@ -43,14 +43,15 @@ class Textmining(modules.Module):
     
     def __loop(self):
         while True:
-            message = self.message_bus.retrieveMessage(messages.MAP_VARS_MESSAGE)
+            message = self.message_bus.retrieveMessage(from_modaddr=True)
             self.message_bus.ackMessage()
-            message_type=message.type
-            if message_type==messages.MAP_VARS_MESSAGE:
+            mtype=message.type
+            if mtype==messages.MAP_VARS_MESSAGE:
                 if self.process_MAP_VARS_MESSAGE(message):
+                    self.logger.debug('Mesage completed successfully: '+mtype)
                     pass
             else:
-                self.logger.error('Message Type not supported: '+message_type)
+                self.logger.error('Message Type not supported: '+mtype)
                 self.message_bus.sendMessage(message)
     
     def process_MAP_VARS_MESSAGE(self, message):

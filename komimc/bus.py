@@ -18,6 +18,7 @@ class MessageBus:
         self.module_instance = module_instance
         self.running_host = running_host
         self.connection = Connection(self.broker)
+        self.mod_address,self.mod_address_opts = messages.get_mod_address(module_id,module_instance,running_host)
         self.senders={}
         self.receivers={}
         self.logger = logger
@@ -32,30 +33,42 @@ class MessageBus:
     
     def sendMessage(self, komlog_message):
         try:
-            if not self.senders.has_key(komlog_message.type):
-                self.senders[komlog_message.type]=self.session.sender(messages.get_address(komlog_message.type,self.module_id, self.module_instance, self.running_host))
-            self.senders[komlog_message.type].send(komlog_message.qpid_message)
+            addr,opts=messages.get_address(komlog_message.type,self.module_id, self.module_instance, self.running_host)
+            if not self.senders.has_key(addr):
+                if addr == None:
+                    self.logger.error('Invalid send address: None')
+                    return False 
+                self.senders[addr]=self.session.sender(addr+opts)
+            self.senders[addr].send(komlog_message.qpid_message)
             self.logger.debug('Message sent of type :'+komlog_message.type)
         except MessagingError as e:
             self.logger.exception('Exception sending message: '+str(e))
             return False
         return True
     
-    def retrieveMessage(self, message_type, timeout=0):
+    def retrieveMessage(self, message_type=None, from_modaddr=False, timeout=0):
+        if from_modaddr==False:
+            addr,opts=messages.get_address(message_type,self.module_id, self.module_instance, self.running_host)
+        else:
+            addr,opts=self.mod_address,self.mod_address_opts
         try:
-            if not self.receivers.has_key(message_type):
-                self.receivers[message_type]=self.session.receiver(messages.get_address(message_type,self.module_id, self.module_instance, self.running_host))
+            if not self.receivers.has_key(addr):
+                if addr == None:
+                    self.logger.error('Invalid retrieve address: None')
+                    return None
+                self.receivers[addr]=self.session.receiver(addr+opts)
             if timeout == 0:
-                message = self.receivers[message_type].fetch()
+                message = self.receivers[addr].fetch()
             else:
-                message = self.receivers[message_type].fetch(timeout)
-            self.logger.debug('Message received of type :'+message_type)
-            return getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[message_type])(qpid_message=message)
+                message = self.receivers[addr].fetch(timeout)
+            mtype = message.content.split('|')[0]
+            self.logger.debug('Message received of type: '+mtype)
+            return getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[mtype])(qpid_message=message)
         except MessagingError as e:
             self.logger.exception('Exception retrieving message: '+str(e))
-            return None 
+            return None
         except AttributeError as e:
-            self.logger.exception('Cannot map message_type to message_class: '+str(e))
+            self.logger.exception('Cannot map message.type to message Class: '+str(e))
             return None
     
     def ackMessage(self):
@@ -63,12 +76,4 @@ class MessageBus:
             self.session.acknowledge()
         except Exception:
             self.logger.exception('Error acknowledging message')
-        
-        
-        
-            
-        
-            
-            
-            
         

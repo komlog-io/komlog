@@ -105,51 +105,64 @@ class Storing(modules.Module):
     
     def __loop(self):
         while True:
-            message = self.message_bus.retrieveMessage(messages.STORE_SAMPLE_MESSAGE)
+            message = self.message_bus.retrieveMessage(from_modaddr=True)
             self.message_bus.ackMessage()
+            mtype = message.type
+            if mtype==messages.STORE_SAMPLE_MESSAGE:
+                self.logger.debug('Message received: '+mtype)
+                sid=self.process_STORE_SAMPLE_MESSAGE(message)
+                if sid>0:
+                    self.logger.debug('Message completed successfully: '+mtype)
+                    if not self.message_bus.sendMessage(messages.MapVarsMessage(sid=sid)):
+                        self.logger.error('Error sending Message: '+messages.MAP_VARS_MESSAGE)
+                    self.logger.debug('Message sent: '+messages.MAP_VARS_MESSAGE)
+                else:
+                    self.logger.error('Error processing message: '+mtype)
+            else:
+                self.logger.error('Message Type not supported: '+mtype)
+                self.message_bus.sendMessage(message)
+
+    def process_STORE_SAMPLE_MESSAGE(self, message):
             f = message.sample_file
             try:
                 os.rename(f,f[:-5]+'.wspl')
             except OSError:
             #other instance took it firts (it shouldn't because messages must be sent once)
                 self.logger.error('File already treated by other module instance: '+f)
+                return -1 
             else:
-                fi = f[:-5]+'.wspl'
-                sid=self.store(fi)
-                if sid>0:
-                    fo = os.path.join(self.outputdir,os.path.basename(fi)[:-5]+'.sspl')
-                    os.rename(fi,fo)
-                    self.message_bus.sendMessage(messages.MapVarsMessage(sid=sid))
-                else:
-                    fo = fi[:-5]+'.xspl'
-                    os.rename(fi,fo)
-    
-    def store(self, filename):
-        self.logger.debug('Storing '+filename)
-        datasourceid = filename.split('_')[1].split('.')[0]
-        date = dateutil.parser.parse(os.path.basename(filename).split('_')[0])
-        udata = fsapi.get_file_content(filename)
-        # Register the sample
-        try:
-            sid = 0
-            sid = dbapi.create_sample(datasourceid, date, self.sql_connection.session)
-            if sid > 0:
-                cassapi.create_sample(sid, udata, self.samples_cf)
-                self.logger.debug(filename+' stored successfully with sid: '+str(sid))
-                return sid
-            else:
-                self.logger.error('Storing '+filename)
-                return -1
-        except Exception as e:
-            #rollback
-            self.logger.exception('Exception storing sample '+filename+': '+str(e))
+                filename = f[:-5]+'.wspl'
+            
+            self.logger.debug('Storing '+filename)
+            datasourceid = filename.split('_')[1].split('.')[0]
+            date = dateutil.parser.parse(os.path.basename(filename).split('_')[0])
+            udata = fsapi.get_file_content(filename)
+            # Register the sample
             try:
+                sid = 0
+                sid = dbapi.create_sample(datasourceid, date, self.sql_connection.session)
                 if sid > 0:
-                    dbapi.delete_sample(sid, self.sql_connection.session)
-                cassapi.remove_sample(sid, self.samples_cf)
+                    cassapi.create_sample(sid, udata, self.samples_cf)
+                    self.logger.debug(filename+' stored successfully with sid: '+str(sid))
+                else:
+                    self.logger.error('Storing '+filename)
             except Exception as e:
-                self.logger.exception('Exception in Rollback storing sample '+filename+': '+str(e))
-                return -1
+                #rollback
+                self.logger.exception('Exception storing sample '+filename+': '+str(e))
+                try:
+                    if sid > 0:
+                        dbapi.delete_sample(sid, self.sql_connection.session)
+                    cassapi.remove_sample(sid, self.samples_cf)
+                except Exception as e:
+                    self.logger.exception('Exception in Rollback storing sample '+filename+': '+str(e))
+                    sid=-1
+                else:
+                    sid=-1
+            if sid>0:
+                fo = os.path.join(self.outputdir,os.path.basename(filename)[:-5]+'.sspl')
+                os.rename(filename,fo)
             else:
-                return -1
-        
+                fo = filename[:-5]+'.xspl'
+                os.rename(filename,fo)
+            return sid
+
