@@ -11,28 +11,47 @@ class Pool(object):
         self.connection_pool = pycassa.ConnectionPool(keyspace,server_list,pool_size=pool_size)
 
 class CF(object):
-    def __init__(self, pool, keyspace):
-        self.cf = pycassa.ColumnFamily(pool, keyspace)
+    def __init__(self, pool):
+        self.pool = pool.connection_pool
+        self.cf = {}
     
-    def get(self, obj,column_count=100):
-        key = obj.key
-        dbdict = self.cf.get(key,column_count=column_count)
-        obj.dbdict = dbdict        
-        return obj
+    def get(self, obj,kwargs={}):
+        try:
+            key = obj.key
+            dbdict = self.cf[obj.__cf__].get(key,**kwargs)
+            obj.dbdict = dbdict        
+            return obj
+        except KeyError:
+            self.__new_cf(obj.__cf__)
+            dbdict = self.cf[obj.__cf__].get(key,**kwargs)
+            obj.dbdict = dbdict
+            return obj
     
     def insert(self, obj):
-        self.cf.insert(obj.key,obj.dbdict)
+        try:
+            self.cf[obj.__cf__].insert(obj.key,obj.dbdict)
+            return True
+        except KeyError:
+            self.__new_cf(obj.__cf__)
+            self.cf[obj.__cf__].insert(obj.key,obj.dbdict)
+            return True
+        else:
+            return False
     
-    def remove(self, obj):
-        self.cf.remove(key=obj.key)
+    def remove(self, obj,kwargs={}):
+        try:
+            self.cf[obj.__cf__].remove(key=obj.key,**kwargs)
+            return True
+        except KeyError:
+            self.__new_cf(obj.__cf__)
+            self.cf[obj.__cf__].remove(key=obj.key,**kwargs)
+            return True
+        else:
+            return False
 
-class SamplesCF(CF):
-    __keyspace__ = 'samples'
-    def __init__(self, pool):
-        super(SamplesCF,self).__init__(pool, self.__keyspace__)
+    def __new_cf(self, cf):
+        self.cf[cf]=pycassa.ColumnFamily(self.pool,cf)
 
-class SampleMapCF(CF):
-    __keyspace__ = 'sample_m'
-    def __init__(self, pool):
-        super(SampleMapCF,self).__init__(pool, self.__keyspace__)
+    def __del_cf(self, cf):
+        self.cf[cf]=None
 

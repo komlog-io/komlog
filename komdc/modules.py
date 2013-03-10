@@ -2,6 +2,7 @@ import sections, options
 import os
 import glob
 import time
+import uuid
 import dateutil.parser
 from komdb import api as dbapi
 from komdb import connection as dbcon
@@ -68,38 +69,35 @@ class Validation(modules.Module):
 class Storing(modules.Module):
     def __init__(self, config, instance_number):
         super(Storing,self).__init__(config, self.__class__.__name__, instance_number)
-        self.cass_keyspace = self.config.safe_get(sections.STORING,options.CASS_KEYSPACE)
-        self.cass_servlist = self.config.safe_get(sections.STORING,options.CASS_SERVLIST).split(',')
+        self.params={}
+        self.params['cass_keyspace'] = self.config.safe_get(sections.STORING,options.CASS_KEYSPACE)
+        self.params['cass_servlist'] = self.config.safe_get(sections.STORING,options.CASS_SERVLIST).split(',')
         try:
-            self.cass_poolsize = int(self.config.safe_get(sections.STORING,options.CASS_POOLSIZE))
+            self.params['cass_poolsize'] = int(self.config.safe_get(sections.STORING,options.CASS_POOLSIZE))
         except Exception:
             self.logger.error('Invalid '+options.CASS_POOLSIZE+'value: setting default (5)')
-            self.cass_poolsize = 5
-        self.sql_uri = self.config.safe_get(sections.STORING, options.SQL_URI)
-        self.watchdir = self.config.safe_get(sections.STORING, options.SAMPLES_INPUT_PATH)
-        self.outputdir = self.config.safe_get(sections.STORING, options.SAMPLES_OUTPUT_PATH)
-        self.broker = self.config.safe_get(sections.STORING, options.MESSAGE_BROKER)
-        if not self.broker:
-            self.broker = self.config.safe_get(sections.MAIN, options.MESSAGE_BROKER)
+            self.params['cass_poolsize'] = 5
+        self.params['watchdir'] = self.config.safe_get(sections.STORING, options.SAMPLES_INPUT_PATH)
+        self.params['outputdir'] = self.config.safe_get(sections.STORING, options.SAMPLES_OUTPUT_PATH)
+        self.params['broker'] = self.config.safe_get(sections.STORING, options.MESSAGE_BROKER)
+        if not self.params['broker']:
+            self.params['broker'] = self.config.safe_get(sections.MAIN, options.MESSAGE_BROKER)
 
     def start(self):
         self.logger = komlogger.getLogger(self.config.conf_file, self.name)
         self.logger.info('Storing module started')
-        if not self.cass_keyspace or not self.cass_poolsize or not self.cass_servlist:
+        if not self.params['cass_keyspace'] or not self.params['cass_poolsize'] or not self.params['cass_servlist']:
             self.logger.error('Cassandra connection configuration keys not found')
-        elif not self.watchdir:
+        elif not self.params['watchdir']:
             self.logger.error('Key '+options.SAMPLES_INPUT_PATH+' not found')
-        elif not self.outputdir:
+        elif not self.params['outputdir']:
             self.logger.error('Key '+options.SAMPLES_OUTPUT_PATH+' not found')
-        elif not self.sql_uri:
-            self.logger.error('Key '+options.SQL_URI+' not found')
-        elif not self.broker:
+        elif not self.params['broker']:
             self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
         else:
-            self.cass_pool = casscon.Pool(keyspace=self.cass_keyspace, server_list=self.cass_servlist, pool_size=self.cass_poolsize)
-            self.samples_cf = casscon.SamplesCF(self.cass_pool.connection_pool)
-            self.sql_connection = dbcon.Connection(self.sql_uri)
-            self.message_bus = bus.MessageBus(self.broker, self.name, self.instance_number, self.hostname, self.logger)
+            self.cass_pool = casscon.Pool(keyspace=self.params['cass_keyspace'], server_list=self.params['cass_servlist'], pool_size=self.params['cass_poolsize'])
+            self.cass_cf = casscon.CF(self.cass_pool)
+            self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
             self.__loop()
         self.logger.info('Storing module exiting')
     
@@ -110,10 +108,10 @@ class Storing(modules.Module):
             mtype = message.type
             if mtype==messages.STORE_SAMPLE_MESSAGE:
                 self.logger.debug('Message received: '+mtype)
-                sid=self.process_STORE_SAMPLE_MESSAGE(message)
-                if sid>0:
+                did,date=self.process_STORE_SAMPLE_MESSAGE(message)
+                if did:
                     self.logger.debug('Message completed successfully: '+mtype)
-                    if not self.message_bus.sendMessage(messages.MapVarsMessage(sid=sid)):
+                    if not self.message_bus.sendMessage(messages.MapVarsMessage(did=did,date=date)):
                         self.logger.error('Error sending Message: '+messages.MAP_VARS_MESSAGE)
                     self.logger.debug('Message sent: '+messages.MAP_VARS_MESSAGE)
                 else:
@@ -135,34 +133,30 @@ class Storing(modules.Module):
             
             self.logger.debug('Storing '+filename)
             datasourceid = filename.split('_')[1].split('.')[0]
+            if datasourceid == str(152):
+                datasourceid = uuid.UUID('7aaedfc9-3850-4752-957f-70f6ccd03d26')
+            elif datasourceid == str(156):
+                datasourceid = uuid.UUID('31da904f-26a1-4959-be3b-f819963110ab')
+            else:
+                datasourceid = uuid.UUID(datasourceid)
             date = dateutil.parser.parse(os.path.basename(filename).split('_')[0])
             udata = fsapi.get_file_content(filename)
-            # Register the sample
+            dsobj=cassapi.DatasourceData(did=datasourceid,date=date,content=udata)
             try:
-                sid = 0
-                sid = dbapi.create_sample(datasourceid, date, self.sql_connection.session)
-                if sid > 0:
-                    cassapi.create_sample(sid, udata, self.samples_cf)
-                    self.logger.debug(filename+' stored successfully with sid: '+str(sid))
+                if cassapi.insert_datasourcedata(dsobj,self.cass_cf):
+                    self.logger.debug(filename+' stored successfully : '+str(datasourceid)+' '+str(date))
+                    fo = os.path.join(self.params['outputdir'],os.path.basename(filename)[:-5]+'.sspl')
+                    os.rename(filename,fo)
+                    return datasourceid,date
                 else:
-                    self.logger.error('Storing '+filename)
+                    fo = filename[:-5]+'.xspl'
+                    os.rename(filename,fo)
+                    return None,None
             except Exception as e:
-                #rollback
-                self.logger.exception('Exception storing sample '+filename+': '+str(e))
-                try:
-                    if sid > 0:
-                        dbapi.delete_sample(sid, self.sql_connection.session)
-                    cassapi.remove_sample(sid, self.samples_cf)
-                except Exception as e:
-                    self.logger.exception('Exception in Rollback storing sample '+filename+': '+str(e))
-                    sid=-1
-                else:
-                    sid=-1
-            if sid>0:
-                fo = os.path.join(self.outputdir,os.path.basename(filename)[:-5]+'.sspl')
-                os.rename(filename,fo)
-            else:
+                cassapi.remove_datasourcedata(datasourceid,date,self.cass_cf)
+                self.logger.exception('Exception inserting sample: '+str(e))
                 fo = filename[:-5]+'.xspl'
                 os.rename(filename,fo)
-            return sid
+                return None,None
+
 
