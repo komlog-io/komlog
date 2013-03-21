@@ -43,12 +43,18 @@ class DatapointInfo:
             self.dbcols = dbdict
             if self.dbcols.has_key('did'):
                 self.did=uuid.UUID(self.dbcols['did'])
-            if self.dbcols.has_key('positives'):
+            try:
                 self.dbcols['positives']=json.loads(self.dbcols['positives'])
-            if self.dbcols.has_key('negatives'):
+            except KeyError:
+                self.dbcols['positives']=[]
+            try:
                 self.dbcols['negatives']=json.loads(self.dbcols['negatives'])
-            if self.dbcols.has_key('dtree'):
+            except KeyError:
+                self.dbcols['negatives']=[]
+            try:
                 self.dbcols['dtree']=json.loads(self.dbcols['dtree'])
+            except KeyError:
+                self.dbcols['dtree']=[]
         else:
             self.did=did
             self.pid=pid
@@ -73,6 +79,12 @@ class DatapointInfo:
             self.prestore()
     
     def prestore(self):
+        if type(self.dbcols['dtree'])==list:
+            self.dbcols['dtree']=json.dumps(self.dbcols['dtree'])
+        if type(self.dbcols['positives'])==list:
+            self.dbcols['positives']=json.dumps(self.dbcols['positives'])
+        if type(self.dbcols['negatives'])==list:
+            self.dbcols['negatives']=json.dumps(self.dbcols['negatives'])
         self.key=self.pid
         self.dbdict=self.dbcols
 
@@ -92,6 +104,7 @@ def register_dtp(dtp,dsdtprelation,session):
         dsdtprelation.dtps.insert(0,dtp.pid)
         dsdtprelation.prestore()
         session.insert(schema.DsDtpRelationORM(key=dsdtprelation.key, dbdict=dsdtprelation.dbdict))
+        dtp.prestore()
         session.insert(schema.DatapointInfoORM(key=dtp.key, dbdict=dtp.dbdict))
         return True
     except Exception:
@@ -104,6 +117,14 @@ def remove_dtp(dtp,dsdtprelation,session):
         kwargs={}
         kwargs['columns']=(dtp.pid,)
         session.remove(schema.DsDtpRelationORM(key=dsdtprelation.key, dbdict=dsdtprelation.dbdict),kwargs)
+        return True
+    except Exception as e:
+        return False
+
+def update_dtp(dtp,session):
+    try:
+        dtp.prestore()
+        session.insert(schema.DatapointInfoORM(key=dtp.key, dbdict=dtp.dbdict))
         return True
     except Exception as e:
         return False

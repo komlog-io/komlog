@@ -66,7 +66,6 @@ class Gestconsole(modules.Module):
         - Comprobamos que la variable exista en el sample (ds en un dtdo momento)
         - Comprobamos que la variable no pertenezca a un datapoint existente
         - Registramos el nuevo datapoint, marcando la variable como muestra positiva
-        - Al finalizar, fuera de esta funcion, solicitamos la generacion del arbol de decision: mensaje GDTREE
         '''
         did=message.did
         date=message.date
@@ -86,8 +85,10 @@ class Gestconsole(modules.Module):
             for pid in dsdtprelation.dtps:
                 dtpinfo=cassapi.get_dtpinfo(pid,dbcols={'dtree':u''},self.cf)
                 try:
-                    dtree=decisiontree.DecisionTree(dtpinfo.dbcols['dtree'])
-                    if dtree.evaluate(varlist.h):
+                    #TODO
+                    stored_dtree=dtpinfo.dbcols['dtree']
+                    dtree=decisiontree.DecisionTree(jsontree=json.dumps(stored_dtree))
+                    if dtree.evaluate_row(varlist.h):
                         return False,ALREADYMONITORED
                 except KeyError:
                     pass

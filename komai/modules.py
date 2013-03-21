@@ -1,13 +1,16 @@
 import sections, options
 import re
 import json
+import dateutil.parser
 from komcass import api as cassapi
 from komcass import connection as casscon
 from komapp import modules
 from komfig import komlogger
 from komimc import bus,messages
 from komlibs.textman import variables
+from komlibs.ai import decisiontree
 
+ERROR=1
 
 class Textmining(modules.Module):
     def __init__(self, config, instance_number):
@@ -47,11 +50,27 @@ class Textmining(modules.Module):
                 if self.process_MAP_VARS_MESSAGE(message):
                     self.logger.debug('Mesage completed successfully: '+mtype)
                     pass
+                else:
+                    self.logger.debug('Error procesing: '+mtype)
+            elif mtype==messages.GDTREE_MESSAGE:
+                result,pid=self.process_GDTREE_MESSAGE(message):
+                if result:
+                    self.logger.debug('Message completed successfully: '+mtype)
+                    pass
+                else:
+                    self.logger.debug('Error procesing: '+mtype)
             else:
                 self.logger.error('Message Type not supported: '+mtype)
                 self.message_bus.sendMessage(message)
     
     def process_MAP_VARS_MESSAGE(self, message):
+        '''
+        Los pasos son los siguientes:
+        - Obtenemos el datasource del mensaje
+        - Obtenemos el contenido
+        - extraemos las variables que contiene, con la informacion necesaria para ser identificadas univocamente
+        - almacenamos esta informacion en bbdd, por un lado todo el contenido de las variables recien extraido, y por otro el listado completo de variables de cada datasource, para acelerar las busquedas
+        '''
         did=message.did
         date=message.date
         varlist=[]
@@ -81,4 +100,46 @@ class Textmining(modules.Module):
         else:
             self.logger.error('Datasource data not found: '+str(did)+' '+str(date))
             return False
+
+    def process_GDTREE_MESSAGE(self, message):
+        '''
+        Los pasos son los siguientes:
+        - Obtenemos el pid del mensaje
+        - Obtenemos la informacion del datapoint
+        - creamos un listado con las muestras que contienen variables positivas o negativas (confirmadas o descartadas por el usuario)
+        - por cada una de las muestras, obtenemos las variables y las clasificamos segun la info obtenida del datapoint
+        - En base a la clasificacion obtenida, creamos el arbol de decision
+        - lo almacenamos en bbdd
+        '''
+        pid=message.pid
+        dptinfo=cassapi.get_dtpinfo(pid,{},self.cf)
+        did=dtpinfo.did
+        samples_to_get=[]
+        positives=dtpinfo.dbcols['positives']
+        negatives=dtpinfo.dbcols['negatives']
+        dtree_training_set=[]
+        for positive in positives:
+            date,var=positive.split('_')
+            samples_to_get.append({'date':dateutil.parser.parse(date),
+                                   'var':var,'result':True})
+        for negative in negatives:
+            date,var=negative.split('_')
+            samples_to_get.append({'date':dateutil.parser.parse(date),
+                                   'var':var,'result':False})
+        dsmaps=[]
+        for sample in samples_to_get:
+            dsmap=cassapi.get_datasourcemap(did,sample['date'],self.cf)
+            varlist=variables.get_varlist(jsoncontent=dsmap.content)
+            for var in varlist:
+                if str(var.s)==sample['var']:
+                    var.h['result']=sample['result']
+                else:
+                    var.h['result']=False
+                dtree_training_set.append(var.h)
+        dtree=decisiontree.DecisionTree(rawdata=dtree_training_set)
+        dtpinfo.dbcols['dtree']=dtree.get_jsontree()
+        if cassapi.update_dtp(dtpinfo,self.cf):
+            return True,pid
+        else:
+            return False,ERROR
 
