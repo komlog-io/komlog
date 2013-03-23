@@ -85,7 +85,6 @@ class Gestconsole(modules.Module):
             for pid in dsdtprelation.dtps:
                 dtpinfo=cassapi.get_dtpinfo(pid,dbcols={'dtree':u''},self.cf)
                 try:
-                    #TODO
                     stored_dtree=dtpinfo.dbcols['dtree']
                     dtree=decisiontree.DecisionTree(jsontree=json.dumps(stored_dtree))
                     if dtree.evaluate_row(varlist.h):

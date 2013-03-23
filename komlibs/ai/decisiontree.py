@@ -170,5 +170,21 @@ class DecisionTree:
             self.tree.append(DecisionTreeNode(**nodedict))
             
     def evaluate_row(self,row):
-        pass
-
+        def eval_node(parentid=None):
+            for node in self.tree:
+                if node.parentid==parentid:
+                    try:
+                        if row[node.attribute]==node.value:
+                            if node.endnode==True:
+                                return node.result
+                            else:
+                                return eval_node(parentid=node.nodeid)
+                        else:
+                            return False
+                    except KeyError:
+                        if node.attribute=='' and node.endnode:
+                            return node.result
+                        else:
+                            pass
+            return False
+        return eval_node()
