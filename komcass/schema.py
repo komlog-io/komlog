@@ -41,11 +41,13 @@ class DatapointInfoORM(CassandraBase):
         super(DatapointInfoORM,self).__init__(key, dbdict)
         
         
-class DatapointValuesORM(CassandraBase):
+class DatapointDataORM(CassandraBase):
     __cf__ = 'dtp_data'
 
     def __init__(self, key=None, dbdict=None):
-        super(DatapointValuesORM,self).__init__(key, dbdict)
+        date=str(dbdict.keys()[0].date())
+        pkey=str(key)+'_'+date
+        super(DatapointDataORM,self).__init__(pkey,dbdict)
 
 class DsDtpRelationORM(CassandraBase):
     __cf__ = 'ds_dtp_relation'

@@ -2,6 +2,7 @@ import sections, options
 import re
 import json
 import dateutil.parser
+from date import datetime,timedelta
 from komcass import api as cassapi
 from komcass import connection as casscon
 from komapp import modules
@@ -10,7 +11,8 @@ from komimc import bus,messages
 from komlibs.textman import variables
 from komlibs.ai import decisiontree
 
-ERROR=1
+OK=1
+ERROR=2
 
 class Textmining(modules.Module):
     def __init__(self, config, instance_number):
@@ -142,4 +144,67 @@ class Textmining(modules.Module):
             return True,pid
         else:
             return False,ERROR
+
+    def process_FILL_DATAPOINT_MESSAGE(self, message):
+        '''
+        Los pasos son los siguientes:
+        - Obtenemos el pid o el did y date
+        - Si recibimos did y date:
+          - Lista de variables: las de la fecha recibida
+          - lista de dtrees: la de todos los datapoint asociados al datasource
+          - lista de muestras: la de la fecha
+        - Si recibimos el pid:
+          - lista de variables: las de todas las muestras a almacenar
+          - lista de dtree: el del datapoint recibido
+          - lista de muestras: DE MOMENTO VAMOS A ALMACENAR DESDE UN MES ATRAS
+        - loop:
+          - por cada muestra:
+            - por cada variable:
+              - por cada dtree:
+                evalua variable
+                if true:
+                    almacena_valor
+                    break
+        '''
+        pid=message.pid
+        did=message.did
+        date=message.date
+        dsmaps=[]
+        dtps=[]
+        if pid:
+            dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
+            dtree=decisiontree.DecisionTree(jsontree=json.dumps(dtpinfo.dbcols['dtree']))
+            dtps.append((dtpinfo,dtree))
+            #TODO: hay que obtener la fecha final del dsinfo
+            #Miramos la fecha de la ultima muestra del datasource
+            #dsinfo=cassapi.get_dsinfo(dtpinfo.did,{},self.cf)
+            #calculamos la fecha de inicio
+            #end_date=dsinfo.dbcols['last_received']
+            end_date=datetime.utcnow()
+            init_date=end_date-timedelta(days=30)
+            #obtenemos los datos
+            dsmaps=cassapi.get_datasourcemap(did=dtpinfo.did,session=self.cf,fromdate=init_date,todate=end_date)
+        else:
+            dsmaps.append(get_datasourcemap(did=did,session=self.cf,date=date))
+            dtps=cassapi.get_dsdtprelation(did,self.cf).dtps
+            for pid in dtps:
+                dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
+                dtree=decisiontree.DecisionTree(jsondata=json.dumps(dtpinfo.dbcols['dtree']))
+                dtps.append((dtpinfo,dtree))
+        for dsmap in dsmaps:
+            varlist=variables.get_varlist(jsoncontent=dsmap.content)
+            dptlist=list(dtps)
+            for var in varlist:
+                for dtp in dtplist:
+                    dtpinfo,dtree=dtp
+                    if dtree.evaluate_row(var.h):
+                        dtp_data=komcass.DatapointData(pid=dtpinfo.pid,date=dsmap.date,content=var.c)
+                        if komcass.insert_datapointdata(dtp_data,self.cf):
+                            dtplist.remove(dtp)
+                            break
+                        else:
+                            self.logger.error('Error inserting datapoint data: %s_%s' %(dtpinfo.pid,dsmap.date))
+                            break
+        return True,OK
+
 

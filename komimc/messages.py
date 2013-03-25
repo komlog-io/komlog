@@ -23,6 +23,7 @@ STORE_SAMPLE_MESSAGE='STOSMP'
 MAP_VARS_MESSAGE='MAPVARS'
 MON_VAR_MESSAGE='MONVAR'
 GDTREE_MESSAGE='GDTREE'
+FILL_DATAPOINT_MESSAGE='FILDTP'
 
 #MODULE LIST
 VALIDATION='Validation'
@@ -33,14 +34,16 @@ GESTCONSOLE='Gestconsole'
 #MESSAGE MAPPINGS
 MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           MAP_VARS_MESSAGE:'MapVarsMessage',
-                          MON_VAR_MESSAGE:'MonitorVariableMessage'
-                          GDTREE_MESSAGE:'GenerateDTreeMessage'}
+                          MON_VAR_MESSAGE:'MonitorVariableMessage',
+                          GDTREE_MESSAGE:'GenerateDTreeMessage',
+                          FILL_DATAPOINT_MESSAGE:'FillDatapointMessage'}
 
 
 MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             MAP_VARS_MESSAGE:TEXTMINING,
                             MON_VAR_MESSAGE:GESTCONSOLE,
-                            GDTREE_MESSAGE:TEXTMINING}
+                            GDTREE_MESSAGE:TEXTMINING,
+                            FILL_DATAPOINT_MESSAGE:TEXTMINING}
 
 
 #MODULE MAPPINGS
@@ -129,4 +132,20 @@ class GenerateDTreeMessage:
             self.pid=pid
             self.qpid_message=Message(self.type+'|'+str(self.pid))
 
+
+class FillDatapointMessage:
+    def __init__(self, qpid_message=None, did=None,date=None,pid=None):
+        if qpid_message:
+            self.qpid_message=qpid_message
+            type,did,date,pid=self.qpid_message.content.split('|')
+            self.type=type
+            self.did=uuid.UUID(did) if not str(did)=='None' else None
+            self.date=dateutil.parser.parse(date) if not str(date)=='None' else None
+            self.pid=uuid.UUID(pid) if not str(pid)=='None' else None
+        else:
+            self.type=FILL_DATAPOINT_MESSAGE
+            self.did=did
+            self.date=date
+            self.pid=pid
+            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+self.date.isoformat()+'|'+str(self.pid))
 

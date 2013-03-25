@@ -8,6 +8,7 @@ import exceptions, schema
 from pycassa.cassandra.ttypes import NotFoundException
 import uuid
 import json
+from komlibs.date import datefuncs
 
 class DsDtpRelation:
     def __init__(self, did=None, dtps=None, key=None, dbdict=None):
@@ -129,6 +130,46 @@ def update_dtp(dtp,session):
     except Exception as e:
         return False
 
+class DatapointData:
+    def __init__(self, pid=None, date=None, content=None,key=None,dbdict=None):
+        if key:
+            self.pid=uuid.UUID(key)
+            self.date=dbdict.keys()[0] if len(dbdict.keys()) == 1 else dbdict.keys()
+            self.content=dbdict.values()[0] if len(dbdict.values()) == 1 else dbdict.values()
+        else:
+            self.pid = pid
+            self.date = date
+            self.content = content # unicode
+            self.prestore()
+
+    def prestore(self):
+        self.key=str(self.pid)
+        self.dbdict = {}
+        self.dbdict[self.date]=self.content.encode('utf8')
+
+def insert_datapointdata(dtpobj,session):
+    dtpobj.prestore()
+    if session.insert(schema.DatapointDataORM(key=dtpobj.key,dbdict=dtpobj.dbdict)):
+        return True
+    else:
+        return False
+
+def get_datapointdata(pid,date,session):
+    try:
+        kwargs={}
+        kwargs['columns']=(date,)
+        dbobj=session.get(schema.DatapointDataORM(key=pid,dbdict={date:u''}),kwargs)
+        return DatapointData(key=dbobj.get_key(),dbdict=dbobj.get_dbdict())
+    except NotFoundException:
+        return None
+
+def remove_datapointdata(pid,date,session):
+    kwargs={'columns':(date,)}
+    if session.remove(schema.DatapointDataORM(key=pid,dbdict={date:u''}),kwargs):
+        return True
+    else:
+        return False
+
 class DatasourceData:
     def __init__(self, did=None, date=None, content=None,key=None,dbdict=None):
         if key:
@@ -141,12 +182,13 @@ class DatasourceData:
             self.content = content # unicode
             self.prestore()
 
-    def prestore():
+    def prestore(self):
         self.key=str(self.did)
         self.dbdict = {}
-        self.dbdict[date]=self.content.encode('utf8')
+        self.dbdict[self.date]=self.content.encode('utf8')
 
 def insert_datasourcedata(dsobj,session):
+    dsobj.prestore()
     if session.insert(schema.DatasourceDataORM(key=dsobj.key,dbdict=dsobj.dbdict)):
         return True
     else:
@@ -205,13 +247,37 @@ def insert_datasourcemap(dsmobj,dsmvobj,session):
         remove_datasourcemap(dsmobj.did,dsmobj.date,session)
         return False
 
-def get_datasourcemap(did,date,session):
-    try:
-        kwargs={}
+def get_datasourcemap(did,session,date=None,fromdate=None,todate=None):
+    dsmaps=[]
+    kwargs={}
+    if date:
         kwargs['columns']=(date,)
-        dbobj=session.get(schema.DatasourceMapORM(key=did,dbdict={date:u''}),kwargs)
-        return DatasourceMap(key=dbobj.get_key(),dbdict=dbobj.get_dbdict())
-    except NotFoundException:
+        start_date=date
+        end_date=date
+    elif fromdate and todate:
+        kwargs['column_start']=fromdate
+        kwargs['column_finish']=todate
+        start_date=fromdate
+        end_date=todate
+    elif todate:
+        kwargs['column_finish']=todate
+        start_date=todate-timedelta(days=1)
+        end_date=todate
+    elif fromdate:
+        kwargs['column_start']=fromdate
+        start_date=fromdate
+        end_date=datetime.utcnow()
+    for date in datefuncs.get_range(start_date,end_date,interval='days',num=1):
+        try:
+            dbobj=session.get(schema.DatasourceMapORM(key=did,dbdict={date:u''}),kwargs)
+            if dbobj:
+                for date,content in dbobj.get_dbdict().iteritems():
+                    dsmaps.append(DatasourceMap(did=dbobj.get_key(),date=date,content=content))
+        except NotFoundException:
+            pass
+    if len(dsmaps)>0:
+        return dsmaps[0] if len(dsmaps)==1 else dsmaps
+    else:
         return None
 
 def get_datasourcemapvars(did,date,session):
