@@ -71,14 +71,14 @@ class Gestconsole(modules.Module):
         date=message.date
         var=message.var
         name=message.name
-        dsmapvar = cassapi.get_datasourcemapvars(did,date,self.cf)
+        dsmapvar = cassapi.get_datasourcemapvars(did=did,session=self.cf,date=date)
         if not dsmapvar: 
             return False,NOTFOUND
         try:
             index=dsmapvar.content.index(var)
         except ValueError:
             return False,NOTFOUND
-        dsmap=cassapi.get_datasourcemap(did,date,self.cf)
+        dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)
         varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=var)
         dsdtprelation=cassapi.get_dsdtprelation(did,self.cf)
         if dsdtprelation:

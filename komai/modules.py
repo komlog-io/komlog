@@ -130,7 +130,7 @@ class Textmining(modules.Module):
                                    'var':var,'result':False})
         dsmaps=[]
         for sample in samples_to_get:
-            dsmap=cassapi.get_datasourcemap(did,sample['date'],self.cf)
+            dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=sample['date'])
             varlist=variables.get_varlist(jsoncontent=dsmap.content)
             for var in varlist:
                 if str(var.s)==sample['var']:
