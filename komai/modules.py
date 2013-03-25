@@ -49,16 +49,17 @@ class Textmining(modules.Module):
             self.message_bus.ackMessage()
             mtype=message.type
             if mtype==messages.MAP_VARS_MESSAGE:
-                if self.process_MAP_VARS_MESSAGE(message):
+                result,did,date=self.process_MAP_VARS_MESSAGE(message):
+                if result:
                     self.logger.debug('Mesage completed successfully: '+mtype)
-                    pass
+                    self.message_bus.sendMessage(messages.FillDatapointMessage(did=did,date=date))
                 else:
                     self.logger.debug('Error procesing: '+mtype)
             elif mtype==messages.GDTREE_MESSAGE:
-                result,pid=self.process_GDTREE_MESSAGE(message):
+                result,pid,date=self.process_GDTREE_MESSAGE(message):
                 if result:
                     self.logger.debug('Message completed successfully: '+mtype)
-                    pass
+                    self.message_bus.sendMessage(messages.FillDatapointMessage(pid=pid,date=date))
                 else:
                     self.logger.debug('Error procesing: '+mtype)
             else:
@@ -93,15 +94,15 @@ class Textmining(modules.Module):
             try:
                 if cassapi.insert_datasourcemap(dsmobj,dsmvobj,self.cf):
                     self.logger.debug('Map created for did: '+str(did))
-                return True
+                return True,did,date
             except Exception as e:
                 #rollback
                 self.logger.exception('Exception creating Map for did '+str(did)+': '+str(e))
                 cassapi.remove_datasourcemap(dsmobj.did,dsmobj.date,self.cf)
-                return False
+                return False,None,None
         else:
             self.logger.error('Datasource data not found: '+str(did)+' '+str(date))
-            return False
+            return False,None,None
 
     def process_GDTREE_MESSAGE(self, message):
         '''
@@ -168,7 +169,7 @@ class Textmining(modules.Module):
         '''
         pid=message.pid
         did=message.did
-        date=message.date
+        date=message.date #depending on the received param, date will be the date of the did or date of the sample whose pid was monitored or modified
         dsmaps=[]
         dtps=[]
         if pid:
