@@ -297,4 +297,368 @@ def remove_datasourcemap(did,date,session):
     else:
         return False
 
+####################################################################################################################
+
+class UserUIDRelation:
+    def __init__(self, username, uid):
+        self.uid=uid
+        self.username=username
+
+    def _prestore(self):
+        self.key=self.username
+        self.dbdict = {self.uid:u''}
+
+
+def get_useruidrelation(username, session):
+    try:
+        dbobj=session.get(schema.UserUIDRelationORM(key=username,dbdict={}))
+        return UserUIDRelation(username=dbobj.key,uid=dbobj.dbdict.keys()[0])
+    except NotFoundException:
+        return None
+
+class UserAgentRelation:
+    def __init__(self, uid, aids):
+        self.uid=uid
+        self.aids=aids
+
+    def _prestore(self):
+        self.key=self.uid
+        self.dbdict = {}
+        for aid in self.aids:
+            self.dbdict[aid]=u''
+
+
+def get_useragentrelation(uid, session):
+    try:
+        dbobj=session.get(schema.UserAgentRelationORM(key=uid,dbdict={}))
+        return UserAgentRelation(uid=dbobj.key,aids=[aid for aid in dbobj.dbdict.keys()])
+    except NotFoundException:
+        return None
+
+class AgentDsRelation:
+    def __init__(self, aid, dids):
+        self.aid=aid
+        self.dids=dids
+
+    def _prestore(self):
+        self.key=self.aid
+        self.dbdict = {}
+        for did in self.dids:
+            self.dbdict[did]=u''
+
+
+def get_agentdsrelation(aid, session):
+    try:
+        dbobj=session.get(schema.AgentDsRelationORM(key=aid,dbdict={}))
+        return AgentDsRelation(aid=dbobj.key,dids=[did for did in dbobj.dbdict.keys()])
+    except NotFoundException:
+        return None
+
+''' USER CLASSES AND METHODS '''
+
+class UserInfo:
+    def __init__(self, uid, fromdict=None, username=None, password=None, segment=None, creation_date=None, state=None):
+        if fromdict:
+            self.uid=uid
+            self.username=fromdict['username'] if fromdict.has_key('username') else None
+            self.password=fromdict['password'] if fromdict.has_key('password') else None
+            self.segment=fromdict['segment'] if fromdict.has_key('segment') else None
+            self.creation_date=fromdict['creation_date'] if fromdict.has_key('creation_date') else None
+            self.state=fromdict['state'] if fromdict.has_key('state') else None
+        else:
+            self.uid=uid
+            self.username=username
+            self.password=password
+            self.segment=segment
+            self.creation_date=creation_date
+            self.state=state
+        
+    def _prestore(self):
+        self.key=self.uid
+        self.dbdict={}
+        if self.username is not None:
+            self.dbdict['username']=self.username
+        if self.password is not None:
+            self.dbdict['password']=self.password
+        if self.segment is not None:
+            self.dbdict['segment']=self.segment
+        if self.creation_date is not None:
+            self.dbdict['creation_date']=self.creation_date
+        if self.state is not None:
+            self.dbdict['state']=self.state
+
+def get_userinfo(uid,dbcols,session):
+    try:
+        kwargs={}
+        if len(dbcols.keys())>0:
+            kwargs['columns']=[key for key in dbcols.keys()]
+        dbobj=session.get(schema.UserInfoORM(key=uid,dbdict={}),kwargs)
+        return UserInfo(uid=dbobj.key,fromdict=dbobj.dbdict)
+    except NotFoundException:
+        return None
+
+def register_user(userinfo,session):
+    try:
+        uid=userinfo.uid
+        username=userinfo.username
+        useruidr=get_useruidrelation(username,session)
+        if not useruidr:
+            useruidr=UserUIDRelation(username,uid)
+            useruidr._prestore()
+            if session.insert(schema.UserUIDRelationORM(key=useruidr.key,dbdict=useruidr.dbdict)):
+                userinfo._prestore()
+                if session.insert(schema.UserInfoORM(key=userinfo.key, dbdict=userinfo.dbdict)):
+                    return True
+                else:
+                    remove_user(userinfo,session)
+                    return False
+            else:
+                remove_user(userinfo,session)
+                return False
+        elif useruidr.uid==uid:
+            userinfo._prestore()
+            if session.insert(schema.UserInfoORM(key=userinfo.key, dbdict=userinfo.dbdict)):
+                return True
+            else:
+                return False
+        else:
+            return False
+    except Exception as e:
+        remove_user(userinfo,session)
+        return False
+
+def remove_user(userinfo,session):
+    try:
+        userinfo._prestore()
+        session.remove(schema.UserInfoORM(key=userinfo.key, dbdict=userinfo.dbdict))
+        useruidr=get_useruidrelation(userinfo.username,session)
+        if useruidr:
+            useruidr._prestore()
+            session.remove(schema.UserUIDRelationORM(key=useruidr.key, dbdict=useruidr.dbdict))
+        return True
+    except Exception as e:
+        return False
+
+def update_user(userinfo,session):
+    try:
+        userinfo._prestore()
+        session.insert(schema.UserInfoORM(key=userinfo.key, dbdict=userinfo.dbdict))
+        return True
+    except Exception as e:
+        return False
+
+'''AGENT CLASSES AND METHODS'''
+
+class AgentInfo:
+    def __init__(self, aid, fromdict=None, agentname=None, agentkey=None, version=None, uid=None, state=None):
+        if fromdict:
+            self.aid=aid
+            self.uid=fromdict['uid'] if fromdict.has_key('uid') else None
+            self.agentname=fromdict['agentname'] if fromdict.has_key('agentname') else None
+            self.agentkey=fromdict['agentkey'] if fromdict.has_key('agentkey') else None
+            self.version=fromdict['version'] if fromdict.has_key('version') else None
+            self.state=fromdict['state'] if fromdict.has_key('state') else None
+        else:
+            self.aid=aid
+            self.uid=uid
+            self.agentname=agentname
+            self.agentkey=agentkey
+            self.version=version
+            self.state=state
+        
+    def _prestore(self):
+        self.key=self.aid
+        self.dbdict={}
+        if self.uid is not None:
+            self.dbdict['uid']=self.uid
+        if self.agentname is not None:
+            self.dbdict['agentname']=self.agentname
+        if self.agentkey is not None:
+            self.dbdict['agentkey']=self.agentkey
+        if self.version is not None:
+            self.dbdict['version']=self.version
+        if self.state is not None:
+            self.dbdict['state']=self.state
+
+def get_agentinfo(aid,dbcols,session):
+    try:
+        kwargs={}
+        if len(dbcols.keys())>0:
+            kwargs['columns']=[key for key in dbcols.keys()]
+        dbobj=session.get(schema.AgentInfoORM(key=aid,dbdict={}),kwargs)
+        return AgentInfo(aid=dbobj.key,fromdict=dbobj.dbdict)
+    except NotFoundException:
+        return None
+
+def register_agent(agentinfo,session):
+    try:
+        aid=agentinfo.aid
+        uid=agentinfo.uid
+        useragentr=get_useragentrelation(uid,session)
+        if useragentr:
+            try:
+                aidpos = useragentr.aids.index(aid)
+                return False
+            except ValueError:
+                pass
+        else:
+            if not useragentr:
+                useragentr=UserAgentRelation(uid=uid,aids=[])
+            useragentr.aids.append(aid)
+            useragentr._prestore()
+            if session.insert(schema.UserAgentRelationORM(key=useragentr.key,dbdict=useragentr.dbdict)):
+                agentinfo._prestore()
+                if session.insert(schema.AgentInfoORM(key=agentinfo.key, dbdict=agentinfo.dbdict)):
+                    return True
+                else:
+                    remove_agent(agentinfo,session)
+                    return False
+            else:
+                remove_agent(agentinfo,session)
+                return False
+    except Exception as e:
+        print str(e)
+        remove_agent(agentinfo,session)
+        return False
+
+def remove_agent(agentinfo,session):
+    try:
+        agentinfo._prestore()
+        session.remove(schema.AgentInfoORM(key=agentinfo.key, dbdict=agentinfo.dbdict))
+        kwargs={}
+        kwargs['columns']=(agentinfo.aid,)
+        session.remove(schema.UserAgentRelationORM(key=agentinfo.uid, dbdict={}),kwargs)
+        return True
+    except Exception as e:
+        return False
+
+def update_agent(agentinfo,session):
+    try:
+        agentinfo._prestore()
+        session.insert(schema.AgentInfoORM(key=agentinfo.key, dbdict=agentinfo.dbdict))
+        return True
+    except Exception as e:
+        return False
+
+'''DATASOURCE CLASSES AND METHODS'''
+
+class DatasourceInfo:
+    def __init__(self, did, fromdict=None, dsname=None, last_received=None, dstype=None, aid=None, creation_date=None, state=None, \
+                 script_name=None, day_of_week=None, month=None, day_of_month=None, hour=None, minute=None):
+        if fromdict:
+            self.did=did
+            self.aid=fromdict['aid'] if fromdict.has_key('aid') else None
+            self.dsname=fromdict['dsname'] if fromdict.has_key('dsname') else None
+            self.dstype=fromdict['dstype'] if fromdict.has_key('dstype') else None
+            self.last_received=fromdict['last_received'] if fromdict.has_key('last_received') else None
+            self.creation_date=fromdict['creation_date'] if fromdict.has_key('creation_date') else None
+            self.state=fromdict['state'] if fromdict.has_key('state') else None
+            self.script_name=fromdict['script_name'] if fromdict.has_key('script_name') else None
+            self.day_of_week=fromdict['day_of_week'] if fromdict.has_key('day_of_week') else None
+            self.month=fromdict['month'] if fromdict.has_key('month') else None
+            self.day_of_month=fromdict['day_of_month'] if fromdict.has_key('day_of_month') else None
+            self.hour=fromdict['hour'] if fromdict.has_key('hour') else None
+            self.minute=fromdict['minute'] if fromdict.has_key('minute') else None
+        else:
+            self.did=did
+            self.aid=aid
+            self.dsname=dsname
+            self.last_received=last_received
+            self.dstype=dstype
+            self.creation_date=creation_date
+            self.state=state
+            self.script_name=script_name
+            self.day_of_week=day_of_week
+            self.month=month
+            self.day_of_month=day_of_month
+            self.hour=hour
+            self.minute=minute
+        
+    def _prestore(self):
+        self.key=self.did
+        self.dbdict={}
+        if self.aid:
+            self.dbdict['aid']=self.aid
+        if self.dsname:
+            self.dbdict['dsname']=self.dsname
+        if self.dstype:
+            self.dbdict['dstype']=self.dstype
+        if self.last_received:
+            self.dbdict['last_received']=self.last_received
+        if self.creation_date:
+            self.dbdict['creation_date']=self.creation_date
+        if self.state:
+            self.dbdict['state']=self.state
+        if self.script_name:
+            self.dbdict['script_name']=self.script_name
+        if self.day_of_week:
+            self.dbdict['day_of_week']=self.day_of_week
+        if self.month:
+            self.dbdict['month']=self.month
+        if self.day_of_month:
+            self.dbdict['day_of_month']=self.day_of_month
+        if self.hour:
+            self.dbdict['hour']=self.hour
+        if self.minute:
+            self.dbdict['minute']=self.minute
+
+def get_dsinfo(did,dbcols,session):
+    try:
+        kwargs={}
+        if len(dbcols.keys())>0:
+            kwargs['columns']=[key for key in dbcols.keys()]
+        dbobj=session.get(schema.DatasourceInfoORM(key=did,dbdict={}),kwargs)
+        return DatasourceInfo(did=dbobj.key,fromdict=dbobj.dbdict)
+    except NotFoundException:
+        return None
+
+def register_datasource(dsinfo,session):
+    try:
+        did=dsinfo.did
+        aid=dsinfo.aid
+        agentdsr=get_agentdsrelation(aid,session)
+        if agentdsr:
+            try:
+                didpos = agentdsr.dids.index(did)
+                return False
+            except ValueError:
+                pass
+        else:
+            if not agentdsr:
+                agentdsr=AgentDsRelation(aid=aid,dids=[])
+            agentdsr.dids.append(did)
+            agentdsr._prestore()
+            if session.insert(schema.AgentDsRelationORM(key=agentdsr.key,dbdict=agentdsr.dbdict)):
+                dsinfo._prestore()
+                if session.insert(schema.DatasourceInfoORM(key=dsinfo.key, dbdict=dsinfo.dbdict)):
+                    return True
+                else:
+                    remove_ds(dsinfo,session)
+                    return False
+            else:
+                remove_ds(dsinfo,session)
+                return False
+    except Exception as e:
+        print str(e)
+        remove_ds(dsinfo,session)
+        return False
+
+def remove_ds(dsinfo,session):
+    try:
+        dsinfo._prestore()
+        session.remove(schema.DatasourceInfoORM(key=dsinfo.key, dbdict=dsinfo.dbdict))
+        kwargs={}
+        kwargs['columns']=(dsinfo.did,)
+        session.remove(schema.AgentDsRelationORM(key=dsinfo.aid, dbdict={}),kwargs)
+        return True
+    except Exception as e:
+        return False
+
+def update_ds(dsinfo,session):
+    try:
+        dsinfo._prestore()
+        session.insert(schema.DatasourceInfoORM(key=dsinfo.key, dbdict=dsinfo.dbdict))
+        return True
+    except Exception as e:
+        return False
 

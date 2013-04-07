@@ -90,3 +90,42 @@ class DatasourceMapVarsORM(CassandraBase):
     def get_key(self):
         return self.key.split('_')[0]
 
+class UserUIDRelationORM(CassandraBase):
+    __cf__ = 'user_uid_relation'
+
+    def __init__(self, key=None, dbdict=None):
+        super(UserUIDRelationORM,self).__init__(key, dbdict)
+
+class UserAgentRelationORM(CassandraBase):
+    __cf__ = 'user_agent_relation'
+
+    def __init__(self, key=None, dbdict=None):
+        super(UserAgentRelationORM,self).__init__(key, dbdict)
+
+class AgentDsRelationORM(CassandraBase):
+    __cf__ = 'agent_ds_relation'
+
+    def __init__(self, key=None, dbdict=None):
+        super(AgentDsRelationORM,self).__init__(key, dbdict)
+
+class UserInfoORM(CassandraBase):
+    __cf__ = 'user_info'
+    
+    def __init__(self, key=None, dbdict=None):
+        super(UserInfoORM,self).__init__(key, dbdict)
+        
+       
+class AgentInfoORM(CassandraBase):
+    __cf__ = 'agent_info'
+    
+    def __init__(self, key=None, dbdict=None):
+        super(AgentInfoORM,self).__init__(key, dbdict)
+        
+       
+class DatasourceInfoORM(CassandraBase):
+    __cf__ = 'ds_info'
+    
+    def __init__(self, key=None, dbdict=None):
+        super(DatasourceInfoORM,self).__init__(key, dbdict)
+        
+       
