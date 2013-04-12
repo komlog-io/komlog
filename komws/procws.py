@@ -1,6 +1,7 @@
 import exceptions as wsex
-from komdb import api as dbapi
-from komdb import exceptions as dbex
+#from komdb import api as dbapi
+#from komdb import exceptions as dbex
+from komcass import api as cassapi
 from komfs import api as fsapi
 import os
 
@@ -33,6 +34,7 @@ def wsupload_sample(data, extra_vars):
         print str(e)
         raise wsex.ProcessingError()
     else:
+        print 'Proc: OK'
         return True
 
 def wsdownload_config(data, extra_vars):
@@ -45,8 +47,7 @@ def wsdownload_config(data, extra_vars):
             - For each agent's datasource get its configuration
             - return all configuration to the agent            
     """
-    configuration = []
-    sql_session=extra_vars['sql_session']
+    '''
     try:
         user = dbapi.User(username=data.username, session=sql_session)
         for agent in user.getAgents(sql_session):
@@ -59,6 +60,26 @@ def wsdownload_config(data, extra_vars):
         raise wsex.ProcessingError()
     else:
         return configuration
-    
+    '''
+    configuration = []
+    cf=extra_vars['cf']
+    try:
+        useruidr=cassapi.get_useruidrelation(data.username,cf)
+        useragentr=cassapi.get_useragentrelation(useruidr.uid,cf)
+        for aid in useragentr.aids:
+            agentinfo=cassapi.get_agentinfo(aid,{},cf)
+            if agentinfo.agentkey==data.agentid:
+                agentdsr=cassapi.get_agentdsrelation(agentinfo.aid,cf)
+                for did in agentdsr.dids:
+                    dsinfo=cassapi.get_dsinfo(did,{},cf)
+                    configuration.append({'command':dsinfo.script_name,'dow':dsinfo.day_of_week,'mon':dsinfo.month,'dom':dsinfo.day_of_month,\
+                                          'hour':dsinfo.hour,'min':dsinfo.minute,'did':str(dsinfo.did)})
+                    print 'Configuration added'
+    except Exception as e:
+        print str(e)
+        raise wsex.ProcessingError()
+    else:
+        return configuration
+      
 
 

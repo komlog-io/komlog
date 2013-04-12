@@ -20,7 +20,6 @@ def wsupload_sample(data):
     """
     needed_keys = ['username','password','agentid','datasourceid','date','filecontent']
     try:
-        did = int(data.datasourceid)
         if len(data)==len(needed_keys):
             for key in needed_keys:
                 if hasattr(data,key):
@@ -29,9 +28,11 @@ def wsupload_sample(data):
                     raise wsex.InvalidData()
         else:
             raise wsex.InvalidData()
-    except:
+    except Exception as e:
+        print str(e)
         raise wsex.InvalidData()
     else:
+        print 'Check: OK'
         return True
 
 def wsdownload_config(data):
@@ -54,5 +55,6 @@ def wsdownload_config(data):
     except:
         raise wsex.InvalidData()
     else:
+        print 'Check: OK'
         return True
 

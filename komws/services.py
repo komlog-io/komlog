@@ -3,8 +3,8 @@ import checkws, authws, procws, codes, exceptions
 
 
 class Services(soap.SOAPPublisher):
-    def __init__(self, sql_connection, data_dir, logger):
-        self.sql_connection = sql_connection
+    def __init__(self, cf, data_dir, logger):
+        self.cf = cf
         self.data_dir = data_dir
         self.logger = logger
         
@@ -22,7 +22,7 @@ class Services(soap.SOAPPublisher):
         context='wsupload_sample'
         self.logger.debug('Service called: '+context)
         self.logger.debug('Received data: '+str(data))
-        extras = {'dir':self.data_dir,'sql_session':self.sql_connection.session}
+        extras = {'dir':self.data_dir,'cf':self.cf}
         try:
             self.logger.debug('check')
             checkws.check(data, context)
@@ -57,7 +57,7 @@ class Services(soap.SOAPPublisher):
         context='wsdownload_config'
         self.logger.debug('Service called: '+context)
         self.logger.debug('Received data: '+str(data))
-        extras = {'sql_session':self.sql_connection.session}
+        extras = {'cf':self.cf}
         try:
             self.logger.debug('check called')
             checkws.check(data, context)

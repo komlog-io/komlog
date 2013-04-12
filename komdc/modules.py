@@ -133,12 +133,7 @@ class Storing(modules.Module):
             
             self.logger.debug('Storing '+filename)
             datasourceid = filename.split('_')[1].split('.')[0]
-            if datasourceid == str(152):
-                datasourceid = uuid.UUID('7aaedfc9-3850-4752-957f-70f6ccd03d26')
-            elif datasourceid == str(156):
-                datasourceid = uuid.UUID('31da904f-26a1-4959-be3b-f819963110ab')
-            else:
-                datasourceid = uuid.UUID(datasourceid)
+            datasourceid = uuid.UUID(datasourceid)
             date = dateutil.parser.parse(os.path.basename(filename).split('_')[0])
             udata = fsapi.get_file_content(filename)
             dsobj=cassapi.DatasourceData(did=datasourceid,date=date,content=udata)

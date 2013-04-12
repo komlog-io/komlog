@@ -2,7 +2,7 @@ import sections, options
 import re
 import json
 import dateutil.parser
-from date import datetime,timedelta
+from datetime import datetime,timedelta
 from komcass import api as cassapi
 from komcass import connection as casscon
 from komapp import modules
@@ -49,17 +49,23 @@ class Textmining(modules.Module):
             self.message_bus.ackMessage()
             mtype=message.type
             if mtype==messages.MAP_VARS_MESSAGE:
-                result,did,date=self.process_MAP_VARS_MESSAGE(message):
+                result,did,date=self.process_MAP_VARS_MESSAGE(message)
                 if result:
                     self.logger.debug('Mesage completed successfully: '+mtype)
                     self.message_bus.sendMessage(messages.FillDatapointMessage(did=did,date=date))
                 else:
                     self.logger.debug('Error procesing: '+mtype)
             elif mtype==messages.GDTREE_MESSAGE:
-                result,pid,date=self.process_GDTREE_MESSAGE(message):
+                result,pid,date=self.process_GDTREE_MESSAGE(message)
                 if result:
                     self.logger.debug('Message completed successfully: '+mtype)
                     self.message_bus.sendMessage(messages.FillDatapointMessage(pid=pid,date=date))
+                else:
+                    self.logger.debug('Error procesing: '+mtype)
+            elif mtype==messages.FILL_DATAPOINT_MESSAGE:
+                result,subresult=self.process_FILL_DATAPOINT_MESSAGE(message)
+                if result:
+                    self.logger.debug('Message completed successfully: '+mtype)
                 else:
                     self.logger.debug('Error procesing: '+mtype)
             else:
@@ -115,7 +121,8 @@ class Textmining(modules.Module):
         - lo almacenamos en bbdd
         '''
         pid=message.pid
-        dptinfo=cassapi.get_dtpinfo(pid,{},self.cf)
+        date=message.date
+        dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
         did=dtpinfo.did
         samples_to_get=[]
         positives=dtpinfo.dbcols['positives']
@@ -142,9 +149,9 @@ class Textmining(modules.Module):
         dtree=decisiontree.DecisionTree(rawdata=dtree_training_set)
         dtpinfo.dbcols['dtree']=dtree.get_jsontree()
         if cassapi.update_dtp(dtpinfo,self.cf):
-            return True,pid
+            return True,pid,date
         else:
-            return False,ERROR
+            return False,ERROR,date
 
     def process_FILL_DATAPOINT_MESSAGE(self, message):
         '''
@@ -173,34 +180,51 @@ class Textmining(modules.Module):
         dsmaps=[]
         dtps=[]
         if pid:
+            print 'ENTRO AQUI????'
+            print pid
             dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
+            if not dtpinfo:
+                self.logger.info('Datapoint info not found: '+str(pid))
+                return True,OK
             dtree=decisiontree.DecisionTree(jsontree=json.dumps(dtpinfo.dbcols['dtree']))
+            if not dtree:
+                self.logger.info('Datapoint Decision tree not found: '+str(pid))
+                return True,OK
             dtps.append((dtpinfo,dtree))
-            #TODO: hay que obtener la fecha final del dsinfo
-            #Miramos la fecha de la ultima muestra del datasource
-            #dsinfo=cassapi.get_dsinfo(dtpinfo.did,{},self.cf)
-            #calculamos la fecha de inicio
-            #end_date=dsinfo.dbcols['last_received']
-            end_date=datetime.utcnow()
-            init_date=end_date-timedelta(days=30)
+            dsinfo=cassapi.get_dsinfo(dtpinfo.did,{},self.cf)
+            if not dsinfo:
+                self.logger.info('Datasource info not found: '+str(dtpinfo.pid))
+                return True,OK
+            end_date=dsinfo.last_received
+            if not end_date:
+                end_date=datetime.utcnow()
+            if date > end_date:
+                init_date=end_date-timedelta(days=1)
+            else:
+                init_date=date
             #obtenemos los datos
             dsmaps=cassapi.get_datasourcemap(did=dtpinfo.did,session=self.cf,fromdate=init_date,todate=end_date)
         else:
-            dsmaps.append(get_datasourcemap(did=did,session=self.cf,date=date))
-            dtps=cassapi.get_dsdtprelation(did,self.cf).dtps
-            for pid in dtps:
+            dsmaps.append(cassapi.get_datasourcemap(did=did,session=self.cf,date=date))
+            dsdtpr=cassapi.get_dsdtprelation(did,self.cf)
+            if dsdtpr:
+                pids=dsdtpr.dtps
+            else:
+                self.logger.info('Datasource has no datapoints: '+str(did))
+                return True,OK
+            for pid in pids:
                 dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
-                dtree=decisiontree.DecisionTree(jsondata=json.dumps(dtpinfo.dbcols['dtree']))
+                dtree=decisiontree.DecisionTree(jsontree=json.dumps(dtpinfo.dbcols['dtree']))
                 dtps.append((dtpinfo,dtree))
         for dsmap in dsmaps:
             varlist=variables.get_varlist(jsoncontent=dsmap.content)
-            dptlist=list(dtps)
+            dtplist=list(dtps)
             for var in varlist:
                 for dtp in dtplist:
                     dtpinfo,dtree=dtp
                     if dtree.evaluate_row(var.h):
-                        dtp_data=komcass.DatapointData(pid=dtpinfo.pid,date=dsmap.date,content=var.c)
-                        if komcass.insert_datapointdata(dtp_data,self.cf):
+                        dtp_data=cassapi.DatapointData(pid=dtpinfo.pid,date=dsmap.date,content=var.c)
+                        if cassapi.insert_datapointdata(dtp_data,self.cf):
                             dtplist.remove(dtp)
                             break
                         else:

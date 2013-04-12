@@ -50,10 +50,10 @@ class Gestconsole(modules.Module):
             self.message_bus.ackMessage()
             mtype=message.type
             if mtype==messages.MON_VAR_MESSAGE:
-                result,pid=self.process_MON_VAR_MESSAGE(message)
+                result,pid,date=self.process_MON_VAR_MESSAGE(message)
                 if result:
                     self.logger.debug('Message completed successfully: '+mtype)
-                    self.message_bus.sendMessage(messages.GenerateDecisionTree(pid=pid))
+                    self.message_bus.sendMessage(messages.GenerateDecisionTree(pid=pid,date=date))
                 else:
                     self.logger.error('Error processing message: '+mtype+' Error: '+str(result))
                     #self.message_bus.sendMessage(message)
@@ -83,7 +83,7 @@ class Gestconsole(modules.Module):
         dsdtprelation=cassapi.get_dsdtprelation(did,self.cf)
         if dsdtprelation:
             for pid in dsdtprelation.dtps:
-                dtpinfo=cassapi.get_dtpinfo(pid,dbcols={'dtree':u''},self.cf)
+                dtpinfo=cassapi.get_dtpinfo(pid,{'dtree':u''},self.cf)
                 try:
                     stored_dtree=dtpinfo.dbcols['dtree']
                     dtree=decisiontree.DecisionTree(jsontree=json.dumps(stored_dtree))
@@ -97,7 +97,7 @@ class Gestconsole(modules.Module):
         print pid
         newdtp=cassapi.DatapointInfo(pid,name=name,positives=(str(date)+'_'+str(var),),did=did)
         if cassapi.register_dtp(newdtp,dsdtprelation,self.cf):
-            return True,newdtp.pid
+            return True,newdtp.pid,date
         else:
-            return False,DBERROR
+            return False,DBERROR,date
 

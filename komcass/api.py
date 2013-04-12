@@ -80,11 +80,11 @@ class DatapointInfo:
             self.prestore()
     
     def prestore(self):
-        if type(self.dbcols['dtree'])==list:
+        if self.dbcols.has_key('dtree') and type(self.dbcols['dtree'])==list:
             self.dbcols['dtree']=json.dumps(self.dbcols['dtree'])
-        if type(self.dbcols['positives'])==list:
+        if self.dbcols.has_key('positives') and type(self.dbcols['positives'])==list:
             self.dbcols['positives']=json.dumps(self.dbcols['positives'])
-        if type(self.dbcols['negatives'])==list:
+        if self.dbcols.has_key('negatives') and type(self.dbcols['negatives'])==list:
             self.dbcols['negatives']=json.dumps(self.dbcols['negatives'])
         self.key=self.pid
         self.dbdict=self.dbcols
@@ -190,6 +190,14 @@ class DatasourceData:
 def insert_datasourcedata(dsobj,session):
     dsobj.prestore()
     if session.insert(schema.DatasourceDataORM(key=dsobj.key,dbdict=dsobj.dbdict)):
+        dsinfo=get_dsinfo(dsobj.did,{'last_received':u''},session)
+        if dsinfo:
+            if dsinfo.last_received<dsobj.date:
+                dsinfo.last_received=dsobj.date
+                update_ds(dsinfo,session)
+        else:
+            dsinfo=DatasourceInfo(did=dsobj.did,last_received=dsobj.date)
+            update_ds(dsinfo,session)
         return True
     else:
         return False
@@ -266,7 +274,7 @@ def get_datasourcemap(did,session,date=None,fromdate=None,todate=None):
     elif fromdate:
         kwargs['column_start']=fromdate
         start_date=fromdate
-        end_date=datetime.utcnow()
+        end_date=todate+timedelta(days=1)
     for date in datefuncs.get_range(start_date,end_date,interval='days',num=1):
         try:
             dbobj=session.get(schema.DatasourceMapORM(key=did,dbdict={date:u''}),kwargs)

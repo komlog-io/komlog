@@ -121,16 +121,18 @@ class MonitorVariableMessage:
             self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+date.isoformat()+'|'+str(self.var)+'|'+str(self.name))
 
 class GenerateDTreeMessage:
-    def __init__(self, qpid_message=None, pid=None):
+    def __init__(self, qpid_message=None, pid=None, date=None):
         if qpid_message:
             self.qpid_message=qpid_message
-            type,pid=self.qpid_message.content.split('|')
+            type,pid,date=self.qpid_message.content.split('|')
             self.type=type
             self.pid=uuid.UUID(pid)
+            self.date=date
         else:
             self.type=GDTREE_MESSAGE
             self.pid=pid
-            self.qpid_message=Message(self.type+'|'+str(self.pid))
+            self.date=date
+            self.qpid_message=Message(self.type+'|'+str(self.pid)+'|'+date.isoformat())
 
 
 class FillDatapointMessage:

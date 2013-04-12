@@ -137,7 +137,11 @@ class DecisionTree:
         values=[]
         total=0.0
         for row in rows:
-            values.append(row[attribute])
+            try:
+                values.append(row[attribute])
+            except KeyError:
+                row[attribute]=0
+                values.append(row[attribute])
         d=list(set(values))
         for k in d:
             selected_rows=[]
