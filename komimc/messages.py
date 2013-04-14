@@ -92,8 +92,8 @@ class MapVarsMessage:
     def __init__(self, qpid_message=None, did=None,date=None):
         if qpid_message:
             self.qpid_message=qpid_message
-            type,did,date=self.qpid_message.content.split('|')
-            self.type=type
+            mtype,did,date=self.qpid_message.content.split('|')
+            self.type=mtype
             self.did=uuid.UUID(did)
             self.date=dateutil.parser.parse(date)
         else:
@@ -106,8 +106,8 @@ class MonitorVariableMessage:
     def __init__(self, qpid_message=None, did=None, date=None, var=None, name=None):
         if qpid_message:
             self.qpid_message=qpid_message
-            type,did,date,var,name = self.qpid_message.content.split('|')
-            self.type=type
+            mtype,did,date,var,name = self.qpid_message.content.split('|')
+            self.type=mtype
             self.did=uuid.UUID(did)
             self.date=dateutil.parser.parse(date)
             self.var=str(var)
@@ -124,10 +124,10 @@ class GenerateDTreeMessage:
     def __init__(self, qpid_message=None, pid=None, date=None):
         if qpid_message:
             self.qpid_message=qpid_message
-            type,pid,date=self.qpid_message.content.split('|')
-            self.type=type
+            mtype,pid,date=self.qpid_message.content.split('|')
+            self.type=mtype
             self.pid=uuid.UUID(pid)
-            self.date=date
+            self.date=dateutil.parser.parse(date)
         else:
             self.type=GDTREE_MESSAGE
             self.pid=pid
@@ -139,8 +139,8 @@ class FillDatapointMessage:
     def __init__(self, qpid_message=None, did=None,date=None,pid=None):
         if qpid_message:
             self.qpid_message=qpid_message
-            type,did,date,pid=self.qpid_message.content.split('|')
-            self.type=type
+            mtype,did,date,pid=self.qpid_message.content.split('|')
+            self.type=mtype
             self.did=uuid.UUID(did) if not str(did)=='None' else None
             self.date=dateutil.parser.parse(date) if not str(date)=='None' else None
             self.pid=uuid.UUID(pid) if not str(pid)=='None' else None

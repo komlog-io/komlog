@@ -14,6 +14,7 @@ from komlibs.ai import decisiontree
 NOTFOUND=1
 ALREADYMONITORED=2
 DBERROR=3
+PENDINGDTREEGENERATION=4
 
 class Gestconsole(modules.Module):
     def __init__(self, config, instance_number):
@@ -53,9 +54,9 @@ class Gestconsole(modules.Module):
                 result,pid,date=self.process_MON_VAR_MESSAGE(message)
                 if result:
                     self.logger.debug('Message completed successfully: '+mtype)
-                    self.message_bus.sendMessage(messages.GenerateDecisionTree(pid=pid,date=date))
+                    self.message_bus.sendMessage(messages.GenerateDTreeMessage(pid=pid,date=date))
                 else:
-                    self.logger.error('Error processing message: '+mtype+' Error: '+str(result))
+                    self.logger.error('Error processing message: '+mtype+' Error: '+str(pid))
                     #self.message_bus.sendMessage(message)
             else:
                 self.logger.error('Message Type not supported: '+mtype)
@@ -73,22 +74,24 @@ class Gestconsole(modules.Module):
         name=message.name
         dsmapvar = cassapi.get_datasourcemapvars(did=did,session=self.cf,date=date)
         if not dsmapvar: 
-            return False,NOTFOUND
+            return False,NOTFOUND,date
         try:
             index=dsmapvar.content.index(var)
         except ValueError:
-            return False,NOTFOUND
+            return False,NOTFOUND,date
         dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)
         varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=var)
         dsdtprelation=cassapi.get_dsdtprelation(did,self.cf)
         if dsdtprelation:
             for pid in dsdtprelation.dtps:
                 dtpinfo=cassapi.get_dtpinfo(pid,{'dtree':u''},self.cf)
+                if not dtpinfo:
+                    return False,PENDINGDTREEGENERATION,date
                 try:
                     stored_dtree=dtpinfo.dbcols['dtree']
                     dtree=decisiontree.DecisionTree(jsontree=json.dumps(stored_dtree))
-                    if dtree.evaluate_row(varlist.h):
-                        return False,ALREADYMONITORED
+                    if dtree.evaluate_row(varlist[0].h):
+                        return False,ALREADYMONITORED,date
                 except KeyError:
                     pass
         else:

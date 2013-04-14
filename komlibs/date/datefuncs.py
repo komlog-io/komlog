@@ -14,5 +14,8 @@ def get_range(start_date,end_date,interval='days',num=1):
         yield start_date
         start_date = start_date + datetime.timedelta(**kwargs)
         if start_date > end_date:
-            break
+            if start_date.day == end_date.day:
+                start_date=end_date
+            else:
+                break
 

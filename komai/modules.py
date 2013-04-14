@@ -57,6 +57,8 @@ class Textmining(modules.Module):
                     self.logger.debug('Error procesing: '+mtype)
             elif mtype==messages.GDTREE_MESSAGE:
                 result,pid,date=self.process_GDTREE_MESSAGE(message)
+                print result,pid,date
+                print type(pid),type(date)
                 if result:
                     self.logger.debug('Message completed successfully: '+mtype)
                     self.message_bus.sendMessage(messages.FillDatapointMessage(pid=pid,date=date))
@@ -121,7 +123,7 @@ class Textmining(modules.Module):
         - lo almacenamos en bbdd
         '''
         pid=message.pid
-        date=message.date
+        mdate=message.date
         dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
         did=dtpinfo.did
         samples_to_get=[]
@@ -149,9 +151,9 @@ class Textmining(modules.Module):
         dtree=decisiontree.DecisionTree(rawdata=dtree_training_set)
         dtpinfo.dbcols['dtree']=dtree.get_jsontree()
         if cassapi.update_dtp(dtpinfo,self.cf):
-            return True,pid,date
+            return True,pid,mdate
         else:
-            return False,ERROR,date
+            return False,ERROR,mdate
 
     def process_FILL_DATAPOINT_MESSAGE(self, message):
         '''
