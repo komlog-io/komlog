@@ -76,7 +76,7 @@ class Gestconsole(modules.Module):
         if not dsmapvar: 
             return False,NOTFOUND,date
         try:
-            index=dsmapvar.content.index(var)
+            index=dsmapvar.content.index((var,str(len(var))))
         except ValueError:
             return False,NOTFOUND,date
         dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)

@@ -94,7 +94,7 @@ class Textmining(modules.Module):
             for var in varlist:
                 content=var.__dict__
                 mapcontentlist.append(content)
-                mapvarcontentlist.append(content['s'])
+                mapvarcontentlist.append((content['s'],content['l']))
             mapcontentjson=json.dumps(mapcontentlist)
             mapvarcontentjson=json.dumps(mapvarcontentlist)
             dsmobj=cassapi.DatasourceMap(did=did,date=date,content=mapcontentjson)
