@@ -23,6 +23,7 @@ and column_metadata = [
 {column_name: aid, validation_class: UUIDType}
 {column_name: dsname, validation_class: UTF8Type}
 {column_name: last_received, validation_class: DateType}
+{column_name: last_mapped, validation_class: DateType}
 {column_name: dstype, validation_class: UTF8Type}
 {column_name: creation_date, validation_class: DateType}
 {column_name: state, validation_class: IntegerType}

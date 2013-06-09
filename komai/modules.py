@@ -102,6 +102,8 @@ class Textmining(modules.Module):
             try:
                 if cassapi.insert_datasourcemap(dsmobj,dsmvobj,self.cf):
                     self.logger.debug('Map created for did: '+str(did))
+                dsinfo=cassapi.DatasourceInfo(did,last_mapped=date)
+                cassapi.update_ds(dsinfo,self.cf)
                 return True,did,date
             except Exception as e:
                 #rollback

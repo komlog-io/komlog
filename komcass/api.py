@@ -551,7 +551,7 @@ def update_agent(agentinfo,session):
 '''DATASOURCE CLASSES AND METHODS'''
 
 class DatasourceInfo:
-    def __init__(self, did, fromdict=None, dsname=None, last_received=None, dstype=None, aid=None, creation_date=None, state=None, \
+    def __init__(self, did, fromdict=None, dsname=None, last_received=None, last_mapped=None, dstype=None, aid=None, creation_date=None, state=None, \
                  script_name=None, day_of_week=None, month=None, day_of_month=None, hour=None, minute=None):
         if fromdict:
             self.did=did
@@ -559,6 +559,7 @@ class DatasourceInfo:
             self.dsname=fromdict['dsname'] if fromdict.has_key('dsname') else None
             self.dstype=fromdict['dstype'] if fromdict.has_key('dstype') else None
             self.last_received=fromdict['last_received'] if fromdict.has_key('last_received') else None
+            self.last_mapped=fromdict['last_mapped'] if fromdict.has_key('last_mapped') else None
             self.creation_date=fromdict['creation_date'] if fromdict.has_key('creation_date') else None
             self.state=fromdict['state'] if fromdict.has_key('state') else None
             self.script_name=fromdict['script_name'] if fromdict.has_key('script_name') else None
@@ -572,6 +573,7 @@ class DatasourceInfo:
             self.aid=aid
             self.dsname=dsname
             self.last_received=last_received
+            self.last_mapped=last_mapped
             self.dstype=dstype
             self.creation_date=creation_date
             self.state=state
@@ -593,6 +595,8 @@ class DatasourceInfo:
             self.dbdict['dstype']=self.dstype
         if self.last_received:
             self.dbdict['last_received']=self.last_received
+        if self.last_mapped:
+            self.dbdict['last_mapped']=self.last_mapped
         if self.creation_date:
             self.dbdict['creation_date']=self.creation_date
         if self.state:
