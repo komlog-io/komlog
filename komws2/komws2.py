@@ -12,8 +12,8 @@ import handlers
 from tornado.options import define, options
 define("port", default=8000, help="run on the given port", type=int)
 
-static_path = '/home/jcazor/workspace/komlog/komws2/static/'
-#favicon_path = '/home/jcazor/workspace/komlog/komws2/static/favicon.ico'
+static_path = '/home/komlog/komlog/komws2/static/'
+#favicon_path = '/home/komlog/komlog/komws2/static/favicon.ico'
 
 UUID4_REGEX='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
 class Application(tornado.web.Application):
@@ -30,7 +30,7 @@ class Application(tornado.web.Application):
         server_list=('csbe1',)
         pool=casscon.Pool(keyspace,server_list,5)
         self.cf=casscon.CF(pool)
-        self.dest_dir='/tmp/komlog/'
+        self.dest_dir='/home/komlog/data/received'
         tornado.web.Application.__init__(self, handler_list, static_path=static_path,template_path=template_path,debug=True)
 
 if __name__ == "__main__":
