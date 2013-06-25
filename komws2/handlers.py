@@ -94,8 +94,8 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
             ds_name=dsinfo.dsname
             last_received=dsinfo.last_received.isoformat()
             ds_type=dsinfo.dstype
-            params=dsinfo.get_params() #La key del diccionario se establece en el api de bbdd, en cambio las keys del json de la respuesta se establecen aquí... Estamos definiendo keys de la respuesta en sitios diferentes, no me gusta esto a nivel de diseño.
-            #params={'script_name':'sar.sh'}
+            #params=dsinfo.get_params() #La key del diccionario se establece en el api de bbdd, en cambio las keys del json de la respuesta se establecen aquí... Estamos definiendo keys de la respuesta en sitios diferentes, no me gusta esto a nivel de diseño.
+            params={'script_name':'sar.sh','min':'*','hour':'*','dow':'*','month':'*','dom':'*'}
             response={'did':p_did,'ds_name':ds_name,'last_received':last_received,'ds_type':ds_type,'ds_params':params}
             self.write(json_encode(response))
         else:
