@@ -6,6 +6,7 @@ from tornado.template import Template
 from tornado.escape import json_encode,json_decode,xhtml_escape
 from komcass import api as cassapi
 from komfs import api as fsapi
+import os
 import uuid
 import datetime
 
@@ -74,7 +75,7 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
                 now=datetime.datetime.utcnow().isoformat()
                 requestdata={'received':now,'did':p_did,'json_content':self.request.body}
                 try:
-                    requestdata_json=json_encode(request)
+                    requestdata_json=json_encode(requestdata)
                 except Exception as e:
                     self.set_status(400)
                 else:
