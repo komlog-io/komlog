@@ -4,8 +4,6 @@ import glob
 import time
 import uuid
 import dateutil.parser
-from komdb import api as dbapi
-from komdb import connection as dbcon
 from komcass import api as cassapi
 from komcass import connection as casscon
 from komfs import api as fsapi
