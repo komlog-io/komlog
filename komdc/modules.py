@@ -1,6 +1,7 @@
 import sections, options
 import os
 import glob
+import json
 import time
 import uuid
 import dateutil.parser
@@ -130,23 +131,27 @@ class Storing(modules.Module):
                 filename = f[:-5]+'.wspl'
             
             self.logger.debug('Storing '+filename)
-            datasourceid = filename.split('_')[1].split('.')[0]
-            datasourceid = uuid.UUID(datasourceid)
-            date = dateutil.parser.parse(os.path.basename(filename).split('_')[0])
-            udata = fsapi.get_file_content(filename)
-            dsobj=cassapi.DatasourceData(did=datasourceid,date=date,content=udata)
+            #datasourceid = filename.split('_')[1].split('.')[0]
+            #datasourceid = uuid.UUID(datasourceid)
+            #date = dateutil.parser.parse(os.path.basename(filename).split('_')[0])
+            metainfo = json.loads(fsapi.get_file_content(filename))
+            dsinfo=json.loads(metainfo['json_content'])
+            did=uuid.UUID(metainfo['did'])
+            ds_content=dsinfo['ds_content']
+            ds_date=dateutil.parser.parse(dsinfo['ds_date'])
+            dsobj=cassapi.DatasourceData(did=did,date=ds_date,content=ds_content)
             try:
                 if cassapi.insert_datasourcedata(dsobj,self.cass_cf):
-                    self.logger.debug(filename+' stored successfully : '+str(datasourceid)+' '+str(date))
+                    self.logger.debug(filename+' stored successfully : '+str(did)+' '+str(ds_date))
                     fo = os.path.join(self.params['outputdir'],os.path.basename(filename)[:-5]+'.sspl')
                     os.rename(filename,fo)
-                    return datasourceid,date
+                    return did,ds_date
                 else:
                     fo = filename[:-5]+'.xspl'
                     os.rename(filename,fo)
                     return None,None
             except Exception as e:
-                cassapi.remove_datasourcedata(datasourceid,date,self.cass_cf)
+                cassapi.remove_datasourcedata(did,ds_date,self.cass_cf)
                 self.logger.exception('Exception inserting sample: '+str(e))
                 fo = filename[:-5]+'.xspl'
                 os.rename(filename,fo)

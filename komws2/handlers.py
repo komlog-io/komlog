@@ -68,7 +68,7 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             self.write(json_encode({'Message': 'Agent not found'}))
     def post(self,p_did):
         did=uuid.UUID(p_did)
-        dsinfo=cassapi.get_dsinfo(did,{'last_received':u''},self.application.cf)
+        dsinfo=cassapi.get_dsinfo(did,{},self.application.cf)
         if dsinfo:
             ctype=self.request.headers.get('Content-Type')
             if ctype.find('application/json')>=0:
@@ -80,12 +80,14 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
                     self.set_status(400)
                 else:
                     dest_dir=self.application.dest_dir
-                    file_name=now+str(p_did)+'.pspl'
+                    file_name=now+'_'+str(p_did)+'.pspl'
                     dest_file=os.path.join(dest_dir,file_name)
                     if fsapi.create_sample(dest_file,requestdata_json):
                         self.set_status(202)
                     else:
                         self.set_status(500)
+        else:
+            self.set_status(404)
 
 class DatasourceConfigHandler(tornado.web.RequestHandler):
     def get(self,p_did):
