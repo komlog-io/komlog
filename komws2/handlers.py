@@ -93,7 +93,7 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
         dsinfo=cassapi.get_dsinfo(did,{},self.application.cf)
         if dsinfo:
             ds_name=dsinfo.dsname
-            last_received=dsinfo.last_received.isoformat()
+            last_received=dsinfo.last_received.isoformat() if dsinfo.last_received else None
             ds_type=dsinfo.dstype
             #params=dsinfo.get_params() #La key del diccionario se establece en el api de bbdd, en cambio las keys del json de la respuesta se establecen aquí... Estamos definiendo keys de la respuesta en sitios diferentes, no me gusta esto a nivel de diseño.
             params={'script_name':'sar.sh','min':'*','hour':'*','dow':'*','month':'*','dom':'*'}
