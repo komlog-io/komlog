@@ -12,19 +12,39 @@ import datetime
 
 class AgentCreationHandler(tornado.web.RequestHandler):
     def post(self):
-        #Durante la validación, es necesario determinar como buscar agentes en función de su key, para ver si el agente que se intenta crear ya está dado de alta
-        #suponemos que aquí llega una vez ha validado que el agente no existe y es necesario crearlo
-        data=json_decode(self.request.body)
-        aid=uuid.UUID4()
-        uid='X' #obten el uid del usuario autenticado
-        aginfo=cassapi.AgentInfo(aid,agentname=data.ag_name,agentkey=data.ag_pubkey,version=data.ag_version,uid=uid,state='ps')
-        if register_agent(aginfo, self.application.cf):
-            self.set_status(200)
-            response={'aid':str(aid)}
-            self.write(json_encode(response))
+        #suponemos que aquí llega una vez ha validado 
+        username=self.request.headers.get('username')
+        password=self.request.headers.get('password')
+        try:
+            data=json_decode(self.request.body)
+            ag_pubkey=data['ag_pubkey']
+            ag_version=data['ag_version']
+            ag_name=data['ag_name']
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'Message':'Bad parameters'}))
         else:
-            self.status(500)
-            self.write(json_encode({'Message':'Internal error'}))
+            useruidr=cassapi.get_useruidrelation(username,self.application.cf)
+            if not useruidr:
+                self.set_status(404)
+                self.write(json_encode({'Message':'Not found'}))
+            else:
+                uid=useruidr.uid
+                useragentpubkeyr=cassapi.get_useragentpubkeyrelation(uid,{ag_pubkey:u''},self.application.cf)
+                if useragentpubkeyr:
+                    ''' Agent pubkey already on system '''
+                    self.set_status(200)
+                    self.write(json_encode({'aid':str(useragentpubkeyr.dbdict[ag_pubkey])}))
+                else:
+                    ''' register new agent '''
+                    aid=uuid.uuid4()
+                    agentinfo=cassapi.AgentInfo(aid,agentname=ag_name,agentkey=ag_pubkey,version=ag_version,uid=uid,state=0)
+                    if cassapi.register_agent(agentinfo,self.application.cf):
+                        self.set_status(200)
+                        self.write(json_encode({'aid':str(aid)}))
+                    else:
+                        self.set_status(500)
+                        self.write(json_encode({'Message':'Houston, had a problem, try it later please.'}))
 
 class AgentConfigHandler(tornado.web.RequestHandler):
     def get(self,p_aid):

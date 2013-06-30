@@ -102,6 +102,12 @@ class UserAgentRelationORM(CassandraBase):
     def __init__(self, key=None, dbdict=None):
         super(UserAgentRelationORM,self).__init__(key, dbdict)
 
+class UserAgentPubKeyRelationORM(CassandraBase):
+    __cf__ = 'user_agent_pubkey_relation'
+
+    def __init__(self, key=None, dbdict=None):
+        super(UserAgentPubKeyRelationORM,self).__init__(key, dbdict)
+
 class AgentDsRelationORM(CassandraBase):
     __cf__ = 'agent_ds_relation'
 

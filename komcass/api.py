@@ -331,18 +331,37 @@ class UserAgentRelation:
     def __init__(self, uid, aids):
         self.uid=uid
         self.aids=aids
-
     def _prestore(self):
         self.key=self.uid
         self.dbdict = {}
         for aid in self.aids:
             self.dbdict[aid]=u''
 
-
 def get_useragentrelation(uid, session):
     try:
         dbobj=session.get(schema.UserAgentRelationORM(key=uid,dbdict={}))
         return UserAgentRelation(uid=dbobj.key,aids=[aid for aid in dbobj.dbdict.keys()])
+    except NotFoundException:
+        return None
+
+class UserAgentPubKeyRelation:
+    def __init__(self, uid, pubkeys_aids):
+        self.uid=uid
+        self.pubkeys_aids=pubkeys_aids
+        self._prestore()
+    def _prestore(self):
+        self.key=self.uid
+        self.dbdict = {}
+        for (pubkey,aid) in self.pubkeys_aids:
+            self.dbdict[pubkey]=aid
+
+def get_useragentpubkeyrelation(uid,dbcols,session):
+    try:
+        kwargs={}
+        if len(dbcols.keys())>0:
+            kwargs['columns']=[key for key in dbcols.keys()]
+        dbobj=session.get(schema.UserAgentPubKeyRelationORM(key=uid,dbdict={}),kwargs)
+        return UserAgentPubKeyRelation(uid=dbobj.key,pubkeys_aids=[(pubkey,aid) for (pubkey,aid) in dbobj.dbdict.iteritems()])
     except NotFoundException:
         return None
 
@@ -502,31 +521,38 @@ def get_agentinfo(aid,dbcols,session):
         return None
 
 def register_agent(agentinfo,session):
+    print 'Vamos a registrar el agente'
     try:
         aid=agentinfo.aid
         uid=agentinfo.uid
+        pubkey=agentinfo.agentkey
         useragentr=get_useragentrelation(uid,session)
         if useragentr:
+            print 'useragentr con datos'
             try:
                 aidpos = useragentr.aids.index(aid)
                 return False
             except ValueError:
                 pass
-        else:
-            if not useragentr:
-                useragentr=UserAgentRelation(uid=uid,aids=[])
-            useragentr.aids.append(aid)
-            useragentr._prestore()
-            if session.insert(schema.UserAgentRelationORM(key=useragentr.key,dbdict=useragentr.dbdict)):
+        if not useragentr:
+            useragentr=UserAgentRelation(uid=uid,aids=[])
+        useragentr.aids.append(aid)
+        useragentr._prestore()
+        print 'Empieza lo serio'
+        if session.insert(schema.UserAgentRelationORM(key=useragentr.key,dbdict=useragentr.dbdict)):
+            print 'registrada la relacion'
+            useragentpubkeyr=UserAgentPubKeyRelation(uid=uid,pubkeys_aids=[(pubkey,aid)])
+            print useragentpubkeyr.__dict__
+            useragentpubkeyr._prestore()
+            if session.insert(schema.UserAgentPubKeyRelationORM(key=useragentpubkeyr.key,dbdict=useragentpubkeyr.dbdict)):
+                print 'registrada la key'
                 agentinfo._prestore()
+                print agentinfo.__dict__
                 if session.insert(schema.AgentInfoORM(key=agentinfo.key, dbdict=agentinfo.dbdict)):
+                    print 'Registrado correctamente'
                     return True
-                else:
-                    remove_agent(agentinfo,session)
-                    return False
-            else:
-                remove_agent(agentinfo,session)
-                return False
+        remove_agent(agentinfo,session)
+        return False
     except Exception as e:
         print str(e)
         remove_agent(agentinfo,session)
@@ -539,6 +565,8 @@ def remove_agent(agentinfo,session):
         kwargs={}
         kwargs['columns']=(agentinfo.aid,)
         session.remove(schema.UserAgentRelationORM(key=agentinfo.uid, dbdict={}),kwargs)
+        kwargs['columns']=(agentinfo.agentkey,)
+        session.remove(schema.UserAgentPubKeyRelationORM(key=agentinfo.uid, dbdict={}),kwargs)
         return True
     except Exception as e:
         return False

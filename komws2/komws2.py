@@ -19,7 +19,7 @@ UUID4_REGEX='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
 class Application(tornado.web.Application):
     def __init__(self):
         handler_list = [(r"/etc/agent/("+UUID4_REGEX+")", handlers.AgentConfigHandler),
-                    (r"/etc/agent/", handlers.AgentCreationHandler),
+                    (r"/etc/agent/?", handlers.AgentCreationHandler),
                     (r"/etc/ds/("+UUID4_REGEX+")", handlers.DatasourceConfigHandler),
                     (r"/home/(\w+)/config", handlers.UserConfigHandler),
                     (r"/home/(\w+)", handlers.UserHomeHandler),
