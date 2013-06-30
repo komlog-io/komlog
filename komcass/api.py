@@ -284,7 +284,10 @@ def get_datasourcemap(did,session,date=None,fromdate=None,todate=None):
         except NotFoundException:
             pass
     if len(dsmaps)>0:
-        return dsmaps[0] if len(dsmaps)==1 else dsmaps
+        if fromdate or todate:
+            return dsmaps
+        else:
+            return dsmaps[0] if len(dsmaps)==1 else dsmaps
     else:
         return None
 

@@ -103,22 +103,24 @@ class MapVarsMessage:
             self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+date.isoformat())
 
 class MonitorVariableMessage:
-    def __init__(self, qpid_message=None, did=None, date=None, var=None, name=None):
+    def __init__(self, qpid_message=None, did=None, date=None, pos=None, length=None, name=None):
         if qpid_message:
             self.qpid_message=qpid_message
-            mtype,did,date,var,name = self.qpid_message.content.split('|')
+            mtype,did,date,pos,length,name = self.qpid_message.content.split('|')
             self.type=mtype
             self.did=uuid.UUID(did)
             self.date=dateutil.parser.parse(date)
-            self.var=str(var)
+            self.pos=str(pos)
+            self.length=str(length)
             self.name=str(name)
         else:
             self.type=MON_VAR_MESSAGE
             self.did=did
             self.date=date
-            self.var=str(var)
+            self.pos=str(pos)
+            self.length=str(length)
             self.name=str(name)
-            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+date.isoformat()+'|'+str(self.var)+'|'+str(self.name))
+            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length)+'|'+str(self.name))
 
 class GenerateDTreeMessage:
     def __init__(self, qpid_message=None, pid=None, date=None):

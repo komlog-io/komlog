@@ -15,6 +15,7 @@ NOTFOUND=1
 ALREADYMONITORED=2
 DBERROR=3
 PENDINGDTREEGENERATION=4
+PROCESSERROR=5
 
 class Gestconsole(modules.Module):
     def __init__(self, config, instance_number):
@@ -70,17 +71,21 @@ class Gestconsole(modules.Module):
         '''
         did=message.did
         date=message.date
-        var=message.var
+        pos=message.pos
+        length=message.length
         name=message.name
         dsmapvar = cassapi.get_datasourcemapvars(did=did,session=self.cf,date=date)
         if not dsmapvar: 
             return False,NOTFOUND,date
         try:
-            index=dsmapvar.content.index((var,str(len(var))))
+            content=json.loads(dsmapvar.content)
+            index=content.index([int(pos),int(length)])
         except ValueError:
             return False,NOTFOUND,date
+        except Exception:
+            return False,PROCESSERROR,date
         dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)
-        varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=var)
+        varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=pos)
         dsdtprelation=cassapi.get_dsdtprelation(did,self.cf)
         if dsdtprelation:
             for pid in dsdtprelation.dtps:
@@ -98,7 +103,7 @@ class Gestconsole(modules.Module):
             dsdtprelation=cassapi.DsDtpRelation(did=did)
         pid=uuid.uuid4()
         print pid
-        newdtp=cassapi.DatapointInfo(pid,name=name,positives=(str(date)+'_'+str(var),),did=did)
+        newdtp=cassapi.DatapointInfo(pid,name=name,positives=(str(date)+'_'+str(pos),),did=did)
         if cassapi.register_dtp(newdtp,dsdtprelation,self.cf):
             return True,newdtp.pid,date
         else:
