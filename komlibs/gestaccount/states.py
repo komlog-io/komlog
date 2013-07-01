@@ -5,11 +5,11 @@ creation date: 2013/03/31
 author: jcazor
 '''
 
-AGENT={'ACTIVE':0,
-       'PENDING_USER_VALIDATION':1}
+AGENT={'PENDING_USER_VALIDATION':0,
+       'ACTIVE':1}
 
-USER={'ACTIVE':0}
+USER={'ACTIVE':1}
 
-DATASOURCE={'ACTIVE':0}
+DATASOURCE={'ACTIVE':1}
 
 

@@ -6,13 +6,17 @@ from tornado.template import Template
 from tornado.escape import json_encode,json_decode,xhtml_escape
 from komcass import api as cassapi
 from komfs import api as fsapi
+from komlibs.gestaccount import agents as agapi
+from komlibs.gestaccount import datasources as dsapi
+from komlibs.gestaccount import exceptions as gestexcept
 import os
 import uuid
 import datetime
 
 class AgentCreationHandler(tornado.web.RequestHandler):
+
     def post(self):
-        #suponemos que aquí llega una vez ha validado 
+        #suponemos que aquí llega una vez ha validado
         username=self.request.headers.get('username')
         password=self.request.headers.get('password')
         try:
@@ -22,130 +26,127 @@ class AgentCreationHandler(tornado.web.RequestHandler):
             ag_name=data['ag_name']
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'Message':'Bad parameters'}))
+            self.write(json_encode({'message':'Bad parameters'}))
         else:
-            useruidr=cassapi.get_useruidrelation(username,self.application.cf)
-            if not useruidr:
+            try:
+                data=agapi.create_agent(username,ag_name,ag_pubkey,ag_version,self.application.cf)
+                print data
+                self.set_status(200)
+                self.write(json_encode(data))
+            except gestexcept.UserNotFoundException:
                 self.set_status(404)
-                self.write(json_encode({'Message':'Not found'}))
-            else:
-                uid=useruidr.uid
-                useragentpubkeyr=cassapi.get_useragentpubkeyrelation(uid,{ag_pubkey:u''},self.application.cf)
-                if useragentpubkeyr:
-                    ''' Agent pubkey already on system '''
-                    self.set_status(200)
-                    self.write(json_encode({'aid':str(useragentpubkeyr.dbdict[ag_pubkey])}))
-                else:
-                    ''' register new agent '''
-                    aid=uuid.uuid4()
-                    agentinfo=cassapi.AgentInfo(aid,agentname=ag_name,agentkey=ag_pubkey,version=ag_version,uid=uid,state=0)
-                    if cassapi.register_agent(agentinfo,self.application.cf):
-                        self.set_status(200)
-                        self.write(json_encode({'aid':str(aid)}))
-                    else:
-                        self.set_status(500)
-                        self.write(json_encode({'Message':'Houston, had a problem, try it later please.'}))
+                self.write(json_encode({'message':'Not Found'}))
+            except gestexcept.AgentCreationException:
+                self.set_status(500)
+                self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+            except Exception as e:
+                print str(e)
+                self.set_status(500)
+                self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
 class AgentConfigHandler(tornado.web.RequestHandler):
+
     def get(self,p_aid):
-        aid=uuid.UUID(p_aid)
-        agentinfo=cassapi.get_agentinfo(aid,{},self.application.cf)
-        if agentinfo:
-            agentname=agentinfo.agentname
-            state=agentinfo.state
-            version=agentinfo.version
-            agentdsr=cassapi.get_agentdsrelation(aid,self.application.cf)
-            dids=[]
-            if agentdsr:
-                for did in agentdsr.dids:
-                    dids.append(str(did))
-            response={'aid':p_aid,'ag_name':agentname,'ag_state':state,'ag_version':version,'dids':dids}
-            self.write(json_encode(response))
-        else:
+        try:
+            aid=uuid.UUID(p_aid)
+            data=agapi.get_agentconfig(aid,self.application.cf,dids_flag=True)
+            self.set_status(200)
+            self.write(json_encode(data))
+        except gestexcept.AgentNotFoundException:
             self.set_status(404)
-            self.write(json_encode({'Message': 'Agent not found'}))
+            self.write(json_encode({'message':'Agent Not Found'}))
+        except Exception as e:
+            #self.application.logger.exception(str(e))
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
 
 class DatasourceDataHandler(tornado.web.RequestHandler):
+
     def get(self,p_did):
-        print self._headers
-        did=uuid.UUID(p_did)
-        dsinfo=cassapi.get_dsinfo(did,{'last_received':u'','last_mapped':u''},self.application.cf)
-        if dsinfo:
-            last_received=dsinfo.last_received
-            last_mapped=dsinfo.last_mapped
-            dsdata=cassapi.get_datasourcedata(did,last_received,self.application.cf)
-            print last_received,last_mapped
-            detectedvars=[]
-            if last_mapped and last_mapped==last_received:
-                dsmapvars=cassapi.get_datasourcemapvars(did,last_received,self.application.cf)
-                if dsmapvars:
-                    detectedvars=dsmapvars.content
-            location=None
-            response={'did':p_did,'ds_content':dsdata.content,'ds_date':last_received.isoformat(),'ds_location':location,'ds_vars':detectedvars}
-            self.write(json_encode(response))
-        else:
+        try:
+            did=uuid.UUID(p_did)
+            data=dsapi.get_datasourcedata(did,self.application.cf)
+            self.set_status(200)
+            self.write(json_encode(data))
+        except gestexcept.DatasourceNotFoundException:
             self.set_status(404)
-            self.write(json_encode({'Message': 'Agent not found'}))
+            self.write(json_encode({'message': 'Agent not found'}))
+        except Exception as e:
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
+
     def post(self,p_did):
         did=uuid.UUID(p_did)
-        dsinfo=cassapi.get_dsinfo(did,{},self.application.cf)
-        if dsinfo:
-            ctype=self.request.headers.get('Content-Type')
-            if ctype.find('application/json')>=0:
-                now=datetime.datetime.utcnow().isoformat()
-                requestdata={'received':now,'did':p_did,'json_content':self.request.body}
-                try:
-                    requestdata_json=json_encode(requestdata)
-                except Exception as e:
-                    self.set_status(400)
-                else:
-                    dest_dir=self.application.dest_dir
-                    file_name=now+'_'+str(p_did)+'.pspl'
-                    dest_file=os.path.join(dest_dir,file_name)
-                    if fsapi.create_sample(dest_file,requestdata_json):
-                        self.set_status(202)
-                    else:
-                        self.set_status(500)
+        ctype=self.request.headers.get('Content-Type')
+        content=self.request.body
+        dest_dir=self.application.dest_dir
+        if ctype.find('application/json')>=0:
+            try:
+                destfile=dsapi.upload_content(did,content,self.application.cf,dest_dir)
+                self.set_status(202)
+            except gestexcept.DatasourceUploadContentException:
+                print 'uploadexception'
+                self.set_status(500)
+                self.write(json_encode({'message':'Internal Error'}))
+            except gestexcept.DatasourceNotFoundException:
+                self.set_status(404)
+                self.write(json_encode({'message':'Not Found'}))
+            except TypeError:
+                self.set_status(400)
+                self.write(json_encode({'message':'Bad Parameters'}))
+            except Exception as e:
+                print str(e)
+                self.set_status(500)
+                self.write(json_encode({'message':'Internal Error'}))
         else:
-            self.set_status(404)
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad Request'}))
 
 class DatasourceConfigHandler(tornado.web.RequestHandler):
+
     def get(self,p_did):
-        did=uuid.UUID(p_did)
-        dsinfo=cassapi.get_dsinfo(did,{},self.application.cf)
-        if dsinfo:
-            ds_name=dsinfo.dsname
-            last_received=dsinfo.last_received.isoformat() if dsinfo.last_received else None
-            ds_type=dsinfo.dstype
-            #params=dsinfo.get_params() #La key del diccionario se establece en el api de bbdd, en cambio las keys del json de la respuesta se establecen aquí... Estamos definiendo keys de la respuesta en sitios diferentes, no me gusta esto a nivel de diseño.
-            params={'script_name':'sar.sh','min':'*','hour':'*','dow':'*','month':'*','dom':'*'}
-            response={'did':p_did,'ds_name':ds_name,'last_received':last_received,'ds_type':ds_type,'ds_params':params}
-            self.write(json_encode(response))
-        else:
+        try:
+            did=uuid.UUID(p_did)
+            data=dsapi.get_datasourceconfig(did,self.application.cf)
+            print data
+            self.set_status(200)
+            self.write(json_encode(data))
+        except gestexcept.DatasourceNotFoundException:
             self.set_status(404)
-            self.write(json_encode({'Message': 'Agent not found'}))
+            self.write(json_encode({'message':'Not Found'}))
+        except TypeError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad Request'}))
+        except Exception as e:
+            #self.application.logger.exception(str(e))
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
+
     def put(self, p_did):
-        did=uuid.UUID(p_did)
-        dsinfo=cassapi.get_dsinfo(did,{},self.application.cf)
-        if dsinfo:
-            try:
-                requestdata=json.loads(self.request.body)
-                #ahora hay que ver si las keys de la peticion son correctas, antes de modificar el valor de dsinfo
-                for key,value in requestdata.iteritems():
-                    dsinfo.key=value
-                cassapi.update_ds(dsinfo,self.application.cf)
-            except Exception as e:
-                print 'Exception updating datasource: '+str(e)
-                self.set_status(500)
-            else:
-                self.set_status(200)
+        try:
+            did=uuid.UUID(p_did)
+            data=json_loads(self.request.body)
+            new_dsinfo=dsapi.update_datasourceconfig(did,self.application.cf,data)
+            self.set_status(200)
+        except TypeError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad Parameters'}))
+        except KeyError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad Parameters'}))
+        except gestexcept.DatasourceUpdateException:
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
+        except gestexcept.DatasourceNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Not Found'}))
 
 class UserConfigHandler(tornado.web.RequestHandler):
     def get(self,username):
         useruidr=cassapi.get_useruidrelation(username,self.application.cf)
         if not useruidr:
             self.set_status(404)
-            self.write(json_encode({'Message': 'User not found'}))
+            self.write(json_encode({'message': 'User not found'}))
         userinfo='/home/'+username+'/info'
         userconfig='/home/'+username+'/config'
         userhome='/home/'+username
@@ -172,7 +173,7 @@ class UserHomeHandler(tornado.web.RequestHandler):
         useruidr=cassapi.get_useruidrelation(username,self.application.cf)
         if not useruidr:
             self.set_status(404)
-            self.write(json_encode({'Message': 'User not found'}))
+            self.write(json_encode({'message': 'User not found'}))
         userinfo='/home/'+username+'/info'
         userconfig='/home/'+username+'/config'
         userhome='/home/'+username
