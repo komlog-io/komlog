@@ -308,7 +308,45 @@ def remove_datasourcemap(did,date,session):
     else:
         return False
 
-####################################################################################################################
+class DatasourceMapDtps:
+    def __init__(self, did, fromdict=None, date=None, jsoncontent=None):
+        if fromdict:
+            print fromdict
+            self.did=did
+            self.date=fromdict.keys()[0]
+            self.jsoncontent=fromdict.values()[0]
+        else:
+            self.did = did
+            self.date = date
+            self.jsoncontent = jsoncontent
+
+    def _prestore(self):
+        self.key=self.did
+        self.dbdict={}
+        self.dbdict[self.date]=self.jsoncontent
+
+def get_datasourcemapdtps(did,date,session):
+    try:
+        kwargs={}
+        kwargs['columns']=(date,)
+        dbobj=session.get(schema.DatasourceMapDtpsORM(key=did,dbdict={date:u''}),kwargs)
+        return DatasourceMapDtps(did=dbobj.get_key(),fromdict=dbobj.get_dbdict())
+    except NotFoundException:
+        return None
+
+def insert_datasourcemapdtps(obj,session):
+    obj._prestore()
+    if session.insert(schema.DatasourceMapDtpsORM(key=obj.key,dbdict=obj.dbdict)):
+        return True
+    else:
+        return False
+
+def remove_datasourcemapdtps(obj,session):
+    if session.remove(schema.DatasourceMapDtpsORM(key=obj.key,dbdict=obj.dbdict)):
+        return True
+    else:
+        return False
+
 
 class UserUIDRelation:
     def __init__(self, username, uid):

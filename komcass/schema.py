@@ -90,6 +90,17 @@ class DatasourceMapVarsORM(CassandraBase):
     def get_key(self):
         return self.key.split('_')[0]
 
+class DatasourceMapDtpsORM(CassandraBase):
+    __cf__ = 'ds_map_dtps'
+
+    def __init__(self, key=None, dbdict=None):
+        date=str(dbdict.keys()[0].date())
+        pkey=str(key)+'_'+date
+        super(DatasourceMapDtpsORM,self).__init__(pkey,dbdict)
+
+    def get_key(self):
+        return self.key.split('_')[0]
+
 class UserUIDRelationORM(CassandraBase):
     __cf__ = 'user_uid_relation'
 

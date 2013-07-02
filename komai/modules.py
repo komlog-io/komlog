@@ -86,7 +86,7 @@ class Textmining(modules.Module):
         date=message.date
         varlist=[]
         dsdata=cassapi.get_datasourcedata(did,date,self.cf)
-        if not dsdata==None:
+        if dsdata:
             ds_content=dsdata.content
             varlist = variables.get_varlist(ds_content)
             mapcontentlist=[]
@@ -183,19 +183,22 @@ class Textmining(modules.Module):
         date=message.date #depending on the received param, date will be the date of the did or date of the sample whose pid was monitored or modified
         dsmaps=[]
         dtps=[]
+        pidonly_flag=False
         if pid:
+            pidonly_flag=True
             print 'ENTRO AQUI????'
             print pid
             dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
             if not dtpinfo:
                 self.logger.info('Datapoint info not found: '+str(pid))
                 return True,OK
+            did=dtpinfo.did
             dtree=decisiontree.DecisionTree(jsontree=json.dumps(dtpinfo.dbcols['dtree']))
             if not dtree:
                 self.logger.info('Datapoint Decision tree not found: '+str(pid))
                 return True,OK
             dtps.append((dtpinfo,dtree))
-            dsinfo=cassapi.get_dsinfo(dtpinfo.did,{},self.cf)
+            dsinfo=cassapi.get_dsinfo(did,{},self.cf)
             if not dsinfo:
                 self.logger.info('Datasource info not found: '+str(dtpinfo.pid))
                 return True,OK
@@ -207,7 +210,7 @@ class Textmining(modules.Module):
             else:
                 init_date=date
             #obtenemos los datos
-            dsmaps=cassapi.get_datasourcemap(did=dtpinfo.did,session=self.cf,fromdate=init_date,todate=end_date)
+            dsmaps=cassapi.get_datasourcemap(did=did,session=self.cf,fromdate=init_date,todate=end_date)
         else:
             dsmaps.append(cassapi.get_datasourcemap(did=did,session=self.cf,date=date))
             dsdtpr=cassapi.get_dsdtprelation(did,self.cf)
@@ -223,17 +226,34 @@ class Textmining(modules.Module):
         for dsmap in dsmaps:
             varlist=variables.get_varlist(jsoncontent=dsmap.content)
             dtplist=list(dtps)
+            dsmapdtps={}
             for var in varlist:
                 for dtp in dtplist:
                     dtpinfo,dtree=dtp
                     if dtree.evaluate_row(var.h):
                         dtp_data=cassapi.DatapointData(pid=dtpinfo.pid,date=dsmap.date,content=var.c)
                         if cassapi.insert_datapointdata(dtp_data,self.cf):
+                            dsmapdtps[str(dtpinfo.pid)]=var.s
                             dtplist.remove(dtp)
                             break
                         else:
                             self.logger.error('Error inserting datapoint data: %s_%s' %(dtpinfo.pid,dsmap.date))
                             break
+            dsmapdtpsobj=None
+            if pidonly_flag:
+                dsmapdtpsobj=cassapi.get_datasourcemapdtps(did,dsmap.date,self.cf)
+                if dsmapdtpsobj:
+                    content=json.loads(dsmapdtpsobj.jsoncontent)
+                    for key,value in content.iteritems():
+                        content[key]=value
+                    dsmapdtpsobj.jsoncontent=json.dumps(content)
+                else:
+                    dsmapdtpsobj=cassapi.DatasourceMapDtps(did,date=dsmap.date,jsoncontent=json.dumps(dsmapdtps))
+            else:
+                dsmapdtpsobj=cassapi.DatasourceMapDtps(did,date=dsmap.date,jsoncontent=json.dumps(dsmapdtps))
+            if not cassapi.insert_datasourcemapdtps(dsmapdtpsobj,self.cf):
+                self.logger.error('Error inserting Datasource Datapoint Map: %s_%s' %(did,dsmap.date))
+                break
         return True,OK
 
 
