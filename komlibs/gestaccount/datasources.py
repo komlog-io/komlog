@@ -37,16 +37,21 @@ def get_datasourcedata(did,session,date=None):
         last_received=date if date else dsinfo.last_received
         dsdata=cassapi.get_datasourcedata(did,last_received,session)
         dsvars=[]
+        dsdtps={}
         if last_mapped:
             dsmapvars=cassapi.get_datasourcemapvars(did,last_received,session)
             if dsmapvars:
                 dsvars=dsmapvars.content
+        dsmapdtps=cassapi.get_datasourcemapdtps(did,last_received,session)
+        if dsmapdtps:
+            dsdtps=json.loads(dsmapdtps.jsoncontent)
         location={}
         data['did']=str(did)
         data['ds_date']=last_received.isoformat()
         data['ds_location']=location
         data['ds_vars']=dsvars
         data['ds_content']=dsdata.content
+        data['ds_dtps']=dsdtps
         return data
     else:
         raise exceptions.DatasourceNotFoundException()
