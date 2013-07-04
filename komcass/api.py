@@ -177,7 +177,7 @@ def get_datapointdata(pid,session,date=None,fromdate=None,todate=None):
         kwargs['column_start']=fromdate
         start_date=fromdate
         end_date=todate+timedelta(days=1)
-    for date in datefuncs.get_range(start_date,end_date,interval='days',num=1,reverse_order=True):
+    for date in datefuncs.get_range(start_date,end_date,interval='days',num=1,reverse_order=True if kwargs.has_key('column_reversed') else False):
         try:
             dbobj=session.get(schema.DatapointDataORM(key=pid,dbdict={date:u''}),kwargs)
             if dbobj:
@@ -299,14 +299,15 @@ def get_datasourcemap(did,session,date=None,fromdate=None,todate=None):
         start_date=fromdate
         end_date=todate
     elif todate:
-        kwargs['column_finish']=todate
+        kwargs['column_start']=todate
+        kwargs['column_reversed']=True
         start_date=todate-timedelta(days=1)
         end_date=todate
     elif fromdate:
         kwargs['column_start']=fromdate
         start_date=fromdate
         end_date=todate+timedelta(days=1)
-    for date in datefuncs.get_range(start_date,end_date,interval='day',num=1):
+    for date in datefuncs.get_range(start_date,end_date,interval='days',num=1,reverse_order=True if kwargs.has_key('column_reversed') else False):
         try:
             dbobj=session.get(schema.DatasourceMapORM(key=did,dbdict={date:u''}),kwargs)
             if dbobj:
