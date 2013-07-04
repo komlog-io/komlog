@@ -8,10 +8,12 @@ from komcass import api as cassapi
 from komfs import api as fsapi
 from komlibs.gestaccount import agents as agapi
 from komlibs.gestaccount import datasources as dsapi
+from komlibs.gestaccount import datapoints as dpapi
 from komlibs.gestaccount import exceptions as gestexcept
 import os
 import uuid
 import datetime
+import dateutil.parser
 
 class AgentCreationHandler(tornado.web.RequestHandler):
 
@@ -70,7 +72,7 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             self.write(json_encode(data))
         except gestexcept.DatasourceNotFoundException:
             self.set_status(404)
-            self.write(json_encode({'message': 'Agent not found'}))
+            self.write(json_encode({'message': 'Datasource not found'}))
         except Exception as e:
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
@@ -140,6 +142,25 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
         except gestexcept.DatasourceNotFoundException:
             self.set_status(404)
             self.write(json_encode({'message':'Not Found'}))
+
+class DatapointDataHandler(tornado.web.RequestHandler):
+
+    def get(self,p_pid):
+        try:
+            pid=uuid.UUID(p_pid)
+            strdate=self.get_argument('ld',default=None) #ld : last date
+            date=dateutil.parser.parse(strdate) if strdate else datetime.datetime.utcnow()
+            data=dpapi.get_datapointdata(pid,self.application.cf,todate=date)
+            self.set_status(200)
+            self.write(json_encode(data))
+        except gestexcept.DatapointDataNotFoundException as e:
+            self.set_status(404)
+            print 'Datos no encontrados'
+            self.write(json_encode({'message': 'Datapoint data not found','last_date':e.last_date.isoformat()}))
+        except Exception as e:
+            print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
 
 class UserConfigHandler(tornado.web.RequestHandler):
     def get(self,username):

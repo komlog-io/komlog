@@ -24,7 +24,8 @@ class Application(tornado.web.Application):
                     (r"/home/(\w+)/config", handlers.UserConfigHandler),
                     (r"/home/(\w+)", handlers.UserHomeHandler),
                     (r'/static/(.*)', tornado.web.StaticFileHandler),
-                    (r"/var/ds/("+UUID4_REGEX+")", handlers.DatasourceDataHandler)]
+                    (r"/var/ds/("+UUID4_REGEX+")", handlers.DatasourceDataHandler),
+                    (r"/var/dp/("+UUID4_REGEX+")", handlers.DatapointDataHandler)]
         template_path=os.path.join(os.path.dirname(__file__), "templates")
         keyspace='komlog'
         server_list=('csbe1',)

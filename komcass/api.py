@@ -9,6 +9,7 @@ from pycassa.cassandra.ttypes import NotFoundException
 import uuid
 import json
 from komlibs.date import datefuncs
+from datetime import timedelta
 
 class DsDtpRelation:
     def __init__(self, did=None, dtps=None, key=None, dbdict=None):
@@ -154,14 +155,42 @@ def insert_datapointdata(dtpobj,session):
     else:
         return False
 
-def get_datapointdata(pid,date,session):
-    try:
-        kwargs={}
+def get_datapointdata(pid,session,date=None,fromdate=None,todate=None):
+    dtpdatas=[]
+    kwargs={}
+    if date:
         kwargs['columns']=(date,)
-        dbobj=session.get(schema.DatapointDataORM(key=pid,dbdict={date:u''}),kwargs)
-        return DatapointData(key=dbobj.get_key(),dbdict=dbobj.get_dbdict())
-    except NotFoundException:
+        start_date=date
+        end_date=date
+    elif fromdate and todate:
+        kwargs['column_start']=fromdate
+        kwargs['column_finish']=todate
+        start_date=fromdate
+        end_date=todate
+    elif todate:
+        kwargs['column_finish']=todate
+        start_date=todate-timedelta(days=1)
+        end_date=todate
+    elif fromdate:
+        kwargs['column_start']=fromdate
+        start_date=fromdate
+        end_date=todate+timedelta(days=1)
+    for date in datefuncs.get_range(start_date,end_date,interval='days',num=1):
+        try:
+            dbobj=session.get(schema.DatapointDataORM(key=pid,dbdict={date:u''}),kwargs)
+            if dbobj:
+                for date,content in dbobj.get_dbdict().iteritems():
+                    dtpdatas.append(DatapointData(pid=dbobj.get_key(),date=date,content=content))
+        except NotFoundException:
+            pass
+    if len(dtpdatas)>0:
+        if fromdate or todate:
+            return dtpdatas
+        else:
+            return dtpdatas[0] if len(dtpdatas)==1 else dtpdatas
+    else:
         return None
+
 
 def remove_datapointdata(pid,date,session):
     kwargs={'columns':(date,)}

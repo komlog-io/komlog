@@ -27,3 +27,7 @@ class DatasourceUpdateException(Exception):
     def __init__(self):
         pass
 
+class DatapointDataNotFoundException(Exception):
+    def __init__(self, last_date):
+        self.last_date=last_date
+
