@@ -162,6 +162,34 @@ class DatapointDataHandler(tornado.web.RequestHandler):
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
+class DatapointCreationHandler(tornado.web.RequestHandler):
+
+    def post(self):
+        #suponemos que aquí llega una vez ha validado
+        username=self.request.headers.get('username')
+        password=self.request.headers.get('password')
+        try:
+            data=json_decode(self.request.body)
+            dsdate=data['ds_date']
+            did=data['did']
+            cs=data['cs'] #char start
+            vl=data['vl'] #var length
+            dpname=data['ds_name'] #dp name
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            try:
+                dpapi.create_datapoint(did=did,dsdate=dsdate,pos=cs,length=vl,name=dpname,msgbus=self.application.mb)
+                self.set_status(200)
+            except gestexcept.DatapointCreationException:
+                self.set_status(500)
+                self.write(json_encode({'message':'Error, try again later'}))
+            except Exception as e:
+                print str(e)
+                self.set_status(500)
+                self.write(json_encode({'message':'Error, try again later'}))
+
 class UserConfigHandler(tornado.web.RequestHandler):
     def get(self,username):
         useruidr=cassapi.get_useruidrelation(username,self.application.cf)

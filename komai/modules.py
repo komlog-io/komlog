@@ -244,7 +244,7 @@ class Textmining(modules.Module):
                 dsmapdtpsobj=cassapi.get_datasourcemapdtps(did,dsmap.date,self.cf)
                 if dsmapdtpsobj:
                     content=json.loads(dsmapdtpsobj.jsoncontent)
-                    for key,value in content.iteritems():
+                    for key,value in dsmapdtps.iteritems():
                         content[key]=value
                     dsmapdtpsobj.jsoncontent=json.dumps(content)
                 else:

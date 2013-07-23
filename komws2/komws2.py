@@ -6,8 +6,10 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
-from komcass import connection as casscon
 import handlers
+import logging
+from komcass import connection as casscon
+from komimc import bus
 
 from tornado.options import define, options
 define("port", default=8000, help="run on the given port", type=int)
@@ -25,6 +27,7 @@ class Application(tornado.web.Application):
                     (r"/home/(\w+)", handlers.UserHomeHandler),
                     (r'/static/(.*)', tornado.web.StaticFileHandler),
                     (r"/var/ds/("+UUID4_REGEX+")", handlers.DatasourceDataHandler),
+                    (r"/etc/dp/?", handlers.DatapointCreationHandler),
                     (r"/var/dp/("+UUID4_REGEX+")", handlers.DatapointDataHandler)]
         template_path=os.path.join(os.path.dirname(__file__), "templates")
         keyspace='komlog'
@@ -32,6 +35,13 @@ class Application(tornado.web.Application):
         pool=casscon.Pool(keyspace,server_list,5)
         self.cf=casscon.CF(pool)
         self.dest_dir='/home/komlog/data/received'
+        #BUS vars
+        broker='localhost'
+        name='komws2'
+        instance_number='8000'
+        hostname='komserver1'
+        logger=logging.Logger(name)
+        self.mb=bus.MessageBus(broker,name,instance_number,hostname,logger)
         tornado.web.Application.__init__(self, handler_list, static_path=static_path,template_path=template_path,debug=True)
 
 if __name__ == "__main__":

@@ -12,9 +12,11 @@ author: jcazor
 import uuid
 import json
 import os
+import dateutil.parser
 from datetime import timedelta
 from komcass import api as cassapi
 from komlibs.gestaccount import states,types,exceptions
+from komimc import messages
 
 def get_datapointdata(pid,session,todate):
     ''' como se ha pasado por las fases de autorización y autenticación, 
@@ -31,3 +33,16 @@ def get_datapointdata(pid,session,todate):
             data.append((dtpdata.date.isoformat(),dtpdata.content))
     return data
 
+def create_datapoint(did,dsdate,pos,length,name,msgbus):
+    '''
+    Funcion utilizada para la monitorización de una variable y
+    la creación del datapoint correspondiente
+    '''
+    did=uuid.UUID(did)
+    dsdate=dateutil.parser.parse(dsdate)
+    pos=str(pos)
+    length=str(length)
+    name=u''+name
+    message=messages.MonitorVariableMessage(did=did,date=dsdate,pos=pos,length=length,name=name)
+    msgbus.sendMessage(message)
+    return True
