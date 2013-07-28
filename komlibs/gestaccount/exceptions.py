@@ -35,3 +35,6 @@ class DatapointCreationException(Exception):
     def __init__(self, last_date):
         self.last_date=last_date
 
+class BadParametersException(Exception):
+    def __init__(self):
+        pass

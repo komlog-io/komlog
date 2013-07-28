@@ -143,6 +143,46 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
             self.set_status(404)
             self.write(json_encode({'message':'Not Found'}))
 
+class DatasourceCreationHandler(tornado.web.RequestHandler):
+
+    def post(self):
+        #suponemos que aquí llega una vez ha validado
+        username=self.request.headers.get('username')
+        password=self.request.headers.get('password')
+        try:
+            data=json_decode(self.request.body)
+            aid=uuid.UUID(data['aid'])
+            ds_name=str(data['ds_name'])
+            ds_type=str(data['ds_type'])
+            ds_params=data['ds_params']
+        except Exception as e:
+            print 'Exception en el handler'
+            print str(e)
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            try:
+                data=dsapi.create_datasource(username,aid,ds_name,ds_type,ds_params,self.application.cf)
+                print data
+                self.set_status(200)
+                self.write(json_encode(data))
+            except gestexcept.UserNotFoundException:
+                self.set_status(404)
+                self.write(json_encode({'message':'Not Found'}))
+            except gestexcept.AgentNotFoundException:
+                self.set_status(404)
+                self.write(json_encode({'message':'Not Found'}))
+            except gestexcept.BadParametersException:
+                self.set_status(400)
+                self.write(json_encode({'message':'Bad parameters'}))
+            except gestexcept.DatasourceCreationException:
+                self.set_status(500)
+                self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+            except Exception as e:
+                print str(e)
+                self.set_status(500)
+                self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+
 class DatapointDataHandler(tornado.web.RequestHandler):
 
     def get(self,p_pid):

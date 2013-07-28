@@ -22,6 +22,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handler_list = [(r"/etc/agent/("+UUID4_REGEX+")", handlers.AgentConfigHandler),
                     (r"/etc/agent/?", handlers.AgentCreationHandler),
+                    (r"/etc/ds/?", handlers.DatasourceCreationHandler),
                     (r"/etc/ds/("+UUID4_REGEX+")", handlers.DatasourceConfigHandler),
                     (r"/home/(\w+)/config", handlers.UserConfigHandler),
                     (r"/home/(\w+)", handlers.UserHomeHandler),
@@ -34,7 +35,7 @@ class Application(tornado.web.Application):
         server_list=('csbe1',)
         pool=casscon.Pool(keyspace,server_list,5)
         self.cf=casscon.CF(pool)
-        self.dest_dir='/home/komlog/data/received'
+        self.dest_dir='/var/local/komlog/data/received'
         #BUS vars
         broker='localhost'
         name='komws2'

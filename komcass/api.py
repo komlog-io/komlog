@@ -812,18 +812,19 @@ def register_datasource(dsinfo,session):
         else:
             if not agentdsr:
                 agentdsr=AgentDsRelation(aid=aid,dids=[])
-            agentdsr.dids.append(did)
-            agentdsr._prestore()
-            if session.insert(schema.AgentDsRelationORM(key=agentdsr.key,dbdict=agentdsr.dbdict)):
-                dsinfo._prestore()
-                if session.insert(schema.DatasourceInfoORM(key=dsinfo.key, dbdict=dsinfo.dbdict)):
-                    return True
-                else:
-                    remove_ds(dsinfo,session)
-                    return False
+        agentdsr.dids.append(did)
+        agentdsr._prestore()
+        print 'Voy a registrar'
+        if session.insert(schema.AgentDsRelationORM(key=agentdsr.key,dbdict=agentdsr.dbdict)):
+            dsinfo._prestore()
+            if session.insert(schema.DatasourceInfoORM(key=dsinfo.key, dbdict=dsinfo.dbdict)):
+                return True
             else:
                 remove_ds(dsinfo,session)
                 return False
+        else:
+            remove_ds(dsinfo,session)
+            return False
     except Exception as e:
         print str(e)
         remove_ds(dsinfo,session)

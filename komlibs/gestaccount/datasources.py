@@ -16,16 +16,31 @@ from komcass import api as cassapi
 from komfs import api as fsapi
 from komlibs.gestaccount import states,types,exceptions
 
-def create_datasource(aid,dsname,dstype,dsparams,session):
+def create_datasource(username,aid,dsname,dstype,dsparams,session):
     now=datetime.utcnow()
     did=uuid.uuid4()
     kwargs={}
-    if dstype == 'script':
-        for webpar,dbpar in types.DSPARAMS_WEB2DB[DS_STR2INT['script']]:
-            kwargs[dbpar]=dsparams[webpar]
+    try:
+        for dbkey,webkey in types.DSPARAMS_WEB2DB[types.DS_STR2INT[dstype]]:
+            kwargs[dbkey]=dsparams[webkey]
+        dstype=types.DS_STR2INT[dstype]
+    except Exception as e:
+        print str(e)
+        raise exceptions.BadParametersException()
+    useruidr=cassapi.get_useruidrelation(username,session)
+    if not useruidr:
+        raise exceptions.UserNotFoundException()
+    uid=useruidr.uid
+    uidagentr=cassapi.get_useragentrelation(uid,session)
+    if not uidagentr:
+        raise exceptions.AgentNotFoundException()
+    try:
+        index=uidagentr.aids.index(aid)
+    except ValueError:
+        raise exceptions.AgentNotFoundException()
     dsinfo=cassapi.DatasourceInfo(did=did,aid=aid,dsname=dsname,dstype=dstype,creation_date=now,state=states.DATASOURCE['ACTIVE'],**kwargs)
     if cassapi.register_datasource(dsinfo, session):
-        return did
+        return {'did':str(did)}
     else:
         raise exceptions.DatasourceCreationException()
 
