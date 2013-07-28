@@ -40,20 +40,12 @@ def get_dsdtprelation(did, session):
         return None
 
 class DatapointInfo:
-    def __init__(self, pid=None, name=None, dtree=None, positives=None, negatives=None, did=None, key=None,dbdict=None):
+    def __init__(self, pid=None, name=None, dtree=None, did=None, key=None,dbdict=None):
         if key:
             self.pid=key
             self.dbcols = dbdict
             if self.dbcols.has_key('did'):
                 self.did=uuid.UUID(self.dbcols['did'])
-            try:
-                self.dbcols['positives']=json.loads(self.dbcols['positives'])
-            except KeyError:
-                self.dbcols['positives']=[]
-            try:
-                self.dbcols['negatives']=json.loads(self.dbcols['negatives'])
-            except KeyError:
-                self.dbcols['negatives']=[]
             try:
                 self.dbcols['dtree']=json.loads(self.dbcols['dtree'])
             except KeyError:
@@ -65,12 +57,6 @@ class DatapointInfo:
             if dtree:
                 dtree=json.dumps(dtree)
                 self.dbcols['dtree']=dtree
-            if positives:
-                positives=json.dumps(positives)
-                self.dbcols['positives']=positives
-            if negatives:
-                negatives=json.dumps(negatives)
-                self.dbcols['negatives']=negatives
             if did:
                 self.dbcols['did']=str(did)
             else:
@@ -84,10 +70,6 @@ class DatapointInfo:
     def prestore(self):
         if self.dbcols.has_key('dtree') and type(self.dbcols['dtree'])==list:
             self.dbcols['dtree']=json.dumps(self.dbcols['dtree'])
-        if self.dbcols.has_key('positives') and type(self.dbcols['positives'])==list:
-            self.dbcols['positives']=json.dumps(self.dbcols['positives'])
-        if self.dbcols.has_key('negatives') and type(self.dbcols['negatives'])==list:
-            self.dbcols['negatives']=json.dumps(self.dbcols['negatives'])
         self.key=self.pid
         self.dbdict=self.dbcols
 
@@ -106,9 +88,11 @@ def register_dtp(dtp,dsdtprelation,session):
     try:
         dsdtprelation.dtps.insert(0,dtp.pid)
         dsdtprelation.prestore()
+        print 'Insertando PID ds_dtp_relation: '+str(dsdtprelation.key)
         session.insert(schema.DsDtpRelationORM(key=dsdtprelation.key, dbdict=dsdtprelation.dbdict))
         dtp.prestore()
         session.insert(schema.DatapointInfoORM(key=dtp.key, dbdict=dtp.dbdict))
+        print 'Insertando PID dtp_info: '+str(dtp.key)
         return True
     except Exception:
         remove_dtp(dtp,dsdtprelation,session)
@@ -200,6 +184,95 @@ def remove_datapointdata(pid,date,session):
         return True
     else:
         return False
+
+
+class DatapointDtreePositives:
+    def __init__(self, pid):
+        self.pid=pid
+        self.positives={}
+
+    def set_positive(self, date, positive):
+        self.positives[date]=positive
+    
+    def set_positives(self, positives):
+        self.positives=positives
+
+    def del_positive(self,date,positive):
+        if self.positives.has_key(date) and self.positives[date]==positive:
+            self.positive[date]=[]
+
+    def _prestore(self):
+        self._key=self.pid
+        self._dbdict=self.positives
+
+def get_dtp_dtree_positives(pid,session,date=None):
+    kwargs={}
+    if date:
+        kwargs['columns']=(date,)
+    try:
+        dbobj=session.get(schema.DatapointDtreePositivesORM(key=pid,dbdict={date:u''}),kwargs)
+        dtpdtreepositiveobj=DatapointDtreePositives(dbobj.get_key())
+        dtpdtreepositiveobj.set_positives(dbobj.get_dbdict())
+        return dtpdtreepositiveobj
+    except NotFoundException:
+        return None
+
+def update_dtp_dtree_positives(dtpdtreepos,session):
+    dtpdtreepos._prestore()
+    print 'Insertando PID dtp_dtree_positives: '+str(dtpdtreepos._key)
+    if session.insert(schema.DatapointDtreePositivesORM(key=dtpdtreepos._key,dbdict=dtpdtreepos._dbdict)):
+        return True
+    else:
+        return False
+
+class DatapointDtreeNegatives:
+    def __init__(self, pid):
+        self.pid=pid
+        self.negatives={}
+
+    def add_negative(self, date, negative):
+        if self.negatives.has_key(date):
+            try:
+                index=self.negatives[date].index(negative)
+            except ValueError:
+                self.negatives[date].append(negative)
+        else:
+            self.negatives[date]=[negative]
+
+    def set_negatives(self, negatives):
+        self.negatives=negatives
+
+    def del_negative(self, date, negative):
+        if self.negatives.has_key(date):
+            try:
+                index=self.negatives[date].index(negative)
+                self.negatives[date].pop(index)
+            except ValueError:
+                pass
+
+    def _prestore(self):
+        self._key=self.pid
+        self._dbdict=self.negatives
+
+def get_dtp_dtree_negatives(pid,session,date=None):
+    kwargs={}
+    if date:
+        kwargs['columns']=(date,)
+    try:
+        dbobj=session.get(schema.DatapointDtreeNegativesORM(key=pid,dbdict={date:u''}),kwargs)
+        dtpdtreenegativeobj=DatapointDtreeNegatives(dbobj.get_key())
+        dtpdtreenegativeobj.set_negatives(dbobj.get_dbdict())
+        return dtpdtreenegativeobj
+    except NotFoundException:
+        return None
+
+def update_dtp_dtree_negatives(dtpdtreeneg,session):
+    dtpdtreeneg._prestore()
+    if session.insert(schema.DatapointDtreeNegativesORM(key=dtpdtreeneg._key,dbdict=dtpdtreeneg._dbdict)):
+        return True
+    else:
+        return False
+
 
 class DatasourceData:
     def __init__(self, did=None, date=None, content=None,key=None,dbdict=None):

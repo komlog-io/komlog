@@ -4,6 +4,8 @@ Created on 14/12/2012
 @author: jcazor
 '''
 
+import json
+
 class CassandraBase(object):
     def __init__(self, key=None, dbdict=None):
         self.key = key
@@ -48,6 +50,44 @@ class DatapointDataORM(CassandraBase):
         date=str(dbdict.keys()[0].date())
         pkey=str(key)+'_'+date
         super(DatapointDataORM,self).__init__(pkey,dbdict)
+
+class DatapointDtreePositivesORM(CassandraBase):
+    __cf__ = 'dtp_dtree_positives'
+
+    def __init__(self, key=None, dbdict=None):
+        if dbdict:
+            for dkey,value in dbdict.iteritems():
+                print 'Tipo obj: '+str(type(value))
+                dbdict[dkey]=json.dumps(value)
+                print 'Tipo db:' +str(type(dbdict[dkey]))
+        super(DatapointDtreePositivesORM,self).__init__(key,dbdict)
+
+    def get_dbdict(self):
+        if self.dbdict:
+            dbdict={}
+            for key,value in self.dbdict.iteritems():
+                dbdict[key]=json.loads(value)
+            return dbdict
+        else:
+            return None
+
+class DatapointDtreeNegativesORM(CassandraBase):
+    __cf__ = 'dtp_dtree_negatives'
+
+    def __init__(self, key=None, dbdict=None):
+        if dbdict:
+            for dkey,value in dbdict.iteritems():
+                dbdict[dkey]=json.dumps(value)
+        super(DatapointDtreeNegativesORM,self).__init__(key,dbdict)
+    
+    def get_dbdict(self):
+        if self.dbdict:
+            dbdict={}
+            for key,value in self.dbdict.iteritems():
+                dbdict[key]=json.loads(value)
+            return dbdict
+        else:
+            return None
 
 class DsDtpRelationORM(CassandraBase):
     __cf__ = 'ds_dtp_relation'

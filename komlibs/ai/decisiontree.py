@@ -48,8 +48,8 @@ class DecisionTree:
 
     def learn_tree(self,rows,attributes,parentid=None):
         print 'LLamada nueva',
-        print rows
-        print attributes
+        #print rows
+        #print attributes
         node_list=[]
         if len(rows)==0:
             node_list.append(DecisionTreeNode(attribute='',value=1,parentid=parentid,endnode=True,result=False))
@@ -63,15 +63,22 @@ class DecisionTree:
                     p+=1
                 else:
                     n+=1
+            print t,p,n
             if t==p:
+                print 'Todos POSITIVOS'
                 node_list.append(DecisionTreeNode(attribute='',value=1,parentid=parentid,endnode=True,result=True))
             elif t==n:
+                print 'Todos NEGATIVOS'
                 node_list.append(DecisionTreeNode(attribute='',value=1,parentid=parentid,endnode=True))
             elif len(attributes)==0: #aqui deberia devolver que es necesario aumentar la precision del hash de las muestras de entrenamiento
+                print 'ME QUEDE SIN ATRIBUTOS'
+                print 'ESTAS SON LAS ROWS QUE NO SE HAN PODIDO DETERMINAR'
+                print rows
                 node_list.append(DecisionTreeNode(attribute='',value=1,parentid=parentid,endnode=True))
             else:
+                print 'POSITIVOS Y NEGATIVOS ENTRE LAS VARIABLES'
                 next_att=self.__get_attribute(rows,attributes)
-                print 'Siguiente atributo',
+                print 'Siguiente atributo: ',
                 print next_att
                 attributes.remove(next_att)
                 different_values=[]
@@ -79,15 +86,18 @@ class DecisionTree:
                     if row['result']:
                         different_values.append(row[next_att])
                 different_values=list(set(different_values))
+                print 'VALORES POSITIVOS: '+str(different_values)
                 for value in different_values:
                     selected_rows=[]
                     for row in rows:
                         if row[next_att]==value:
                             selected_rows.append(row)
                     if len(selected_rows)==1:
+                        print 'ULTIMA ROW DEL GRUPO'
                         new_node=DecisionTreeNode(attribute=next_att,value=value,parentid=parentid,endnode=True,result=selected_rows[0]['result'])
                         node_list.append(new_node)
                     else:
+                        print 'VARIOS ROWS CON ATTRIBUTO ENTRE LOS VALORES POSITIVOS, CONTINUAMOS CON LA SIGUIENTE ITERACION'
                         new_node=DecisionTreeNode(attribute=next_att,value=value,parentid=parentid,endnode=False)
                         node_list.append(new_node)
                         more_nodes=self.learn_tree(rows=selected_rows,attributes=attributes,parentid=new_node.nodeid)

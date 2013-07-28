@@ -127,29 +127,42 @@ class Textmining(modules.Module):
         pid=message.pid
         mdate=message.date
         dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
+        if not dtpinfo:
+            return False,ERROR,None
         did=dtpinfo.did
-        samples_to_get=[]
-        positives=dtpinfo.dbcols['positives']
-        negatives=dtpinfo.dbcols['negatives']
+        samples_to_get={}
+        dtp_positives=cassapi.get_dtp_dtree_positives(pid,self.cf)
+        dtp_negatives=cassapi.get_dtp_dtree_negatives(pid,self.cf)
         dtree_training_set=[]
-        for positive in positives:
-            date,var=positive.split('_')
-            samples_to_get.append({'date':dateutil.parser.parse(date),
-                                   'var':var,'result':True})
-        for negative in negatives:
-            date,var=negative.split('_')
-            samples_to_get.append({'date':dateutil.parser.parse(date),
-                                   'var':var,'result':False})
+        if dtp_positives:
+            print dtp_positives.__dict__
+            positives=dtp_positives.positives
+            for date,positive in positives.iteritems():
+                print date
+                print positive[0]
+                samples_to_get[date]=positive[0]
+        if dtp_negatives:
+            print dtp_negatives.__dict__
+            negatives=dtp_negatives.negatives
+            for date,negative_array in negatives.iteritems():
+                    if not samples_to_get.has_key(date):
+                        samples_to_get[date]=None
         dsmaps=[]
-        for sample in samples_to_get:
-            dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=sample['date'])
+        print 'SAMPLES TO GET****************************'
+        print samples_to_get
+        print '******************************************'
+        for date,positive in samples_to_get.iteritems():
+            dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)
             varlist=variables.get_varlist(jsoncontent=dsmap.content)
             for var in varlist:
-                if str(var.s)==sample['var']:
-                    var.h['result']=sample['result']
+                if positive and str(var.s)==positive:
+                    var.h['result']=True
                 else:
                     var.h['result']=False
                 dtree_training_set.append(var.h)
+        print 'DTREE_TRAINING_SET**************************************'
+        print dtree_training_set
+        print '******************************************'
         dtree=decisiontree.DecisionTree(rawdata=dtree_training_set)
         dtpinfo.dbcols['dtree']=dtree.get_jsontree()
         if cassapi.update_dtp(dtpinfo,self.cf):

@@ -24,6 +24,8 @@ MAP_VARS_MESSAGE='MAPVARS'
 MON_VAR_MESSAGE='MONVAR'
 GDTREE_MESSAGE='GDTREE'
 FILL_DATAPOINT_MESSAGE='FILDTP'
+NEG_VAR_MESSAGE='NEGVAR'
+POS_VAR_MESSAGE='POSVAR'
 
 #MODULE LIST
 VALIDATION='Validation'
@@ -36,14 +38,18 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           MAP_VARS_MESSAGE:'MapVarsMessage',
                           MON_VAR_MESSAGE:'MonitorVariableMessage',
                           GDTREE_MESSAGE:'GenerateDTreeMessage',
-                          FILL_DATAPOINT_MESSAGE:'FillDatapointMessage'}
+                          FILL_DATAPOINT_MESSAGE:'FillDatapointMessage',
+                          NEG_VAR_MESSAGE:'NegativeVariableMessage',
+                          POS_VAR_MESSAGE:'PositiveVariableMessage'}
 
 
 MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             MAP_VARS_MESSAGE:TEXTMINING,
                             MON_VAR_MESSAGE:GESTCONSOLE,
                             GDTREE_MESSAGE:TEXTMINING,
-                            FILL_DATAPOINT_MESSAGE:TEXTMINING}
+                            FILL_DATAPOINT_MESSAGE:TEXTMINING,
+                            NEG_VAR_MESSAGE:GESTCONSOLE,
+                            POS_VAR_MESSAGE:GESTCONSOLE}
 
 
 #MODULE MAPPINGS
@@ -152,4 +158,40 @@ class FillDatapointMessage:
             self.date=date
             self.pid=pid
             self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+self.date.isoformat()+'|'+str(self.pid))
+
+class NegativeVariableMessage:
+    def __init__(self, qpid_message=None, pid=None, date=None, pos=None, length=None):
+        if qpid_message:
+            self.qpid_message=qpid_message
+            mtype,pid,date,pos,length = self.qpid_message.content.split('|')
+            self.type=mtype
+            self.pid=uuid.UUID(pid)
+            self.date=dateutil.parser.parse(date)
+            self.pos=str(pos)
+            self.length=str(length)
+        else:
+            self.type=NEG_VAR_MESSAGE
+            self.pid=pid
+            self.date=date
+            self.pos=str(pos)
+            self.length=str(length)
+            self.qpid_message=Message(self.type+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length))
+
+class PositiveVariableMessage:
+    def __init__(self, qpid_message=None, pid=None, date=None, pos=None, length=None):
+        if qpid_message:
+            self.qpid_message=qpid_message
+            mtype,pid,date,pos,length = self.qpid_message.content.split('|')
+            self.type=mtype
+            self.pid=uuid.UUID(pid)
+            self.date=dateutil.parser.parse(date)
+            self.pos=str(pos)
+            self.length=str(length)
+        else:
+            self.type=POS_VAR_MESSAGE
+            self.pid=pid
+            self.date=date
+            self.pos=str(pos)
+            self.length=str(length)
+            self.qpid_message=Message(self.type+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length))
 
