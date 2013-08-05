@@ -462,13 +462,69 @@ class UserUIDRelation:
         self.key=self.username
         self.dbdict = {self.uid:u''}
 
-
 def get_useruidrelation(username, session):
     try:
         dbobj=session.get(schema.UserUIDRelationORM(key=username,dbdict={}))
         return UserUIDRelation(username=dbobj.key,uid=dbobj.dbdict.keys()[0])
     except NotFoundException:
         return None
+
+class EmailUIDRelation:
+    def __init__(self, email, uid):
+        self.uid=uid
+        self.email=email
+
+    def _prestore(self):
+        self.key=self.email
+        self.dbdict = {self.uid:u''}
+
+def get_emailuidrelation(email, session):
+    try:
+        dbobj=session.get(schema.EmailUIDRelationORM(key=email,dbdict={}))
+        email=dbobj.get_key()
+        uid=dbobj.get_dbdict().keys()[0]
+        return EmailUIDRelation(email,uid)
+    except NotFoundException:
+        return None
+
+class UserCodeRelation:
+    def __init__(self, email, code):
+        self.email=email
+        self.code=code
+
+    def _prestore(self):
+        self.key=self.email
+        self.dbdict = {self.code:u''}
+
+def get_usercoderelation(email,session):
+    try:
+        dbobj=session.get(schema.UserCodeRelationORM(key=email,dbdict={}))
+        email=dbobj.get_key()
+        code=dbobj.get_dbdict().keys()[0]
+        return UserCodeRelation(email,code)
+    except NotFoundException:
+        return None
+
+def insert_usercoderelation(usercoder,session):
+    try:
+        usercoder._prestore()
+        if not session.insert(schema.UserCodeRelationORM(key=usercoder.key,dbdict=usercoder.dbdict)):
+            return False
+        return True
+    except Exception:
+        remove_usercoderelation(usercoder,session)
+        return False
+
+def remove_usercodrelation(usercoder,session):
+    try:
+        usercoder._prestore()
+        session.remove(schema.UserCodeRelationORM(key=usercoder.key,dbdict=usercoder.dbdict))
+        return True
+    except Exception as e:
+        return False
+
+
+        
 
 class UserAgentRelation:
     def __init__(self, uid, aids):
@@ -530,11 +586,12 @@ def get_agentdsrelation(aid, session):
 ''' USER CLASSES AND METHODS '''
 
 class UserInfo:
-    def __init__(self, uid, fromdict=None, username=None, password=None, segment=None, creation_date=None, state=None):
+    def __init__(self, uid, fromdict=None, username=None, password=None, email=None, segment=None, creation_date=None, state=None):
         if fromdict:
             self.uid=uid
             self.username=fromdict['username'] if fromdict.has_key('username') else None
             self.password=fromdict['password'] if fromdict.has_key('password') else None
+            self.email=fromdict['email'] if fromdict.has_key('email') else None
             self.segment=fromdict['segment'] if fromdict.has_key('segment') else None
             self.creation_date=fromdict['creation_date'] if fromdict.has_key('creation_date') else None
             self.state=fromdict['state'] if fromdict.has_key('state') else None
@@ -542,6 +599,7 @@ class UserInfo:
             self.uid=uid
             self.username=username
             self.password=password
+            self.email=email
             self.segment=segment
             self.creation_date=creation_date
             self.state=state
@@ -553,6 +611,8 @@ class UserInfo:
             self.dbdict['username']=self.username
         if self.password is not None:
             self.dbdict['password']=self.password
+        if self.email is not None:
+            self.dbdict['email']=self.email
         if self.segment is not None:
             self.dbdict['segment']=self.segment
         if self.creation_date is not None:
@@ -574,48 +634,59 @@ def register_user(userinfo,session):
     try:
         uid=userinfo.uid
         username=userinfo.username
+        email=userinfo.email
+        emailuidr=get_emailuidrelation(email,session)
         useruidr=get_useruidrelation(username,session)
-        if not useruidr:
-            useruidr=UserUIDRelation(username,uid)
-            useruidr._prestore()
-            if session.insert(schema.UserUIDRelationORM(key=useruidr.key,dbdict=useruidr.dbdict)):
-                userinfo._prestore()
-                if session.insert(schema.UserInfoORM(key=userinfo.key, dbdict=userinfo.dbdict)):
-                    return True
-                else:
-                    remove_user(userinfo,session)
-                    return False
-            else:
-                remove_user(userinfo,session)
-                return False
-        elif useruidr.uid==uid:
-            userinfo._prestore()
-            if session.insert(schema.UserInfoORM(key=userinfo.key, dbdict=userinfo.dbdict)):
-                return True
-            else:
-                return False
-        else:
+        userinfo2=get_userinfo(uid,{},session)
+        if emailuidr or useruidr or userinfo2:
             return False
-    except Exception as e:
-        remove_user(userinfo,session)
-        return False
-
-def remove_user(userinfo,session):
-    try:
+        emailuidr=EmailUIDRelation(email,uid)
+        emailuidr._prestore()
+        if not session.insert(schema.EmailUIDRelationORM(key=emailuidr.key,dbdict=emailuidr.dbdict)):
+            remove_user(userinfo,session)
+            return False
+        useruidr=UserUIDRelation(username,uid)
+        useruidr._prestore()
+        if not session.insert(schema.UserUIDRelationORM(key=useruidr.key,dbdict=useruidr.dbdict)):
+            remove_user(userinfo,session)
+            return False
         userinfo._prestore()
-        session.remove(schema.UserInfoORM(key=userinfo.key, dbdict=userinfo.dbdict))
-        useruidr=get_useruidrelation(userinfo.username,session)
-        if useruidr:
-            useruidr._prestore()
-            session.remove(schema.UserUIDRelationORM(key=useruidr.key, dbdict=useruidr.dbdict))
+        if not session.insert(schema.UserInfoORM(key=userinfo.key, dbdict=userinfo.dbdict)):
+            remove_user(userinfo,session) 
+            return False
         return True
     except Exception as e:
+        remove_user(userinfo,session)
         return False
 
 def update_user(userinfo,session):
     try:
         userinfo._prestore()
-        session.insert(schema.UserInfoORM(key=userinfo.key, dbdict=userinfo.dbdict))
+        uid=userinfo.uid
+        if not session.insert(schema.UserInfoORM(key=userinfo.key, dbdict=userinfo.dbdict)):
+            return False
+        return True
+    except Exception:
+        return False
+
+def remove_user(userinfo,session):
+    try:
+        userinfo._prestore()
+        uid=userinfo.uid
+        username=userinfo.username
+        email=userinfo.email
+        emailuidr=get_emauiluidrelation(email,session)
+        if emailuidr and emailuidr.uid==uid:
+            emailuidr._prestore()
+            session.remove(schema.EmailUIDRelationORM(key=emailuidr.key,dbdict=emailuidr.dbdict))
+        useruidr=get_useruidrelation(username,session)
+        if useruidr and useruidr.uid==uid:
+            useruidr._prestore()
+            session.remove(schema.UserUIDRelationORM(key=useruidr.key,dbdict=useruidr.dbdict))
+        userinfo2=get_userinfo(uid,{},session)
+        if userinfo2:
+            userinfo2._prestore()
+            session.remove(schema.UserInfoORM(key=userinfo.key,dbdict=userinfo.dbdict))
         return True
     except Exception as e:
         return False

@@ -11,6 +11,10 @@ from komfig import komlogger
 from komimc import bus,messages
 from komlibs.textman import variables
 from komlibs.ai import decisiontree
+from komlibs.general import stringops
+from komlibs.mail import connection as mailcon
+from komlibs.mail import types as mailtypes
+from komlibs.mail import messages as mailmessages
 
 
 NOTFOUND=1
@@ -33,6 +37,11 @@ class Gestconsole(modules.Module):
         self.params['broker'] = self.config.safe_get(sections.GESTCONSOLE, options.MESSAGE_BROKER)
         if not self.params['broker']:
             self.params['broker'] = self.config.safe_get(sections.MAIN, options.MESSAGE_BROKER)
+        self.params['mail_server'] = self.config.safe_get(sections.MAIN,options.MAIL_SERVER)
+        self.params['mail_user'] = self.config.safe_get(sections.MAIN,options.MAIL_USER)
+        self.params['mail_password'] = self.config.safe_get(sections.MAIN,options.MAIL_PASSWORD)
+        self.params['mail_domain'] = self.config.safe_get(sections.MAIN,options.MAIL_DOMAIN)
+
 
     def start(self):
         self.logger = komlogger.getLogger(self.config.conf_file, self.name)
@@ -41,10 +50,14 @@ class Gestconsole(modules.Module):
             self.logger.error('Cassandra connection configuration keys not found')
         elif not self.params['broker']:
             self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
+        elif not self.params['mail_server'] or not self.params['mail_user'] or not self.params['mail_password']:
+            self.logger.error('Mail configuration parameter not found either server, user or password')
         else:
             self.cass_pool = casscon.Pool(keyspace=self.params['cass_keyspace'], server_list=self.params['cass_servlist'], pool_size=self.params['cass_poolsize'])
             self.cf = casscon.CF(self.cass_pool)
             self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
+            self.mailer = mailcon.Mailer(self.params['mail_server'])
+            self.mailer.login(self.params['mail_user'],self.params['mail_password'])
             self.__loop()
         self.logger.info('Gestconsole module exiting')
     
@@ -75,6 +88,12 @@ class Gestconsole(modules.Module):
                     self.message_bus.sendMessage(messages.GenerateDTreeMessage(pid=pid,date=date))
                 else:
                     self.logger.error('Error processing message: '+mtype+' Error: '+str(pid))
+            elif mtype==messages.NEW_USR_MESSAGE:
+                result,msg=self.process_NEW_USR_MESSAGE(message)
+                if result:
+                    self.logger.debug('Message completed successfully: '+mtype)
+                else:
+                    self.logger.error('Error processing message: '+mtype+' Error: '+str(msg))
             else:
                 self.logger.error('Message Type not supported: '+mtype)
                 self.message_bus.sendMessage(message)
@@ -205,3 +224,31 @@ class Gestconsole(modules.Module):
         if not cassapi.update_dtp_dtree_negatives(dtpdtreeneg,self.cf):
             return False,PROCESSERROR,date
         return True,pid,date
+
+    def process_NEW_USR_MESSAGE(self, message):
+        ''' Los pasos son los siguientes:
+        - Obtenemos la informacion del usuario
+        - generamos codigo y mandamos un mail al usuario con el enlace para su activacion
+        '''
+        print 'por lo menos el mensaje LO TRATAMOS'
+        uid=message.uid
+        userinfo=cassapi.get_userinfo(uid,{},self.cf)
+        if not userinfo:
+            return False,'Userinfo not found'
+        email=userinfo.email
+        if not email:
+            return False,'User email not found'
+        new_code=stringops.get_randomstring(size=32)
+        usercoder=cassapi.UserCodeRelation(email,new_code)
+        if not cassapi.insert_usercoderelation(usercoder,self.cf):
+            return False,'Error inserting new user code'
+        mailargs={'to_address':email,'code':new_code,'domain':self.params['mail_domain']}
+        mailmessage=mailmessages.get_message(mailtypes.NEW_USER,mailargs)
+        print mailmessage.__dict__
+        if not self.mailer.send(mailmessage):
+            return False,'Error sending mail'
+        return True,'Message processed successfully'
+
+
+
+

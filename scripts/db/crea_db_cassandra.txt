@@ -17,6 +17,8 @@ create column family ds_map with comparator=DateType and default_validation_clas
 create column family ds_map_vars with comparator=DateType and default_validation_class=UTF8Type and key_validation_class=UTF8Type;
 create column family ds_map_dtps with comparator=DateType and default_validation_class=UTF8Type and key_validation_class=UTF8Type;
 
+create column family new_user_codes with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UTF8Type;
+create column family email_uid_relation with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UTF8Type;
 create column family user_uid_relation with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UTF8Type;
 create column family user_agent_relation with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
 create column family user_agent_pubkey_relation with comparator=UTF8Type and default_validation_class=UUIDType and key_validation_class=UUIDType;

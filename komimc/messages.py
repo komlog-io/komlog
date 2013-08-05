@@ -26,6 +26,7 @@ GDTREE_MESSAGE='GDTREE'
 FILL_DATAPOINT_MESSAGE='FILDTP'
 NEG_VAR_MESSAGE='NEGVAR'
 POS_VAR_MESSAGE='POSVAR'
+NEW_USR_MESSAGE='NEWUSR'
 
 #MODULE LIST
 VALIDATION='Validation'
@@ -40,7 +41,8 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           GDTREE_MESSAGE:'GenerateDTreeMessage',
                           FILL_DATAPOINT_MESSAGE:'FillDatapointMessage',
                           NEG_VAR_MESSAGE:'NegativeVariableMessage',
-                          POS_VAR_MESSAGE:'PositiveVariableMessage'}
+                          POS_VAR_MESSAGE:'PositiveVariableMessage',
+                          NEW_USR_MESSAGE:'NewUserMessage'}
 
 
 MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
@@ -49,7 +51,8 @@ MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             GDTREE_MESSAGE:TEXTMINING,
                             FILL_DATAPOINT_MESSAGE:TEXTMINING,
                             NEG_VAR_MESSAGE:GESTCONSOLE,
-                            POS_VAR_MESSAGE:GESTCONSOLE}
+                            POS_VAR_MESSAGE:GESTCONSOLE,
+                            NEW_USR_MESSAGE:GESTCONSOLE}
 
 
 #MODULE MAPPINGS
@@ -194,4 +197,16 @@ class PositiveVariableMessage:
             self.pos=str(pos)
             self.length=str(length)
             self.qpid_message=Message(self.type+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length))
+
+class NewUserMessage:
+    def __init__(self, qpid_message=None, uid=None):
+        if qpid_message:
+            self.qpid_message=qpid_message
+            mtype,uid = self.qpid_message.content.split('|')
+            self.type=mtype
+            self.uid=uuid.UUID(uid)
+        else:
+            self.type=NEW_USR_MESSAGE
+            self.uid=uid
+            self.qpid_message=Message(self.type+'|'+str(self.uid))
 

@@ -24,12 +24,14 @@ class Application(tornado.web.Application):
                     (r"/etc/agent/?", handlers.AgentCreationHandler),
                     (r"/etc/ds/?", handlers.DatasourceCreationHandler),
                     (r"/etc/ds/("+UUID4_REGEX+")", handlers.DatasourceConfigHandler),
+                    (r"/etc/dp/?", handlers.DatapointCreationHandler),
+                    (r"/etc/usr/confirm/", handlers.UserConfirmationHandler),
+                    (r"/etc/usr/?", handlers.UserCreationHandler),
+                    (r"/var/ds/("+UUID4_REGEX+")", handlers.DatasourceDataHandler),
+                    (r"/var/dp/("+UUID4_REGEX+")", handlers.DatapointDataHandler),
                     (r"/home/(\w+)/config", handlers.UserConfigHandler),
                     (r"/home/(\w+)", handlers.UserHomeHandler),
-                    (r'/static/(.*)', tornado.web.StaticFileHandler),
-                    (r"/var/ds/("+UUID4_REGEX+")", handlers.DatasourceDataHandler),
-                    (r"/etc/dp/?", handlers.DatapointCreationHandler),
-                    (r"/var/dp/("+UUID4_REGEX+")", handlers.DatapointDataHandler)]
+                    (r'/static/(.*)', tornado.web.StaticFileHandler)]
         template_path=os.path.join(os.path.dirname(__file__), "templates")
         keyspace='komlog'
         server_list=('csbe1',)

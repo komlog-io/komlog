@@ -6,6 +6,7 @@ from tornado.template import Template
 from tornado.escape import json_encode,json_decode,xhtml_escape
 from komcass import api as cassapi
 from komfs import api as fsapi
+from komlibs.gestaccount import users as usrapi
 from komlibs.gestaccount import agents as agapi
 from komlibs.gestaccount import datasources as dsapi
 from komlibs.gestaccount import datapoints as dpapi
@@ -182,6 +183,70 @@ class DatasourceCreationHandler(tornado.web.RequestHandler):
                 print str(e)
                 self.set_status(500)
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+
+class UserCreationHandler(tornado.web.RequestHandler):
+    def post(self):
+        #suponemos que aquí llega una vez ha validado capcha o algo asi
+        try:
+            data=json_decode(self.request.body)
+            username=u''+data['username']
+            password=u''+data['password']
+            email=u''+data['email']
+        except Exception as e:
+            print 'Exception en el handler'
+            print str(e)
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            try:
+                print 'llamamos a usrapi.create_user'
+                data=usrapi.create_user(username,password,email,self.application.cf,self.application.mb)
+                print 'Datos recibidos',
+                print data
+                self.set_status(200)
+                self.write(json_encode(data))
+            except gestexcept.UserAlreadyExistsException:
+                self.set_status(404)
+                self.write(json_encode({'message':'User Already Exists'}))
+            except gestexcept.BadParametersException:
+                self.set_status(400)
+                self.write(json_encode({'message':'Bad parameters'}))
+            except gestexcept.UserCreationException:
+                self.set_status(500)
+                self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+            except Exception as e:
+                print str(e)
+                self.set_status(500)
+                self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+
+class UserConfirmationHandler(tornado.web.RequestHandler):
+    def get(self):
+        print 'Entramos en UserConfirmationHandler'
+        #suponemos que aquí llega una vez ha validado capcha o algo asi
+        code=self.get_argument('c') #confirmation cod3 
+        print code
+        email=self.get_argument('e') #email
+        print email
+        try:
+            print 'llamamos a usrapi.confirm_user'
+            data=usrapi.confirm_user(email,code,self.application.cf)
+            print 'Datos recibidos',
+            print data
+            self.set_status(200)
+            self.write(json_encode(data))
+        except gestexcept.UserNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'User not Found'}))
+        except gestexcept.BadParametersException:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        except gestexcept.UserCreationException:
+            self.set_status(500)
+            self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+        except Exception as e:
+            print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
 class DatapointDataHandler(tornado.web.RequestHandler):
 

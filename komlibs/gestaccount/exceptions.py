@@ -11,6 +11,14 @@ class UserNotFoundException(Exception):
     def __init__(self):
         pass
 
+class UserAlreadyExistsException(Exception):
+    def __init__(self):
+        pass
+
+class UserCreationException(Exception):
+    def __init__(self):
+        pass
+
 class DatasourceCreationException(Exception):
     def __init__(self):
         pass

@@ -147,6 +147,18 @@ class UserUIDRelationORM(CassandraBase):
     def __init__(self, key=None, dbdict=None):
         super(UserUIDRelationORM,self).__init__(key, dbdict)
 
+class EmailUIDRelationORM(CassandraBase):
+    __cf__ = 'email_uid_relation'
+
+    def __init__(self, key=None, dbdict=None):
+        super(EmailUIDRelationORM,self).__init__(key, dbdict)
+
+class UserCodeRelationORM(CassandraBase):
+    __cf__ = 'new_user_codes'
+
+    def __init__(self, key=None, dbdict=None):
+        super(UserCodeRelationORM,self).__init__(key, dbdict)
+
 class UserAgentRelationORM(CassandraBase):
     __cf__ = 'user_agent_relation'
 
