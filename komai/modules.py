@@ -9,6 +9,7 @@ from komapp import modules
 from komfig import komlogger
 from komimc import bus,messages
 from komlibs.textman import variables
+from komlibs.numeric import weight
 from komlibs.ai import decisiontree
 
 OK=1
@@ -66,6 +67,12 @@ class Textmining(modules.Module):
                     self.logger.debug('Error procesing: '+mtype)
             elif mtype==messages.FILL_DATAPOINT_MESSAGE:
                 result,subresult=self.process_FILL_DATAPOINT_MESSAGE(message)
+                if result:
+                    self.logger.debug('Message completed successfully: '+mtype)
+                else:
+                    self.logger.debug('Error procesing: '+mtype)
+            elif mtype==messages.UPDATE_GRAPH_WEIGHT_MESSAGE:
+                result,subresult=self.process_UPDATE_GRAPH_WEIGHT_MESSAGE(message)
                 if result:
                     self.logger.debug('Message completed successfully: '+mtype)
                 else:
@@ -268,5 +275,46 @@ class Textmining(modules.Module):
                 self.logger.error('Error inserting Datasource Datapoint Map: %s_%s' %(did,dsmap.date))
                 break
         return True,OK
+
+    def process_UPDATE_GRAPH_WEIGHT_MESSAGE(self,message):
+        '''
+        This function associates each graph with the datasources
+        it should be related with, and determines the importance (weight) of
+        the graph to the datasource
+        procedure:
+        1) select all datapoints associated with the graph
+        2) for each datapoint, select its datasource
+        3) Group datapoints by datasource
+        4) apply relevance measurement algorithm
+        5) store results
+        '''
+        gid=message.gid
+        graphinfo=cassapi.get_graphinfo(gid,self.cf)
+        if not graphinfo:
+            return False,'Graphinfo not found'
+        datasources={}
+        for pid in graphinfo.get_datapoints():
+            dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
+            try:
+                did=dtpinfo.did
+                datasources[did].append(pid)
+            except KeyError:
+                datasources[did]=[]
+                datasources[did].append(pid)
+            except Exception:
+                pass
+        weights=weight.relevanceweight(datasources)
+        graphdsw=cassapi.get_graphdatasourceweight(gid,self.cf)
+        if graphdsw:
+            cassapi.delete_graphdatasourceweight(graphdsw,self.cf)
+        graphdsw=cassapi.GraphDatasourceWeight(gid)
+        graphdsw.set_data(weights)
+        if not cassapi.insert_graphdatasourceweight(graphdsw,self.cf):
+            return False,'Error inserting GraphDatasourceWeight'
+        for did in datasources.keys():
+            dsgw=cassapi.DatasourceGraphWeight(did)
+            dsgw.add_graph(gid,weights[did])
+            cassapi.insert_datasourcegraphweight(dsgw,self.cf)
+        return True,'Updated successfully'
 
 

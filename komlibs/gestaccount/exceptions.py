@@ -46,3 +46,12 @@ class DatapointCreationException(Exception):
 class BadParametersException(Exception):
     def __init__(self):
         pass
+
+class GraphNotFoundException(Exception):
+    def __init__(self):
+        pass
+
+class GraphCreationException(Exception):
+    def __init__(self):
+        pass
+

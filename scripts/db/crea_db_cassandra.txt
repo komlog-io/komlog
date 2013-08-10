@@ -53,4 +53,8 @@ and column_metadata = [
 {column_name: state, validation_class: IntegerType}
 ];
 
-
+create column family dtp_graph_relation with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family graph_dtp_relation with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family ds_graph_weight with comparator=UUIDType and default_validation_class=FloatType and key_validation_class=UUIDType;
+create column family graph_ds_weight with comparator=UUIDType and default_validation_class=FloatType and key_validation_class=UUIDType;
+create column family graph_info with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;

@@ -5,6 +5,8 @@ Created on 14/12/2012
 '''
 
 import json
+import uuid
+import api as cassapi
 
 class CassandraBase(object):
     def __init__(self, key=None, dbdict=None):
@@ -198,3 +200,117 @@ class DatasourceInfoORM(CassandraBase):
         super(DatasourceInfoORM,self).__init__(key, dbdict)
         
        
+class GraphInfoORM(CassandraBase):
+    __cf__ = 'graph_info'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.gid
+            dbdict={}
+            if apiobj.uid:
+                dbdict['uid']=str(apiobj.uid)
+            if apiobj.name:
+                dbdict['name']=apiobj.name
+            for dtp in apiobj.get_datapoints():
+                dtpinfo=apiobj.get_datapoint_info(dtp)
+                dtpcolor=str(dtp)+'_color'
+                dtpname=str(dtp)+'_name'
+                dbdict[dtpcolor]=dtpinfo['color']
+                dbdict[dtpname]=dtpinfo['name']
+        super(GraphInfoORM,self).__init__(key,dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.GraphInfo(self.key,uuid.UUID(self.dbdict['uid']),self.dbdict['name'])
+        datapoints=[]
+        dtpcolors={}
+        dtpnames={}
+        for col,value in self.dbdict.iteritems():
+            if len(col.split('_'))==2:
+                dtp,param=col.split('_')
+                dtp=uuid.UUID(dtp)
+                datapoints.append(dtp)
+                datapoints=list(set(datapoints))
+                if param=='color':
+                    dtpcolors[dtp]=value
+                elif param=='name':
+                    dtpnames[dtp]=value
+        datapoints=list(datapoints)
+        for dtp in datapoints:
+            try:
+                apiobj.add_datapoint(dtp,dtpcolors[dtp],dtpnames[dtp])
+            except KeyError:
+                return None
+        return apiobj
+
+class GraphDatapointRelationORM(CassandraBase):
+    __cf__ = 'graph_dtp_relation'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.gid
+            dbdict={}
+            for pid in apiobj.pids:
+                dbdict[pid]=''
+        super(GraphDatapointRelationORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.GraphDatapointRelation(gid)
+        for pid in self.dbdict.keys():
+            apiobj.add_datapoint(pid)
+        return apiobj
+
+class DatapointGraphRelationORM(CassandraBase):
+    __cf__ = 'dtp_graph_relation'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.pid
+            dbdict={}
+            for gid in apiobj.gids:
+                dbdict[gid]=''
+        super(DatapointGraphRelationORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.DatapointGraphRelation(pid)
+        for gid in self.dbdict.keys():
+            apiobj.add_graph(gid)
+        return apiobj
+
+class DatasourceGraphWeightORM(CassandraBase):
+    __cf__ = 'ds_graph_weight'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.did
+            dbdict=apiobj.gids
+        super(DatasourceGraphWeightORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.DatasourceGraphWeight(self.key)
+        apiobj.set_data(self.dbdict)
+        return apiobj
+
+class GraphDatasourceWeightORM(CassandraBase):
+    __cf__ = 'graph_ds_weight'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.gid
+            dbdict=apiobj.dids
+        super(GraphDatasourceWeightORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.GraphDatasourceWeight(gid)
+        apiobj.set_data(self.dbdict)
+        return apiobj
+

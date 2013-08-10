@@ -25,6 +25,8 @@ class Application(tornado.web.Application):
                     (r"/etc/ds/?", handlers.DatasourceCreationHandler),
                     (r"/etc/ds/("+UUID4_REGEX+")", handlers.DatasourceConfigHandler),
                     (r"/etc/dp/?", handlers.DatapointCreationHandler),
+                    (r"/etc/graph/?", handlers.GraphCreationHandler),
+                    (r"/etc/graph/("+UUID4_REGEX+")", handlers.GraphConfigHandler),
                     (r"/etc/usr/confirm/", handlers.UserConfirmationHandler),
                     (r"/etc/usr/?", handlers.UserCreationHandler),
                     (r"/var/ds/("+UUID4_REGEX+")", handlers.DatasourceDataHandler),

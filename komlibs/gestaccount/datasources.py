@@ -1,3 +1,4 @@
+#coding: utf-8
 '''
 datasources.py: library for managing datasource operations
 
@@ -60,10 +61,17 @@ def get_datasourcedata(did,session,date=None):
         dsmapdtps=cassapi.get_datasourcemapdtps(did,last_received,session)
         if dsmapdtps:
             dsdtps=json.loads(dsmapdtps.jsoncontent)
-        location={}
+        print 'Llegamos a donde esperamos'
+        dsgraphs=cassapi.get_datasourcegraphweight(did,session)
+        print dsgraphs
+        if dsgraphs:
+            graphsweights=[]
+            for key,value in dsgraphs.gids.items():
+                graphsweights.append((str(key),value))
+            data['ds_graphs']=graphsweights
+        print 'LLEgamos más lejos de lo que esperábamos'
         data['did']=str(did)
         data['ds_date']=last_received.isoformat()
-        data['ds_location']=location
         data['ds_vars']=dsvars
         data['ds_content']=dsdata.content
         data['ds_dtps']=dsdtps

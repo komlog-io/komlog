@@ -27,6 +27,7 @@ FILL_DATAPOINT_MESSAGE='FILDTP'
 NEG_VAR_MESSAGE='NEGVAR'
 POS_VAR_MESSAGE='POSVAR'
 NEW_USR_MESSAGE='NEWUSR'
+UPDATE_GRAPH_WEIGHT_MESSAGE='UPDGRW'
 
 #MODULE LIST
 VALIDATION='Validation'
@@ -42,7 +43,8 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           FILL_DATAPOINT_MESSAGE:'FillDatapointMessage',
                           NEG_VAR_MESSAGE:'NegativeVariableMessage',
                           POS_VAR_MESSAGE:'PositiveVariableMessage',
-                          NEW_USR_MESSAGE:'NewUserMessage'}
+                          NEW_USR_MESSAGE:'NewUserMessage',
+                          UPDATE_GRAPH_WEIGHT_MESSAGE:'UpdateGraphWeightMessage'}
 
 
 MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
@@ -52,7 +54,8 @@ MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             FILL_DATAPOINT_MESSAGE:TEXTMINING,
                             NEG_VAR_MESSAGE:GESTCONSOLE,
                             POS_VAR_MESSAGE:GESTCONSOLE,
-                            NEW_USR_MESSAGE:GESTCONSOLE}
+                            NEW_USR_MESSAGE:GESTCONSOLE,
+                            UPDATE_GRAPH_WEIGHT_MESSAGE:TEXTMINING}
 
 
 #MODULE MAPPINGS
@@ -209,4 +212,16 @@ class NewUserMessage:
             self.type=NEW_USR_MESSAGE
             self.uid=uid
             self.qpid_message=Message(self.type+'|'+str(self.uid))
+
+class UpdateGraphWeightMessage:
+    def __init__(self, qpid_message=None, gid=None):
+        if qpid_message:
+            self.qpid_message=qpid_message
+            mtype,gid = self.qpid_message.content.split('|')
+            self.type=mtype
+            self.gid=uuid.UUID(gid)
+        else:
+            self.type=UPDATE_GRAPH_WEIGHT_MESSAGE
+            self.gid=gid
+            self.qpid_message=Message(self.type+'|'+str(self.gid))
 

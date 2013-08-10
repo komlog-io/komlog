@@ -920,3 +920,187 @@ def update_ds(dsinfo,session):
     except Exception as e:
         return False
 
+''' GRAPH CLASSES AND METHODS '''
+
+
+class GraphInfo:
+    def __init__(self,gid,uid=None,name=None):
+        self.gid=gid
+        self.uid=uid
+        self.name=name
+        self._datapoints=[]
+        self._dtpcolors={}
+        self._dtpnames={}
+
+    def get_datapoints(self):
+        return self._datapoints
+
+    def get_datapoint_info(self,pid):
+        dtpinfo={}
+        try:
+            dtpinfo['color']=self._dtpcolors[pid]
+            dtpinfo['name']=self._dtpnames[pid]
+            return dtpinfo
+        except KeyError:
+            return None
+
+    def add_datapoint(self, pid,color,name):
+        self._datapoints.append(pid)
+        self._datapoints=list(set(self._datapoints))
+        self._dtpcolors[pid]=color
+        self._dtpnames[pid]=name
+
+def get_graphinfo(gid,session):
+    try:
+        schemaobj=session.get(schema.GraphInfoORM(key=gid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+class GraphDatapointRelation:
+    def __init__(self, gid):
+        self.gid=gid
+        self.pids=[]
+
+    def add_datapoint(self, pid):
+        self.pids.append(pid)
+        self.pids=list(set(self.pids))
+
+def get_graphdatapointrelation(gid,session):
+    try:
+        schemaobj=session.get(schema.GraphDatapointRelationORM(key=gid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+class DatapointGraphRelation:
+    def __init__(self, pid):
+        self.pid=pid
+        self.gids=[]
+
+    def add_graph(self, gid):
+        self.gids.append(gid)
+        self.gids=list(set(self.gids))
+
+def get_datapointgraphrelation(pid,session):
+    try:
+        schemaobj=session.get(schema.DatapointGraphRelationORM(key=pid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def delete_graph(graphinfo, session):
+    gid=graphinfo.gid
+    graph_datapoints=graphinfo.get_datapoints()
+    graph_datasourcesweight=get_graphdatasourceweight(gid,session)
+    if graph_datasourcesweight:
+        for did in graph_datasourcesweight.dids.keys():
+            session.delete(DatasourceGraphWeightORM(key=did),{'columns':gid})
+        session.delete(GraphDatasourceWeightORM(key=gid))
+    if graph_datapoints:
+        for pid in graph_datapoints:
+            session.delete(DatapointGraphRelationORM(key=pid),{'columns':gid})
+        session.delete(GraphDatapointRelationORM(key=gid))
+    session.delete(GraphInfoORM(key=gid))
+    return True
+
+def insert_new_graph(graphinfo, session):
+    graph_datapoints=graphinfo.get_datapoints()
+    gid=graphinfo.gid
+    dtpgraphrarray=[]
+    graphdtpr=get_graphdatapointrelation(gid,session)
+    if not graphdtpr:
+        graphdtpr=GraphDatapointRelation(gid)
+    for pid in graph_datapoints:
+        graphdtpr.add_datapoint(pid)
+        dtpgraphr=get_datapointgraphrelation(pid,session)
+        if not dtpgraphr:
+            dtpgraphr=DatapointGraphRelation(pid)
+        dtpgraphr.add_graph(gid)
+        dtpgraphrarray.append(dtpgraphr)
+    if not session.insert(schema.GraphInfoORM(apiobj=graphinfo)):
+        return False
+    if not session.insert(schema.GraphDatapointRelationORM(apiobj=graphdtpr)):
+        delete_graph(graphinfo,session)
+        return False
+    for dtpgraphr in dtpgraphrarray:
+        if not session.insert(schema.DatapointGraphRelationORM(apiobj=dtpgraphr)):
+            delete_graph(graphinfo,session)
+            return False
+    return True
+
+class DatasourceGraphWeight:
+    def __init__(self, did):
+        self.did=did
+        self.gids={}
+
+    def add_graph(self, gid,weight):
+        self.gids[gid]=weight
+
+    def set_data(self,data):
+        self.gids=data
+
+def get_datasourcegraphweight(did,session):
+    try:
+        schemaobj=session.get(schema.DatasourceGraphWeightORM(key=did))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_datasourcegraphweight(dsgwobj,session):
+    try:
+        if session.insert(schema.DatasourceGraphWeightORM(apiobj=dsgwobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def set_graphweight_on_datasource(did,gid,weight,session):
+    dsgraphweight=session.get(schema.DatasourceGraphWeightORM(key=did))
+    if not dsgraphweight:
+        dsgraphweight=DatasourceGraphWeight(did)
+    dsgraphweight.add_graph(gid,weight)
+    if insert_datasourcegraphweight(dsgraphweight,session):
+        return True
+    else:
+        return False
+
+class GraphDatasourceWeight:
+    def __init__(self, gid):
+        self.gid=gid
+        self.dids={}
+
+    def add_datasource(self, did,weight):
+        self.dids[did]=weight
+
+    def set_data(self,data):
+        self.dids=data
+
+
+def get_graphdatasourceweight(gid,session):
+    try:
+        schemaobj=session.get(schema.GraphDatasourceWeightORM(key=gid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_graphdatasourceweight(gdswobj,session):
+    try:
+        if session.insert(schema.GraphDatasourceWeightORM(apiobj=gdswobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def set_datasourceweight_on_graph(gid,did,weight,session):
+    graphdsweight=session.get(schema.GraphDatasourceWeightORM(key=gid))
+    if not graphdsweight:
+        graphdsweight=GraphDatasourceWeight(gid)
+    graphdsweight.add_datasource(did,weight)
+    if insert_graphdatasourceweight(graphdsweight,session):
+        return True
+    else:
+        return False
+

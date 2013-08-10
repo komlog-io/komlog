@@ -10,6 +10,7 @@ from komlibs.gestaccount import users as usrapi
 from komlibs.gestaccount import agents as agapi
 from komlibs.gestaccount import datasources as dsapi
 from komlibs.gestaccount import datapoints as dpapi
+from komlibs.gestaccount import graphs as graphapi
 from komlibs.gestaccount import exceptions as gestexcept
 import os
 import uuid
@@ -75,6 +76,7 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             self.set_status(404)
             self.write(json_encode({'message': 'Datasource not found'}))
         except Exception as e:
+            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
@@ -348,4 +350,58 @@ class UserHomeHandler(tornado.web.RequestHandler):
                         dss.append({'ds_name':dsinfo.dsname,'did':did_s,'url':dsurl})
                 data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
         self.render('home.html',username=username,userurl=userinfo,userdata=data,userhome=userhome,userconfig=userconfig)
+
+class GraphCreationHandler(tornado.web.RequestHandler):
+
+    def post(self):
+        #suponemos que aquí llega una vez ha validado
+        username=self.request.headers.get('username')
+        try:
+            data=json_decode(self.request.body)
+            graphname=data['graph_name']
+            pid=uuid.UUID(data['pid'])
+            dtpname=data['datapoint_name']
+        except Exception as e:
+            print 'Exception en el handler'
+            print str(e)
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            try:
+                print 'llamamos a graphapi.new_graph'
+                data=graphapi.create_graph(username,graphname,pid,dtpname,self.application.cf,self.application.mb)
+                print 'Datos recibidos',
+                print data
+                self.set_status(200)
+                self.write(json_encode(data))
+            except gestexcept.BadParametersException:
+                self.set_status(400)
+                self.write(json_encode({'message':'Bad parameters'}))
+            except gestexcept.GraphCreationException:
+                self.set_status(500)
+                self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+            except Exception as e:
+                print str(e)
+                self.set_status(500)
+                self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+
+class GraphConfigHandler(tornado.web.RequestHandler):
+
+    def get(self,p_gid):
+        try:
+            gid=uuid.UUID(p_gid)
+            data=graphapi.get_graphconfig(gid,self.application.cf)
+            print data
+            self.set_status(200)
+            self.write(json_encode(data))
+        except gestexcept.GraphNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Not Found'}))
+        except TypeError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad Request'}))
+        except Exception as e:
+            #self.application.logger.exception(str(e))
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
 
