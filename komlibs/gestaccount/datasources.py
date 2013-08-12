@@ -61,15 +61,12 @@ def get_datasourcedata(did,session,date=None):
         dsmapdtps=cassapi.get_datasourcemapdtps(did,last_received,session)
         if dsmapdtps:
             dsdtps=json.loads(dsmapdtps.jsoncontent)
-        print 'Llegamos a donde esperamos'
         dsgraphs=cassapi.get_datasourcegraphweight(did,session)
-        print dsgraphs
         if dsgraphs:
             graphsweights=[]
             for key,value in dsgraphs.gids.items():
                 graphsweights.append((str(key),value))
             data['ds_graphs']=graphsweights
-        print 'LLEgamos más lejos de lo que esperábamos'
         data['did']=str(did)
         data['ds_date']=last_received.isoformat()
         data['ds_vars']=dsvars
@@ -105,7 +102,6 @@ def get_datasourceconfig(did,session):
         ds_type=types.DS_INT2STR[dsinfo.dstype]
         params={}
         for webkey,dbkey in types.DSPARAMS_DB2WEB[dsinfo.dstype]:
-            print webkey,dbkey
             params[webkey]=getattr(dsinfo,dbkey)
         data={}
         data['did']=str(did)

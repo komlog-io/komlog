@@ -59,9 +59,7 @@ class DatapointDtreePositivesORM(CassandraBase):
     def __init__(self, key=None, dbdict=None):
         if dbdict:
             for dkey,value in dbdict.iteritems():
-                print 'Tipo obj: '+str(type(value))
                 dbdict[dkey]=json.dumps(value)
-                print 'Tipo db:' +str(type(dbdict[dkey]))
         super(DatapointDtreePositivesORM,self).__init__(key,dbdict)
 
     def get_dbdict(self):

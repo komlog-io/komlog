@@ -40,7 +40,7 @@ def get_dsdtprelation(did, session):
         return None
 
 class DatapointInfo:
-    def __init__(self, pid=None, name=None, dtree=None, did=None, key=None,dbdict=None):
+    def __init__(self, pid=None, name=None, dtree=None, did=None, decimalseparator=None,  key=None,dbdict=None):
         if key:
             self.pid=key
             self.dbcols = dbdict
@@ -63,6 +63,8 @@ class DatapointInfo:
                 raise exceptions.ParameterNotFoundException('did')
             if name:
                 self.dbcols['name']=name
+            if decimalseparator:
+                self.dbcols['decimalseparator']=decimalseparator
             else:
                 raise exceptions.ParameterNotFoundException('name')
             self.prestore()
@@ -72,6 +74,15 @@ class DatapointInfo:
             self.dbcols['dtree']=json.dumps(self.dbcols['dtree'])
         self.key=self.pid
         self.dbdict=self.dbcols
+
+    def get_decimalseparator(self):
+        if self.dbcols.has_key('decimalseparator'):
+            return self.dbcols['decimalseparator']
+        else:
+            return None
+
+    def set_decimalseparator(self,char):
+        self.dbcols['decimalseparator']=char
 
 
 def get_dtpinfo(pid,dbcols,session):
@@ -88,11 +99,9 @@ def register_dtp(dtp,dsdtprelation,session):
     try:
         dsdtprelation.dtps.insert(0,dtp.pid)
         dsdtprelation.prestore()
-        print 'Insertando PID ds_dtp_relation: '+str(dsdtprelation.key)
         session.insert(schema.DsDtpRelationORM(key=dsdtprelation.key, dbdict=dsdtprelation.dbdict))
         dtp.prestore()
         session.insert(schema.DatapointInfoORM(key=dtp.key, dbdict=dtp.dbdict))
-        print 'Insertando PID dtp_info: '+str(dtp.key)
         return True
     except Exception:
         remove_dtp(dtp,dsdtprelation,session)
@@ -125,13 +134,13 @@ class DatapointData:
         else:
             self.pid = pid
             self.date = date
-            self.content = content # unicode
+            self.content = content # float
             self.prestore()
 
     def prestore(self):
         self.key=str(self.pid)
         self.dbdict = {}
-        self.dbdict[self.date]=self.content.encode('utf8')
+        self.dbdict[self.date]=self.content
 
 def insert_datapointdata(dtpobj,session):
     dtpobj.prestore()
@@ -219,7 +228,6 @@ def get_dtp_dtree_positives(pid,session,date=None):
 
 def update_dtp_dtree_positives(dtpdtreepos,session):
     dtpdtreepos._prestore()
-    print 'Insertando PID dtp_dtree_positives: '+str(dtpdtreepos._key)
     if session.insert(schema.DatapointDtreePositivesORM(key=dtpdtreepos._key,dbdict=dtpdtreepos._dbdict)):
         return True
     else:
@@ -416,7 +424,6 @@ def remove_datasourcemap(did,date,session):
 class DatasourceMapDtps:
     def __init__(self, did, fromdict=None, date=None, jsoncontent=None):
         if fromdict:
-            print fromdict
             self.did=did
             self.date=fromdict.keys()[0]
             self.jsoncontent=fromdict.values()[0]
@@ -735,14 +742,12 @@ def get_agentinfo(aid,dbcols,session):
         return None
 
 def register_agent(agentinfo,session):
-    print 'Vamos a registrar el agente'
     try:
         aid=agentinfo.aid
         uid=agentinfo.uid
         pubkey=agentinfo.agentkey
         useragentr=get_useragentrelation(uid,session)
         if useragentr:
-            print 'useragentr con datos'
             try:
                 aidpos = useragentr.aids.index(aid)
                 return False
@@ -752,18 +757,12 @@ def register_agent(agentinfo,session):
             useragentr=UserAgentRelation(uid=uid,aids=[])
         useragentr.aids.append(aid)
         useragentr._prestore()
-        print 'Empieza lo serio'
         if session.insert(schema.UserAgentRelationORM(key=useragentr.key,dbdict=useragentr.dbdict)):
-            print 'registrada la relacion'
             useragentpubkeyr=UserAgentPubKeyRelation(uid=uid,pubkeys_aids=[(pubkey,aid)])
-            print useragentpubkeyr.__dict__
             useragentpubkeyr._prestore()
             if session.insert(schema.UserAgentPubKeyRelationORM(key=useragentpubkeyr.key,dbdict=useragentpubkeyr.dbdict)):
-                print 'registrada la key'
                 agentinfo._prestore()
-                print agentinfo.__dict__
                 if session.insert(schema.AgentInfoORM(key=agentinfo.key, dbdict=agentinfo.dbdict)):
-                    print 'Registrado correctamente'
                     return True
         remove_agent(agentinfo,session)
         return False
@@ -885,7 +884,6 @@ def register_datasource(dsinfo,session):
                 agentdsr=AgentDsRelation(aid=aid,dids=[])
         agentdsr.dids.append(did)
         agentdsr._prestore()
-        print 'Voy a registrar'
         if session.insert(schema.AgentDsRelationORM(key=agentdsr.key,dbdict=agentdsr.dbdict)):
             dsinfo._prestore()
             if session.insert(schema.DatasourceInfoORM(key=dsinfo.key, dbdict=dsinfo.dbdict)):

@@ -8,7 +8,7 @@ create column family smp_info with comparator=UTF8Type and default_validation_cl
 create column family dtp_values with comparator=TimeUUIDType and default_validation_class=TimeUUIDType and key_validation_class=UTF8Type;
 
 create column family dtp_info with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;
-create column family dtp_data with comparator=DateType and default_validation_class=UTF8Type and key_validation_class=UTF8Type;
+create column family dtp_data with comparator=DateType and default_validation_class=DecimalType and key_validation_class=UTF8Type;
 create column family dtp_dtree_positives with comparator=DateType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
 create column family dtp_dtree_negatives with comparator=DateType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
 create column family ds_dtp_relation with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;

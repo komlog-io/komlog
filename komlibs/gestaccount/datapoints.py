@@ -24,13 +24,11 @@ def get_datapointdata(pid,session,todate):
     dtpdatas=cassapi.get_datapointdata(pid,session,todate=todate)
     data=[]
     if not dtpdatas:
-        print 'no hay datos'
         last_date=todate-timedelta(days=1)
-        print 'calculada fecha inicial'
         raise exceptions.DatapointDataNotFoundException(last_date=last_date)
     else:
         for dtpdata in dtpdatas:
-            data.append((dtpdata.date.isoformat(),dtpdata.content))
+            data.append((dtpdata.date.isoformat(),str(dtpdata.content)))
     return data
 
 def create_datapoint(did,dsdate,pos,length,name,msgbus):

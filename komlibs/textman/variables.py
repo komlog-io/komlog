@@ -6,6 +6,7 @@ date: 2013/03/09
 '''
 import re
 import json
+from decimal import *
 
 FLOAT_REGEXP=u'[-+]?[0-9]*[\.,]?[0-9]+'
 VAR_SEPARATORS=(u' ',u';',u'\n',u'\t')
@@ -139,4 +140,84 @@ def get_string(offset,start,content,before):
                 clean=False
                 pos+=1
     return ''.join(string)
+
+def get_numericvalueandseparator(dtpinfo,varlist,var):
+    '''
+    This function return the numeric value (float) of a datasource var.
+    If the value contains a separator (, or .) the decimal separator will be guessed 
+    searching in the complete datasource varlist, so vars added recently has more work to do
+    '''
+    
+    def getdecimal(strnumber,separator):
+        millar=',' if separator=='.' else '.'
+        try:
+            regex=re.compile('.*['+separator+'].*')
+            if not regex.match(strnumber):
+                '''Only integer part'''
+                integer=strnumber
+                decimal='0'
+            else:
+                integer,decimal=strnumber.split(separator)
+        except ValueError:
+            '''More than one ocurrence of the separator'''
+            return False
+        else:
+            regex=re.compile('.*['+millar+'].*')
+            if regex.match(decimal):
+                return False
+            if regex.match(integer):
+                '''It has millar separator'''
+                index=0
+                newinteger=''
+                for value in integer.split(millar):
+                    if not index==0 and not len(value)==3:
+                        return False
+                    else:
+                        index+=1
+                        newinteger+=value
+                integer=newinteger
+            number=integer+'.'+decimal
+            return Decimal(number)
+
+    regex=re.compile('.*[,.].*')
+    m=regex.match(var.c)
+    if not m:
+        ''' No decimal part'''
+        return Decimal(var.c),False
+    decsep=dtpinfo.get_decimalseparator()
+    if decsep:
+        ''' Decimal separator already established'''
+        return getdecimal(var.c,decsep),decsep
+    dotfloat=getdecimal(var.c,'.')
+    commafloat=getdecimal(var.c,',')
+    if dotfloat and commafloat:
+        ''' Both decimal separators seems correct, guess over other vars '''
+        posdot=0
+        poscomma=0
+        for var in varlist:
+            commavalue=getdecimal(var.c,',')
+            dotvalue=getdecimal(var.c,'.')
+            if commavalue and dotvalue:
+                continue
+            elif commavalue:
+                poscomma+=1
+            elif dotvalue:
+                posdot+=1
+        if posdot>poscomma:
+            return dotfloat,'.'
+        elif poscomma>posdot:
+            return commafloat,','
+        else:
+            ''' Bad Luck '''
+            return Decimal(-1),False
+    elif commafloat:
+        ''' decimal separator: , '''
+        return commafloat,','
+    elif dotfloat:
+        ''' decimal separator: . '''
+        return dotfloat,'.'
+    else:
+        ''' WTF '''
+        return Decimal(-1),False
+
 

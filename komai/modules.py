@@ -58,8 +58,6 @@ class Textmining(modules.Module):
                     self.logger.debug('Error procesing: '+mtype)
             elif mtype==messages.GDTREE_MESSAGE:
                 result,pid,date=self.process_GDTREE_MESSAGE(message)
-                print result,pid,date
-                print type(pid),type(date)
                 if result:
                     self.logger.debug('Message completed successfully: '+mtype)
                     self.message_bus.sendMessage(messages.FillDatapointMessage(pid=pid,date=date))
@@ -142,22 +140,15 @@ class Textmining(modules.Module):
         dtp_negatives=cassapi.get_dtp_dtree_negatives(pid,self.cf)
         dtree_training_set=[]
         if dtp_positives:
-            print dtp_positives.__dict__
             positives=dtp_positives.positives
             for date,positive in positives.iteritems():
-                print date
-                print positive[0]
                 samples_to_get[date]=positive[0]
         if dtp_negatives:
-            print dtp_negatives.__dict__
             negatives=dtp_negatives.negatives
             for date,negative_array in negatives.iteritems():
                     if not samples_to_get.has_key(date):
                         samples_to_get[date]=None
         dsmaps=[]
-        print 'SAMPLES TO GET****************************'
-        print samples_to_get
-        print '******************************************'
         for date,positive in samples_to_get.iteritems():
             dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)
             varlist=variables.get_varlist(jsoncontent=dsmap.content)
@@ -167,9 +158,6 @@ class Textmining(modules.Module):
                 else:
                     var.h['result']=False
                 dtree_training_set.append(var.h)
-        print 'DTREE_TRAINING_SET**************************************'
-        print dtree_training_set
-        print '******************************************'
         dtree=decisiontree.DecisionTree(rawdata=dtree_training_set)
         dtpinfo.dbcols['dtree']=dtree.get_jsontree()
         if cassapi.update_dtp(dtpinfo,self.cf):
@@ -206,8 +194,6 @@ class Textmining(modules.Module):
         pidonly_flag=False
         if pid:
             pidonly_flag=True
-            print 'ENTRO AQUI????'
-            print pid
             dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
             if not dtpinfo:
                 self.logger.info('Datapoint info not found: '+str(pid))
@@ -251,10 +237,16 @@ class Textmining(modules.Module):
                 for dtp in dtplist:
                     dtpinfo,dtree=dtp
                     if dtree.evaluate_row(var.h):
-                        dtp_data=cassapi.DatapointData(pid=dtpinfo.pid,date=dsmap.date,content=var.c)
+                        value,separator=variables.get_numericvalueandseparator(dtpinfo,varlist,var)
+                        dtp_data=cassapi.DatapointData(pid=dtpinfo.pid,date=dsmap.date,content=value)
                         if cassapi.insert_datapointdata(dtp_data,self.cf):
                             dsmapdtps[str(dtpinfo.pid)]=var.s
                             dtplist.remove(dtp)
+                            ''' Update datapoint separator info '''
+                            if not dtpinfo.get_decimalseparator():
+                                if separator:
+                                    dtpinfo.set_decimalseparator(separator)
+                                    cassapi.update_dtp(dtpinfo,self.cf)
                             break
                         else:
                             self.logger.error('Error inserting datapoint data: %s_%s' %(dtpinfo.pid,dsmap.date))
