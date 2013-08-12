@@ -12,13 +12,37 @@ function getDC(id){
     $("#ContentBox").load(url)
 }
 
-function getDD(id){
+function labelSubstringStartingAtOfLength(string,index,length) {
+          prefix=string.substr(0, index);
+          stringtochange='<div class="label label-default" id='+index+'>'+string.substr(index,length)+'</div>';
+          sufix=string.substr(index+length,string.length);
+          result=prefix+stringtochange+sufix;
+          return result;
+}
+
+function prepareDSContent(data) {
+    finalcontent=data.ds_content;
+    vararray=data.ds_vars;
+    for (var i = vararray.length; i>0; i--){
+        finalcontent=labelSubstringStartingAtOfLength(finalcontent,vararray[i-1][0],vararray[i-1][1]);
+    }
+    return finalcontent
+}
+
+function getDD(id,title){
     url="/var/ds/"+id
-    $("#ContentBox").load(url)
+    //$("#ContentBox").load(url)
+    $.getJSON(url,function(data){
+        content=prepareDSContent(data)
+        doc=$("<h3/>").html(title)
+        $("#ContentBox").empty()
+        $("<pre/>").html(content).appendTo(doc)
+        $("<div/>").html(doc).appendTo("#ContentBox")}
+        )
 }
 
 function showC(data){
-    $("#ContentBox").html(data);
+    $("#ContentBox").value=data;
 }
 
 function creaDCForm(did){

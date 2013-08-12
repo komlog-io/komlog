@@ -57,7 +57,7 @@ def get_datasourcedata(did,session,date=None):
         if last_mapped:
             dsmapvars=cassapi.get_datasourcemapvars(did,last_received,session)
             if dsmapvars:
-                dsvars=dsmapvars.content
+                dsvars=json.loads(dsmapvars.content)
         dsmapdtps=cassapi.get_datasourcemapdtps(did,last_received,session)
         if dsmapdtps:
             dsdtps=json.loads(dsmapdtps.jsoncontent)

@@ -10,14 +10,14 @@
 <script src="http://code.jquery.com/jquery.js"></script>
 <script src="/static/js/komlog.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
+<div class="container">
 <div class="row">
-<div class="span1 offset1"><h4><a href={{ userhome }}>Home</a></h4></div>
-<div class="span1"><h4><a href={{ userconfig }}>Config</a></h4></div>
-<div class="span2 offset11"> <a href={{ userurl }}>{{ username }}</a></div>
+<div class="col-lg-1"><h4><a href={{ userhome }}>Home</a></h4></div>
+<div class="col-lg-1"><h4><a href={{ userconfig }}>Config</a></h4></div>
+<div class="col-lg-offset-11"><h4><a href={{ userurl }}>{{ username }}</a></h4></div>
 </div>
-<div class="container-fluid">
-<div class="row-fluid">
-<div class="span2">
+<div class="row">
+<div class="col-lg-2">
 <h5>Agents</h5>
 <ul>
 {% for agent in userdata  %}
@@ -30,7 +30,7 @@
 {% end %}
 </ul>
 </div>
-<div class="span10" id='ContentBox'>
+<div class="col-lg-10" id='ContentBox'>
 </div>
 </div>
 </div>
