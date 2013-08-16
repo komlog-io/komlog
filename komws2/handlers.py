@@ -12,6 +12,7 @@ from komlibs.gestaccount import datasources as dsapi
 from komlibs.gestaccount import datapoints as dpapi
 from komlibs.gestaccount import graphs as graphapi
 from komlibs.gestaccount import exceptions as gestexcept
+import auth
 import os
 import uuid
 import datetime
@@ -19,10 +20,10 @@ import dateutil.parser
 
 class AgentCreationHandler(tornado.web.RequestHandler):
 
+    @auth.userauthenticated
     def post(self):
-        #suponemos que aquí llega una vez ha validado
-        username=self.request.headers.get('username')
-        password=self.request.headers.get('password')
+        #Aquí llega una vez ha validado
+        username=self.user
         try:
             data=json_decode(self.request.body)
             ag_pubkey=data['ag_pubkey']
@@ -50,6 +51,7 @@ class AgentCreationHandler(tornado.web.RequestHandler):
 
 class AgentConfigHandler(tornado.web.RequestHandler):
 
+    @auth.userauthenticated
     def get(self,p_aid):
         try:
             aid=uuid.UUID(p_aid)
@@ -66,6 +68,7 @@ class AgentConfigHandler(tornado.web.RequestHandler):
 
 class DatasourceDataHandler(tornado.web.RequestHandler):
 
+    @auth.userauthenticated
     def get(self,p_did):
         try:
             did=uuid.UUID(p_did)
@@ -80,6 +83,7 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
+    @auth.agentauthenticated
     def post(self,p_did):
         did=uuid.UUID(p_did)
         ctype=self.request.headers.get('Content-Type')
@@ -109,6 +113,7 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
 
 class DatasourceConfigHandler(tornado.web.RequestHandler):
 
+    @auth.userauthenticated
     def get(self,p_did):
         try:
             did=uuid.UUID(p_did)
@@ -127,6 +132,7 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
+    @auth.userauthenticated
     def put(self, p_did):
         try:
             did=uuid.UUID(p_did)
@@ -148,10 +154,10 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
 
 class DatasourceCreationHandler(tornado.web.RequestHandler):
 
+    @auth.userauthenticated
     def post(self):
         #suponemos que aquí llega una vez ha validado
-        username=self.request.headers.get('username')
-        password=self.request.headers.get('password')
+        username=self.user
         try:
             data=json_decode(self.request.body)
             aid=uuid.UUID(data['aid'])
@@ -222,9 +228,10 @@ class UserCreationHandler(tornado.web.RequestHandler):
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
 class UserConfirmationHandler(tornado.web.RequestHandler):
+
     def get(self):
         print 'Entramos en UserConfirmationHandler'
-        #suponemos que aquí llega una vez ha validado capcha o algo asi
+        #Aquí llega a traves de un enlace generado dinámicamente durante el alta
         code=self.get_argument('c') #confirmation cod3 
         print code
         email=self.get_argument('e') #email
@@ -252,6 +259,7 @@ class UserConfirmationHandler(tornado.web.RequestHandler):
 
 class DatapointDataHandler(tornado.web.RequestHandler):
 
+    @auth.userauthenticated
     def get(self,p_pid):
         try:
             pid=uuid.UUID(p_pid)
@@ -271,10 +279,8 @@ class DatapointDataHandler(tornado.web.RequestHandler):
 
 class DatapointCreationHandler(tornado.web.RequestHandler):
 
+    @auth.userauthenticated
     def post(self):
-        #suponemos que aquí llega una vez ha validado
-        username=self.request.headers.get('username')
-        password=self.request.headers.get('password')
         try:
             data=json_decode(self.request.body)
             dsdate=data['ds_date']
@@ -298,6 +304,8 @@ class DatapointCreationHandler(tornado.web.RequestHandler):
                 self.write(json_encode({'message':'Error, try again later'}))
 
 class UserConfigHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
     def get(self,username):
         useruidr=cassapi.get_useruidrelation(username,self.application.cf)
         if not useruidr:
@@ -325,6 +333,8 @@ class UserConfigHandler(tornado.web.RequestHandler):
         self.render('config.html',username=username,userurl=userinfo,userdata=data,userhome=userhome,userconfig=userconfig)
 
 class UserHomeHandler(tornado.web.RequestHandler):
+    #@auth.userauthorized
+    @auth.userauthenticated
     def get(self,username):
         useruidr=cassapi.get_useruidrelation(username,self.application.cf)
         if not useruidr:
@@ -353,9 +363,9 @@ class UserHomeHandler(tornado.web.RequestHandler):
 
 class GraphCreationHandler(tornado.web.RequestHandler):
 
+    @auth.userauthenticated
     def post(self):
-        #suponemos que aquí llega una vez ha validado
-        username=self.request.headers.get('username')
+        username=self.user
         try:
             data=json_decode(self.request.body)
             graphname=data['graph_name']
@@ -387,6 +397,7 @@ class GraphCreationHandler(tornado.web.RequestHandler):
 
 class GraphConfigHandler(tornado.web.RequestHandler):
 
+    @auth.userauthenticated
     def get(self,p_gid):
         try:
             gid=uuid.UUID(p_gid)
@@ -404,4 +415,48 @@ class GraphConfigHandler(tornado.web.RequestHandler):
             #self.application.logger.exception(str(e))
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
+
+class LoginHandler(tornado.web.RequestHandler):
+    
+    def get(self):
+        self.render('login.html')
+
+    def post(self):
+        username=self.get_argument("username")
+        password=self.get_argument("password")
+        agentid=self.get_argument("agent",None)
+        agentidsecret=self.get_argument("agentsecret",None)
+        useruidr=cassapi.get_useruidrelation(username,self.application.cf)
+        if useruidr:
+            userinfo=cassapi.get_userinfo(useruidr.uid,{'password':u''},self.application.cf)
+            print userinfo.__dict__
+            if userinfo.password==usrapi.get_hpassword(useruidr.uid,password):
+                self.set_secure_cookie("komlog_user",username,httponly=True)#, secure=True)
+                if not agentid:
+                    self.write({'redirect':"/home/"+username}) 
+                else:
+                    try:
+                        aid=uuid.UUID(agentid)
+                    except Exception:
+                        self.set_status('400')
+                    else:
+                        agentinfo=cassapi.get_agentinfo(aid,{'agentkey'},self.application.cf)
+                        agentid2=agapi.decrypt(agentinfo.agentkey,agentidsecret)
+                        if agentid==agentid2:
+                            self.set_secure_cookie('komlog_agent',agentid, httponly=True)#, secure=True)
+                            self.redirect('/etc/ag/'+agentid+'/')
+
+            else:
+                print 'No me mola tu P'
+                self.set_status(403)
+        else:
+            self.set_status(403)
+
+
+class LogoutHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        self.clear_cookie("komlog_user")
+        self.clear_cookie("komlog_agent")
+        self.redirect('/')
 

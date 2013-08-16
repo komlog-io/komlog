@@ -13,12 +13,16 @@ from komlibs.gestaccount import segments
 from komimc import messages
 
 
+def get_hpassword(uid,password):
+    salt='$6$'+str(uid).split('-')[1]+'$'
+    hpassword=crypt.crypt(password,salt)
+    return hpassword
+
 def create_user(username, password, email, session, msgbus):
     '''This function creates a new user in the database'''
     print 'inicio create _user'
     uid=uuid.uuid4()
-    salt='$6$'+str(uid).split('-')[1]+'$'
-    hpassword=crypt.crypt(password,salt)
+    hpassword=get_hpassword(uid,password)
     now=datetime.utcnow()
     segment=segments.USER['FREE']
     print 'userinfo'

@@ -20,7 +20,9 @@ static_path = '/home/komlog/komlog/komws2/static/'
 UUID4_REGEX='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
 class Application(tornado.web.Application):
     def __init__(self):
-        handler_list = [(r"/etc/agent/("+UUID4_REGEX+")", handlers.AgentConfigHandler),
+        handler_list = [(r"/login/?", handlers.LoginHandler),
+                    (r"/logout/?", handlers.LogoutHandler),
+                    (r"/etc/agent/("+UUID4_REGEX+")", handlers.AgentConfigHandler),
                     (r"/etc/agent/?", handlers.AgentCreationHandler),
                     (r"/etc/ds/?", handlers.DatasourceCreationHandler),
                     (r"/etc/ds/("+UUID4_REGEX+")", handlers.DatasourceConfigHandler),
@@ -46,8 +48,10 @@ class Application(tornado.web.Application):
         instance_number='8000'
         hostname='komserver1'
         logger=logging.Logger(name)
+        login_url='/login'
+        cookie_secret='d0E7/DycTZaLa+7pa9L/N1BO0jvtUER1hElpod3Bdro='
         self.mb=bus.MessageBus(broker,name,instance_number,hostname,logger)
-        tornado.web.Application.__init__(self, handler_list, static_path=static_path,template_path=template_path,debug=True)
+        tornado.web.Application.__init__(self, handler_list, static_path=static_path,template_path=template_path,cookie_secret=cookie_secret,login_url=login_url, debug=True)
 
 if __name__ == "__main__":
     tornado.options.parse_command_line()

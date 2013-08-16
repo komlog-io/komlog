@@ -9,7 +9,14 @@ import uuid
 from komcass import api as cassapi
 from komlibs.gestaccount import states as states
 from komlibs.gestaccount import exceptions
+from Crypto.PublicKey import RSA
 
+
+def decrypt(pubkey,cmsg):
+    pubkey=RSA.importKey(pubkey)
+    return pubkey.decrypt(cmsg)
+
+    
 def create_agent(username,agentname,agentkey,version,session):
     '''
     When the agent connects the first time, we will register it in a pending state, 
