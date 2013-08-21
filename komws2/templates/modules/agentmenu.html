@@ -1,0 +1,19 @@
+<!-- Clase del modulo: AgentMenuModule
+Descripcion: Fichero para renderizar la parte del header dependiente del usuario -->
+
+<div id="tree_menu">
+	<ul>
+		{% for agent in userdata  %}
+		<li>
+			<a>{{ agent['agentname'] }}</a>
+			<ul>
+				{% for ds in agent['dss'] %}
+				<li id="DD#{{ ds['did'] }}">
+					<a>{{ ds['ds_name'] }}</a>
+				</li>
+				{% end %}
+			</ul>
+		</li>
+		{% end %}
+	</ul>
+</div>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Komlog</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Bootstrap -->
+<link href="/static/css/bootstrap.min.css" rel="stylesheet" media="screen">
+</head>
+<body>
+<script src="http://code.jquery.com/jquery.js"></script>
+<script src="/static/js/komlog.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<div class="row">
+<div class="span1 offset1"><h4><strong><a href={{ userhome }}>Home</a></strong></h4></div>
+<div class="span1"><h4><a href={{ userconfig }}>Config</a></h4></div>
+<div class="span2 offset11"> <a href={{ userurl }}>{{ username }}</a></div>
+</div>
+<div class="container-fluid">
+<div class="row-fluid">
+<div class="span2">
+<h5>Agents</h5>
+<ul>
+{% for agent in userdata  %}
+    <li>{{ agent['agentname'] }}</li>
+<ul>
+    {% for ds in agent['dss'] %}
+       <li><a href="#" onclick="getDD('{{ ds['did'] }}')">{{ ds['ds_name'] }}</a></li>
+    {% end %}
+</ul>
+{% end %}
+</ul>
+</div>
+<div class="span10" id='ContentBox'>
+</div>
+</div>
+</div>
+</body>
+</html>

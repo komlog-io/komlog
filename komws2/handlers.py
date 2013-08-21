@@ -18,6 +18,12 @@ import uuid
 import datetime
 import dateutil.parser
 
+class BaseHandler(tornado.web.RequestHandler):
+    
+    @auth.userauthenticated
+    def get_current_user(self):
+        return self.get_secure_cookie('komlog_user')
+
 class AgentCreationHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
@@ -303,17 +309,19 @@ class DatapointCreationHandler(tornado.web.RequestHandler):
                 self.set_status(500)
                 self.write(json_encode({'message':'Error, try again later'}))
 
-class UserConfigHandler(tornado.web.RequestHandler):
+class UserConfigHandler(BaseHandler):
 
     @auth.userauthenticated
-    def get(self,username):
-        useruidr=cassapi.get_useruidrelation(username,self.application.cf)
+#     def get(self,username):
+    def get(self):
+#         useruidr=cassapi.get_useruidrelation(username,self.application.cf)
+        useruidr=cassapi.get_useruidrelation(self.current_user,self.application.cf)
         if not useruidr:
             self.set_status(404)
             self.write(json_encode({'message': 'User not found'}))
-        userinfo='/home/'+username+'/info'
-        userconfig='/home/'+username+'/config'
-        userhome='/home/'+username
+#         userinfo='/home/'+username+'/info'
+#         userconfig='/home/'+username+'/config'
+#         userhome='/home/'+username
         useragentr=cassapi.get_useragentrelation(useruidr.uid,self.application.cf)
         data=[]
         if useragentr:
@@ -330,19 +338,22 @@ class UserConfigHandler(tornado.web.RequestHandler):
                         dsurl='/etc/ds/'+did_s
                         dss.append({'ds_name':dsinfo.dsname,'did':did_s,'url':dsurl})
                 data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
-        self.render('config.html',username=username,userurl=userinfo,userdata=data,userhome=userhome,userconfig=userconfig)
+#         self.render('config.html',username=username,userurl=userinfo,userdata=data,userhome=userhome,userconfig=userconfig)
+        self.render('config.html',userdata=data,page_title='Komlog - Config',navitem=1)
 
-class UserHomeHandler(tornado.web.RequestHandler):
+class UserHomeHandler(BaseHandler):
     #@auth.userauthorized
     @auth.userauthenticated
-    def get(self,username):
-        useruidr=cassapi.get_useruidrelation(username,self.application.cf)
+#     def get(self):
+    def get(self):
+#         useruidr=cassapi.get_useruidrelation(username,self.application.cf)
+        useruidr=cassapi.get_useruidrelation(self.current_user,self.application.cf)
         if not useruidr:
             self.set_status(404)
             self.write(json_encode({'message': 'User not found'}))
-        userinfo='/home/'+username+'/info'
-        userconfig='/home/'+username+'/config'
-        userhome='/home/'+username
+#         userinfo='/home/'+username+'/info'
+#         userconfig='/home/'+username+'/config'
+#         userhome='/home/'+username
         useragentr=cassapi.get_useragentrelation(useruidr.uid,self.application.cf)
         data=[]
         if useragentr:
@@ -359,7 +370,8 @@ class UserHomeHandler(tornado.web.RequestHandler):
                         dsurl='/etc/ds/'+did_s
                         dss.append({'ds_name':dsinfo.dsname,'did':did_s,'url':dsurl})
                 data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
-        self.render('home.html',username=username,userurl=userinfo,userdata=data,userhome=userhome,userconfig=userconfig)
+        #self.render('home.html',username=username,userurl=userinfo,userdata=data,userhome=userhome,userconfig=userconfig)
+        self.render('home.html',userdata=data,page_title='Komlog - Home',navitem=0)
 
 class GraphCreationHandler(tornado.web.RequestHandler):
 
@@ -417,9 +429,13 @@ class GraphConfigHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Internal Error'}))
 
 class LoginHandler(tornado.web.RequestHandler):
-    
+
     def get(self):
-        self.render('login.html')
+        try:
+            errorcode=self.get_argument("error")
+        except:
+            errorcode=""
+        self.render('login.html',errorcode=errorcode)
 
     def post(self):
         username=self.get_argument("username")
@@ -427,13 +443,16 @@ class LoginHandler(tornado.web.RequestHandler):
         agentid=self.get_argument("agent",None)
         agentidsecret=self.get_argument("agentsecret",None)
         useruidr=cassapi.get_useruidrelation(username,self.application.cf)
+        error=u"?error=1"
         if useruidr:
             userinfo=cassapi.get_userinfo(useruidr.uid,{'password':u''},self.application.cf)
             print userinfo.__dict__
             if userinfo.password==usrapi.get_hpassword(useruidr.uid,password):
+            #if userinfo.password==password:
                 self.set_secure_cookie("komlog_user",username,httponly=True)#, secure=True)
                 if not agentid:
-                    self.write({'redirect':"/home/"+username}) 
+                    #self.write({'redirect':"/home/"+username})
+                    self.redirect('/home') 
                 else:
                     try:
                         aid=uuid.UUID(agentid)
@@ -447,10 +466,12 @@ class LoginHandler(tornado.web.RequestHandler):
                             self.redirect('/etc/ag/'+agentid+'/')
 
             else:
-                print 'No me mola tu P'
-                self.set_status(403)
+                #print 'No me mola tu P'
+                #self.set_status(403)
+                self.redirect(self.get_login_url()+error)
         else:
-            self.set_status(403)
+#             self.set_status(403)
+            self.redirect(self.get_login_url()+error)
 
 
 class LogoutHandler(tornado.web.RequestHandler):
@@ -458,5 +479,5 @@ class LogoutHandler(tornado.web.RequestHandler):
     def get(self):
         self.clear_cookie("komlog_user")
         self.clear_cookie("komlog_agent")
-        self.redirect('/')
+        self.redirect(self.get_login_url())
 

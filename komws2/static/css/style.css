@@ -1,0 +1,301 @@
+@charset "UTF-8"
+
+*{
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+
+html, body {
+	min-width: 1024px;
+}
+
+body {
+	font-family: verdana, arial, sans-serif;
+	font-size: 12px;
+	background-color: #DDDDDD;
+}
+/* Arreglo para las nuevas secciones de html5 en navegadores antiguos */
+header, section, footer, aside, nav, article, figure { 
+	display: block; 
+}
+
+/* Estilos para la pantalla de login
+ * esta pantalla es distinta del resto
+ */
+
+#c_login {
+	width: 350px;
+	margin: auto;
+}
+
+.cl_f_login {
+	width: 30%;
+}
+
+.ci_f_login {
+	width: 70%;
+}
+
+.cb_f_login {
+	width: 100%;
+	text-align: center;
+	margin-top: 10px;
+}
+
+.ce_f_login{
+	width: 100%;
+	margin-bottom: 10px;
+}
+
+/*
+ * Estilos de la pagina base
+ */
+#c_container {
+	width: 990px;
+	height: 580px;
+	position:relative;
+	margin: auto;
+	border:2px solid #CCC;
+	background-color: #FFF;
+}
+
+#c_header {
+	width: 990px;
+	height: 68px;
+	border-bottom:2px solid #CCC;
+}
+
+#c_navbar {
+	width: 990px;
+	height: 48px;
+	border-bottom:2px solid #CCC;
+}
+
+#c_sidebar_left {
+	width: 188px;
+	height: 460px;
+	border-right:2px solid #CCC;
+	overflow: auto;
+}
+
+#c_content {
+	width: 800px;
+	height: 460px;
+	overflow: auto;
+}
+
+/*
+ * Estilos del header
+ */
+
+#c_logo {
+	width: 65%;
+	height: inherit;
+	background-color: white;
+}
+
+#c_user_control {
+	width: 35%;
+	height: inherit;
+	background-color: white;
+	text-align: right;
+}
+
+#c_user_control table {
+	height: inherit;
+	text-align: right;
+}
+
+.row_button {
+	width: 24px;
+}
+
+.row_avatar {
+	width: 48px;
+}
+
+.row_username {
+	width: 220px;
+	text-align: center;
+	font-weight: bold;
+	text-transform: uppercase;
+}
+
+#c_date {
+	font-weight: normal;
+	text-transform: none;
+}
+
+.img_avatar{
+	width: 48px;
+	height: 48px;
+}
+
+/*
+ * Estilo tab menu
+ */
+
+#tab_menu, #tab_menu ul, #tab_menu ul li, #tab_menu ul li a {
+	padding: 0;
+	margin: 0;
+	line-height: 3;
+}
+
+#tab_menu:before, #tab_menu:after, #tab_menu > ul:before, #tab_menu > ul:after {
+	content: '';
+	display: table;
+}
+
+
+#tab_menu:after, #tab_menu > ul:after {
+	clear: both;
+}
+
+#tab_menu {
+	height: 40px;
+}
+
+#tab_menu ul {
+	height: 40px;
+}
+
+#tab_menu ul li {
+	float: left;
+	list-style: none;
+}
+
+#tab_menu ul li a{	
+	display: block;
+	height: 40px;
+	padding: 4px 55px 0;
+	margin: 4px 2px 1px 0 !important;
+	text-decoration: none;
+	font-size: 15px;
+	color: white;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, .75);
+	font-weight: 400;
+	opacity: .9;	
+}
+
+#tab_menu ul li a {
+	background: url(../img/tab_inactive.png) no-repeat center bottom;
+	display: block;
+	height: 40px;
+	margin-top: 0px;
+	padding-top: 5px;
+	color: #616161;
+	text-shadow: 0 1px 1px rgba(255, 255, 255, .35);
+	opacity: 1;
+}
+
+#tab_menu ul li a:hover, #tab_menu ul li.tab_active a{
+	background: url(../img/tab_active.png) no-repeat center bottom;
+	color: #FFFFFF;
+}
+
+/*
+ * Tree menu
+ */
+
+#tree_menu a{
+	cursor: pointer;
+}
+
+/*#tree_menu a { white-space:normal !important; height: auto; padding:1px 2px; }
+#tree_menu li > ins { vertical-align:top; }
+#tree_menu .jstree-hovered, #tree_menu .jstree-clicked { border:0; }
+*/
+
+/*
+ * Estilo botones
+ */
+
+.big_button {
+	height: 24px;
+	width: 24px;
+	text-decoration: none;
+	display: block;
+}
+
+.button_logout {
+	background: url(../img/img_b_logout.png) no-repeat transparent;
+}
+
+.button_settings {
+	background: url(../img/img_b_settings.png) no-repeat transparent;
+}
+
+/*
+ * Estilos generales
+ */
+
+.float_left {
+	float: left;
+}
+
+.float_right {
+	float: right;
+}
+
+legend,label {
+	font-weight: bold;	
+}
+
+legend {
+	font-size: 20px;
+}
+
+/*
+ * Estilo footer
+ */
+
+footer {
+	font-size: 10px;
+	text-align: center;
+}
+
+/*
+ * Estilo helpers
+ */
+
+.m_error{
+	background: url(../img/img_s_cross.png) no-repeat left center transparent;
+	padding: 0 0 0 17px;
+	color: #FF0000;
+	font-weight: bold;
+}
+
+
+/*
+ * Temporal
+ */
+
+.label {
+  display: inline;
+  padding: .25em .6em;
+  font-size: 75%;
+  font-weight: 500;
+  line-height: 1;
+  color: #ffffff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+}
+
+.label[href]:hover,
+.label[href]:focus {
+  color: #ffffff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.label-default {
+  background-color: #999999;
+}
+
+.label-default[href]:hover,
+.label-default[href]:focus {
+  background-color: #808080;
+} 

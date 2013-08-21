@@ -1,0 +1,15 @@
+<!-- Clase del modulo: UserHeaderModule
+Descripcion: Fichero para renderizar la parte del header dependiente del usuario -->
+
+<div id="c_user_control" class="float_left">
+	<table>
+		<tr>
+			<td class="row_avatar"><img class="img_avatar" src="../static/img/test_avatar.png" /></td>
+			<td class="row_username"> {{ current_user }}
+			<br/>
+			<span id="c_date">{{ date }}</span></td>
+			<td class="row_button"><a class="big_button button_settings" title="Settings" href="#"></a></td>
+			<td class="row_button"><a class="big_button button_logout" title="Logout" href="/logout"></a></td>
+		</tr>
+	</table>
+</div>

@@ -1,61 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
+	<head>
+		<meta charset="utf-8" />
 
-    <title>Signin Template for Bootstrap</title>
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
-    <!-- Bootstrap core CSS -->
-    <link href="/static/css/bootstrap.css" rel="stylesheet">
-    <script src="http://code.jquery.com/jquery.js"></script>
+		<title>Komlog - Login</title>
+		<meta name="description" content="" />
+		<meta name="author" content="Javi" />
+		<meta name="viewport" content="width=device-width; initial-scale=1.0" />
 
-    <!-- Custom styles for this template -->
-    <link href="/static/css/signin.css" rel="stylesheet">
+		<!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<link href="../static/css/style.css" rel="stylesheet" media="screen">
+	</head>
 
-  </head>
-
-  <body>
-
-    <script>
-        function loginuser(){
-             user=$("#userfield").val();
-             pass=$("#passfield").val();
-             $.ajax({
-                     url: "/login",
-                     type: 'POST', 
-                     data: { 
-                         username: user,
-                         password: pass
-                     },
-                     success: function (response) {
-                         if (response.redirect){
-                             window.location.href=response.redirect;
-                         }
-                     },
-                     error: function (xhr, ajaxOptions, thrownError) { 
-                         alert(xhr.status);
-                         alert(xhr.responseText);
-                     },
-                 });
-                };
-    </script>
-
-    <div class="container">
-
-      <form class="form-signin">
-        <h2 class="form-signin-heading">Please sign in</h2>
-        <input id="userfield" type="text" class="form-control" placeholder="username or email address" autofocus>
-        <input id="passfield" type="password" class="form-control" placeholder="password">
-        <label class="checkbox">
-          <input type="checkbox" value="remember-me"> Remember me
-        </label>
-        <button onclick="loginuser()" class="btn btn-large btn-primary btn-block" type="button">Sign in</button>
-      </form>
-
-    </div> <!-- /container -->
-
-  </body>
+	<body>
+			<header>
+				<h1>LOGIN FORM (LOGO)</h1>
+			</header>
+			
+			<section>
+				<div id="c_login">
+					<form id="f_login" method="post" action="">
+						<fieldset>
+							<legend>User Login</legend>
+					
+							<div class="ce_f_login float_left">
+								{% module ErrorHelper(errorcode) %}							
+							</div>
+							<div class="cl_f_login float_left">
+								<label for="username">Username:</label>
+								<br /><br />
+								<label for="password">Password:</label>
+							</div>
+							<div class="ci_f_login float_left">
+								<input id="username" name="username" type="text" autofocus placeholder="User Name" required title="Enter your username" />
+								<br /><br />
+								<input id="password" name="password" type="password" placeholder="User Password" required title="Enter your password" />
+							</div>
+							<div class="cb_f_login float_left">
+								<input type="submit" value="Enter">
+							</div>
+						</fieldset>
+					</form>
+				</div>
+			</section>
+			
+			<footer>
+				<p>
+					&copy; Copyright by
+				</p>
+			</footer>
+	</body>
 </html>
