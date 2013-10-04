@@ -142,6 +142,8 @@ class Gestconsole(modules.Module):
         newdtpdtreepositives=cassapi.DatapointDtreePositives(pid)
         newdtpdtreepositives.set_positive(date,[pos,length])
         if cassapi.register_dtp(newdtp,dsdtprelation,self.cf) and cassapi.update_dtp_dtree_positives(newdtpdtreepositives,self.cf):
+            ''' Aqui debo lanzar el mensaje UPDQUO, pero hasta que no se retornen estructuras de datos no merece la pena implementarlo
+                porque vamos a guarrear mucho '''
             return True,newdtp.pid,date
         else:
             return False,DBERROR,date

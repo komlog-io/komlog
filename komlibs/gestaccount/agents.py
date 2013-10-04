@@ -9,6 +9,8 @@ import uuid
 from komcass import api as cassapi
 from komlibs.gestaccount import states as states
 from komlibs.gestaccount import exceptions
+from komlibs.quotes import operations
+from komimc import messages
 from Crypto.PublicKey import RSA
 
 
@@ -17,7 +19,7 @@ def decrypt(pubkey,cmsg):
     return pubkey.decrypt(cmsg)
 
     
-def create_agent(username,agentname,agentkey,version,session):
+def create_agent(username,agentname,agentkey,version,session,msgbus):
     '''
     When the agent connects the first time, we will register it in a pending state, 
     waiting for the user validation to gain access to the system
@@ -34,7 +36,11 @@ def create_agent(username,agentname,agentkey,version,session):
             aid=uuid.uuid4()
             agentinfo=cassapi.AgentInfo(aid=aid, uid=useruidr.uid, agentname=agentname, agentkey=agentkey, version=version, state=states.AGENT['PENDING_USER_VALIDATION'])
             if cassapi.register_agent(agentinfo,session):
-                print 'Devuelvo todo correcto'
+                ''' Send Quote Operation Message before returning'''
+                operation=operations.NewAgentQuoteOperation(useruidr.uid)
+                message=messages.UpdateQuotesMessage(operation=operation)
+                msgbus.sendMessage(message)
+                print 'Return New Agent id'
                 data={'aid':str(aid)}
                 return data
             else:

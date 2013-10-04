@@ -16,8 +16,10 @@ from datetime import datetime
 from komcass import api as cassapi
 from komfs import api as fsapi
 from komlibs.gestaccount import states,types,exceptions
+from komlibs.quotes import operations
+from komimc import messages
 
-def create_datasource(username,aid,dsname,dstype,dsparams,session):
+def create_datasource(username,aid,dsname,dstype,dsparams,session,msgbus):
     now=datetime.utcnow()
     did=uuid.uuid4()
     kwargs={}
@@ -41,6 +43,10 @@ def create_datasource(username,aid,dsname,dstype,dsparams,session):
         raise exceptions.AgentNotFoundException()
     dsinfo=cassapi.DatasourceInfo(did=did,aid=aid,dsname=dsname,dstype=dstype,creation_date=now,state=states.DATASOURCE['ACTIVE'],**kwargs)
     if cassapi.register_datasource(dsinfo, session):
+        ''' before returning, send quote message '''
+        operation=operations.NewDatasourceQuoteOperation(uid=uid,aid=aid)
+        message=messages.UpdateQuotesMessage(operation=operation)
+        msgbus.sendMessage(message)
         return {'did':str(did)}
     else:
         raise exceptions.DatasourceCreationException()

@@ -275,7 +275,7 @@ class DatapointGraphRelationORM(CassandraBase):
         super(DatapointGraphRelationORM,self).__init__(key,dbdict)
 
     def to_apiobj(self):
-        apiobj=cassapi.DatapointGraphRelation(pid)
+        apiobj=cassapi.DatapointGraphRelation(self.key)
         for gid in self.dbdict.keys():
             apiobj.add_graph(gid)
         return apiobj
@@ -310,5 +310,111 @@ class GraphDatasourceWeightORM(CassandraBase):
     def to_apiobj(self):
         apiobj=cassapi.GraphDatasourceWeight(gid)
         apiobj.set_data(self.dbdict)
+        return apiobj
+
+#Segmentation
+
+class SegmentParamsORM(CassandraBase):
+    __cf__ = 'prm_segment'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if key:
+            key=int(key)
+            dbdict=dbdict
+        if apiobj:
+            key=int(apiobj.segid)
+            dbdict=apiobj._paramlist
+        print key
+        print dbdict
+        super(SegmentParamsORM,self).__init__(key,dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.SegmentParams(self.key)
+        apiobj.set_params(self.dbdict)
+        return apiobj
+
+class UserQuoORM(CassandraBase):
+    __cf__ = 'mst_user_quo'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if key:
+            self.key=key
+            self.dbdict=dbdict
+        if apiobj:
+            self.key=apiobj.uid
+            self.dbdict=apiobj._quotes
+        super(UserQuoORM,self).__init__(self.key,self.dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.UserQuo(self.key)
+        apiobj.set_quotes(self.dbdict)
+        return apiobj
+
+class AgentQuoORM(CassandraBase):
+    __cf__ = 'mst_agent_quo'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if key:
+            self.key=key
+            self.dbdict=dbdict
+        if apiobj:
+            self.key=apiobj.aid
+            self.dbdict=apiobj._quotes
+        super(AgentQuoORM,self).__init__(self.key,self.dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.AgentQuo(self.key)
+        apiobj.set_quotes(self.dbdict)
+        return apiobj
+
+class DatasourceQuoORM(CassandraBase):
+    __cf__ = 'mst_ds_quo'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if key:
+            self.key=key
+            self.dbdict=dbdict
+        if apiobj:
+            self.key=apiobj.did
+            self.dbdict=apiobj._quotes
+        super(DatasourceQuoORM,self).__init__(self.key,self.dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.DatasourceQuo(self.key)
+        apiobj.set_quotes(self.dbdict)
+        return apiobj
+
+class DatapointQuoORM(CassandraBase):
+    __cf__ = 'mst_dtp_quo'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if key:
+            self.key=key
+            self.dbdict=dbdict
+        if apiobj:
+            self.key=apiobj.pid
+            self.dbdict=apiobj._quotes
+        super(DatapointQuoORM,self).__init__(self.key,self.dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.DatapointQuo(self.key)
+        apiobj.set_quotes(self.dbdict)
+        return apiobj
+
+class GraphQuoORM(CassandraBase):
+    __cf__ = 'mst_graph_quo'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if key:
+            self.key=key
+            self.dbdict=dbdict
+        if apiobj:
+            self.key=apiobj.gid
+            self.dbdict=apiobj._quotes
+        super(GraphQuoORM,self).__init__(self.key,self.dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.GraphQuo(self.key)
+        apiobj.set_quotes(self.dbdict)
         return apiobj
 

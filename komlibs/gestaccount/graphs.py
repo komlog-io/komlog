@@ -16,6 +16,7 @@ from datetime import datetime
 from komcass import api as cassapi
 from komlibs.gestaccount import states,types,exceptions
 from komimc import messages
+from komlibs.quotes import operations
 
 def create_graph(username,graphname,pid,datapointname,session,msgbus):
     now=datetime.utcnow()
@@ -35,6 +36,10 @@ def create_graph(username,graphname,pid,datapointname,session,msgbus):
     graphinfo.add_datapoint(pid,datapointcolor,datapointname)
     message=messages.UpdateGraphWeightMessage(gid=gid)
     if cassapi.insert_new_graph(graphinfo,session):
+        msgbus.sendMessage(message)
+        ''' Before returning, send quote message '''
+        operation=operations.NewGraphQuoteOperation(uid=uid)
+        message=messages.UpdateQuotesMessage(operation=operation)
         msgbus.sendMessage(message)
         return {'gid':str(gid)}
     else:

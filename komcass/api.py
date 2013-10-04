@@ -1102,3 +1102,293 @@ def set_datasourceweight_on_graph(gid,did,weight,session):
     else:
         return False
 
+
+class SegmentParams:
+    def __init__(self,segid):
+        self.segid=segid
+        self._paramlist={}
+
+    def add_param(self,param,value):
+        self._paramlist[param]=value
+
+    def set_params(self,params):
+        self._paramlist=params
+
+    def get_params(self):
+        return self._paramlist
+
+    def get_param(self, param):
+        try:
+            return self._paramlist[param]
+        except KeyError:
+            return None
+
+def get_segment_info(segid,session):
+    try:
+        schemaobj=session.get(schema.SegmentParamsORM(key=segid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def set_segment_params(segid,paramlist,session):
+    segmentparams=SegmentParams(segid)
+    segmentparams.set_params(paramlist)
+    try:
+        if session.insert(schema.SegmentParamsORM(apiobj=segmentparams)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def del_segment_params(segid,paramlist,session):
+    segmentparams=SegmentParams(segid)
+    segmentparams.set_params(paramlist)
+    try:
+        if session.delete(schema.SegmentParamsORM(apiobj=segmentparams)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class UserQuo:
+    def __init__(self,uid):
+        self.uid=uid
+        self._quotes={}
+
+    def add_quote(self,quote,value):
+        self._quotes[quote]=value
+
+    def set_quotes(self,quotes):
+        self._quotes=quotes
+
+    def get_quotes(self):
+        return self._quotes
+
+    def get_quote(self,quote):
+        try:
+            return self._quotes[quote]
+        except KeyError:
+            return None
+
+def get_user_quotes(uid,session):
+    try:
+        schemaobj=session.get(schema.UserQuoORM(key=uid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def set_user_quotes(uid,quotes,session):
+    userquotes=UserQuo(uid)
+    userquotes.set_quotes(quotes)
+    print 'A punto de insertar'
+    objeto=schema.UserQuoORM(apiobj=userquotes)
+    print userquotes.__dict__
+    try:
+        if session.insert(schema.UserQuoORM(apiobj=userquotes)):
+            print 'Correcto'
+            return True
+        else:
+            print 'Falso'
+            return False
+    except Exception as e:
+        print 'Exception: '+str(e)
+        return False
+
+def del_user_quotes(uid,quotes,session):
+    userquotes=UserQuo(uid)
+    userquotes.set_quotes(quotes)
+    try:
+        if session.delete(schema.UserQuoORM(apiobj=userquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class AgentQuo:
+    def __init__(self,aid):
+        self.aid=aid
+        self._quotes={}
+
+    def add_quote(self,quote,value):
+        self._quotes[quote]=value
+
+    def set_quotes(self,quotes):
+        self._quotes=quotes
+
+    def get_quotes(self):
+        return self._quotes
+
+    def get_quote(self,quote):
+        try:
+            return self._quotes[quote]
+        except KeyError:
+            return None
+
+
+def get_agent_quotes(aid,session):
+    try:
+        schemaobj=session.get(schema.AgentQuoORM(key=aid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def set_agent_quotes(aid,quotes,session):
+    agentquotes=AgentQuo(aid)
+    agentquotes.set_quotes(quotes)
+    try:
+        if session.insert(schema.AgentQuoORM(apiobj=agentquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def del_agent_quotes(aid,quotes,session):
+    agentquotes=AgentQuo(aid)
+    agentquotes.set_quotes(quotes)
+    try:
+        if session.delete(schema.AgentQuoORM(apiobj=agentquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class DatasourceQuo:
+    def __init__(self,did):
+        self.did=did
+        self._quotes={}
+
+    def add_quote(self,quote,value):
+        self._quotes[quote]=value
+
+    def set_quotes(self,quotes):
+        self._quotes=quotes
+
+    def get_quotes(self):
+        return self._quotes
+
+    def get_quote(self,quote):
+        try:
+            return self._quotes[quote]
+        except KeyError:
+            return None
+
+def get_ds_quotes(did,session):
+    try:
+        schemaobj=session.get(schema.DatasourceQuoORM(key=did))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def set_ds_quotes(did,quotes,session):
+    dsquotes=DatasourceQuo(did)
+    dsquotes.set_quotes(quotes)
+    try:
+        if session.insert(schema.DatasourceQuoORM(apiobj=dsquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def del_ds_quotes(did,quotes,session):
+    dsquotes=DatasourceQuo(did)
+    dsquotes.set_quotes(quotes)
+    try:
+        if session.delete(schema.DatasourceQuoORM(apiobj=dsquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class DatapointQuo:
+    def __init__(self,pid):
+        self.pid=pid
+        self._quotes={}
+
+    def add_quote(self,quote,value):
+        self._quotes[quote]=value
+
+    def set_quotes(self,quotes):
+        self._quotes=quotes
+
+    def get_quotes(self):
+        return self._quotes
+
+def get_dtp_quotes(pid,session):
+    try:
+        schemaobj=session.get(schema.DatapointQuoORM(key=pid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def set_dtp_quotes(pid,quotes,session):
+    dtpquotes=DatapointQuo(pid)
+    dtpquotes.set_quotes(quotes)
+    try:
+        if session.insert(schema.DatapointQuoORM(apiobj=dtpquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def del_dtp_quotes(pid,quotes,session):
+    dtpquotes=DatapointQuo(pid)
+    dtpquotes.set_quotes(quotes)
+    try:
+        if session.delete(schema.DatapointQuoORM(apiobj=dtpquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class GraphQuo:
+    def __init__(self,gid):
+        self.gid=gid
+        self._quotes={}
+
+    def add_quote(self,quote,value):
+        self._quotes[quote]=value
+
+    def set_quotes(self,quotes):
+        self._quotes=quotes
+
+    def get_quotes(self):
+        return self._quotes
+
+def get_graph_quotes(gid,session):
+    try:
+        schemaobj=session.get(schema.GraphQuoORM(key=gid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def set_graph_quotes(gid,quotes,session):
+    graphquotes=GraphQuo(gid)
+    graphquotes.set_quotes(quotes)
+    try:
+        if session.insert(schema.GraphQuoORM(apiobj=graphquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def del_graph_quotes(gid,quotes,session):
+    graphquotes=GraphQuo(gid)
+    graphquotes.set_quotes(quotes)
+    try:
+        if session.delete(schema.GraphQuoORM(apiobj=graphquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+

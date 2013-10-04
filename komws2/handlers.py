@@ -40,7 +40,7 @@ class AgentCreationHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
-                data=agapi.create_agent(username,ag_name,ag_pubkey,ag_version,self.application.cf)
+                data=agapi.create_agent(username,ag_name,ag_pubkey,ag_version,self.application.cf,self.application.mb)
                 print data
                 self.set_status(200)
                 self.write(json_encode(data))
@@ -177,7 +177,7 @@ class DatasourceCreationHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
-                data=dsapi.create_datasource(username,aid,ds_name,ds_type,ds_params,self.application.cf)
+                data=dsapi.create_datasource(username,aid,ds_name,ds_type,ds_params,self.application.cf,self.application.mb)
                 print data
                 self.set_status(200)
                 self.write(json_encode(data))

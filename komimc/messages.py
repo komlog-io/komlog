@@ -10,7 +10,9 @@ messages: komlog custom messages class implementations for inter module communic
 
 import exceptions
 from qpid.messaging import Message
+from komlibs.quotes import operations
 import uuid
+import json
 import dateutil.parser
 
 #QPID ADDRESS CONSTANTS
@@ -28,12 +30,15 @@ NEG_VAR_MESSAGE='NEGVAR'
 POS_VAR_MESSAGE='POSVAR'
 NEW_USR_MESSAGE='NEWUSR'
 UPDATE_GRAPH_WEIGHT_MESSAGE='UPDGRW'
+UPDATE_QUOTES_MESSAGE='UPDQUO'
 
 #MODULE LIST
 VALIDATION='Validation'
 STORING='Storing'
 TEXTMINING='Textmining'
 GESTCONSOLE='Gestconsole'
+RESCONTROL='Rescontrol'
+
 
 #MESSAGE MAPPINGS
 MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
@@ -44,7 +49,8 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           NEG_VAR_MESSAGE:'NegativeVariableMessage',
                           POS_VAR_MESSAGE:'PositiveVariableMessage',
                           NEW_USR_MESSAGE:'NewUserMessage',
-                          UPDATE_GRAPH_WEIGHT_MESSAGE:'UpdateGraphWeightMessage'}
+                          UPDATE_GRAPH_WEIGHT_MESSAGE:'UpdateGraphWeightMessage',
+                          UPDATE_QUOTES_MESSAGE:'UpdateQuotesMessage'}
 
 
 MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
@@ -55,14 +61,16 @@ MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             NEG_VAR_MESSAGE:GESTCONSOLE,
                             POS_VAR_MESSAGE:GESTCONSOLE,
                             NEW_USR_MESSAGE:GESTCONSOLE,
-                            UPDATE_GRAPH_WEIGHT_MESSAGE:TEXTMINING}
+                            UPDATE_GRAPH_WEIGHT_MESSAGE:TEXTMINING,
+                            UPDATE_QUOTES_MESSAGE:RESCONTROL}
 
 
 #MODULE MAPPINGS
 MODULE_TO_ADDRESS_MAPPING={VALIDATION:'%m.%h',
                            STORING:'%m.%h',
                            TEXTMINING:'%m',
-                           GESTCONSOLE:'%m'}
+                           GESTCONSOLE:'%m',
+                           RESCONTROL:'%m'}
 
 
 def get_address(type, module_id, module_instance, running_host):
@@ -224,4 +232,19 @@ class UpdateGraphWeightMessage:
             self.type=UPDATE_GRAPH_WEIGHT_MESSAGE
             self.gid=gid
             self.qpid_message=Message(self.type+'|'+str(self.gid))
+
+class UpdateQuotesMessage:
+    def __init__(self, qpid_message=None, operation=None):
+        if qpid_message:
+            self.qpid_message=qpid_message
+            mtype,json_serialization = self.qpid_message.content.split('|')
+            self.type=mtype
+            operation_dict=json.loads(json_serialization)
+            operation_class=operation_dict['opclass']
+            operation_dict.pop('opclass',None)
+            self.operation=getattr(operations,operation_class)(**operation_dict)
+        else:
+            self.type=UPDATE_QUOTES_MESSAGE
+            self.operation=operation
+            self.qpid_message=Message(self.type+'|'+self.operation.get_json_serialization())
 
