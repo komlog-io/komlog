@@ -11,6 +11,7 @@ from komfs import api as fsapi
 from komapp import modules
 from komfig import komlogger
 from komimc import bus,messages
+from komimc import codes as msgcodes
         
 class Validation(modules.Module):
     def __init__(self, config, instance_number):
@@ -105,56 +106,56 @@ class Storing(modules.Module):
             message = self.message_bus.retrieveMessage(from_modaddr=True)
             self.message_bus.ackMessage()
             mtype = message.type
-            if mtype==messages.STORE_SAMPLE_MESSAGE:
+            try:
                 self.logger.debug('Message received: '+mtype)
-                did,date=self.process_STORE_SAMPLE_MESSAGE(message)
-                if did:
-                    self.logger.debug('Message completed successfully: '+mtype)
-                    if not self.message_bus.sendMessage(messages.MapVarsMessage(did=did,date=date)):
-                        self.logger.error('Error sending Message: '+messages.MAP_VARS_MESSAGE)
-                    self.logger.debug('Message sent: '+messages.MAP_VARS_MESSAGE)
-                else:
-                    self.logger.error('Error processing message: '+mtype)
-            else:
-                self.logger.error('Message Type not supported: '+mtype)
-                self.message_bus.sendMessage(message)
+                msgresult=getattr(self,'process_msg_'+mtype)(message)
+                messages.process_msg_result(msgresult,self.message_bus,self.logger)
+            except AttributeError:
+                self.logger.exception('Exception processing message: '+mtype)
+            except Exception as e:
+                self.logger.exception('Exception processing message: '+str(e))
 
-    def process_STORE_SAMPLE_MESSAGE(self, message):
+    def process_msg_STOSMP(self, message):
+            msgresult=messages.MessageResult(message)
             f = message.sample_file
             try:
                 os.rename(f,f[:-5]+'.wspl')
             except OSError:
             #other instance took it firts (it shouldn't because messages must be sent once)
                 self.logger.error('File already treated by other module instance: '+f)
-                return -1 
+                msgresult.retcode=msgcodes.NOOP
             else:
                 filename = f[:-5]+'.wspl'
-            
-            self.logger.debug('Storing '+filename)
-            #datasourceid = filename.split('_')[1].split('.')[0]
-            #datasourceid = uuid.UUID(datasourceid)
-            #date = dateutil.parser.parse(os.path.basename(filename).split('_')[0])
-            metainfo = json.loads(fsapi.get_file_content(filename))
-            dsinfo=json.loads(metainfo['json_content'])
-            did=uuid.UUID(metainfo['did'])
-            ds_content=dsinfo['ds_content']
-            ds_date=dateutil.parser.parse(dsinfo['ds_date'])
-            dsobj=cassapi.DatasourceData(did=did,date=ds_date,content=ds_content)
-            try:
-                if cassapi.insert_datasourcedata(dsobj,self.cass_cf):
-                    self.logger.debug(filename+' stored successfully : '+str(did)+' '+str(ds_date))
-                    fo = os.path.join(self.params['outputdir'],os.path.basename(filename)[:-5]+'.sspl')
-                    os.rename(filename,fo)
-                    return did,ds_date
-                else:
+                self.logger.debug('Storing '+filename)
+                #datasourceid = filename.split('_')[1].split('.')[0]
+                #datasourceid = uuid.UUID(datasourceid)
+                #date = dateutil.parser.parse(os.path.basename(filename).split('_')[0])
+                metainfo = json.loads(fsapi.get_file_content(filename))
+                dsinfo=json.loads(metainfo['json_content'])
+                did=uuid.UUID(metainfo['did'])
+                ds_content=dsinfo['ds_content']
+                ds_date=dateutil.parser.parse(dsinfo['ds_date'])
+                dsobj=cassapi.DatasourceData(did=did,date=ds_date,content=ds_content)
+                try:
+                    if cassapi.insert_datasourcedata(dsobj,self.cass_cf):
+                        self.logger.debug(filename+' stored successfully : '+str(did)+' '+str(ds_date))
+                        fo = os.path.join(self.params['outputdir'],os.path.basename(filename)[:-5]+'.sspl')
+                        os.rename(filename,fo)
+                        newmsg=messages.MapVarsMessage(did=did,date=ds_date)
+                        msgresult.add_msg_originated(msg)
+                        msgresult.retcode=msgcodes.SUCCESS
+                    else:
+                        fo = filename[:-5]+'.xspl'
+                        os.rename(filename,fo)
+                        msgresult.retcode=msgcodes.ERROR
+                except Exception as e:
+                    cassapi.remove_datasourcedata(did,ds_date,self.cass_cf)
+                    self.logger.exception('Exception inserting sample: '+str(e))
                     fo = filename[:-5]+'.xspl'
                     os.rename(filename,fo)
-                    return None,None
-            except Exception as e:
-                cassapi.remove_datasourcedata(did,ds_date,self.cass_cf)
-                self.logger.exception('Exception inserting sample: '+str(e))
-                fo = filename[:-5]+'.xspl'
-                os.rename(filename,fo)
-                return None,None
+                    msgresult.retcode=msgcodes.ERROR
+            return msgresult
+
+
 
 

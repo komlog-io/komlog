@@ -9,19 +9,14 @@ from komcass import connection as casscon
 from komapp import modules
 from komfig import komlogger
 from komimc import bus,messages
+from komimc import codes as msgcodes
 from komlibs.textman import variables
 from komlibs.ai import decisiontree
 from komlibs.general import stringops
 from komlibs.mail import connection as mailcon
 from komlibs.mail import types as mailtypes
 from komlibs.mail import messages as mailmessages
-
-
-NOTFOUND=1
-ALREADYMONITORED=2
-DBERROR=3
-PENDINGDTREEGENERATION=4
-PROCESSERROR=5
+from komlibs.quotes import operations
 
 class Gestconsole(modules.Module):
     def __init__(self, config, instance_number):
@@ -41,7 +36,6 @@ class Gestconsole(modules.Module):
         self.params['mail_user'] = self.config.safe_get(sections.MAIN,options.MAIL_USER)
         self.params['mail_password'] = self.config.safe_get(sections.MAIN,options.MAIL_PASSWORD)
         self.params['mail_domain'] = self.config.safe_get(sections.MAIN,options.MAIL_DOMAIN)
-
 
     def start(self):
         self.logger = komlogger.getLogger(self.config.conf_file, self.name)
@@ -66,59 +60,47 @@ class Gestconsole(modules.Module):
             message = self.message_bus.retrieveMessage(from_modaddr=True)
             self.message_bus.ackMessage()
             mtype=message.type
-            if mtype==messages.MON_VAR_MESSAGE:
-                result,pid,date=self.process_MON_VAR_MESSAGE(message)
-                if result:
-                    self.logger.debug('Message completed successfully: '+mtype)
-                    self.message_bus.sendMessage(messages.GenerateDTreeMessage(pid=pid,date=date))
-                else:
-                    self.logger.error('Error processing message: '+mtype+' Error: '+str(pid))
-                    #self.message_bus.sendMessage(message)
-            elif mtype==messages.NEG_VAR_MESSAGE:
-                result,pid,date=self.process_NEG_VAR_MESSAGE(message)
-                if result:
-                    self.logger.debug('Message completed successfully: '+mtype)
-                    self.message_bus.sendMessage(messages.GenerateDTreeMessage(pid=pid,date=date))
-                else:
-                    self.logger.error('Error processing message: '+mtype+' Error: '+str(pid))
-            elif mtype==messages.POS_VAR_MESSAGE:
-                result,pid,date=self.process_POS_VAR_MESSAGE(message)
-                if result:
-                    self.logger.debug('Message completed successfully: '+mtype)
-                    self.message_bus.sendMessage(messages.GenerateDTreeMessage(pid=pid,date=date))
-                else:
-                    self.logger.error('Error processing message: '+mtype+' Error: '+str(pid))
-            elif mtype==messages.NEW_USR_MESSAGE:
-                result,msg=self.process_NEW_USR_MESSAGE(message)
-                if result:
-                    self.logger.debug('Message completed successfully: '+mtype)
-                else:
-                    self.logger.error('Error processing message: '+mtype+' Error: '+str(msg))
-            else:
-                self.logger.error('Message Type not supported: '+mtype)
-                self.message_bus.sendMessage(message)
-    
-    def process_MON_VAR_MESSAGE(self, message):
+            try:
+                msgresult=getattr(self,'process_msg_'+mtype)(message)
+                messages.process_msg_result(msgresult,self.message_bus,self.logger)
+            except AttributeError:
+                self.logger.exception('Exception processing message: '+mtype)
+            except Exception as e:
+                self.logger.exception('Exception processing message: '+str(e))
+
+    def process_msg_MONVAR(self, message):
         ''' Los pasos son los siguientes:
         - Comprobamos que la variable exista en el sample (ds en un dtdo momento)
         - Comprobamos que la variable no pertenezca a un datapoint existente
         - Registramos el nuevo datapoint, marcando la variable como muestra positiva
         '''
+        msgresult=messages.MessageResult(message)
         did=message.did
         date=message.date
         pos=message.pos
         length=message.length
         name=message.name
+        dsinfo=cassapi.get_dsinfo(did,{},self.cf)
+        if not dsinfo:
+            self.logger.error('Datasource not found: '+str(did))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         dsmapvar = cassapi.get_datasourcemapvars(did=did,session=self.cf,date=date)
         if not dsmapvar: 
-            return False,NOTFOUND,date
+            self.logger.error('Datasource MapVar not found: '+str(did)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         try:
             content=json.loads(dsmapvar.content)
             index=content.index([int(pos),int(length)])
         except ValueError:
-            return False,NOTFOUND,date
-        except Exception:
-            return False,PROCESSERROR,date
+            self.logger.exception('ValueError Loading content: '+str(did)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
+        except Exception as e:
+            self.logger.exception('Loading content exception '+str(e)+': '+str(did)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)
         varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=pos)
         dsdtprelation=cassapi.get_dsdtprelation(did,self.cf)
@@ -126,131 +108,207 @@ class Gestconsole(modules.Module):
             for pid in dsdtprelation.dtps:
                 dtpinfo=cassapi.get_dtpinfo(pid,{'dtree':u''},self.cf)
                 if not dtpinfo:
-                    return False,PENDINGDTREEGENERATION,date
+                    ''' Encontramos dtp sin DTREE. Solicitamos GDTREE y MONVAR nuevamente. Todos los dtp deben
+                    tener DTREE para saber si la variable solicitada ya está siendo monitorizada '''
+                    newmsg=messages.GenerateDTreeMessage(pid=pid,date=date)
+                    msgresult.add_msg_originated(newmsg)
+                    newmsg=message
+                    msgresult.add_msg_originated(newmsg)
+                    msgresult.retcode=msgcodes.ERROR
+                    return msgresult
                 try:
                     stored_dtree=dtpinfo.dbcols['dtree']
                     dtree=decisiontree.DecisionTree(jsontree=json.dumps(stored_dtree))
                     if dtree.evaluate_row(varlist[0].h):
-                        return False,ALREADYMONITORED,date
+                        self.logger.error('Datapoint Already monitored: '+str(pid))
+                        msgresult.retcode=msgcodes.ERROR
+                        return msgresult
                 except KeyError:
                     pass
         else:
             dsdtprelation=cassapi.DsDtpRelation(did=did)
         pid=uuid.uuid4()
-        print pid
         newdtp=cassapi.DatapointInfo(pid,name=name,did=did)
         newdtpdtreepositives=cassapi.DatapointDtreePositives(pid)
         newdtpdtreepositives.set_positive(date,[pos,length])
         if cassapi.register_dtp(newdtp,dsdtprelation,self.cf) and cassapi.update_dtp_dtree_positives(newdtpdtreepositives,self.cf):
             ''' Aqui debo lanzar el mensaje UPDQUO, pero hasta que no se retornen estructuras de datos no merece la pena implementarlo
                 porque vamos a guarrear mucho '''
-            return True,newdtp.pid,date
+            aginfo=cassapi.get_agentinfo(dsinfo.aid,{},self.cf)
+            newmsg=messages.UpdateQuotesMessage(operation=operations.NewDatapointQuoteOperation(uid=aginfo.uid,aid=dsinfo.aid,did=did))
+            msgresult.add_msg_originated(newmsg)
+            newmsg=messages.GenerateDTreeMessage(pid=pid,date=date)
+            msgresult.add_msg_originated(newmsg)
+            msgcodes.retcode=msgcodes.SUCCESS
+            return msgresult
         else:
-            return False,DBERROR,date
+            self.logger.error('Error registering datapoint in database. did: '+str(did)+' date: '+str(date)+' pos: '+str(pos))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
 
-    def process_NEG_VAR_MESSAGE(self, message):
+    def process_msg_NEGVAR(self, message):
         ''' Los pasos son los siguientes:
         - Comprobamos que la variable exista en el sample (ds en un dtdo momento)
         - Añadimos la variable a la lista de negativos del datapoint
         '''
+        msgresult=messages.MessageResult(message)
         date=message.date
         pos=message.pos
         length=message.length
         pid=message.pid
         dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
         if not dtpinfo:
-            return False,NOTFOUND,date
+            self.logger.error('Datapoint not found: '+str(pid))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         did=dtpinfo.did
         dsmapvar = cassapi.get_datasourcemapvars(did=did,session=self.cf,date=date)
         if not dsmapvar: 
-            return False,NOTFOUND,date
+            self.logger.error('Datasource MapVar not found')
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         try:
             content=json.loads(dsmapvar.content)
             index=content.index([int(pos),int(length)])
         except ValueError:
-            return False,NOTFOUND,date
+            self.logger.exception('ValueError loading content: '+str(did)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         except Exception:
-            return False,PROCESSERROR,date
+            self.logger.exception('Exception loading content: '+str(did)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         #en este punto hemos comprobado que la muestra y variable existen, falta añadirla al listado de negativos
         dtpdtreeneg=cassapi.get_dtp_dtree_negatives(pid=pid,date=date,session=self.cf)
         if not dtpdtreeneg:
             dtpdtreeneg=cassapi.DatapointDtreeNegatives(pid=pid)
         dtpdtreeneg.add_negative(date,[pos,length])
         if not cassapi.update_dtp_dtree_negatives(dtpdtreeneg,self.cf):
-            return False,PROCESSERROR,date
+            self.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         #y eliminarla de los positivos si estuviese
         dtpdtreepos=cassapi.get_dtp_dtree_positives(pid=pid,date=date,session=self.cf)
         if not dtpdtreepos:
             dtpdtreepos=cassapi.DatapointDtreePositives(pid=pid)
         dtpdtreepos.del_positive(date,[pos,length])
         if not cassapi.update_dtp_dtree_positives(dtpdtreepos,self.cf):
-            return False,PROCESSERROR,date
-        return True,pid,date
+            self.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
+        newmsg=messages.GenerateDTreeMessage(pid=pid,date=date)
+        msgresult.add_msg_originated(newmsg)
+        msgresult.retcode=msgcodes.SUCCESS
+        return msgresult
 
-    def process_POS_VAR_MESSAGE(self, message):
+    def process_msg_POSVAR(self, message):
         ''' Los pasos son los siguientes:
         - Comprobamos que la variable exista en el sample (ds en un dtdo momento)
         - Establecemos la variable como positiva
+        - Si algun otro datapoint valida la variable marcada, solicitamos la regeneracion del DTREE de dicho datapoint 
+        y mandamos un NEGVAR sobre esa variable y ese dtp
         '''
+        msgresult=messages.MessageResult(message)
         date=message.date
         pos=message.pos
         length=message.length
+        did=message.did
         pid=message.pid
         dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
         if not dtpinfo:
-            return False,NOTFOUND,date
-        did=dtpinfo.did
+            self.logger.error('Datapoint not found: '+str(pid))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
+        if not dtpinfo.did or not did == dtpinfo.did:
+            self.logger.error('Datapoint DID not matchs Message DID: dtp_did: '+str(dtpinfo.did)+' msg_did: '+str(did))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         dsmapvar = cassapi.get_datasourcemapvars(did=did,session=self.cf,date=date)
         if not dsmapvar: 
-            return False,NOTFOUND,date
+            self.logger.error('Datasource MapVar not found: '+str(did)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         try:
             content=json.loads(dsmapvar.content)
             index=content.index([int(pos),int(length)])
         except ValueError:
-            return False,NOTFOUND,date
+            self.logger.exception('ValueError loading content: '+str(did)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         except Exception:
-            return False,PROCESSERROR,date
-        #en este punto hemos comprobado que la muestra y variable existen
-        #falta establecerla como positivo
+            self.logger.exception('ValueError loading content: '+str(did)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
+        ''' en este punto hemos comprobado que la muestra y variable existen y dtp pertenece a did indicado.
+        Comprobamos que no haya otros datapoints que validen esa variable, en caso contrario
+        solicitaremos que esa variable se marque como negativa en ellos '''
+        dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)
+        varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=pos)
+        dsdtprelation=cassapi.get_dsdtprelation(did,self.cf)
+        if dsdtprelation:
+            pids=dsdtprelation.dtps
+            pids.pop(pid)
+            for apid in pids:
+                dtpinfo=cassapi.get_dtpinfo(apid,{'dtree':u''},self.cf)
+                if dtpinfo:
+                    stored_dtree=dtpinfo.dbcols['dtree']
+                    dtree=decisiontree.DecisionTree(jsontree=json.dumps(stored_dtree))
+                    if dtree.evaluate_row(varlist[0].h):
+                        self.logger.debug('Variable matched other datapoint. Requesting NEGVAR on it: '+str(apid))
+                        newmsg=messages.NegativeVariableMessage(did=did,pid=apid,date=date,pos=pos,length=length)
+                        msgresult.add_msg_originated(newmsg)
+        ''' establecemos la variable como positiva para este datapoint '''
         dtpdtreepos=cassapi.get_dtp_dtree_positives(pid=pid,date=date,session=self.cf)
         if not dtpdtreepos:
             dtpdtreepos=cassapi.DatapointDtreePositives(pid=pid)
         dtpdtreepos.set_positive(date,[pos,length])
         if not cassapi.update_dtp_dtree_positives(dtpdtreepos,self.cf):
-            return False,PROCESSERROR,date
+            self.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         #y eliminarla de los negativos si estuviese
         dtpdtreeneg=cassapi.get_dtp_dtree_negatives(pid=pid,date=date,session=self.cf)
         if not dtpdtreeneg:
             dtpdtreeneg=cassapi.DatapointDtreeNegatives(pid=pid)
         dtpdtreeneg.del_negative(date,[pos,length])
         if not cassapi.update_dtp_dtree_negatives(dtpdtreeneg,self.cf):
-            return False,PROCESSERROR,date
-        return True,pid,date
+            self.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
+        newmsg=messages.GenerateDTreeMessage(pid=pid,date=date)
+        msgresult.add_msg_originated(newmsg)
+        msgresult.retcode=msgcodes.SUCCESS
+        return msgresult
 
-    def process_NEW_USR_MESSAGE(self, message):
+    def process_msg_NEWUSR(self, message):
         ''' Los pasos son los siguientes:
         - Obtenemos la informacion del usuario
         - generamos codigo y mandamos un mail al usuario con el enlace para su activacion
         '''
-        print 'por lo menos el mensaje LO TRATAMOS'
+        msgresult=messages.MessageResult(message)
         uid=message.uid
         userinfo=cassapi.get_userinfo(uid,{},self.cf)
         if not userinfo:
-            return False,'Userinfo not found'
+            self.logger.error('User not found: '+str(uid))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         email=userinfo.email
         if not email:
-            return False,'User email not found'
+            self.logger.error('User email not found: '+str(uid))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         new_code=stringops.get_randomstring(size=32)
         usercoder=cassapi.UserCodeRelation(email,new_code)
         if not cassapi.insert_usercoderelation(usercoder,self.cf):
-            return False,'Error inserting new user code'
+            self.logger.error('Error inserting new user code, uid: '+str(uid))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         mailargs={'to_address':email,'code':new_code,'domain':self.params['mail_domain']}
         mailmessage=mailmessages.get_message(mailtypes.NEW_USER,mailargs)
-        print mailmessage.__dict__
         if not self.mailer.send(mailmessage):
-            return False,'Error sending mail'
-        return True,'Message processed successfully'
-
-
-
+            self.logger.error('Error sending mail, uid: '+str(uid))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
+        msgresult.retcode=msgcodes.SUCCESS
+        return msgresult
 

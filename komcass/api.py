@@ -63,10 +63,10 @@ class DatapointInfo:
                 raise exceptions.ParameterNotFoundException('did')
             if name:
                 self.dbcols['name']=name
-            if decimalseparator:
-                self.dbcols['decimalseparator']=decimalseparator
             else:
                 raise exceptions.ParameterNotFoundException('name')
+            if decimalseparator:
+                self.dbcols['decimalseparator']=decimalseparator
             self.prestore()
     
     def prestore(self):

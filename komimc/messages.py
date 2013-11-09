@@ -9,6 +9,7 @@ messages: komlog custom messages class implementations for inter module communic
 '''
 
 import exceptions
+import codes as msgcodes
 from qpid.messaging import Message
 from komlibs.quotes import operations
 import uuid
@@ -97,6 +98,30 @@ def get_mod_address(module_id, module_instance, running_host):
     else:
         return None,QPID_ADDR_OPTIONS
 
+class MessageResult:
+    def __init__(self,message):
+        self.mtype=message.type
+        self.mparams=message.qpid_message.content
+        self.retcode=None
+        self._msgoriginated=[]
+
+    def add_msg_originated(self, msg, index=0):
+        array_position=int(index) if index else len(self._msgoriginated)
+        self._msgoriginated.insert(array_position,msg)
+
+    def get_msg_originated(self):
+        return self._msgoriginated
+
+def process_msg_result(msg_result,msg_bus,logger):
+    if msg_result.retcode==msgcodes.ERROR:
+        logger.error('Error processing message: '+msg_result.mparams)
+    elif msg_result.retcode==msgcodes.SUCCESS:
+        logger.debug('Message processed successfully: '+msg_result.mparams)
+    for msg in msg_result.get_msg_originated():
+        if msg_bus.sendMessage(msg):
+            logger.debug('Message Sent: '+msg.qpid_message.content)
+
+
 class StoreSampleMessage:
     def __init__(self, qpid_message=None, sample_file=None):
         if qpid_message:
@@ -174,40 +199,44 @@ class FillDatapointMessage:
             self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+self.date.isoformat()+'|'+str(self.pid))
 
 class NegativeVariableMessage:
-    def __init__(self, qpid_message=None, pid=None, date=None, pos=None, length=None):
+    def __init__(self, qpid_message=None, did=None, pid=None, date=None, pos=None, length=None):
         if qpid_message:
             self.qpid_message=qpid_message
-            mtype,pid,date,pos,length = self.qpid_message.content.split('|')
+            mtype,did,pid,date,pos,length = self.qpid_message.content.split('|')
             self.type=mtype
+            self.did=uuid.UUID(did)
             self.pid=uuid.UUID(pid)
             self.date=dateutil.parser.parse(date)
             self.pos=str(pos)
             self.length=str(length)
         else:
             self.type=NEG_VAR_MESSAGE
+            self.did=did
             self.pid=pid
             self.date=date
             self.pos=str(pos)
             self.length=str(length)
-            self.qpid_message=Message(self.type+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length))
+            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length))
 
 class PositiveVariableMessage:
-    def __init__(self, qpid_message=None, pid=None, date=None, pos=None, length=None):
+    def __init__(self, qpid_message=None, did=None, pid=None, date=None, pos=None, length=None):
         if qpid_message:
             self.qpid_message=qpid_message
-            mtype,pid,date,pos,length = self.qpid_message.content.split('|')
+            mtype,did,pid,date,pos,length = self.qpid_message.content.split('|')
             self.type=mtype
+            self.did=uuid.UUID(did)
             self.pid=uuid.UUID(pid)
             self.date=dateutil.parser.parse(date)
             self.pos=str(pos)
             self.length=str(length)
         else:
             self.type=POS_VAR_MESSAGE
+            self.did=did
             self.pid=pid
             self.date=date
             self.pos=str(pos)
             self.length=str(length)
-            self.qpid_message=Message(self.type+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length))
+            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length))
 
 class NewUserMessage:
     def __init__(self, qpid_message=None, uid=None):

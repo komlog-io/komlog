@@ -1,3 +1,5 @@
+#coding:utf-8
+
 import sections, options
 import re
 import json
@@ -8,6 +10,7 @@ from komcass import connection as casscon
 from komapp import modules
 from komfig import komlogger
 from komimc import bus,messages
+from komimc import codes as msgcodes
 from komlibs.textman import variables
 from komlibs.numeric import weight
 from komlibs.ai import decisiontree
@@ -49,37 +52,15 @@ class Textmining(modules.Module):
             message = self.message_bus.retrieveMessage(from_modaddr=True)
             self.message_bus.ackMessage()
             mtype=message.type
-            if mtype==messages.MAP_VARS_MESSAGE:
-                result,did,date=self.process_MAP_VARS_MESSAGE(message)
-                if result:
-                    self.logger.debug('Mesage completed successfully: '+mtype)
-                    self.message_bus.sendMessage(messages.FillDatapointMessage(did=did,date=date))
-                else:
-                    self.logger.debug('Error procesing: '+mtype)
-            elif mtype==messages.GDTREE_MESSAGE:
-                result,pid,date=self.process_GDTREE_MESSAGE(message)
-                if result:
-                    self.logger.debug('Message completed successfully: '+mtype)
-                    self.message_bus.sendMessage(messages.FillDatapointMessage(pid=pid,date=date))
-                else:
-                    self.logger.debug('Error procesing: '+mtype)
-            elif mtype==messages.FILL_DATAPOINT_MESSAGE:
-                result,subresult=self.process_FILL_DATAPOINT_MESSAGE(message)
-                if result:
-                    self.logger.debug('Message completed successfully: '+mtype)
-                else:
-                    self.logger.debug('Error procesing: '+mtype)
-            elif mtype==messages.UPDATE_GRAPH_WEIGHT_MESSAGE:
-                result,subresult=self.process_UPDATE_GRAPH_WEIGHT_MESSAGE(message)
-                if result:
-                    self.logger.debug('Message completed successfully: '+mtype)
-                else:
-                    self.logger.debug('Error procesing: '+mtype)
-            else:
-                self.logger.error('Message Type not supported: '+mtype)
-                self.message_bus.sendMessage(message)
-    
-    def process_MAP_VARS_MESSAGE(self, message):
+            try:
+                msgresult=getattr(self,'process_msg_'+mtype)(message)
+                messages.process_msg_result(msgresult,self.message_bus,self.logger)
+            except AttributeError:
+                self.logger.exception('Exception processing message: '+mtype)
+            except Exception as e:
+                self.logger.exception('Exception processing message: '+str(e))
+
+    def process_msg_MAPVARS(self, message):
         '''
         Los pasos son los siguientes:
         - Obtenemos el datasource del mensaje
@@ -87,6 +68,7 @@ class Textmining(modules.Module):
         - extraemos las variables que contiene, con la informacion necesaria para ser identificadas univocamente
         - almacenamos esta informacion en bbdd, por un lado todo el contenido de las variables recien extraido, y por otro el listado completo de variables de cada datasource, para acelerar las busquedas
         '''
+        msgresult=messages.MessageResult(message)
         did=message.did
         date=message.date
         varlist=[]
@@ -109,17 +91,21 @@ class Textmining(modules.Module):
                     self.logger.debug('Map created for did: '+str(did))
                 dsinfo=cassapi.DatasourceInfo(did,last_mapped=date)
                 cassapi.update_ds(dsinfo,self.cf)
-                return True,did,date
+                newmsg=messages.FillDatapointMessage(did=did,date=date)
+                msgresult.add_msg_originated(newmsg)
+                msgresult.retcode=msgcodes.SUCCESS
             except Exception as e:
                 #rollback
                 self.logger.exception('Exception creating Map for did '+str(did)+': '+str(e))
                 cassapi.remove_datasourcemap(dsmobj.did,dsmobj.date,self.cf)
-                return False,None,None
+                msgresult.retcode=msgcodes.ERROR
         else:
             self.logger.error('Datasource data not found: '+str(did)+' '+str(date))
-            return False,None,None
+            msgresult.retcode=msgcodes.ERROR
+        return msgresult
+            
 
-    def process_GDTREE_MESSAGE(self, message):
+    def process_msg_GDTREE(self, message):
         '''
         Los pasos son los siguientes:
         - Obtenemos el pid del mensaje
@@ -129,43 +115,59 @@ class Textmining(modules.Module):
         - En base a la clasificacion obtenida, creamos el arbol de decision
         - lo almacenamos en bbdd
         '''
+        msgresult=messages.MessageResult(message)
         pid=message.pid
         mdate=message.date
         dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
         if not dtpinfo:
-            return False,ERROR,None
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         did=dtpinfo.did
-        samples_to_get={}
+        dates_to_get=[]
+        positive_samples={}
+        negative_samples={}
         dtp_positives=cassapi.get_dtp_dtree_positives(pid,self.cf)
         dtp_negatives=cassapi.get_dtp_dtree_negatives(pid,self.cf)
         dtree_training_set=[]
         if dtp_positives:
-            positives=dtp_positives.positives
-            for date,positive in positives.iteritems():
-                samples_to_get[date]=positive[0]
+            positive_samples=dtp_positives.positives
+            for date,positive in positive_samples.iteritems():
+                dates_to_get.append(date)
         if dtp_negatives:
-            negatives=dtp_negatives.negatives
-            for date,negative_array in negatives.iteritems():
-                    if not samples_to_get.has_key(date):
-                        samples_to_get[date]=None
+            negative_samples=dtp_negatives.negatives
+            for date,negative_array in negative_samples.iteritems():
+                dates_to_get.append(date)
+        dates_to_get=sorted(set(dates_to_get))
         dsmaps=[]
-        for date,positive in samples_to_get.iteritems():
+        for date in dates_to_get:
             dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)
             varlist=variables.get_varlist(jsoncontent=dsmap.content)
-            for var in varlist:
-                if positive and str(var.s)==positive:
-                    var.h['result']=True
-                else:
-                    var.h['result']=False
-                dtree_training_set.append(var.h)
+            if positive_samples.has_key(date):
+                positive=positive_samples[date]
+                for var in varlist:
+                    if str(var.s)==positive[0]:
+                        var.h['result']=True
+                    else:
+                        var.h['result']=False
+                    dtree_training_set.append(var.h)
+            if negative_samples.has_key(date) and not positive_samples.has_key(date):
+                negative_list=negative_samples[date]
+                for var in varlist:
+                    if str(var.s) in negative_list:
+                        var.h['result']=False
+                        dtree_training_set.append(var.h)
         dtree=decisiontree.DecisionTree(rawdata=dtree_training_set)
         dtpinfo.dbcols['dtree']=dtree.get_jsontree()
         if cassapi.update_dtp(dtpinfo,self.cf):
-            return True,pid,mdate
+            msgresult.retcode=msgcodes.ERROR
+            newmsg=messages.FillDatapointMessage(pid=pid,date=mdate)
+            msgresult.add_msg_originated(newmsg)
+            msgresult.retcode=msgcodes.SUCCESS
         else:
-            return False,ERROR,mdate
+            msgresult.retcode=msgcodes.ERROR
+        return msgresult
 
-    def process_FILL_DATAPOINT_MESSAGE(self, message):
+    def process_msg_FILDTP(self, message):
         '''
         Los pasos son los siguientes:
         - Obtenemos el pid o el did y date
@@ -186,6 +188,7 @@ class Textmining(modules.Module):
                     almacena_valor
                     break
         '''
+        msgresult=messages.MessageResult(message)
         pid=message.pid
         did=message.did
         date=message.date #depending on the received param, date will be the date of the did or date of the sample whose pid was monitored or modified
@@ -196,18 +199,21 @@ class Textmining(modules.Module):
             pidonly_flag=True
             dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
             if not dtpinfo:
-                self.logger.info('Datapoint info not found: '+str(pid))
-                return True,OK
+                self.logger.error('Datapoint not found: '+str(pid))
+                msgresult.retcode=msgcodes.ERROR
+                return msgresult
             did=dtpinfo.did
             dtree=decisiontree.DecisionTree(jsontree=json.dumps(dtpinfo.dbcols['dtree']))
             if not dtree:
-                self.logger.info('Datapoint Decision tree not found: '+str(pid))
-                return True,OK
+                self.logger.error('Datapoint Decision tree not found: '+str(pid))
+                msgresult.retcode=msgcodes.ERROR
+                return msgresult
             dtps.append((dtpinfo,dtree))
             dsinfo=cassapi.get_dsinfo(did,{},self.cf)
             if not dsinfo:
-                self.logger.info('Datasource info not found: '+str(dtpinfo.pid))
-                return True,OK
+                self.logger.error('Datasource not found: '+str(dtpinfo.pid))
+                msgresult.retcode=msgcodes.ERROR
+                return msgresult
             end_date=dsinfo.last_received
             if not end_date:
                 end_date=datetime.utcnow()
@@ -224,7 +230,8 @@ class Textmining(modules.Module):
                 pids=dsdtpr.dtps
             else:
                 self.logger.info('Datasource has no datapoints: '+str(did))
-                return True,OK
+                msgresult.retcode=msgcodes.NOOP
+                return msgresult
             for pid in pids:
                 dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
                 dtree=decisiontree.DecisionTree(jsontree=json.dumps(dtpinfo.dbcols['dtree']))
@@ -266,9 +273,10 @@ class Textmining(modules.Module):
             if not cassapi.insert_datasourcemapdtps(dsmapdtpsobj,self.cf):
                 self.logger.error('Error inserting Datasource Datapoint Map: %s_%s' %(did,dsmap.date))
                 break
-        return True,OK
+        msgresult.retcode=msgcodes.SUCCESS
+        return msgresult
 
-    def process_UPDATE_GRAPH_WEIGHT_MESSAGE(self,message):
+    def process_msg_UPDGRW(self,message):
         '''
         This function associates each graph with the datasources
         it should be related with, and determines the importance (weight) of
@@ -280,10 +288,13 @@ class Textmining(modules.Module):
         4) apply relevance measurement algorithm
         5) store results
         '''
+        msgresult=messages.MessageResult(message)
         gid=message.gid
         graphinfo=cassapi.get_graphinfo(gid,self.cf)
         if not graphinfo:
-            return False,'Graphinfo not found'
+            self.logger.error('Graph info not found: '+str(gid))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         datasources={}
         for pid in graphinfo.get_datapoints():
             dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
@@ -302,11 +313,14 @@ class Textmining(modules.Module):
         graphdsw=cassapi.GraphDatasourceWeight(gid)
         graphdsw.set_data(weights)
         if not cassapi.insert_graphdatasourceweight(graphdsw,self.cf):
-            return False,'Error inserting GraphDatasourceWeight'
+            self.logger.error('Error inserting GraphDatasourceWeight: '+str(gid))
+            msgresult.retcode=msgcodes.ERROR
+            return msgresult
         for did in datasources.keys():
             dsgw=cassapi.DatasourceGraphWeight(did)
             dsgw.add_graph(gid,weights[did])
             cassapi.insert_datasourcegraphweight(dsgw,self.cf)
-        return True,'Updated successfully'
-
+        self.logger.info('Graph Weight updated successfully: '+str(gid))
+        msgresult.retcode=msgcodes.SUCCESS
+        return msgresult
 

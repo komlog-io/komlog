@@ -14,6 +14,7 @@ from komcass import connection as casscon
 from komapp import modules
 from komfig import komlogger
 from komimc import bus,messages
+from komimc import codes as msgcodes
 from komlibs.quotes import update,compare
 
 UPDATEFUNCS={}
@@ -53,22 +54,20 @@ class Rescontrol(modules.Module):
             message = self.message_bus.retrieveMessage(from_modaddr=True)
             self.message_bus.ackMessage()
             mtype = message.type
-            if mtype==messages.UPDATE_QUOTES_MESSAGE:
-                self.logger.debug('Message received: '+mtype)
-                result=self.process_UPDATE_QUOTES_MESSAGE(message)
-                if result:
-                    self.logger.debug('Message completed successfully: '+mtype)
-                else:
-                    self.logger.error('Error processing message: '+mtype)
-            else:
-                self.logger.error('Message Type not supported: '+mtype)
-                self.message_bus.sendMessage(message)
+            try:
+                msgresult=getattr(self,'process_msg_'+mtype)(message)
+                messages.process_msg_result(msgresult,self.message_bus,self.logger)
+            except AttributeError:
+                self.logger.exception('Exception processing message: '+mtype)
+            except Exception as e:
+                self.logger.exception('Exception processing message: '+str(e))
 
-    def process_UPDATE_QUOTES_MESSAGE(self, message):
+    def process_msg_UPDQUO(self, message):
+        msgresult=messages.MessageResult(message)
         quotes_to_update=list(message.operation.get_quotes_to_update())
         opparams=message.operation.get_params()
         for quote in quotes_to_update:
-            print 'Inicio de proceso de quota: '+quote
+            self.logger.debug('Inicio de proceso de quota: '+quote)
             try:
                 qvalue=UPDATEFUNCS[quote](cf=self.cass_cf,params=opparams)
             except KeyError:
@@ -78,8 +77,10 @@ class Rescontrol(modules.Module):
                     quotes_to_update.append(quote)
                 except Exception as e:
                     self.logger.exception('Exception getting quote funcions: '+quote+' '+str(e))
+                    msgresult.retcode=msgcodes.ERROR
             except Exception as e:
                 self.logger.exception('Exception in quote update function: '+quote+' '+str(e))
+                msgresult.retcode=msgcodes.ERROR
             else:
                 if qvalue is not None:
                     ''' quote updated successfully, the return value is the quota value updated'''
@@ -89,11 +90,13 @@ class Rescontrol(modules.Module):
                         if should_block:
                             '''aqui creo un mensaje UPDATEQUOAUTH que se enviara al modulo para que revise el acceso 
                             al interfaz relacionado con la cuota '''
-                            pass
+                        msgresult.retcode=msgcodes.SUCCESS
                     except Exception as e:
                         self.logger.exception('Exception in quote compare function: '+quote+' '+str(e))
+                        msgresult.retcode=msgcodes.ERROR
                 else:
                     self.logger.error('Error updating quote: '+quote)
-        return True
+                    msgresult.retcode=msgcodes.ERROR
+        return msgresult
 
 
