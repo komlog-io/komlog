@@ -15,10 +15,11 @@ from komapp import modules
 from komfig import komlogger
 from komimc import bus,messages
 from komimc import codes as msgcodes
-from komlibs.quotes import update,compare
+from komlibs.auth.quotes import update as quoup
+from komlibs.auth.quotes import compare as quocmp
+from komlibs.auth.quotes import deny as quodeny
+from komlibs.auth.resources import update as resup
 
-UPDATEFUNCS={}
-COMPAREFUNCS={}
 
 class Rescontrol(modules.Module):
     def __init__(self, config, instance_number):
@@ -50,6 +51,10 @@ class Rescontrol(modules.Module):
         self.logger.info('Rescontrol module exiting')
     
     def __loop(self):
+        self.quote_update_funcs={}
+        self.quote_compare_funcs={}
+        self.quote_deny_funcs={}
+        self.resource_update_funcs={}
         while True:
             message = self.message_bus.retrieveMessage(from_modaddr=True)
             self.message_bus.ackMessage()
@@ -69,11 +74,12 @@ class Rescontrol(modules.Module):
         for quote in quotes_to_update:
             self.logger.debug('Inicio de proceso de quota: '+quote)
             try:
-                qvalue=UPDATEFUNCS[quote](cf=self.cass_cf,params=opparams)
+                qvalue=self.quote_update_funcs[quote](cf=self.cass_cf,params=opparams)
             except KeyError:
                 try:
-                    UPDATEFUNCS[quote]=getattr(update,'update_'+quote)
-                    COMPAREFUNCS[quote]=getattr(compare,'compare_'+quote)
+                    self.quote_update_funcs[quote]=getattr(quoup,'update_'+quote)
+                    self.quote_compare_funcs[quote]=getattr(quocmp,'compare_'+quote)
+                    self.quote_deny_funcs[quote]=getattr(quodeny,'deny_'+quote)
                     quotes_to_update.append(quote)
                 except Exception as e:
                     self.logger.exception('Exception getting quote funcions: '+quote+' '+str(e))
@@ -84,18 +90,44 @@ class Rescontrol(modules.Module):
             else:
                 if qvalue is not None:
                     ''' quote updated successfully, the return value is the quota value updated'''
-                    ''' now determine if quota is aproaching limits '''
+                    ''' now determine if quota is aproaching limits and should block interface'''
                     try:
-                        should_block=COMPAREFUNCS[quote](cf=self.cass_cf,params=opparams)
-                        if should_block:
-                            '''aqui creo un mensaje UPDATEQUOAUTH que se enviara al modulo para que revise el acceso 
-                            al interfaz relacionado con la cuota '''
-                        msgresult.retcode=msgcodes.SUCCESS
+                        should_block=self.quote_compare_funcs[quote](cf=self.cass_cf,params=opparams)
+                        deny=True if should_block else False
+                        if self.quote_deny_funcs[quote](cf=self.cass_cf,params=opparams,deny=deny):
+                            msgresult.retcode=msgcodes.SUCCESS
                     except Exception as e:
-                        self.logger.exception('Exception in quote compare function: '+quote+' '+str(e))
+                        self.logger.exception('Exception evaluating quote denial: '+quote+' '+str(e))
                         msgresult.retcode=msgcodes.ERROR
                 else:
                     self.logger.error('Error updating quote: '+quote)
+                    msgresult.retcode=msgcodes.ERROR
+        return msgresult
+
+    def process_msg_RESAUTH(self, message):
+        msgresult=messages.MessageResult(message)
+        auths_to_update=list(message.operation.get_auths_to_update())
+        opparams=message.operation.get_params()
+        for auth in auths_to_update:
+            self.logger.debug('Resource authorization update begins: '+auth)
+            try:
+                avalue=self.resource_update_funcs[auth](cf=self.cass_cf,params=opparams)
+            except KeyError:
+                try:
+                    self.resource_update_funcs[auth]=getattr(resup,'update_'+auth)
+                    auths_to_update.append(auth)
+                except Exception as e:
+                    self.logger.exception('Exception getting authorization functions: '+auth+' '+str(e))
+                    msgresult.retcode=msgcodes.ERROR
+            except Exception as e:
+                self.logger.exception('Exception in authorization update function: '+auth+' '+str(e))
+                msgresult.retcode=msgcodes.ERROR
+            else:
+                if avalue:
+                    ''' auth updated successfully'''
+                    msgresult.retcode=msgcodes.SUCCESS
+                else:
+                    self.logger.error('Error updating authorization: '+auth)
                     msgresult.retcode=msgcodes.ERROR
         return msgresult
 

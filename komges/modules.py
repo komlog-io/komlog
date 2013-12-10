@@ -16,7 +16,7 @@ from komlibs.general import stringops
 from komlibs.mail import connection as mailcon
 from komlibs.mail import types as mailtypes
 from komlibs.mail import messages as mailmessages
-from komlibs.quotes import operations
+from komlibs.ifaceops import operations
 
 class Gestconsole(modules.Module):
     def __init__(self, config, instance_number):
@@ -132,10 +132,11 @@ class Gestconsole(modules.Module):
         newdtpdtreepositives=cassapi.DatapointDtreePositives(pid)
         newdtpdtreepositives.set_positive(date,[pos,length])
         if cassapi.register_dtp(newdtp,dsdtprelation,self.cf) and cassapi.update_dtp_dtree_positives(newdtpdtreepositives,self.cf):
-            ''' Aqui debo lanzar el mensaje UPDQUO, pero hasta que no se retornen estructuras de datos no merece la pena implementarlo
-                porque vamos a guarrear mucho '''
             aginfo=cassapi.get_agentinfo(dsinfo.aid,{},self.cf)
-            newmsg=messages.UpdateQuotesMessage(operation=operations.NewDatapointQuoteOperation(uid=aginfo.uid,aid=dsinfo.aid,did=did))
+            operation=operations.NewDatapointOperation(uid=aginfo.uid,aid=dsinfo.aid,did=did,pid=pid)
+            newmsg=messages.UpdateQuotesMessage(operation=operation)
+            msgresult.add_msg_originated(newmsg)
+            newmsg=messages.ResourceAuthorizationUpdateMessage(operation=operation)
             msgresult.add_msg_originated(newmsg)
             newmsg=messages.GenerateDTreeMessage(pid=pid,date=date)
             msgresult.add_msg_originated(newmsg)

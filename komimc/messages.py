@@ -11,7 +11,7 @@ messages: komlog custom messages class implementations for inter module communic
 import exceptions
 import codes as msgcodes
 from qpid.messaging import Message
-from komlibs.quotes import operations
+from komlibs.ifaceops import operations
 import uuid
 import json
 import dateutil.parser
@@ -32,6 +32,7 @@ POS_VAR_MESSAGE='POSVAR'
 NEW_USR_MESSAGE='NEWUSR'
 UPDATE_GRAPH_WEIGHT_MESSAGE='UPDGRW'
 UPDATE_QUOTES_MESSAGE='UPDQUO'
+RESOURCE_AUTHORIZATION_UPDATE_MESSAGE='RESAUTH'
 
 #MODULE LIST
 VALIDATION='Validation'
@@ -51,7 +52,8 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           POS_VAR_MESSAGE:'PositiveVariableMessage',
                           NEW_USR_MESSAGE:'NewUserMessage',
                           UPDATE_GRAPH_WEIGHT_MESSAGE:'UpdateGraphWeightMessage',
-                          UPDATE_QUOTES_MESSAGE:'UpdateQuotesMessage'}
+                          UPDATE_QUOTES_MESSAGE:'UpdateQuotesMessage',
+                          RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:'ResourceAuthorizationUpdateMessage'}
 
 
 MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
@@ -63,7 +65,8 @@ MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             POS_VAR_MESSAGE:GESTCONSOLE,
                             NEW_USR_MESSAGE:GESTCONSOLE,
                             UPDATE_GRAPH_WEIGHT_MESSAGE:TEXTMINING,
-                            UPDATE_QUOTES_MESSAGE:RESCONTROL}
+                            UPDATE_QUOTES_MESSAGE:RESCONTROL,
+                            RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:RESCONTROL}
 
 
 #MODULE MAPPINGS
@@ -274,6 +277,21 @@ class UpdateQuotesMessage:
             self.operation=getattr(operations,operation_class)(**operation_dict)
         else:
             self.type=UPDATE_QUOTES_MESSAGE
+            self.operation=operation
+            self.qpid_message=Message(self.type+'|'+self.operation.get_json_serialization())
+
+class ResourceAuthorizationUpdateMessage:
+    def __init__(self, qpid_message=None, operation=None):
+        if qpid_message:
+            self.qpid_message=qpid_message
+            mtype,json_serialization = self.qpid_message.content.split('|')
+            self.type=mtype
+            operation_dict=json.loads(json_serialization)
+            operation_class=operation_dict['opclass']
+            operation_dict.pop('opclass',None)
+            self.operation=getattr(operations,operation_class)(**operation_dict)
+        else:
+            self.type=RESOURCE_AUTHORIZATION_UPDATE_MESSAGE
             self.operation=operation
             self.qpid_message=Message(self.type+'|'+self.operation.get_json_serialization())
 

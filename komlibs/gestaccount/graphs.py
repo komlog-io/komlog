@@ -16,7 +16,7 @@ from datetime import datetime
 from komcass import api as cassapi
 from komlibs.gestaccount import states,types,exceptions
 from komimc import messages
-from komlibs.quotes import operations
+from komlibs.ifaceops import operations
 
 def create_graph(username,graphname,pid,datapointname,session,msgbus):
     now=datetime.utcnow()
@@ -37,9 +37,11 @@ def create_graph(username,graphname,pid,datapointname,session,msgbus):
     message=messages.UpdateGraphWeightMessage(gid=gid)
     if cassapi.insert_new_graph(graphinfo,session):
         msgbus.sendMessage(message)
-        ''' Before returning, send quote message '''
-        operation=operations.NewGraphQuoteOperation(uid=uid)
+        ''' Before returning, send quote and resource authorization message '''
+        operation=operations.NewGraphOperation(uid=uid,gid=gid)
         message=messages.UpdateQuotesMessage(operation=operation)
+        msgbus.sendMessage(message)
+        message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
         msgbus.sendMessage(message)
         return {'gid':str(gid)}
     else:

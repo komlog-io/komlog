@@ -66,3 +66,12 @@ create column family mst_ds_quo with comparator=UTF8Type and default_validation_
 create column family mst_dtp_quo with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;
 create column family mst_graph_quo with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;
 
+create column family mst_user_agent_perm with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family mst_user_ds_perm with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family mst_user_dtp_perm with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family mst_user_graph_perm with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family mst_agent_ds_perm with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family mst_agent_dtp_perm with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family mst_agent_graph_perm with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+
+create column family mst_user_iface_deny with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;

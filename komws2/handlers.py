@@ -12,6 +12,8 @@ from komlibs.gestaccount import datasources as dsapi
 from komlibs.gestaccount import datapoints as dpapi
 from komlibs.gestaccount import graphs as graphapi
 from komlibs.gestaccount import exceptions as gestexcept
+from komlibs.auth import authorization
+from komlibs.auth import exceptions as authexcept
 import auth
 import os
 import uuid
@@ -29,7 +31,6 @@ class AgentCreationHandler(tornado.web.RequestHandler):
     @auth.userauthenticated
     def post(self):
         #Aquí llega una vez ha validado
-        username=self.user
         try:
             data=json_decode(self.request.body)
             ag_pubkey=data['ag_pubkey']
@@ -40,10 +41,14 @@ class AgentCreationHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
-                data=agapi.create_agent(username,ag_name,ag_pubkey,ag_version,self.application.cf,self.application.mb)
+                authorization.authorize_request(request='NewAgentRequest',username=self.user,session=self.application.cf)
+                data=agapi.create_agent(self.user,ag_name,ag_pubkey,ag_version,self.application.cf,self.application.mb)
                 print data
                 self.set_status(200)
                 self.write(json_encode(data))
+            except authexcept.AuthorizationException:
+                self.set_status(403)
+                self.write(json_encode({'message':'Access Denied'}))
             except gestexcept.UserNotFoundException:
                 self.set_status(404)
                 self.write(json_encode({'message':'Not Found'}))
@@ -61,9 +66,13 @@ class AgentConfigHandler(tornado.web.RequestHandler):
     def get(self,p_aid):
         try:
             aid=uuid.UUID(p_aid)
+            authorization.authorize_request(request='GetAgentConfigRequest',username=self.user,session=self.application.cf,aid=aid)
             data=agapi.get_agentconfig(aid,self.application.cf,dids_flag=True)
             self.set_status(200)
             self.write(json_encode(data))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access denied'}))
         except gestexcept.AgentNotFoundException:
             self.set_status(404)
             self.write(json_encode({'message':'Agent Not Found'}))
@@ -78,9 +87,13 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
     def get(self,p_did):
         try:
             did=uuid.UUID(p_did)
+            authorization.authorize_request(request='GetDatasourceDataRequest',username=self.user,session=self.application.cf,did=did)
             data=dsapi.get_datasourcedata(did,self.application.cf)
             self.set_status(200)
             self.write(json_encode(data))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access Denied'}))
         except gestexcept.DatasourceNotFoundException:
             self.set_status(404)
             self.write(json_encode({'message': 'Datasource not found'}))
@@ -97,8 +110,12 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
         dest_dir=self.application.dest_dir
         if ctype.find('application/json')>=0:
             try:
+                authorization.authorize_request(request='PostDatasourceDataRequest',username=self.user,session=self.application.cf,aid=self.agent,did=did)
                 destfile=dsapi.upload_content(did,content,self.application.cf,dest_dir)
                 self.set_status(202)
+            except authexcept.AuthorizationException:
+                self.set_status(403)
+                self.write(json_encode({'message':'Access Denied'}))
             except gestexcept.DatasourceUploadContentException:
                 print 'uploadexception'
                 self.set_status(500)
@@ -123,10 +140,14 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
     def get(self,p_did):
         try:
             did=uuid.UUID(p_did)
+            print 'LLASDFASD'
+            authorization.authorize_request(request='GetDatasourceConfigRequest',username=self.user,session=self.application.cf,did=did)
             data=dsapi.get_datasourceconfig(did,self.application.cf)
-            print data
             self.set_status(200)
             self.write(json_encode(data))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access Denied'}))
         except gestexcept.DatasourceNotFoundException:
             self.set_status(404)
             self.write(json_encode({'message':'Not Found'}))
@@ -135,6 +156,7 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad Request'}))
         except Exception as e:
             #self.application.logger.exception(str(e))
+            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
@@ -142,9 +164,14 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
     def put(self, p_did):
         try:
             did=uuid.UUID(p_did)
+            authorization.authorize_request(request='PutDatasourceConfigRequest',username=self.user,session=self.application.cf,did=did)
             data=json_loads(self.request.body)
             new_dsinfo=dsapi.update_datasourceconfig(did,self.application.cf,data)
             self.set_status(200)
+            self.write()
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access Denied'}))
         except TypeError:
             self.set_status(400)
             self.write(json_encode({'message':'Bad Parameters'}))
@@ -163,7 +190,6 @@ class DatasourceCreationHandler(tornado.web.RequestHandler):
     @auth.userauthenticated
     def post(self):
         #suponemos que aquí llega una vez ha validado
-        username=self.user
         try:
             data=json_decode(self.request.body)
             aid=uuid.UUID(data['aid'])
@@ -177,10 +203,13 @@ class DatasourceCreationHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
-                data=dsapi.create_datasource(username,aid,ds_name,ds_type,ds_params,self.application.cf,self.application.mb)
-                print data
+                authorization.authorize_request('NewDatasourceRequest',self.user,session=self.application.cf,aid=aid)
+                data=dsapi.create_datasource(self.user,aid,ds_name,ds_type,ds_params,self.application.cf,self.application.mb)
                 self.set_status(200)
                 self.write(json_encode(data))
+            except authexcept.AuthorizationException:
+                    self.set_status(403)
+                    self.write(json_encode({'message':'Access Denied'}))
             except gestexcept.UserNotFoundException:
                 self.set_status(404)
                 self.write(json_encode({'message':'Not Found'}))
@@ -269,11 +298,15 @@ class DatapointDataHandler(tornado.web.RequestHandler):
     def get(self,p_pid):
         try:
             pid=uuid.UUID(p_pid)
+            authorization.authorize_request(request='GetDatapointDataRequest',username=self.user,session=self.application.cf,pid=pid)
             strdate=self.get_argument('ld',default=None) #ld : last date
             date=dateutil.parser.parse(strdate) if strdate else datetime.datetime.utcnow()
             data=dpapi.get_datapointdata(pid,self.application.cf,todate=date)
             self.set_status(200)
             self.write(json_encode(data))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access Denied'}))
         except gestexcept.DatapointDataNotFoundException as e:
             self.set_status(404)
             print 'Datos no encontrados'
@@ -299,8 +332,12 @@ class DatapointCreationHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
+                authorization.authorize_request(request='NewDatapointRequest',username=self.user,session=self.application.cf,did=did)
                 dpapi.create_datapoint(did=did,dsdate=dsdate,pos=cs,length=vl,name=dpname,msgbus=self.application.mb)
                 self.set_status(200)
+            except authexcept.AuthorizationException:
+                self.set_status(403)
+                self.write(json_encode({'message':'Access Denied'}))
             except gestexcept.DatapointCreationException:
                 self.set_status(500)
                 self.write(json_encode({'message':'Error, try again later'}))
@@ -312,16 +349,11 @@ class DatapointCreationHandler(tornado.web.RequestHandler):
 class UserConfigHandler(BaseHandler):
 
     @auth.userauthenticated
-#     def get(self,username):
     def get(self):
-#         useruidr=cassapi.get_useruidrelation(username,self.application.cf)
         useruidr=cassapi.get_useruidrelation(self.current_user,self.application.cf)
         if not useruidr:
             self.set_status(404)
             self.write(json_encode({'message': 'User not found'}))
-#         userinfo='/home/'+username+'/info'
-#         userconfig='/home/'+username+'/config'
-#         userhome='/home/'+username
         useragentr=cassapi.get_useragentrelation(useruidr.uid,self.application.cf)
         data=[]
         if useragentr:
@@ -338,22 +370,16 @@ class UserConfigHandler(BaseHandler):
                         dsurl='/etc/ds/'+did_s
                         dss.append({'ds_name':dsinfo.dsname,'did':did_s,'url':dsurl})
                 data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
-#         self.render('config.html',username=username,userurl=userinfo,userdata=data,userhome=userhome,userconfig=userconfig)
         self.render('config.html',userdata=data,page_title='Komlog - Config',navitem=1)
 
 class UserHomeHandler(BaseHandler):
-    #@auth.userauthorized
+
     @auth.userauthenticated
-#     def get(self):
     def get(self):
-#         useruidr=cassapi.get_useruidrelation(username,self.application.cf)
         useruidr=cassapi.get_useruidrelation(self.current_user,self.application.cf)
         if not useruidr:
             self.set_status(404)
             self.write(json_encode({'message': 'User not found'}))
-#         userinfo='/home/'+username+'/info'
-#         userconfig='/home/'+username+'/config'
-#         userhome='/home/'+username
         useragentr=cassapi.get_useragentrelation(useruidr.uid,self.application.cf)
         data=[]
         if useragentr:
@@ -370,14 +396,12 @@ class UserHomeHandler(BaseHandler):
                         dsurl='/etc/ds/'+did_s
                         dss.append({'ds_name':dsinfo.dsname,'did':did_s,'url':dsurl})
                 data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
-        #self.render('home.html',username=username,userurl=userinfo,userdata=data,userhome=userhome,userconfig=userconfig)
         self.render('home.html',userdata=data,page_title='Komlog - Home',navitem=0)
 
 class GraphCreationHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def post(self):
-        username=self.user
         try:
             data=json_decode(self.request.body)
             graphname=data['graph_name']
@@ -390,12 +414,13 @@ class GraphCreationHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
-                print 'llamamos a graphapi.new_graph'
-                data=graphapi.create_graph(username,graphname,pid,dtpname,self.application.cf,self.application.mb)
-                print 'Datos recibidos',
-                print data
+                authorization.authorize_request(request='NewGraphRequest',username=self.user,session=self.application.cf,pid=pid)
+                data=graphapi.create_graph(self.user,graphname,pid,dtpname,self.application.cf,self.application.mb)
                 self.set_status(200)
                 self.write(json_encode(data))
+            except authexcept.AuthorizationException:
+                self.set_status(403)
+                self.write(json_encode({'message':'Access Denied'}))
             except gestexcept.BadParametersException:
                 self.set_status(400)
                 self.write(json_encode({'message':'Bad parameters'}))
@@ -413,10 +438,14 @@ class GraphConfigHandler(tornado.web.RequestHandler):
     def get(self,p_gid):
         try:
             gid=uuid.UUID(p_gid)
+            authorization.authorize_request(request='GetGraphConfigRequest',username=self.user,session=self.application.cf,gid=gid)
             data=graphapi.get_graphconfig(gid,self.application.cf)
             print data
             self.set_status(200)
             self.write(json_encode(data))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access Denied'}))
         except gestexcept.GraphNotFoundException:
             self.set_status(404)
             self.write(json_encode({'message':'Not Found'}))
@@ -448,10 +477,8 @@ class LoginHandler(tornado.web.RequestHandler):
             userinfo=cassapi.get_userinfo(useruidr.uid,{'password':u''},self.application.cf)
             print userinfo.__dict__
             if userinfo.password==usrapi.get_hpassword(useruidr.uid,password):
-            #if userinfo.password==password:
                 self.set_secure_cookie("komlog_user",username,httponly=True)#, secure=True)
                 if not agentid:
-                    #self.write({'redirect':"/home/"+username})
                     self.redirect('/home') 
                 else:
                     try:
@@ -466,11 +493,8 @@ class LoginHandler(tornado.web.RequestHandler):
                             self.redirect('/etc/ag/'+agentid+'/')
 
             else:
-                #print 'No me mola tu P'
-                #self.set_status(403)
                 self.redirect(self.get_login_url()+error)
         else:
-#             self.set_status(403)
             self.redirect(self.get_login_url()+error)
 
 

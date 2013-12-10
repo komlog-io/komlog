@@ -9,7 +9,7 @@ import uuid
 from komcass import api as cassapi
 from komlibs.gestaccount import states as states
 from komlibs.gestaccount import exceptions
-from komlibs.quotes import operations
+from komlibs.ifaceops import operations
 from komimc import messages
 from Crypto.PublicKey import RSA
 
@@ -36,9 +36,11 @@ def create_agent(username,agentname,agentkey,version,session,msgbus):
             aid=uuid.uuid4()
             agentinfo=cassapi.AgentInfo(aid=aid, uid=useruidr.uid, agentname=agentname, agentkey=agentkey, version=version, state=states.AGENT['PENDING_USER_VALIDATION'])
             if cassapi.register_agent(agentinfo,session):
-                ''' Send Quote Operation Message before returning'''
-                operation=operations.NewAgentQuoteOperation(useruidr.uid)
+                ''' Send Quote and Resource Authorization Message before returning'''
+                operation=operations.NewAgentOperation(useruidr.uid,aid=aid)
                 message=messages.UpdateQuotesMessage(operation=operation)
+                msgbus.sendMessage(message)
+                message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
                 msgbus.sendMessage(message)
                 print 'Return New Agent id'
                 data={'aid':str(aid)}

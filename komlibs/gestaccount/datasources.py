@@ -16,7 +16,7 @@ from datetime import datetime
 from komcass import api as cassapi
 from komfs import api as fsapi
 from komlibs.gestaccount import states,types,exceptions
-from komlibs.quotes import operations
+from komlibs.ifaceops import operations
 from komimc import messages
 
 def create_datasource(username,aid,dsname,dstype,dsparams,session,msgbus):
@@ -43,9 +43,11 @@ def create_datasource(username,aid,dsname,dstype,dsparams,session,msgbus):
         raise exceptions.AgentNotFoundException()
     dsinfo=cassapi.DatasourceInfo(did=did,aid=aid,dsname=dsname,dstype=dstype,creation_date=now,state=states.DATASOURCE['ACTIVE'],**kwargs)
     if cassapi.register_datasource(dsinfo, session):
-        ''' before returning, send quote message '''
-        operation=operations.NewDatasourceQuoteOperation(uid=uid,aid=aid)
+        ''' before returning, send quote and resource authorization message '''
+        operation=operations.NewDatasourceOperation(uid=uid,aid=aid,did=did)
         message=messages.UpdateQuotesMessage(operation=operation)
+        msgbus.sendMessage(message)
+        message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
         msgbus.sendMessage(message)
         return {'did':str(did)}
     else:

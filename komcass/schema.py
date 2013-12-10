@@ -256,7 +256,7 @@ class GraphDatapointRelationORM(CassandraBase):
         super(GraphDatapointRelationORM,self).__init__(key,dbdict)
 
     def to_apiobj(self):
-        apiobj=cassapi.GraphDatapointRelation(gid)
+        apiobj=cassapi.GraphDatapointRelation(self.key)
         for pid in self.dbdict.keys():
             apiobj.add_datapoint(pid)
         return apiobj
@@ -308,7 +308,7 @@ class GraphDatasourceWeightORM(CassandraBase):
         super(GraphDatasourceWeightORM,self).__init__(key,dbdict)
 
     def to_apiobj(self):
-        apiobj=cassapi.GraphDatasourceWeight(gid)
+        apiobj=cassapi.GraphDatasourceWeight(self.key)
         apiobj.set_data(self.dbdict)
         return apiobj
 
@@ -324,8 +324,6 @@ class SegmentParamsORM(CassandraBase):
         if apiobj:
             key=int(apiobj.segid)
             dbdict=apiobj._paramlist
-        print key
-        print dbdict
         super(SegmentParamsORM,self).__init__(key,dbdict)
     
     def to_apiobj(self):
@@ -416,5 +414,141 @@ class GraphQuoORM(CassandraBase):
     def to_apiobj(self):
         apiobj=cassapi.GraphQuo(self.key)
         apiobj.set_quotes(self.dbdict)
+        return apiobj
+
+class UserAgentPermsORM(CassandraBase):
+    __cf__ = 'mst_user_agent_perm'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if apiobj:
+            key=apiobj.uid
+            dbdict=apiobj._aids
+        else:
+            key=key
+            dbdict=dbdict
+        super(UserAgentPermsORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.UserAgentPerms(self.key)
+        apiobj.set_agents(self.dbdict)
+        return apiobj
+
+class UserDsPermsORM(CassandraBase):
+    __cf__ = 'mst_user_ds_perm'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if apiobj:
+            key=apiobj.uid
+            dbdict=apiobj._dids
+        else:
+            key=key
+            dbdict=dbdict
+        super(UserDsPermsORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.UserDsPerms(self.key)
+        apiobj.set_dss(self.dbdict)
+        return apiobj
+
+class UserDtpPermsORM(CassandraBase):
+    __cf__ = 'mst_user_dtp_perm'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if apiobj:
+            key=apiobj.uid
+            dbdict=apiobj._pids
+        else:
+            key=key
+            dbdict=dbdict
+        super(UserDtpPermsORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.UserDtpPerms(self.key)
+        apiobj.set_dtps(self.dbdict)
+        return apiobj
+
+class UserGraphPermsORM(CassandraBase):
+    __cf__ = 'mst_user_graph_perm'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if apiobj:
+            key=apiobj.uid
+            dbdict=apiobj._gids
+        else:
+            key=key
+            dbdict=dbdict
+        super(UserGraphPermsORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.UserGraphPerms(self.key)
+        apiobj.set_graphs(self.dbdict)
+        return apiobj
+
+class AgentDsPermsORM(CassandraBase):
+    __cf__ = 'mst_agent_ds_perm'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if apiobj:
+            key=apiobj.aid
+            dbdict=apiobj._dids
+        else:
+            key=key
+            dbdict=dbdict
+        super(AgentDsPermsORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.AgentDsPerms(self.key)
+        apiobj.set_dss(self.dbdict)
+        return apiobj
+
+class AgentDtpPermsORM(CassandraBase):
+    __cf__ = 'mst_agent_dtp_perm'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if apiobj:
+            key=apiobj.aid
+            dbdict=apiobj._pids
+        else:
+            key=key
+            dbdict=dbdict
+        super(AgentDtpPermsORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.AgentDtpPerms(self.key)
+        apiobj.set_dtps(self.dbdict)
+        return apiobj
+
+class AgentGraphPermsORM(CassandraBase):
+    __cf__ = 'mst_agent_graph_perm'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if apiobj:
+            key=apiobj.aid
+            dbdict=apiobj._gids
+        else:
+            key=key
+            dbdict=dbdict
+        super(AgentGraphPermsORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.AgentGraphPerms(self.key)
+        apiobj.set_graphs(self.dbdict)
+        return apiobj
+
+class UserIfaceDenyORM(CassandraBase):
+    __cf__ = 'mst_user_iface_deny'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if apiobj:
+            key=apiobj.uid
+            dbdict=apiobj.get_interfaces()
+        else:
+            key=key
+            dbdict=dbdict
+        super(UserIfaceDenyORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.UserIfaceDeny(self.key)
+        apiobj.set_interfaces(self.dbdict)
         return apiobj
 

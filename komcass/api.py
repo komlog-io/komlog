@@ -32,9 +32,12 @@ class DsDtpRelation:
             self.dbdict[pid]=u''
 
 
-def get_dsdtprelation(did, session):
+def get_dsdtprelation(did, session, dbcols={}):
     try:
-        dbobj=session.get(schema.DsDtpRelationORM(key=did,dbdict={}))
+        kwargs={}
+        if len(dbcols.keys())>0:
+            kwargs['columns']=[key for key in dbcols.keys()]
+        dbobj=session.get(schema.DsDtpRelationORM(key=did,dbdict={}),kwargs)
         return DsDtpRelation(key=dbobj.key,dbdict=dbobj.dbdict)
     except NotFoundException:
         return None
@@ -543,9 +546,12 @@ class UserAgentRelation:
         for aid in self.aids:
             self.dbdict[aid]=u''
 
-def get_useragentrelation(uid, session):
+def get_useragentrelation(uid, session, dbcols={}):
     try:
-        dbobj=session.get(schema.UserAgentRelationORM(key=uid,dbdict={}))
+        kwargs={}
+        if len(dbcols.keys())>0:
+            kwargs['columns']=[key for key in dbcols.keys()]
+        dbobj=session.get(schema.UserAgentRelationORM(key=uid,dbdict={}),kwargs)
         return UserAgentRelation(uid=dbobj.key,aids=[aid for aid in dbobj.dbdict.keys()])
     except NotFoundException:
         return None
@@ -583,9 +589,12 @@ class AgentDsRelation:
             self.dbdict[did]=u''
 
 
-def get_agentdsrelation(aid, session):
+def get_agentdsrelation(aid, session, dbcols={}):
     try:
-        dbobj=session.get(schema.AgentDsRelationORM(key=aid,dbdict={}))
+        kwargs={}
+        if len(dbcols.keys())>0:
+            kwargs['columns']=[key for key in dbcols.keys()]
+        dbobj=session.get(schema.AgentDsRelationORM(key=aid,dbdict={}),kwargs)
         return AgentDsRelation(aid=dbobj.key,dids=[did for did in dbobj.dbdict.keys()])
     except NotFoundException:
         return None
@@ -993,13 +1002,13 @@ def delete_graph(graphinfo, session):
     graph_datasourcesweight=get_graphdatasourceweight(gid,session)
     if graph_datasourcesweight:
         for did in graph_datasourcesweight.dids.keys():
-            session.delete(DatasourceGraphWeightORM(key=did),{'columns':gid})
-        session.delete(GraphDatasourceWeightORM(key=gid))
+            session.remove(DatasourceGraphWeightORM(key=did),{'columns':gid})
+        session.remove(GraphDatasourceWeightORM(key=gid))
     if graph_datapoints:
         for pid in graph_datapoints:
-            session.delete(DatapointGraphRelationORM(key=pid),{'columns':gid})
-        session.delete(GraphDatapointRelationORM(key=gid))
-    session.delete(GraphInfoORM(key=gid))
+            session.remove(DatapointGraphRelationORM(key=pid),{'columns':gid})
+        session.remove(GraphDatapointRelationORM(key=gid))
+    session.remove(GraphInfoORM(key=gid))
     return True
 
 def insert_new_graph(graphinfo, session):
@@ -1145,7 +1154,7 @@ def del_segment_params(segid,paramlist,session):
     segmentparams=SegmentParams(segid)
     segmentparams.set_params(paramlist)
     try:
-        if session.delete(schema.SegmentParamsORM(apiobj=segmentparams)):
+        if session.remove(schema.SegmentParamsORM(apiobj=segmentparams)):
             return True
         else:
             return False
@@ -1182,15 +1191,11 @@ def get_user_quotes(uid,session):
 def set_user_quotes(uid,quotes,session):
     userquotes=UserQuo(uid)
     userquotes.set_quotes(quotes)
-    print 'A punto de insertar'
     objeto=schema.UserQuoORM(apiobj=userquotes)
-    print userquotes.__dict__
     try:
         if session.insert(schema.UserQuoORM(apiobj=userquotes)):
-            print 'Correcto'
             return True
         else:
-            print 'Falso'
             return False
     except Exception as e:
         print 'Exception: '+str(e)
@@ -1200,7 +1205,7 @@ def del_user_quotes(uid,quotes,session):
     userquotes=UserQuo(uid)
     userquotes.set_quotes(quotes)
     try:
-        if session.delete(schema.UserQuoORM(apiobj=userquotes)):
+        if session.remove(schema.UserQuoORM(apiobj=userquotes)):
             return True
         else:
             return False
@@ -1250,7 +1255,7 @@ def del_agent_quotes(aid,quotes,session):
     agentquotes=AgentQuo(aid)
     agentquotes.set_quotes(quotes)
     try:
-        if session.delete(schema.AgentQuoORM(apiobj=agentquotes)):
+        if session.remove(schema.AgentQuoORM(apiobj=agentquotes)):
             return True
         else:
             return False
@@ -1299,7 +1304,7 @@ def del_ds_quotes(did,quotes,session):
     dsquotes=DatasourceQuo(did)
     dsquotes.set_quotes(quotes)
     try:
-        if session.delete(schema.DatasourceQuoORM(apiobj=dsquotes)):
+        if session.remove(schema.DatasourceQuoORM(apiobj=dsquotes)):
             return True
         else:
             return False
@@ -1342,7 +1347,7 @@ def del_dtp_quotes(pid,quotes,session):
     dtpquotes=DatapointQuo(pid)
     dtpquotes.set_quotes(quotes)
     try:
-        if session.delete(schema.DatapointQuoORM(apiobj=dtpquotes)):
+        if session.remove(schema.DatapointQuoORM(apiobj=dtpquotes)):
             return True
         else:
             return False
@@ -1385,7 +1390,317 @@ def del_graph_quotes(gid,quotes,session):
     graphquotes=GraphQuo(gid)
     graphquotes.set_quotes(quotes)
     try:
-        if session.delete(schema.GraphQuoORM(apiobj=graphquotes)):
+        if session.remove(schema.GraphQuoORM(apiobj=graphquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class UserAgentPerms:
+    ''' This class is used to access User - Agent permission relation '''
+    def __init__(self, uid):
+        self.uid=uid
+        self._aids={}
+
+    def add_agent(self, aid, perm=u'A'):
+        self._aids[aid]=perm #at first A means ALL ACCESS to the resource
+
+    def get_agents(self, aid=None):
+        try:
+            return {aid:self._aids[aid]} if aid else self._aids
+        except KeyError:
+            return None
+
+    def set_agents(self, aids=None):
+        self._aids=aids if aids else {}
+
+def get_useragentperms(uid,session,aid=None):
+    try:
+        kwargs={}
+        if aid:
+            kwargs['columns']=(aid,)
+        schemaobj=session.get(schema.UserAgentPermsORM(key=uid),kwargs)
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_useragentperms(uapobj,session):
+    try:
+        if session.insert(schema.UserAgentPermsORM(apiobj=uapobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class UserDsPerms:
+    ''' This class is used to access User-Datasource permission relation '''
+    def __init__(self, uid):
+        self.uid=uid
+        self._dids={}
+
+    def add_ds(self, did, perm=u'A'):
+        self._dids[did]=perm #at first A means ALL ACCESS to the resource
+
+    def get_dss(self, did=None):
+        try:
+            return {did:self._dids[did]} if did else self._dids
+        except KeyError:
+            return None
+
+    def set_dss(self, dids=None):
+        self._dids=dids if dids else {}
+
+def get_userdsperms(uid,session,did=None):
+    try:
+        kwargs={}
+        if did:
+            kwargs['columns']=(did,)
+        schemaobj=session.get(schema.UserDsPermsORM(key=uid),kwargs)
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_userdsperms(udpobj,session):
+    try:
+        if session.insert(schema.UserDsPermsORM(apiobj=udpobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class UserDtpPerms:
+    ''' This class is used to access User-Datapoint permission relation '''
+    def __init__(self, uid):
+        self.uid=uid
+        self._pids={}
+
+    def add_dtp(self, pid, perm=u'A'):
+        self._pids[pid]=perm #at first A means ALL ACCESS to the resource
+
+    def get_dtps(self, pid=None):
+        try:
+            return {pid:self._pids[pid]} if pid else self._pids
+        except KeyError:
+            return None
+
+    def set_dtps(self, pids=None):
+        self._pids=pids if pids else {}
+
+def get_userdtpperms(uid,session,pid=None):
+    try:
+        kwargs={}
+        if pid:
+            kwargs['columns']=(pid,)
+        schemaobj=session.get(schema.UserDtpPermsORM(key=uid),kwargs)
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_userdtpperms(uppobj,session):
+    try:
+        if session.insert(schema.UserDtpPermsORM(apiobj=uppobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class UserGraphPerms:
+    ''' This class is used to access User-Graph permission relation '''
+    def __init__(self, uid):
+        self.uid=uid
+        self._gids={}
+
+    def add_graph(self, gid, perm=u'A'):
+        self._gids[gid]=perm #at first A means ALL ACCESS to the resource
+
+    def get_graphs(self, gid=None):
+        try:
+            return {gid:self._gids[gid]} if gid else self._gids
+        except KeyError:
+            return None
+
+    def set_graphs(self, gids=None):
+        self._gids=gids if gids else {}
+
+def get_usergraphperms(uid,session,gid=None):
+    try:
+        kwargs={}
+        if gid:
+            kwargs['columns']=(gid,)
+        schemaobj=session.get(schema.UserGraphPermsORM(key=uid),kwargs)
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_usergraphperms(ugpobj,session):
+    try:
+        if session.insert(schema.UserGraphPermsORM(apiobj=ugpobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class AgentDsPerms:
+    ''' This class is used to access Agent-Datasource permission relation '''
+    def __init__(self, aid):
+        self.aid=aid
+        self._dids={}
+
+    def add_ds(self, did, perm=u'A'):
+        self._dids[did]=perm #at first A means ALL ACCESS to the resource
+
+    def get_dss(self, did=None):
+        try:
+            return {did:self._dids[did]} if did else self._dids
+        except KeyError:
+            return None
+
+    def set_dss(self, dids=None):
+        self._dids=dids if dids else {}
+
+def get_agentdsperms(aid,session,did=None):
+    try:
+        kwargs={}
+        if did:
+            kwargs['columns']=(did,)
+        schemaobj=session.get(schema.AgentDsPermsORM(key=aid),kwargs)
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_agentdsperms(adpobj,session):
+    try:
+        if session.insert(schema.AgentDsPermsORM(apiobj=adpobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class AgentDtpPerms:
+    ''' This class is used to access Agent-Datapoint permission relation '''
+    def __init__(self, aid):
+        self.aid=aid
+        self._pids={}
+
+    def add_dtp(self, pid, perm=u'A'):
+        self._pids[pid]=perm #at first A means ALL ACCESS to the resource
+
+    def get_dtps(self, pid=None):
+        try:
+            return {pid:self._pids[pid]} if pid else self._pids
+        except KeyError:
+            return None
+
+    def set_dtps(self, pids=None):
+        self._pids=pids if pids else {}
+
+def get_agentdtpperms(aid,session,pid=None):
+    try:
+        kwargs={}
+        if pid:
+            kwargs['columns']=(pid,)
+        schemaobj=session.get(schema.AgentDtpPermsORM(key=aid),kwargs)
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_agentdtpperms(appobj,session):
+    try:
+        if session.insert(schema.AgentDtpPermsORM(apiobj=appobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class AgentGraphPerms:
+    ''' This class is used to access Agent-Graph permission relation '''
+    def __init__(self, aid):
+        self.aid=aid
+        self._gids={}
+
+    def add_graph(self, gid, perm=u'A'):
+        self._gids[gid]=perm #at first A means ALL ACCESS to the resource
+
+    def get_agents(self, gid=None):
+        try:
+            return {gid:self._gids[gid]} if gid else self._gids
+        except KeyError:
+            return None
+
+    def set_graphs(self, gids=None):
+        self._gids=gids if gids else {}
+
+def get_agentgraphperms(aid,session,gid=None):
+    try:
+        kwargs={}
+        if gid:
+            kwargs['columns']=(gid,)
+        schemaobj=session.get(schema.AgentGraphPermsORM(key=aid),kwargs)
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_agentgraphperms(agpobj,session):
+    try:
+        if session.insert(schema.AgentGraphPermsORM(apiobj=agpobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class UserIfaceDeny:
+    ''' This class is used to register interfaces whose access is denied to user requests'''
+    def __init__(self, uid):
+        self.uid=uid
+        self._ifaces={}
+
+    def add_interface(self, iface, perm=u'A'):
+        self._ifaces[iface]=perm #at first A means DENY ALL ACCESS to the interface
+
+    def get_interfaces(self, iface=None):
+        try:
+            return {iface:self._ifaces[iface]} if iface else self._ifaces
+        except KeyError:
+            print 'ERROR EN GET_INTERFACES'
+            return None
+
+    def set_interfaces(self, ifaces=None):
+        self._ifaces=ifaces if ifaces else {}
+
+def get_userifacedeny(uid,session,iface=None):
+    try:
+        kwargs={}
+        if iface:
+            kwargs['columns']=(iface,)
+        schemaobj=session.get(schema.UserIfaceDenyORM(key=uid),kwargs)
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_userifacedeny(uifdobj,session):
+    try:
+        if session.insert(schema.UserIfaceDenyORM(apiobj=uifdobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def delete_userifacedeny(uifdobj,session):
+    try:
+        kwargs={}
+        columns=uifdobj.get_interfaces()
+        if columns:
+            kwargs['columns']=columns.keys()
+        if session.remove(schema.UserIfaceDenyORM(key=uifdobj.uid),kwargs):
             return True
         else:
             return False
