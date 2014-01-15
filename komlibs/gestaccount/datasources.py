@@ -18,15 +18,20 @@ from komfs import api as fsapi
 from komlibs.gestaccount import states,types,exceptions
 from komlibs.ifaceops import operations
 from komimc import messages
+from komlibs.general import crontab
 
 def create_datasource(username,aid,dsname,dstype,dsparams,session,msgbus):
     now=datetime.utcnow()
     did=uuid.uuid4()
     kwargs={}
     try:
-        for dbkey,webkey in types.DSPARAMS_WEB2DB[types.DS_STR2INT[dstype]]:
-            kwargs[dbkey]=dsparams[webkey]
         dstype=types.DS_STR2INT[dstype]
+        for dbkey,webkey in types.DSPARAMS_WEB2DB[dstype]:
+            kwargs[dbkey]=dsparams[webkey]
+        if dstype==types.DS_STR2INT['script']:
+            cronentry=crontab.CrontabEntry(**kwargs)
+            if not cronentry.validate_entry():
+                raise Exception()
     except Exception as e:
         print str(e)
         raise exceptions.BadParametersException()
