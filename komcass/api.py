@@ -107,10 +107,10 @@ def register_dtp(dtp,dsdtprelation,session):
         session.insert(schema.DatapointInfoORM(key=dtp.key, dbdict=dtp.dbdict))
         return True
     except Exception:
-        remove_dtp(dtp,dsdtprelation,session)
+        delete_dtp(dtp,dsdtprelation,session)
         return False
 
-def remove_dtp(dtp,dsdtprelation,session):
+def delete_dtp(dtp,dsdtprelation,session):
     try:
         session.remove(schema.DatapointInfoORM(key=dtp.key, dbdict=dtp.dbdict))
         kwargs={}
@@ -189,8 +189,7 @@ def get_datapointdata(pid,session,date=None,fromdate=None,todate=None):
     else:
         return None
 
-
-def remove_datapointdata(pid,date,session):
+def delete_datapointdata(pid,date,session):
     kwargs={'columns':(date,)}
     if session.remove(schema.DatapointDataORM(key=pid,dbdict={date:u''}),kwargs):
         return True
@@ -230,10 +229,26 @@ def get_dtp_dtree_positives(pid,session,date=None):
         return None
 
 def update_dtp_dtree_positives(dtpdtreepos,session):
-    dtpdtreepos._prestore()
-    if session.insert(schema.DatapointDtreePositivesORM(key=dtpdtreepos._key,dbdict=dtpdtreepos._dbdict)):
-        return True
-    else:
+    try:
+        dtpdtreepos._prestore()
+        if session.insert(schema.DatapointDtreePositivesORM(key=dtpdtreepos._key,dbdict=dtpdtreepos._dbdict)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def delete_dtp_dtree_positives(dtpdtreepos, session):
+    try:
+        dtpdtreepos._prestore()
+        kwargs={}
+        if len(dtpdtreepos.positives.keys())>0:
+            kwargs['columns']=(key for key in dtpdtreepos.positives.keys())
+        if session.remove(schema.DatapointDtreePositivesORM(key=dtpdtreepos._key),kwargs):
+            return True
+        else:
+            return False
+    except Exception:
         return False
 
 class DatapointDtreeNegatives:
@@ -284,6 +299,18 @@ def update_dtp_dtree_negatives(dtpdtreeneg,session):
     else:
         return False
 
+def delete_dtp_dtree_negatives(dtpdtreeneg, session):
+    try:
+        dtpdtreeneg._prestore()
+        kwargs={}
+        if len(dtpdtreeneg.negatives.keys())>0:
+            kwargs['columns']=(key for key in dtpdtreeneg.negatives.keys())
+        if session.remove(schema.DatapointDtreeNegativesORM(key=dtpdtreeneg._key),kwargs):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
 
 class DatasourceData:
     def __init__(self, did=None, date=None, content=None,key=None,dbdict=None):
@@ -326,13 +353,12 @@ def get_datasourcedata(did,date,session):
     except NotFoundException:
         return None
 
-def remove_datasourcedata(did,date,session):
+def delete_datasourcedata(did,date,session):
     kwargs={'columns':(date,)}
     if session.remove(schema.DatasourceDataORM(key=did,dbdict={date:u''}),kwargs):
         return True
     else:
         return False
-
 
 class DatasourceMap:
     def __init__(self, did=None, date=None, content=None,key=None,dbdict=None):
@@ -367,7 +393,7 @@ def insert_datasourcemap(dsmobj,dsmvobj,session):
        session.insert(schema.DatasourceMapVarsORM(key=dsmvobj._key,dbdict=dsmvobj._dbdict)):
         return True
     else:
-        remove_datasourcemap(dsmobj.did,dsmobj.date,session)
+        delete_datasourcemap(dsmobj.did,dsmobj.date,session)
         return False
 
 def get_datasourcemap(did,session,date=None,fromdate=None,todate=None):
@@ -416,7 +442,7 @@ def get_datasourcemapvars(did,date,session):
     except NotFoundException:
         return None
 
-def remove_datasourcemap(did,date,session):
+def delete_datasourcemap(did,date,session):
     kwargs={'columns':(date,)}
     if session.remove(schema.DatasourceMapORM(key=did,dbdict={date:u''}),kwargs) and \
        session.remove(schema.DatasourceMapVarsORM(key=did,dbdict={date:u''}),kwargs):
@@ -456,12 +482,18 @@ def insert_datasourcemapdtps(obj,session):
     else:
         return False
 
-def remove_datasourcemapdtps(obj,session):
-    if session.remove(schema.DatasourceMapDtpsORM(key=obj.key,dbdict=obj.dbdict)):
-        return True
-    else:
+def delete_datasourcemapdtps(obj,session):
+    try:
+        obj._prestore()
+        kwargs={}
+        if obj.date:
+            kwargs['columns']=obj.date
+        if session.remove(schema.DatasourceMapDtpsORM(key=obj.key),kwargs):
+            return True
+        else:
+            return False
+    except Exception:
         return False
-
 
 class UserUIDRelation:
     def __init__(self, username, uid):
@@ -497,6 +529,23 @@ def get_emailuidrelation(email, session):
     except NotFoundException:
         return None
 
+def insert_emailuidrelation(emailuidr,session):
+    try:
+        emailuidr._prestore()
+        if session.insert(schema.EmailUIDRelationORM(key=emailuidr.key, dbdict=emailuidr.dbdict)):
+            return True
+        return False
+    except Exception:
+        return False
+
+def delete_emailuidrelation(emailuidr,session):
+    try:
+        if session.remove(schema.EmailUIDRelationORM(key=emailuidr.email)):
+            return True
+        return False
+    except Exception:
+        return False
+
 class UserCodeRelation:
     def __init__(self, email, code):
         self.email=email
@@ -522,19 +571,16 @@ def insert_usercoderelation(usercoder,session):
             return False
         return True
     except Exception:
-        remove_usercoderelation(usercoder,session)
+        delete_usercoderelation(usercoder,session)
         return False
 
-def remove_usercodrelation(usercoder,session):
+def delete_usercodrelation(usercoder,session):
     try:
         usercoder._prestore()
         session.remove(schema.UserCodeRelationORM(key=usercoder.key,dbdict=usercoder.dbdict))
         return True
     except Exception as e:
         return False
-
-
-        
 
 class UserAgentRelation:
     def __init__(self, uid, aids):
@@ -659,20 +705,20 @@ def register_user(userinfo,session):
         emailuidr=EmailUIDRelation(email,uid)
         emailuidr._prestore()
         if not session.insert(schema.EmailUIDRelationORM(key=emailuidr.key,dbdict=emailuidr.dbdict)):
-            remove_user(userinfo,session)
+            delete_user(userinfo,session)
             return False
         useruidr=UserUIDRelation(username,uid)
         useruidr._prestore()
         if not session.insert(schema.UserUIDRelationORM(key=useruidr.key,dbdict=useruidr.dbdict)):
-            remove_user(userinfo,session)
+            delete_user(userinfo,session)
             return False
         userinfo._prestore()
         if not session.insert(schema.UserInfoORM(key=userinfo.key, dbdict=userinfo.dbdict)):
-            remove_user(userinfo,session) 
+            delete_user(userinfo,session) 
             return False
         return True
     except Exception as e:
-        remove_user(userinfo,session)
+        delete_user(userinfo,session)
         return False
 
 def update_user(userinfo,session):
@@ -685,7 +731,7 @@ def update_user(userinfo,session):
     except Exception:
         return False
 
-def remove_user(userinfo,session):
+def delete_user(userinfo,session):
     try:
         userinfo._prestore()
         uid=userinfo.uid
@@ -773,14 +819,14 @@ def register_agent(agentinfo,session):
                 agentinfo._prestore()
                 if session.insert(schema.AgentInfoORM(key=agentinfo.key, dbdict=agentinfo.dbdict)):
                     return True
-        remove_agent(agentinfo,session)
+        delete_agent(agentinfo,session)
         return False
     except Exception as e:
         print str(e)
-        remove_agent(agentinfo,session)
+        delete_agent(agentinfo,session)
         return False
 
-def remove_agent(agentinfo,session):
+def delete_agent(agentinfo,session):
     try:
         agentinfo._prestore()
         session.remove(schema.AgentInfoORM(key=agentinfo.key, dbdict=agentinfo.dbdict))
@@ -898,17 +944,17 @@ def register_datasource(dsinfo,session):
             if session.insert(schema.DatasourceInfoORM(key=dsinfo.key, dbdict=dsinfo.dbdict)):
                 return True
             else:
-                remove_ds(dsinfo,session)
+                delete_ds(dsinfo,session)
                 return False
         else:
-            remove_ds(dsinfo,session)
+            delete_ds(dsinfo,session)
             return False
     except Exception as e:
         print str(e)
-        remove_ds(dsinfo,session)
+        delete_ds(dsinfo,session)
         return False
 
-def remove_ds(dsinfo,session):
+def delete_ds(dsinfo,session):
     try:
         dsinfo._prestore()
         session.remove(schema.DatasourceInfoORM(key=dsinfo.key, dbdict=dsinfo.dbdict))
@@ -1011,7 +1057,7 @@ def delete_graph(graphinfo, session):
     session.remove(GraphInfoORM(key=gid))
     return True
 
-def insert_new_graph(graphinfo, session):
+def create_graph(graphinfo, session):
     graph_datapoints=graphinfo.get_datapoints()
     gid=graphinfo.gid
     dtpgraphrarray=[]
@@ -1084,7 +1130,6 @@ class GraphDatasourceWeight:
     def set_data(self,data):
         self.dids=data
 
-
 def get_graphdatasourceweight(gid,session):
     try:
         schemaobj=session.get(schema.GraphDatasourceWeightORM(key=gid))
@@ -1110,7 +1155,6 @@ def set_datasourceweight_on_graph(gid,did,weight,session):
         return True
     else:
         return False
-
 
 class SegmentParams:
     def __init__(self,segid):
@@ -1434,6 +1478,19 @@ def insert_useragentperms(uapobj,session):
     except Exception:
         return False
 
+def delete_useragentperms(uapobj,session):
+    try:
+        kwargs={}
+        agents=uapobj.get_agents()
+        if agents and len(agents.keys())>0:
+            kwargs['columns']=[key for key in agents.keys()]
+        if session.remove(schema.UserAgentPermsORM(apiobj=uapobj),kwargs):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
 class UserDsPerms:
     ''' This class is used to access User-Datasource permission relation '''
     def __init__(self, uid):
@@ -1465,6 +1522,19 @@ def get_userdsperms(uid,session,did=None):
 def insert_userdsperms(udpobj,session):
     try:
         if session.insert(schema.UserDsPermsORM(apiobj=udpobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def delete_userdsperms(udpobj,session):
+    try:
+        kwargs={}
+        dss=udpobj.get_dss()
+        if dss and len(dss.keys())>0:
+            kwargs['columns']=[key for key in dss.keys()]
+        if session.remove(schema.UserDsPermsORM(apiobj=udpobj),kwargs):
             return True
         else:
             return False
@@ -1508,6 +1578,19 @@ def insert_userdtpperms(uppobj,session):
     except Exception:
         return False
 
+def delete_userdtpperms(uppobj,session):
+    try:
+        kwargs={}
+        dtps=uppobj.get_dtps()
+        if dtps and len(dtps.keys())>0:
+            kwargs['columns']=[key for key in dtps.keys()]
+        if session.remove(schema.UserDtpPermsORM(apiobj=uppobj),kwargs):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
 class UserGraphPerms:
     ''' This class is used to access User-Graph permission relation '''
     def __init__(self, uid):
@@ -1539,6 +1622,19 @@ def get_usergraphperms(uid,session,gid=None):
 def insert_usergraphperms(ugpobj,session):
     try:
         if session.insert(schema.UserGraphPermsORM(apiobj=ugpobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def delete_usergraphperms(ugpobj,session):
+    try:
+        kwargs={}
+        graphs=ugpobj.get_graphs()
+        if graphs and len(graphs.keys())>0:
+            kwargs['columns']=[key for key in graphs.keys()]
+        if session.remove(schema.UserGraphPermsORM(apiobj=ugpobj),kwargs):
             return True
         else:
             return False
@@ -1582,6 +1678,19 @@ def insert_agentdsperms(adpobj,session):
     except Exception:
         return False
 
+def delete_agentdsperms(adpobj,session):
+    try:
+        kwargs={}
+        dss=adpobj.get_dss()
+        if dss and len(dss.keys())>0:
+            kwargs['columns']=[key for key in dss.keys()]
+        if session.remove(schema.AgentDsPermsORM(apiobj=adpobj),kwargs):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
 class AgentDtpPerms:
     ''' This class is used to access Agent-Datapoint permission relation '''
     def __init__(self, aid):
@@ -1619,6 +1728,19 @@ def insert_agentdtpperms(appobj,session):
     except Exception:
         return False
 
+def delete_agentdtpperms(appobj,session):
+    try:
+        kwargs={}
+        dtps=appobj.get_dtps()
+        if dtps and len(dtps.keys())>0:
+            kwargs['columns']=[key for key in dtps.keys()]
+        if session.remove(schema.AgentDtpPermsORM(apiobj=appobj),kwargs):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
 class AgentGraphPerms:
     ''' This class is used to access Agent-Graph permission relation '''
     def __init__(self, aid):
@@ -1628,7 +1750,7 @@ class AgentGraphPerms:
     def add_graph(self, gid, perm=u'A'):
         self._gids[gid]=perm #at first A means ALL ACCESS to the resource
 
-    def get_agents(self, gid=None):
+    def get_graphss(self, gid=None):
         try:
             return {gid:self._gids[gid]} if gid else self._gids
         except KeyError:
@@ -1650,6 +1772,19 @@ def get_agentgraphperms(aid,session,gid=None):
 def insert_agentgraphperms(agpobj,session):
     try:
         if session.insert(schema.AgentGraphPermsORM(apiobj=agpobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def delete_agentgraphperms(agpobj,session):
+    try:
+        kwargs={}
+        graphs=agpobj.get_graphs()
+        if dtps and len(graphs.keys())>0:
+            kwargs['columns']=[key for key in graphs.keys()]
+        if session.remove(schema.AgentGraphPermsORM(apiobj=agpobj),kwargs):
             return True
         else:
             return False

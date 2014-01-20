@@ -35,7 +35,7 @@ def create_graph(username,graphname,pid,datapointname,session,msgbus):
     datapointcolor=dtpinfo.dbcols['default_color']
     graphinfo.add_datapoint(pid,datapointcolor,datapointname)
     message=messages.UpdateGraphWeightMessage(gid=gid)
-    if cassapi.insert_new_graph(graphinfo,session):
+    if cassapi.create_graph(graphinfo,session):
         msgbus.sendMessage(message)
         ''' Before returning, send quote and resource authorization message '''
         operation=operations.NewGraphOperation(uid=uid,gid=gid)

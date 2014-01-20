@@ -22,11 +22,12 @@ func_requests={'NewAgentRequest':'authorize_new_agent_creation',
                'GetDatasourceConfigRequest':'authorize_get_ds_config',
                'PutDatasourceConfigRequest':'authorize_put_ds_config',
                'GetDatapointDataRequest':'authorize_get_dp_data',
-               'GetGraphConfigRequest':'authorize_get_graph_config'
+               'GetGraphConfigRequest':'authorize_get_graph_config',
+               'UserUpdateConfigurationRequest':'authorize_user_update_configuration'
                }
 
-def authorize_request(request,username,session,aid=None,did=None,pid=None,gid=None):
-    params={'aid':aid,'did':did,'username':username,'pid':pid,'gid':gid}
+def authorize_request(request,username,session,aid=None,did=None,pid=None,gid=None,data=None):
+    params={'aid':aid,'did':did,'username':username,'pid':pid,'gid':gid,'request_data':data}
     getattr(sys.modules[__name__],func_requests[request])(params,session)
 
 def authorize_new_agent_creation(params,session):
@@ -105,4 +106,8 @@ def authorize_get_graph_config(params,session):
     if not quoauth.authorize_get_graph_config(username,gid,session) \
         or not resauth.authorize_get_graph_config(username,gid,session):
         raise authexcept.AuthorizationException()
+
+def authorize_user_update_configuration(params,session):
+    #If user authentication was successfull, authorization to its own user config is granted
+    pass
 

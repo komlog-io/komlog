@@ -7,6 +7,7 @@ authentication and authorization
 jcazor
 '''
 
+import tornado.web
 import functools
 import urlparse
 from urllib import urlencode
@@ -18,7 +19,7 @@ def userauthenticated(method):
         print 'Usuario obtenido: ',
         print self.user
         if not self.user:
-            if self.request.method in ("GET", "HEAD"):
+            if self.request.method in ('GET','HEAD','PUT','POST'):
                 url = self.get_login_url()
                 if "?" not in url:
                     if urlparse.urlsplit(url).scheme:
@@ -29,7 +30,7 @@ def userauthenticated(method):
                     url += "?" + urlencode(dict(next=next_url))
                 self.redirect(url)
                 return
-            raise HTTPError(403)
+            raise tornado.web.HTTPError(403)
         return method(self, *args, **kwargs)
     return authlogic
 
@@ -38,7 +39,7 @@ def agentauthenticated(method):
     def authlogic(self,*args,**kwargs):
         self.agent=self.get_secure_cookie("komlog_agent")
         if not self.agent:
-            if self.request.method in ("GET", "HEAD"):
+            if self.request.method in ('GET','HEAD','PUT','POST'):
                 url = self.get_login_url()
                 if "?" not in url:
                     if urlparse.urlsplit(url).scheme:

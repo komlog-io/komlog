@@ -208,8 +208,8 @@ class DatasourceCreationHandler(tornado.web.RequestHandler):
                 self.set_status(200)
                 self.write(json_encode(data))
             except authexcept.AuthorizationException:
-                    self.set_status(403)
-                    self.write(json_encode({'message':'Access Denied'}))
+                self.set_status(403)
+                self.write(json_encode({'message':'Access Denied'}))
             except gestexcept.UserNotFoundException:
                 self.set_status(404)
                 self.write(json_encode({'message':'Not Found'}))
@@ -371,6 +371,29 @@ class UserConfigHandler(BaseHandler):
                         dss.append({'ds_name':dsinfo.dsname,'did':did_s,'url':dsurl})
                 data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
         self.render('config.html',userdata=data,page_title='Komlog - Config',navitem=1)
+
+    @auth.userauthenticated
+    def put(self):
+        try:
+            data=json_decode(self.request.body)
+            authorization.authorize_request('UserUpdateConfigurationRequest',self.user, data=data, session=self.application.cf)
+            usrapi.update_user_configuration(self.user, data, self.application.cf, self.application.mb)
+            self.set_status(200)
+            self.write(json_encode({'message':'Operation completed'}))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access Denied'}))
+        except gestexcept.UserNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Not Found'}))
+        except gestexcept.BadParametersException:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        except Exception as e:
+            print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+
 
 class UserHomeHandler(BaseHandler):
 

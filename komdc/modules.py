@@ -149,7 +149,7 @@ class Storing(modules.Module):
                         os.rename(filename,fo)
                         msgresult.retcode=msgcodes.ERROR
                 except Exception as e:
-                    cassapi.remove_datasourcedata(did,ds_date,self.cass_cf)
+                    cassapi.delete_datasourcedata(did,ds_date,self.cass_cf)
                     self.logger.exception('Exception inserting sample: '+str(e))
                     fo = filename[:-5]+'.xspl'
                     os.rename(filename,fo)

@@ -42,6 +42,7 @@ and column_metadata = [
 {column_name: segment, validation_class: IntegerType}
 {column_name: state, validation_class: IntegerType}
 {column_name: creation_date, validation_class: DateType}
+{column_name: email, validation_class: UTF8Type}
 ];
 
 create column family agent_info with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType
