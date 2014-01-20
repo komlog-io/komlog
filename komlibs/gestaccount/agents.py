@@ -60,7 +60,7 @@ def activate_agent(aid,session):
         if cassapi.update_agent(agentinfo,session):
             return True
         else:
-            raise excpetions.AgentUpdateException()
+            raise exceptions.AgentUpdateException()
     else:
         raise exceptions.AgentNotFoundException()
 
@@ -86,4 +86,14 @@ def get_agentconfig(aid,session,dids_flag=False):
         return data
     else:
         raise exceptions.AgentNotFoundException()
+
+def update_agent_config(username, aid, data, session, msgbus):
+    if not data.has_key('ag_name'):
+        raise exceptions.BadParametersException()
+    agentinfo=cassapi.get_agentinfo(aid, {}, session)
+    if not agentinfo:
+        raise exceptions.AgentNotFoundException()
+    agentinfo.agentname=data['ag_name']
+    if not cassapi.update_agent(agentinfo,session):
+        raise exceptions.AgentUpdateException()
 

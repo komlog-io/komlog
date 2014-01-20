@@ -23,7 +23,8 @@ func_requests={'NewAgentRequest':'authorize_new_agent_creation',
                'PutDatasourceConfigRequest':'authorize_put_ds_config',
                'GetDatapointDataRequest':'authorize_get_dp_data',
                'GetGraphConfigRequest':'authorize_get_graph_config',
-               'UserUpdateConfigurationRequest':'authorize_user_update_configuration'
+               'UserUpdateConfigurationRequest':'authorize_user_update_configuration',
+               'AgentUpdateConfigurationRequest':'authorize_agent_update_configuration'
                }
 
 def authorize_request(request,username,session,aid=None,did=None,pid=None,gid=None,data=None):
@@ -110,4 +111,10 @@ def authorize_get_graph_config(params,session):
 def authorize_user_update_configuration(params,session):
     #If user authentication was successfull, authorization to its own user config is granted
     pass
+
+def authorize_agent_update_configuration(params,session):
+    username=params['username']
+    aid=params['aid']
+    if not resauth.authorize_put_agent_config(username,aid,session):
+        raise authexcept.AuthorizationException()
 

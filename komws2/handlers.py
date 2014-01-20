@@ -81,6 +81,32 @@ class AgentConfigHandler(tornado.web.RequestHandler):
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
+    @auth.userauthenticated
+    def put(self,p_aid):
+        try:
+            aid=uuid.UUID(p_aid)
+            authorization.authorize_request('AgentUpdateConfigurationRequest',self.user, aid=aid, session=self.application.cf)
+            data=json_decode(self.request.body)
+            agapi.update_agent_config(self.user, aid, data, self.application.cf, self.application.mb)
+            self.set_status(200)
+            self.write(json_encode({'message':'Operation completed'}))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access Denied'}))
+        except gestexcept.UserNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Not Found'}))
+        except gestexcept.AgentNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Agent Not Found'}))
+        except gestexcept.BadParametersException:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        except Exception as e:
+            print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+
 class DatasourceDataHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
@@ -375,8 +401,8 @@ class UserConfigHandler(BaseHandler):
     @auth.userauthenticated
     def put(self):
         try:
+            authorization.authorize_request('UserUpdateConfigurationRequest',self.user, session=self.application.cf)
             data=json_decode(self.request.body)
-            authorization.authorize_request('UserUpdateConfigurationRequest',self.user, data=data, session=self.application.cf)
             usrapi.update_user_configuration(self.user, data, self.application.cf, self.application.mb)
             self.set_status(200)
             self.write(json_encode({'message':'Operation completed'}))

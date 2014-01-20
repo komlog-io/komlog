@@ -11,6 +11,8 @@ This library implements authorization mechanisms to Komlog interfaces and object
 from komcass import api as cassapi
 
 def authorize_get_agent_config(username,session,aid):
+    if not aid:
+        return False
     useruidr=cassapi.get_useruidrelation(username,session)
     useragentperms=cassapi.get_useragentperms(useruidr.uid,session,aid=aid)
     if useragentperm:
@@ -19,21 +21,18 @@ def authorize_get_agent_config(username,session,aid):
         return False
 
 def authorize_get_ds_config(username,did,session):
-    print 'Authorizacion get_ds_config'
+    if not did:
+        return False
     useruidr=cassapi.get_useruidrelation(username,session)
-    print 'useruidr sale'
-    print useruidr.__dict__
     userdsperms=cassapi.get_userdsperms(useruidr.uid,session,did=did)
-    print 'userdsperms sale'
-    print userdsperms.__dict__
     if userdsperms:
-        print 'devolvemos true'
         return True
     else:
-        print 'devolvemos false'
         return False
 
 def authorize_put_ds_config(username,did,session):
+    if not did:
+        return False
     useruidr=cassapi.get_useruidrelation(username,session)
     userdsperms=cassapi.get_userdsperms(useruidr.uid,session,did=did)
     if userdsperms:
@@ -42,6 +41,8 @@ def authorize_put_ds_config(username,did,session):
         return False
 
 def authorize_get_ds_data(username,did,session):
+    if not did:
+        return False
     useruidr=cassapi.get_useruidrelation(username,session)
     userdsperms=cassapi.get_userdsperms(useruidr.uid,session,did=did)
     if userdsperms:
@@ -50,6 +51,8 @@ def authorize_get_ds_data(username,did,session):
         return False
 
 def authorize_post_ds_data(username,aid,did,session):
+    if not aid or not did:
+        return False
     useruidr=cassapi.get_useruidrelation(username,session)
     userdsperms=cassapi.get_userdsperms(useruidr.uid,session,did=did)
     agentdsperms=cassapi.get_agentdsperms(aid,session,did=did)
@@ -63,6 +66,8 @@ def authorize_new_agent(username,session):
     return True
 
 def authorize_new_datasource(username,aid,session):
+    if not aid:
+        return False
     useruidr=cassapi.get_useruidrelation(username,session)
     useragperms=cassapi.get_useragentperms(useruidr.uid,session,aid)
     if useragperms:
@@ -72,6 +77,8 @@ def authorize_new_datasource(username,aid,session):
     return True
 
 def authorize_get_dp_data(username,pid,session):
+    if not pid:
+        return False
     useruidr=cassapi.get_useruidrelation(username,session)
     userdtpperms=cassapi.get_userdtpperms(useruidr.uid,session,pid=pid)
     if userdtpperms:
@@ -80,6 +87,8 @@ def authorize_get_dp_data(username,pid,session):
         return False
 
 def authorize_new_datapoint(username,did,session):
+    if not did:
+        return False
     useruidr=cassapi.get_useruidrelation(username,session)
     userdsperms=cassapi.get_userdsperms(useruidr.uid,session,did)
     if userdsperms:
@@ -89,6 +98,8 @@ def authorize_new_datapoint(username,did,session):
     return True
 
 def authorize_new_graph(username,pid,session):
+    if not pid:
+        return False
     useruidr=cassapi.get_useruidrelation(username,session)
     userdtpperms=cassapi.get_userdtpperms(useruidr.uid,session,pid)
     if userdtpperms:
@@ -98,9 +109,21 @@ def authorize_new_graph(username,pid,session):
     return True
 
 def authorize_get_graph_config(username,gid,session):
+    if not gid:
+        return False
     useruidr=cassapi.get_useruidrelation(username,session)
     usergraphperms=cassapi.get_usergraphperms(useruidr.uid,session,gid=gid)
     if usergraphperms:
+        return True
+    else:
+        return False
+
+def authorize_put_agent_config(username,aid,session):
+    if not aid:
+        return False
+    useruidr=cassapi.get_useruidrelation(username,session)
+    useragentperms=cassapi.get_useragentperms(useruidr.uid,session,aid=aid)
+    if useragentperms:
         return True
     else:
         return False
