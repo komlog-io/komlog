@@ -185,10 +185,9 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
-    #@auth.userauthenticated
+    @auth.userauthenticated
     def put(self, p_did):
         try:
-            self.user='jcazor'
             did=uuid.UUID(p_did)
             authorization.authorize_request(request='DatasourceUpdateConfigurationRequest',username=self.user,session=self.application.cf,did=did)
             data=json_decode(self.request.body)
@@ -345,6 +344,62 @@ class DatapointDataHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message': 'Datapoint data not found','last_date':e.last_date.isoformat()}))
         except Exception as e:
             print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
+
+class DatapointConfigHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def get(self,p_pid):
+        try:
+            pid=uuid.UUID(p_pid)
+            authorization.authorize_request(request='GetDatapointConfigRequest',username=self.user,session=self.application.cf,pid=pid)
+            data=dpapi.get_datapointconfig(pid,self.application.cf)
+            self.set_status(200)
+            self.write(json_encode(data))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access Denied'}))
+        except gestexcept.DatapointNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Not Found'}))
+        except TypeError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad Request'}))
+        except Exception as e:
+            #self.application.logger.exception(str(e))
+            print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
+
+    @auth.userauthenticated
+    def put(self, p_pid):
+        try:
+            pid=uuid.UUID(p_pid)
+            authorization.authorize_request(request='DatapointUpdateConfigurationRequest',username=self.user,session=self.application.cf,pid=pid)
+            data=json_decode(self.request.body)
+            dpapi.update_datapointconfig(pid,self.application.cf,data)
+            self.set_status(200)
+            self.write(json_encode({'message':'Operation completed'}))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access Denied'}))
+        except gestexcept.BadParametersException:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        except TypeError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad Parameters'}))
+        except KeyError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad Parameters'}))
+        except gestexcept.DatapointUpdateException:
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
+        except gestexcept.DatapointNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Not Found'}))
+        except Exception as e:
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 

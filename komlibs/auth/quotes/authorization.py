@@ -53,6 +53,10 @@ def authorize_get_dp_data(username,pid,session):
     ''' Not quotes authorization needed '''
     return True
 
+def authorize_get_dp_config(username,pid,session):
+    ''' Not quotes authorization needed '''
+    return True
+
 def authorize_new_datapoint(username,did,session):
     useruidr=cassapi.get_useruidrelation(username,session)
     interfaces=[]

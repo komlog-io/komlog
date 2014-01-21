@@ -21,7 +21,9 @@ func_requests={'NewAgentRequest':'authorize_new_agent_creation',
                'PostDatasourceDataRequest':'authorize_post_ds_data',
                'GetDatasourceConfigRequest':'authorize_get_ds_config',
                'DatasourceUpdateConfigurationRequest':'authorize_ds_update_configuration',
+               'DatapointUpdateConfigurationRequest':'authorize_dp_update_configuration',
                'GetDatapointDataRequest':'authorize_get_dp_data',
+               'GetDatapointConfigRequest':'authorize_get_dp_config',
                'GetGraphConfigRequest':'authorize_get_graph_config',
                'UserUpdateConfigurationRequest':'authorize_user_update_configuration',
                'AgentUpdateConfigurationRequest':'authorize_agent_update_configuration'
@@ -86,11 +88,24 @@ def authorize_get_dp_data(params,session):
         or not resauth.authorize_get_dp_data(username,pid,session):
         raise authexcept.AuthorizationException()
 
+def authorize_get_dp_config(params,session):
+    username=params['username']
+    pid=params['pid']
+    if not quoauth.authorize_get_dp_config(username,pid,session) \
+        or not resauth.authorize_get_dp_config(username,pid,session):
+        raise authexcept.AuthorizationException()
+
 def authorize_new_datapoint_creation(params,session):
     username=params['username']
     did=params['did']
     if not quoauth.authorize_new_datapoint(username,did,session) \
         or not resauth.authorize_new_datapoint(username,did,session):
+        raise authexcept.AuthorizationException()
+
+def authorize_dp_update_configuration(params,session):
+    username=params['username']
+    pid=params['pid']
+    if not resauth.authorize_put_dp_config(username,pid,session):
         raise authexcept.AuthorizationException()
 
 def authorize_new_graph_creation(params,session):

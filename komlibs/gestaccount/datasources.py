@@ -140,7 +140,7 @@ def update_datasourceconfig(did,session,data):
             if not crontab_entry.validate_entry():
                 raise exceptions.BadParametersException()
         if cassapi.update_ds(dsinfo,session):
-            return dsinfo
+            return True
         else:
             raise exceptions.DatasourceUpdateException()
     else:

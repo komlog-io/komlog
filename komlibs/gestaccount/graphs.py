@@ -17,6 +17,7 @@ from komcass import api as cassapi
 from komlibs.gestaccount import states,types,exceptions
 from komimc import messages
 from komlibs.ifaceops import operations
+from komlibs.general import colors
 
 def create_graph(username,graphname,pid,datapointname,session,msgbus):
     now=datetime.utcnow()
@@ -30,7 +31,7 @@ def create_graph(username,graphname,pid,datapointname,session,msgbus):
         raise exceptions.DatapointNotFoundException()
     graphinfo=cassapi.GraphInfo(gid,uid,graphname)
     if not dtpinfo.dbcols.has_key('default_color'):
-        dtpinfo.dbcols['default_color']=get_randomcolor()
+        dtpinfo.dbcols['default_color']=colors.get_randomcolor()
         cassapi.update_dtp(dtpinfo,session)
     datapointcolor=dtpinfo.dbcols['default_color']
     graphinfo.add_datapoint(pid,datapointcolor,datapointname)
@@ -70,6 +71,3 @@ def get_graphconfig(gid,session):
             data['graph_ds'].append((str(did),weight))
     return data
 
-def get_randomcolor():
-    r = lambda: random.randint(0,255)
-    return '#%02X%02X%02X' % (r(),r(),r())

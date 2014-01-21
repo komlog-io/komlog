@@ -86,6 +86,26 @@ def authorize_get_dp_data(username,pid,session):
     else:
         return False
 
+def authorize_get_dp_config(username,pid,session):
+    if not pid:
+        return False
+    useruidr=cassapi.get_useruidrelation(username,session)
+    userdtpperms=cassapi.get_userdtpperms(useruidr.uid,session,pid=pid)
+    if userdtpperms:
+        return True
+    else:
+        return False
+
+def authorize_put_dp_config(username,pid,session):
+    if not pid:
+        return False
+    useruidr=cassapi.get_useruidrelation(username,session)
+    userdtpperms=cassapi.get_userdtpperms(useruidr.uid,session,pid=pid)
+    if userdtpperms:
+        return True
+    else:
+        return False
+
 def authorize_new_datapoint(username,did,session):
     if not did:
         return False
