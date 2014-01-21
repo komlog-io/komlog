@@ -886,32 +886,12 @@ class DatasourceInfo:
     def _prestore(self):
         self.key=self.did
         self.dbdict={}
-        if self.aid:
-            self.dbdict['aid']=self.aid
-        if self.dsname:
-            self.dbdict['dsname']=self.dsname
-        if self.dstype:
-            self.dbdict['dstype']=self.dstype
-        if self.last_received:
-            self.dbdict['last_received']=self.last_received
-        if self.last_mapped:
-            self.dbdict['last_mapped']=self.last_mapped
-        if self.creation_date:
-            self.dbdict['creation_date']=self.creation_date
-        if self.state:
-            self.dbdict['state']=self.state
-        if self.script_name:
-            self.dbdict['script_name']=self.script_name
-        if self.day_of_week:
-            self.dbdict['day_of_week']=self.day_of_week
-        if self.month:
-            self.dbdict['month']=self.month
-        if self.day_of_month:
-            self.dbdict['day_of_month']=self.day_of_month
-        if self.hour:
-            self.dbdict['hour']=self.hour
-        if self.minute:
-            self.dbdict['minute']=self.minute
+        for field in ('aid','dsname','dstype','last_received','last_mapped','creation_date',\
+                      'state','script_name','day_of_week','month','day_of_month','hour','minute'):
+            try:
+                self.dbdict[field]=getattr(self, field)
+            except AttributeError:
+                pass
 
 def get_dsinfo(did,dbcols,session):
     try:

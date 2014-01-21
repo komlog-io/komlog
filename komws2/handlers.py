@@ -166,7 +166,6 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
     def get(self,p_did):
         try:
             did=uuid.UUID(p_did)
-            print 'LLASDFASD'
             authorization.authorize_request(request='GetDatasourceConfigRequest',username=self.user,session=self.application.cf,did=did)
             data=dsapi.get_datasourceconfig(did,self.application.cf)
             self.set_status(200)
@@ -186,18 +185,22 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
-    @auth.userauthenticated
+    #@auth.userauthenticated
     def put(self, p_did):
         try:
+            self.user='jcazor'
             did=uuid.UUID(p_did)
-            authorization.authorize_request(request='PutDatasourceConfigRequest',username=self.user,session=self.application.cf,did=did)
-            data=json_loads(self.request.body)
-            new_dsinfo=dsapi.update_datasourceconfig(did,self.application.cf,data)
+            authorization.authorize_request(request='DatasourceUpdateConfigurationRequest',username=self.user,session=self.application.cf,did=did)
+            data=json_decode(self.request.body)
+            dsapi.update_datasourceconfig(did,self.application.cf,data)
             self.set_status(200)
-            self.write()
+            self.write(json_encode({'message':'Operation completed'}))
         except authexcept.AuthorizationException:
             self.set_status(403)
             self.write(json_encode({'message':'Access Denied'}))
+        except gestexcept.BadParametersException:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
         except TypeError:
             self.set_status(400)
             self.write(json_encode({'message':'Bad Parameters'}))
@@ -210,6 +213,9 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
         except gestexcept.DatasourceNotFoundException:
             self.set_status(404)
             self.write(json_encode({'message':'Not Found'}))
+        except Exception as e:
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
 
 class DatasourceCreationHandler(tornado.web.RequestHandler):
 

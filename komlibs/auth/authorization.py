@@ -20,7 +20,7 @@ func_requests={'NewAgentRequest':'authorize_new_agent_creation',
                'GetDatasourceDataRequest':'authorize_get_ds_data',
                'PostDatasourceDataRequest':'authorize_post_ds_data',
                'GetDatasourceConfigRequest':'authorize_get_ds_config',
-               'PutDatasourceConfigRequest':'authorize_put_ds_config',
+               'DatasourceUpdateConfigurationRequest':'authorize_ds_update_configuration',
                'GetDatapointDataRequest':'authorize_get_dp_data',
                'GetGraphConfigRequest':'authorize_get_graph_config',
                'UserUpdateConfigurationRequest':'authorize_user_update_configuration',
@@ -66,11 +66,10 @@ def authorize_get_ds_config(params,session):
         or not resauth.authorize_get_ds_config(username,did,session):
         raise authexcept.AuthorizationException()
 
-def authorize_put_ds_config(params,session):
+def authorize_ds_update_configuration(params,session):
     username=params['username']
     did=params['did']
-    if not quoauth.authorize_put_ds_config(username,did,session) \
-        or not resauth.authorize_put_ds_config(username,did,session):
+    if not resauth.authorize_put_ds_config(username,did,session):
         raise authexcept.AuthorizationException()
 
 def authorize_new_datasource_creation(params,session):

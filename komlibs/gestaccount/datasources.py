@@ -130,9 +130,15 @@ def update_datasourceconfig(did,session,data):
     dsinfo=cassapi.get_dsinfo(did,{},session)
     if dsinfo:
         for dbkey,webkey in types.DSPARAMS_WEB2DB[dsinfo.dstype]:
-            setattr(dsinfo,dbdict[dbkey],data['ds_params'][webkey])
-        dsinfo.dsname=data['ds_name']
-        dsinfo.state=data['ds_state']
+            if data.has_key(webkey):
+                setattr(dsinfo,dbkey,data[webkey])
+        if data.has_key('ds_name'):
+            dsinfo.dsname=data['ds_name']
+        if dsinfo.dstype==types.DS_STR2INT['script']:
+            crontab_entry=crontab.CrontabEntry(min=dsinfo.minute, hour=dsinfo.hour, dom=dsinfo.day_of_month,\
+                                  month=dsinfo.month, dow=dsinfo.day_of_week, script_name=dsinfo.script_name)
+            if not crontab_entry.validate_entry():
+                raise exceptions.BadParametersException()
         if cassapi.update_ds(dsinfo,session):
             return dsinfo
         else:

@@ -63,7 +63,6 @@ class CrontabEntry:
                 return False
             if denominator and len(numerator_elements)>1:
                 return False
-        print 'Minutes ok'
         return True
 
     def _validate_hours(self):
@@ -90,7 +89,6 @@ class CrontabEntry:
                 return False
             if denominator and len(numerator_elements)>1:
                 return False
-        print 'Hour OK'
         return True
 
     def _validate_day_of_month(self):
@@ -117,7 +115,6 @@ class CrontabEntry:
                 return False
             if denominator and len(numerator_elements)>1:
                 return False
-        print 'Day of Month OK'
         return True
 
     def _validate_month(self):
@@ -144,7 +141,6 @@ class CrontabEntry:
                 return False
             if denominator and len(numerator_elements)>1:
                 return False
-        print 'Month OK'
         return True
 
     def _validate_day_of_week(self):
@@ -171,13 +167,11 @@ class CrontabEntry:
                 return False
             if denominator and len(numerator_elements)>1:
                 return False
-        print 'Day of Week OK'
         return True
 
     def _validate_script_name(self):
         if os.path.split(self.script_name)[0] not in ('./',''):
             return False
         else:
-            print 'Script Name OK'
             return True
 
