@@ -138,6 +138,18 @@ def authorize_get_graph_config(username,gid,session):
     else:
         return False
 
+def authorize_put_graph_config(username,gid,session):
+    if not gid:
+        return False
+    useruidr=cassapi.get_useruidrelation(username,session)
+    if not useruidr:
+        raise exceptions.BadParametersException()
+    usergraphperms=cassapi.get_usergraphperms(useruidr.uid,session,gid=gid)
+    if usergraphperms:
+        return True
+    else:
+        return False
+
 def authorize_put_agent_config(username,aid,session):
     if not aid:
         return False

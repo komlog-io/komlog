@@ -990,6 +990,13 @@ def get_graphinfo(gid,session):
     except NotFoundException:
         return None
 
+def update_graphinfo(graphinfo,session):
+    if not graphinfo:
+        return False
+    if not session.insert(schema.GraphInfoORM(apiobj=graphinfo)):
+        return False
+    return True
+
 class GraphDatapointRelation:
     def __init__(self, gid):
         self.gid=gid

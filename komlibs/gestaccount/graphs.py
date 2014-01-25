@@ -49,16 +49,13 @@ def create_graph(username,graphname,pid,datapointname,session,msgbus):
         raise exceptions.GraphCreationException()
 
 def get_graphconfig(gid,session):
-    print 'Entramos en graphconfig'
     graphinfo=cassapi.get_graphinfo(gid,session)
-    print 'despues de graphinfo'
     if not graphinfo:
         raise exceptions.GraphNotFoundException()
     data={}
     data['gid']=str(graphinfo.gid)
     data['graph_name']=graphinfo.name
     data['datapoints']={}
-    print 'llegamos a los datapoints'
     datapoints=graphinfo.get_datapoints()
     if datapoints:
         for datapoint in datapoints:
@@ -70,4 +67,44 @@ def get_graphconfig(gid,session):
         for did,weight in graphdsw.dids.items():
             data['graph_ds'].append((str(did),weight))
     return data
+
+def update_graph_configuration(gid, session, data):
+    if not data:
+        raise exceptions.BadParametersException()
+    graphinfo=cassapi.get_graphinfo(gid,session)
+    if not graphinfo:
+        raise exceptions.GraphNotFoundException()
+    for key in data.keys():
+        if key not in ('graph_name','datapoints'):
+            raise exceptions.BadParametersException()
+    if data.has_key('graph_name'):
+        graphinfo.name=data['graph_name']
+    if data.has_key('datapoints'):
+        graphdatapoints=graphinfo.get_datapoints()
+        for datapoint in data['datapoints']:
+            try:
+                uuid_datapoint=uuid.UUID(datapoint)
+            except Exception:
+                raise exceptions.BadParametersException()
+            if uuid_datapoint in graphdatapoints:
+                datapointinfo=graphinfo.get_datapoint_info(uuid_datapoint)
+                for attribute in data['datapoints'][datapoint].keys():
+                    if attribute=='name':
+                        datapointinfo[attribute]=data['datapoints'][datapoint][attribute]
+                    elif attribute=='color':
+                        if colors.validate_hexcolor(data['datapoints'][datapoint][attribute]):
+                            datapointinfo[attribute]=data['datapoints'][datapoint][attribute]
+                        else:
+                            raise exceptions.BadParametersException()
+                    else:
+                        raise exceptions.BadParametersException()
+                graphinfo.add_datapoint(uuid_datapoint,datapointinfo['color'],datapointinfo['name'])
+            else:
+                raise exceptions.BadParametersException()
+    if cassapi.update_graphinfo(graphinfo,session):
+        return True
+    else:
+        raise exceptions.GraphUpdateException()
+
+
 

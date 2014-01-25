@@ -25,6 +25,7 @@ func_requests={'NewAgentRequest':'authorize_new_agent_creation',
                'GetDatapointDataRequest':'authorize_get_dp_data',
                'GetDatapointConfigRequest':'authorize_get_dp_config',
                'GetGraphConfigRequest':'authorize_get_graph_config',
+               'GraphUpdateConfigurationRequest':'authorize_graph_update_configuration',
                'UserUpdateConfigurationRequest':'authorize_user_update_configuration',
                'AgentUpdateConfigurationRequest':'authorize_agent_update_configuration'
                }
@@ -120,6 +121,12 @@ def authorize_get_graph_config(params,session):
     gid=params['gid']
     if not quoauth.authorize_get_graph_config(username,gid,session) \
         or not resauth.authorize_get_graph_config(username,gid,session):
+        raise authexcept.AuthorizationException()
+
+def authorize_graph_update_configuration(params,session):
+    username=params['username']
+    gid=params['gid']
+    if not resauth.authorize_put_graph_config(username,gid,session):
         raise authexcept.AuthorizationException()
 
 def authorize_user_update_configuration(params,session):

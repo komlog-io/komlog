@@ -63,3 +63,6 @@ class GraphCreationException(Exception):
     def __init__(self):
         pass
 
+class GraphUpdateException(Exception):
+    def __init__(self):
+        pass

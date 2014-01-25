@@ -550,7 +550,6 @@ class GraphConfigHandler(tornado.web.RequestHandler):
             gid=uuid.UUID(p_gid)
             authorization.authorize_request(request='GetGraphConfigRequest',username=self.user,session=self.application.cf,gid=gid)
             data=graphapi.get_graphconfig(gid,self.application.cf)
-            print data
             self.set_status(200)
             self.write(json_encode(data))
         except authexcept.AuthorizationException:
@@ -562,6 +561,35 @@ class GraphConfigHandler(tornado.web.RequestHandler):
         except TypeError:
             self.set_status(400)
             self.write(json_encode({'message':'Bad Request'}))
+        except Exception as e:
+            #self.application.logger.exception(str(e))
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
+
+    @auth.userauthenticated
+    def put(self,p_gid):
+        try:
+            gid=uuid.UUID(p_gid)
+            authorization.authorize_request(request='GraphUpdateConfigurationRequest',username=self.user,session=self.application.cf,gid=gid)
+            data=json_decode(self.request.body)
+            graphapi.update_graph_configuration(gid,self.application.cf,data)
+            self.set_status(200)
+            self.write(json_encode({'message':'Operation completed'}))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access Denied'}))
+        except gestexcept.GraphNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Not Found'}))
+        except TypeError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad Request'}))
+        except gestexcept.BadParametersException:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        except gestexcept.GraphUpdateException:
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
         except Exception as e:
             #self.application.logger.exception(str(e))
             self.set_status(500)
