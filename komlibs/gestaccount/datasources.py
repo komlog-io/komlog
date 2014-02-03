@@ -46,7 +46,7 @@ def create_datasource(username,aid,dsname,dstype,dsparams,session,msgbus):
         index=uidagentr.aids.index(aid)
     except ValueError:
         raise exceptions.AgentNotFoundException()
-    dsinfo=cassapi.DatasourceInfo(did=did,aid=aid,dsname=dsname,dstype=dstype,creation_date=now,state=states.DATASOURCE['ACTIVE'],**kwargs)
+    dsinfo=cassapi.DatasourceInfo(did=did,aid=aid,uid=uid,dsname=dsname,dstype=dstype,creation_date=now,state=states.DATASOURCE['ACTIVE'],**kwargs)
     if cassapi.register_datasource(dsinfo, session):
         ''' before returning, send quote and resource authorization message '''
         operation=operations.NewDatasourceOperation(uid=uid,aid=aid,did=did)

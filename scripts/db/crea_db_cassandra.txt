@@ -27,6 +27,7 @@ create column family agent_ds_relation with comparator=UUIDType and default_vali
 create column family ds_info with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType
 and column_metadata = [
 {column_name: aid, validation_class: UUIDType}
+{column_name: uid, validation_class: UUIDType}
 {column_name: dsname, validation_class: UTF8Type}
 {column_name: last_received, validation_class: DateType}
 {column_name: last_mapped, validation_class: DateType}
@@ -76,3 +77,19 @@ create column family mst_agent_dtp_perm with comparator=UUIDType and default_val
 create column family mst_agent_graph_perm with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
 
 create column family mst_user_iface_deny with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+
+create column family mst_ds_card with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType
+and column_metadata = [
+{column_name: aid, validation_class: UUIDType}
+{column_name: uid, validation_class: UUIDType}
+{column_name: ds_name, validation_class: UTF8Type}
+{column_name: ag_name, validation_class: UTF8Type}
+{column_name: datapoints, validation_class: UTF8Type}
+{column_name: graphs, validation_class: UTF8Type}
+{column_name: ds_date, validation_class: DateType}
+{column_name: anomalies, validation_class: UTF8Type}
+{column_name: priority, validation_class: UTF8Type}
+];
+
+create column family rel_user_ds_card with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family rel_agent_ds_card with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;

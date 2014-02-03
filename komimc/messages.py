@@ -33,6 +33,7 @@ NEW_USR_MESSAGE='NEWUSR'
 UPDATE_GRAPH_WEIGHT_MESSAGE='UPDGRW'
 UPDATE_QUOTES_MESSAGE='UPDQUO'
 RESOURCE_AUTHORIZATION_UPDATE_MESSAGE='RESAUTH'
+UPDATE_CARD_MESSAGE='UPDCARD'
 
 #MODULE LIST
 VALIDATION='Validation'
@@ -40,6 +41,7 @@ STORING='Storing'
 TEXTMINING='Textmining'
 GESTCONSOLE='Gestconsole'
 RESCONTROL='Rescontrol'
+CARDMANAGER='Cardmanager'
 
 
 #MESSAGE MAPPINGS
@@ -53,7 +55,8 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           NEW_USR_MESSAGE:'NewUserMessage',
                           UPDATE_GRAPH_WEIGHT_MESSAGE:'UpdateGraphWeightMessage',
                           UPDATE_QUOTES_MESSAGE:'UpdateQuotesMessage',
-                          RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:'ResourceAuthorizationUpdateMessage'}
+                          RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:'ResourceAuthorizationUpdateMessage',
+                          UPDATE_CARD_MESSAGE:'UpdateCardMessage'}
 
 
 MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
@@ -66,7 +69,8 @@ MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             NEW_USR_MESSAGE:GESTCONSOLE,
                             UPDATE_GRAPH_WEIGHT_MESSAGE:TEXTMINING,
                             UPDATE_QUOTES_MESSAGE:RESCONTROL,
-                            RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:RESCONTROL}
+                            RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:RESCONTROL,
+                            UPDATE_CARD_MESSAGE:CARDMANAGER}
 
 
 #MODULE MAPPINGS
@@ -74,7 +78,8 @@ MODULE_TO_ADDRESS_MAPPING={VALIDATION:'%m.%h',
                            STORING:'%m.%h',
                            TEXTMINING:'%m',
                            GESTCONSOLE:'%m',
-                           RESCONTROL:'%m'}
+                           RESCONTROL:'%m',
+                           CARDMANAGER:'%m'}
 
 
 def get_address(type, module_id, module_instance, running_host):
@@ -183,7 +188,6 @@ class GenerateDTreeMessage:
             self.pid=pid
             self.date=date
             self.qpid_message=Message(self.type+'|'+str(self.pid)+'|'+date.isoformat())
-
 
 class FillDatapointMessage:
     def __init__(self, qpid_message=None, did=None,date=None,pid=None):
@@ -294,4 +298,20 @@ class ResourceAuthorizationUpdateMessage:
             self.type=RESOURCE_AUTHORIZATION_UPDATE_MESSAGE
             self.operation=operation
             self.qpid_message=Message(self.type+'|'+self.operation.get_json_serialization())
+
+class UpdateCardMessage:
+    def __init__(self,qpid_message=None,did=None,date=None,force=False):
+        if qpid_message:
+            self.qpid_message=qpid_message
+            mtype,did,date,force=self.qpid_message.content.split('|')
+            self.type=mtype
+            self.did=uuid.UUID(did)
+            self.date=dateutil.parser.parse(date)
+            self.force=True if force=='True' else False
+        else:
+            self.type=UPDATE_CARD_MESSAGE
+            self.did=did
+            self.date=date
+            self.force=force
+            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+self.date.isoformat()+'|'+str(self.force))
 

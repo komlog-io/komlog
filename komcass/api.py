@@ -137,7 +137,7 @@ class DatapointData:
         else:
             self.pid = pid
             self.date = date
-            self.content = content # float
+            self.content = content # Number()
             self.prestore()
 
     def prestore(self):
@@ -850,11 +850,12 @@ def update_agent(agentinfo,session):
 '''DATASOURCE CLASSES AND METHODS'''
 
 class DatasourceInfo:
-    def __init__(self, did, fromdict=None, dsname=None, last_received=None, last_mapped=None, dstype=None, aid=None, creation_date=None, state=None, \
+    def __init__(self, did, fromdict=None, dsname=None, last_received=None, last_mapped=None, dstype=None, aid=None, uid=None, creation_date=None, state=None, \
                  script_name=None, day_of_week=None, month=None, day_of_month=None, hour=None, minute=None):
         if fromdict:
             self.did=did
             self.aid=fromdict['aid'] if fromdict.has_key('aid') else None
+            self.uid=fromdict['uid'] if fromdict.has_key('uid') else None
             self.dsname=fromdict['dsname'] if fromdict.has_key('dsname') else None
             self.dstype=fromdict['dstype'] if fromdict.has_key('dstype') else None
             self.last_received=fromdict['last_received'] if fromdict.has_key('last_received') else None
@@ -870,6 +871,7 @@ class DatasourceInfo:
         else:
             self.did=did
             self.aid=aid
+            self.uid=uid
             self.dsname=dsname
             self.last_received=last_received
             self.last_mapped=last_mapped
@@ -886,7 +888,7 @@ class DatasourceInfo:
     def _prestore(self):
         self.key=self.did
         self.dbdict={}
-        for field in ('aid','dsname','dstype','last_received','last_mapped','creation_date',\
+        for field in ('aid','uid','dsname','dstype','last_received','last_mapped','creation_date',\
                       'state','script_name','day_of_week','month','day_of_month','hour','minute'):
             try:
                 self.dbdict[field]=getattr(self, field)
@@ -1791,7 +1793,6 @@ class UserIfaceDeny:
         try:
             return {iface:self._ifaces[iface]} if iface else self._ifaces
         except KeyError:
-            print 'ERROR EN GET_INTERFACES'
             return None
 
     def set_interfaces(self, ifaces=None):
@@ -1828,4 +1829,147 @@ def delete_userifacedeny(uifdobj,session):
             return False
     except Exception:
         return False
+
+class DatasourceCard:
+    def __init__(self,did):
+        self.did=did
+        self.uid=None
+        self.aid=None
+        self.ag_name=None
+        self.ds_name=None
+        self.ds_date=None
+        self.priority=None
+        self._datapoints=[]
+        self._graphs=[]
+        self._anomalies=[]
+
+    def get_datapoints(self):
+        return self._datapoints
+
+    def add_datapoint(self, dtp_name,dtp_value):
+        dtp_pair=(dtp_name,str(dtp_value))
+        self._datapoints.append(dtp_pair)
+        self._datapoints=list(set(self._datapoints))
+
+    def empty_datapoints(self):
+        self._datapoints=[]
+
+    def get_graphs(self):
+        return self._graphs
+
+    def add_graph(self, graph):
+        self._graphs.append(graph)
+
+    def empty_graphs(self):
+        self._graphs=[]
+
+    def get_anomalies(self):
+        return self._anomalies
+
+    def add_anomaly(self, dtp_name,message):
+        dtp_pair=(dtp_name,message)
+        self._anomalies.append(dtp_pair)
+        self._anomalies=list(set(self._anomalies))
+        
+    def empty_anomalies(self):
+        self._anomalies=[]
+
+def get_datasourcecard(did,session):
+    try:
+        schemaobj=session.get(schema.DatasourceCardORM(key=did))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def delete_datasourcecard(did,session):
+    if session.remove(schema.DatasourceCardORM(key=did)):
+        return True
+    return False
+
+def insert_datasourcecard(datasourcecard,session):
+    if not datasourcecard:
+        return False
+    if not session.insert(schema.DatasourceCardORM(apiobj=datasourcecard)):
+        return False
+    return True
+
+class UserDsCard:
+    def __init__(self,uid):
+        self.uid=uid
+        self._cards={}
+
+    def get_cards(self):
+        return self._cards
+
+    def add_card(self, did, priority):
+        self._cards[did]=priority
+    
+    def delete_card(self, did, priority):
+        if self._cards.has_key(did) and self._cards[did]==priority:
+            self._cards.pop(did)
+        return True
+
+def get_userdscard(uid,session):
+    try:
+        schemaobj=session.get(schema.UserDsCardORM(key=uid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def delete_userdscard(userdscard,session):
+    if not userdscard:
+        return False
+    userdscardorm=schema.UserDsCardORM(apiobj=userdscard)
+    kwargs={}
+    kwargs['columns']=userdscardorm.dbdict.keys()
+    if session.remove(userdscardorm,kwargs):
+        return True
+    return False
+
+def insert_userdscard(userdscard,session):
+    if not userdscard:
+        return False
+    if not session.insert(schema.UserDsCardORM(apiobj=userdscard)):
+        return False
+    return True
+
+class AgentDsCard:
+    def __init__(self,aid):
+        self.aid=aid
+        self._cards={}
+
+    def get_cards(self):
+        return self._cards
+
+    def add_card(self, did, priority):
+        self._cards[did]=priority
+
+    def delete_card(self, did, priority):
+        if self._cards.has_key(did) and self._cards[did]==priority:
+            self._cards.pop(did)
+        return True
+
+def get_agentdscard(aid,session):
+    try:
+        schemaobj=session.get(schema.AgentDsCardORM(key=aid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def delete_agentdscard(agentdscard,session):
+    if not agentdscard:
+        return False
+    agentdscardorm=schema.AgentDsCardORM(apiobj=agentdscard)
+    kwargs={}
+    kwargs['columns']=agentdscardorm.dbdict.keys()
+    if session.remove(agentdscardorm,kwargs):
+        return True
+    return False
+
+def insert_agentdscard(agentdscard,session):
+    if not agentdscard:
+        return False
+    if not session.insert(schema.AgentDsCardORM(apiobj=agentdscard)):
+        return False
+    return True
 

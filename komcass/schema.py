@@ -552,3 +552,98 @@ class UserIfaceDenyORM(CassandraBase):
         apiobj.set_interfaces(self.dbdict)
         return apiobj
 
+class DatasourceCardORM(CassandraBase):
+    __cf__ = 'mst_ds_card'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.did
+            dbdict={}
+            if apiobj.uid:
+                dbdict['uid']=apiobj.uid
+            if apiobj.aid:
+                dbdict['aid']=apiobj.aid
+            if apiobj.ag_name:
+                dbdict['ag_name']=apiobj.ag_name
+            if apiobj.ds_name:
+                dbdict['ds_name']=apiobj.ds_name
+            if apiobj.ds_date:
+                dbdict['ds_date']=apiobj.ds_date
+            if apiobj.priority:
+                dbdict['priority']=str(apiobj.priority).upper()
+            dbdict['datapoints']=json.dumps(apiobj.get_datapoints())
+            dbdict['graphs']=[]
+            if len(apiobj.get_graphs())>0:
+                for gid in apiobj.get_graphs():
+                    s_gid=str(gid)
+                    dbdict['graphs'].append(s_gid)
+            dbdict['graphs']=json.dumps(dbdict['graphs'])
+            dbdict['anomalies']=json.dumps(apiobj.get_anomalies())
+        super(DatasourceCardORM,self).__init__(key,dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.DatasourceCard(self.key)
+        apiobj.uid=self.dbdict['uid'] if self.dbdict.has_key('uid') else None
+        apiobj.aid=self.dbdict['aid'] if self.dbdict.has_key('aid') else None
+        apiobj.ag_name=self.dbdict['ag_name'] if self.dbdict.has_key('ag_name') else None
+        apiobj.ds_name=self.dbdict['ds_name'] if self.dbdict.has_key('ds_name') else None
+        apiobj.ds_date=self.dbdict['ds_date'] if self.dbdict.has_key('ds_date') else None
+        apiobj.priority=self.dbdict['priority'] if self.dbdict.has_key('priority') else None
+        apiobj._datapoints=json.loads(self.dbdict['datapoints']) if self.dbdict.has_key('datapoints') else []
+        if self.dbdict.has_key('graphs'):
+            graphlist=json.loads(self.dbdict['graphs'])
+            for graph in graphlist:
+                gid=uuid.UUID(graph)
+                apiobj.add_graph(gid)
+        else:
+            apiobj._graphs=[]
+        apiobj._anomalies=json.loads(self.dbdict['anomalies']) if self.dbdict.has_key('anomalies') else []
+        return apiobj
+
+
+class UserDsCardORM(CassandraBase):
+    __cf__ = 'rel_user_ds_card'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.uid
+            dbdict={}
+            for did,value in apiobj.get_cards().iteritems():
+                dbdict[str(value).upper()+'_'+str(did)]=''
+        super(UserDsCardORM,self).__init__(key,dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.UserDsCard(self.key)
+        for key in self.dbdict.keys():
+            did=uuid.UUID(key.split('_')[-1])
+            priority=key.split('_')[0]
+            apiobj.add_card(did,priority)
+        return apiobj
+
+
+class AgentDsCardORM(CassandraBase):
+    __cf__ = 'rel_agent_ds_card'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.aid
+            dbdict={}
+            for did,value in apiobj.get_cards().iteritems():
+                dbdict[str(value).upper()+'_'+str(did)]=''
+        super(AgentDsCardORM,self).__init__(key,dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.AgentDsCard(self.key)
+        for key in self.dbdict.keys():
+            did=uuid.UUID(key.split('_')[-1])
+            priority=key.split('_')[0]
+            apiobj.add_card(did,priority)
+        return apiobj
+
+
