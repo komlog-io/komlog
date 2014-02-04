@@ -1,6 +1,8 @@
 #!/bin/bash
 
 cd $HOME
+nohup python komlog/komplot/komplot.py > /var/log/komlog/komplot.log 2>&1 &
+echo $! > /tmp/komplot.pid
 nohup python komlog/komai/komai.py > /var/log/komlog/komai.log 2>&1 &
 echo $! > /tmp/komai.pid
 nohup python komlog/komges/komges.py > /var/log/komlog/komges.log 2>&1 &

@@ -406,14 +406,14 @@ class Cardmanager(modules.Module):
         if dsgraphw:
             sorted_by_w=sorted(dsgraphw.gids.iteritems(),key=operator.itemgetter(1))
             num_graphs=len(sorted_by_w)
-            max_gids=3
+            max_gids=2
             c_gid=0
             for i in reversed(range(num_graphs)):
                 if c_gid<max_gids:
                     gid=sorted_by_w[i][0]
                     dscard.add_graph(gid)
-                    #graph_msg=messages.GenerateGraphImageMessage(gid=gid)
-                    #graph_msgs.append(graph_msg)
+                    graph_msg=messages.PlotStoreMessage(gid=gid,end_date=date)
+                    graph_msgs.append(graph_msg)
                     c_gid+=1
             gids=dscard.get_graphs()
             max_pids=5
@@ -469,7 +469,6 @@ class Cardmanager(modules.Module):
         else:
             ''' existia anteriormente con la misma prioridad. no hacemos nada '''
             pass
-        print str(dscard.__dict__)
         if cassapi.insert_datasourcecard(dscard,self.cf):
             msgresult.retcode=msgcodes.SUCCESS
             for msg in graph_msgs:

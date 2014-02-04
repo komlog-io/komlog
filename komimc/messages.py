@@ -34,6 +34,7 @@ UPDATE_GRAPH_WEIGHT_MESSAGE='UPDGRW'
 UPDATE_QUOTES_MESSAGE='UPDQUO'
 RESOURCE_AUTHORIZATION_UPDATE_MESSAGE='RESAUTH'
 UPDATE_CARD_MESSAGE='UPDCARD'
+PLOT_STORE_MESSAGE='PLTSTO'
 
 #MODULE LIST
 VALIDATION='Validation'
@@ -42,6 +43,7 @@ TEXTMINING='Textmining'
 GESTCONSOLE='Gestconsole'
 RESCONTROL='Rescontrol'
 CARDMANAGER='Cardmanager'
+PLOTTER='Plotter'
 
 
 #MESSAGE MAPPINGS
@@ -56,7 +58,8 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           UPDATE_GRAPH_WEIGHT_MESSAGE:'UpdateGraphWeightMessage',
                           UPDATE_QUOTES_MESSAGE:'UpdateQuotesMessage',
                           RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:'ResourceAuthorizationUpdateMessage',
-                          UPDATE_CARD_MESSAGE:'UpdateCardMessage'}
+                          UPDATE_CARD_MESSAGE:'UpdateCardMessage',
+                          PLOT_STORE_MESSAGE:'PlotStoreMessage'}
 
 
 MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
@@ -70,7 +73,8 @@ MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             UPDATE_GRAPH_WEIGHT_MESSAGE:TEXTMINING,
                             UPDATE_QUOTES_MESSAGE:RESCONTROL,
                             RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:RESCONTROL,
-                            UPDATE_CARD_MESSAGE:CARDMANAGER}
+                            UPDATE_CARD_MESSAGE:CARDMANAGER,
+                            PLOT_STORE_MESSAGE:PLOTTER+'.%h'}
 
 
 #MODULE MAPPINGS
@@ -79,7 +83,8 @@ MODULE_TO_ADDRESS_MAPPING={VALIDATION:'%m.%h',
                            TEXTMINING:'%m',
                            GESTCONSOLE:'%m',
                            RESCONTROL:'%m',
-                           CARDMANAGER:'%m'}
+                           CARDMANAGER:'%m',
+                           PLOTTER:'%m.%h'}
 
 
 def get_address(type, module_id, module_instance, running_host):
@@ -314,4 +319,28 @@ class UpdateCardMessage:
             self.date=date
             self.force=force
             self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+self.date.isoformat()+'|'+str(self.force))
+
+class PlotStoreMessage:
+    def __init__(self, qpid_message=None, gid=None,init_date=None,end_date=None):
+        if qpid_message:
+            self.qpid_message=qpid_message
+            mtype,gid,init_date,end_date = self.qpid_message.content.split('|')
+            self.type=mtype
+            self.gid=uuid.UUID(gid)
+            if not init_date=='':
+                self.init_date=dateutil.parser.parse(init_date)
+            else:
+                self.init_date=None
+            if not end_date=='':
+                self.end_date=dateutil.parser.parse(end_date)
+            else:
+                self.end_date=None
+        else:
+            self.type=PLOT_STORE_MESSAGE
+            self.gid=gid
+            self.init_date=init_date if init_date else ''
+            self.end_date=end_date if end_date else ''
+            init_date_iso=self.init_date.isoformat() if init_date else ''
+            end_date_iso=self.end_date.isoformat() if end_date else ''
+            self.qpid_message=Message(self.type+'|'+str(self.gid)+'|'+init_date_iso+'|'+end_date_iso)
 

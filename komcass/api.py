@@ -137,7 +137,7 @@ class DatapointData:
         else:
             self.pid = pid
             self.date = date
-            self.content = content # Number()
+            self.content = content # Decimal()
             self.prestore()
 
     def prestore(self):
