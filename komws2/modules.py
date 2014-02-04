@@ -37,3 +37,8 @@ class AgentMenuConfModule(tornado.web.UIModule):
 class ErrorHelperModule(tornado.web.UIModule):
     def render(self,errorcode):
         return self.render_string('modules/errorhelper.html',errorcode=errorcode)    
+
+class CardsHomeModule(tornado.web.UIModule):
+    def render(self,cardsdata):
+        return self.render_string('modules/cardshome.html',cardsdata=cardsdata)
+

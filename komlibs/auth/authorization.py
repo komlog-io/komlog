@@ -27,7 +27,8 @@ func_requests={'NewAgentRequest':'authorize_new_agent_creation',
                'GetGraphConfigRequest':'authorize_get_graph_config',
                'GraphUpdateConfigurationRequest':'authorize_graph_update_configuration',
                'UserUpdateConfigurationRequest':'authorize_user_update_configuration',
-               'AgentUpdateConfigurationRequest':'authorize_agent_update_configuration'
+               'AgentUpdateConfigurationRequest':'authorize_agent_update_configuration',
+               'GetPlotDataRequest':'authorize_get_plot_data',
                }
 
 def authorize_request(request,username,session,aid=None,did=None,pid=None,gid=None,data=None):
@@ -137,5 +138,11 @@ def authorize_agent_update_configuration(params,session):
     username=params['username']
     aid=params['aid']
     if not resauth.authorize_put_agent_config(username,aid,session):
+        raise authexcept.AuthorizationException()
+
+def authorize_get_plot_data(params,session):
+    username=params['username']
+    gid=params['gid']
+    if not resauth.authorize_get_plot_data(username,gid,session):
         raise authexcept.AuthorizationException()
 

@@ -12,6 +12,7 @@ from komlibs.gestaccount import datasources as dsapi
 from komlibs.gestaccount import datapoints as dpapi
 from komlibs.gestaccount import graphs as graphapi
 from komlibs.gestaccount import exceptions as gestexcept
+from komlibs.gestaccount import cards as gestcards
 from komlibs.auth import authorization
 from komlibs.auth import exceptions as authexcept
 import auth
@@ -506,7 +507,9 @@ class UserHomeHandler(BaseHandler):
                         dsurl='/etc/ds/'+did_s
                         dss.append({'ds_name':dsinfo.dsname,'did':did_s,'url':dsurl})
                 data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
-        self.render('home.html',userdata=data,page_title='Komlog - Home',navitem=0)
+        ''' now obtain cards data'''
+        cards=gestcards.get_homecards(uid=useruidr.uid, session=self.application.cf, msgbus=self.application.mb)
+        self.render('home.html',userdata=data,cardsdata=cards, page_title='Komlog - Home',navitem=0)
 
 class GraphCreationHandler(tornado.web.RequestHandler):
 
@@ -642,4 +645,27 @@ class LogoutHandler(tornado.web.RequestHandler):
         self.clear_cookie("komlog_user")
         self.clear_cookie("komlog_agent")
         self.redirect(self.get_login_url())
+
+class PlotDataHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def get(self,p_gid):
+        try:
+            gid=uuid.UUID(p_gid)
+            authorization.authorize_request(request='GetPlotDataRequest',username=self.user,session=self.application.cf,gid=gid)
+            image = graphapi.get_plotimage(username=self.user, session=self.application.cf, msgbus=self.application.mb, gid=gid)
+            self.set_header('Content-type', 'image/png')
+            self.set_header('Content-length', len(image))
+            self.set_status(200)
+            self.write(image)
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access Denied'}))
+        except gestexcept.DatasourceNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message': 'Datasource not found'}))
+        except Exception as e:
+            print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
 

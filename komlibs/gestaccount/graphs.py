@@ -11,6 +11,7 @@ author: jcazor
 import uuid
 import json
 import os
+import os.path
 import random
 from datetime import datetime
 from komcass import api as cassapi
@@ -106,5 +107,10 @@ def update_graph_configuration(gid, session, data):
     else:
         raise exceptions.GraphUpdateException()
 
+def get_plotimage(username, session, msgbus, gid):
+    ruta='/var/local/komlog/plots'
+    plot=str(gid)+'.png'
+    if os.path.isfile(os.path.join(ruta,plot)):
+        return open(os.path.join(ruta,plot),'rb').read()
 
 

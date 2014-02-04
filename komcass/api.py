@@ -1846,8 +1846,8 @@ class DatasourceCard:
     def get_datapoints(self):
         return self._datapoints
 
-    def add_datapoint(self, dtp_name,dtp_value):
-        dtp_pair=(dtp_name,str(dtp_value))
+    def add_datapoint(self, dtp_name,dtp_value,dtp_color):
+        dtp_pair=(dtp_name,str(dtp_value),dtp_color)
         self._datapoints.append(dtp_pair)
         self._datapoints=list(set(self._datapoints))
 
@@ -1909,9 +1909,12 @@ class UserDsCard:
             self._cards.pop(did)
         return True
 
-def get_userdscard(uid,session):
+def get_userdscard(uid,session,count=None):
+    kwargs={}
+    if count:
+        kwargs['column_count']=int(count)
     try:
-        schemaobj=session.get(schema.UserDsCardORM(key=uid))
+        schemaobj=session.get(schema.UserDsCardORM(key=uid),kwargs)
         return schemaobj.to_apiobj()
     except NotFoundException:
         return None
@@ -1949,9 +1952,12 @@ class AgentDsCard:
             self._cards.pop(did)
         return True
 
-def get_agentdscard(aid,session):
+def get_agentdscard(aid,session,count=None):
+    kwargs={}
+    if count:
+        kwargs['column_count']=int(count)
     try:
-        schemaobj=session.get(schema.AgentDsCardORM(key=aid))
+        schemaobj=session.get(schema.AgentDsCardORM(key=aid),kwargs)
         return schemaobj.to_apiobj()
     except NotFoundException:
         return None

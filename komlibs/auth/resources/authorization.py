@@ -160,3 +160,13 @@ def authorize_put_agent_config(username,aid,session):
     else:
         return False
 
+def authorize_get_plot_data(username,gid,session):
+    if not gid:
+        return False
+    useruidr=cassapi.get_useruidrelation(username,session)
+    usergraphperms=cassapi.get_usergraphperms(useruidr.uid,session,gid=gid)
+    if usergraphperms:
+        return True
+    else:
+        return False
+

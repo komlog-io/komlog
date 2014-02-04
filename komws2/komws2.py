@@ -36,6 +36,7 @@ class Application(tornado.web.Application):
                     (r"/etc/usr/?", handlers.UserCreationHandler),
                     (r"/var/ds/("+UUID4_REGEX+")", handlers.DatasourceDataHandler),
                     (r"/var/dp/("+UUID4_REGEX+")", handlers.DatapointDataHandler),
+                    (r"/var/static/plot/("+UUID4_REGEX+")", handlers.PlotDataHandler),
 #                     (r"/home/(\w+)/config", handlers.UserConfigHandler),
 #                     (r"/home/(\w+)", handlers.UserHomeHandler)]
                     (r"/home/config", handlers.UserConfigHandler),
@@ -46,7 +47,8 @@ class Application(tornado.web.Application):
               "NavMenu" : modules.NavMenuModule,
               "AgentMenu" : modules.AgentMenuModule,
               "AgentMenuConf" : modules.AgentMenuConfModule,
-              "ErrorHelper" : modules.ErrorHelperModule
+              "ErrorHelper" : modules.ErrorHelperModule,
+              "CardsHome" : modules.CardsHomeModule
               }
         # Defino la variable settings para manejar mejor las variables de la aplicacion
         settings_vars = {

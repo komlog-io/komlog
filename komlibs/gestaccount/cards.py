@@ -6,6 +6,8 @@ This file implements some CARD operations
 @date: 2014/02/03
 
 '''
+import operator
+from komcass import api as cassapi
 
 def calculate_card_priority(dscard):
     '''
@@ -27,3 +29,26 @@ def calculate_card_priority(dscard):
     if len(hex_prio)==1:
         hex_prio='0'+hex_prio
     return hex_prio.upper()
+
+def get_homecards(uid, session, msgbus):
+    data=[]
+    userdscards=cassapi.get_userdscard(uid,session,count=6)
+    cards=userdscards.get_cards()
+    sorted_cards=sorted(cards.iteritems(),key=operator.itemgetter(1))
+    for card in sorted_cards:
+        dscard=cassapi.get_datasourcecard(card[0],session)
+        if not dscard:
+            continue
+        else:
+            cardinfo={}
+            cardinfo['title']=dscard.ds_name
+            cardinfo['subtitle']=dscard.ag_name
+            cardinfo['date']=dscard.ds_date
+            cardinfo['imgs']=dscard.get_graphs()
+            cardinfo['table']=dscard.get_datapoints()
+            cardinfo['news']=dscard.get_anomalies()
+            data.append(cardinfo)
+    return data
+
+
+

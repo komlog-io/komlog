@@ -441,10 +441,12 @@ class Cardmanager(modules.Module):
                 else:
                     break
         for pid in pids:
-            dtpinfo=cassapi.get_dtpinfo(pid,{'name':''},self.cf)
+            dtpinfo=cassapi.get_dtpinfo(pid,{'name':'','default_color':''},self.cf)
             dtpdata=cassapi.get_datapointdata(pid,self.cf,date=date)
             if dtpdata and dtpinfo:
-                dscard.add_datapoint(dtpinfo.dbcols['name'],dtpdata.content)
+                if not dtpinfo.dbcols.has_key('default_color'):
+                    dtpinfo.dbcols['default_color']='#FF00FF'
+                dscard.add_datapoint(dtpinfo.dbcols['name'],dtpdata.content,dtpinfo.dbcols['default_color'])
         priority=gestcard.calculate_card_priority(dscard)
         userdscard=cassapi.UserDsCard(dscard.uid)
         agentdscard=cassapi.AgentDsCard(dscard.aid)
