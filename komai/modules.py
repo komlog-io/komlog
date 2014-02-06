@@ -318,6 +318,10 @@ class Textmining(modules.Module):
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         for did in datasources.keys():
+            dsinfo=cassapi.get_dsinfo(did,{'last_mapped':u''},self.cf)
+            if dsinfo:
+                newmsg=messages.UpdateCardMessage(did=did,date=dsinfo.last_mapped,force=True)
+                msgresult.add_msg_originated(newmsg)
             dsgw=cassapi.DatasourceGraphWeight(did)
             dsgw.add_graph(gid,weights[did])
             cassapi.insert_datasourcegraphweight(dsgw,self.cf)
@@ -385,8 +389,8 @@ class Cardmanager(modules.Module):
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         if not force:
-            last_date=dsinfo.last_mapped
-            td=timedelta(minutes=15)
+            last_date=dscard.ds_date
+            td=timedelta(minutes=5)
             if date-td>last_date:
                 force=True
         if not force:

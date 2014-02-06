@@ -20,6 +20,7 @@ import os
 import uuid
 import datetime
 import dateutil.parser
+import json
 
 class BaseHandler(tornado.web.RequestHandler):
     
@@ -68,6 +69,7 @@ class AgentConfigHandler(tornado.web.RequestHandler):
         try:
             aid=uuid.UUID(p_aid)
             authorization.authorize_request(request='GetAgentConfigRequest',username=self.user,session=self.application.cf,aid=aid)
+            print 'AUTORIZADO'
             data=agapi.get_agentconfig(aid,self.application.cf,dids_flag=True)
             self.set_status(200)
             self.write(json_encode(data))
@@ -132,12 +134,13 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
     @auth.agentauthenticated
     def post(self,p_did):
         did=uuid.UUID(p_did)
+        aid=uuid.UUID(self.agent)
         ctype=self.request.headers.get('Content-Type')
         content=self.request.body
         dest_dir=self.application.dest_dir
         if ctype.find('application/json')>=0:
             try:
-                authorization.authorize_request(request='PostDatasourceDataRequest',username=self.user,session=self.application.cf,aid=self.agent,did=did)
+                authorization.authorize_request(request='PostDatasourceDataRequest',username=self.user,session=self.application.cf,aid=aid,did=did)
                 destfile=dsapi.upload_content(did,content,self.application.cf,dest_dir)
                 self.set_status(202)
             except authexcept.AuthorizationException:
@@ -150,7 +153,8 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             except gestexcept.DatasourceNotFoundException:
                 self.set_status(404)
                 self.write(json_encode({'message':'Not Found'}))
-            except TypeError:
+            except TypeError as e:
+                print str(e)
                 self.set_status(400)
                 self.write(json_encode({'message':'Bad Parameters'}))
             except Exception as e:
@@ -506,6 +510,7 @@ class UserHomeHandler(BaseHandler):
                         did_s=str(did)
                         dsurl='/etc/ds/'+did_s
                         dss.append({'ds_name':dsinfo.dsname,'did':did_s,'url':dsurl})
+                print agentinfo.__dict__
                 data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
         ''' now obtain cards data'''
         cards=gestcards.get_homecards(uid=useruidr.uid, session=self.application.cf, msgbus=self.application.mb)
@@ -611,12 +616,11 @@ class LoginHandler(tornado.web.RequestHandler):
         username=self.get_argument("username")
         password=self.get_argument("password")
         agentid=self.get_argument("agent",None)
-        agentidsecret=self.get_argument("agentsecret",None)
+        signature=self.get_argument("signature",None)
         useruidr=cassapi.get_useruidrelation(username,self.application.cf)
         error=u"?error=1"
         if useruidr:
             userinfo=cassapi.get_userinfo(useruidr.uid,{'password':u''},self.application.cf)
-            print userinfo.__dict__
             if userinfo.password==usrapi.get_hpassword(useruidr.uid,password):
                 self.set_secure_cookie("komlog_user",username,httponly=True)#, secure=True)
                 if not agentid:
@@ -627,12 +631,18 @@ class LoginHandler(tornado.web.RequestHandler):
                     except Exception:
                         self.set_status('400')
                     else:
-                        agentinfo=cassapi.get_agentinfo(aid,{'agentkey'},self.application.cf)
-                        agentid2=agapi.decrypt(agentinfo.agentkey,agentidsecret)
-                        if agentid==agentid2:
-                            self.set_secure_cookie('komlog_agent',agentid, httponly=True)#, secure=True)
-                            self.redirect('/etc/ag/'+agentid+'/')
-
+                        useragentr=cassapi.get_useragentrelation(useruidr.uid,self.application.cf,{aid:''})
+                        agentinfo=cassapi.get_agentinfo(aid,{'agentkey':''},self.application.cf)
+                        if agentinfo and useragentr:
+                            if agapi.verify_signature(agentinfo.agentkey,agentid,signature):
+                                self.set_secure_cookie('komlog_agent',agentid, httponly=True)#, secure=True)
+                                self.redirect('/etc/agent/'+agentid)
+                            else:
+                                self.clear_cookie("komlog_user")
+                                self.set_status(403)
+                        else:
+                            self.clear_cookie("komlog_user")
+                            self.set_status(403)
             else:
                 self.redirect(self.get_login_url()+error)
         else:

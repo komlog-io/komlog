@@ -90,6 +90,8 @@ def get_datasourcedata(did,session,date=None):
         raise exceptions.DatasourceNotFoundException()
 
 def upload_content(did,content,session,dest_dir):
+    print 'ENTRAMOS A UPLOAD'
+    print did
     dsinfo=cassapi.get_dsinfo(did,{},session)
     if dsinfo:
         now=datetime.utcnow().isoformat()

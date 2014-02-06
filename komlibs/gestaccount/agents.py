@@ -12,12 +12,24 @@ from komlibs.gestaccount import exceptions
 from komlibs.ifaceops import operations
 from komimc import messages
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA256
+from base64 import b64encode, b64decode
 
 
 def decrypt(pubkey,cmsg):
     pubkey=RSA.importKey(pubkey)
     return pubkey.decrypt(cmsg)
 
+def verify_signature(pubkey,text,b64sign):
+    rsakey=RSA.importKey(pubkey)
+    signer = PKCS1_v1_5.new(rsakey)
+    digest = SHA256.new()
+    digest.update(text)
+    signature=b64decode(b64sign)
+    if signer.verify(digest,signature):
+        return True
+    return False
     
 def create_agent(username,agentname,agentkey,version,session,msgbus):
     '''

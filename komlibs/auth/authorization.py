@@ -44,8 +44,8 @@ def authorize_new_agent_creation(params,session):
 def authorize_get_agent_config(params,session):
     username=params['username']
     aid=params['aid']
-    if not quoauth.authorize_get_agent_config(username,aid,session) \
-        or not resauth.authorize_get_agent_config(username,aid,session):
+    if not quoauth.authorize_get_agent_config(username=username,aid=aid,session=session) \
+        or not resauth.authorize_get_agent_config(username=username,aid=aid,session=session):
         raise authexcept.AuthorizationException()
 
 def authorize_get_ds_data(params,session):
@@ -60,7 +60,7 @@ def authorize_post_ds_data(params,session):
     did=params['did']
     aid=params['aid']
     if not quoauth.authorize_post_ds_data(username,aid,did,session) \
-        or not resauth.authorize_get_ds_data(username,aid,did,session):
+        or not resauth.authorize_post_ds_data(username,aid,did,session):
         raise authexcept.AuthorizationException()
 
 def authorize_get_ds_config(params,session):

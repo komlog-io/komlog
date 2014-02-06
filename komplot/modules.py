@@ -88,7 +88,7 @@ class Plotter(modules.Module):
         dtpdata={}
         for pid in graphdtp:
             dtpinfo[pid]=graphinfo.get_datapoint_info(pid)
-            dtpdataarray=cassapi.get_datapointdata(pid,self.cf,fromdate=init_date,todate=end_date)
+            dtpdataarray=cassapi.get_datapointdata(pid,self.cf,fromdate=init_date,todate=end_date,reverse=True) 
             dtpdata[pid]={}
             for dtpdataobj in dtpdataarray:
                 dates[dtpdataobj.date]=''

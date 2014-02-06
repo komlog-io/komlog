@@ -13,8 +13,8 @@ from komcass import api as cassapi
 def authorize_get_agent_config(username,session,aid):
     if not aid:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    useragentperms=cassapi.get_useragentperms(useruidr.uid,session,aid=aid)
+    useruidr=cassapi.get_useruidrelation(username=username,session=session)
+    useragentperm=cassapi.get_useragentperms(uid=useruidr.uid,session=session,aid=aid)
     if useragentperm:
         return True
     else:

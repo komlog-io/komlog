@@ -4,6 +4,7 @@ This library implements some color functions
 
 '''
 
+import random
 
 def get_randomcolor():
     r = lambda: random.randint(0,255)

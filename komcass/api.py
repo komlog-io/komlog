@@ -152,16 +152,17 @@ def insert_datapointdata(dtpobj,session):
     else:
         return False
 
-def get_datapointdata(pid,session,date=None,fromdate=None,todate=None):
+def get_datapointdata(pid,session,date=None,fromdate=None,todate=None,reverse=False):
     dtpdatas=[]
     kwargs={}
+    kwargs['column_reversed']=reverse
     if date:
         kwargs['columns']=(date,)
         start_date=date
         end_date=date
     elif fromdate and todate:
-        kwargs['column_start']=fromdate
-        kwargs['column_finish']=todate
+        kwargs['column_finish']=fromdate if reverse else todate
+        kwargs['column_start']=todate if reverse else fromdate
         start_date=fromdate
         end_date=todate
     elif todate:
@@ -173,7 +174,7 @@ def get_datapointdata(pid,session,date=None,fromdate=None,todate=None):
         kwargs['column_start']=fromdate
         start_date=fromdate
         end_date=todate+timedelta(days=1)
-    for date in datefuncs.get_range(start_date,end_date,interval='days',num=1,reverse_order=True if kwargs.has_key('column_reversed') else False):
+    for date in datefuncs.get_range(start_date,end_date,interval='days',num=1,reverse_order=kwargs['column_reversed']):
         try:
             dbobj=session.get(schema.DatapointDataORM(key=pid,dbdict={date:u''}),kwargs)
             if dbobj:
@@ -508,7 +509,7 @@ def get_useruidrelation(username, session):
     try:
         dbobj=session.get(schema.UserUIDRelationORM(key=username,dbdict={}))
         return UserUIDRelation(username=dbobj.key,uid=dbobj.dbdict.keys()[0])
-    except NotFoundException:
+    except Exception as e:
         return None
 
 class EmailUIDRelation:
@@ -891,7 +892,8 @@ class DatasourceInfo:
         for field in ('aid','uid','dsname','dstype','last_received','last_mapped','creation_date',\
                       'state','script_name','day_of_week','month','day_of_month','hour','minute'):
             try:
-                self.dbdict[field]=getattr(self, field)
+                if getattr(self,field):
+                    self.dbdict[field]=getattr(self, field)
             except AttributeError:
                 pass
 
@@ -950,6 +952,8 @@ def delete_ds(dsinfo,session):
 def update_ds(dsinfo,session):
     try:
         dsinfo._prestore()
+        print 'vamos a insertar'
+        print str(dsinfo.__dict__)
         session.insert(schema.DatasourceInfoORM(key=dsinfo.key, dbdict=dsinfo.dbdict))
         return True
     except Exception as e:
@@ -1129,6 +1133,15 @@ def get_graphdatasourceweight(gid,session):
 def insert_graphdatasourceweight(gdswobj,session):
     try:
         if session.insert(schema.GraphDatasourceWeightORM(apiobj=gdswobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def delete_graphdatasourceweight(gdswobj,session):
+    try:
+        if session.remove(schema.GraphDatasourceWeightORM(key=gdswobj.gid)):
             return True
         else:
             return False

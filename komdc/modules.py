@@ -138,11 +138,13 @@ class Storing(modules.Module):
                 dsobj=cassapi.DatasourceData(did=did,date=ds_date,content=ds_content)
                 try:
                     if cassapi.insert_datasourcedata(dsobj,self.cass_cf):
+                        dsinfo=cassapi.DatasourceInfo(did,last_received=ds_date)
+                        cassapi.update_ds(dsinfo,self.cass_cf)
                         self.logger.debug(filename+' stored successfully : '+str(did)+' '+str(ds_date))
                         fo = os.path.join(self.params['outputdir'],os.path.basename(filename)[:-5]+'.sspl')
                         os.rename(filename,fo)
                         newmsg=messages.MapVarsMessage(did=did,date=ds_date)
-                        msgresult.add_msg_originated(msg)
+                        msgresult.add_msg_originated(newmsg)
                         msgresult.retcode=msgcodes.SUCCESS
                     else:
                         fo = filename[:-5]+'.xspl'

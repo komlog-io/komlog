@@ -38,7 +38,8 @@ def agentauthenticated(method):
     @functools.wraps(method)
     def authlogic(self,*args,**kwargs):
         self.agent=self.get_secure_cookie("komlog_agent")
-        if not self.agent:
+        self.user=self.get_secure_cookie("komlog_user")
+        if not self.agent or not self.user:
             if self.request.method in ('GET','HEAD','PUT','POST'):
                 url = self.get_login_url()
                 if "?" not in url:

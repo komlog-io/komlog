@@ -35,6 +35,7 @@ def create_graph(username,graphname,pid,datapointname,session,msgbus):
         dtpinfo.dbcols['default_color']=colors.get_randomcolor()
         cassapi.update_dtp(dtpinfo,session)
     datapointcolor=dtpinfo.dbcols['default_color']
+    datapointname=dtpinfo.dbcols['name']
     graphinfo.add_datapoint(pid,datapointcolor,datapointname)
     message=messages.UpdateGraphWeightMessage(gid=gid)
     if cassapi.create_graph(graphinfo,session):
@@ -113,4 +114,34 @@ def get_plotimage(username, session, msgbus, gid):
     if os.path.isfile(os.path.join(ruta,plot)):
         return open(os.path.join(ruta,plot),'rb').read()
 
+
+def add_datapoint_to_existing_graph(username, gid, pid, session, msgbus):
+    useruidr=cassapi.get_useruidrelation(username,session)
+    if not useruidr:
+        raise exceptions.UserNotFoundException()
+    uid=useruidr.uid
+    graphinfo=cassapi.get_graphinfo(gid,session)
+    dtpinfo=cassapi.get_dtpinfo(pid,{},session)
+    if not graphinfo:
+        raise exceptions.GraphNotFoundException()
+    if not dtpinfo:
+        raise exceptions.DatapointNotFoundException()
+    if not dtpinfo.dbcols.has_key('default_color'):
+        dtpinfo.dbcols['default_color']=colors.get_randomcolor()
+        cassapi.update_dtp(dtpinfo,session)
+    datapointcolor=dtpinfo.dbcols['default_color']
+    datapointname=dtpinfo.dbcols['name']
+    graphinfo.add_datapoint(pid,datapointcolor,datapointname)
+    message=messages.UpdateGraphWeightMessage(gid=gid)
+    if cassapi.create_graph(graphinfo,session):
+        msgbus.sendMessage(message)
+        ''' Before returning, send quote and resource authorization message '''
+        operation=operations.NewGraphOperation(uid=uid,gid=gid)
+        message=messages.UpdateQuotesMessage(operation=operation)
+        msgbus.sendMessage(message)
+        message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
+        msgbus.sendMessage(message)
+        return {'gid':str(gid)}
+    else:
+        raise exceptions.GraphCreationException()
 
