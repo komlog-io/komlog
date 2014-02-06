@@ -125,7 +125,7 @@ class Plotter(modules.Module):
         plt.setp(ax.get_xticklabels(), fontsize=5)
         plt.setp(ax.get_yticklabels(), fontsize=6)
         if len(legends)<4:
-            plt.legend(p1,legends,loc=0,prop={'size':6})
+            plt.legend(p1,legends,loc=2,prop={'size':6})
         plt.gcf().autofmt_xdate()
         plt.savefig(os.path.join(self.params['plot_dest_dir'],str(gid)))
         msgresult.retcode=msgcodes.SUCCESS
