@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block jsDefinition %}
+<script src="{{ static_url("js/jquery-1.10.2.js") }}" type="text/javascript"></script>
+<script type="text/javascript">
+function updateprofile(){
+    email=$('#email').val();
+    old_p=$('#old_p').val();
+    new_p=$('#new_p').val();
+    new_p2=$('#new_p2').val();
+    data={}
+    if (old_p==''){alert('Old password can\'t be empty');}
+    else if (new_p!=new_p2){alert('Passwords don\'t match');}
+    else if (new_p==old_p){alert('New and old password is the same');}
+    else if (new_p=='' && email==''){alert('Nothing to update');}
+    else{
+        data['old_password']=old_p;
+        if (email!=''){data['email']=email;}
+        if (new_p!=''){data['new_password']=new_p;}
+        $.ajax({
+            url:'/home/profile',
+            type: 'PUT',
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function(data) {
+                    alert('Update successfull.');
+                      }
+        });
+       }
+   } 
+</script>
+{% end %}
+
+{% block body %}
+<aside id="c_sidebar_left" class="float_left">
+Menu Lateral Usuario
+</aside>
+
+<section id="c_content" class="float_left">
+	{% module UserProfile(data) %}
+</section>
+{% end %}

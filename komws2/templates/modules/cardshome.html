@@ -3,8 +3,8 @@ Descripcion: Fichero para renderizar la parte del HOME de CARDS -->
 <div id="cards">
 	{% for card in cardsdata  %}
 	<div id="card">
-		<h1>{{ card['title'] }}</h1>
-		{{ card['subtitle'] }}
+		<h1><a href="/home/ds/{{ card['did'] }}">{{ card['title'] }}</a></h1>
+		<a href="/home?a={{ card['aid'] }}">{{ card['subtitle'] }}</a>
 		{% for img in card['imgs'] %}
 		<img src=/var/static/plot/{{ img }}>
 		{% end %}

@@ -69,7 +69,6 @@ class AgentConfigHandler(tornado.web.RequestHandler):
         try:
             aid=uuid.UUID(p_aid)
             authorization.authorize_request(request='GetAgentConfigRequest',username=self.user,session=self.application.cf,aid=aid)
-            print 'AUTORIZADO'
             data=agapi.get_agentconfig(aid,self.application.cf,dids_flag=True)
             self.set_status(200)
             self.write(json_encode(data))
@@ -90,9 +89,12 @@ class AgentConfigHandler(tornado.web.RequestHandler):
             aid=uuid.UUID(p_aid)
             authorization.authorize_request('AgentUpdateConfigurationRequest',self.user, aid=aid, session=self.application.cf)
             data=json_decode(self.request.body)
-            agapi.update_agent_config(self.user, aid, data, self.application.cf, self.application.mb)
+            agapi.update_agent_config(username=self.user,aid=aid,data=data,session=self.application.cf,msgbus=self.application.mb)
             self.set_status(200)
             self.write(json_encode({'message':'Operation completed'}))
+        except ValueError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
         except authexcept.AuthorizationException:
             self.set_status(403)
             self.write(json_encode({'message':'Access Denied'}))
@@ -196,7 +198,7 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
             did=uuid.UUID(p_did)
             authorization.authorize_request(request='DatasourceUpdateConfigurationRequest',username=self.user,session=self.application.cf,did=did)
             data=json_decode(self.request.body)
-            dsapi.update_datasourceconfig(did,self.application.cf,data)
+            dsapi.update_datasourceconfig(did=did,session=self.application.cf,data=data)
             self.set_status(200)
             self.write(json_encode({'message':'Operation completed'}))
         except authexcept.AuthorizationException:
@@ -225,7 +227,6 @@ class DatasourceCreationHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def post(self):
-        #suponemos que aquí llega una vez ha validado
         try:
             data=json_decode(self.request.body)
             aid=uuid.UUID(data['aid'])
@@ -240,7 +241,7 @@ class DatasourceCreationHandler(tornado.web.RequestHandler):
         else:
             try:
                 authorization.authorize_request('NewDatasourceRequest',self.user,session=self.application.cf,aid=aid)
-                data=dsapi.create_datasource(self.user,aid,ds_name,ds_type,ds_params,self.application.cf,self.application.mb)
+                data=dsapi.create_datasource(username=self.user,aid=aid,dsname=ds_name,dstype=ds_type,dsparams=ds_params,session=self.application.cf,msgbus=self.application.mb)
                 self.set_status(200)
                 self.write(json_encode(data))
             except authexcept.AuthorizationException:
@@ -272,16 +273,11 @@ class UserCreationHandler(tornado.web.RequestHandler):
             password=u''+data['password']
             email=u''+data['email']
         except Exception as e:
-            print 'Exception en el handler'
-            print str(e)
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
-                print 'llamamos a usrapi.create_user'
                 data=usrapi.create_user(username,password,email,self.application.cf,self.application.mb)
-                print 'Datos recibidos',
-                print data
                 self.set_status(200)
                 self.write(json_encode(data))
             except gestexcept.UserAlreadyExistsException:
@@ -301,17 +297,11 @@ class UserCreationHandler(tornado.web.RequestHandler):
 class UserConfirmationHandler(tornado.web.RequestHandler):
 
     def get(self):
-        print 'Entramos en UserConfirmationHandler'
         #Aquí llega a traves de un enlace generado dinámicamente durante el alta
         code=self.get_argument('c') #confirmation cod3 
-        print code
         email=self.get_argument('e') #email
-        print email
         try:
-            print 'llamamos a usrapi.confirm_user'
             data=usrapi.confirm_user(email,code,self.application.cf)
-            print 'Datos recibidos',
-            print data
             self.set_status(200)
             self.write(json_encode(data))
         except gestexcept.UserNotFoundException:
@@ -383,7 +373,7 @@ class DatapointConfigHandler(tornado.web.RequestHandler):
             pid=uuid.UUID(p_pid)
             authorization.authorize_request(request='DatapointUpdateConfigurationRequest',username=self.user,session=self.application.cf,pid=pid)
             data=json_decode(self.request.body)
-            dpapi.update_datapointconfig(pid,self.application.cf,data)
+            dpapi.update_datapointconfig(pid=pid,session=self.application.cf,data=data)
             self.set_status(200)
             self.write(json_encode({'message':'Operation completed'}))
         except authexcept.AuthorizationException:
@@ -418,7 +408,7 @@ class DatapointCreationHandler(tornado.web.RequestHandler):
             did=data['did']
             cs=data['cs'] #char start
             vl=data['vl'] #var length
-            dpname=data['ds_name'] #dp name
+            dpname=data['dtp_name'] #dp name
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
@@ -462,16 +452,33 @@ class UserConfigHandler(BaseHandler):
                         dsurl='/etc/ds/'+did_s
                         dss.append({'ds_name':dsinfo.dsname,'did':did_s,'url':dsurl})
                 data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
-        self.render('config.html',userdata=data,page_title='Komlog - Config',navitem=1)
+        self.render('config.html',userdata=data,page_title='Komlog')
+
+class UserProfileHandler(BaseHandler):
+
+    @auth.userauthenticated
+    def get(self):
+        try:
+            data=usrapi.get_userprofile(username=self.user, session=self.application.cf)
+            print 'TENEMOS LOS DATOS'
+            print data
+            self.render('profile.html',data=data,page_title='Komlog')
+        except Exception as e:
+            print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
     @auth.userauthenticated
     def put(self):
         try:
-            authorization.authorize_request('UserUpdateConfigurationRequest',self.user, session=self.application.cf)
+            authorization.authorize_request('UserUpdateProfileRequest',self.user, session=self.application.cf)
             data=json_decode(self.request.body)
-            usrapi.update_user_configuration(self.user, data, self.application.cf, self.application.mb)
+            usrapi.update_userprofile(self.user, data, self.application.cf, self.application.mb)
             self.set_status(200)
             self.write(json_encode({'message':'Operation completed'}))
+        except ValueError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Error in JSON data received'}))
         except authexcept.AuthorizationException:
             self.set_status(403)
             self.write(json_encode({'message':'Access Denied'}))
@@ -484,7 +491,6 @@ class UserConfigHandler(BaseHandler):
         except Exception as e:
             print str(e)
             self.set_status(500)
-            self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
 
 class UserHomeHandler(BaseHandler):
@@ -495,6 +501,13 @@ class UserHomeHandler(BaseHandler):
         if not useruidr:
             self.set_status(404)
             self.write(json_encode({'message': 'User not found'}))
+        s_aid=self.get_argument('a',default=None)
+        q_aid=None
+        if s_aid:
+            try:
+                q_aid=uuid.UUID(s_aid)
+            except Exception:
+                self.redirect('/home')
         useragentr=cassapi.get_useragentrelation(useruidr.uid,self.application.cf)
         data=[]
         if useragentr:
@@ -513,8 +526,15 @@ class UserHomeHandler(BaseHandler):
                 print agentinfo.__dict__
                 data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
         ''' now obtain cards data'''
-        cards=gestcards.get_homecards(uid=useruidr.uid, session=self.application.cf, msgbus=self.application.mb)
-        self.render('home.html',userdata=data,cardsdata=cards, page_title='Komlog - Home',navitem=0)
+        if q_aid and not q_aid in useragentr.aids:
+            print 'REDIRIGIENDO'
+            self.redirect('/home')
+        else:
+            print useragentr.aids
+            print 'PUES SI ESTa'
+            print aid
+            cards=gestcards.get_homecards(uid=useruidr.uid, aid=q_aid, session=self.application.cf, msgbus=self.application.mb)
+            self.render('home.html',userdata=data,cardsdata=cards, page_title='Komlog')
 
 class GraphCreationHandler(tornado.web.RequestHandler):
 
@@ -523,8 +543,10 @@ class GraphCreationHandler(tornado.web.RequestHandler):
         try:
             data=json_decode(self.request.body)
             graphname=data['graph_name']
-            pid=uuid.UUID(data['pid'])
-            dtpname=data['datapoint_name']
+            dtp_list=data['dtp_list']
+            pids=[]
+            for dtp in dtp_list:
+                pids.append(uuid.UUID(dtp))
         except Exception as e:
             print 'Exception en el handler'
             print str(e)
@@ -532,8 +554,9 @@ class GraphCreationHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
-                authorization.authorize_request(request='NewGraphRequest',username=self.user,session=self.application.cf,pid=pid)
-                data=graphapi.create_graph(self.user,graphname,pid,dtpname,self.application.cf,self.application.mb)
+                for pid in pids:
+                    authorization.authorize_request(request='NewGraphRequest',username=self.user,session=self.application.cf,pid=pid)
+                data=graphapi.create_graph(username=self.user,graphname=graphname,pids=pids,session=self.application.cf,msgbus=self.application.mb)
                 self.set_status(200)
                 self.write(json_encode(data))
             except authexcept.AuthorizationException:

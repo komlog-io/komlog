@@ -53,11 +53,14 @@ def get_datapointconfig(pid,session):
     data={}
     data['pid']=str(pid)
     if dtpinfo:
-        for key in ('name','did','decimalseparator','default_color'):
-            try:
-                data[key]=dtpinfo.dbcols[key]
-            except KeyError:
-                pass
+        if dtpinfo.dbcols.has_key('name') and dtpinfo.dbcols['name']:
+            data['dtp_name']=dtpinfo.dbcols['name']
+        if dtpinfo.dbcols.has_key('did') and dtpinfo.dbcols['did']:
+            data['did']=dtpinfo.dbcols['did']
+        if dtpinfo.dbcols.has_key('default_color') and dtpinfo.dbcols['default_color']:
+            data['dtp_color']=dtpinfo.dbcols['default_color']
+        if dtpinfo.dbcols.has_key('decimalseparator') and dtpinfo.dbcols['decimalseparator']:
+            data['dtp_decimalseparator']=dtpinfo.dbcols['decimalseparator']
     else:
         raise exceptions.DatapointNotFoundException()
     return data
@@ -65,11 +68,11 @@ def get_datapointconfig(pid,session):
 def update_datapointconfig(pid,session,data):
     dtpinfo=cassapi.get_dtpinfo(pid,{},session)
     if dtpinfo:
-        if data.has_key('name'):
-            dtpinfo.dbcols['name']=u''+data['name']
-        if data.has_key('default_color'):
-            if colors.validate_hexcolor(data['default_color']):
-                dtpinfo.dbcols['default_color']=u''+data['default_color']
+        if data.has_key('dtp_name'):
+            dtpinfo.dbcols['name']=u''+data['dtp_name']
+        if data.has_key('dtp_color'):
+            if colors.validate_hexcolor(data['dtp_color']):
+                dtpinfo.dbcols['default_color']=u''+data['dtp_color']
             else:
                 raise exceptions.BadParametersException()
         if cassapi.update_dtp(dtpinfo,session):

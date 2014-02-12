@@ -42,3 +42,7 @@ class CardsHomeModule(tornado.web.UIModule):
     def render(self,cardsdata):
         return self.render_string('modules/cardshome.html',cardsdata=cardsdata)
 
+class UserProfileModule(tornado.web.UIModule):
+    def render(self,data):
+        return self.render_string('modules/userprofile.html',data=data)
+

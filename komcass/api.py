@@ -152,7 +152,7 @@ def insert_datapointdata(dtpobj,session):
     else:
         return False
 
-def get_datapointdata(pid,session,date=None,fromdate=None,todate=None,reverse=False):
+def get_datapointdata(pid,session,date=None,fromdate=None,todate=None,reverse=False,num_regs=100):
     dtpdatas=[]
     kwargs={}
     kwargs['column_reversed']=reverse
@@ -174,12 +174,14 @@ def get_datapointdata(pid,session,date=None,fromdate=None,todate=None,reverse=Fa
         kwargs['column_start']=fromdate
         start_date=fromdate
         end_date=todate+timedelta(days=1)
+    kwargs['column_count']=num_regs
     for date in datefuncs.get_range(start_date,end_date,interval='days',num=1,reverse_order=kwargs['column_reversed']):
         try:
             dbobj=session.get(schema.DatapointDataORM(key=pid,dbdict={date:u''}),kwargs)
             if dbobj:
                 for date,content in dbobj.get_dbdict().iteritems():
                     dtpdatas.append(DatapointData(pid=dbobj.get_key(),date=date,content=content))
+                kwargs['column_count']=kwargs['column_count']-len(dtpdatas)
         except NotFoundException:
             pass
     if len(dtpdatas)>0:

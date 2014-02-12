@@ -30,16 +30,11 @@
 			<header id="c_header" class="float_left">
 			{% block header %}
 				<div id="c_logo" class="float_left">
-					<a href="#" title="Home">KOMLOG LOGO</a>
+					<a href="/home" title="Home">KOMLOG LOGO</a>
 				</div>
 				{% module UserHeader() %}
 			{% end %}
 			</header>
-			<nav id="c_navbar" class="float_left">
-			{% block navbar %}
-				{% module NavMenu(navitem) %}
-			{% end %}	
-			</nav>
 			
 			{% block body %}
 			{% end %}
@@ -47,7 +42,7 @@
 		<footer>
 			{% block footer %}
 			<p>
-				&copy; Copyright by
+				&copy; Copyright by Komlog
 			</p>
 			{% end %}
 		</footer>

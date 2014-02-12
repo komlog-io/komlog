@@ -37,9 +37,8 @@ class Application(tornado.web.Application):
                     (r"/var/ds/("+UUID4_REGEX+")", handlers.DatasourceDataHandler),
                     (r"/var/dp/("+UUID4_REGEX+")", handlers.DatapointDataHandler),
                     (r"/var/static/plot/("+UUID4_REGEX+")", handlers.PlotDataHandler),
-#                     (r"/home/(\w+)/config", handlers.UserConfigHandler),
-#                     (r"/home/(\w+)", handlers.UserHomeHandler)]
                     (r"/home/config", handlers.UserConfigHandler),
+                    (r"/home/profile", handlers.UserProfileHandler),
                     (r"/home", handlers.UserHomeHandler)]
                 # Listado de modulos de interfaz
         modules_list = {
@@ -48,7 +47,8 @@ class Application(tornado.web.Application):
               "AgentMenu" : modules.AgentMenuModule,
               "AgentMenuConf" : modules.AgentMenuConfModule,
               "ErrorHelper" : modules.ErrorHelperModule,
-              "CardsHome" : modules.CardsHomeModule
+              "CardsHome" : modules.CardsHomeModule,
+              "UserProfile" : modules.UserProfileModule
               }
         # Defino la variable settings para manejar mejor las variables de la aplicacion
         settings_vars = {

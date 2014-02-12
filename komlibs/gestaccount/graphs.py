@@ -20,23 +20,24 @@ from komimc import messages
 from komlibs.ifaceops import operations
 from komlibs.general import colors
 
-def create_graph(username,graphname,pid,datapointname,session,msgbus):
+def create_graph(username,graphname,pids,session,msgbus):
     now=datetime.utcnow()
     useruidr=cassapi.get_useruidrelation(username,session)
     if not useruidr:
         raise exceptions.UserNotFoundException()
     uid=useruidr.uid
     gid=uuid.uuid4()
-    dtpinfo=cassapi.get_dtpinfo(pid,{},session)
-    if not dtpinfo:
-        raise exceptions.DatapointNotFoundException()
     graphinfo=cassapi.GraphInfo(gid,uid,graphname)
-    if not dtpinfo.dbcols.has_key('default_color'):
-        dtpinfo.dbcols['default_color']=colors.get_randomcolor()
-        cassapi.update_dtp(dtpinfo,session)
-    datapointcolor=dtpinfo.dbcols['default_color']
-    datapointname=dtpinfo.dbcols['name']
-    graphinfo.add_datapoint(pid,datapointcolor,datapointname)
+    for pid in pids:
+        dtpinfo=cassapi.get_dtpinfo(pid,{},session)
+        if not dtpinfo:
+            raise exceptions.DatapointNotFoundException()
+        if not dtpinfo.dbcols.has_key('default_color'):
+            dtpinfo.dbcols['default_color']=colors.get_randomcolor()
+            cassapi.update_dtp(dtpinfo,session)
+        datapointcolor=dtpinfo.dbcols['default_color']
+        datapointname=dtpinfo.dbcols['name']
+        graphinfo.add_datapoint(pid,datapointcolor,datapointname)
     message=messages.UpdateGraphWeightMessage(gid=gid)
     if cassapi.create_graph(graphinfo,session):
         msgbus.sendMessage(message)

@@ -3,6 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from matplotlib.ticker import MaxNLocator
 import os.path
 import uuid
 import sections, options
@@ -58,6 +59,8 @@ class Plotter(modules.Module):
                 self.logger.exception('Exception processing message: '+mtype)
             except Exception as e:
                 self.logger.exception('Exception processing message: '+str(e))
+            else:
+                msgresult=None
 
     def process_msg_PLTSTO(self, message):
         '''
@@ -88,7 +91,7 @@ class Plotter(modules.Module):
         dtpdata={}
         for pid in graphdtp:
             dtpinfo[pid]=graphinfo.get_datapoint_info(pid)
-            dtpdataarray=cassapi.get_datapointdata(pid,self.cf,fromdate=init_date,todate=end_date,reverse=True) 
+            dtpdataarray=cassapi.get_datapointdata(pid,self.cf,fromdate=init_date,todate=end_date,reverse=True,num_regs=500) 
             dtpdata[pid]={}
             for dtpdataobj in dtpdataarray:
                 dates[dtpdataobj.date]=''
@@ -122,6 +125,7 @@ class Plotter(modules.Module):
             line.set_color(colors[i])
         ax.xaxis.set_major_formatter(dateFmt)
         plt.subplots_adjust(top=0.85)
+        plt.gca().yaxis.set_major_locator(MaxNLocator(nbins=5))
         plt.setp(ax.get_xticklabels(), fontsize=5)
         plt.setp(ax.get_yticklabels(), fontsize=6)
         if len(legends)<4:

@@ -5,10 +5,10 @@ Descripcion: Fichero para renderizar la parte del header dependiente del usuario
 	<table>
 		<tr>
 			<td class="row_avatar"><img class="img_avatar" src="../static/img/test_avatar.png" /></td>
-			<td class="row_username"> {{ current_user }}
+			<td class="row_username"><a href="/home/profile">{{ current_user }}</a>
 			<br/>
 			<span id="c_date">{{ date }}</span></td>
-			<td class="row_button"><a class="big_button button_settings" title="Settings" href="#"></a></td>
+			<td class="row_button"><a class="big_button button_settings" title="Settings" href="/home/config"></a></td>
 			<td class="row_button"><a class="big_button button_logout" title="Logout" href="/logout"></a></td>
 		</tr>
 	</table>

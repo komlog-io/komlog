@@ -61,7 +61,7 @@ def confirm_user(email, code, session):
         raise exceptions.UserConfirmationException()
     return {'result':email+' confirmation OK'}
     
-def update_user_configuration(username, params, session, msgbus):
+def update_userprofile(username, params, session, msgbus):
     ''' This function is used to update user configuration parameters.
     Parameters supported:
         - password
@@ -71,9 +71,7 @@ def update_user_configuration(username, params, session, msgbus):
     if not uidr:
         raise exceptions.UserNotFoundException()
     uid=uidr.uid
-    print 'El UID: '+str(uid)
     userinfo=cassapi.get_userinfo(uid,{},session)
-    print 'USERINFO: '+str(userinfo.__dict__)
     userinfo_bck=userinfo
     if not userinfo:
         raise Exception
@@ -85,7 +83,6 @@ def update_user_configuration(username, params, session, msgbus):
         raise exceptions.BadParametersException()
     if params.has_key('new_password') and params.has_key('old_password'):
         if not userinfo.password==get_hpassword(uid,params['old_password']):
-            print 'Password incorrecto'
             raise exceptions.BadParametersException()
         if params['new_password']==params['old_password']:
             raise exceptions.BadParametersException()
@@ -93,32 +90,27 @@ def update_user_configuration(username, params, session, msgbus):
     old_email=None
     if params.has_key('email'):
         params['email']=params['email'].lower()
-        print 'Entramos al procesamiento del email'
         new_email=params['email']
-        emailuidr=cassapi.get_emailuidrelation(new_email, session)
-        if emailuidr:
-            ''' Email already used'''
-            print 'Email already used'
-            raise exceptions.BadParametersException()
-        old_email=userinfo.email
-        if old_email:
-            emailuidr=cassapi.get_emailuidrelation(old_email,session)
+        if not new_email==userinfo.email:
+            emailuidr=cassapi.get_emailuidrelation(new_email, session)
             if emailuidr:
-                if emailuidr.uid==uid:
-                    print 'Ahora borraria la relacion email-uid actual'
-                    if not cassapi.delete_emailuidrelation(emailuidr,session):
-                        raise Exception
-                else:
-                    'WTF: email not associated with current uid...data integrity problem...'
-                    pass
-        userinfo.email=params['email']
-        new_emailuidr=cassapi.EmailUIDRelation(userinfo.email, uid)
-        print 'Ahora insertaria la nueva relacion email-uid: '+str(new_emailuidr.__dict__)
-        if not cassapi.insert_emailuidrelation(new_emailuidr,session):
-            print 'Error al insertar la nueva relacion email-uid'
-            raise Exception
+                ''' Email already used'''
+                raise exceptions.BadParametersException()
+            old_email=userinfo.email
+            if old_email:
+                emailuidr=cassapi.get_emailuidrelation(old_email,session)
+                if emailuidr:
+                    if emailuidr.uid==uid:
+                        if not cassapi.delete_emailuidrelation(emailuidr,session):
+                            raise Exception
+                    else:
+                        'WTF: email not associated with current uid...data integrity problem...'
+                        pass
+            userinfo.email=params['email']
+            new_emailuidr=cassapi.EmailUIDRelation(userinfo.email, uid)
+            if not cassapi.insert_emailuidrelation(new_emailuidr,session):
+                raise Exception
     if cassapi.update_user(userinfo,session):
-        print 'Actualizado Usuario OK'
         return True
     else:
         if old_email:
@@ -127,4 +119,14 @@ def update_user_configuration(username, params, session, msgbus):
         new_emailuidr=cassapi.EmailUIDRelation(params['email'],uid)
         cassapi.delete_emailuidrelation(new_emailuidr,session)
         return False
+
+def get_userprofile(username, session):
+    useruidr=cassapi.get_useruidrelation(username,session)
+    if not useruidr:
+        raise exceptions.UserNotFoundException()
+    data={}
+    userinfo=cassapi.get_userinfo(useruidr.uid,{},session)
+    data['email']=userinfo.email if userinfo.email else ''
+    return data
+
 

@@ -30,10 +30,17 @@ def calculate_card_priority(dscard):
         hex_prio='0'+hex_prio
     return hex_prio.upper()
 
-def get_homecards(uid, session, msgbus):
+def get_homecards(session, msgbus, uid=None, aid=None):
     data=[]
-    userdscards=cassapi.get_userdscard(uid,session,count=6)
-    cards=userdscards.get_cards()
+    if aid:
+        dscards=cassapi.get_agentdscard(aid,session,count=6)
+    elif uid:
+        dscards=cassapi.get_userdscard(uid,session,count=6)
+    else:
+        return data
+    if not dscards:
+        return data
+    cards=dscards.get_cards()
     sorted_cards=sorted(cards.iteritems(),key=operator.itemgetter(1))
     for card in sorted_cards:
         dscard=cassapi.get_datasourcecard(card[0],session)
@@ -42,7 +49,9 @@ def get_homecards(uid, session, msgbus):
         else:
             cardinfo={}
             cardinfo['title']=dscard.ds_name
+            cardinfo['did']=dscard.did
             cardinfo['subtitle']=dscard.ag_name
+            cardinfo['aid']=dscard.aid
             cardinfo['date']=dscard.ds_date
             cardinfo['imgs']=dscard.get_graphs()
             cardinfo['table']=dscard.get_datapoints()

@@ -129,9 +129,10 @@ def get_datasourceconfig(did,session):
 def update_datasourceconfig(did,session,data):
     dsinfo=cassapi.get_dsinfo(did,{},session)
     if dsinfo:
-        for dbkey,webkey in types.DSPARAMS_WEB2DB[dsinfo.dstype]:
-            if data.has_key(webkey):
-                setattr(dsinfo,dbkey,data[webkey])
+        if data.has_key('ds_params'):
+            for dbkey,webkey in types.DSPARAMS_WEB2DB[dsinfo.dstype]:
+                if data['ds_params'].has_key(webkey):
+                    setattr(dsinfo,dbkey,data['ds_params'][webkey])
         if data.has_key('ds_name'):
             dsinfo.dsname=data['ds_name']
         if dsinfo.dstype==types.DS_STR2INT['script']:

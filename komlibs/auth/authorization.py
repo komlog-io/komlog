@@ -27,6 +27,7 @@ func_requests={'NewAgentRequest':'authorize_new_agent_creation',
                'GetGraphConfigRequest':'authorize_get_graph_config',
                'GraphUpdateConfigurationRequest':'authorize_graph_update_configuration',
                'UserUpdateConfigurationRequest':'authorize_user_update_configuration',
+               'UserUpdateProfileRequest':'authorize_user_update_profile',
                'AgentUpdateConfigurationRequest':'authorize_agent_update_configuration',
                'GetPlotDataRequest':'authorize_get_plot_data',
                }
@@ -132,6 +133,10 @@ def authorize_graph_update_configuration(params,session):
 
 def authorize_user_update_configuration(params,session):
     #If user authentication was successfull, authorization to its own user config is granted
+    pass
+
+def authorize_user_update_profile(params,session):
+    #If user authentication was successfull, authorization to its own user profile is granted
     pass
 
 def authorize_agent_update_configuration(params,session):

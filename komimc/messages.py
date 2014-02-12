@@ -133,6 +133,7 @@ def process_msg_result(msg_result,msg_bus,logger):
     for msg in msg_result.get_msg_originated():
         if msg_bus.sendMessage(msg):
             logger.debug('Message Sent: '+msg.qpid_message.content)
+    return True
 
 
 class StoreSampleMessage:
