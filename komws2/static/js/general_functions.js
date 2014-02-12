@@ -43,15 +43,39 @@ function loadItemContent(id,item){
 
 function getAC(id){ 
     url="/etc/agent/"+id;
-    /*request=$.ajax({url:url,dataType: "json"}).done(function (data) { $("#ContentBox").html(data); });*/
-    $("#c_content").load(url)
+    $.ajax({ url: url, dataType: "json", success: function(data) {
+                agtable=$('<table></table>');
+                agtable.append('<tr><td>Agent Name: </td><td><input type="text" id="ag_name" value="'+data['ag_name']+'"></td></tr>');
+                var button = $("<input />").attr('type','button');
+                button.attr('value','Update');
+                button.attr('onClick','updateAgent("'+data['aid']+'")');
+                $("#c_content").empty();
+                $("#c_content").append(agtable);
+                $("#c_content").append(button);
+                }
+        });
 }
 
 function getDC(id){ 
     url="/etc/ds/"+id;
-    //request=$.ajax({url:url,dataType: "json"}).done(function (data) { $("#ContentBox").html(data); });
-    $("#c_content").load(url)
+    $.ajax({ url: url, dataType: "json", success: function(data) {
+                dstable=$('<table></table>');
+                dstable.append('<tr><td>Report Name: </td><td><input type="text" id="ds_name" value="'+data['ds_name']+'"></td></tr>');
+                dstable.append('<tr><td>Minute: </td><td><input type="text" id="minute" value="'+data['ds_params']['min']+'"></td></tr>');
+                dstable.append('<tr><td>Hour: </td><td><input type="text" id="hour" value="'+data['ds_params']['hour']+'"></td></tr>');
+                dstable.append('<tr><td>Day of Week: </td><td><input type="text" id="day_of_week" value="'+data['ds_params']['dow']+'"></td></tr>');
+                dstable.append('<tr><td>Month: </td><td><input type="text" id="month" value="'+data['ds_params']['month']+'"></td></tr>');
+                dstable.append('<tr><td>Day of Month: </td><td><input type="text" id="day_of_month" value="'+data['ds_params']['dom']+'"></td></tr>');
+                var button = $("<input />").attr('type','button');
+                button.attr('value','Update');
+                button.attr('onClick','updateDatasource("'+data['did']+'")');
+                $("#c_content").empty();
+                $("#c_content").append(dstable);
+                $("#c_content").append(button);
+                }
+        });
 }
+
 
 function labelSubstringStartingAtOfLength(string,index,length) {
           prefix=string.substr(0, index);
@@ -110,3 +134,57 @@ function creaDCForm(did){
     $('#c_content').replaceWith('<div class="span10" id="c_content"></div>');
     $('#c_content').append($form);
 }
+
+
+function updateAgent(aid){
+    url='/etc/agent/'+aid
+    ag_name=$('#ag_name').val();
+    data={}
+    if (ag_name==''){alert('Agent name can\'t be empty');}
+    else{
+        data['ag_name']=ag_name;
+        $.ajax({
+            url: url,
+            type: 'PUT',
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function(data) {
+                    alert('Update successfull.');
+                      }
+        });
+       }
+   } 
+
+function updateDatasource(did){
+    url='/etc/ds/'+did
+    ds_name=$('#ds_name').val();
+    script=$('#script').val();
+    minute=$('#minute').val();
+    hour=$('#hour').val();
+    day_of_week=$('#day_of_week').val();
+    month=$('#month').val();
+    day_of_month=$('#day_of_month').val();
+    data={}
+    if (ds_name==''){alert('Report name can\'t be empty');}
+    else if (script==''){alert('Script name can\'t be empty');}
+    else{
+        data['ds_name']=ds_name;
+        params={}
+        params['script_name']=script;
+        if (minute==''){params['min']='*';}else{params['min']=minute;}
+        if (hour==''){params['hour']='*';}else{params['hour']=hour;}
+        if (month==''){params['month']='*';}else{params['month']=month;}
+        if (day_of_week==''){params['dow']='*';}else{params['dow']=day_of_week;}
+        if (day_of_month==''){params['dom']='*';}else{params['dom']=day_of_month;}
+        data['ds_params']=params;
+        $.ajax({
+            url: url,
+            type: 'PUT',
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function(data) {
+                    alert('Update successfull.');
+                      }
+        });
+       }
+   } 
