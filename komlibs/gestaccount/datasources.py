@@ -29,7 +29,8 @@ def create_datasource(username,aid,dsname,dstype,dsparams,session,msgbus):
         for dbkey,webkey in types.DSPARAMS_WEB2DB[dstype]:
             kwargs[dbkey]=dsparams[webkey]
         if dstype==types.DS_STR2INT['script']:
-            cronentry=crontab.CrontabEntry(**kwargs)
+            cronentry=crontab.CrontabEntry(min=kwargs['minute'],hour=kwargs['hour'],dow=kwargs['day_of_week'],month=kwargs['month'], \
+                                           dom=kwargs['day_of_month'],script_name=kwargs['script_name'])
             if not cronentry.validate_entry():
                 raise Exception()
     except Exception as e:

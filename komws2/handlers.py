@@ -230,8 +230,8 @@ class DatasourceCreationHandler(tornado.web.RequestHandler):
         try:
             data=json_decode(self.request.body)
             aid=uuid.UUID(data['aid'])
-            ds_name=str(data['ds_name'])
-            ds_type=str(data['ds_type'])
+            ds_name=data['ds_name']
+            ds_type=data['ds_type']
             ds_params=data['ds_params']
         except Exception as e:
             print 'Exception en el handler'

@@ -1817,7 +1817,7 @@ def get_userifacedeny(uid,session,iface=None):
     try:
         kwargs={}
         if iface:
-            kwargs['columns']=(iface,)
+            kwargs['columns']=[aniface for aniface in iface]
         schemaobj=session.get(schema.UserIfaceDenyORM(key=uid),kwargs)
         return schemaobj.to_apiobj()
     except NotFoundException:

@@ -52,6 +52,20 @@ function getAC(id){
                 $("#c_content").empty();
                 $("#c_content").append(agtable);
                 $("#c_content").append(button);
+                var newDs = $("<div></div>");
+                newDs.append('<table></table>');
+                newDs.append('<tr><td>Report Name: </td><td><input type="text" id="ds_name"></td></tr>');
+                newDs.append('<tr><td>Script Name: </td><td><input type="text" id="script"></td></tr>');
+                newDs.append('<tr><td>Minute: </td><td><input type="text" id="minute"></td></tr>');
+                newDs.append('<tr><td>Hour: </td><td><input type="text" id="hour"></td></tr>');
+                newDs.append('<tr><td>Day of Week: </td><td><input type="text" id="day_of_week"></td></tr>');
+                newDs.append('<tr><td>Month: </td><td><input type="text" id="month"></td></tr>');
+                newDs.append('<tr><td>Day of Month: </td><td><input type="text" id="day_of_month"></td></tr>');
+                var newDsBtn = $("<input />").attr('type','button');
+                newDsBtn.attr('value','Add Report');
+                newDsBtn.attr('onClick','newDatasource("'+data['aid']+'")');
+                newDs.append(newDsBtn);
+                $("#c_content").append(newDs);
                 }
         });
 }
@@ -61,6 +75,7 @@ function getDC(id){
     $.ajax({ url: url, dataType: "json", success: function(data) {
                 dstable=$('<table></table>');
                 dstable.append('<tr><td>Report Name: </td><td><input type="text" id="ds_name" value="'+data['ds_name']+'"></td></tr>');
+                dstable.append('<tr><td>Script Name: </td><td><input type="text" id="script" value="'+data['ds_params']['script_name']+'"></td></tr>');
                 dstable.append('<tr><td>Minute: </td><td><input type="text" id="minute" value="'+data['ds_params']['min']+'"></td></tr>');
                 dstable.append('<tr><td>Hour: </td><td><input type="text" id="hour" value="'+data['ds_params']['hour']+'"></td></tr>');
                 dstable.append('<tr><td>Day of Week: </td><td><input type="text" id="day_of_week" value="'+data['ds_params']['dow']+'"></td></tr>');
@@ -184,6 +199,42 @@ function updateDatasource(did){
             data: JSON.stringify(data),
             success: function(data) {
                     alert('Update successfull.');
+                      }
+        });
+       }
+   } 
+
+function newDatasource(aid){
+    url='/etc/ds';
+    ds_name=$('#ds_name').val();
+    script=$('#script').val();
+    minute=$('#minute').val();
+    hour=$('#hour').val();
+    day_of_week=$('#day_of_week').val();
+    month=$('#month').val();
+    day_of_month=$('#day_of_month').val();
+    data={}
+    data['aid']=aid;
+    if (ds_name==''){alert('Report name can\'t be empty');}
+    else if (script==''){alert('Script name can\'t be empty');}
+    else{
+        data['ds_name']=ds_name;
+        data['ds_type']='script';
+        params={}
+        params['script_name']=script;
+        if (minute==''){params['min']='*';}else{params['min']=minute;}
+        if (hour==''){params['hour']='*';}else{params['hour']=hour;}
+        if (month==''){params['month']='*';}else{params['month']=month;}
+        if (day_of_week==''){params['dow']='*';}else{params['dow']=day_of_week;}
+        if (day_of_month==''){params['dom']='*';}else{params['dom']=day_of_month;}
+        data['ds_params']=params;
+        $.ajax({
+            url: url,
+            type: 'POST',
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function(data) {
+                    alert('Report Created Successfully');
                       }
         });
        }
