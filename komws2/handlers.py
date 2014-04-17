@@ -145,6 +145,7 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
                 authorization.authorize_request(request='PostDatasourceDataRequest',username=self.user,session=self.application.cf,aid=aid,did=did)
                 destfile=dsapi.upload_content(did,content,self.application.cf,dest_dir)
                 self.set_status(202)
+                self.write(json_encode({'message':'Data received'}))
             except authexcept.AuthorizationException:
                 self.set_status(403)
                 self.write(json_encode({'message':'Access Denied'}))
@@ -225,11 +226,11 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
 
 class DatasourceCreationHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.agentauthenticated
     def post(self):
         try:
             data=json_decode(self.request.body)
-            aid=uuid.UUID(data['aid'])
+            aid=uuid.UUID(self.agent)
             ds_name=data['ds_name']
             ds_type=data['ds_type']
             ds_params=data['ds_params']
