@@ -52,8 +52,8 @@ header, section, footer, aside, nav, article, figure {
  * Estilos de la pagina base
  */
 #c_container {
-	width: 990px;
-	height: 580px;
+	width: 1400px;
+	height: 900px;
 	position:relative;
 	margin: auto;
 	border:2px solid #CCC;
@@ -61,27 +61,27 @@ header, section, footer, aside, nav, article, figure {
 }
 
 #c_header {
-	width: 990px;
+	width: 1400px;
 	height: 68px;
 	border-bottom:2px solid #CCC;
 }
 
 #c_navbar {
-	width: 990px;
+	width: 1400px;
 	height: 48px;
 	border-bottom:2px solid #CCC;
 }
 
 #c_sidebar_left {
-	width: 188px;
-	height: 460px;
+	width: 300px;
+	height: 600px;
 	border-right:2px solid #CCC;
 	overflow: auto;
 }
 
 #c_content {
-	width: 800px;
-	height: 460px;
+	width: 1000px;
+	height: 800px;
 	overflow: auto;
 }
 
