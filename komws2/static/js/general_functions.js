@@ -1,23 +1,63 @@
-/**
- * @author Javi
- */
 
-/*
- * Funcion para incializar el jsTree
- */
+function drag_start(e) {
+    console.log('drag started');
+    var window=$(this).parent();
+    var id=window.attr('id');
+    var obj_left=window.offset().left;
+    var obj_top=window.offset().top;
+    var mouse_left=e.originalEvent.pageX;
+    var mouse_top=e.originalEvent.pageY;
+    console.log(obj_left+','+obj_top+','+mouse_left+','+mouse_top);
+    e.originalEvent.dataTransfer.setData("text/plain",obj_left+','+obj_top+','+mouse_left+','+mouse_top+','+id);
+} 
+
+function drag_enter(e) { 
+    console.log('drag enter');
+    e.preventDefault();
+    e.stopPropagation();
+    return false; 
+} 
+
+function drag_over(e) { 
+    console.log('drag over');
+    e.preventDefault();
+    e.stopPropagation();
+    return false; 
+} 
+
+function drop(e) { 
+    console.log('drop');
+    e.preventDefault();
+    e.stopPropagation();
+    var data = e.originalEvent.dataTransfer.getData("text/plain").split(',');
+    var final_left = parseInt(data[0])-parseInt(data[2])+parseInt(e.originalEvent.pageX);
+    var final_top = parseInt(data[1])-parseInt(data[3])+parseInt(e.originalEvent.pageY);
+    console.log(data);
+    var dm = $('#'+data[4]);
+    if (dm) {
+        console.log('Cambiando coordenadas a: '+final_left+','+final_top);
+        dm.offset({top:final_top,left:final_left});
+        console.log(dm.position());
+    }
+    return false;
+} 
+
+function close_window() {
+    $(this).parent().parent().remove();
+}
 
 function initTree(id_div) {
-	$(function() {
-		$("#"+id_div).jstree({
-			"themes" : {
-				"theme" : "komlog",
-				"icons" : false
-			},
-			"plugins" : ["themes", "ui", "html_data"]
-		}).bind("select_node.jstree", function(e, data) {
-			loadItemContent(data.rslt.obj[0].id,data.rslt.obj[0].textContent);
-		});
-	});
+  $(function() {
+    $("#"+id_div).jstree({
+      "themes" : {
+        "theme" : "komlog",
+        "icons" : false
+      },
+      "plugins" : ["themes", "ui", "html_data"]
+    }).bind("select_node.jstree", function(e, data) {
+      loadItemContent(data.rslt.obj[0].id,data.rslt.obj[0].textContent);
+    });
+  });
 }
 
 /*
@@ -25,19 +65,19 @@ function initTree(id_div) {
  */
 
 function loadItemContent(id,item){
-	if (id) {
-		var itemtype=id.split("#")[0];
-		var itemid=id.split("#")[1];
-		item=item.replace(/^\s+/g, '');
-		switch (itemtype) {
-			case "AC": getAC(itemid);
-						break;
-			case "DC": getDC(itemid);
-						break;
-			case "DD": getDD(itemid,item);
-						break;			
-		}
-	}
+  if (id) {
+    var itemtype=id.split("#")[0];
+    var itemid=id.split("#")[1];
+    item=item.replace(/^\s+/g, '');
+    switch (itemtype) {
+      case "AC": getAC(itemid);
+            break;
+      case "DC": getDC(itemid);
+            break;
+      case "DD": getDD(itemid,item);
+            break;      
+    }
+  }
 }
 
 
@@ -111,14 +151,28 @@ function prepareDSContent(data) {
 
 function getDD(id,title){
     url="/var/ds/"+id
-    //$("#ContentBox").load(url)
-    $.getJSON(url,function(data){
-        content=prepareDSContent(data)
-        doc=$("<h3/>").html(title)
-        $("#c_content").empty()
-        $("<pre/>").html(content).appendTo(doc)
-        $("<div/>").html(doc).appendTo("#c_content")}
-        )
+    var obj = $('#'+id+'.c_window');
+    console.log(obj.attr('id'));
+    if (obj.attr('id') === undefined) {
+      $.getJSON(url,function(data){
+          content=prepareDSContent(data);
+          var window = $("<div>").addClass("c_window");
+          window.attr('id',id);
+          window.appendTo("#c_content")
+          var window_title = $("<h3>").html(title).attr("draggable","true");
+          window_title.on('dragstart',drag_start);
+          window_title.appendTo(window);
+          var button_bar = $('<div>').addClass('button_bar');
+          var button_close = $('<p>').addClass('button_close').text('X');
+          button_close.click(close_window);
+          button_close.appendTo(button_bar);
+          button_bar.appendTo(window);
+          $("<pre>").html(content).appendTo(window);
+          $("#c_content").children("#cards").remove();
+          });
+    } else {
+        console.log('window already exists');
+    }
 }
 
 function showC(data){
@@ -239,3 +293,11 @@ function newDatasource(aid){
         });
        }
    } 
+
+function main() {
+    $("#c_content").on('dragover',drag_over);
+    $("#c_content").on('dragenter',drag_enter);
+    $("#c_content").on('drop',drop);
+}
+
+$(document).ready(main);
