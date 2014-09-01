@@ -327,7 +327,7 @@ class DatapointDataHandler(tornado.web.RequestHandler):
             pid=uuid.UUID(p_pid)
             authorization.authorize_request(request='GetDatapointDataRequest',username=self.user,session=self.application.cf,pid=pid)
             strdate=self.get_argument('ld',default=None) #ld : last date
-            date=dateutil.parser.parse(strdate) if strdate else datetime.datetime.utcnow()
+            date=dateutil.parser.parse(strdate) if strdate else None
             data=dpapi.get_datapointdata(pid,self.application.cf,todate=date)
             self.set_status(200)
             self.write(json_encode(data))
@@ -525,7 +525,9 @@ class UserHomeHandler(BaseHandler):
                         dsurl='/etc/ds/'+did_s
                         dss.append({'ds_name':dsinfo.dsname,'did':did_s,'url':dsurl})
                 print agentinfo.__dict__
+                dss=sorted(dss,key=lambda x: x['ds_name'])
                 data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
+            data=sorted(data,key=lambda x: x['agentname'])
         ''' now obtain cards data'''
         if q_aid and not q_aid in useragentr.aids:
             print 'REDIRIGIENDO'

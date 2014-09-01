@@ -10,7 +10,7 @@ from pycassa.cassandra.ttypes import NotFoundException
 import uuid
 import json
 from komlibs.date import datefuncs
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 class DsDtpRelation:
     def __init__(self, did=None, dtps=None, key=None, dbdict=None):
@@ -148,6 +148,13 @@ class DatapointData:
 def insert_datapointdata(dtpobj,session):
     dtpobj.prestore()
     if session.insert(schema.DatapointDataORM(key=dtpobj.key,dbdict=dtpobj.dbdict)):
+        dtpstats=get_datapoint_stats(dtpobj.pid,session)
+        if not dtpstats:
+            dtpstats=DatapointStats(dtpobj.pid,last_received=dtpobj.date)
+            result = update_datapoint_stats(dtpstats,session)
+        elif not dtpstats.last_received or dtpstats.last_received<dtpobj.date:
+            dtpstats.last_received=dtpobj.date
+            result=update_datapoint_stats(dtpstats,session)
         return True
     else:
         return False
@@ -174,6 +181,15 @@ def get_datapointdata(pid,session,date=None,fromdate=None,todate=None,reverse=Fa
         kwargs['column_start']=fromdate
         start_date=fromdate
         end_date=todate+timedelta(days=1)
+    else: 
+        dtp_stats=get_datapoint_stats(pid,session)
+        if not dtp_stats: #similar to todate with end_date set to utcnow
+            end_date=datetime.utcnow()
+        else: #similar to todate but checking what is the last sample received 
+            end_date=dtp_stats.last_received
+        start_date=end_date-timedelta(days=1)
+        kwargs['column_start']=end_date
+        kwargs['column_reversed']=True
     kwargs['column_count']=num_regs
     for date in datefuncs.get_range(start_date,end_date,interval='days',num=1,reverse_order=kwargs['column_reversed']):
         try:
@@ -199,6 +215,24 @@ def delete_datapointdata(pid,date,session):
     else:
         return False
 
+class DatapointStats:
+    def __init__(self,pid,last_received=None):
+        self.pid=pid
+        self.last_received=last_received
+
+def get_datapoint_stats(pid,session):
+    try:
+        schemaobj=session.get(schema.DatapointStatsORM(key=pid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def update_datapoint_stats(datapointstats,session):
+    if not datapointstats:
+        return False
+    if not session.insert(schema.DatapointStatsORM(apiobj=datapointstats)):
+        return False
+    return True
 
 class DatapointDtreePositives:
     def __init__(self, pid):

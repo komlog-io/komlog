@@ -141,23 +141,94 @@ function labelSubstringStartingAtOfLength(string,index,length) {
 }
 
 function prepareDSContent(data) {
-    finalcontent=data.ds_content;
-    vararray=data.ds_vars;
+    var finalcontent=data.ds_content;
+    var vararray=data.ds_vars;
     for (var i = vararray.length; i>0; i--){
         finalcontent=labelSubstringStartingAtOfLength(finalcontent,vararray[i-1][0],vararray[i-1][1]);
     }
-    return finalcontent
+    data.ds_content=finalcontent;
+    return data;
+}
+
+function createGraph(id,data) {
+    var wid = 'a'+id;
+    var width = 750, height = 300;
+    var domainX = d3.extent(data, function(datum) {
+        return datum.timestamp;
+         });
+    var domainY = d3.extent(data, function(datum) {
+        return datum.value;
+        });
+    var rangeX = [50, width], rangeY = [height-50, 0]; //los 30 son los margenes que vamos a dejar para colocar ejes, etc
+    var scaleX = d3.time.scale().domain(domainX).range(rangeX);
+    var scaleY = d3.scale.linear().domain(domainY).range(rangeY);
+    var axisX =  d3.svg.axis().scale(scaleX);
+    var axisY =  d3.svg.axis().scale(scaleY).orient('left');
+    var line = d3.svg.line().x(function(datum) {
+        return scaleX(datum.timestamp);
+        }).y(function(datum) {
+            return scaleY(datum.value);
+        });
+    console.log('Vamos a seleccionar la ventana del grafico');
+    var svg = d3.select('#'+wid).append('svg').attr('width', width).attr('height', height);
+    svg.append('g').attr('class','x axis').attr('transform','translate(0,'+(height-50)+')').call(axisX);
+    svg.append('g').attr('class','y axis').attr('transform','translate(50,0)').call(axisY);
+    console.log('svg creado');
+    var path = svg.append('path').datum(data).attr('class', 'line').attr('d', line).style('fill', 'none').style('stroke', '#FB5050').style('stroke-width', '2px');
+    console.log('Esto ha terminado');
+}
+
+function getGR(id,title) {
+    console.log('Empieza getGR');
+    url="/etc/graph/"+id
+    var wid = 'a'+id;
+    var obj = $(wid+'.c_window');
+    console.log(obj.attr('id'));
+    if (obj.attr('id') === undefined) {
+      $.getJSON(url,function(data){
+          console.log(data.datapoints);
+          console.log('creamos ventana');
+          var window = $("<div>").addClass("c_window");
+          window.attr('id',wid);
+          window.appendTo("#c_content");
+          var window_title = $("<h3>").html(title).attr("draggable","true");
+          window_title.on('dragstart',drag_start);
+          window_title.appendTo(window);
+          var button_bar = $('<div>').addClass('button_bar');
+          var button_close = $('<p>').addClass('button_close').text('X');
+          button_close.click(close_window);
+          button_close.appendTo(button_bar);
+          button_bar.appendTo(window);
+          for (var key in data.datapoints) {
+            var dtp_url='/var/dp/'+key;
+            $.getJSON(dtp_url, function(data2) {
+                var dtp_data=[];
+                for (var i=0;i<data2.length;i++) {
+                    dtp_data.push({
+                        timestamp: new Date(data2[i][0]),
+                        value: data2[i][1]
+                    });
+                }
+                createGraph(id,dtp_data);
+            });
+          }
+          $("#c_content").children("#cards").remove();
+          });
+    } else {
+        console.log('window already exists');
+    }
 }
 
 function getDD(id,title){
     url="/var/ds/"+id
-    var obj = $('#'+id+'.c_window');
+    var wid = 'a'+id;
+    var obj = $('#'+wid+'.c_window');
     console.log(obj.attr('id'));
     if (obj.attr('id') === undefined) {
       $.getJSON(url,function(data){
           content=prepareDSContent(data);
           var window = $("<div>").addClass("c_window");
-          window.attr('id',id);
+          window.attr('id',wid);
           window.appendTo("#c_content")
           var window_title = $("<h3>").html(title).attr("draggable","true");
           window_title.on('dragstart',drag_start);
@@ -167,7 +238,19 @@ function getDD(id,title){
           button_close.click(close_window);
           button_close.appendTo(button_bar);
           button_bar.appendTo(window);
-          $("<pre>").html(content).appendTo(window);
+          $("<pre>").html(content.ds_content).appendTo(window);
+          if (content.ds_graphs) {
+              var graphs = $('<div>').addClass('c_graphs');
+              $('<h4>').text('Related Graphs').appendTo(graphs);
+              graph_list = $('<ul>');
+              $.each(content.ds_graphs, function (index,value) {
+                  $('<a>').text(value[1]).attr('href','#').click(function() {
+                      getGR(value[0],value[1]);
+                  }).appendTo($('<li>').appendTo(graph_list));
+              });
+              graph_list.appendTo(graphs);
+              graphs.appendTo(window);
+          }
           $("#c_content").children("#cards").remove();
           });
     } else {

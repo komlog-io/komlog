@@ -53,6 +53,26 @@ class DatapointDataORM(CassandraBase):
         pkey=str(key)+'_'+date
         super(DatapointDataORM,self).__init__(pkey,dbdict)
 
+class DatapointStatsORM(CassandraBase):
+    __cf__ = 'dtp_stats'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.pid
+            dbdict={}
+            if apiobj.last_received:
+                dbdict['last_received']=apiobj.last_received
+        super(DatapointStatsORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.DatapointStats(self.key)
+        for key,value in self.dbdict.iteritems():
+            if key in ['last_received']:
+                setattr(apiobj,key,value)
+        return apiobj
+
 class DatapointDtreePositivesORM(CassandraBase):
     __cf__ = 'dtp_dtree_positives'
 

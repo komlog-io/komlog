@@ -13,18 +13,20 @@ import uuid
 import json
 import os
 import dateutil.parser
-from datetime import timedelta
+from datetime import timedelta, datetime
 from komcass import api as cassapi
 from komlibs.gestaccount import states,types,exceptions
 from komlibs.general import colors
 from komimc import messages
 
-def get_datapointdata(pid,session,todate):
+def get_datapointdata(pid,session,todate=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
     dtpdatas=cassapi.get_datapointdata(pid,session,todate=todate)
     data=[]
     if not dtpdatas:
+        if not todate:
+            todate=datetime.utcnow()
         last_date=todate-timedelta(days=1)
         raise exceptions.DatapointDataNotFoundException(last_date=last_date)
     else:

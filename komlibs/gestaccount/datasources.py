@@ -79,8 +79,14 @@ def get_datasourcedata(did,session,date=None):
         if dsgraphs:
             graphsweights=[]
             for key,value in dsgraphs.gids.items():
-                graphsweights.append((str(key),value))
-            data['ds_graphs']=graphsweights
+                graphsweights.append((key,value))
+            s_graphs=sorted(graphsweights,key=lambda x:x[1])
+            graphs_info=[]
+            for graph in s_graphs:
+                graph_info=cassapi.get_graphinfo(graph[0],session)
+                if graph_info:
+                    graphs_info.append((str(graph_info.gid),graph_info.name))
+            data['ds_graphs']=graphs_info
         data['did']=str(did)
         data['ds_date']=last_received.isoformat()
         data['ds_vars']=dsvars
