@@ -502,42 +502,7 @@ class UserHomeHandler(BaseHandler):
         if not useruidr:
             self.set_status(404)
             self.write(json_encode({'message': 'User not found'}))
-        s_aid=self.get_argument('a',default=None)
-        q_aid=None
-        if s_aid:
-            try:
-                q_aid=uuid.UUID(s_aid)
-            except Exception:
-                self.redirect('/home')
-        useragentr=cassapi.get_useragentrelation(useruidr.uid,self.application.cf)
-        data=[]
-        if useragentr:
-            for aid in useragentr.aids:
-                agentinfo=cassapi.get_agentinfo(aid,{},self.application.cf)
-                agentdsr=cassapi.get_agentdsrelation(aid,self.application.cf)
-                aid_s=str(aid)
-                agenturl='/etc/agent/'+aid_s
-                dss=[]
-                if agentdsr:
-                    for did in agentdsr.dids:
-                        dsinfo=cassapi.get_dsinfo(did,{},self.application.cf)
-                        did_s=str(did)
-                        dsurl='/etc/ds/'+did_s
-                        dss.append({'ds_name':dsinfo.dsname,'did':did_s,'url':dsurl})
-                print agentinfo.__dict__
-                dss=sorted(dss,key=lambda x: x['ds_name'])
-                data.append({'agentname':agentinfo.agentname,'aid':aid_s,'url':agenturl,'dss':dss})
-            data=sorted(data,key=lambda x: x['agentname'])
-        ''' now obtain cards data'''
-        if q_aid and not q_aid in useragentr.aids:
-            print 'REDIRIGIENDO'
-            self.redirect('/home')
-        else:
-            print useragentr.aids
-            print 'PUES SI ESTa'
-            print aid
-            cards=gestcards.get_homecards(uid=useruidr.uid, aid=q_aid, session=self.application.cf, msgbus=self.application.mb)
-            self.render('home.html',userdata=data,cardsdata=cards, page_title='Komlog')
+        self.render('home.html', page_title='Komlog')
 
 class GraphCreationHandler(tornado.web.RequestHandler):
 

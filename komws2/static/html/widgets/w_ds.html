@@ -1,0 +1,15 @@
+<div draggable class="c_window">
+    <div class="title_bar">
+        <div ng-repeat="ds in ds_c" ng-if="ds.did==widget.did">
+            <h3>{{ ds.name }}</h3>
+        </div>
+    </div>
+    <div class="button_bar">
+        <div class="button_close" ng-click="closeWidget(widget.wid)">
+            <p> 
+            </p>
+        </div>
+    </div>
+    <div class="date_info" ds-date={{widget.did}}></div>
+    <pre ds-content={{widget.did}}></pre>
+</div>

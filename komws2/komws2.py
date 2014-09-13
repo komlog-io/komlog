@@ -16,8 +16,6 @@ from komimc import bus
 from tornado.options import define, options
 define("port", default=8000, help="run on the given port", type=int)
 
-static_path = '/home/komlog/komlog/komws2/static/'
-#favicon_path = '/home/komlog/komlog/komws2/static/favicon.ico'
 
 UUID4_REGEX='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
 class Application(tornado.web.Application):
@@ -43,11 +41,7 @@ class Application(tornado.web.Application):
                 # Listado de modulos de interfaz
         modules_list = {
               "UserHeader" : modules.UserHeaderModule,
-              "NavMenu" : modules.NavMenuModule,
-              "AgentMenu" : modules.AgentMenuModule,
-              "AgentMenuConf" : modules.AgentMenuConfModule,
               "ErrorHelper" : modules.ErrorHelperModule,
-              "CardsHome" : modules.CardsHomeModule,
               "UserProfile" : modules.UserProfileModule
               }
         # Defino la variable settings para manejar mejor las variables de la aplicacion

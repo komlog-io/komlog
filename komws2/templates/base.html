@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="komlogApp">
   <head>
     <meta charset="utf-8" />
 
@@ -15,12 +15,12 @@
     <link href="{{ static_url("css/style.css") }}" rel="stylesheet" media="screen">
     
     {% block jsDefinition %}
-    <script src="{{ static_url("js/jquery-1.10.2.js") }}" type="javascript"></script>
-    <script src="{{ static_url("js/general_functions.js")}}" type="javascript"></script>
+    <script src="{{ static_url("js/komlog.js")}}" type="javascript"></script>
+    <script src="{{ static_url("js/angular.min.js")}}" type="javascript"></script>
     {% end %}
   </head>
 
-  <body>
+  <body ng-controller="mainCtrl">
     <section id="c_container">
       <header id="c_header" class="float_left">
       {% block header %}
