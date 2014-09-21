@@ -25,5 +25,4 @@ DSPARAMS_WEB2DB={DS_STR2INT['script']:[('script_name','script_name'),\
                     ('day_of_month','dom')]}
 
 
-
-
+DS_WIDGET='ds'

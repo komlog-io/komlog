@@ -16,6 +16,7 @@ from datetime import datetime
 from komcass import api as cassapi
 from komfs import api as fsapi
 from komlibs.gestaccount import states,types,exceptions
+from komlibs.gestaccount import widgets as wgapi
 from komlibs.ifaceops import operations
 from komimc import messages
 from komlibs.general import crontab
@@ -55,6 +56,8 @@ def create_datasource(username,aid,dsname,dstype,dsparams,session,msgbus):
         msgbus.sendMessage(message)
         message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
         msgbus.sendMessage(message)
+        ''' create associated widget every time a new ds is created '''
+        wgapi.create_ds_widget(username,did,session,msgbus)
         return {'did':str(did)}
     else:
         raise exceptions.DatasourceCreationException()
@@ -75,18 +78,6 @@ def get_datasourcedata(did,session,date=None):
         dsmapdtps=cassapi.get_datasourcemapdtps(did,last_received,session)
         if dsmapdtps:
             dsdtps=json.loads(dsmapdtps.jsoncontent)
-        dsgraphs=cassapi.get_datasourcegraphweight(did,session)
-        if dsgraphs:
-            graphsweights=[]
-            for key,value in dsgraphs.gids.items():
-                graphsweights.append((key,value))
-            s_graphs=sorted(graphsweights,key=lambda x:x[1])
-            graphs_info=[]
-            for graph in s_graphs:
-                graph_info=cassapi.get_graphinfo(graph[0],session)
-                if graph_info:
-                    graphs_info.append((str(graph_info.gid),graph_info.name))
-            data['ds_graphs']=graphs_info
         data['did']=str(did)
         data['ds_date']=last_received.isoformat()
         data['ds_vars']=dsvars
@@ -117,21 +108,33 @@ def upload_content(did,content,session,dest_dir):
 def get_datasourceconfig(did,session):
     dsinfo=cassapi.get_dsinfo(did,{},session)
     if dsinfo:
-        ds_name=dsinfo.dsname
         last_received=dsinfo.last_received.isoformat() if dsinfo.last_received else None
-        ds_type=types.DS_INT2STR[dsinfo.dstype]
-        params={}
-        for webkey,dbkey in types.DSPARAMS_DB2WEB[dsinfo.dstype]:
-            params[webkey]=getattr(dsinfo,dbkey)
         data={}
         data['did']=str(did)
-        data['ds_name']=ds_name
+        data['aid']=str(dsinfo.aid)
+        data['name']=dsinfo.dsname
         data['last_received']=last_received
-        data['ds_type']=ds_type
-        data['ds_params']=params
         return data
     else:
         raise exceptions.DatasourceNotFoundException()
+
+def get_datasourcesconfig(user,session):
+    useruidr=cassapi.get_useruidrelation(user,session)
+    if not useruidr:
+        raise exceptions.UserNotFoundException()
+    else:
+        useragentr=cassapi.get_useragentrelation(useruidr.uid,session)
+        data=[]
+        if useragentr and useragentr.aids:
+            for aid in useragentr.aids:
+                agentdsr=cassapi.get_agentdsrelation(aid,session)
+                if agentdsr and agentdsr.dids:
+                    for did in agentdsr.dids:
+                        dsinfo=cassapi.get_dsinfo(did,{},session)
+                        if dsinfo:
+                            reg={'did':str(did),'aid':str(dsinfo.aid),'name':dsinfo.dsname}
+                            data.append(reg)
+        return data
 
 def update_datasourceconfig(did,session,data):
     dsinfo=cassapi.get_dsinfo(did,{},session)

@@ -85,3 +85,29 @@ def update_user_graph_perms(params,cf):
             return True
     return False
 
+def update_user_widget_perms(params,cf):
+    if not params.has_key('wid') or not params.has_key('uid'):
+        return False
+    wid=params['wid']
+    uid=params['uid']
+    userwidgetperms=cassapi.UserWidgetPerms(uid)
+    userwidgetperms.add_widget(wid)
+    userwidgetr=cassapi.get_userwidgetrelation(uid,cf,dbcols={wid:u''})
+    if userwidgetr:
+        if cassapi.insert_userwidgetperms(userwidgetperms,cf):
+            return True
+    return False
+
+def update_user_dashboard_perms(params,cf):
+    if not params.has_key('bid') or not params.has_key('uid'):
+        return False
+    bid=params['bid']
+    uid=params['uid']
+    userdashboardperms=cassapi.UserDashboardPerms(uid)
+    userdashboardperms.add_dashboard(bid)
+    userdashboardr=cassapi.get_userdashboardrelation(uid,cf,dbcols={bid:u''})
+    if userdashboardr:
+        if cassapi.insert_userdashboardperms(userdashboardperms,cf):
+            return True
+    return False
+

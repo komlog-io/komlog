@@ -85,9 +85,9 @@ def get_agentconfig(aid,session,dids_flag=False):
     agentinfo=cassapi.get_agentinfo(aid,{},session)
     if agentinfo:
         data['aid']=str(aid)
-        data['ag_name']=agentinfo.agentname
-        data['ag_state']=agentinfo.state
-        data['ag_version']=agentinfo.version
+        data['name']=agentinfo.agentname
+        data['state']=agentinfo.state
+        data['version']=agentinfo.version
         if dids_flag:
             agentdsr=cassapi.get_agentdsrelation(aid,session)
             dids=[]
@@ -99,6 +99,23 @@ def get_agentconfig(aid,session,dids_flag=False):
     else:
         raise exceptions.AgentNotFoundException()
 
+def get_agentsconfig(user,session,dids_flag=False):
+    useruidr=cassapi.get_useruidrelation(user,session)
+    if not useruidr:
+        raise exceptions.UserNotFoundException()
+    else:
+        useragentr=cassapi.get_useragentrelation(useruidr.uid,session)
+        data=[]
+        if useragentr and useragentr.aids:
+            for aid in useragentr.aids:
+                try:
+                    agent_data=get_agentconfig(aid,session,dids_flag)
+                except Exception:
+                    continue
+                else:
+                    data.append(agent_data)
+        return data
+    
 def update_agent_config(username, aid, data, session, msgbus):
     if not data.has_key('ag_name'):
         raise exceptions.BadParametersException()

@@ -96,6 +96,28 @@ def update_quo_static_user_total_datapoints(params,cf):
             return num_dtp
     return None
 
+def update_quo_static_user_total_widgets(params,cf):
+    if not params.has_key('uid'):
+        return None
+    uid=params['uid']
+    uidwidgetr=cassapi.get_userwidgetrelation(uid,cf)
+    if uidwidgetr:
+        num_widgets=str(len(uidwidgetr.wids)) #str because always quote values will be strings
+        if cassapi.set_user_quotes(uid,{'quo_static_user_total_widgets':num_widgets},cf):
+            return num_widgets
+    return None
+
+def update_quo_static_user_total_dashboards(params,cf):
+    if not params.has_key('uid'):
+        return None
+    uid=params['uid']
+    uiddashboardr=cassapi.get_userdashboardrelation(uid,cf)
+    if uiddashboardr:
+        num_dashboards=str(len(uiddashboardr.bids)) #str because always quote values will be strings
+        if cassapi.set_user_quotes(uid,{'quo_static_user_total_dashboards':num_dashboards},cf):
+            return num_dashboards
+    return None
+
 def update_quo_static_agent_total_datasources(params,cf):
     print 'Empezamos agent_tota_ds'
     if not params.has_key('aid'):
@@ -152,72 +174,4 @@ def update_quo_static_ds_total_datapoints(params,cf):
     if cassapi.set_ds_quotes(did,{'quo_static_ds_total_datapoints':num_dtp},cf):
         return num_dtp
     return None
-
-def resauth_update_user_agent_perms(params,cf):
-    if not params.has_key('aid') or not params.has_key('uid'):
-        return False
-    aid=params['aid']
-    uid=params['uid']
-    useragentperms=cassapi.UserAgentPerms(uid).add_agent(aid)
-    useragentr=cassapi.get_useragentrelation(uid,cf,dbcols={aid:u''})
-    if useragentr:
-        if cassapi.insert_useragentperms(useragentperms,cf):
-            return True
-    return False
-
-def resauth_update_user_ds_perms(params,cf):
-    if not params.has_key('did') or not params.has_key('uid') or not params.has_key('aid'):
-        return False
-    did=params['did']
-    uid=params['uid']
-    aid=params['aid']
-    userdsperms=cassapi.UserDsPerms(uid).add_ds(did)
-    agentdsr=cassapi.get_agentdsrelation(aid,cf,dbcols={did:u''})
-    useragentr=cassapi.get_useragentrelation(uid,cf,dbcols={aid:u''})
-    if agentdsr and useragentr:
-        if cassapi.insert_userdsperms(userdsperms,cf):
-                    return True
-    return False
-
-def resauth_update_agent_ds_perms(params,cf):
-    if not params.has_key('did') or not params.has_key('uid') or not params.has_key('aid'):
-        return False
-    did=params['did']
-    uid=params['uid']
-    aid=params['aid']
-    agentdsperms=cassapi.AgentDsPerms(aid).add_ds(did)
-    agentdsr=cassapi.get_agentdsrelation(aid,cf,dbcols={did:u''})
-    useragentr=cassapi.get_useragentrelation(uid,cf,dbcols={aid:u''})
-    if agentdsr and useragentr:
-        if cassapi.insert_agentdsperms(agentdsperms,cf):
-                    return True
-    return False
-
-def resauth_update_user_dtp_perms(params,cf):
-    if not params.has_key('did') or not params.has_key('uid') \
-    or not params.has_key('aid') or not params.has_key('pid'):
-        return False
-    did=params['did']
-    uid=params['uid']
-    aid=params['aid']
-    pid=params['pid']
-    userdtpperms=cassapi.UserDtpPerms(uid).add_dtp(pid)
-    agentdsr=cassapi.get_agentdsrelation(aid,cf,dbcols={did:u''})
-    useragentr=cassapi.get_useragentrelation(uid,cf,dbcols={aid:u''})
-    dsdtpr=cassapi.get_dsdtprelation(did,cf,dbcols={pid:u''})
-    if agentdsr and useragentr and dsdtpr:
-        if cassapi.insert_userdtpperms(userdtpperms,cf):
-            return True
-    return False
-
-def resauth_update_user_graph_perms(params,cf):
-    if not params.has_key('gid') or not params.has_key('uid'):
-        return False
-    gid=params['gid']
-    uid=params['uid']
-    graphinfo=cassapi.get_graphinfo(gid,cf,dbcols={'uid':u''})
-    if graphinfo and graphinfo.uid==uid:
-        if cassapi.insert_usergraphperms(usergraphperms,cf):
-            return True
-    return False
 

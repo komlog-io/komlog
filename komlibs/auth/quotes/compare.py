@@ -87,6 +87,42 @@ def compare_quo_static_user_total_datapoints(params,cf):
                 return True
     return False
 
+def compare_quo_static_user_total_widgets(params,cf):
+    if not params.has_key('uid'):
+        return None
+    uid=params['uid']
+    userquo=cassapi.get_user_quotes(uid,cf)
+    userinfo=cassapi.get_userinfo(uid,{'segment':''},cf)
+    if userinfo:
+        seginfo=cassapi.get_segment_info(userinfo.segment,cf)
+    else:
+        return None
+    if userquo and seginfo:
+        quote=userquo.get_quote('quo_static_user_total_widgets')
+        limit=seginfo.get_param('quo_static_user_max_widgets')
+        if limit:
+            if int(quote)>=int(limit)-1:
+                return True
+    return False
+
+def compare_quo_static_user_total_dashboards(params,cf):
+    if not params.has_key('uid'):
+        return None
+    uid=params['uid']
+    userquo=cassapi.get_user_quotes(uid,cf)
+    userinfo=cassapi.get_userinfo(uid,{'segment':''},cf)
+    if userinfo:
+        seginfo=cassapi.get_segment_info(userinfo.segment,cf)
+    else:
+        return None
+    if userquo and seginfo:
+        quote=userquo.get_quote('quo_static_user_total_dashboards')
+        limit=seginfo.get_param('quo_static_user_max_dashboards')
+        if limit:
+            if int(quote)>=int(limit)-1:
+                return True
+    return False
+
 def compare_quo_static_agent_total_datasources(params,cf):
     if not params.has_key('aid') or not params.has_key('uid'):
         return None

@@ -18,7 +18,10 @@ interfaces={'User_AgentCreation':'/user/agentcreation/',
             'User_DatapointCreation':'/user/dpcreation/',
             'Agent_DatasourceCreation':'/agent/dscreation/',
             'Agent_DatapointCreation':'/agent/dpcreation/',
-            'Ds_DatapointCreation':'/ds/dpcreation/'}
+            'Ds_DatapointCreation':'/ds/dpcreation/',
+            'User_WidgetCreation':'/user/wgcreation/',
+            'User_DashboardCreation':'/user/dbcreation/',
+           }
 
 def deny_quo_static_user_total_agents(params,cf,deny):
     ''' Insert/Delete /etc/agent/ to User Deny List'''
@@ -73,6 +76,36 @@ def deny_quo_static_user_total_datapoints(params,cf,deny):
         return False
     uid=params['uid']
     iface=interfaces['User_DatapointCreation']
+    userifd=cassapi.UserIfaceDeny(uid)
+    userifd.add_interface(iface)
+    if deny:
+        if cassapi.insert_userifacedeny(userifd,cf):
+            return True
+    else:
+        if cassapi.delete_userifacedeny(userifd,cf):
+            return True
+    return False
+
+def deny_quo_static_user_total_widgets(params,cf,deny):
+    if not params.has_key('uid'):
+        return False
+    uid=params['uid']
+    iface=interfaces['User_WidgetCreation']
+    userifd=cassapi.UserIfaceDeny(uid)
+    userifd.add_interface(iface)
+    if deny:
+        if cassapi.insert_userifacedeny(userifd,cf):
+            return True
+    else:
+        if cassapi.delete_userifacedeny(userifd,cf):
+            return True
+    return False
+
+def deny_quo_static_user_total_dashboards(params,cf,deny):
+    if not params.has_key('uid'):
+        return False
+    uid=params['uid']
+    iface=interfaces['User_DashboardCreation']
     userifd=cassapi.UserIfaceDeny(uid)
     userifd.add_interface(iface)
     if deny:

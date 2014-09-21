@@ -5,11 +5,13 @@
         </div>
     </div>
     <div class="button_bar">
-        <div class="button_close" ng-click="closeWidget(widget.wid)">
+        <div class="button_close" ng-click="hideWidget(widget.wid)">
             <p> 
             </p>
         </div>
     </div>
-    <div class="date_info" ds-date={{widget.did}}></div>
-    <pre ds-content={{widget.did}}></pre>
+    <div ng-repeat="ds in ds_d" ng-if="ds.did==widget.did">
+        <div class="date_info">{{ ds.ds_date }}</div>
+        <pre ds-content={{ds.did}}> </pre>
+    </div>
 </div>

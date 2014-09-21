@@ -10,6 +10,7 @@ from pycassa.cassandra.ttypes import NotFoundException
 import uuid
 import json
 from komlibs.date import datefuncs
+from komlibs.gestaccount import types
 from datetime import timedelta, datetime
 
 class DsDtpRelation:
@@ -2027,4 +2028,368 @@ def insert_agentdscard(agentdscard,session):
     if not session.insert(schema.AgentDsCardORM(apiobj=agentdscard)):
         return False
     return True
+
+class UserWidgetRelation:
+    def __init__(self, uid, wids=None):
+        self.uid=uid
+        self.wids=wids if wids else []
+
+    def _prestore(self):
+        self.key=self.uid
+        self.dbdict = {}
+        for wid in self.wids:
+            self.dbdict[wid]=u''
+
+def get_userwidgetrelation(uid, session, dbcols={}):
+    try:
+        kwargs={}
+        if len(dbcols.keys())>0:
+            kwargs['columns']=[key for key in dbcols.keys()]
+        dbobj=session.get(schema.UserWidgetRelationORM(key=uid,dbdict={}),kwargs)
+        return UserWidgetRelation(uid=dbobj.key,wids=[wid for wid in dbobj.dbdict.keys()])
+    except NotFoundException:
+        return None
+
+class UserDashboardRelation:
+    def __init__(self, uid, bids):
+        self.uid=uid
+        self.bids=bids
+
+    def _prestore(self):
+        self.key=self.uid
+        self.dbdict = {}
+        for bid in self.bids:
+            self.dbdict[bid]=u''
+
+def get_userdashboardrelation(uid, session, dbcols={}):
+    try:
+        kwargs={}
+        if len(dbcols.keys())>0:
+            kwargs['columns']=[key for key in dbcols.keys()]
+        dbobj=session.get(schema.UserDashboardRelationORM(key=uid,dbdict={}),kwargs)
+        return UserDashboardRelation(uid=dbobj.key,bids=[bid for bid in dbobj.dbdict.keys()])
+    except NotFoundException:
+        return None
+
+class DashboardWidgetRelation:
+    def __init__(self, bid, wids):
+        self.bid=bid
+        self.wids=wids
+
+    def _prestore(self):
+        self.key=self.bid
+        self.dbdict = {}
+        for wid in self.wids:
+            self.dbdict[wid]=u''
+
+def get_dashboardwidgetrelation(bid, session, dbcols={}):
+    try:
+        kwargs={}
+        if len(dbcols.keys())>0:
+            kwargs['columns']=[key for key in dbcols.keys()]
+        dbobj=session.get(schema.DashboardWidgetRelationORM(key=bid,dbdict={}),kwargs)
+        return DashboardWidgetRelation(bid=dbobj.key,wids=[wid for wid in dbobj.dbdict.keys()])
+    except NotFoundException:
+        return None
+
+class Dashboard:
+    def __init__(self,bid,uid,name):
+        self.bid=bid
+        self.uid=uid
+        self.name=name
+
+def get_dashboard(bid,session):
+    try:
+        schemaobj=session.get(schema.DashboardORM(key=bid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def delete_dashboard(bid,session):
+    if session.remove(schema.DashboardORM(key=bid)):
+        return True
+    return False
+
+def insert_dashboard(dashboard,session):
+    if not dashboard:
+        return False
+    if not session.insert(schema.DashboardORM(apiobj=dashboard)):
+        return False
+    return True
+
+class Widget(object):
+    def __init__(self,wid,uid,type):
+        self.wid=wid
+        self.uid=uid
+        self.type=type
+
+def get_widget(wid,session):
+    try:
+        schemaobj=session.get(schema.WidgetORM(key=wid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def delete_widget(widget,session):
+    userwgr=get_userwidgetrelation(widget.uid,session)
+    if userwgr:
+        try:
+            widpos = userwgr.wids.index(widget.wid)
+            userwgr = UserWidgetRelation(widget.uid,(widget.wid,))
+            userwgr._prestore()
+            kwargs={}
+            kwargs['columns']=(widget.wid,)
+            session.remove(schema.UserWidgetRelationORM(key=userwgr.key,dbdict=userwgr.dbdict),kwargs)
+        except ValueError:
+            pass
+    session.remove(schema.WidgetORM(key=widget.wid))
+    return True
+
+def insert_widget(widget,session):
+    if not widget:
+        return False
+    userwgr=get_userwidgetrelation(widget.uid,session)
+    if userwgr:
+        try:
+            widpos = userwgr.wids.index(widget.wid)
+            return False
+        except ValueError:
+            pass
+    else:
+        userwgr=UserWidgetRelation(uid=widget.uid)
+    userwgr.wids.append(widget.wid)
+    userwgr._prestore()
+    if session.insert(schema.UserWidgetRelationORM(key=userwgr.key,dbdict=userwgr.dbdict)):
+        if session.insert(schema.WidgetORM(apiobj=widget)):
+            return True
+        else:
+            delete_widget(widget,session)
+            return False
+    return False
+
+class DatasourceWidget(Widget):
+    def __init__(self,wid,uid,did):
+        self.did=did
+        super(DatasourceWidget,self).__init__(wid,uid,types.DS_WIDGET)
+
+def get_datasource_widget(wid,session):
+    try:
+        schemaobj=session.get(schema.DatasourceWidgetORM(key=wid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def delete_datasource_widget(widget,session):
+    if session.remove(schema.DatasourceWidgetORM(key=widget.wid)) and delete_widget(widget,session):
+        return True
+    return False
+
+def insert_datasource_widget(datasourcewidget,session):
+    if not datasourcewidget:
+        return False
+    if not session.insert(schema.DatasourceWidgetORM(apiobj=datasourcewidget)):
+        return False
+    widget=Widget(datasourcewidget.wid,datasourcewidget.uid,datasourcewidget.type)
+    if not insert_widget(widget,session):
+        delete_datasourcewidget(datasourcewidget.wid,session)
+        return False
+    return True
+
+class UserWidgetPerms:
+    ''' This class is used to access User-Widget permission relation '''
+    def __init__(self, uid):
+        self.uid=uid
+        self._wids={}
+
+    def add_widget(self, wid, perm=u'A'):
+        self._wids[wid]=perm #at first A means ALL ACCESS to the resource
+
+    def get_widgets(self, wid=None):
+        try:
+            return {wid:self._wids[wid]} if wid else self._wids
+        except KeyError:
+            return None
+
+    def set_widgets(self, wids=None):
+        self._wids=wids if wids else {}
+
+def get_userwidgetperms(uid,session,wid=None):
+    try:
+        kwargs={}
+        if wid:
+            kwargs['columns']=(wid,)
+        schemaobj=session.get(schema.UserWidgetPermsORM(key=uid),kwargs)
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_userwidgetperms(uwpobj,session):
+    try:
+        if session.insert(schema.UserWidgetPermsORM(apiobj=uwpobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def delete_userwidgetperms(uwpobj,session):
+    try:
+        kwargs={}
+        wids=uwpobj.get_widgets()
+        if wids and len(wids.keys())>0:
+            kwargs['columns']=[key for key in wids.keys()]
+        if session.remove(schema.UserWidgetPermsORM(apiobj=uwpobj),kwargs):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class UserDashboardPerms:
+    ''' This class is used to access User-Dashboard permission relation '''
+    def __init__(self, uid):
+        self.uid=uid
+        self._bids={}
+
+    def add_dashboard(self, bid, perm=u'A'):
+        self._bids[bid]=perm #at first A means ALL ACCESS to the resource
+
+    def get_dashboards(self, bid=None):
+        try:
+            return {bid:self._bids[bid]} if bid else self._bids
+        except KeyError:
+            return None
+
+    def set_dashboards(self, bids=None):
+        self._bids=bids if bids else {}
+
+def get_userdashboardperms(uid,session,bid=None):
+    try:
+        kwargs={}
+        if bid:
+            kwargs['columns']=(bid,)
+        schemaobj=session.get(schema.UserDashboardPermsORM(key=uid),kwargs)
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def insert_userdashboardperms(udpobj,session):
+    try:
+        if session.insert(schema.UserDashboardPermsORM(apiobj=udpobj)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def delete_userdashboardperms(udpobj,session):
+    try:
+        kwargs={}
+        bids=udpobj.get_widgets()
+        if bids and len(bids.keys())>0:
+            kwargs['columns']=[key for key in bids.keys()]
+        if session.remove(schema.UserDashboardPermsORM(apiobj=udpobj),kwargs):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class WidgetQuo:
+    def __init__(self,wid):
+        self.wid=wid
+        self._quotes={}
+
+    def add_quote(self,quote,value):
+        self._quotes[quote]=value
+
+    def set_quotes(self,quotes):
+        self._quotes=quotes
+
+    def get_quotes(self):
+        return self._quotes
+
+    def get_quote(self,quote):
+        try:
+            return self._quotes[quote]
+        except KeyError:
+            return None
+
+def get_widget_quotes(wid,session):
+    try:
+        schemaobj=session.get(schema.WidgetQuoORM(key=wid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def set_widget_quotes(wid,quotes,session):
+    wgquotes=WidgetQuo(wid)
+    wgquotes.set_quotes(quotes)
+    try:
+        if session.insert(schema.WidgetQuoORM(apiobj=wgquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def del_widget_quotes(wid,quotes,session):
+    wgquotes=WidgetQuo(wid)
+    wgquotes.set_quotes(quotes)
+    try:
+        if session.remove(schema.WidgetQuoORM(apiobj=wgquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+class DashboardQuo:
+    def __init__(self,wid):
+        self.bid=bid
+        self._quotes={}
+
+    def add_quote(self,quote,value):
+        self._quotes[quote]=value
+
+    def set_quotes(self,quotes):
+        self._quotes=quotes
+
+    def get_quotes(self):
+        return self._quotes
+
+    def get_quote(self,quote):
+        try:
+            return self._quotes[quote]
+        except KeyError:
+            return None
+
+def get_dashboard_quotes(bid,session):
+    try:
+        schemaobj=session.get(schema.DashboardQuoORM(key=bid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def set_dashboard_quotes(bid,quotes,session):
+    dbquotes=DashboardQuo(bid)
+    dbquotes.set_quotes(quotes)
+    try:
+        if session.insert(schema.DashboardQuoORM(apiobj=dbquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
+def del_dashboard_quotes(bid,quotes,session):
+    dbquotes=DashboardQuo(bid)
+    dbquotes.set_quotes(quotes)
+    try:
+        if session.remove(schema.DashboardQuoORM(apiobj=dbquotes)):
+            return True
+        else:
+            return False
+    except Exception:
+        return False
 

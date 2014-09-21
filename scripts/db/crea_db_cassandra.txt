@@ -98,3 +98,30 @@ and column_metadata = [
 
 create column family rel_user_ds_card with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;
 create column family rel_agent_ds_card with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+
+create column family rel_user_widget with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family rel_user_dashboard with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family rel_dashboard_widget with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+
+create column family mst_dashboard with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType
+and column_metadata = [
+{column_name: uid, validation_class: UUIDType}
+{column_name: name, validation_class: UTF8Type}
+];
+
+create column family mst_widget with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType
+and column_metadata = [
+{column_name: uid, validation_class: UUIDType}
+{column_name: type, validation_class: UTF8Type}
+];
+
+create column family mst_datasource_widget with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType
+and column_metadata = [
+{column_name: uid, validation_class: UUIDType}
+{column_name: did, validation_class: UUIDType}
+];
+
+create column family mst_widget_quo with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family mst_dashboard_quo with comparator=UTF8Type and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family mst_user_widget_perm with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;
+create column family mst_user_dashboard_perm with comparator=UUIDType and default_validation_class=UTF8Type and key_validation_class=UUIDType;

@@ -33,7 +33,6 @@ def authorize_post_ds_data(username,aid,did,session):
 
 def authorize_get_ds_config(username,did,session):
     ''' Not quotes authorization needed '''
-    print 'Yo salgo bien'
     return True
 
 def authorize_put_ds_config(username,aid,did,session):
@@ -78,4 +77,35 @@ def authorize_new_graph(username,session):
 def authorize_get_graph_config(username,gid,session):
     ''' Not quotes authorization needed '''
     return True
+
+def authorize_new_widget(username,session):
+    useruidr=cassapi.get_useruidrelation(username,session)
+    interfaces=deny.interfaces['User_WidgetCreation']
+    if not cassapi.get_userifacedeny(useruidr.uid,session,interfaces):
+        return True
+    return False
+
+def authorize_get_widget_config(username,wid,session):
+    ''' Not quotes authorization needed '''
+    return True
+
+def authorize_put_widget_config(username,wid,session):
+    ''' Not quotes authorization needed '''
+    return True
+
+def authorize_new_dashboard(username,session):
+    useruidr=cassapi.get_useruidrelation(username,session)
+    interfaces=deny.interfaces['User_DashboardCreation']
+    if not cassapi.get_userifacedeny(useruidr.uid,session,interfaces):
+        return True
+    return False
+
+def authorize_get_dashboard_config(username,bid,session):
+    ''' Not quotes authorization needed '''
+    return True
+
+def authorize_put_dashboard_config(username,bid,session):
+    ''' Not quotes authorization needed '''
+    return True
+
 

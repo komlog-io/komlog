@@ -170,3 +170,51 @@ def authorize_get_plot_data(username,gid,session):
     else:
         return False
 
+def authorize_new_widget(username,session):
+    ''' Resource authorization not needed in this request '''
+    return True
+
+def authorize_get_widget_config(username,wid,session):
+    if not wid:
+        return False
+    useruidr=cassapi.get_useruidrelation(username,session)
+    userwgperms=cassapi.get_userwidgetperms(useruidr.uid,session,wid=wid)
+    if userwgperms:
+        return True
+    else:
+        return False
+
+def authorize_put_widget_config(username,wid,session):
+    if not wid:
+        return False
+    useruidr=cassapi.get_useruidrelation(username,session)
+    userwgperms=cassapi.get_userwidgetperms(useruidr.uid,session,wid=wid)
+    if userwgperms:
+        return True
+    else:
+        return False
+
+def authorize_new_dashboard(username,session):
+    ''' Resource authorization not needed in this request '''
+    return True
+
+def authorize_get_dashboard_config(username,bid,session):
+    if not bid:
+        return False
+    useruidr=cassapi.get_useruidrelation(username,session)
+    userdbperms=cassapi.get_userdashboardperms(useruidr.uid,session,bid=bid)
+    if userdbperms:
+        return True
+    else:
+        return False
+
+def authorize_put_dashboard_config(username,bid,session):
+    if not bid:
+        return False
+    useruidr=cassapi.get_useruidrelation(username,session)
+    userdbperms=cassapi.get_userdashboardperms(useruidr.uid,session,bid=bid)
+    if userdbperms:
+        return True
+    else:
+        return False
+

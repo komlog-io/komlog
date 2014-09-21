@@ -10,6 +10,8 @@ from komlibs.gestaccount import users as usrapi
 from komlibs.gestaccount import agents as agapi
 from komlibs.gestaccount import datasources as dsapi
 from komlibs.gestaccount import datapoints as dpapi
+from komlibs.gestaccount import widgets as wgapi
+from komlibs.gestaccount import dashboards as dbapi
 from komlibs.gestaccount import graphs as graphapi
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.gestaccount import cards as gestcards
@@ -28,7 +30,7 @@ class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         return self.get_secure_cookie('komlog_user')
 
-class AgentCreationHandler(tornado.web.RequestHandler):
+class AgentsHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def post(self):
@@ -61,6 +63,20 @@ class AgentCreationHandler(tornado.web.RequestHandler):
                 print str(e)
                 self.set_status(500)
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+
+    @auth.userauthenticated
+    def get(self):
+        try:
+            data=agapi.get_agentsconfig(self.user,self.application.cf,dids_flag=True)
+            self.set_status(200)
+            self.write(json_encode(data))
+        except gestexcept.UserNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'User not found'}))
+        except Exception as e:
+            print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
 class AgentConfigHandler(tornado.web.RequestHandler):
 
@@ -224,7 +240,7 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
-class DatasourceCreationHandler(tornado.web.RequestHandler):
+class DatasourcesHandler(tornado.web.RequestHandler):
 
     @auth.agentauthenticated
     def post(self):
@@ -265,7 +281,21 @@ class DatasourceCreationHandler(tornado.web.RequestHandler):
                 self.set_status(500)
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
-class UserCreationHandler(tornado.web.RequestHandler):
+    @auth.userauthenticated
+    def get(self):
+        try:
+            data=dsapi.get_datasourcesconfig(self.user,self.application.cf)
+            self.set_status(200)
+            self.write(json_encode(data))
+        except gestexcept.UserNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'User not found'}))
+        except Exception as e:
+            print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+
+class UsersHandler(tornado.web.RequestHandler):
     def post(self):
         #suponemos que aquí llega una vez ha validado capcha o algo asi
         try:
@@ -399,7 +429,7 @@ class DatapointConfigHandler(tornado.web.RequestHandler):
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
-class DatapointCreationHandler(tornado.web.RequestHandler):
+class DatapointsHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def post(self):
@@ -433,7 +463,7 @@ class UserConfigHandler(BaseHandler):
 
     @auth.userauthenticated
     def get(self):
-        useruidr=cassapi.get_useruidrelation(self.current_user,self.application.cf)
+        useruidr=cassapi.get_useruidrelation(self.user,self.application.cf)
         if not useruidr:
             self.set_status(404)
             self.write(json_encode({'message': 'User not found'}))
@@ -498,13 +528,13 @@ class UserHomeHandler(BaseHandler):
 
     @auth.userauthenticated
     def get(self):
-        useruidr=cassapi.get_useruidrelation(self.current_user,self.application.cf)
+        useruidr=cassapi.get_useruidrelation(self.user,self.application.cf)
         if not useruidr:
             self.set_status(404)
             self.write(json_encode({'message': 'User not found'}))
         self.render('home.html', page_title='Komlog')
 
-class GraphCreationHandler(tornado.web.RequestHandler):
+class GraphsHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def post(self):
@@ -667,6 +697,86 @@ class PlotDataHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message': 'Datasource not found'}))
         except Exception as e:
             print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
+
+class WidgetsHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def get(self):
+        try:
+            data=wgapi.get_widgetsconfig(self.user,self.application.cf)
+            self.set_status(200)
+            self.write(json_encode(data))
+        except gestexcept.UserNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'User not found'}))
+        except gestexcept.WidgetNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Not found widgets'}))
+        except Exception as e:
+            print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+
+class WidgetConfigHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def get(self,p_wid):
+        try:
+            wid=uuid.UUID(p_wid)
+            authorization.authorize_request(request='GetWidgetConfigRequest',username=self.user,session=self.application.cf,wid=wid)
+            data=wgapi.get_widgetconfig(wid,self.application.cf)
+            self.set_status(200)
+            self.write(json_encode(data))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access denied'}))
+        except gestexcept.WidgetNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Widget Not Found'}))
+        except Exception as e:
+            #self.application.logger.exception(str(e))
+            self.set_status(500)
+            self.write(json_encode({'message':'Internal Error'}))
+
+class DashboardsHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def get(self):
+        try:
+            data=dbapi.get_dashboardsconfig(self.user,self.application.cf)
+            self.set_status(200)
+            self.write(json_encode(data))
+        except gestexcept.UserNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'User not found'}))
+        except gestexcept.DashboardNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Not found dashboards'}))
+        except Exception as e:
+            print str(e)
+            self.set_status(500)
+            self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
+
+class DashboardConfigHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def get(self,p_bid):
+        try:
+            bid=uuid.UUID(p_bid)
+            authorization.authorize_request(request='GetDashboardConfigRequest',username=self.user,session=self.application.cf,bid=bid)
+            data=dbapi.get_dashboardconfig(wid,self.application.cf)
+            self.set_status(200)
+            self.write(json_encode(data))
+        except authexcept.AuthorizationException:
+            self.set_status(403)
+            self.write(json_encode({'message':'Access denied'}))
+        except gestexcept.DashboardNotFoundException:
+            self.set_status(404)
+            self.write(json_encode({'message':'Dashboard Not Found'}))
+        except Exception as e:
+            #self.application.logger.exception(str(e))
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 

@@ -66,3 +66,20 @@ class GraphCreationException(Exception):
 class GraphUpdateException(Exception):
     def __init__(self):
         pass
+
+class WidgetCreationException(Exception):
+    def __init__(self):
+        pass
+
+class WidgetNotFoundException(Exception):
+    def __init__(self):
+        pass
+
+class WidgetTypeNotFoundException(Exception):
+    def __init__(self):
+        pass
+
+class DashboardNotFoundException(Exception):
+    def __init__(self):
+        pass
+

@@ -666,4 +666,142 @@ class AgentDsCardORM(CassandraBase):
             apiobj.add_card(did,priority)
         return apiobj
 
+class UserWidgetRelationORM(CassandraBase):
+    __cf__ = 'rel_user_widget'
+
+    def __init__(self, key=None, dbdict=None):
+        super(UserWidgetRelationORM,self).__init__(key, dbdict)
+
+class UserDashboardRelationORM(CassandraBase):
+    __cf__ = 'rel_user_dashboard'
+
+    def __init__(self, key=None, dbdict=None):
+        super(UserDashboardRelationORM,self).__init__(key, dbdict)
+
+
+class DashboardWidgetRelationORM(CassandraBase):
+    __cf__ = 'rel_dashboard_widget'
+
+    def __init__(self, key=None, dbdict=None):
+        super(DashboardWidgetRelationORM,self).__init__(key, dbdict)
+
+class DashboardORM(CassandraBase):
+    __cf__ = 'mst_dashboard'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.bid
+            dbdict={}
+            dbdict['uid']=apiobj.uid
+            dbdict['name']=apiobj.name
+        super(DashboardORM,self).__init__(key,dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.Dashboard(self.key,self.dbdict['uid'],self.dbdict['name'])
+        return apiobj
+
+class WidgetORM(CassandraBase):
+    __cf__ = 'mst_widget'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.wid
+            dbdict={}
+            dbdict['uid']=apiobj.uid
+            dbdict['type']=apiobj.type
+        super(WidgetORM,self).__init__(key,dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.Widget(self.key,self.dbdict['uid'],self.dbdict['type'])
+        return apiobj
+
+class DatasourceWidgetORM(CassandraBase):
+    __cf__ = 'mst_datasource_widget'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.wid
+            dbdict={}
+            dbdict['uid']=apiobj.uid
+            dbdict['did']=apiobj.did
+        super(DatasourceWidgetORM,self).__init__(key,dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.DatasourceWidget(self.key,self.dbdict['uid'],self.dbdict['did'])
+        return apiobj
+
+class WidgetQuoORM(CassandraBase):
+    __cf__ = 'mst_widget_quo'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if key:
+            self.key=key
+            self.dbdict=dbdict
+        if apiobj:
+            self.key=apiobj.wid
+            self.dbdict=apiobj._quotes
+        super(WidgetQuoORM,self).__init__(self.key,self.dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.WidgetQuo(self.key)
+        apiobj.set_quotes(self.dbdict)
+        return apiobj
+
+
+class DashboardQuoORM(CassandraBase):
+    __cf__ = 'mst_dashboard_quo'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if key:
+            self.key=key
+            self.dbdict=dbdict
+        if apiobj:
+            self.key=apiobj.bid
+            self.dbdict=apiobj._quotes
+        super(DashboardQuoORM,self).__init__(self.key,self.dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.DashboardQuo(self.key)
+        apiobj.set_quotes(self.dbdict)
+        return apiobj
+
+class UserWidgetPermsORM(CassandraBase):
+    __cf__ = 'mst_user_widget_perm'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if apiobj:
+            key=apiobj.uid
+            dbdict=apiobj._wids
+        else:
+            key=key
+            dbdict=dbdict
+        super(UserWidgetPermsORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.UserWidgetPerms(self.key)
+        apiobj.set_widgets(self.dbdict)
+        return apiobj
+
+class UserDashboardPermsORM(CassandraBase):
+    __cf__ = 'mst_user_dashboard_perm'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        if apiobj:
+            key=apiobj.uid
+            dbdict=apiobj._bids
+        else:
+            key=key
+            dbdict=dbdict
+        super(UserDashboardPermsORM,self).__init__(key,dbdict)
+
+    def to_apiobj(self):
+        apiobj=cassapi.UserDashboardPerms(self.key)
+        apiobj.set_dashboards(self.dbdict)
+        return apiobj
 

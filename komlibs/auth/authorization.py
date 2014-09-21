@@ -30,10 +30,16 @@ func_requests={'NewAgentRequest':'authorize_new_agent_creation',
                'UserUpdateProfileRequest':'authorize_user_update_profile',
                'AgentUpdateConfigurationRequest':'authorize_agent_update_configuration',
                'GetPlotDataRequest':'authorize_get_plot_data',
+               'NewWidgetRequest':'authorize_new_widget_creation',
+               'GetWidgetConfigRequest':'authorize_get_widget_config',
+               'WidgetUpdateConfigurationRequest':'authorize_widget_update_configuration',
+               'NewDashboardRequest':'authorize_new_dashboard_creation',
+               'GetDashboardConfigRequest':'authorize_get_dashboard_config',
+               'DashboardUpdateConfigurationRequest':'authorize_dashboard_update_configuration',
                }
 
-def authorize_request(request,username,session,aid=None,did=None,pid=None,gid=None,data=None):
-    params={'aid':aid,'did':did,'username':username,'pid':pid,'gid':gid,'request_data':data}
+def authorize_request(request,username,session,aid=None,did=None,pid=None,gid=None,wid=None,bid=None,data=None):
+    params={'aid':aid,'did':did,'username':username,'pid':pid,'gid':gid,'wid':wid,'bid':bid,'request_data':data}
     getattr(sys.modules[__name__],func_requests[request])(params,session)
 
 def authorize_new_agent_creation(params,session):
@@ -150,4 +156,45 @@ def authorize_get_plot_data(params,session):
     gid=params['gid']
     if not resauth.authorize_get_plot_data(username,gid,session):
         raise authexcept.AuthorizationException()
+
+def authorize_get_widget_config(params,session):
+    username=params['username']
+    wid=params['wid']
+    if not quoauth.authorize_get_widget_config(username,wid,session) \
+        or not resauth.authorize_get_widget_config(username,wid,session):
+        raise authexcept.AuthorizationException()
+
+def authorize_widget_update_configuration(params,session):
+    username=params['username']
+    wid=params['wid']
+    if not resauth.authorize_put_widget_config(username,wid,session):
+        raise authexcept.AuthorizationException()
+
+def authorize_new_widget_creation(params,session):
+    username=params['username']
+    wid=params['wid']
+    if not quoauth.authorize_new_widget(username,wid,session) \
+        or not resauth.authorize_new_widget(username,session):
+        raise authexcept.AuthorizationException()
+
+def authorize_get_dashboard_config(params,session):
+    username=params['username']
+    bid=params['bid']
+    if not quoauth.authorize_get_dashboard_config(username,bid,session) \
+        or not resauth.authorize_get_dashboard_config(username,bid,session):
+        raise authexcept.AuthorizationException()
+
+def authorize_dashboard_update_configuration(params,session):
+    username=params['username']
+    bid=params['bid']
+    if not resauth.authorize_put_dashboard_config(username,bid,session):
+        raise authexcept.AuthorizationException()
+
+def authorize_new_dashboard_creation(params,session):
+    username=params['username']
+    bid=params['bid']
+    if not quoauth.authorize_new_dashboard(username,bid,session) \
+        or not resauth.authorize_new_dashboard(username,session):
+        raise authexcept.AuthorizationException()
+
 
