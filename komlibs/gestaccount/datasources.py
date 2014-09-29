@@ -70,16 +70,18 @@ def get_datasourcedata(did,session,date=None):
         last_received=date if date else dsinfo.last_received
         dsdata=cassapi.get_datasourcedata(did,last_received,session)
         dsvars=[]
-        dsdtps={}
+        dsdtps=[]
         if last_mapped:
             dsmapvars=cassapi.get_datasourcemapvars(did,last_received,session)
             if dsmapvars:
                 dsvars=json.loads(dsmapvars.content)
         dsmapdtps=cassapi.get_datasourcemapdtps(did,last_received,session)
         if dsmapdtps:
-            dsdtps=json.loads(dsmapdtps.jsoncontent)
+            datapoints=json.loads(dsmapdtps.jsoncontent)
+            for key,value in datapoints.iteritems():
+                dsdtps.append({'pid':key,'id':value})
         data['did']=str(did)
-        data['ds_date']=last_received.isoformat()
+        data['ds_date']=last_received.isoformat()+'Z'
         data['ds_vars']=dsvars
         data['ds_content']=dsdata.content
         data['ds_dtps']=dsdtps

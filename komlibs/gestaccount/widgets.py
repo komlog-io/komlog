@@ -18,6 +18,22 @@ from komlibs.gestaccount import states,types,exceptions
 from komlibs.ifaceops import operations
 from komimc import messages
 
+def get_widgetconfig(wid,session):
+    widget=cassapi.get_widget(wid,session)
+    if widget:
+        data={}
+        if widget.type==types.DS_WIDGET:
+            dswidget=cassapi.get_datasource_widget(wid,session)
+            if dswidget:
+                data={'wid':str(dswidget.wid),'type':types.DS_WIDGET,'did':str(dswidget.did)}
+        elif widget.type==types.DP_WIDGET:
+            dpwidget=cassapi.get_datapoint_widget(wid,session)
+            if dpwidget:
+                data={'wid':str(dpwidget.wid),'type':types.DP_WIDGET,'pid':str(dpwidget.pid)}
+        return data
+    else:
+        raise exceptions.WidgetNotFoundException()
+
 def create_ds_widget(username,did,session,msgbus):
     useruidr=cassapi.get_useruidrelation(username,session)
     if not useruidr:
@@ -86,19 +102,45 @@ def get_widgetsconfig(username,session):
                 dswidget=cassapi.get_datasource_widget(wid,session)
                 if dswidget:
                     data.append({'wid':str(dswidget.wid),'type':types.DS_WIDGET,'did':str(dswidget.did)})
+            elif widget.type==types.DP_WIDGET:
+                dpwidget=cassapi.get_datapoint_widget(wid,session)
+                if dpwidget:
+                    data.append({'wid':str(dpwidget.wid),'type':types.DP_WIDGET,'pid':str(dpwidget.pid)})
         return data
     else:
         raise exceptions.WidgetNotFoundException()
 
-def get_widgetconfig(wid,session):
-    widget=cassapi.get_widget(wid,session)
-    if widget:
-        data={}
-        if widget.type==types.DS_WIDGET:
-            dswidget=cassapi.get_datasource_widget(wid,session)
-            if dswidget:
-                data={'wid':str(dswidget.wid),'type':types.DS_WIDGET,'did':str(dswidget.did)}
-        return data
+def create_dp_widget(username,pid,session,msgbus):
+    useruidr=cassapi.get_useruidrelation(username,session)
+    if not useruidr:
+        raise exceptions.UserNotFoundException()
+    print 'obtenido useruidr '+username
+    dtpinfo=cassapi.get_dtpinfo(pid,{},session)
+    if not dtpinfo:
+        raise exceptions.DatapointNotFoundException()
     else:
-        raise exceptions.WidgetNotFoundException()
+        print 'obtenido dtpinfo'
+        userwidgets=cassapi.get_userwidgetrelation(useruidr.uid,session)
+        if userwidgets:
+            for wid in userwidgets.wids:
+                widget=cassapi.get_widget(wid,session)
+                if widget and widget.type==types.DP_WIDGET:
+                    dpwidget=cassapi.get_datapoint_widget(wid,session)
+                    if dpwidget and dpwidget.pid==pid:
+                        print 'Datapoint already linked to dp_widget'
+                        return {'wid':str(wid)}
+        wid=uuid.uuid4()
+        dpwidget=cassapi.DatapointWidget(wid,useruidr.uid,dtpinfo.pid)
+        if cassapi.insert_datapoint_widget(dpwidget,session):
+            print 'dp insertado correctamente en bbdd'
+            operation=operations.NewWidgetOperation(uid=useruidr.uid,wid=wid)
+            message=messages.UpdateQuotesMessage(operation=operation)
+            msgbus.sendMessage(message)
+            print 'enviado mensaje updatequotesoperation'
+            message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
+            msgbus.sendMessage(message)
+            print 'enviado mensaje resource authorizationupdate'
+            return {'wid':str(wid)}
+        else:
+            raise exceptions.WidgetCreationException()
 

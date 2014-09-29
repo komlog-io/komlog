@@ -356,9 +356,11 @@ class DatapointDataHandler(tornado.web.RequestHandler):
         try:
             pid=uuid.UUID(p_pid)
             authorization.authorize_request(request='GetDatapointDataRequest',username=self.user,session=self.application.cf,pid=pid)
-            strdate=self.get_argument('ld',default=None) #ld : last date
-            date=dateutil.parser.parse(strdate) if strdate else None
-            data=dpapi.get_datapointdata(pid,self.application.cf,todate=date)
+            end_date=self.get_argument('ed',default=None) #ed : end date
+            start_date=self.get_argument('sd',default=None) #sd : start date
+            end_date=dateutil.parser.parse(end_date) if end_date else None
+            start_date=dateutil.parser.parse(start_date) if start_date else None
+            data=dpapi.get_datapointdata(pid,self.application.cf,end_date=end_date, start_date=start_date)
             self.set_status(200)
             self.write(json_encode(data))
         except authexcept.AuthorizationException:
@@ -366,7 +368,6 @@ class DatapointDataHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Access Denied'}))
         except gestexcept.DatapointDataNotFoundException as e:
             self.set_status(404)
-            print 'Datos no encontrados'
             self.write(json_encode({'message': 'Datapoint data not found','last_date':e.last_date.isoformat()}))
         except Exception as e:
             print str(e)

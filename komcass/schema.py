@@ -736,6 +736,23 @@ class DatasourceWidgetORM(CassandraBase):
         apiobj=cassapi.DatasourceWidget(self.key,self.dbdict['uid'],self.dbdict['did'])
         return apiobj
 
+class DatapointWidgetORM(CassandraBase):
+    __cf__ = 'mst_datapoint_widget'
+
+    def __init__(self, key=None, dbdict=None, apiobj=None):
+        key=key
+        dbdict=dbdict
+        if apiobj:
+            key=apiobj.wid
+            dbdict={}
+            dbdict['uid']=apiobj.uid
+            dbdict['pid']=apiobj.pid
+        super(DatapointWidgetORM,self).__init__(key,dbdict)
+    
+    def to_apiobj(self):
+        apiobj=cassapi.DatapointWidget(self.key,self.dbdict['uid'],self.dbdict['pid'])
+        return apiobj
+
 class WidgetQuoORM(CassandraBase):
     __cf__ = 'mst_widget_quo'
 

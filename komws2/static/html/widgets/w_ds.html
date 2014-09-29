@@ -1,4 +1,4 @@
-<div draggable class="c_window">
+<div draggable class="c_window" style="resize: both;">
     <div class="title_bar">
         <div ng-repeat="ds in ds_c" ng-if="ds.did==widget.did">
             <h3>{{ ds.name }}</h3>
@@ -12,6 +12,6 @@
     </div>
     <div ng-repeat="ds in ds_d" ng-if="ds.did==widget.did">
         <div class="date_info">{{ ds.ds_date }}</div>
-        <pre ds-content={{ds.did}}> </pre>
+        <pre wds-content={{ds.did}}> </pre>
     </div>
 </div>

@@ -26,3 +26,4 @@ DSPARAMS_WEB2DB={DS_STR2INT['script']:[('script_name','script_name'),\
 
 
 DS_WIDGET='ds'
+DP_WIDGET='dp'

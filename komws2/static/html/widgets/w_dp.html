@@ -1,0 +1,16 @@
+<div draggable class="c_window">
+    <div class="title_bar">
+        <div ng-repeat="dp in dp_c" ng-if="dp.pid==widget.pid">
+            <h3>{{ dp.name }}</h3>
+        </div>
+    </div>
+    <div class="button_bar">
+        <div class="button_close" ng-click="hideWidget(widget.wid)">
+            <p> 
+            </p>
+        </div>
+    </div>
+    <div ng-repeat="dp in dp_d" ng-if="dp.pid==widget.pid">
+        <div wdp-content wid={{widget.wid}}></div>
+    </div>
+</div>

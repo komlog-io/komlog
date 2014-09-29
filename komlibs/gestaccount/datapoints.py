@@ -19,19 +19,19 @@ from komlibs.gestaccount import states,types,exceptions
 from komlibs.general import colors
 from komimc import messages
 
-def get_datapointdata(pid,session,todate=None):
+def get_datapointdata(pid,session,end_date=None,start_date=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
-    dtpdatas=cassapi.get_datapointdata(pid,session,todate=todate)
+    dtpdatas=cassapi.get_datapointdata(pid,session,todate=end_date,fromdate=start_date)
     data=[]
     if not dtpdatas:
-        if not todate:
-            todate=datetime.utcnow()
-        last_date=todate-timedelta(days=1)
+        if not end_date:
+            end_date=datetime.utcnow()
+        last_date=end_date-timedelta(days=1)
         raise exceptions.DatapointDataNotFoundException(last_date=last_date)
     else:
         for dtpdata in dtpdatas:
-            data.append((dtpdata.date.isoformat(),str(dtpdata.content)))
+            data.append({'date':dtpdata.date.isoformat()+'Z','value':str(dtpdata.content)})
     return data
 
 def create_datapoint(did,dsdate,pos,length,name,msgbus):
@@ -56,13 +56,13 @@ def get_datapointconfig(pid,session):
     data['pid']=str(pid)
     if dtpinfo:
         if dtpinfo.dbcols.has_key('name') and dtpinfo.dbcols['name']:
-            data['dtp_name']=dtpinfo.dbcols['name']
+            data['name']=dtpinfo.dbcols['name']
         if dtpinfo.dbcols.has_key('did') and dtpinfo.dbcols['did']:
             data['did']=dtpinfo.dbcols['did']
         if dtpinfo.dbcols.has_key('default_color') and dtpinfo.dbcols['default_color']:
-            data['dtp_color']=dtpinfo.dbcols['default_color']
+            data['color']=dtpinfo.dbcols['default_color']
         if dtpinfo.dbcols.has_key('decimalseparator') and dtpinfo.dbcols['decimalseparator']:
-            data['dtp_decimalseparator']=dtpinfo.dbcols['decimalseparator']
+            data['decimalseparator']=dtpinfo.dbcols['decimalseparator']
     else:
         raise exceptions.DatapointNotFoundException()
     return data
@@ -70,11 +70,11 @@ def get_datapointconfig(pid,session):
 def update_datapointconfig(pid,session,data):
     dtpinfo=cassapi.get_dtpinfo(pid,{},session)
     if dtpinfo:
-        if data.has_key('dtp_name'):
-            dtpinfo.dbcols['name']=u''+data['dtp_name']
-        if data.has_key('dtp_color'):
-            if colors.validate_hexcolor(data['dtp_color']):
-                dtpinfo.dbcols['default_color']=u''+data['dtp_color']
+        if data.has_key('name'):
+            dtpinfo.dbcols['name']=u''+data['name']
+        if data.has_key('color'):
+            if colors.validate_hexcolor(data['color']):
+                dtpinfo.dbcols['default_color']=u''+data['color']
             else:
                 raise exceptions.BadParametersException()
         if cassapi.update_dtp(dtpinfo,session):

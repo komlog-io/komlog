@@ -2195,6 +2195,34 @@ def insert_datasource_widget(datasourcewidget,session):
         return False
     return True
 
+class DatapointWidget(Widget):
+    def __init__(self,wid,uid,pid):
+        self.pid=pid
+        super(DatapointWidget,self).__init__(wid,uid,types.DP_WIDGET)
+
+def get_datapoint_widget(wid,session):
+    try:
+        schemaobj=session.get(schema.DatapointWidgetORM(key=wid))
+        return schemaobj.to_apiobj()
+    except NotFoundException:
+        return None
+
+def delete_datapoint_widget(widget,session):
+    if session.remove(schema.DatapointWidgetORM(key=widget.wid)) and delete_widget(widget,session):
+        return True
+    return False
+
+def insert_datapoint_widget(datapointwidget,session):
+    if not datapointwidget:
+        return False
+    if not session.insert(schema.DatapointWidgetORM(apiobj=datapointwidget)):
+        return False
+    widget=Widget(datapointwidget.wid,datapointwidget.uid,datapointwidget.type)
+    if not insert_widget(widget,session):
+        delete_datapointwidget(datapointwidget.wid,session)
+        return False
+    return True
+
 class UserWidgetPerms:
     ''' This class is used to access User-Widget permission relation '''
     def __init__(self, uid):
