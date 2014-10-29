@@ -1,57 +1,36 @@
 '''
-Created on 14/12/2012
+Created on 01/10/2014
 
-@author: jcazor
+@author: komlog crew
 '''
 
-import pycassa
+from cassandra.cluster import Cluster
+from cassandra.query import dict_factory
+from komcass.model import statement
 
-class Pool(object):
-    def __init__(self, keyspace=None, server_list=None, pool_size=None):
-        self.connection_pool = pycassa.ConnectionPool(keyspace,server_list,pool_size=pool_size)
+session = None
 
-class CF(object):
-    def __init__(self, pool):
-        self.pool = pool.connection_pool
-        self.cf = {}
-    
-    def get(self, obj,kwargs={}):
+class Session:
+    def __init__(self, ip_list, keyspace=None):
+        self.cluster = Cluster(ip_list)
+        self.session = self.cluster.connect(keyspace)
+        self.session.row_factory = dict_factory
+        self.stmts={}
+
+    def execute(self,stmt,parameters):
         try:
-            key = obj.key
-            dbdict = self.cf[obj.__cf__].get(key,**kwargs)
-            obj.dbdict = dbdict        
-            return obj
+            row = self.session.execute(self.stmts[stmt],parameters)
+            return row
         except KeyError:
-            self.__new_cf(obj.__cf__)
-            dbdict = self.cf[obj.__cf__].get(key,**kwargs)
-            obj.dbdict = dbdict
-            return obj
-    
-    def insert(self, obj):
-        try:
-            self.cf[obj.__cf__].insert(obj.key,obj.dbdict)
-            return True
-        except KeyError:
-            self.__new_cf(obj.__cf__)
-            self.cf[obj.__cf__].insert(obj.key,obj.dbdict)
-            return True
-        else:
-            return False
-    
-    def remove(self, obj,kwargs={}):
-        try:
-            self.cf[obj.__cf__].remove(key=obj.key,**kwargs)
-            return True
-        except KeyError:
-            self.__new_cf(obj.__cf__)
-            self.cf[obj.__cf__].remove(key=obj.key,**kwargs)
-            return True
-        else:
-            return False
+            self.stmts[stmt]=self.session.prepare(statement.get_statement(stmt))
+            row = self.session.execute(self.stmts[stmt],parameters)
+            return row
+        except Exception as e:
+            print 'Otra exception en la session: '+str(e)
+            return None
 
-    def __new_cf(self, cf):
-        self.cf[cf]=pycassa.ColumnFamily(self.pool,cf)
-
-    def __del_cf(self, cf):
-        self.cf[cf]=None
+def initialize_session(ip_list,keyspace):
+    global session
+    if not session:
+        session = Session(ip_list,keyspace)
 

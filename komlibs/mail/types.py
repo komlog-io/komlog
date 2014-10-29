@@ -12,7 +12,7 @@ this file enumerate the multiple email types we will send
 NEW_USER=0
 
 
-bodytemplates={0:'/home/komlog/komlog/komlibs/mail/newuser_body.tpl'}
+bodytemplates={0:'/home/komlog/komlogs/komlibs/mail/newuser_body.tpl'}
 subjects={0:'Welcome to Komlog!'}
 fromaddress={0:'jcazor@gmail.com'}
 toaddress={0:'${to_address}'}

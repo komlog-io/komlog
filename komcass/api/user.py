@@ -1,0 +1,90 @@
+#coding: utf-8
+'''
+Created on 01/10/2014
+
+@author: komlog crew
+'''
+
+from komcass.model.orm import user as ormuser
+from komcass.model.statement import user as stmtuser
+from komcass.exception import user as excpuser
+
+def get_user(session, username=None, uid=None):
+    if username:
+        row=session.execute(stmtuser.S_A_MSTUSER_B_USERNAME,(username,))
+        if not row:
+            return None
+        elif len(row)==1:
+            return ormuser.User(**row[0])
+        else:
+            raise excpuser.DataConsistencyException(function='get_user',field='username',value=username)
+    elif uid:
+        row=session.execute(stmtuser.S_A_MSTUSER_B_UID,(uid,))
+        if not row:
+            return None
+        if len(row)==1:
+            return ormuser.User(**row[0])
+        else:
+            raise excpuser.DataConsistencyException(function='get_user',field='uid',value=uid)
+    else:
+        return None
+
+def new_user(session, user):
+    if not user:
+        return False
+    else:
+        signup_info=get_signup_info(session, email=user.email)
+        if signup_info:
+            return False
+        signup_info=get_signup_info(session, username=user.username)
+        if signup_info:
+            return False
+        userinfo=get_user(session, uid=user.uid)
+        if userinfo:
+            return False
+        session.execute(stmtuser.I_A_MSTUSER,(user.username,user.uid,user.password,user.email,user.state,user.segment,user.creation_date))
+        return True
+
+def insert_user(session, user):
+    session.execute(stmtuser.I_A_MSTUSER,(user.username,user.uid,user.password,user.email,user.state,user.segment,user.creation_date))
+    return True
+
+def delete_user(session, username):
+    session.execute(stmtuser.D_A_MSTUSER_B_UID,(username,))
+    return True
+
+def get_signup_info(session, email=None, signup_code=None, username=None):
+    if email:
+        row=session.execute(stmtuser.S_A_MSTSIGNUP_B_EMAIL,(email,))
+        if not row:
+            return None
+        elif len(row)==1:
+            return ormuser.SignUp(**row[0])
+        else:
+            raise excpuser.DataConsistencyException(function='get_signup_info',field='email',value=email)
+    elif signup_code:
+        row=session.execute(stmtuser.S_A_MSTSIGNUP_B_SIGNUPCODE,(signup_code,))
+        if not row:
+            return None
+        elif len(row)==1:
+            return ormuser.SignUp(**row[0])
+        else:
+            raise excpuser.DataConsistencyException(function='get_signup_info',field='signup_code',value=signup_code)
+    elif username:
+        row=session.execute(stmtuser.S_A_MSTSIGNUP_B_USERNAME,(username,))
+        if not row:
+            return None
+        elif len(row)==1:
+            return ormuser.SignUp(**row[0])
+        else:
+            raise excpuser.DataConsistencyException(function='get_signup_info',field='username',value=username)
+    else:
+        return None
+
+def insert_signup_info(session, signup_info):
+    if not signupinfo:
+        return False
+    else:
+        session.execute(stmtuser.I_A_MSTSIGNUP,(signupinfo.username,signupinfo.signup_code,signupinfo.email,signupinfo.creation_date,signupinfo.utilization_date))
+        return True
+

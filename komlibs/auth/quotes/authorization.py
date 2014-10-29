@@ -9,81 +9,78 @@ This library implements authorization mechanisms based on user quotas
 '''
 
 import deny
-from komcass import api as cassapi
+from komcass.api import user as cassapiuser
+from komcass.api import datasource as cassapidatasource
+from komcass.api import interface as cassapiiface
 
 
 def authorize_new_agent(username,session):
-    useruidr=cassapi.get_useruidrelation(username,session)
-    interfaces=deny.interfaces['User_AgentCreation']
-    if not cassapi.get_userifacedeny(useruidr.uid,session,interfaces):
-        return True
-    return False
+    user=cassapiuser.get_user(session, username=username)
+    interfaces=[]
+    interfaces.append(deny.interfaces['User_AgentCreation'])
+    for iface in interfaces:
+        if cassapiiface.get_user_iface_deny(session, uid=user.uid, iface=iface):
+            return False
+    return True
 
 def authorize_get_agent_config(username,aid,session):
     ''' Not quotes authorization needed '''
     return True
 
-def authorize_get_ds_data(username,did,session):
+def authorize_get_datasource_data(username,did,session):
     ''' Not quotes authorization needed '''
     return True
 
-def authorize_post_ds_data(username,aid,did,session):
+def authorize_post_datasource_data(username,aid,did,session):
     ''' Not quotes authorization needed '''
     return True
 
-def authorize_get_ds_config(username,did,session):
+def authorize_get_datasource_config(username,did,session):
     ''' Not quotes authorization needed '''
     return True
 
-def authorize_put_ds_config(username,aid,did,session):
+def authorize_put_datasource_config(username,aid,did,session):
     ''' Not quotes authorization needed '''
     return True
 
 def authorize_new_datasource(username,aid,session):
-    useruidr=cassapi.get_useruidrelation(username,session)
+    user=cassapiuser.get_user(session, username=username)
     interfaces=[]
     interfaces.append(deny.interfaces['User_DatasourceCreation'])
     interfaces.append(deny.interfaces['Agent_DatasourceCreation']+str(aid))
-    if not cassapi.get_userifacedeny(useruidr.uid,session,interfaces):
-        return True
-    return False
+    for iface in interfaces:
+        if cassapiiface.get_user_iface_deny(session, uid=user.uid, iface=iface):
+            return False
+    return True
 
-def authorize_get_dp_data(username,pid,session):
+def authorize_get_datapoint_data(username,pid,session):
     ''' Not quotes authorization needed '''
     return True
 
-def authorize_get_dp_config(username,pid,session):
+def authorize_get_datapoint_config(username,pid,session):
     ''' Not quotes authorization needed '''
     return True
 
 def authorize_new_datapoint(username,did,session):
-    useruidr=cassapi.get_useruidrelation(username,session)
+    user=cassapiuser.get_user(session, username=username)
+    datasource=cassapidatasource.get_datasource(session, did=did)
     interfaces=[]
     interfaces.append(deny.interfaces['User_DatapointCreation'])
-    #aqui deberiamos añadir tb el agent_dtpcreation, pero obtener el aid seria lento...
-    interfaces.append(deny.interfaces['Ds_DatapointCreation']+str(did))
-    if not cassapi.get_userifacedeny(useruidr.uid,session,interfaces):
-        return True
-    return False
-
-def authorize_new_graph(username,session):
-    useruidr=cassapi.get_useruidrelation(username,session)
-    interfaces=[]
-    interfaces.append(deny.interfaces['User_GraphCreation'])
-    if not cassapi.get_userifacedeny(useruidr.uid,session,interfaces):
-        return True
-    return False
-
-def authorize_get_graph_config(username,gid,session):
-    ''' Not quotes authorization needed '''
+    interfaces.append(deny.interfaces['Agent_DatapointCreation']+str(datasource.aid))
+    interfaces.append(deny.interfaces['Datasource_DatapointCreation']+str(did))
+    for iface in interfaces:
+        if cassapiiface.get_user_iface_deny(session, uid=user.uid, iface=iface):
+            return False
     return True
 
 def authorize_new_widget(username,session):
-    useruidr=cassapi.get_useruidrelation(username,session)
-    interfaces=deny.interfaces['User_WidgetCreation']
-    if not cassapi.get_userifacedeny(useruidr.uid,session,interfaces):
-        return True
-    return False
+    user=cassapiuser.get_user(session, username=username)
+    interfaces=[]
+    interfaces.append(deny.interfaces['User_WidgetCreation'])
+    for iface in interfaces:
+        if cassapiiface.get_user_iface_deny(session, uid=user.uid, iface=iface):
+            return False
+    return True
 
 def authorize_get_widget_config(username,wid,session):
     ''' Not quotes authorization needed '''
@@ -94,11 +91,13 @@ def authorize_put_widget_config(username,wid,session):
     return True
 
 def authorize_new_dashboard(username,session):
-    useruidr=cassapi.get_useruidrelation(username,session)
-    interfaces=deny.interfaces['User_DashboardCreation']
-    if not cassapi.get_userifacedeny(useruidr.uid,session,interfaces):
-        return True
-    return False
+    user=cassapiuser.get_user(session, username=username)
+    interfaces=[]
+    interfaces.append(deny.interfaces['User_DashboardCreation'])
+    for iface in interfaces:
+        if cassapiiface.get_user_iface_deny(session, uid=user.uid, iface=iface):
+            return False
+    return True
 
 def authorize_get_dashboard_config(username,bid,session):
     ''' Not quotes authorization needed '''

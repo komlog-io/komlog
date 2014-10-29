@@ -6,7 +6,9 @@ import json
 import dateutil.parser
 import operator
 from datetime import datetime,timedelta
-from komcass import api as cassapi
+from komcass.api import datasource as cassapidatasource
+from komcass.api import datapoint as cassapidatapoint
+from komcass.model.orm import datasource as ormdatasource
 from komcass import connection as casscon
 from komapp import modules
 from komfig import komlogger
@@ -15,20 +17,14 @@ from komimc import codes as msgcodes
 from komlibs.textman import variables
 from komlibs.numeric import weight
 from komlibs.ai import decisiontree
-from komlibs.gestaccount import cards as gestcard
 
 
 class Textmining(modules.Module):
     def __init__(self, config, instance_number):
         super(Textmining,self).__init__(config, self.__class__.__name__, instance_number)
         self.params={}
-        self.params['cass_keyspace'] = self.config.safe_get(sections.TEXTMINING,options.CASS_KEYSPACE)
-        self.params['cass_servlist'] = self.config.safe_get(sections.TEXTMINING,options.CASS_SERVLIST).split(',')
-        try:
-            self.params['cass_poolsize'] = int(self.config.safe_get(sections.TEXTMINING,options.CASS_POOLSIZE))
-        except Exception:
-            self.logger.error('Invalid '+options.CASS_POOLSIZE+'value: setting default (5)')
-            self.params['cass_poolsize'] = 5
+        self.params['cassandra_keyspace'] = self.config.safe_get(sections.TEXTMINING,options.CASSANDRA_KEYSPACE)
+        self.params['cassandra_cluster'] = self.config.safe_get(sections.TEXTMINING,options.CASSANDRA_CLUSTER).split(',')
         self.params['broker'] = self.config.safe_get(sections.TEXTMINING, options.MESSAGE_BROKER)
         if not self.params['broker']:
             self.params['broker'] = self.config.safe_get(sections.MAIN, options.MESSAGE_BROKER)
@@ -36,13 +32,13 @@ class Textmining(modules.Module):
     def start(self):
         self.logger = komlogger.getLogger(self.config.conf_file, self.name)
         self.logger.info('Textmining module started')
-        if not self.params['cass_keyspace'] or not self.params['cass_poolsize'] or not self.params['cass_servlist']:
+        if not self.params['cassandra_keyspace'] or not self.params['cassandra_cluster']:
             self.logger.error('Cassandra connection configuration keys not found')
         elif not self.params['broker']:
             self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
         else:
-            self.cass_pool = casscon.Pool(keyspace=self.params['cass_keyspace'], server_list=self.params['cass_servlist'], pool_size=self.params['cass_poolsize'])
-            self.cf = casscon.CF(self.cass_pool)
+            casscon.initialize_session(self.params['cassandra_cluster'],self.params['cassandra_keyspace'])
+            self.session=casscon.session
             self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
             self.__loop()
         self.logger.info('Textmining module exiting')
@@ -72,32 +68,28 @@ class Textmining(modules.Module):
         did=message.did
         date=message.date
         varlist=[]
-        dsdata=cassapi.get_datasourcedata(did,date,self.cf)
+        dsdata=cassapidatasource.get_datasource_data(self.session, did=did, date=date)
         if dsdata:
-            ds_content=dsdata.content
-            varlist = variables.get_varlist(ds_content)
+            varlist = variables.get_varlist(dsdata.content)
             mapcontentlist=[]
-            mapvarcontentlist=[]
+            mapvarcontentlist={}
             for var in varlist:
                 content=var.__dict__
                 mapcontentlist.append(content)
-                mapvarcontentlist.append((content['s'],content['l']))
+                mapvarcontentlist[content['s']]=content['l']
             mapcontentjson=json.dumps(mapcontentlist)
-            mapvarcontentjson=json.dumps(mapvarcontentlist)
-            dsmobj=cassapi.DatasourceMap(did=did,date=date,content=mapcontentjson)
-            dsmvobj=cassapi.DatasourceMapVars(did=did,date=date,content=mapvarcontentjson)
+            dsmapobj=ormdatasource.DatasourceMap(did=did,date=date,content=mapcontentjson,variables=mapvarcontentlist)
             try:
-                if cassapi.insert_datasourcemap(dsmobj,dsmvobj,self.cf):
+                if cassapidatasource.insert_datasource_map(self.session, dsmapobj=dsmapobj):
                     self.logger.debug('Map created for did: '+str(did))
-                dsinfo=cassapi.DatasourceInfo(did,last_mapped=date)
-                cassapi.update_ds(dsinfo,self.cf)
+                cassapidatasource.set_last_mapped(self.session, did=did, last_mapped=date)
                 newmsg=messages.FillDatapointMessage(did=did,date=date)
                 msgresult.add_msg_originated(newmsg)
                 msgresult.retcode=msgcodes.SUCCESS
             except Exception as e:
                 #rollback
                 self.logger.exception('Exception creating Map for did '+str(did)+': '+str(e))
-                cassapi.remove_datasourcemap(dsmobj.did,dsmobj.date,self.cf)
+                cassapidatasource.delete_datasource_map(self.session, did=did, date=date)
                 msgresult.retcode=msgcodes.ERROR
         else:
             self.logger.error('Datasource data not found: '+str(did)+' '+str(date))
@@ -118,47 +110,46 @@ class Textmining(modules.Module):
         msgresult=messages.MessageResult(message)
         pid=message.pid
         mdate=message.date
-        dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
-        if not dtpinfo:
+        datapoint=cassapidatapoint.get_datapoint(self.session, pid=pid)
+        if not datapoint:
             msgresult.retcode=msgcodes.ERROR
             return msgresult
-        did=dtpinfo.did
+        did=datapoint.did
         dates_to_get=[]
         positive_samples={}
         negative_samples={}
-        dtp_positives=cassapi.get_dtp_dtree_positives(pid,self.cf)
-        dtp_negatives=cassapi.get_dtp_dtree_negatives(pid,self.cf)
+        dtp_positives=cassapidatapoint.get_datapoint_dtree_positives(self.session, pid=pid)
+        dtp_negatives=cassapidatapoint.get_datapoint_dtree_negatives(self.session, pid=pid)
         dtree_training_set=[]
         if dtp_positives:
-            positive_samples=dtp_positives.positives
-            for date,positive in positive_samples.iteritems():
-                dates_to_get.append(date)
+            for dtp_positive in dtp_positives:
+                positive_samples[dtp_positive.date]=(dtp_positive.position,dtp_positive.length)
+                dates_to_get.append(dtp_positive.date)
         if dtp_negatives:
-            negative_samples=dtp_negatives.negatives
-            for date,negative_array in negative_samples.iteritems():
-                dates_to_get.append(date)
+            for dtp_negative in dtp_negatives:
+                negative_samples[dtp_negative.date]=dtp_negative.coordinates
+                dates_to_get.append(dtp_positive.date)
         dates_to_get=sorted(set(dates_to_get))
         dsmaps=[]
         for date in dates_to_get:
-            dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)
+            dsmap=cassapidatasource.get_datasource_map(self.session, did=did, date=date)
             varlist=variables.get_varlist(jsoncontent=dsmap.content)
             if positive_samples.has_key(date):
-                positive=positive_samples[date]
+                position,length=positive_samples[date]
                 for var in varlist:
-                    if str(var.s)==positive[0]:
+                    if var.s==position:
                         var.h['result']=True
                     else:
                         var.h['result']=False
                     dtree_training_set.append(var.h)
             if negative_samples.has_key(date) and not positive_samples.has_key(date):
-                negative_list=negative_samples[date]
+                negative_coordinates=negative_samples[date]
                 for var in varlist:
-                    if str(var.s) in negative_list:
+                    if str(var.s) in negative_coordinates.iterkeys():
                         var.h['result']=False
                         dtree_training_set.append(var.h)
         dtree=decisiontree.DecisionTree(rawdata=dtree_training_set)
-        dtpinfo.dbcols['dtree']=dtree.get_jsontree()
-        if cassapi.update_dtp(dtpinfo,self.cf):
+        if cassapidatapoint.set_datapoint_dtree(self.session, pid=pid, dtree=dtree.get_jsontree()):
             newmsg=messages.FillDatapointMessage(pid=pid,date=mdate)
             msgresult.add_msg_originated(newmsg)
             msgresult.retcode=msgcodes.SUCCESS
@@ -177,7 +168,7 @@ class Textmining(modules.Module):
         - Si recibimos el pid:
           - lista de variables: las de todas las muestras a almacenar
           - lista de dtree: el del datapoint recibido
-          - lista de muestras: DE MOMENTO VAMOS A ALMACENAR DESDE UN MES ATRAS
+          - lista de muestras: DE MOMENTO VAMOS A ALMACENAR DESDE UN DIA ATRAS
         - loop:
           - por cada muestra:
             - por cada variable:
@@ -196,24 +187,27 @@ class Textmining(modules.Module):
         pidonly_flag=False
         if pid:
             pidonly_flag=True
-            dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
-            if not dtpinfo:
+            datapoint=cassapidatapoint.get_datapoint(self.session, pid=pid)
+            datapoint_stats=cassapidatapoint.get_datapoint_stats(self.session, pid=pid)
+            if not datapoint:
                 self.logger.error('Datapoint not found: '+str(pid))
                 msgresult.retcode=msgcodes.ERROR
                 return msgresult
-            did=dtpinfo.did
-            dtree=decisiontree.DecisionTree(jsontree=json.dumps(dtpinfo.dbcols['dtree']))
-            if not dtree:
+            did=datapoint.did
+            if datapoint_stats and datapoint_stats.dtree:
+                dtree=decisiontree.DecisionTree(jsontree=datapoint_stats.dtree)
+            else:
                 self.logger.error('Datapoint Decision tree not found: '+str(pid))
                 msgresult.retcode=msgcodes.ERROR
                 return msgresult
-            dtps.append((dtpinfo,dtree))
-            dsinfo=cassapi.get_dsinfo(did,{},self.cf)
-            if not dsinfo:
-                self.logger.error('Datasource not found: '+str(dtpinfo.pid))
+            dtps.append((datapoint,datapoint_stats,dtree))
+            datasource=cassapidatasource.get_datasource(self.session, did=did)
+            if not datasource:
+                self.logger.error('Datasource not found: '+str(did))
                 msgresult.retcode=msgcodes.ERROR
                 return msgresult
-            end_date=dsinfo.last_received
+            datasource_stats=cassapidatasource.get_datasource_stats(self.session, did=did)
+            end_date=datasource_stats.last_received
             if not end_date:
                 end_date=datetime.utcnow()
             if date > end_date:
@@ -221,268 +215,44 @@ class Textmining(modules.Module):
             else:
                 init_date=date
             #obtenemos los datos
-            dsmaps=cassapi.get_datasourcemap(did=did,session=self.cf,fromdate=init_date,todate=end_date)
+            dsmaps=cassapidatasource.get_datasource_maps(self.session, did=did, fromdate=init_date, todate=end_date)
         else:
-            dsmaps.append(cassapi.get_datasourcemap(did=did,session=self.cf,date=date))
-            dsdtpr=cassapi.get_dsdtprelation(did,self.cf)
-            if dsdtpr:
-                pids=dsdtpr.dtps
-            else:
+            dsmaps.append(cassapidatasource.get_datasource_map(self.session, did=did, date=date))
+            datapoints=cassapidatapoint.get_datapoints(self.session, did=did)
+            if not datapoints:
                 self.logger.info('Datasource has no datapoints: '+str(did))
                 msgresult.retcode=msgcodes.NOOP
                 return msgresult
-            for pid in pids:
-                dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
-                dtree=decisiontree.DecisionTree(jsontree=json.dumps(dtpinfo.dbcols['dtree']))
-                dtps.append((dtpinfo,dtree))
+            for datapoint in datapoints:
+                datapoint_stats=cassapidatapoint.get_datapoint_stats(self.session, pid=datapoint.pid)
+                if datapoint_stats and datapoint_stats.dtree:
+                    dtree=decisiontree.DecisionTree(jsontree=datapoint_stats.dtree)
+                    if dtree:
+                        dtps.append((datapoint,datapoint_stats,dtree))
         for dsmap in dsmaps:
             varlist=variables.get_varlist(jsoncontent=dsmap.content)
             dtplist=list(dtps)
-            dsmapdtps={}
             for var in varlist:
                 for dtp in dtplist:
-                    dtpinfo,dtree=dtp
+                    datapoint,datapoint_stats,dtree=dtp
                     if dtree.evaluate_row(var.h):
-                        value,separator=variables.get_numericvalueandseparator(dtpinfo,varlist,var)
-                        dtp_data=cassapi.DatapointData(pid=dtpinfo.pid,date=dsmap.date,content=value)
-                        if cassapi.insert_datapointdata(dtp_data,self.cf):
-                            dsmapdtps[str(dtpinfo.pid)]=var.s
+                        value,separator=variables.get_numericvalueandseparator(datapoint_stats.decimal_separator,varlist,var)
+                        print 'SEPARATOR: '+str(separator)
+                        if cassapidatapoint.insert_datapoint_data(self.session, pid=datapoint.pid, date=dsmap.date, value=value):
+                            cassapidatasource.add_datapoint_to_datasource_map(self.session,did=dsmap.did,date=dsmap.date,pid=datapoint.pid,position=var.s)
+                            if not datapoint_stats.decimal_separator:
+                                cassapidatapoint.set_datapoint_decimal_separator(self.session,pid=datapoint.pid, decimal_separator=separator)
+                            elif not datapoint_stats.decimal_separator==separator:
+                                cassapidatapoint.set_datapoint_decimal_separator(self.session,pid=datapoint.pid, decimal_separator=separator)
+                            if not datapoint_stats.last_received:
+                                cassapidatapoint.set_datapoint_last_received(self.session, pid=datapoint.pid, last_received=dsmap.date)
+                            elif datapoint_stats.last_received < dsmap.date:
+                                cassapidatapoint.set_datapoint_last_received(self.session, pid=datapoint.pid, last_received=dsmap.date)
                             dtplist.remove(dtp)
-                            ''' Update datapoint separator info '''
-                            if not dtpinfo.get_decimalseparator():
-                                if separator:
-                                    dtpinfo.set_decimalseparator(separator)
-                                    cassapi.update_dtp(dtpinfo,self.cf)
                             break
                         else:
                             self.logger.error('Error inserting datapoint data: %s_%s' %(dtpinfo.pid,dsmap.date))
                             break
-            dsmapdtpsobj=None
-            if pidonly_flag:
-                dsmapdtpsobj=cassapi.get_datasourcemapdtps(did,dsmap.date,self.cf)
-                if dsmapdtpsobj:
-                    content=json.loads(dsmapdtpsobj.jsoncontent)
-                    for key,value in dsmapdtps.iteritems():
-                        content[key]=value
-                    dsmapdtpsobj.jsoncontent=json.dumps(content)
-                else:
-                    dsmapdtpsobj=cassapi.DatasourceMapDtps(did,date=dsmap.date,jsoncontent=json.dumps(dsmapdtps))
-            else:
-                dsmapdtpsobj=cassapi.DatasourceMapDtps(did,date=dsmap.date,jsoncontent=json.dumps(dsmapdtps))
-            if not cassapi.insert_datasourcemapdtps(dsmapdtpsobj,self.cf):
-                self.logger.error('Error inserting Datasource Datapoint Map: %s_%s' %(did,dsmap.date))
-                break
-        newmsg=messages.UpdateCardMessage(did=did,date=date)
-        msgresult.add_msg_originated(newmsg)
         msgresult.retcode=msgcodes.SUCCESS
-        return msgresult
-
-    def process_msg_UPDGRW(self,message):
-        '''
-        This function associates each graph with the datasources
-        it should be related with, and determines the importance (weight) of
-        the graph to the datasource
-        procedure:
-        1) select all datapoints associated with the graph
-        2) for each datapoint, select its datasource
-        3) Group datapoints by datasource
-        4) apply relevance measurement algorithm
-        5) store results
-        '''
-        msgresult=messages.MessageResult(message)
-        gid=message.gid
-        graphinfo=cassapi.get_graphinfo(gid,self.cf)
-        if not graphinfo:
-            self.logger.error('Graph info not found: '+str(gid))
-            msgresult.retcode=msgcodes.ERROR
-            return msgresult
-        datasources={}
-        for pid in graphinfo.get_datapoints():
-            dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
-            try:
-                did=dtpinfo.did
-                datasources[did].append(pid)
-            except KeyError:
-                datasources[did]=[]
-                datasources[did].append(pid)
-            except Exception:
-                pass
-        weights=weight.relevanceweight(datasources)
-        graphdsw=cassapi.get_graphdatasourceweight(gid,self.cf)
-        if graphdsw:
-            cassapi.delete_graphdatasourceweight(graphdsw,self.cf)
-        graphdsw=cassapi.GraphDatasourceWeight(gid)
-        graphdsw.set_data(weights)
-        if not cassapi.insert_graphdatasourceweight(graphdsw,self.cf):
-            self.logger.error('Error inserting GraphDatasourceWeight: '+str(gid))
-            msgresult.retcode=msgcodes.ERROR
-            return msgresult
-        for did in datasources.keys():
-            dsinfo=cassapi.get_dsinfo(did,{'last_mapped':u''},self.cf)
-            if dsinfo:
-                newmsg=messages.UpdateCardMessage(did=did,date=dsinfo.last_mapped,force=True)
-                msgresult.add_msg_originated(newmsg)
-            dsgw=cassapi.DatasourceGraphWeight(did)
-            dsgw.add_graph(gid,weights[did])
-            cassapi.insert_datasourcegraphweight(dsgw,self.cf)
-        self.logger.info('Graph Weight updated successfully: '+str(gid))
-        msgresult.retcode=msgcodes.SUCCESS
-        return msgresult
-
-class Cardmanager(modules.Module):
-    def __init__(self, config, instance_number):
-        super(Cardmanager,self).__init__(config, self.__class__.__name__, instance_number)
-        self.params={}
-        self.params['cass_keyspace'] = self.config.safe_get(sections.CARDMANAGER,options.CASS_KEYSPACE)
-        self.params['cass_servlist'] = self.config.safe_get(sections.CARDMANAGER,options.CASS_SERVLIST).split(',')
-        try:
-            self.params['cass_poolsize'] = int(self.config.safe_get(sections.CARDMANAGER,options.CASS_POOLSIZE))
-        except Exception:
-            self.logger.error('Invalid '+options.CASS_POOLSIZE+'value: setting default (5)')
-            self.params['cass_poolsize'] = 5
-        self.params['broker'] = self.config.safe_get(sections.CARDMANAGER, options.MESSAGE_BROKER)
-        if not self.params['broker']:
-            self.params['broker'] = self.config.safe_get(sections.MAIN, options.MESSAGE_BROKER)
-
-    def start(self):
-        self.logger = komlogger.getLogger(self.config.conf_file, self.name)
-        self.logger.info('Cardmanager module started')
-        if not self.params['cass_keyspace'] or not self.params['cass_poolsize'] or not self.params['cass_servlist']:
-            self.logger.error('Cassandra connection configuration keys not found')
-        elif not self.params['broker']:
-            self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
-        else:
-            self.cass_pool = casscon.Pool(keyspace=self.params['cass_keyspace'], server_list=self.params['cass_servlist'], pool_size=self.params['cass_poolsize'])
-            self.cf = casscon.CF(self.cass_pool)
-            self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
-            self.__loop()
-        self.logger.info('Cardmanager module exiting')
-    
-    def __loop(self):
-        while True:
-            message = self.message_bus.retrieveMessage(from_modaddr=True)
-            self.message_bus.ackMessage()
-            mtype=message.type
-            try:
-                msgresult=getattr(self,'process_msg_'+mtype)(message)
-                messages.process_msg_result(msgresult,self.message_bus,self.logger)
-            except AttributeError:
-                self.logger.exception('Exception processing message: '+mtype)
-            except Exception as e:
-                self.logger.exception('Exception processing message: '+str(e))
-
-    def process_msg_UPDCARD(self, message):
-        msgresult=messages.MessageResult(message)
-        did=message.did
-        date=message.date
-        force=message.force
-        dscard=cassapi.get_datasourcecard(did,self.cf)
-        dsinfo=cassapi.get_dsinfo(did,{},self.cf)
-        if not dsinfo:
-            msgresult.retcode=msgcodes.ERROR
-            return msgresult
-        if not dscard:
-            dscard=cassapi.DatasourceCard(did)
-            force=True
-        aginfo=cassapi.get_agentinfo(dsinfo.aid,{},self.cf)
-        if not aginfo:
-            msgresult.retcode=msgcodes.ERROR
-            return msgresult
-        if not force:
-            last_date=dscard.ds_date
-            td=timedelta(minutes=5)
-            if date-td>last_date:
-                force=True
-        if not force:
-            msgresult.retcode=msgcodes.NOOP
-            return msgresult
-        dscard.uid=dsinfo.uid
-        dscard.aid=dsinfo.aid
-        dscard.ds_name=dsinfo.dsname
-        dscard.ag_name=aginfo.agentname
-        dscard.ds_date=date
-        dscard.empty_graphs()
-        dscard.empty_datapoints()
-        dscard.empty_anomalies()
-        dsgraphw=cassapi.get_datasourcegraphweight(did,self.cf)
-        graph_msgs=[]
-        pids=[]
-        if dsgraphw:
-            sorted_by_w=sorted(dsgraphw.gids.iteritems(),key=operator.itemgetter(1))
-            num_graphs=len(sorted_by_w)
-            max_gids=2
-            c_gid=0
-            for i in reversed(range(num_graphs)):
-                if c_gid<max_gids:
-                    gid=sorted_by_w[i][0]
-                    dscard.add_graph(gid)
-                    graph_msg=messages.PlotStoreMessage(gid=gid,end_date=date)
-                    graph_msgs.append(graph_msg)
-                    c_gid+=1
-            gids=dscard.get_graphs()
-            max_pids=5
-            c_pid=0
-            for gid in gids:
-                if c_pid<max_pids:
-                    gdtpr=cassapi.get_graphdatapointrelation(gid,self.cf)
-                    if gdtpr:
-                        for pid in gdtpr.pids:
-                            if c_pid<max_pids:
-                                pids.append(pid)
-                                c_pid+=1
-                            else:
-                                break
-                else:
-                    break
-        else:
-            dsdtpr=cassapi.get_dsdtprelation(did,self.cf)
-            max_pids=5
-            c_pid=0
-            for pid in dsdtpr.dtps:
-                if c_pid<max_pids:
-                    pids.append(pid)
-                    c_pid+=1
-                else:
-                    break
-        for pid in pids:
-            dtpinfo=cassapi.get_dtpinfo(pid,{'name':'','default_color':''},self.cf)
-            dtpdata=cassapi.get_datapointdata(pid,self.cf,date=date)
-            if dtpdata and dtpinfo:
-                if not dtpinfo.dbcols.has_key('default_color'):
-                    dtpinfo.dbcols['default_color']='#FF00FF'
-                dscard.add_datapoint(dtpinfo.dbcols['name'],dtpdata.content,dtpinfo.dbcols['default_color'])
-        priority=gestcard.calculate_card_priority(dscard)
-        userdscard=cassapi.UserDsCard(dscard.uid)
-        agentdscard=cassapi.AgentDsCard(dscard.aid)
-        if dscard.priority==None:
-            ''' No existia anteriormente, solo insertamos '''
-            dscard.priority=priority
-            userdscard.add_card(dscard.did,dscard.priority)
-            agentdscard.add_card(dscard.did,dscard.priority)
-            cassapi.insert_userdscard(userdscard,self.cf)
-            cassapi.insert_agentdscard(agentdscard,self.cf)
-        elif not priority==dscard.priority:
-            ''' existia anteriormente, con prioridad diferente, borramos los anteriores e insertamos'''
-            userdscard.add_card(dscard.did,dscard.priority)
-            agentdscard.add_card(dscard.did,dscard.priority)
-            cassapi.delete_userdscard(userdscard,self.cf)
-            cassapi.delete_agentdscard(agentdscard,self.cf)
-            dscard.priority=priority
-            userdscard.add_card(dscard.did,dscard.priority)
-            agentdscard.add_card(dscard.did,dscard.priority)
-            cassapi.insert_userdscard(userdscard,self.cf)
-            cassapi.insert_agentdscard(agentdscard,self.cf)
-        else:
-            ''' existia anteriormente con la misma prioridad. no hacemos nada '''
-            pass
-        if cassapi.insert_datasourcecard(dscard,self.cf):
-            msgresult.retcode=msgcodes.SUCCESS
-            for msg in graph_msgs:
-                msgresult.add_msg_originated(msg)
-        else:
-            cassapi.delete_userdscard(userdscard,self.cf)
-            cassapi.delete_agentdscard(agentdscard,self.cf)
-            cassapi.delete_datasourcecard(dscard,self.cf)
-            msgresult.retcode=msgcodes.ERROR
         return msgresult
 

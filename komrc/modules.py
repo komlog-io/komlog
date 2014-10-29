@@ -25,13 +25,8 @@ class Rescontrol(modules.Module):
     def __init__(self, config, instance_number):
         super(Rescontrol,self).__init__(config, self.__class__.__name__, instance_number)
         self.params={}
-        self.params['cass_keyspace'] = self.config.safe_get(sections.RESCONTROL,options.CASS_KEYSPACE)
-        self.params['cass_servlist'] = self.config.safe_get(sections.RESCONTROL,options.CASS_SERVLIST).split(',')
-        try:
-            self.params['cass_poolsize'] = int(self.config.safe_get(sections.RESCONTROL,options.CASS_POOLSIZE))
-        except Exception:
-            self.logger.error('Invalid '+options.CASS_POOLSIZE+'value: setting default (5)')
-            self.params['cass_poolsize'] = 5
+        self.params['cassandra_keyspace'] = self.config.safe_get(sections.RESCONTROL,options.CASSANDRA_KEYSPACE)
+        self.params['cassandra_cluster'] = self.config.safe_get(sections.RESCONTROL,options.CASSANDRA_CLUSTER).split(',')
         self.params['broker'] = self.config.safe_get(sections.RESCONTROL, options.MESSAGE_BROKER)
         if not self.params['broker']:
             self.params['broker'] = self.config.safe_get(sections.MAIN, options.MESSAGE_BROKER)
@@ -39,13 +34,13 @@ class Rescontrol(modules.Module):
     def start(self):
         self.logger = komlogger.getLogger(self.config.conf_file, self.name)
         self.logger.info('Rescontrol module started')
-        if not self.params['cass_keyspace'] or not self.params['cass_poolsize'] or not self.params['cass_servlist']:
+        if not self.params['cassandra_keyspace'] or not self.params['cassandra_cluster']:
             self.logger.error('Cassandra connection configuration keys not found')
         elif not self.params['broker']:
             self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
         else:
-            self.cass_pool = casscon.Pool(keyspace=self.params['cass_keyspace'], server_list=self.params['cass_servlist'], pool_size=self.params['cass_poolsize'])
-            self.cass_cf = casscon.CF(self.cass_pool)
+            casscon.initialize_session(self.params['cassandra_cluster'],self.params['cassandra_keyspace'])
+            self.session=casscon.session
             self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
             self.__loop()
         self.logger.info('Rescontrol module exiting')
@@ -74,7 +69,7 @@ class Rescontrol(modules.Module):
         for quote in quotes_to_update:
             self.logger.debug('Inicio de proceso de quota: '+quote)
             try:
-                qvalue=self.quote_update_funcs[quote](cf=self.cass_cf,params=opparams)
+                qvalue=self.quote_update_funcs[quote](session=self.session,params=opparams)
             except KeyError:
                 try:
                     self.quote_update_funcs[quote]=getattr(quoup,'update_'+quote)
@@ -92,9 +87,9 @@ class Rescontrol(modules.Module):
                     ''' quote updated successfully, the return value is the quota value updated'''
                     ''' now determine if quota is aproaching limits and should block interface'''
                     try:
-                        should_block=self.quote_compare_funcs[quote](cf=self.cass_cf,params=opparams)
+                        should_block=self.quote_compare_funcs[quote](session=self.session,params=opparams)
                         deny=True if should_block else False
-                        if self.quote_deny_funcs[quote](cf=self.cass_cf,params=opparams,deny=deny):
+                        if self.quote_deny_funcs[quote](session=self.session,params=opparams,deny=deny):
                             msgresult.retcode=msgcodes.SUCCESS
                     except Exception as e:
                         self.logger.exception('Exception evaluating quote denial: '+quote+' '+str(e))
@@ -111,7 +106,7 @@ class Rescontrol(modules.Module):
         for auth in auths_to_update:
             self.logger.debug('Resource authorization update begins: '+auth)
             try:
-                avalue=self.resource_update_funcs[auth](cf=self.cass_cf,params=opparams)
+                avalue=self.resource_update_funcs[auth](session=self.session,params=opparams)
             except KeyError:
                 try:
                     self.resource_update_funcs[auth]=getattr(resup,'update_'+auth)

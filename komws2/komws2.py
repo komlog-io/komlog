@@ -60,15 +60,15 @@ class Application(tornado.web.Application):
                     }
 
         keyspace='komlog'
-        server_list=('csbe1',)
-        pool=casscon.Pool(keyspace,server_list,5)
-        self.cf=casscon.CF(pool)
+        server_list=('localhost',)
+        casscon.initialize_session(server_list,keyspace)
+        self.session=casscon.session
         self.dest_dir='/var/local/komlog/data/received'
         #BUS vars
         broker='localhost'
         name='komws2'
         instance_number='8000'
-        hostname='komserver1'
+        hostname='localhost'
         logger=logging.Logger(name)
         self.mb=bus.MessageBus(broker,name,instance_number,hostname,logger)
         tornado.web.Application.__init__(self, handler_list, **settings_vars)

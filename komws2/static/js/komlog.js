@@ -156,6 +156,7 @@ angular.module('komlogApp')
     $scope.db_c=[{bid:'0',name:'Home',wids:[]}]
 
     $scope.showWidget = function (id) {
+        console.log('llamando a showwidget')
         contentAreaServices.showWidget(id)
         dataServices.loadWidgetContents(id);
     }

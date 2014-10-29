@@ -8,55 +8,56 @@ This library implements authorization mechanisms to Komlog interfaces and object
 @author: jcazor
 '''
 
-from komcass import api as cassapi
+from komcass.api import user as cassapiuser
+from komcass.api import permission as cassapiperm
 
 def authorize_get_agent_config(username,session,aid):
     if not aid:
         return False
-    useruidr=cassapi.get_useruidrelation(username=username,session=session)
-    useragentperm=cassapi.get_useragentperms(uid=useruidr.uid,session=session,aid=aid)
-    if useragentperm:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_agent_perm(uid=user.uid,session=session,aid=aid)
+    if permission:
         return True
     else:
         return False
 
-def authorize_get_ds_config(username,did,session):
+def authorize_get_datasource_config(username,did,session):
     if not did:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userdsperms=cassapi.get_userdsperms(useruidr.uid,session,did=did)
-    if userdsperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_datasource_perm(uid=user.uid,session=session,did=did)
+    if permission:
         return True
     else:
         return False
 
-def authorize_put_ds_config(username,did,session):
+def authorize_put_datasource_config(username,did,session):
     if not did:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userdsperms=cassapi.get_userdsperms(useruidr.uid,session,did=did)
-    if userdsperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_datasource_perm(uid=user.uid,session=session,did=did)
+    if permission:
         return True
     else:
         return False
 
-def authorize_get_ds_data(username,did,session):
+def authorize_get_datasource_data(username,did,session):
     if not did:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userdsperms=cassapi.get_userdsperms(useruidr.uid,session,did=did)
-    if userdsperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_datasource_perm(uid=user.uid,session=session,did=did)
+    if permission:
         return True
     else:
         return False
 
-def authorize_post_ds_data(username,aid,did,session):
+def authorize_post_datasource_data(username,aid,did,session):
     if not aid or not did:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userdsperms=cassapi.get_userdsperms(useruidr.uid,session,did=did)
-    agentdsperms=cassapi.get_agentdsperms(aid,session,did=did)
-    if userdsperms and agentdsperms:
+    user=cassapiuser.get_user(session, username=username)
+    datasource_perm=cassapiperm.get_user_datasource_perm(uid=user.uid,session=session,did=did)
+    agent_perm=cassapiperm.get_user_agent_perm(session, uid=user.uid, aid=aid)
+    if agent_perm and datasource_perm:
         return True
     else:
         return False
@@ -68,40 +69,39 @@ def authorize_new_agent(username,session):
 def authorize_new_datasource(username,aid,session):
     if not aid:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    useragperms=cassapi.get_useragentperms(useruidr.uid,session,aid)
-    if useragperms:
-        return True
-    else:
-        return False
-    return True
-
-def authorize_get_dp_data(username,pid,session):
-    if not pid:
-        return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userdtpperms=cassapi.get_userdtpperms(useruidr.uid,session,pid=pid)
-    if userdtpperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_agent_perm(session, uid=user.uid, aid=aid)
+    if permission:
         return True
     else:
         return False
 
-def authorize_get_dp_config(username,pid,session):
+def authorize_get_datapoint_data(username,pid,session):
     if not pid:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userdtpperms=cassapi.get_userdtpperms(useruidr.uid,session,pid=pid)
-    if userdtpperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_datapoint_perm(session, uid=user.uid, pid=pid)
+    if permission:
         return True
     else:
         return False
 
-def authorize_put_dp_config(username,pid,session):
+def authorize_get_datapoint_config(username,pid,session):
     if not pid:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userdtpperms=cassapi.get_userdtpperms(useruidr.uid,session,pid=pid)
-    if userdtpperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_datapoint_perm(session, uid=user.uid, pid=pid)
+    if permission:
+        return True
+    else:
+        return False
+
+def authorize_put_datapoint_config(username,pid,session):
+    if not pid:
+        return False
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_datapoint_perm(session, uid=user.uid, pid=pid)
+    if permission:
         return True
     else:
         return False
@@ -109,43 +109,9 @@ def authorize_put_dp_config(username,pid,session):
 def authorize_new_datapoint(username,did,session):
     if not did:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userdsperms=cassapi.get_userdsperms(useruidr.uid,session,did)
-    if userdsperms:
-        return True
-    else:
-        return False
-    return True
-
-def authorize_new_graph(username,pid,session):
-    if not pid:
-        return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userdtpperms=cassapi.get_userdtpperms(useruidr.uid,session,pid)
-    if userdtpperms:
-        return True
-    else:
-        return False
-    return True
-
-def authorize_get_graph_config(username,gid,session):
-    if not gid:
-        return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    usergraphperms=cassapi.get_usergraphperms(useruidr.uid,session,gid=gid)
-    if usergraphperms:
-        return True
-    else:
-        return False
-
-def authorize_put_graph_config(username,gid,session):
-    if not gid:
-        return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    if not useruidr:
-        raise exceptions.BadParametersException()
-    usergraphperms=cassapi.get_usergraphperms(useruidr.uid,session,gid=gid)
-    if usergraphperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_datasource_perm(session, uid=user.uid, did=did)
+    if permission:
         return True
     else:
         return False
@@ -153,19 +119,9 @@ def authorize_put_graph_config(username,gid,session):
 def authorize_put_agent_config(username,aid,session):
     if not aid:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    useragentperms=cassapi.get_useragentperms(useruidr.uid,session,aid=aid)
-    if useragentperms:
-        return True
-    else:
-        return False
-
-def authorize_get_plot_data(username,gid,session):
-    if not gid:
-        return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    usergraphperms=cassapi.get_usergraphperms(useruidr.uid,session,gid=gid)
-    if usergraphperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_agent_perm(session, uid=user.uid, aid=aid)
+    if permission:
         return True
     else:
         return False
@@ -177,9 +133,9 @@ def authorize_new_widget(username,session):
 def authorize_get_widget_config(username,wid,session):
     if not wid:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userwgperms=cassapi.get_userwidgetperms(useruidr.uid,session,wid=wid)
-    if userwgperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_widget_perm(session, uid=user.uid, wid=wid)
+    if permission:
         return True
     else:
         return False
@@ -187,9 +143,9 @@ def authorize_get_widget_config(username,wid,session):
 def authorize_put_widget_config(username,wid,session):
     if not wid:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userwgperms=cassapi.get_userwidgetperms(useruidr.uid,session,wid=wid)
-    if userwgperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_widget_perm(session, uid=user.uid, wid=wid)
+    if permission:
         return True
     else:
         return False
@@ -201,9 +157,9 @@ def authorize_new_dashboard(username,session):
 def authorize_get_dashboard_config(username,bid,session):
     if not bid:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userdbperms=cassapi.get_userdashboardperms(useruidr.uid,session,bid=bid)
-    if userdbperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_dashboard_perm(session, uid=user.uid, bid=bid)
+    if permission:
         return True
     else:
         return False
@@ -211,9 +167,9 @@ def authorize_get_dashboard_config(username,bid,session):
 def authorize_put_dashboard_config(username,bid,session):
     if not bid:
         return False
-    useruidr=cassapi.get_useruidrelation(username,session)
-    userdbperms=cassapi.get_userdashboardperms(useruidr.uid,session,bid=bid)
-    if userdbperms:
+    user=cassapiuser.get_user(session, username=username)
+    permission=cassapiperm.get_user_dashboard_perm(session, uid=user.uid, bid=bid)
+    if permission:
         return True
     else:
         return False

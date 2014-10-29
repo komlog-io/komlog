@@ -5,7 +5,8 @@ import json
 import time
 import uuid
 import dateutil.parser
-from komcass import api as cassapi
+from komcass.api import datasource as cassapidatasource
+from komcass.model.orm import datasource as ormdatasource
 from komcass import connection as casscon
 from komfs import api as fsapi
 from komapp import modules
@@ -70,13 +71,8 @@ class Storing(modules.Module):
     def __init__(self, config, instance_number):
         super(Storing,self).__init__(config, self.__class__.__name__, instance_number)
         self.params={}
-        self.params['cass_keyspace'] = self.config.safe_get(sections.STORING,options.CASS_KEYSPACE)
-        self.params['cass_servlist'] = self.config.safe_get(sections.STORING,options.CASS_SERVLIST).split(',')
-        try:
-            self.params['cass_poolsize'] = int(self.config.safe_get(sections.STORING,options.CASS_POOLSIZE))
-        except Exception:
-            self.logger.error('Invalid '+options.CASS_POOLSIZE+'value: setting default (5)')
-            self.params['cass_poolsize'] = 5
+        self.params['cassandra_keyspace'] = self.config.safe_get(sections.STORING,options.CASSANDRA_KEYSPACE)
+        self.params['cassandra_cluster'] = self.config.safe_get(sections.STORING,options.CASSANDRA_CLUSTER).split(',')
         self.params['watchdir'] = self.config.safe_get(sections.STORING, options.SAMPLES_INPUT_PATH)
         self.params['outputdir'] = self.config.safe_get(sections.STORING, options.SAMPLES_OUTPUT_PATH)
         self.params['broker'] = self.config.safe_get(sections.STORING, options.MESSAGE_BROKER)
@@ -86,7 +82,7 @@ class Storing(modules.Module):
     def start(self):
         self.logger = komlogger.getLogger(self.config.conf_file, self.name)
         self.logger.info('Storing module started')
-        if not self.params['cass_keyspace'] or not self.params['cass_poolsize'] or not self.params['cass_servlist']:
+        if not self.params['cassandra_keyspace'] or not self.params['cassandra_cluster']:
             self.logger.error('Cassandra connection configuration keys not found')
         elif not self.params['watchdir']:
             self.logger.error('Key '+options.SAMPLES_INPUT_PATH+' not found')
@@ -95,8 +91,8 @@ class Storing(modules.Module):
         elif not self.params['broker']:
             self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
         else:
-            self.cass_pool = casscon.Pool(keyspace=self.params['cass_keyspace'], server_list=self.params['cass_servlist'], pool_size=self.params['cass_poolsize'])
-            self.cass_cf = casscon.CF(self.cass_pool)
+            casscon.initialize_session(self.params['cassandra_cluster'],self.params['cassandra_keyspace'])
+            self.session=casscon.session
             self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
             self.__loop()
         self.logger.info('Storing module exiting')
@@ -127,19 +123,15 @@ class Storing(modules.Module):
             else:
                 filename = f[:-5]+'.wspl'
                 self.logger.debug('Storing '+filename)
-                #datasourceid = filename.split('_')[1].split('.')[0]
-                #datasourceid = uuid.UUID(datasourceid)
-                #date = dateutil.parser.parse(os.path.basename(filename).split('_')[0])
                 metainfo = json.loads(fsapi.get_file_content(filename))
                 dsinfo=json.loads(metainfo['json_content'])
                 did=uuid.UUID(metainfo['did'])
                 ds_content=dsinfo['ds_content']
                 ds_date=dateutil.parser.parse(dsinfo['ds_date'])
-                dsobj=cassapi.DatasourceData(did=did,date=ds_date,content=ds_content)
+                dsdobj=ormdatasource.DatasourceData(did=did,date=ds_date,content=ds_content)
                 try:
-                    if cassapi.insert_datasourcedata(dsobj,self.cass_cf):
-                        dsinfo=cassapi.DatasourceInfo(did,last_received=ds_date)
-                        cassapi.update_ds(dsinfo,self.cass_cf)
+                    if cassapidatasource.insert_datasource_data(self.session, dsdobj=dsdobj):
+                        cassapidatasource.set_last_received(self.session, did=did, last_received=ds_date)
                         self.logger.debug(filename+' stored successfully : '+str(did)+' '+str(ds_date))
                         fo = os.path.join(self.params['outputdir'],os.path.basename(filename)[:-5]+'.sspl')
                         os.rename(filename,fo)
@@ -151,7 +143,7 @@ class Storing(modules.Module):
                         os.rename(filename,fo)
                         msgresult.retcode=msgcodes.ERROR
                 except Exception as e:
-                    cassapi.delete_datasourcedata(did,ds_date,self.cass_cf)
+                    cassapidatasource.delete_datasource_data(self.session, did=did, date=ds_date)
                     self.logger.exception('Exception inserting sample: '+str(e))
                     fo = filename[:-5]+'.xspl'
                     os.rename(filename,fo)

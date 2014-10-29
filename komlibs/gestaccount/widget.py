@@ -1,0 +1,126 @@
+#coding: utf-8
+'''
+widget.py: library for managing widget operations
+
+This file implements the logic of different widget operations at a service level.
+At this point, authorization and autentication has been passed
+
+creation date: 2014/09/18
+author: jcazor
+'''
+
+import uuid
+from datetime import datetime
+from komcass.api import widget as cassapiwidget
+from komcass.api import user as cassapiuser
+from komcass.api import datasource as cassapidatasource
+from komcass.api import datapoint as cassapidatapoint
+from komcass.model.orm import widget as ormwidget
+from komlibs.gestaccount import states,types,exceptions
+from komlibs.ifaceops import operations
+from komimc import messages
+
+def get_widget_config(wid,session):
+    widget=cassapiwidget.get_widget(session, wid=wid)
+    if widget:
+        data={}
+        if widget.type==types.DS_WIDGET:
+            dswidget=cassapiwidget.get_widget_ds(session, wid=wid)
+            if dswidget:
+                data={'wid':str(dswidget.wid),'type':types.DS_WIDGET,'did':str(dswidget.did)}
+        elif widget.type==types.DP_WIDGET:
+            dpwidget=cassapiwidget.get_widget_dp(session, wid=wid)
+            if dpwidget:
+                data={'wid':str(dpwidget.wid),'type':types.DP_WIDGET,'pid':str(dpwidget.pid)}
+        return data
+    else:
+        raise exceptions.WidgetNotFoundException()
+
+def get_widgets_config(username,session):
+    user=cassapiuser.get_user(session, username=username)
+    if not user:
+        raise exceptions.UserNotFoundException()
+    data=[]
+    widgets=cassapiwidget.get_widgets(session, uid=user.uid)
+    for widget in widgets:
+        if widget.type==types.DS_WIDGET:
+            dswidget=cassapiwidget.get_widget_ds(session, wid=widget.wid)
+            if dswidget:
+                data.append({'wid':str(dswidget.wid),'type':types.DS_WIDGET,'did':str(dswidget.did)})
+        elif widget.type==types.DP_WIDGET:
+            dpwidget=cassapiwidget.get_widget_dp(session, wid=widget.wid)
+            if dpwidget:
+                data.append({'wid':str(dpwidget.wid),'type':types.DP_WIDGET,'pid':str(dpwidget.pid)})
+    return data
+
+def delete_widget(username,wid,session,msgbus):
+    user=cassapiuser.get_user(session, username=username)
+    if not user:
+        raise exceptions.UserNotFoundException()
+    print 'obtenido user '+username
+    widget=cassapiwidget.get_widget(session, wid=wid)
+    if not widget:
+        raise exceptions.WidgetNotFoundException()
+    else:
+        print 'obtenido widget'
+        if cassapiwidget.delete_widget(session, wid=widget.wid):
+#               TODO:
+#               faltaría todo el envio de mensajes para actualizar quotas y permisos
+#               pero para eso tenemos que crear operaciones nuevas, etc
+            return True
+        else:
+            return False
+
+def new_widget_ds(username,did,session,msgbus):
+    user=cassapiuser.get_user(session, username=username)
+    if not user:
+        raise exceptions.UserNotFoundException()
+    datasource=cassapidatasource.get_datasource(session, did=did)
+    if not datasource:
+        raise exceptions.DatasourceNotFoundException()
+    else:
+        userwidgets=cassapiwidget.get_widgets(session, uid=user.uid)
+        if userwidgets:
+            for widget in userwidgets:
+                if widget.type==types.DS_WIDGET:
+                    widget_ds=cassapiwidget.get_widget_ds(session, wid=widget.wid)
+                    if widget_ds and widget_ds.did==did:
+                        return {'wid':str(wid)}
+        wid=uuid.uuid4()
+        widget=ormwidget.WidgetDs(wid=wid,uid=datasource.uid,did=datasource.did,creation_date=datetime.utcnow())
+        if cassapiwidget.new_widget(session, widget=widget):
+            operation=operations.NewWidgetOperation(uid=user.uid,wid=wid)
+            message=messages.UpdateQuotesMessage(operation=operation)
+            msgbus.sendMessage(message)
+            message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
+            msgbus.sendMessage(message)
+            return {'wid':str(wid)}
+        else:
+            raise exceptions.WidgetCreationException()
+
+def new_widget_dp(username,pid,session,msgbus):
+    user=cassapiuser.get_user(session, username=username)
+    if not user:
+        raise exceptions.UserNotFoundException()
+    datapoint=cassapidatapoint.get_datapoint(session, pid=pid)
+    if not datapoint:
+        raise exceptions.DatapointNotFoundException()
+    else:
+        widgets=cassapiwidget.get_widgets(session, uid=user.uid)
+        for widget in widgets:
+            if widget.type==types.DP_WIDGET:
+                dpwidget=cassapiwidget.get_widget_dp(session, wid=wid)
+                if dpwidget and dpwidget.pid==pid:
+                    return {'wid':str(wid)}
+        wid=uuid.uuid4()
+        widget=ormwidget.WidgetDp(wid=wid,uid=user.uid,pid=datapoint.pid,creation_date=datetime.utcnow())
+        if cassapiwidget.new_widget(session, widget=widget):
+            operation=operations.NewWidgetOperation(uid=user.uid,wid=wid)
+            message=messages.UpdateQuotesMessage(operation=operation)
+            msgbus.sendMessage(message)
+            message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
+            msgbus.sendMessage(message)
+            return {'wid':str(wid)}
+        else:
+            raise exceptions.WidgetCreationException()
+

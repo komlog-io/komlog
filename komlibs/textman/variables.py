@@ -141,7 +141,7 @@ def get_string(offset,start,content,before):
                 pos+=1
     return ''.join(string)
 
-def get_numericvalueandseparator(dtpinfo,varlist,var):
+def get_numericvalueandseparator(old_decsep,varlist,var):
     '''
     This function return the numeric value (float) of a datasource var.
     If the value contains a separator (, or .) the decimal separator will be guessed 
@@ -184,7 +184,7 @@ def get_numericvalueandseparator(dtpinfo,varlist,var):
     if not m:
         ''' No decimal part'''
         return Decimal(var.c),False
-    decsep=dtpinfo.get_decimalseparator()
+    decsep=old_decsep
     if decsep:
         ''' Decimal separator already established'''
         return getdecimal(var.c,decsep),decsep

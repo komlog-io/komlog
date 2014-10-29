@@ -4,7 +4,12 @@ import sections, options
 import re
 import json
 import uuid
-from komcass import api as cassapi
+from datetime import datetime
+from komcass.api import user as cassapiuser
+from komcass.api import datasource as cassapidatasource
+from komcass.api import datapoint as cassapidatapoint
+from komcass.model.orm import user as ormuser
+from komcass.model.orm import datapoint as ormdatapoint
 from komcass import connection as casscon
 from komapp import modules
 from komfig import komlogger
@@ -22,13 +27,8 @@ class Gestconsole(modules.Module):
     def __init__(self, config, instance_number):
         super(Gestconsole,self).__init__(config, self.__class__.__name__, instance_number)
         self.params={}
-        self.params['cass_keyspace'] = self.config.safe_get(sections.GESTCONSOLE,options.CASS_KEYSPACE)
-        self.params['cass_servlist'] = self.config.safe_get(sections.GESTCONSOLE,options.CASS_SERVLIST).split(',')
-        try:
-            self.params['cass_poolsize'] = int(self.config.safe_get(sections.GESTCONSOLE,options.CASS_POOLSIZE))
-        except Exception:
-            self.logger.error('Invalid '+options.CASS_POOLSIZE+'value: setting default (5)')
-            self.params['cass_poolsize'] = 5
+        self.params['cassandra_keyspace'] = self.config.safe_get(sections.GESTCONSOLE,options.CASSANDRA_KEYSPACE)
+        self.params['cassandra_cluster'] = self.config.safe_get(sections.GESTCONSOLE,options.CASSANDRA_CLUSTER).split(',')
         self.params['broker'] = self.config.safe_get(sections.GESTCONSOLE, options.MESSAGE_BROKER)
         if not self.params['broker']:
             self.params['broker'] = self.config.safe_get(sections.MAIN, options.MESSAGE_BROKER)
@@ -40,15 +40,15 @@ class Gestconsole(modules.Module):
     def start(self):
         self.logger = komlogger.getLogger(self.config.conf_file, self.name)
         self.logger.info('Gestconsole module started')
-        if not self.params['cass_keyspace'] or not self.params['cass_poolsize'] or not self.params['cass_servlist']:
+        if not self.params['cassandra_keyspace'] or not self.params['cassandra_cluster']:
             self.logger.error('Cassandra connection configuration keys not found')
         elif not self.params['broker']:
             self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
         elif not self.params['mail_server'] or not self.params['mail_user'] or not self.params['mail_password']:
             self.logger.error('Mail configuration parameter not found either server, user or password')
         else:
-            self.cass_pool = casscon.Pool(keyspace=self.params['cass_keyspace'], server_list=self.params['cass_servlist'], pool_size=self.params['cass_poolsize'])
-            self.cf = casscon.CF(self.cass_pool)
+            casscon.initialize_session(self.params['cassandra_cluster'],self.params['cassandra_keyspace'])
+            self.session=casscon.session
             self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
             self.mailer = mailcon.Mailer(self.params['mail_server'])
             self.mailer.login(self.params['mail_user'],self.params['mail_password'])
@@ -73,6 +73,7 @@ class Gestconsole(modules.Module):
         - Comprobamos que la variable exista en el sample (ds en un dtdo momento)
         - Comprobamos que la variable no pertenezca a un datapoint existente
         - Registramos el nuevo datapoint, marcando la variable como muestra positiva
+        - creamos el widget dp
         '''
         msgresult=messages.MessageResult(message)
         did=message.did
@@ -80,60 +81,56 @@ class Gestconsole(modules.Module):
         pos=message.pos
         length=message.length
         name=message.name
-        dsinfo=cassapi.get_dsinfo(did,{},self.cf)
-        if not dsinfo:
+        datasource=cassapidatasource.get_datasource(self.session, did=did)
+        if not datasource:
             self.logger.error('Datasource not found: '+str(did))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
-        dsmapvar = cassapi.get_datasourcemapvars(did=did,session=self.cf,date=date)
-        if not dsmapvar: 
-            self.logger.error('Datasource MapVar not found: '+str(did)+' '+str(date))
+        dsmap = cassapidatasource.get_datasource_map(self.session, did=did, date=date)
+        if not dsmap: 
+            self.logger.error('DatasourceMap not found: '+str(did)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         try:
-            content=json.loads(dsmapvar.content)
-            index=content.index([int(pos),int(length)])
-        except ValueError:
-            self.logger.exception('ValueError Loading content: '+str(did)+' '+str(date))
+            value=dsmap.variables[int(pos)]
+            if not value==int(length):
+                self.logger.error('Variable length doesnt match stored value'+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
+                msgresult.retcode=msgcodes.ERROR
+                return msgresult
+        except KeyError:
+            self.logger.exception('Variable not found: '+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         except Exception as e:
-            self.logger.exception('Loading content exception '+str(e)+': '+str(did)+' '+str(date))
+            self.logger.exception('DatasourceMap exception '+str(e)+': '+str(did)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
-        dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)
         varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=pos)
-        dsdtprelation=cassapi.get_dsdtprelation(did,self.cf)
-        if dsdtprelation:
-            for pid in dsdtprelation.dtps:
-                dtpinfo=cassapi.get_dtpinfo(pid,{'dtree':u''},self.cf)
-                if not dtpinfo:
-                    ''' Encontramos dtp sin DTREE. Solicitamos GDTREE y MONVAR nuevamente. Todos los dtp deben
-                    tener DTREE para saber si la variable solicitada ya está siendo monitorizada '''
-                    newmsg=messages.GenerateDTreeMessage(pid=pid,date=date)
-                    msgresult.add_msg_originated(newmsg)
-                    newmsg=message
-                    msgresult.add_msg_originated(newmsg)
+        pids=cassapidatapoint.get_datapoints_pids(self.session, did=did)
+        for pid in pids:
+            dtree=cassapidatapoint.get_datapoint_stats(self.session, pid=pid)
+            if not dtree:
+                ''' Encontramos dtp sin DTREE. Solicitamos GDTREE y MONVAR nuevamente. Todos los dtp deben
+                tener DTREE para saber si la variable solicitada ya está siendo monitorizada '''
+                newmsg=messages.GenerateDTreeMessage(pid=pid,date=date)
+                msgresult.add_msg_originated(newmsg)
+                newmsg=message
+                msgresult.add_msg_originated(newmsg)
+                msgresult.retcode=msgcodes.ERROR
+                return msgresult
+            try:
+                stored_dtree=datapoint.dtree
+                dtree=decisiontree.DecisionTree(jsontree=json.dumps(stored_dtree))
+                if dtree.evaluate_row(varlist[0].h):
+                    self.logger.error('Datapoint Already monitored: '+str(datapoint.pid))
                     msgresult.retcode=msgcodes.ERROR
                     return msgresult
-                try:
-                    stored_dtree=dtpinfo.dbcols['dtree']
-                    dtree=decisiontree.DecisionTree(jsontree=json.dumps(stored_dtree))
-                    if dtree.evaluate_row(varlist[0].h):
-                        self.logger.error('Datapoint Already monitored: '+str(pid))
-                        msgresult.retcode=msgcodes.ERROR
-                        return msgresult
-                except KeyError:
-                    pass
-        else:
-            dsdtprelation=cassapi.DsDtpRelation(did=did)
+            except KeyError:
+                pass
         pid=uuid.uuid4()
-        newdtp=cassapi.DatapointInfo(pid,name=name,did=did)
-        newdtpdtreepositives=cassapi.DatapointDtreePositives(pid)
-        newdtpdtreepositives.set_positive(date,[pos,length])
-        if cassapi.register_dtp(newdtp,dsdtprelation,self.cf) and cassapi.update_dtp_dtree_positives(newdtpdtreepositives,self.cf):
-            aginfo=cassapi.get_agentinfo(dsinfo.aid,{},self.cf)
-            operation=operations.NewDatapointOperation(uid=aginfo.uid,aid=dsinfo.aid,did=did,pid=pid)
+        datapoint=ormdatapoint.Datapoint(pid=pid,did=did,datapointname=name,creation_date=datetime.utcnow())
+        if cassapidatapoint.new_datapoint(self.session, datapoint) and cassapidatapoint.set_datapoint_dtree_positive_at(self.session, pid=pid, date=date, position=int(pos), length=int(length)):
+            operation=operations.NewDatapointOperation(uid=datasource.uid,aid=datasource.aid,did=did,pid=pid)
             newmsg=messages.UpdateQuotesMessage(operation=operation)
             msgresult.add_msg_originated(newmsg)
             newmsg=messages.ResourceAuthorizationUpdateMessage(operation=operation)
@@ -157,43 +154,33 @@ class Gestconsole(modules.Module):
         pos=message.pos
         length=message.length
         pid=message.pid
-        dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
-        if not dtpinfo:
+        datapoint=cassapidatapoint.get_datapoint(self.session, pid=pid)
+        if not datapoint:
             self.logger.error('Datapoint not found: '+str(pid))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
-        did=dtpinfo.did
-        dsmapvar = cassapi.get_datasourcemapvars(did=did,session=self.cf,date=date)
-        if not dsmapvar: 
+        dsmapvars = cassapidatasource.get_datasource_map_variables(self.session, did=datapoint.did, date=date)
+        if not dsmapvars: 
             self.logger.error('Datasource MapVar not found')
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         try:
-            content=json.loads(dsmapvar.content)
-            index=content.index([int(pos),int(length)])
-        except ValueError:
-            self.logger.exception('ValueError loading content: '+str(did)+' '+str(date))
-            msgresult.retcode=msgcodes.ERROR
-            return msgresult
-        except Exception:
-            self.logger.exception('Exception loading content: '+str(did)+' '+str(date))
+            value=dsmapvars[pos]
+            if not value==int(length):
+                self.logger.exception('Received length doesnt match stored value: '+str(datapoint.did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
+                msgresult.retcode=msgcodes.ERROR
+                return msgresult
+        except KeyError:
+            self.logger.exception('Variable not found: '+str(datapoint.did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         #en este punto hemos comprobado que la muestra y variable existen, falta añadirla al listado de negativos
-        dtpdtreeneg=cassapi.get_dtp_dtree_negatives(pid=pid,date=date,session=self.cf)
-        if not dtpdtreeneg:
-            dtpdtreeneg=cassapi.DatapointDtreeNegatives(pid=pid)
-        dtpdtreeneg.add_negative(date,[pos,length])
-        if not cassapi.update_dtp_dtree_negatives(dtpdtreeneg,self.cf):
+        if not cassapidatapoint.add_datapoint_dtree_negative_at(self.session, pid=pid, date=date, position=pos, length=length):
             self.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         #y eliminarla de los positivos si estuviese
-        dtpdtreepos=cassapi.get_dtp_dtree_positives(pid=pid,date=date,session=self.cf)
-        if not dtpdtreepos:
-            dtpdtreepos=cassapi.DatapointDtreePositives(pid=pid)
-        dtpdtreepos.del_positive(date,[pos,length])
-        if not cassapi.update_dtp_dtree_positives(dtpdtreepos,self.cf):
+        if not cassapidatapoint.delete_datapoint_dtree_positive_at(self.session, pid=pid, date=date, position=pos):
             self.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
@@ -215,64 +202,52 @@ class Gestconsole(modules.Module):
         length=message.length
         did=message.did
         pid=message.pid
-        dtpinfo=cassapi.get_dtpinfo(pid,{},self.cf)
-        if not dtpinfo:
+        datapoint=cassapidatapoint.get_datapoint(self.session, pid=pid)
+        if not datapoint:
             self.logger.error('Datapoint not found: '+str(pid))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
-        if not dtpinfo.did or not did == dtpinfo.did:
-            self.logger.error('Datapoint DID not matchs Message DID: dtp_did: '+str(dtpinfo.did)+' msg_did: '+str(did))
+        if not datapoint.did or not did == datapoint.did:
+            self.logger.error('Datapoint DID does not match Message DID: datapoint.did: '+str(datapoint.did)+' message.did: '+str(did))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
-        dsmapvar = cassapi.get_datasourcemapvars(did=did,session=self.cf,date=date)
-        if not dsmapvar: 
+        dsmapvars = cassapidatasource.get_datasource_map_variables(self.session, did=did, date=date)
+        if not dsmapvars: 
             self.logger.error('Datasource MapVar not found: '+str(did)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         try:
-            content=json.loads(dsmapvar.content)
-            index=content.index([int(pos),int(length)])
-        except ValueError:
-            self.logger.exception('ValueError loading content: '+str(did)+' '+str(date))
-            msgresult.retcode=msgcodes.ERROR
-            return msgresult
-        except Exception:
-            self.logger.exception('ValueError loading content: '+str(did)+' '+str(date))
+            value=dsmapvars[pos]
+            if not value==int(length):
+                self.logger.exception('Received length doesnt match stored value: '+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
+                msgresult.retcode=msgcodes.ERROR
+                return msgresult
+        except KeyError:
+            self.logger.exception('Variable not found: '+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         ''' en este punto hemos comprobado que la muestra y variable existen y dtp pertenece a did indicado.
         Comprobamos que no haya otros datapoints que validen esa variable, en caso contrario
         solicitaremos que esa variable se marque como negativa en ellos '''
-        dsmap=cassapi.get_datasourcemap(did=did,session=self.cf,date=date)
+        dsmap=cassapidatasource.get_datasource_map(self.session, did=did, date=date)
         varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=pos)
-        dsdtprelation=cassapi.get_dsdtprelation(did,self.cf)
-        if dsdtprelation:
-            pids=dsdtprelation.dtps
-            pids.pop(pid)
-            for apid in pids:
-                dtpinfo=cassapi.get_dtpinfo(apid,{'dtree':u''},self.cf)
-                if dtpinfo:
-                    stored_dtree=dtpinfo.dbcols['dtree']
+        datapoints=cassapidatapoint.get_datapoints(self.session, did=did)
+        if datapoints:
+            for datapoint in datapoints:
+                if not datapoint.pid == pid and datapoint.dtree:
+                    stored_dtree=datapoint.dtree
                     dtree=decisiontree.DecisionTree(jsontree=json.dumps(stored_dtree))
                     if dtree.evaluate_row(varlist[0].h):
-                        self.logger.debug('Variable matched other datapoint. Requesting NEGVAR on it: '+str(apid))
-                        newmsg=messages.NegativeVariableMessage(did=did,pid=apid,date=date,pos=pos,length=length)
+                        self.logger.debug('Variable matched other datapoint. Requesting NEGVAR on it: '+str(datapoint.pid))
+                        newmsg=messages.NegativeVariableMessage(did=did,pid=datapoint.pid,date=date,pos=pos,length=length)
                         msgresult.add_msg_originated(newmsg)
         ''' establecemos la variable como positiva para este datapoint '''
-        dtpdtreepos=cassapi.get_dtp_dtree_positives(pid=pid,date=date,session=self.cf)
-        if not dtpdtreepos:
-            dtpdtreepos=cassapi.DatapointDtreePositives(pid=pid)
-        dtpdtreepos.set_positive(date,[pos,length])
-        if not cassapi.update_dtp_dtree_positives(dtpdtreepos,self.cf):
+        if not cassapidatapoint.set_datapoint_dtree_positive_at(self.session, pid=pid, date=date, posisition=pos, length=length):
             self.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         #y eliminarla de los negativos si estuviese
-        dtpdtreeneg=cassapi.get_dtp_dtree_negatives(pid=pid,date=date,session=self.cf)
-        if not dtpdtreeneg:
-            dtpdtreeneg=cassapi.DatapointDtreeNegatives(pid=pid)
-        dtpdtreeneg.del_negative(date,[pos,length])
-        if not cassapi.update_dtp_dtree_negatives(dtpdtreeneg,self.cf):
+        if not cassapidatapoint.delete_datapoint_dtree_negative_at(self.session, pid=pid, date=date, position=pos):
             self.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
@@ -288,23 +263,23 @@ class Gestconsole(modules.Module):
         '''
         msgresult=messages.MessageResult(message)
         uid=message.uid
-        userinfo=cassapi.get_userinfo(uid,{},self.cf)
-        if not userinfo:
+        user=cassapiuser.get_user(self.session, uid=uid)
+        if not user:
             self.logger.error('User not found: '+str(uid))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
-        email=userinfo.email
+        email=user.email
         if not email:
             self.logger.error('User email not found: '+str(uid))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
-        new_code=stringops.get_randomstring(size=32)
-        usercoder=cassapi.UserCodeRelation(email,new_code)
-        if not cassapi.insert_usercoderelation(usercoder,self.cf):
+        signup_code=stringops.get_randomstring(size=32)
+        signup_info=ormuser.SignUp(username=user.username, signup_code=signup_code, email=email, creation_date=datetime.utcnow())
+        if not cassapiuser.insert_signup_info(self.session, signup_info=signup_info):
             self.logger.error('Error inserting new user code, uid: '+str(uid))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
-        mailargs={'to_address':email,'code':new_code,'domain':self.params['mail_domain']}
+        mailargs={'to_address':email,'code':signup_code,'domain':self.params['mail_domain']}
         mailmessage=mailmessages.get_message(mailtypes.NEW_USER,mailargs)
         if not self.mailer.send(mailmessage):
             self.logger.error('Error sending mail, uid: '+str(uid))
