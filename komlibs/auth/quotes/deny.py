@@ -25,72 +25,72 @@ interfaces={'User_AgentCreation':'/user/agentcreation/',
 
 DEFAULT_PERM='A'
 
-def deny_quo_static_user_total_agents(params,session,deny):
+def deny_quo_static_user_total_agents(params,deny):
     if not params.has_key('uid'):
         return False
     uid=params['uid']
     iface=interfaces['User_AgentCreation']
     if deny:
-        if cassapiiface.insert_user_iface_deny(session, uid=uid, iface=iface, perm=DEFAULT_PERM):
+        if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
             return True
     else:
-        if cassapiiface.delete_user_iface_deny(session, uid=uid, iface=iface):
+        if cassapiiface.delete_user_iface_deny(uid=uid, iface=iface):
             return True
     return False
 
-def deny_quo_static_user_total_datasources(params,session,deny):
+def deny_quo_static_user_total_datasources(params,deny):
     if not params.has_key('uid'):
         return False
     uid=params['uid']
     iface=interfaces['User_DatasourceCreation']
     if deny:
-        if cassapiiface.insert_user_iface_deny(session, uid=uid, iface=iface, perm=DEFAULT_PERM):
+        if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
             return True
     else:
-        if cassapiiface.delete_user_iface_deny(session, uid=uid, iface=iface):
+        if cassapiiface.delete_user_iface_deny(uid=uid, iface=iface):
             return True
     return False
 
-def deny_quo_static_user_total_datapoints(params,session,deny):
+def deny_quo_static_user_total_datapoints(params,deny):
     if not params.has_key('uid'):
         return False
     uid=params['uid']
     iface=interfaces['User_DatapointCreation']
     if deny:
-        if cassapiiface.insert_user_iface_deny(session, uid=uid, iface=iface, perm=DEFAULT_PERM):
+        if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
             return True
     else:
-        if cassapiiface.delete_user_iface_deny(session, uid=uid, iface=iface):
+        if cassapiiface.delete_user_iface_deny(uid=uid, iface=iface):
             return True
     return False
 
-def deny_quo_static_user_total_widgets(params,session,deny):
+def deny_quo_static_user_total_widgets(params,deny):
     if not params.has_key('uid'):
         return False
     uid=params['uid']
     iface=interfaces['User_WidgetCreation']
     if deny:
-        if cassapiiface.insert_user_iface_deny(session, uid=uid, iface=iface, perm=DEFAULT_PERM):
+        if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
             return True
     else:
-        if cassapiiface.delete_user_iface_deny(session, uid=uid, iface=iface):
+        if cassapiiface.delete_user_iface_deny(uid=uid, iface=iface):
             return True
     return False
 
-def deny_quo_static_user_total_dashboards(params,session,deny):
+def deny_quo_static_user_total_dashboards(params,deny):
     if not params.has_key('uid'):
         return False
     uid=params['uid']
     iface=interfaces['User_DashboardCreation']
     if deny:
-        if cassapiiface.insert_user_iface_deny(session, uid=uid, iface=iface, perm=DEFAULT_PERM):
+        if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
             return True
     else:
-        if cassapiiface.delete_user_iface_deny(session, uid=uid, iface=iface):
+        if cassapiiface.delete_user_iface_deny(uid=uid, iface=iface):
             return True
     return False
 
-def deny_quo_static_agent_total_datasources(params,session,deny):
+def deny_quo_static_agent_total_datasources(params,deny):
     if not params.has_key('aid') or not params.has_key('uid'):
         return False
     aid=params['aid']
@@ -98,14 +98,14 @@ def deny_quo_static_agent_total_datasources(params,session,deny):
     iface=interfaces['Agent_DatasourceCreation']+str(aid)
     uid=uid
     if deny:
-        if cassapiiface.insert_user_iface_deny(session, uid=uid, iface=iface, perm=DEFAULT_PERM):
+        if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
             return True
     else:
-        if cassapiiface.delete_user_iface_deny(session, uid=uid, iface=iface):
+        if cassapiiface.delete_user_iface_deny(uid=uid, iface=iface):
             return True
     return False
 
-def deny_quo_static_agent_total_datapoints(params,session,deny):
+def deny_quo_static_agent_total_datapoints(params,deny):
     if not params.has_key('aid') or not params.has_key('uid'):
         return False
     aid=params['aid']
@@ -113,24 +113,24 @@ def deny_quo_static_agent_total_datapoints(params,session,deny):
     iface=interfaces['Agent_DatapointCreation']+str(aid)
     uid=uid
     if deny:
-        if cassapiiface.insert_user_iface_deny(session, uid=uid, iface=iface, perm=DEFAULT_PERM):
+        if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
             return True
     else:
-        if cassapiiface.delete_user_iface_deny(session, uid=uid, iface=iface):
+        if cassapiiface.delete_user_iface_deny(uid=uid, iface=iface):
             return True
     return False
 
-def deny_quo_static_datasource_total_datapoints(params,session,deny):
+def deny_quo_static_datasource_total_datapoints(params,deny):
     if not params.has_key('did') or not params.has_key('uid'):
         return False
     did=params['did']
     uid=params['uid']
     iface=interfaces['Datasource_DatapointCreation']+str(did)
     if deny:
-        if cassapiiface.insert_user_iface_deny(session, uid=uid, iface=iface, perm=DEFAULT_PERM):
+        if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
             return True
     else:
-        if cassapiiface.delete_user_iface_deny(session, uid=uid, iface=iface):
+        if cassapiiface.delete_user_iface_deny(uid=uid, iface=iface):
             return True
     return False
 

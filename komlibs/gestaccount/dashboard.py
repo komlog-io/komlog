@@ -14,12 +14,12 @@ from komcass.api import user as cassapiuser
 from komlibs.gestaccount import states,types,exceptions
 
 
-def get_dashboards_config(username,session):
-    user=cassapiuser.get_user(session, username=username)
+def get_dashboards_config(username):
+    user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
     data=[]
-    dashboards=cassapidashboard.get_dashboards(session, uid=user.uid)
+    dashboards=cassapidashboard.get_dashboards(uid=user.uid)
     if dashboards:
         for dashboard in dashboards:
             wids=[str(wid) for wid in dashboard.widgets] if dashboard.widgets else []
@@ -28,8 +28,8 @@ def get_dashboards_config(username,session):
     else:
         raise exceptions.DashboardNotFoundException()
 
-def get_dashboard_config(bid,session):
-    dashboard=cassapi.get_dashboard(session, bid=bid)
+def get_dashboard_config(bid):
+    dashboard=cassapi.get_dashboard(bid=bid)
     if dashboard:
         wids=[str(wid) for wid in dashboard.widgets] if dashboard.widgets else []
         data={'bid':str(dashboard.bid),'name':dashboard.dashboardname,'wids':wids}

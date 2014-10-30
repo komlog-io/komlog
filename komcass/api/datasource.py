@@ -8,10 +8,11 @@ Created on 01/10/2014
 from komcass.model.orm import datasource as ormdatasource
 from komcass.model.statement import datasource as stmtdatasource
 from komcass.exception import datasource as excpdatasource
+from komcass import connection
 
 
-def get_datasource(session, did):
-    row=session.execute(stmtdatasource.S_A_MSTDATASOURCE_B_DID,(did,))
+def get_datasource(did):
+    row=connection.session.execute(stmtdatasource.S_A_MSTDATASOURCE_B_DID,(did,))
     if not row:
         return None
     elif len(row)==1:
@@ -19,12 +20,12 @@ def get_datasource(session, did):
     else:
         raise excpdatasource.DataConsistencyException(function='get_datasource',field='did',value=did)
 
-def get_datasources(session, aid=None, uid=None):
+def get_datasources(aid=None, uid=None):
     datasources=[]
     if aid:
-        row=session.execute(stmtdatasource.S_A_MSTDATASOURCE_B_AID,(aid,))
+        row=connection.session.execute(stmtdatasource.S_A_MSTDATASOURCE_B_AID,(aid,))
     elif uid:
-        row=session.execute(stmtdatasource.S_A_MSTDATASOURCE_B_UID,(uid,))
+        row=connection.session.execute(stmtdatasource.S_A_MSTDATASOURCE_B_UID,(uid,))
     else:
         return datasources
     if row:
@@ -32,12 +33,12 @@ def get_datasources(session, aid=None, uid=None):
             datasources.append(ormdatasource.Datasource(**r))
     return datasources
 
-def get_datasources_dids(session, aid=None, uid=None):
+def get_datasources_dids(aid=None, uid=None):
     dids=[]
     if aid:
-        row=session.execute(stmtdatasource.S_DID_MSTDATASOURCE_B_AID,(aid,))
+        row=connection.session.execute(stmtdatasource.S_DID_MSTDATASOURCE_B_AID,(aid,))
     elif uid:
-        row=session.execute(stmtdatasource.S_DID_MSTDATASOURCE_B_UID,(uid,))
+        row=connection.session.execute(stmtdatasource.S_DID_MSTDATASOURCE_B_UID,(uid,))
     else:
         return dids
     if row:
@@ -45,36 +46,36 @@ def get_datasources_dids(session, aid=None, uid=None):
             dids.append(r['did'])
     return dids
 
-def get_number_of_datasources_by_aid(session, aid):
-    row=session.execute(stmtdatasource.S_COUNT_MSTDATASOURCE_B_AID,(aid,))
+def get_number_of_datasources_by_aid(aid):
+    row=connection.session.execute(stmtdatasource.S_COUNT_MSTDATASOURCE_B_AID,(aid,))
     return row[0]['count']
 
-def new_datasource(session, datasource):
+def new_datasource(datasource):
     if not datasource:
         return False
     else:
-        existing_datasource=get_datasource(session, did=datasource.did)
+        existing_datasource=get_datasource(did=datasource.did)
         if existing_datasource:
             return False
         else:
-            session.execute(stmtdatasource.I_A_MSTDATASOURCE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.state,datasource.creation_date))
+            connection.session.execute(stmtdatasource.I_A_MSTDATASOURCE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.state,datasource.creation_date))
             return True
 
-def insert_datasource(session, datasource):
+def insert_datasource(datasource):
     if not datasource:
         return False
-    session.execute(stmtdatasource.I_A_MSTDATASOURCE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.state,datasource.creation_date))
+    connection.session.execute(stmtdatasource.I_A_MSTDATASOURCE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.state,datasource.creation_date))
     return True
 
-def delete_datasource(session, did):
-    session.execute(stmtdatasource.D_A_MSTDATASOURCE_B_DID,(did,))
-    session.execute(stmtdatasource.D_A_MSTDATASOURCESTATS_B_DID,(did,))
-    session.execute(stmtdatasource.D_A_DATDATASOURCE_B_DID,(did,))
-    session.execute(stmtdatasource.D_A_DATDATASOURCEMAP_B_DID,(did,))
+def delete_datasource(did):
+    connection.session.execute(stmtdatasource.D_A_MSTDATASOURCE_B_DID,(did,))
+    connection.session.execute(stmtdatasource.D_A_MSTDATASOURCESTATS_B_DID,(did,))
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCE_B_DID,(did,))
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMAP_B_DID,(did,))
     return True
 
-def get_datasource_stats(session, did):
-    row=session.execute(stmtdatasource.S_A_MSTDATASOURCESTATS_B_DID,(did,))
+def get_datasource_stats(did):
+    row=connection.session.execute(stmtdatasource.S_A_MSTDATASOURCESTATS_B_DID,(did,))
     if not row:
         return None
     elif len(row)==1:
@@ -82,16 +83,16 @@ def get_datasource_stats(session, did):
     else:
         raise excpdatasource.DataConsistencyException(function='get_datasource_stats',field='did',value=did)
 
-def set_last_received(session, did, last_received):
-    session.execute(stmtdatasource.I_LASTRECEIVED_MSTDATASOURCESTATS_B_DID,(did,last_received))
+def set_last_received(did, last_received):
+    connection.session.execute(stmtdatasource.I_LASTRECEIVED_MSTDATASOURCESTATS_B_DID,(did,last_received))
     return True
 
-def set_last_mapped(session, did, last_mapped):
-    session.execute(stmtdatasource.I_LASTMAPPED_MSTDATASOURCESTATS_B_DID,(did,last_mapped))
+def set_last_mapped(did, last_mapped):
+    connection.session.execute(stmtdatasource.I_LASTMAPPED_MSTDATASOURCESTATS_B_DID,(did,last_mapped))
     return True
 
-def get_datasource_data(session, did, date):
-    row=session.execute(stmtdatasource.S_A_DATDATASOURCE_B_DID_DATE,(did,date))
+def get_datasource_data(did, date):
+    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCE_B_DID_DATE,(did,date))
     if not row:
         return None
     elif len(row)==1:
@@ -99,28 +100,28 @@ def get_datasource_data(session, did, date):
     else:
         raise excpdatasource.DataConsistencyException(function='get_datasource_data',field='did',value=did)
 
-def insert_datasource_data(session, dsdobj):
-    session.execute(stmtdatasource.I_A_DATDATASOURCE_B_DID_DATE,(dsdobj.did,dsdobj.date,dsdobj.content))
+def insert_datasource_data(dsdobj):
+    connection.session.execute(stmtdatasource.I_A_DATDATASOURCE_B_DID_DATE,(dsdobj.did,dsdobj.date,dsdobj.content))
     return True
 
-def delete_datasource_data(session, did, date):
-    session.execute(stmtdatasource.D_A_DATDATASOURCE_B_DID_DATE,(did,date))
+def delete_datasource_data(did, date):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCE_B_DID_DATE,(did,date))
     return True
 
-def insert_datasource_map(session, dsmapobj):
-    session.execute(stmtdatasource.I_A_DATDATASOURCEMAP_B_DID_DATE,(dsmapobj.did,dsmapobj.date,dsmapobj.content,dsmapobj.variables, dsmapobj.datapoints))
+def insert_datasource_map(dsmapobj):
+    connection.session.execute(stmtdatasource.I_A_DATDATASOURCEMAP_B_DID_DATE,(dsmapobj.did,dsmapobj.date,dsmapobj.content,dsmapobj.variables, dsmapobj.datapoints))
     return True
 
-def add_variable_to_datasource_map(session, did, date, position, length):
-    session.execute(stmtdatasource.U_VARIABLES_DATASOURCEMAP_B_DID_DATE,(position,length,did,date))
+def add_variable_to_datasource_map(did, date, position, length):
+    connection.session.execute(stmtdatasource.U_VARIABLES_DATASOURCEMAP_B_DID_DATE,(position,length,did,date))
     return True
 
-def add_datapoint_to_datasource_map(session, did, date, pid, position):
-    session.execute(stmtdatasource.U_DATAPOINTS_DATASOURCEMAP_B_DID_DATE,(pid, position, did,date))
+def add_datapoint_to_datasource_map(did, date, pid, position):
+    connection.session.execute(stmtdatasource.U_DATAPOINTS_DATASOURCEMAP_B_DID_DATE,(pid, position, did,date))
     return True
 
-def get_datasource_map(session, did, date):
-    row=session.execute(stmtdatasource.S_A_DATDATASOURCEMAP_B_DID_DATE,(did,date))
+def get_datasource_map(did, date):
+    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMAP_B_DID_DATE,(did,date))
     if not row:
         return None
     elif len(row)==1:
@@ -128,16 +129,16 @@ def get_datasource_map(session, did, date):
     else:
         raise excpdatasource.DataConsistencyException(function='get_datasource_map',field='did',value=did)
 
-def get_datasource_maps(session, did, fromdate, todate):
-    row=session.execute(stmtdatasource.S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
+def get_datasource_maps(did, fromdate, todate):
+    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
     data=[]
     if row:
         for m in row:
             data.append(ormdatasource.DatasourceMap(**m))
     return data
 
-def get_datasource_map_variables(session, did, date):
-    row=session.execute(stmtdatasource.S_VARIABLES_DATDATASOURCEMAP_B_DID_DATE,(did,date))
+def get_datasource_map_variables(did, date):
+    row=connection.session.execute(stmtdatasource.S_VARIABLES_DATDATASOURCEMAP_B_DID_DATE,(did,date))
     if not row:
         return None
     if len(row)==1:
@@ -145,8 +146,8 @@ def get_datasource_map_variables(session, did, date):
     else:
         raise excpdatasource.DataConsistencyException(function='get_datasource_map_variables',field='did',value=did)
 
-def get_datasource_map_datapoints(session, did, date):
-    row=session.execute(stmtdatasource.S_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE,(did,date))
+def get_datasource_map_datapoints(did, date):
+    row=connection.session.execute(stmtdatasource.S_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE,(did,date))
     if not row:
         return None
     elif len(row)==1:
@@ -154,7 +155,7 @@ def get_datasource_map_datapoints(session, did, date):
     else:
         raise excpdatasource.DataConsistencyException(function='get_datasource_map_variables',field='did',value=did)
 
-def delete_datasource_map(session, did, date):
-    session.execute(stmtdatasource.D_A_DATDATASOURCEMAP_B_DID_DATE,(did,date))
+def delete_datasource_map(did, date):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMAP_B_DID_DATE,(did,date))
     return True
 

@@ -38,7 +38,6 @@ class Textmining(modules.Module):
             self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
         else:
             casscon.initialize_session(self.params['cassandra_cluster'],self.params['cassandra_keyspace'])
-            self.session=casscon.session
             self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
             self.__loop()
         self.logger.info('Textmining module exiting')
@@ -68,7 +67,7 @@ class Textmining(modules.Module):
         did=message.did
         date=message.date
         varlist=[]
-        dsdata=cassapidatasource.get_datasource_data(self.session, did=did, date=date)
+        dsdata=cassapidatasource.get_datasource_data(did=did, date=date)
         if dsdata:
             varlist = variables.get_varlist(dsdata.content)
             mapcontentlist=[]
@@ -80,16 +79,16 @@ class Textmining(modules.Module):
             mapcontentjson=json.dumps(mapcontentlist)
             dsmapobj=ormdatasource.DatasourceMap(did=did,date=date,content=mapcontentjson,variables=mapvarcontentlist)
             try:
-                if cassapidatasource.insert_datasource_map(self.session, dsmapobj=dsmapobj):
+                if cassapidatasource.insert_datasource_map(dsmapobj=dsmapobj):
                     self.logger.debug('Map created for did: '+str(did))
-                cassapidatasource.set_last_mapped(self.session, did=did, last_mapped=date)
+                cassapidatasource.set_last_mapped(did=did, last_mapped=date)
                 newmsg=messages.FillDatapointMessage(did=did,date=date)
                 msgresult.add_msg_originated(newmsg)
                 msgresult.retcode=msgcodes.SUCCESS
             except Exception as e:
                 #rollback
                 self.logger.exception('Exception creating Map for did '+str(did)+': '+str(e))
-                cassapidatasource.delete_datasource_map(self.session, did=did, date=date)
+                cassapidatasource.delete_datasource_map(did=did, date=date)
                 msgresult.retcode=msgcodes.ERROR
         else:
             self.logger.error('Datasource data not found: '+str(did)+' '+str(date))
@@ -110,7 +109,7 @@ class Textmining(modules.Module):
         msgresult=messages.MessageResult(message)
         pid=message.pid
         mdate=message.date
-        datapoint=cassapidatapoint.get_datapoint(self.session, pid=pid)
+        datapoint=cassapidatapoint.get_datapoint(pid=pid)
         if not datapoint:
             msgresult.retcode=msgcodes.ERROR
             return msgresult
@@ -118,8 +117,8 @@ class Textmining(modules.Module):
         dates_to_get=[]
         positive_samples={}
         negative_samples={}
-        dtp_positives=cassapidatapoint.get_datapoint_dtree_positives(self.session, pid=pid)
-        dtp_negatives=cassapidatapoint.get_datapoint_dtree_negatives(self.session, pid=pid)
+        dtp_positives=cassapidatapoint.get_datapoint_dtree_positives(pid=pid)
+        dtp_negatives=cassapidatapoint.get_datapoint_dtree_negatives(pid=pid)
         dtree_training_set=[]
         if dtp_positives:
             for dtp_positive in dtp_positives:
@@ -132,7 +131,7 @@ class Textmining(modules.Module):
         dates_to_get=sorted(set(dates_to_get))
         dsmaps=[]
         for date in dates_to_get:
-            dsmap=cassapidatasource.get_datasource_map(self.session, did=did, date=date)
+            dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
             varlist=variables.get_varlist(jsoncontent=dsmap.content)
             if positive_samples.has_key(date):
                 position,length=positive_samples[date]
@@ -149,7 +148,7 @@ class Textmining(modules.Module):
                         var.h['result']=False
                         dtree_training_set.append(var.h)
         dtree=decisiontree.DecisionTree(rawdata=dtree_training_set)
-        if cassapidatapoint.set_datapoint_dtree(self.session, pid=pid, dtree=dtree.get_jsontree()):
+        if cassapidatapoint.set_datapoint_dtree(pid=pid, dtree=dtree.get_jsontree()):
             newmsg=messages.FillDatapointMessage(pid=pid,date=mdate)
             msgresult.add_msg_originated(newmsg)
             msgresult.retcode=msgcodes.SUCCESS
@@ -187,8 +186,8 @@ class Textmining(modules.Module):
         pidonly_flag=False
         if pid:
             pidonly_flag=True
-            datapoint=cassapidatapoint.get_datapoint(self.session, pid=pid)
-            datapoint_stats=cassapidatapoint.get_datapoint_stats(self.session, pid=pid)
+            datapoint=cassapidatapoint.get_datapoint(pid=pid)
+            datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
             if not datapoint:
                 self.logger.error('Datapoint not found: '+str(pid))
                 msgresult.retcode=msgcodes.ERROR
@@ -201,12 +200,12 @@ class Textmining(modules.Module):
                 msgresult.retcode=msgcodes.ERROR
                 return msgresult
             dtps.append((datapoint,datapoint_stats,dtree))
-            datasource=cassapidatasource.get_datasource(self.session, did=did)
+            datasource=cassapidatasource.get_datasource(did=did)
             if not datasource:
                 self.logger.error('Datasource not found: '+str(did))
                 msgresult.retcode=msgcodes.ERROR
                 return msgresult
-            datasource_stats=cassapidatasource.get_datasource_stats(self.session, did=did)
+            datasource_stats=cassapidatasource.get_datasource_stats(did=did)
             end_date=datasource_stats.last_received
             if not end_date:
                 end_date=datetime.utcnow()
@@ -215,16 +214,16 @@ class Textmining(modules.Module):
             else:
                 init_date=date
             #obtenemos los datos
-            dsmaps=cassapidatasource.get_datasource_maps(self.session, did=did, fromdate=init_date, todate=end_date)
+            dsmaps=cassapidatasource.get_datasource_maps(did=did, fromdate=init_date, todate=end_date)
         else:
-            dsmaps.append(cassapidatasource.get_datasource_map(self.session, did=did, date=date))
-            datapoints=cassapidatapoint.get_datapoints(self.session, did=did)
+            dsmaps.append(cassapidatasource.get_datasource_map(did=did, date=date))
+            datapoints=cassapidatapoint.get_datapoints(did=did)
             if not datapoints:
                 self.logger.info('Datasource has no datapoints: '+str(did))
                 msgresult.retcode=msgcodes.NOOP
                 return msgresult
             for datapoint in datapoints:
-                datapoint_stats=cassapidatapoint.get_datapoint_stats(self.session, pid=datapoint.pid)
+                datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=datapoint.pid)
                 if datapoint_stats and datapoint_stats.dtree:
                     dtree=decisiontree.DecisionTree(jsontree=datapoint_stats.dtree)
                     if dtree:
@@ -238,16 +237,16 @@ class Textmining(modules.Module):
                     if dtree.evaluate_row(var.h):
                         value,separator=variables.get_numericvalueandseparator(datapoint_stats.decimal_separator,varlist,var)
                         print 'SEPARATOR: '+str(separator)
-                        if cassapidatapoint.insert_datapoint_data(self.session, pid=datapoint.pid, date=dsmap.date, value=value):
-                            cassapidatasource.add_datapoint_to_datasource_map(self.session,did=dsmap.did,date=dsmap.date,pid=datapoint.pid,position=var.s)
+                        if cassapidatapoint.insert_datapoint_data(pid=datapoint.pid, date=dsmap.date, value=value):
+                            cassapidatasource.add_datapoint_to_datasource_map(did=dsmap.did,date=dsmap.date,pid=datapoint.pid,position=var.s)
                             if not datapoint_stats.decimal_separator:
-                                cassapidatapoint.set_datapoint_decimal_separator(self.session,pid=datapoint.pid, decimal_separator=separator)
+                                cassapidatapoint.set_datapoint_decimal_separator(pid=datapoint.pid, decimal_separator=separator)
                             elif not datapoint_stats.decimal_separator==separator:
-                                cassapidatapoint.set_datapoint_decimal_separator(self.session,pid=datapoint.pid, decimal_separator=separator)
+                                cassapidatapoint.set_datapoint_decimal_separator(pid=datapoint.pid, decimal_separator=separator)
                             if not datapoint_stats.last_received:
-                                cassapidatapoint.set_datapoint_last_received(self.session, pid=datapoint.pid, last_received=dsmap.date)
+                                cassapidatapoint.set_datapoint_last_received(pid=datapoint.pid, last_received=dsmap.date)
                             elif datapoint_stats.last_received < dsmap.date:
-                                cassapidatapoint.set_datapoint_last_received(self.session, pid=datapoint.pid, last_received=dsmap.date)
+                                cassapidatapoint.set_datapoint_last_received(pid=datapoint.pid, last_received=dsmap.date)
                             dtplist.remove(dtp)
                             break
                         else:

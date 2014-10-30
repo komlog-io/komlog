@@ -19,16 +19,17 @@ from komlibs.gestaccount import states,types,exceptions
 from komlibs.general import colors
 from komimc import messages
 
-def get_datapoint_data(pid,session,end_date=None,start_date=None):
+def get_datapoint_data(pid,end_date=None,start_date=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
     print 'entramos aqui'
     print 'Recibimos: '+str(end_date)+' - '+str(start_date)
     if not end_date:
-        end_date=datetime.utcnow()
+        datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
+        end_date=datapoint_stats.last_received if datapoint_stats and datapoint_stats.last_received else datetime.utcnow()
     if not start_date:
         start_date=end_date-timedelta(days=1)
-    datapoint_data_list=cassapidatapoint.get_datapoint_data(session,pid=pid,fromdate=start_date,todate=end_date)
+    datapoint_data_list=cassapidatapoint.get_datapoint_data(pid=pid,fromdate=start_date,todate=end_date)
     print 'salimos'
     data=[]
     if not datapoint_data_list:
@@ -53,11 +54,11 @@ def create_datapoint(did,dsdate,pos,length,name,msgbus):
     msgbus.sendMessage(message)
     return True
 
-def get_datapoint_config(pid,session):
+def get_datapoint_config(pid):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
-    datapoint=cassapidatapoint.get_datapoint(session, pid=pid)
-    datapoint_stats=cassapidatapoint.get_datapoint_stats(session, pid=pid)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
     data={}
     data['pid']=str(pid)
     if datapoint:
@@ -70,8 +71,8 @@ def get_datapoint_config(pid,session):
         raise exceptions.DatapointNotFoundException()
     return data
 
-def update_datapoint_config(pid,session,data):
-    datapoint=cassapidatapoint.get_datapoint(session, pid=pid)
+def update_datapoint_config(pid,data):
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if datapoint:
         if data.has_key('name'):
             datapoint.datapointname=u''+data['name']
@@ -80,7 +81,7 @@ def update_datapoint_config(pid,session,data):
                 datapoint.color=u''+data['color']
             else:
                 raise exceptions.BadParametersException()
-        if cassapidatapoint.insert_datapoint(session, datapoint):
+        if cassapidatapoint.insert_datapoint(datapoint):
             return True
         else:
             raise exceptions.DatapointUpdateException()

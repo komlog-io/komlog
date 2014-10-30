@@ -20,7 +20,7 @@ def get_hpassword(uid,password):
     hpassword=crypt.crypt(password,salt)
     return hpassword
 
-def create_user(username, password, email, session, msgbus):
+def create_user(username, password, email, msgbus):
     '''This function creates a new user in the database'''
     uid=uuid.uuid4()
     hpassword=get_hpassword(uid,password)
@@ -28,42 +28,42 @@ def create_user(username, password, email, session, msgbus):
     segment=segments.USER['FREE']
     user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.USER['FREE'], creation_date=now, state=states.USER['PREACTIVE'])
     message=messages.NewUserMessage(uid=uid)
-    if cassapiuser.new_user(session=session, user=user):
+    if cassapiuser.new_user(user=user):
         if msgbus.sendMessage(message):
             return True
         else:
-            cassapiuser.delete_user(session,uid=user.uid)
+            cassapiuser.delete_user(uid=user.uid)
             return False
     else:
         return False
 
 
-def confirm_user(email, code, session):
+def confirm_user(email, code):
     '''This function confirm the user'''
-    signup_info=cassapiuser.get_signup_info(session, signup_code=code)
+    signup_info=cassapiuser.get_signup_info(signup_code=code)
     if not signup_info:
         raise exceptions.UserNotFoundException()
     if not signup_info.email==email:
         raise exceptions.UserNotFoundException()
     if signup_info.utilization_date:
         raise exceptions.UserConfirmationException()
-    user=cassapiuser.get_user(session,username=signup_info.username)
+    user=cassapiuser.get_user(username=signup_info.username)
     if not user:
         raise exceptions.UserNotFoundException()
     signup_info.utilization_date=datetime.utcnow()
     user.state=states.USER['ACTIVE']
-    if not cassapiuser.insert_user(session,user=user):
+    if not cassapiuser.insert_user(user=user):
         raise exceptions.UserConfirmationException()
-    cassapiuser.insert_signup_info(session, signup_info=signup_info)
+    cassapiuser.insert_signup_info(signup_info=signup_info)
     return {'result':email+' confirmation OK'}
     
-def update_userprofile(username, params, session, msgbus):
+def update_userprofile(username, params, msgbus):
     ''' This function is used to update user configuration parameters.
     Parameters supported:
         - password
         - email
     '''
-    user=cassapiuser.get_user(session, username=username)
+    user=cassapiuser.get_user(username=username)
     user_bck=user
     if not user:
         raise exceptions.UserNotFoundException()
@@ -84,18 +84,18 @@ def update_userprofile(username, params, session, msgbus):
         params['email']=params['email'].lower()
         new_email=params['email']
         if not new_email==user.email:
-            user2=cassapiuser.get_user(session,email=new_email)
+            user2=cassapiuser.get_user(email=new_email)
             if user2:
                 ''' Email already used'''
                 raise exceptions.BadParametersException()
             user.email=params['email']
-    if cassapiuser.insert_user(session,user=user):
+    if cassapiuser.insert_user(user=user):
         return True
     else:
         return False
 
-def get_userprofile(username, session):
-    user=cassapiuser.get_user(session,username=username)
+def get_userprofile(username):
+    user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
     data={}

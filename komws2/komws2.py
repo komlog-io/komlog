@@ -62,7 +62,6 @@ class Application(tornado.web.Application):
         keyspace='komlog'
         server_list=('localhost',)
         casscon.initialize_session(server_list,keyspace)
-        self.session=casscon.session
         self.dest_dir='/var/local/komlog/data/received'
         #BUS vars
         broker='localhost'

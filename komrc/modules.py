@@ -40,7 +40,6 @@ class Rescontrol(modules.Module):
             self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
         else:
             casscon.initialize_session(self.params['cassandra_cluster'],self.params['cassandra_keyspace'])
-            self.session=casscon.session
             self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
             self.__loop()
         self.logger.info('Rescontrol module exiting')
@@ -69,7 +68,7 @@ class Rescontrol(modules.Module):
         for quote in quotes_to_update:
             self.logger.debug('Inicio de proceso de quota: '+quote)
             try:
-                qvalue=self.quote_update_funcs[quote](session=self.session,params=opparams)
+                qvalue=self.quote_update_funcs[quote](params=opparams)
             except KeyError:
                 try:
                     self.quote_update_funcs[quote]=getattr(quoup,'update_'+quote)
@@ -87,9 +86,9 @@ class Rescontrol(modules.Module):
                     ''' quote updated successfully, the return value is the quota value updated'''
                     ''' now determine if quota is aproaching limits and should block interface'''
                     try:
-                        should_block=self.quote_compare_funcs[quote](session=self.session,params=opparams)
+                        should_block=self.quote_compare_funcs[quote](params=opparams)
                         deny=True if should_block else False
-                        if self.quote_deny_funcs[quote](session=self.session,params=opparams,deny=deny):
+                        if self.quote_deny_funcs[quote](params=opparams,deny=deny):
                             msgresult.retcode=msgcodes.SUCCESS
                     except Exception as e:
                         self.logger.exception('Exception evaluating quote denial: '+quote+' '+str(e))
@@ -106,7 +105,7 @@ class Rescontrol(modules.Module):
         for auth in auths_to_update:
             self.logger.debug('Resource authorization update begins: '+auth)
             try:
-                avalue=self.resource_update_funcs[auth](session=self.session,params=opparams)
+                avalue=self.resource_update_funcs[auth](params=opparams)
             except KeyError:
                 try:
                     self.resource_update_funcs[auth]=getattr(resup,'update_'+auth)

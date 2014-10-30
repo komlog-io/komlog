@@ -24,12 +24,12 @@ from komlibs.ifaceops import operations
 from komimc import messages
 from komlibs.general import crontab
 
-def create_datasource(username,aid,datasourcename,session,msgbus):
+def create_datasource(username,aid,datasourcename,msgbus):
     print 'llegamos al create datasource'
     now=datetime.utcnow()
     did=uuid.uuid4()
-    user=cassapiuser.get_user(session, username=username)
-    agent=cassapiagent.get_agent(session, aid=aid)
+    user=cassapiuser.get_user(username=username)
+    agent=cassapiagent.get_agent(aid=aid)
     if not user:
         raise exceptions.UserNotFoundException()
     if not agent:
@@ -37,7 +37,7 @@ def create_datasource(username,aid,datasourcename,session,msgbus):
     print 'antes de create el objeto datasource'
     datasource=ormdatasource.Datasource(did=did,aid=aid,uid=user.uid,datasourcename=datasourcename,state=states.DATASOURCE['ACTIVE'],creation_date=now)
     print 'antes de lanzar el insert'
-    if cassapidatasource.new_datasource(session, datasource=datasource):
+    if cassapidatasource.new_datasource(datasource=datasource):
         print 'insert correcto'
         ''' before returning, send quote and resource authorization message '''
         operation=operations.NewDatasourceOperation(uid=user.uid,aid=aid,did=did)
@@ -46,27 +46,27 @@ def create_datasource(username,aid,datasourcename,session,msgbus):
         message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
         msgbus.sendMessage(message)
         ''' create related widget every time a new datasource is created '''
-        gestwidget.new_widget_ds(username=username,did=did,session=session,msgbus=msgbus)
+        gestwidget.new_widget_ds(username=username,did=did,msgbus=msgbus)
         return {'did':str(did)}
     else:
         raise exceptions.DatasourceCreationException()
 
-def get_datasource_data(did,session,date=None):
-    datasource_stats=cassapidatasource.get_datasource_stats(session, did=did)
+def get_datasource_data(did,date=None):
+    datasource_stats=cassapidatasource.get_datasource_stats(did=did)
     if datasource_stats:
         data={}
         last_mapped=datasource_stats.last_mapped
         last_received=date if date else datasource_stats.last_received
-        datasource_data=cassapidatasource.get_datasource_data(session,did=did,date=last_received)
+        datasource_data=cassapidatasource.get_datasource_data(did=did,date=last_received)
         dsvars=[]
         dsdtps=[]
         if last_mapped>=last_received:
-            dsvars=cassapidatasource.get_datasource_map_variables(session,did=did,date=last_received)
+            dsvars=cassapidatasource.get_datasource_map_variables(did=did,date=last_received)
             #Con el nuevo model de datos, las dos lineas siguientes no deben hacer falta
             #if datasource_variables:
             #    dsvars=json.loads(dsmapvars.content)
             # REVISAR SI ANTES SE DEVOLVIA UNA LISTA DE TUPLAS Y AHORA UN DICT
-            datasource_datapoints=cassapidatasource.get_datasource_map_datapoints(session, did=did, date=last_received)
+            datasource_datapoints=cassapidatasource.get_datasource_map_datapoints(did=did, date=last_received)
             if datasource_datapoints:
                 #lo mismo que antes, en bbdd ya no almacenamos datos en json
                 #datapoints=json.loads(dsmapdtps.jsoncontent)
@@ -84,8 +84,8 @@ def get_datasource_data(did,session,date=None):
     else:
         raise exceptions.DatasourceNotFoundException()
 
-def upload_content(did,content,session,dest_dir):
-    datasource=cassapidatasource.get_datasource(session, did=did)
+def upload_content(did,content,dest_dir):
+    datasource=cassapidatasource.get_datasource(did=did)
     if datasource:
         now=datetime.utcnow().isoformat()
         filedata={}
@@ -102,8 +102,8 @@ def upload_content(did,content,session,dest_dir):
     else:
         raise exceptions.DatasourceNotFoundException()
 
-def get_datasource_config(did,session):
-    datasource=cassapidatasource.get_datasource(session, did=did)
+def get_datasource_config(did):
+    datasource=cassapidatasource.get_datasource(did=did)
     if datasource:
         data={}
         data['did']=str(did)
@@ -113,24 +113,24 @@ def get_datasource_config(did,session):
     else:
         raise exceptions.DatasourceNotFoundException()
 
-def get_datasources_config(username,session):
-    user=cassapiuser.get_user(session, username=username)
+def get_datasources_config(username):
+    user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
     else:
-        datasources=cassapidatasource.get_datasources(session, uid=user.uid)
+        datasources=cassapidatasource.get_datasources(uid=user.uid)
         data=[]
         if datasources:
             for datasource in datasources:
                 data.append({'did':str(datasource.did),'aid':str(datasource.aid),'name':datasource.datasourcename})
         return data
 
-def update_datasource_config(did,session,data):
+def update_datasource_config(did,data):
     datasource=cassapidatasource.get_datasource(sesion, did=did)
     if datasource:
         if data.has_key('ds_name'):
             datasource.datasourcename=data['ds_name']
-        if cassapidatasource.insert_datasource(session, datasource=datasource):
+        if cassapidatasource.insert_datasource(datasource=datasource):
             return True
         else:
             raise exceptions.DatasourceUpdateException()

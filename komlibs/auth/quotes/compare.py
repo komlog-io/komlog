@@ -13,16 +13,16 @@ from komcass.api import quote as cassapiquote
 from komcass.api import user as cassapiuser
 from komcass.api import segment as cassapisegment
 
-def compare_quo_static_user_total_agents(params,session):
+def compare_quo_static_user_total_agents(params):
     if not params.has_key('uid'):
         return None
     uid=params['uid']
-    user=cassapiuser.get_user(session, uid=uid)
+    user=cassapiuser.get_user(uid=uid)
     if user:
-        segment=cassapisegment.get_user_segment(session, sid=user.segment)
+        segment=cassapisegment.get_user_segment(sid=user.segment)
     else:
         return None
-    userquo=cassapiquote.get_user_quotes(session,uid=uid)
+    userquo=cassapiquote.get_user_quotes(uid=uid)
     if userquo and segment:
         quote=userquo.get_quote('quo_static_user_total_agents')
         limit=segment.get_param('quo_static_user_max_agents')
@@ -32,16 +32,16 @@ def compare_quo_static_user_total_agents(params,session):
     return False
 
 
-def compare_quo_static_user_total_datasources(params,session):
+def compare_quo_static_user_total_datasources(params):
     if not params.has_key('uid'):
         return None
     uid=params['uid']
-    user=cassapiuser.get_user(session, uid=uid)
+    user=cassapiuser.get_user(uid=uid)
     if user:
-        segment=cassapisegment.get_user_segment(session, sid=user.segment)
+        segment=cassapisegment.get_user_segment(sid=user.segment)
     else:
         return None
-    userquo=cassapiquote.get_user_quotes(session, uid=uid)
+    userquo=cassapiquote.get_user_quotes(uid=uid)
     if userquo and segment:
         quote=userquo.get_quote('quo_static_user_total_datasources')
         limit=segment.get_param('quo_static_user_max_datasources')
@@ -50,16 +50,16 @@ def compare_quo_static_user_total_datasources(params,session):
                 return True
     return False
 
-def compare_quo_static_user_total_datapoints(params,session):
+def compare_quo_static_user_total_datapoints(params):
     if not params.has_key('uid'):
         return None
     uid=params['uid']
-    user=cassapiuser.get_user(session, uid=uid)
+    user=cassapiuser.get_user(uid=uid)
     if user:
-        segment=cassapisegment.get_user_segment(session, sid=user.segment)
+        segment=cassapisegment.get_user_segment(sid=user.segment)
     else:
         return None
-    userquo=cassapiquote.get_user_quotes(session, uid=uid)
+    userquo=cassapiquote.get_user_quotes(uid=uid)
     if userquo and segment:
         quote=userquo.get_quote('quo_static_user_total_datapoints')
         limit=segment.get_param('quo_static_user_max_datapoints')
@@ -68,16 +68,16 @@ def compare_quo_static_user_total_datapoints(params,session):
                 return True
     return False
 
-def compare_quo_static_user_total_widgets(params,session):
+def compare_quo_static_user_total_widgets(params):
     if not params.has_key('uid'):
         return None
     uid=params['uid']
-    user=cassapiuser.get_user(session, uid=uid)
+    user=cassapiuser.get_user(uid=uid)
     if user:
-        segment=cassapisegment.get_user_segment(session, sid=user.segment)
+        segment=cassapisegment.get_user_segment(sid=user.segment)
     else:
         return None
-    userquo=cassapiquote.get_user_quotes(session, uid=uid)
+    userquo=cassapiquote.get_user_quotes(uid=uid)
     if userquo and segment:
         quote=userquo.get_quote('quo_static_user_total_widgets')
         limit=segment.get_param('quo_static_user_max_widgets')
@@ -86,16 +86,16 @@ def compare_quo_static_user_total_widgets(params,session):
                 return True
     return False
 
-def compare_quo_static_user_total_dashboards(params,session):
+def compare_quo_static_user_total_dashboards(params):
     if not params.has_key('uid'):
         return None
     uid=params['uid']
-    user=cassapiuser.get_user(session, uid=uid)
+    user=cassapiuser.get_user(uid=uid)
     if user:
-        segment=cassapisegment.get_user_segment(session, sid=user.segment)
+        segment=cassapisegment.get_user_segment(sid=user.segment)
     else:
         return None
-    userquo=cassapiquote.get_user_quotes(session, uid=uid)
+    userquo=cassapiquote.get_user_quotes(uid=uid)
     if userquo and segment:
         quote=userquo.get_quote('quo_static_user_total_dashboards')
         limit=segment.get_param('quo_static_user_max_dashboards')
@@ -104,17 +104,17 @@ def compare_quo_static_user_total_dashboards(params,session):
                 return True
     return False
 
-def compare_quo_static_agent_total_datasources(params,session):
+def compare_quo_static_agent_total_datasources(params):
     if not params.has_key('aid') or not params.has_key('uid'):
         return None
     aid=params['aid']
     uid=params['uid']
-    user=cassapiuser.get_user(session, uid=uid)
+    user=cassapiuser.get_user(uid=uid)
     if user:
-        segment=cassapisegment.get_user_segment(session, sid=user.segment)
+        segment=cassapisegment.get_user_segment(sid=user.segment)
     else:
         return None
-    agentquo=cassapiquote.get_agent_quotes(session, aid=aid)
+    agentquo=cassapiquote.get_agent_quotes(aid=aid)
     if agentquo and segment:
         quote=agentquo.get_quote('quo_static_agent_total_datasources')
         limit=segment.get_param('quo_static_agent_max_datasources')
@@ -123,17 +123,17 @@ def compare_quo_static_agent_total_datasources(params,session):
                 return True
     return False
 
-def compare_quo_static_agent_total_datapoints(params,session):
+def compare_quo_static_agent_total_datapoints(params):
     if not params.has_key('aid') or not params.has_key('uid'):
         return None
     aid=params['aid']
     uid=params['uid']
-    user=cassapiuser.get_user(session, uid=uid)
+    user=cassapiuser.get_user(uid=uid)
     if user:
-        segment=cassapisegment.get_user_segment(session, sid=user.segment)
+        segment=cassapisegment.get_user_segment(sid=user.segment)
     else:
         return None
-    agentquo=cassapiquote.get_agent_quotes(session, aid=aid)
+    agentquo=cassapiquote.get_agent_quotes(aid=aid)
     if agentquo and segment:
         quote=agentquo.get_quote('quo_static_agent_total_datapoints')
         limit=segment.get_param('quo_static_agent_max_datapoints')
@@ -142,17 +142,17 @@ def compare_quo_static_agent_total_datapoints(params,session):
                 return True
     return False
 
-def compare_quo_static_datasource_total_datapoints(params,session):
+def compare_quo_static_datasource_total_datapoints(params):
     if not params.has_key('did') or not params.has_key('uid'):
         return None
     did=params['did']
     uid=params['uid']
-    user=cassapiuser.get_user(session, uid=uid)
+    user=cassapiuser.get_user(uid=uid)
     if user:
-        segment=cassapisegment.get_user_segment(session, sid=user.segment)
+        segment=cassapisegment.get_user_segment(sid=user.segment)
     else:
         return None
-    dsquo=cassapiquote.get_datasource_quotes(session, did=did)
+    dsquo=cassapiquote.get_datasource_quotes(did=did)
     if dsquo and segment:
         quote=dsquo.get_quote('quo_static_datasource_total_datapoints')
         limit=segment.get_param('quo_static_datasource_max_datapoints')

@@ -92,7 +92,6 @@ class Storing(modules.Module):
             self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
         else:
             casscon.initialize_session(self.params['cassandra_cluster'],self.params['cassandra_keyspace'])
-            self.session=casscon.session
             self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
             self.__loop()
         self.logger.info('Storing module exiting')
@@ -130,8 +129,8 @@ class Storing(modules.Module):
                 ds_date=dateutil.parser.parse(dsinfo['ds_date'])
                 dsdobj=ormdatasource.DatasourceData(did=did,date=ds_date,content=ds_content)
                 try:
-                    if cassapidatasource.insert_datasource_data(self.session, dsdobj=dsdobj):
-                        cassapidatasource.set_last_received(self.session, did=did, last_received=ds_date)
+                    if cassapidatasource.insert_datasource_data(dsdobj=dsdobj):
+                        cassapidatasource.set_last_received(did=did, last_received=ds_date)
                         self.logger.debug(filename+' stored successfully : '+str(did)+' '+str(ds_date))
                         fo = os.path.join(self.params['outputdir'],os.path.basename(filename)[:-5]+'.sspl')
                         os.rename(filename,fo)
@@ -143,7 +142,7 @@ class Storing(modules.Module):
                         os.rename(filename,fo)
                         msgresult.retcode=msgcodes.ERROR
                 except Exception as e:
-                    cassapidatasource.delete_datasource_data(self.session, did=did, date=ds_date)
+                    cassapidatasource.delete_datasource_data(did=did, date=ds_date)
                     self.logger.exception('Exception inserting sample: '+str(e))
                     fo = filename[:-5]+'.xspl'
                     os.rename(filename,fo)
