@@ -14,7 +14,7 @@ def main():
         Start program instance with its associated config file
     """
     HOME = os.getenv('HOME')
-    cfg_file = '.komlog/komdc.cfg'
+    cfg_file = '.komlogs/komdc.cfg'
     app = komapp.Komapp(os.path.join(HOME,cfg_file))
     app.start()
     

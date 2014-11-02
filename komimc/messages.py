@@ -12,13 +12,10 @@ import exceptions
 import codes as msgcodes
 from qpid.messaging import Message
 from komlibs.ifaceops import operations
+from komfig import logger
 import uuid
 import json
 import dateutil.parser
-
-#QPID ADDRESS CONSTANTS
-BASE_IMC_ADDRESS = 'pro.komlog.internal.imc.address.'
-QPID_ADDR_OPTIONS='; {create:always}'
 
 
 #MESSAGE LIST
@@ -30,21 +27,8 @@ FILL_DATAPOINT_MESSAGE='FILDTP'
 NEG_VAR_MESSAGE='NEGVAR'
 POS_VAR_MESSAGE='POSVAR'
 NEW_USR_MESSAGE='NEWUSR'
-UPDATE_GRAPH_WEIGHT_MESSAGE='UPDGRW'
 UPDATE_QUOTES_MESSAGE='UPDQUO'
 RESOURCE_AUTHORIZATION_UPDATE_MESSAGE='RESAUTH'
-UPDATE_CARD_MESSAGE='UPDCARD'
-PLOT_STORE_MESSAGE='PLTSTO'
-
-#MODULE LIST
-VALIDATION='Validation'
-STORING='Storing'
-TEXTMINING='Textmining'
-GESTCONSOLE='Gestconsole'
-RESCONTROL='Rescontrol'
-CARDMANAGER='Cardmanager'
-PLOTTER='Plotter'
-
 
 #MESSAGE MAPPINGS
 MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
@@ -55,61 +39,10 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           NEG_VAR_MESSAGE:'NegativeVariableMessage',
                           POS_VAR_MESSAGE:'PositiveVariableMessage',
                           NEW_USR_MESSAGE:'NewUserMessage',
-                          UPDATE_GRAPH_WEIGHT_MESSAGE:'UpdateGraphWeightMessage',
                           UPDATE_QUOTES_MESSAGE:'UpdateQuotesMessage',
                           RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:'ResourceAuthorizationUpdateMessage',
-                          UPDATE_CARD_MESSAGE:'UpdateCardMessage',
-                          PLOT_STORE_MESSAGE:'PlotStoreMessage'}
+                          }
 
-
-MESSAGE_TO_ADDRESS_MAPPING={STORE_SAMPLE_MESSAGE:STORING+'.%h',
-                            MAP_VARS_MESSAGE:TEXTMINING,
-                            MON_VAR_MESSAGE:GESTCONSOLE,
-                            GDTREE_MESSAGE:TEXTMINING,
-                            FILL_DATAPOINT_MESSAGE:TEXTMINING,
-                            NEG_VAR_MESSAGE:GESTCONSOLE,
-                            POS_VAR_MESSAGE:GESTCONSOLE,
-                            NEW_USR_MESSAGE:GESTCONSOLE,
-                            UPDATE_GRAPH_WEIGHT_MESSAGE:TEXTMINING,
-                            UPDATE_QUOTES_MESSAGE:RESCONTROL,
-                            RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:RESCONTROL,
-                            UPDATE_CARD_MESSAGE:CARDMANAGER,
-                            PLOT_STORE_MESSAGE:PLOTTER+'.%h'}
-
-
-#MODULE MAPPINGS
-MODULE_TO_ADDRESS_MAPPING={VALIDATION:'%m.%h',
-                           STORING:'%m.%h',
-                           TEXTMINING:'%m',
-                           GESTCONSOLE:'%m',
-                           RESCONTROL:'%m',
-                           CARDMANAGER:'%m',
-                           PLOTTER:'%m.%h'}
-
-
-def get_address(type, module_id, module_instance, running_host):
-    if MESSAGE_TO_ADDRESS_MAPPING.has_key(type):
-        address = MESSAGE_TO_ADDRESS_MAPPING[type]
-        address = address.replace('%h',running_host)
-        address = address.replace('%m',module_id)
-        address = address.replace('%i',str(module_instance))
-        address = BASE_IMC_ADDRESS+address
-        address = address
-        return address,QPID_ADDR_OPTIONS
-    else:
-        return None,QPID_ADDR_OPTIONS
-
-def get_mod_address(module_id, module_instance, running_host):
-    if MODULE_TO_ADDRESS_MAPPING.has_key(module_id):
-        address = MODULE_TO_ADDRESS_MAPPING[module_id]
-        address = address.replace('%h',running_host)
-        address = address.replace('%m',module_id)
-        address = address.replace('%i',str(module_instance))
-        address = BASE_IMC_ADDRESS+address
-        address = address
-        return address,QPID_ADDR_OPTIONS
-    else:
-        return None,QPID_ADDR_OPTIONS
 
 class MessageResult:
     def __init__(self,message):
@@ -124,17 +57,6 @@ class MessageResult:
 
     def get_msg_originated(self):
         return self._msgoriginated
-
-def process_msg_result(msg_result,msg_bus,logger):
-    if msg_result.retcode==msgcodes.ERROR:
-        logger.error('Error processing message: '+msg_result.mparams)
-    elif msg_result.retcode==msgcodes.SUCCESS:
-        logger.debug('Message processed successfully: '+msg_result.mparams)
-    for msg in msg_result.get_msg_originated():
-        if msg_bus.sendMessage(msg):
-            logger.debug('Message Sent: '+msg.qpid_message.content)
-    return True
-
 
 class StoreSampleMessage:
     def __init__(self, qpid_message=None, sample_file=None):
@@ -263,18 +185,6 @@ class NewUserMessage:
             self.uid=uid
             self.qpid_message=Message(self.type+'|'+str(self.uid))
 
-class UpdateGraphWeightMessage:
-    def __init__(self, qpid_message=None, gid=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,gid = self.qpid_message.content.split('|')
-            self.type=mtype
-            self.gid=uuid.UUID(gid)
-        else:
-            self.type=UPDATE_GRAPH_WEIGHT_MESSAGE
-            self.gid=gid
-            self.qpid_message=Message(self.type+'|'+str(self.gid))
-
 class UpdateQuotesMessage:
     def __init__(self, qpid_message=None, operation=None):
         if qpid_message:
@@ -304,44 +214,4 @@ class ResourceAuthorizationUpdateMessage:
             self.type=RESOURCE_AUTHORIZATION_UPDATE_MESSAGE
             self.operation=operation
             self.qpid_message=Message(self.type+'|'+self.operation.get_json_serialization())
-
-class UpdateCardMessage:
-    def __init__(self,qpid_message=None,did=None,date=None,force=False):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,did,date,force=self.qpid_message.content.split('|')
-            self.type=mtype
-            self.did=uuid.UUID(did)
-            self.date=dateutil.parser.parse(date)
-            self.force=True if force=='True' else False
-        else:
-            self.type=UPDATE_CARD_MESSAGE
-            self.did=did
-            self.date=date
-            self.force=force
-            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+self.date.isoformat()+'|'+str(self.force))
-
-class PlotStoreMessage:
-    def __init__(self, qpid_message=None, gid=None,init_date=None,end_date=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,gid,init_date,end_date = self.qpid_message.content.split('|')
-            self.type=mtype
-            self.gid=uuid.UUID(gid)
-            if not init_date=='':
-                self.init_date=dateutil.parser.parse(init_date)
-            else:
-                self.init_date=None
-            if not end_date=='':
-                self.end_date=dateutil.parser.parse(end_date)
-            else:
-                self.end_date=None
-        else:
-            self.type=PLOT_STORE_MESSAGE
-            self.gid=gid
-            self.init_date=init_date if init_date else ''
-            self.end_date=end_date if end_date else ''
-            init_date_iso=self.init_date.isoformat() if init_date else ''
-            end_date_iso=self.end_date.isoformat() if end_date else ''
-            self.qpid_message=Message(self.type+'|'+str(self.gid)+'|'+init_date_iso+'|'+end_date_iso)
 

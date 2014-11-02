@@ -22,9 +22,10 @@ from komlibs.gestaccount import states,types,exceptions
 from komlibs.gestaccount import widget as gestwidget
 from komlibs.ifaceops import operations
 from komimc import messages
+from komimc import api as msgapi
 from komlibs.general import crontab
 
-def create_datasource(username,aid,datasourcename,msgbus):
+def create_datasource(username,aid,datasourcename):
     print 'llegamos al create datasource'
     now=datetime.utcnow()
     did=uuid.uuid4()
@@ -42,11 +43,11 @@ def create_datasource(username,aid,datasourcename,msgbus):
         ''' before returning, send quote and resource authorization message '''
         operation=operations.NewDatasourceOperation(uid=user.uid,aid=aid,did=did)
         message=messages.UpdateQuotesMessage(operation=operation)
-        msgbus.sendMessage(message)
+        msgapi.send_message(message)
         message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
-        msgbus.sendMessage(message)
+        msgapi.send_message(message)
         ''' create related widget every time a new datasource is created '''
-        gestwidget.new_widget_ds(username=username,did=did,msgbus=msgbus)
+        gestwidget.new_widget_ds(username=username,did=did)
         return {'did':str(did)}
     else:
         raise exceptions.DatasourceCreationException()

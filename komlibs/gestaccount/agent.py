@@ -14,6 +14,7 @@ from komlibs.gestaccount import states as states
 from komlibs.gestaccount import exceptions
 from komlibs.ifaceops import operations
 from komimc import messages
+from komimc import api as msgapi
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA256
@@ -35,7 +36,7 @@ def verify_signature(pubkey,text,b64sign):
         return True
     return False
     
-def create_agent(username,agentname,pubkey,version,msgbus):
+def create_agent(username,agentname,pubkey,version):
     '''
     When the agent connects the first time, we will register it in a pending state, 
     waiting for the user validation to gain access to the system
@@ -56,9 +57,9 @@ def create_agent(username,agentname,pubkey,version,msgbus):
             ''' Send Quote and Resource Authorization Message before returning'''
             operation=operations.NewAgentOperation(uid=agent.uid,aid=agent.aid)
             message=messages.UpdateQuotesMessage(operation=operation)
-            msgbus.sendMessage(message)
+            msgapi.send_message(message)
             message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
-            msgbus.sendMessage(message)
+            msgapi.send_message(message)
             print 'Return New Agent id'
             data={'aid':str(aid)}
             return data
@@ -117,7 +118,7 @@ def get_agents_config(username,dids_flag=False):
                 data.append(agent_data)
         return data
     
-def update_agent_config(username, aid, data, msgbus):
+def update_agent_config(username, aid, data):
     if not data.has_key('ag_name'):
         raise exceptions.BadParametersException()
     agent=cassapiagent.get_agent(aid=aid)

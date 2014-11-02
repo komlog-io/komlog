@@ -1,0 +1,5 @@
+LOG_LEVEL='level'
+LOG_ROTATION='rotate_logs'
+LOG_MAX_BYTES='max_bytes'
+LOG_BACKUP_COUNT='backup_count'
+LOG_FORMAT='format'

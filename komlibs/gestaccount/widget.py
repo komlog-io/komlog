@@ -19,6 +19,7 @@ from komcass.model.orm import widget as ormwidget
 from komlibs.gestaccount import states,types,exceptions
 from komlibs.ifaceops import operations
 from komimc import messages
+from komimc import api as msgapi
 
 def get_widget_config(wid):
     widget=cassapiwidget.get_widget(wid=wid)
@@ -53,7 +54,7 @@ def get_widgets_config(username):
                 data.append({'wid':str(dpwidget.wid),'type':types.DP_WIDGET,'pid':str(dpwidget.pid)})
     return data
 
-def delete_widget(username,wid,msgbus):
+def delete_widget(username,wid):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
@@ -71,7 +72,7 @@ def delete_widget(username,wid,msgbus):
         else:
             return False
 
-def new_widget_ds(username,did,msgbus):
+def new_widget_ds(username,did):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
@@ -91,14 +92,14 @@ def new_widget_ds(username,did,msgbus):
         if cassapiwidget.new_widget(widget=widget):
             operation=operations.NewWidgetOperation(uid=user.uid,wid=wid)
             message=messages.UpdateQuotesMessage(operation=operation)
-            msgbus.sendMessage(message)
+            msgapi.send_message(message)
             message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
-            msgbus.sendMessage(message)
+            msgapi.send_message(message)
             return {'wid':str(wid)}
         else:
             raise exceptions.WidgetCreationException()
 
-def new_widget_dp(username,pid,msgbus):
+def new_widget_dp(username,pid):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
@@ -117,9 +118,9 @@ def new_widget_dp(username,pid,msgbus):
         if cassapiwidget.new_widget(widget=widget):
             operation=operations.NewWidgetOperation(uid=user.uid,wid=wid)
             message=messages.UpdateQuotesMessage(operation=operation)
-            msgbus.sendMessage(message)
+            msgapi.send_message(message)
             message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
-            msgbus.sendMessage(message)
+            msgapi.send_message(message)
             return {'wid':str(wid)}
         else:
             raise exceptions.WidgetCreationException()

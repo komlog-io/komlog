@@ -4,15 +4,16 @@ import sections, options
 import re
 import json
 import dateutil.parser
-import operator
 from datetime import datetime,timedelta
 from komcass.api import datasource as cassapidatasource
 from komcass.api import datapoint as cassapidatapoint
 from komcass.model.orm import datasource as ormdatasource
 from komcass import connection as casscon
 from komapp import modules
-from komfig import komlogger
-from komimc import bus,messages
+from komfig import logger, config
+from komimc import api as msgapi
+from komimc import bus as msgbus
+from komimc import messages
 from komimc import codes as msgcodes
 from komlibs.textman import variables
 from komlibs.numeric import weight
@@ -20,40 +21,39 @@ from komlibs.ai import decisiontree
 
 
 class Textmining(modules.Module):
-    def __init__(self, config, instance_number):
-        super(Textmining,self).__init__(config, self.__class__.__name__, instance_number)
+    def __init__(self, instance_number):
+        super(Textmining,self).__init__(self.__class__.__name__, instance_number)
         self.params={}
-        self.params['cassandra_keyspace'] = self.config.safe_get(sections.TEXTMINING,options.CASSANDRA_KEYSPACE)
-        self.params['cassandra_cluster'] = self.config.safe_get(sections.TEXTMINING,options.CASSANDRA_CLUSTER).split(',')
-        self.params['broker'] = self.config.safe_get(sections.TEXTMINING, options.MESSAGE_BROKER)
+        self.params['cassandra_keyspace'] = config.config.safe_get(sections.TEXTMINING,options.CASSANDRA_KEYSPACE)
+        self.params['cassandra_cluster'] = config.config.safe_get(sections.TEXTMINING,options.CASSANDRA_CLUSTER).split(',')
+        self.params['broker'] = config.config.safe_get(sections.TEXTMINING, options.MESSAGE_BROKER)
         if not self.params['broker']:
-            self.params['broker'] = self.config.safe_get(sections.MAIN, options.MESSAGE_BROKER)
+            self.params['broker'] = config.config.safe_get(sections.MAIN, options.MESSAGE_BROKER)
 
     def start(self):
-        self.logger = komlogger.getLogger(self.config.conf_file, self.name)
-        self.logger.info('Textmining module started')
+        if logger.initialize_logger(self.name+'_'+str(self.instance_number)):
+            logger.logger.info('Textmining module started')
         if not self.params['cassandra_keyspace'] or not self.params['cassandra_cluster']:
-            self.logger.error('Cassandra connection configuration keys not found')
+            logger.logger.error('Cassandra connection configuration keys not found')
         elif not self.params['broker']:
-            self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
+            logger.logger.error('Key '+options.MESSAGE_BROKER+' not found')
         else:
             casscon.initialize_session(self.params['cassandra_cluster'],self.params['cassandra_keyspace'])
-            self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
+            msgbus.initialize_msgbus(self.params['broker'], self.name, self.instance_number, self.hostname)
             self.__loop()
-        self.logger.info('Textmining module exiting')
+        logger.logger.info('Textmining module exiting')
     
     def __loop(self):
         while True:
-            message = self.message_bus.retrieveMessage(from_modaddr=True)
-            self.message_bus.ackMessage()
+            message = msgapi.retrieve_message()
             mtype=message.type
             try:
                 msgresult=getattr(self,'process_msg_'+mtype)(message)
-                messages.process_msg_result(msgresult,self.message_bus,self.logger)
+                msgapi.process_msg_result(msgresult)
             except AttributeError:
-                self.logger.exception('Exception processing message: '+mtype)
+                logger.logger.exception('Exception processing message: '+mtype)
             except Exception as e:
-                self.logger.exception('Exception processing message: '+str(e))
+                logger.logger.exception('Exception processing message: '+str(e))
 
     def process_msg_MAPVARS(self, message):
         '''
@@ -80,18 +80,18 @@ class Textmining(modules.Module):
             dsmapobj=ormdatasource.DatasourceMap(did=did,date=date,content=mapcontentjson,variables=mapvarcontentlist)
             try:
                 if cassapidatasource.insert_datasource_map(dsmapobj=dsmapobj):
-                    self.logger.debug('Map created for did: '+str(did))
+                    logger.logger.debug('Map created for did: '+str(did))
                 cassapidatasource.set_last_mapped(did=did, last_mapped=date)
                 newmsg=messages.FillDatapointMessage(did=did,date=date)
                 msgresult.add_msg_originated(newmsg)
                 msgresult.retcode=msgcodes.SUCCESS
             except Exception as e:
                 #rollback
-                self.logger.exception('Exception creating Map for did '+str(did)+': '+str(e))
+                logger.logger.exception('Exception creating Map for did '+str(did)+': '+str(e))
                 cassapidatasource.delete_datasource_map(did=did, date=date)
                 msgresult.retcode=msgcodes.ERROR
         else:
-            self.logger.error('Datasource data not found: '+str(did)+' '+str(date))
+            logger.logger.error('Datasource data not found: '+str(did)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
         return msgresult
             
@@ -189,20 +189,20 @@ class Textmining(modules.Module):
             datapoint=cassapidatapoint.get_datapoint(pid=pid)
             datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
             if not datapoint:
-                self.logger.error('Datapoint not found: '+str(pid))
+                logger.logger.error('Datapoint not found: '+str(pid))
                 msgresult.retcode=msgcodes.ERROR
                 return msgresult
             did=datapoint.did
             if datapoint_stats and datapoint_stats.dtree:
                 dtree=decisiontree.DecisionTree(jsontree=datapoint_stats.dtree)
             else:
-                self.logger.error('Datapoint Decision tree not found: '+str(pid))
+                logger.logger.error('Datapoint Decision tree not found: '+str(pid))
                 msgresult.retcode=msgcodes.ERROR
                 return msgresult
             dtps.append((datapoint,datapoint_stats,dtree))
             datasource=cassapidatasource.get_datasource(did=did)
             if not datasource:
-                self.logger.error('Datasource not found: '+str(did))
+                logger.logger.error('Datasource not found: '+str(did))
                 msgresult.retcode=msgcodes.ERROR
                 return msgresult
             datasource_stats=cassapidatasource.get_datasource_stats(did=did)
@@ -219,7 +219,7 @@ class Textmining(modules.Module):
             dsmaps.append(cassapidatasource.get_datasource_map(did=did, date=date))
             datapoints=cassapidatapoint.get_datapoints(did=did)
             if not datapoints:
-                self.logger.info('Datasource has no datapoints: '+str(did))
+                logger.logger.info('Datasource has no datapoints: '+str(did))
                 msgresult.retcode=msgcodes.NOOP
                 return msgresult
             for datapoint in datapoints:
@@ -250,7 +250,7 @@ class Textmining(modules.Module):
                             dtplist.remove(dtp)
                             break
                         else:
-                            self.logger.error('Error inserting datapoint data: %s_%s' %(dtpinfo.pid,dsmap.date))
+                            logger.logger.error('Error inserting datapoint data: %s_%s' %(dtpinfo.pid,dsmap.date))
                             break
         msgresult.retcode=msgcodes.SUCCESS
         return msgresult

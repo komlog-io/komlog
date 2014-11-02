@@ -45,11 +45,8 @@ class AgentsHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
-                print 'autorizamos'
                 authorization.authorize_request(request='NewAgentRequest',username=self.user)
-                print 'creamos'
-                data=agapi.create_agent(self.user,ag_name,ag_pubkey,ag_version,self.application.mb)
-                print data
+                data=agapi.create_agent(self.user,ag_name,ag_pubkey,ag_version)
                 self.set_status(200)
                 self.write(json_encode(data))
             except authexcept.AuthorizationException:
@@ -62,7 +59,6 @@ class AgentsHandler(tornado.web.RequestHandler):
                 self.set_status(500)
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
             except Exception as e:
-                print str(e)
                 self.set_status(500)
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
@@ -76,7 +72,6 @@ class AgentsHandler(tornado.web.RequestHandler):
             self.set_status(404)
             self.write(json_encode({'message':'User not found'}))
         except Exception as e:
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
@@ -107,7 +102,7 @@ class AgentConfigHandler(tornado.web.RequestHandler):
             aid=uuid.UUID(p_aid)
             authorization.authorize_request('AgentUpdateConfigurationRequest',self.user, aid=aid)
             data=json_decode(self.request.body)
-            agapi.update_agent_config(username=self.user,aid=aid,data=data,msgbus=self.application.mb)
+            agapi.update_agent_config(username=self.user,aid=aid,data=data)
             self.set_status(200)
             self.write(json_encode({'message':'Operation completed'}))
         except ValueError:
@@ -126,7 +121,6 @@ class AgentConfigHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         except Exception as e:
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
@@ -147,7 +141,6 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             self.set_status(404)
             self.write(json_encode({'message': 'Datasource not found'}))
         except Exception as e:
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
@@ -168,18 +161,15 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
                 self.set_status(403)
                 self.write(json_encode({'message':'Access Denied'}))
             except gestexcept.DatasourceUploadContentException:
-                print 'uploadexception'
                 self.set_status(500)
                 self.write(json_encode({'message':'Internal Error'}))
             except gestexcept.DatasourceNotFoundException:
                 self.set_status(404)
                 self.write(json_encode({'message':'Not Found'}))
             except TypeError as e:
-                print str(e)
                 self.set_status(400)
                 self.write(json_encode({'message':'Bad Parameters'}))
             except Exception as e:
-                print str(e)
                 self.set_status(500)
                 self.write(json_encode({'message':'Internal Error'}))
         else:
@@ -207,7 +197,6 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad Request'}))
         except Exception as e:
             #self.application.logger.exception(str(e))
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
@@ -251,14 +240,12 @@ class DatasourcesHandler(tornado.web.RequestHandler):
             aid=uuid.UUID(self.agent)
             ds_name=data['ds_name']
         except Exception as e:
-            print 'Exception en el handler'
-            print str(e)
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
                 authorization.authorize_request('NewDatasourceRequest',self.user,aid=aid)
-                data=dsapi.create_datasource(username=self.user,aid=aid,datasourcename=ds_name,msgbus=self.application.mb)
+                data=dsapi.create_datasource(username=self.user,aid=aid,datasourcename=ds_name)
                 self.set_status(200)
                 self.write(json_encode(data))
             except authexcept.AuthorizationException:
@@ -277,7 +264,6 @@ class DatasourcesHandler(tornado.web.RequestHandler):
                 self.set_status(500)
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
             except Exception as e:
-                print str(e)
                 self.set_status(500)
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
@@ -291,7 +277,6 @@ class DatasourcesHandler(tornado.web.RequestHandler):
             self.set_status(404)
             self.write(json_encode({'message':'User not found'}))
         except Exception as e:
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
@@ -308,7 +293,7 @@ class UsersHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
-                data=usrapi.create_user(username,password,email,self.application.mb)
+                data=usrapi.create_user(username,password,email)
                 self.set_status(200)
                 self.write(json_encode(data))
             except gestexcept.UserAlreadyExistsException:
@@ -321,7 +306,6 @@ class UsersHandler(tornado.web.RequestHandler):
                 self.set_status(500)
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
             except Exception as e:
-                print str(e)
                 self.set_status(500)
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
@@ -345,7 +329,6 @@ class UserConfirmationHandler(tornado.web.RequestHandler):
             self.set_status(500)
             self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
         except Exception as e:
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
@@ -370,7 +353,6 @@ class DatapointDataHandler(tornado.web.RequestHandler):
             self.set_status(404)
             self.write(json_encode({'message': 'Datapoint data not found','last_date':e.last_date.isoformat()}))
         except Exception as e:
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
@@ -395,7 +377,6 @@ class DatapointConfigHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad Request'}))
         except Exception as e:
             #self.application.logger.exception(str(e))
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
@@ -447,7 +428,7 @@ class DatapointsHandler(tornado.web.RequestHandler):
         else:
             try:
                 authorization.authorize_request(request='NewDatapointRequest',username=self.user,did=did)
-                dpapi.create_datapoint(did=did,dsdate=dsdate,pos=cs,length=vl,name=dpname,msgbus=self.application.mb)
+                dpapi.create_datapoint(did=did,dsdate=dsdate,pos=cs,length=vl,name=dpname)
                 self.set_status(200)
             except authexcept.AuthorizationException:
                 self.set_status(403)
@@ -456,7 +437,6 @@ class DatapointsHandler(tornado.web.RequestHandler):
                 self.set_status(500)
                 self.write(json_encode({'message':'Error, try again later'}))
             except Exception as e:
-                print str(e)
                 self.set_status(500)
                 self.write(json_encode({'message':'Error, try again later'}))
 
@@ -490,11 +470,8 @@ class UserProfileHandler(BaseHandler):
     def get(self):
         try:
             data=usrapi.get_userprofile(username=self.user)
-            print 'TENEMOS LOS DATOS'
-            print data
             self.render('profile.html',data=data,page_title='Komlog')
         except Exception as e:
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
@@ -503,7 +480,7 @@ class UserProfileHandler(BaseHandler):
         try:
             authorization.authorize_request('UserUpdateProfileRequest',self.user)
             data=json_decode(self.request.body)
-            usrapi.update_userprofile(self.user, data, self.application.mb)
+            usrapi.update_userprofile(self.user, data)
             self.set_status(200)
             self.write(json_encode({'message':'Operation completed'}))
         except ValueError:
@@ -519,7 +496,6 @@ class UserProfileHandler(BaseHandler):
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         except Exception as e:
-            print str(e)
             self.set_status(500)
 
 
@@ -541,15 +517,13 @@ class GraphsHandler(tornado.web.RequestHandler):
             for dtp in dtp_list:
                 pids.append(uuid.UUID(dtp))
         except Exception as e:
-            print 'Exception en el handler'
-            print str(e)
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             try:
                 for pid in pids:
                     authorization.authorize_request(request='NewGraphRequest',username=self.user,pid=pid)
-                data=graphapi.create_graph(username=self.user,graphname=graphname,pids=pids,msgbus=self.application.mb)
+                data=graphapi.create_graph(username=self.user,graphname=graphname,pids=pids)
                 self.set_status(200)
                 self.write(json_encode(data))
             except authexcept.AuthorizationException:
@@ -562,7 +536,6 @@ class GraphsHandler(tornado.web.RequestHandler):
                 self.set_status(500)
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
             except Exception as e:
-                print str(e)
                 self.set_status(500)
                 self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
@@ -677,7 +650,7 @@ class PlotDataHandler(tornado.web.RequestHandler):
         try:
             gid=uuid.UUID(p_gid)
             authorization.authorize_request(request='GetPlotDataRequest',username=self.user,gid=gid)
-            image = graphapi.get_plotimage(username=self.user, msgbus=self.application.mb, gid=gid)
+            image = graphapi.get_plotimage(username=self.user, gid=gid)
             self.set_header('Content-type', 'image/png')
             self.set_header('Content-length', len(image))
             self.set_status(200)
@@ -689,7 +662,6 @@ class PlotDataHandler(tornado.web.RequestHandler):
             self.set_status(404)
             self.write(json_encode({'message': 'Datasource not found'}))
         except Exception as e:
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
@@ -708,7 +680,6 @@ class WidgetsHandler(tornado.web.RequestHandler):
             self.set_status(404)
             self.write(json_encode({'message':'Not found widgets'}))
         except Exception as e:
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
@@ -748,7 +719,6 @@ class DashboardsHandler(tornado.web.RequestHandler):
             self.set_status(404)
             self.write(json_encode({'message':'Not found dashboards'}))
         except Exception as e:
-            print str(e)
             self.set_status(500)
             self.write(json_encode({'message':'Houston, had a problem, try it later please.'}))
 
@@ -772,4 +742,29 @@ class DashboardConfigHandler(tornado.web.RequestHandler):
             #self.application.logger.exception(str(e))
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
+
+UUID4_REGEX='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+HANDLERS = [(r"/login/?", LoginHandler),
+            (r"/logout/?", LogoutHandler),
+            (r"/etc/ag/?", AgentsHandler),
+            (r"/etc/ag/("+UUID4_REGEX+")", AgentConfigHandler),
+            (r"/etc/ds/?", DatasourcesHandler),
+            (r"/etc/ds/("+UUID4_REGEX+")", DatasourceConfigHandler),
+            (r"/etc/dp/?", DatapointsHandler),
+            (r"/etc/dp/("+UUID4_REGEX+")", DatapointConfigHandler),
+            (r"/etc/graph/?", GraphsHandler),
+            (r"/etc/graph/("+UUID4_REGEX+")", GraphConfigHandler),
+            (r"/etc/wg/?", WidgetsHandler),
+            (r"/etc/wg/("+UUID4_REGEX+")", WidgetConfigHandler),
+            (r"/etc/db/?", DashboardsHandler),
+            (r"/etc/db/("+UUID4_REGEX+")", DashboardConfigHandler),
+            (r"/etc/usr/confirm/", UserConfirmationHandler),
+            (r"/etc/usr/?", UsersHandler),
+            (r"/var/ds/("+UUID4_REGEX+")", DatasourceDataHandler),
+            (r"/var/dp/("+UUID4_REGEX+")", DatapointDataHandler),
+            (r"/var/static/plot/("+UUID4_REGEX+")", PlotDataHandler),
+            (r"/home/config", UserConfigHandler),
+            (r"/home/profile", UserProfileHandler),
+            (r"/home", UserHomeHandler)
+]
 

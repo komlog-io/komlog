@@ -12,8 +12,10 @@ from komcass.model.orm import user as ormuser
 from komcass.model.orm import datapoint as ormdatapoint
 from komcass import connection as casscon
 from komapp import modules
-from komfig import komlogger
-from komimc import bus,messages
+from komfig import config,logger
+from komimc import bus as msgbus
+from komimc import api as msgapi
+from komimc import messages
 from komimc import codes as msgcodes
 from komlibs.textman import variables
 from komlibs.ai import decisiontree
@@ -24,48 +26,47 @@ from komlibs.mail import messages as mailmessages
 from komlibs.ifaceops import operations
 
 class Gestconsole(modules.Module):
-    def __init__(self, config, instance_number):
-        super(Gestconsole,self).__init__(config, self.__class__.__name__, instance_number)
+    def __init__(self, instance_number):
+        super(Gestconsole,self).__init__(self.__class__.__name__, instance_number)
         self.params={}
-        self.params['cassandra_keyspace'] = self.config.safe_get(sections.GESTCONSOLE,options.CASSANDRA_KEYSPACE)
-        self.params['cassandra_cluster'] = self.config.safe_get(sections.GESTCONSOLE,options.CASSANDRA_CLUSTER).split(',')
-        self.params['broker'] = self.config.safe_get(sections.GESTCONSOLE, options.MESSAGE_BROKER)
+        self.params['cassandra_keyspace'] = config.config.safe_get(sections.GESTCONSOLE,options.CASSANDRA_KEYSPACE)
+        self.params['cassandra_cluster'] = config.config.safe_get(sections.GESTCONSOLE,options.CASSANDRA_CLUSTER).split(',')
+        self.params['broker'] = config.config.safe_get(sections.GESTCONSOLE, options.MESSAGE_BROKER)
         if not self.params['broker']:
-            self.params['broker'] = self.config.safe_get(sections.MAIN, options.MESSAGE_BROKER)
-        self.params['mail_server'] = self.config.safe_get(sections.MAIN,options.MAIL_SERVER)
-        self.params['mail_user'] = self.config.safe_get(sections.MAIN,options.MAIL_USER)
-        self.params['mail_password'] = self.config.safe_get(sections.MAIN,options.MAIL_PASSWORD)
-        self.params['mail_domain'] = self.config.safe_get(sections.MAIN,options.MAIL_DOMAIN)
+            self.params['broker'] = config.config.safe_get(sections.MAIN, options.MESSAGE_BROKER)
+        self.params['mail_server'] = config.config.safe_get(sections.MAIN,options.MAIL_SERVER)
+        self.params['mail_user'] = config.config.safe_get(sections.MAIN,options.MAIL_USER)
+        self.params['mail_password'] = config.config.safe_get(sections.MAIN,options.MAIL_PASSWORD)
+        self.params['mail_domain'] = config.config.safe_get(sections.MAIN,options.MAIL_DOMAIN)
 
     def start(self):
-        self.logger = komlogger.getLogger(self.config.conf_file, self.name)
-        self.logger.info('Gestconsole module started')
+        if logger.initialize_logger(self.name+'_'+str(self.instance_number)):
+            logger.logger.info('Gestconsole module started')
         if not self.params['cassandra_keyspace'] or not self.params['cassandra_cluster']:
-            self.logger.error('Cassandra connection configuration keys not found')
+            logger.logger.error('Cassandra connection configuration keys not found')
         elif not self.params['broker']:
-            self.logger.error('Key '+options.MESSAGE_BROKER+' not found')
+            logger.logger.error('Key '+options.MESSAGE_BROKER+' not found')
         elif not self.params['mail_server'] or not self.params['mail_user'] or not self.params['mail_password']:
-            self.logger.error('Mail configuration parameter not found either server, user or password')
+            logger.logger.error('Mail configuration parameter not found either server, user or password')
         else:
             casscon.initialize_session(self.params['cassandra_cluster'],self.params['cassandra_keyspace'])
-            self.message_bus = bus.MessageBus(self.params['broker'], self.name, self.instance_number, self.hostname, self.logger)
+            msgbus.initialize_msgbus(self.params['broker'], self.name, self.instance_number, self.hostname)
             self.mailer = mailcon.Mailer(self.params['mail_server'])
             self.mailer.login(self.params['mail_user'],self.params['mail_password'])
             self.__loop()
-        self.logger.info('Gestconsole module exiting')
+        logger.logger.info('Gestconsole module exiting')
     
     def __loop(self):
         while True:
-            message = self.message_bus.retrieveMessage(from_modaddr=True)
-            self.message_bus.ackMessage()
+            message = msgapi.retrieve_message()
             mtype=message.type
             try:
                 msgresult=getattr(self,'process_msg_'+mtype)(message)
-                messages.process_msg_result(msgresult,self.message_bus,self.logger)
+                msgapi.process_msg_result(msgresult)
             except AttributeError:
-                self.logger.exception('Exception processing message: '+mtype)
+                logger.logger.exception('Exception processing message: '+mtype)
             except Exception as e:
-                self.logger.exception('Exception processing message: '+str(e))
+                logger.logger.exception('Exception processing message: '+str(e))
 
     def process_msg_MONVAR(self, message):
         ''' Los pasos son los siguientes:
@@ -82,26 +83,26 @@ class Gestconsole(modules.Module):
         name=message.name
         datasource=cassapidatasource.get_datasource(did=did)
         if not datasource:
-            self.logger.error('Datasource not found: '+str(did))
+            logger.logger.error('Datasource not found: '+str(did))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         dsmap = cassapidatasource.get_datasource_map(did=did, date=date)
         if not dsmap: 
-            self.logger.error('DatasourceMap not found: '+str(did)+' '+str(date))
+            logger.logger.error('DatasourceMap not found: '+str(did)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         try:
             value=dsmap.variables[int(pos)]
             if not value==int(length):
-                self.logger.error('Variable length doesnt match stored value'+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
+                logger.logger.error('Variable length doesnt match stored value'+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
                 msgresult.retcode=msgcodes.ERROR
                 return msgresult
         except KeyError:
-            self.logger.exception('Variable not found: '+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
+            logger.logger.exception('Variable not found: '+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         except Exception as e:
-            self.logger.exception('DatasourceMap exception '+str(e)+': '+str(did)+' '+str(date))
+            logger.logger.exception('DatasourceMap exception '+str(e)+': '+str(did)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=pos)
@@ -121,7 +122,7 @@ class Gestconsole(modules.Module):
                 stored_dtree=datapoint.dtree
                 dtree=decisiontree.DecisionTree(jsontree=json.dumps(stored_dtree))
                 if dtree.evaluate_row(varlist[0].h):
-                    self.logger.error('Datapoint Already monitored: '+str(datapoint.pid))
+                    logger.logger.error('Datapoint Already monitored: '+str(datapoint.pid))
                     msgresult.retcode=msgcodes.ERROR
                     return msgresult
             except KeyError:
@@ -139,7 +140,7 @@ class Gestconsole(modules.Module):
             msgcodes.retcode=msgcodes.SUCCESS
             return msgresult
         else:
-            self.logger.error('Error registering datapoint in database. did: '+str(did)+' date: '+str(date)+' pos: '+str(pos))
+            logger.logger.error('Error registering datapoint in database. did: '+str(did)+' date: '+str(date)+' pos: '+str(pos))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
 
@@ -155,32 +156,32 @@ class Gestconsole(modules.Module):
         pid=message.pid
         datapoint=cassapidatapoint.get_datapoint(pid=pid)
         if not datapoint:
-            self.logger.error('Datapoint not found: '+str(pid))
+            logger.logger.error('Datapoint not found: '+str(pid))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         dsmapvars = cassapidatasource.get_datasource_map_variables(did=datapoint.did, date=date)
         if not dsmapvars: 
-            self.logger.error('Datasource MapVar not found')
+            logger.logger.error('Datasource MapVar not found')
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         try:
             value=dsmapvars[pos]
             if not value==int(length):
-                self.logger.exception('Received length doesnt match stored value: '+str(datapoint.did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
+                logger.logger.exception('Received length doesnt match stored value: '+str(datapoint.did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
                 msgresult.retcode=msgcodes.ERROR
                 return msgresult
         except KeyError:
-            self.logger.exception('Variable not found: '+str(datapoint.did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
+            logger.logger.exception('Variable not found: '+str(datapoint.did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         #en este punto hemos comprobado que la muestra y variable existen, falta añadirla al listado de negativos
         if not cassapidatapoint.add_datapoint_dtree_negative_at(pid=pid, date=date, position=pos, length=length):
-            self.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
+            logger.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         #y eliminarla de los positivos si estuviese
         if not cassapidatapoint.delete_datapoint_dtree_positive_at(pid=pid, date=date, position=pos):
-            self.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
+            logger.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         newmsg=messages.GenerateDTreeMessage(pid=pid,date=date)
@@ -203,26 +204,26 @@ class Gestconsole(modules.Module):
         pid=message.pid
         datapoint=cassapidatapoint.get_datapoint(pid=pid)
         if not datapoint:
-            self.logger.error('Datapoint not found: '+str(pid))
+            logger.logger.error('Datapoint not found: '+str(pid))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         if not datapoint.did or not did == datapoint.did:
-            self.logger.error('Datapoint DID does not match Message DID: datapoint.did: '+str(datapoint.did)+' message.did: '+str(did))
+            logger.logger.error('Datapoint DID does not match Message DID: datapoint.did: '+str(datapoint.did)+' message.did: '+str(did))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         dsmapvars = cassapidatasource.get_datasource_map_variables(did=did, date=date)
         if not dsmapvars: 
-            self.logger.error('Datasource MapVar not found: '+str(did)+' '+str(date))
+            logger.logger.error('Datasource MapVar not found: '+str(did)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         try:
             value=dsmapvars[pos]
             if not value==int(length):
-                self.logger.exception('Received length doesnt match stored value: '+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
+                logger.logger.exception('Received length doesnt match stored value: '+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
                 msgresult.retcode=msgcodes.ERROR
                 return msgresult
         except KeyError:
-            self.logger.exception('Variable not found: '+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
+            logger.logger.exception('Variable not found: '+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         ''' en este punto hemos comprobado que la muestra y variable existen y dtp pertenece a did indicado.
@@ -237,17 +238,17 @@ class Gestconsole(modules.Module):
                     stored_dtree=datapoint.dtree
                     dtree=decisiontree.DecisionTree(jsontree=json.dumps(stored_dtree))
                     if dtree.evaluate_row(varlist[0].h):
-                        self.logger.debug('Variable matched other datapoint. Requesting NEGVAR on it: '+str(datapoint.pid))
+                        logger.logger.debug('Variable matched other datapoint. Requesting NEGVAR on it: '+str(datapoint.pid))
                         newmsg=messages.NegativeVariableMessage(did=did,pid=datapoint.pid,date=date,pos=pos,length=length)
                         msgresult.add_msg_originated(newmsg)
         ''' establecemos la variable como positiva para este datapoint '''
         if not cassapidatapoint.set_datapoint_dtree_positive_at(pid=pid, date=date, posisition=pos, length=length):
-            self.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
+            logger.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         #y eliminarla de los negativos si estuviese
         if not cassapidatapoint.delete_datapoint_dtree_negative_at(pid=pid, date=date, position=pos):
-            self.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
+            logger.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         newmsg=messages.GenerateDTreeMessage(pid=pid,date=date)
@@ -264,24 +265,24 @@ class Gestconsole(modules.Module):
         uid=message.uid
         user=cassapiuser.get_user(uid=uid)
         if not user:
-            self.logger.error('User not found: '+str(uid))
+            logger.logger.error('User not found: '+str(uid))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         email=user.email
         if not email:
-            self.logger.error('User email not found: '+str(uid))
+            logger.logger.error('User email not found: '+str(uid))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         signup_code=stringops.get_randomstring(size=32)
         signup_info=ormuser.SignUp(username=user.username, signup_code=signup_code, email=email, creation_date=datetime.utcnow())
         if not cassapiuser.insert_signup_info(signup_info=signup_info):
-            self.logger.error('Error inserting new user code, uid: '+str(uid))
+            logger.logger.error('Error inserting new user code, uid: '+str(uid))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         mailargs={'to_address':email,'code':signup_code,'domain':self.params['mail_domain']}
         mailmessage=mailmessages.get_message(mailtypes.NEW_USER,mailargs)
         if not self.mailer.send(mailmessage):
-            self.logger.error('Error sending mail, uid: '+str(uid))
+            logger.logger.error('Error sending mail, uid: '+str(uid))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
         msgresult.retcode=msgcodes.SUCCESS

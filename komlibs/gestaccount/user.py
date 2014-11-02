@@ -13,6 +13,7 @@ from komlibs.gestaccount import states as states
 from komlibs.gestaccount import segments
 from komlibs.gestaccount import exceptions
 from komimc import messages
+from komimc import api as msgapi
 
 
 def get_hpassword(uid,password):
@@ -20,7 +21,7 @@ def get_hpassword(uid,password):
     hpassword=crypt.crypt(password,salt)
     return hpassword
 
-def create_user(username, password, email, msgbus):
+def create_user(username, password, email):
     '''This function creates a new user in the database'''
     uid=uuid.uuid4()
     hpassword=get_hpassword(uid,password)
@@ -29,7 +30,7 @@ def create_user(username, password, email, msgbus):
     user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.USER['FREE'], creation_date=now, state=states.USER['PREACTIVE'])
     message=messages.NewUserMessage(uid=uid)
     if cassapiuser.new_user(user=user):
-        if msgbus.sendMessage(message):
+        if msgapi.send_message(message):
             return True
         else:
             cassapiuser.delete_user(uid=user.uid)
@@ -57,7 +58,7 @@ def confirm_user(email, code):
     cassapiuser.insert_signup_info(signup_info=signup_info)
     return {'result':email+' confirmation OK'}
     
-def update_userprofile(username, params, msgbus):
+def update_userprofile(username, params):
     ''' This function is used to update user configuration parameters.
     Parameters supported:
         - password

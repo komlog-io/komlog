@@ -18,6 +18,7 @@ from komcass.api import datapoint as cassapidatapoint
 from komlibs.gestaccount import states,types,exceptions
 from komlibs.general import colors
 from komimc import messages
+from komimc import api as msgapi
 
 def get_datapoint_data(pid,end_date=None,start_date=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
@@ -40,7 +41,7 @@ def get_datapoint_data(pid,end_date=None,start_date=None):
             data.append({'date':datapoint_data.date.isoformat()+'Z','value':str(datapoint_data.value)})
     return data
 
-def create_datapoint(did,dsdate,pos,length,name,msgbus):
+def create_datapoint(did,dsdate,pos,length,name):
     '''
     Funcion utilizada para la monitorización de una variable y
     la creación del datapoint correspondiente
@@ -51,7 +52,7 @@ def create_datapoint(did,dsdate,pos,length,name,msgbus):
     length=str(length)
     name=u''+name
     message=messages.MonitorVariableMessage(did=did,date=dsdate,pos=pos,length=length,name=name)
-    msgbus.sendMessage(message)
+    msgapi.send_message(message)
     return True
 
 def get_datapoint_config(pid):
