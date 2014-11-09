@@ -9,7 +9,7 @@ bus.py: Messages Bus implementation
 '''
 
 from qpid.messaging import Connection, MessagingError
-from komfig import logger
+from komfig import config, logger, options
 from komimc import routing
 
 QPID_OPTS='; {create:always}'
@@ -81,8 +81,11 @@ class MessageBus:
         except Exception:
             logger.logger.exception('Error acknowledging message')
 
-def initialize_msgbus(broker, module_name, module_instance, hostname):
+def initialize_msgbus(module_name, module_instance, hostname):
     global msgbus
+    broker = config.get(options.MESSAGE_BROKER)
+    if not broker:
+        return False
     msgbus=MessageBus(broker, module_name, module_instance, hostname)
     if msgbus:
         return True

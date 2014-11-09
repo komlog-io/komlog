@@ -1,4 +1,4 @@
-from komfig import config,defaults,sections,options
+from komfig import config,defaults,options
 import logging
 from logging.handlers import RotatingFileHandler
 import os,sys
@@ -8,11 +8,11 @@ logger=logging.getLogger('komlogs')
 def initialize_logger(module_name):
     global logger
     filename=module_name+'.log'
-    log_level=config.config.safe_get(sections.LOGGING,options.LOG_LEVEL) or defaults.LOG_LEVEL
-    rotate_logs=config.config.safe_get(sections.LOGGING,options.LOG_ROTATION) or defaults.LOG_ROTATION
-    max_bytes=config.config.safe_get(sections.LOGGING,options.LOG_MAX_BYTES) or defaults.LOG_MAX_BYTES
-    backup_count=config.config.safe_get(sections.LOGGING,options.LOG_BACKUP_COUNT) or defaults.LOG_BACKUP_COUNT
-    log_format=config.config.safe_get(sections.LOGGING,options.LOG_FORMAT) or defaults.LOG_FORMAT
+    log_level=config.get(options.LOG_LEVEL) or defaults.LOG_LEVEL
+    rotate_logs=config.get(options.LOG_ROTATION) or defaults.LOG_ROTATION
+    max_bytes=config.get(options.LOG_MAX_BYTES) or defaults.LOG_MAX_BYTES
+    backup_count=config.get(options.LOG_BACKUP_COUNT) or defaults.LOG_BACKUP_COUNT
+    log_format=config.get(options.LOG_FORMAT) or defaults.LOG_FORMAT
     try:
         if not os.path.exists(os.path.join(config.config.root_dir,defaults.LOG_DIRNAME)):
             os.mkdir(os.path.join(config.config.root_dir,defaults.LOG_DIRNAME))

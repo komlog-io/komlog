@@ -10,6 +10,9 @@ This file contains funcions and classes related with email connections and its o
 '''
 
 import smtplib
+from komfig import config, logger, options
+
+mailer=None
 
 class Mailer(object):
     """
@@ -18,7 +21,7 @@ class Mailer(object):
     Use login() to log in with a username and password.
     """
 
-    def __init__(self, host="localhost"):
+    def __init__(self, host='localhost'):
         self.host = u''+host
         self._usr = None
         self._pwd = None
@@ -37,34 +40,29 @@ class Mailer(object):
         mailer.send([msg1, msg2, msg3])
         """
         try:
-            print 'Creando server'
-            print self.host
+            logger.logger.debug('Creating SMTP Server to: '+self.host)
             #server = smtplib.SMTP(self.host)
             server = smtplib.SMTP_SSL(self.host,465)
-            print 'ehlo'
+            logger.logger.debug('EHLO')
             server.ehlo()
-            print 'starttls'
             #server.starttls()
-            print 'ehlo'
             server.ehlo()
 
             if self._usr and self._pwd:
-                print 'login'
-                print self._usr
-                print self._pwd
+                logger.logger.debug('SMTP LOGIN usr: '+self._usr)
                 server.login(self._usr, self._pwd)
 
             try:
                 for m in msg:
-                    print 'send'
+                    logger.logger.debug('SMTP sending message: '+m)
                     self._send(server, m)
             except TypeError:
                 self._send(server, msg)
-            print 'OK'
             server.quit()
+            logger.logger.debug('SMTP message sent OK')
             return True
         except Exception as e:
-            print str(e)
+            logger.logger.debug('Exception: '+str(e))
             return False
 
     def _send(self, server, msg):
@@ -75,3 +73,17 @@ class Mailer(object):
         me = msg.From
         you = [x.strip() for x in msg.To.split(",")]
         server.sendmail(me, you, msg.as_string())
+
+def initialize_mailer():
+    global mailer
+    server=config.get(options.MAIL_SERVER)
+    user=config.get(options.MAIL_USER)
+    password=config.get(options.MAIL_PASSWORD)
+    if not server or not user or not password:
+        logger.logger.error('Error loading mail server parameters')
+        return False
+    mailer=Mailer(server)
+    mailer.login(user, password)
+    logger.logger.debug('Mail connection initialized successfully')
+    return True
+

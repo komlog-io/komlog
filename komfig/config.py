@@ -13,25 +13,6 @@ class Config(ConfigParser.ConfigParser):
             if Err.errno == 2: pass
             else: raise Err
 
-    def set(self, section, option, value):
-        ConfigParser.ConfigParser.set(self, section, option, str(value))
-        
-    def get(self, section, option):
-        return ConfigParser.ConfigParser.get(self, section, option)
-    
-    def safe_set(self, section, option, value):
-        if self.has_section(section):
-            self.set(section, option, str(value))
-        else:
-            self.add_section(section)
-            self.set(section, option, str(value))
-
-    def safe_get(self, section, option):
-        if self.has_option(section, option):
-            return self.get(section, option)
-        else:
-            return None
-
 def initialize_config(cfg_file):
     ''' This function return the handler to the configuration file.
     If this is the first execution of the agent, create from a template '''
@@ -44,4 +25,14 @@ def initialize_config(cfg_file):
             return False
     else:
         return False
+
+def get(option, section=None):
+    global config
+    params=option.split(':')
+    if len(params)==2 and config.has_option(params[0], params[1]):
+        return config.get(params[0], params[1])
+    elif not section is None and config.has_option(section, option):
+        return config.get(section, option)
+    else:
+        return None
 

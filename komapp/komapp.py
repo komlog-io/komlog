@@ -4,8 +4,8 @@ Created on 31/12/2012
 @author: jcazor
 '''
 import os
-from komfig import config, logger
-import options, sections, modules, time
+from komfig import config, logger, options
+import modules, time
 from multiprocessing import Process
 
 
@@ -45,10 +45,9 @@ class Komapp(object):
        
     def __load_modules(self):
         modules_enabled = []
-        for module in config.config.safe_get(sections.MAIN,options.MODULES).split(','):
-            mod_section='module_'+module
-            if str(config.config.safe_get(mod_section, options.MODULE_ENABLED)).lower() == 'yes':
-                instances = config.config.safe_get(mod_section, options.MODULE_INSTANCES)
+        for module in config.get(options.MODULES).split(','):
+            if str(config.get(options.MODULE_ENABLED, module)).lower() == 'yes':
+                instances = config.get(options.MODULE_INSTANCES, module)
                 if not instances:
                     instances=1
                 else:
