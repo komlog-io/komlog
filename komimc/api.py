@@ -18,13 +18,13 @@ def send_message(msg):
     else:
         return False
 
-def retrieve_message(msgtype=None, mod_addr=True, timeout=0):
-    s_message=msgbus.msgbus.retrieveMessage(msgtype, mod_addr, timeout)
-    mtype = s_message.content.split('|')[0]
+def retrieve_message(timeout=0):
+    addr,s_message=msgbus.msgbus.retrieveMessage(timeout)
+    logger.logger.debug('Message received: '+str(s_message))
+    mtype = s_message.split('|')[0]
     logger.logger.debug('Message received of type: '+mtype)
     try:
-        message=getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[mtype])(qpid_message=s_message)
-        msgbus.msgbus.ackMessage()
+        message=getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[mtype])(serialized_message=s_message)
         return message
     except Exception as e:
         logger.logger.exception('Cannot map message.typ to message Class: '+str(e))
@@ -37,6 +37,6 @@ def process_msg_result(msg_result):
         logger.logger.debug('Message processed successfully: '+msg_result.mparams)
     for msg in msg_result.get_msg_originated():
         if send_message(msg):
-            logger.logger.debug('Message Sent: '+msg.qpid_message.content)
+            logger.logger.debug('Message Sent: '+msg.serialized_message)
     return True
 

@@ -36,11 +36,11 @@ MESSAGE_TO_ADDRESS_MAPPING={messages.STORE_SAMPLE_MESSAGE:STORING+'.%h',
 
 
 #MODULE MAPPINGS
-MODULE_TO_ADDRESS_MAPPING={VALIDATION:'%m.%h',
-                           STORING:'%m.%h',
-                           TEXTMINING:'%m',
-                           GESTCONSOLE:'%m',
-                           RESCONTROL:'%m'
+MODULE_TO_ADDRESS_MAPPING={VALIDATION:['%m.%h','%i.%m.%h'],
+                           STORING:['%m.%h','%i.%m.%h'],
+                           TEXTMINING:['%m','%i.%m.%h'],
+                           GESTCONSOLE:['%m','%i.%m.%h'],
+                           RESCONTROL:['%m','%i.%m.%h']
                            }
 
 
@@ -51,20 +51,20 @@ def get_address(type, module_id, module_instance, running_host):
         address = address.replace('%m',module_id)
         address = address.replace('%i',str(module_instance))
         address = BASE_IMC_ADDRESS+address
-        address = address
         return address
     else:
         return None
 
 def get_mod_address(module_id, module_instance, running_host):
     if MODULE_TO_ADDRESS_MAPPING.has_key(module_id):
-        address = MODULE_TO_ADDRESS_MAPPING[module_id]
-        address = address.replace('%h',running_host)
-        address = address.replace('%m',module_id)
-        address = address.replace('%i',str(module_instance))
-        address = BASE_IMC_ADDRESS+address
-        address = address
-        return address
+        address_list=[]
+        for address in MODULE_TO_ADDRESS_MAPPING[module_id]:
+            address = address.replace('%h',running_host)
+            address = address.replace('%m',module_id)
+            address = address.replace('%i',str(module_instance))
+            address = BASE_IMC_ADDRESS+address
+            address_list.append(address)
+        return address_list
     else:
         return None
 

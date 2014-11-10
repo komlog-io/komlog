@@ -3,10 +3,11 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os,sys
 
-logger=logging.getLogger('komlogs')
+logger=None
 
 def initialize_logger(module_name):
     global logger
+    logger=logging.getLogger('komlogs')
     filename=module_name+'.log'
     log_level=config.get(options.LOG_LEVEL) or defaults.LOG_LEVEL
     rotate_logs=config.get(options.LOG_ROTATION) or defaults.LOG_ROTATION

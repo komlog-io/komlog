@@ -10,7 +10,6 @@ messages: komlog custom messages class implementations for inter module communic
 
 import exceptions
 import codes as msgcodes
-from qpid.messaging import Message
 from komlibs.ifaceops import operations
 from komfig import logger
 import uuid
@@ -47,7 +46,7 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
 class MessageResult:
     def __init__(self,message):
         self.mtype=message.type
-        self.mparams=message.qpid_message.content
+        self.mparams=message.serialized_message
         self.retcode=None
         self._msgoriginated=[]
 
@@ -59,21 +58,21 @@ class MessageResult:
         return self._msgoriginated
 
 class StoreSampleMessage:
-    def __init__(self, qpid_message=None, sample_file=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            self.type=self.qpid_message.content.split('|')[0]
-            self.sample_file=self.qpid_message.content.split('|')[1]
+    def __init__(self, serialized_message=None, sample_file=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            self.type=self.serialized_message.split('|')[0]
+            self.sample_file=self.serialized_message.split('|')[1]
         else:
             self.type=STORE_SAMPLE_MESSAGE
             self.sample_file=sample_file
-            self.qpid_message=Message(self.type+'|'+self.sample_file)
+            self.serialized_message=self.type+'|'+self.sample_file
 
 class MapVarsMessage:
-    def __init__(self, qpid_message=None, did=None,date=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,did,date=self.qpid_message.content.split('|')
+    def __init__(self, serialized_message=None, did=None,date=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,did,date=self.serialized_message.split('|')
             self.type=mtype
             self.did=uuid.UUID(did)
             self.date=dateutil.parser.parse(date)
@@ -81,13 +80,13 @@ class MapVarsMessage:
             self.type=MAP_VARS_MESSAGE
             self.did=did
             self.date=date
-            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+date.isoformat())
+            self.serialized_message=self.type+'|'+str(self.did)+'|'+date.isoformat()
 
 class MonitorVariableMessage:
-    def __init__(self, qpid_message=None, did=None, date=None, pos=None, length=None, name=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,did,date,pos,length,name = self.qpid_message.content.split('|')
+    def __init__(self, serialized_message=None, did=None, date=None, pos=None, length=None, name=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,did,date,pos,length,name = self.serialized_message.split('|')
             self.type=mtype
             self.did=uuid.UUID(did)
             self.date=dateutil.parser.parse(date)
@@ -101,13 +100,13 @@ class MonitorVariableMessage:
             self.pos=str(pos)
             self.length=str(length)
             self.name=str(name)
-            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length)+'|'+str(self.name))
+            self.serialized_message=self.type+'|'+str(self.did)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length)+'|'+str(self.name)
 
 class GenerateDTreeMessage:
-    def __init__(self, qpid_message=None, pid=None, date=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,pid,date=self.qpid_message.content.split('|')
+    def __init__(self, serialized_message=None, pid=None, date=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,pid,date=self.serialized_message.split('|')
             self.type=mtype
             self.pid=uuid.UUID(pid)
             self.date=dateutil.parser.parse(date)
@@ -115,13 +114,13 @@ class GenerateDTreeMessage:
             self.type=GDTREE_MESSAGE
             self.pid=pid
             self.date=date
-            self.qpid_message=Message(self.type+'|'+str(self.pid)+'|'+date.isoformat())
+            self.serialized_message=self.type+'|'+str(self.pid)+'|'+date.isoformat()
 
 class FillDatapointMessage:
-    def __init__(self, qpid_message=None, did=None,date=None,pid=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,did,date,pid=self.qpid_message.content.split('|')
+    def __init__(self, serialized_message=None, did=None,date=None,pid=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,did,date,pid=self.serialized_message.split('|')
             self.type=mtype
             self.did=uuid.UUID(did) if not str(did)=='None' else None
             self.date=dateutil.parser.parse(date) if not str(date)=='None' else None
@@ -131,13 +130,13 @@ class FillDatapointMessage:
             self.did=did
             self.date=date
             self.pid=pid
-            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+self.date.isoformat()+'|'+str(self.pid))
+            self.serialized_message=self.type+'|'+str(self.did)+'|'+self.date.isoformat()+'|'+str(self.pid)
 
 class NegativeVariableMessage:
-    def __init__(self, qpid_message=None, did=None, pid=None, date=None, pos=None, length=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,did,pid,date,pos,length = self.qpid_message.content.split('|')
+    def __init__(self, serialized_message=None, did=None, pid=None, date=None, pos=None, length=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,did,pid,date,pos,length = self.serialized_message.split('|')
             self.type=mtype
             self.did=uuid.UUID(did)
             self.pid=uuid.UUID(pid)
@@ -151,13 +150,13 @@ class NegativeVariableMessage:
             self.date=date
             self.pos=str(pos)
             self.length=str(length)
-            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length))
+            self.serialized_message=self.type+'|'+str(self.did)+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length)
 
 class PositiveVariableMessage:
-    def __init__(self, qpid_message=None, did=None, pid=None, date=None, pos=None, length=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,did,pid,date,pos,length = self.qpid_message.content.split('|')
+    def __init__(self, serialized_message=None, did=None, pid=None, date=None, pos=None, length=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,did,pid,date,pos,length = self.serialized_message.split('|')
             self.type=mtype
             self.did=uuid.UUID(did)
             self.pid=uuid.UUID(pid)
@@ -171,25 +170,25 @@ class PositiveVariableMessage:
             self.date=date
             self.pos=str(pos)
             self.length=str(length)
-            self.qpid_message=Message(self.type+'|'+str(self.did)+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length))
+            self.serialized_message=self.type+'|'+str(self.did)+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length)
 
 class NewUserMessage:
-    def __init__(self, qpid_message=None, uid=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,uid = self.qpid_message.content.split('|')
+    def __init__(self, serialized_message=None, uid=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,uid = self.serialized_message.split('|')
             self.type=mtype
             self.uid=uuid.UUID(uid)
         else:
             self.type=NEW_USR_MESSAGE
             self.uid=uid
-            self.qpid_message=Message(self.type+'|'+str(self.uid))
+            self.serialized_message=self.type+'|'+str(self.uid)
 
 class UpdateQuotesMessage:
-    def __init__(self, qpid_message=None, operation=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,json_serialization = self.qpid_message.content.split('|')
+    def __init__(self, serialized_message=None, operation=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,json_serialization = self.serialized_message.split('|')
             self.type=mtype
             operation_dict=json.loads(json_serialization)
             operation_class=operation_dict['opclass']
@@ -198,13 +197,13 @@ class UpdateQuotesMessage:
         else:
             self.type=UPDATE_QUOTES_MESSAGE
             self.operation=operation
-            self.qpid_message=Message(self.type+'|'+self.operation.get_json_serialization())
+            self.serialized_message=self.type+'|'+self.operation.get_json_serialization()
 
 class ResourceAuthorizationUpdateMessage:
-    def __init__(self, qpid_message=None, operation=None):
-        if qpid_message:
-            self.qpid_message=qpid_message
-            mtype,json_serialization = self.qpid_message.content.split('|')
+    def __init__(self, serialized_message=None, operation=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,json_serialization = self.serialized_message.split('|')
             self.type=mtype
             operation_dict=json.loads(json_serialization)
             operation_class=operation_dict['opclass']
@@ -213,5 +212,5 @@ class ResourceAuthorizationUpdateMessage:
         else:
             self.type=RESOURCE_AUTHORIZATION_UPDATE_MESSAGE
             self.operation=operation
-            self.qpid_message=Message(self.type+'|'+self.operation.get_json_serialization())
+            self.serialized_message=self.type+'|'+self.operation.get_json_serialization()
 

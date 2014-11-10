@@ -65,41 +65,5 @@ class Validation(modules.Module):
 
 class Storing(modules.Module):
     def __init__(self, instance_number):
-        super(Storing,self).__init__(self.__class__.__name__, instance_number)
-        self.params={}
-        self.params['watchdir'] = config.get(options.SAMPLES_VALIDATED_PATH)
-        self.params['outputdir'] = config.get(options.SAMPLES_STORED_PATH)
-
-    def start(self):
-        if not logger.initialize_logger(self.name+'_'+str(self.instance_number)):
-            exit()
-        logger.logger.info('Module started')
-        if not casscon.initialize_session():
-            logger.logger.error('Error initializing cassandra session')
-            exit()
-        if not msgbus.initialize_msgbus(self.name, self.instance_number, self.hostname):
-            logger.logger.error('Error initializing broker session')
-            exit()
-        if not self.params['watchdir']:
-            logger.logger.error('Key '+options.SAMPLES_VALIDATED_PATH+' not found')
-            exit()
-        if not self.params['outputdir']:
-            logger.logger.error('Key '+options.SAMPLES_STORED_PATH+' not found')
-            exit()
-        self.__loop()
-        logger.logger.info('Module exiting')
-    
-    def __loop(self):
-        while True:
-            message = msgapi.retrieve_message()
-            try:
-                msgresult=messages.process_message(message)
-                if msgresult:
-                    msgapi.process_msg_result(msgresult)
-                else:
-                    logger.logger.error('msgresult is None: '+message.type)
-            except AttributeError:
-                logger.logger.exception('Exception processing message: '+message.type)
-            except Exception as e:
-                logger.logger.exception('Exception processing message: '+str(e))
+        super(Storing,self).__init__(name=self.__class__.__name__, instance_number=instance_number, needs_db=True, needs_msgbus=True)
 
