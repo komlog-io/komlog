@@ -1,11 +1,11 @@
-import ConfigParser
+import configparser
 import os, getpass
 
 config=None
 
-class Config(ConfigParser.ConfigParser):
+class Config(configparser.ConfigParser):
     def __init__(self, conf_file):
-        ConfigParser.ConfigParser.__init__(self)
+        configparser.ConfigParser.__init__(self)
         self.conf_file = conf_file
         self.root_dir = os.path.split(conf_file)[0]
         try: self.readfp(open(self.conf_file), 'r')

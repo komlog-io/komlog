@@ -22,7 +22,7 @@ class Mailer(object):
     """
 
     def __init__(self, host='localhost'):
-        self.host = u''+host
+        self.host = ''+host
         self._usr = None
         self._pwd = None
 
@@ -86,4 +86,9 @@ def initialize_mailer():
     mailer.login(user, password)
     logger.logger.debug('Mail connection initialized successfully')
     return True
+
+def terminate_mailer():
+    global mailer
+    if mailer:
+        mailer=None
 

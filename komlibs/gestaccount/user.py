@@ -68,20 +68,20 @@ def update_userprofile(username, params):
     user_bck=user
     if not user:
         raise exceptions.UserNotFoundException()
-    if not params.has_key('email') and not params.has_key('new_password'):
+    if 'email' not in params and 'new_password' not in params:
         raise exceptions.BadParametersException()
-    if params.has_key('new_password') and not params.has_key('old_password'):
+    if 'new_password' in params and 'old_password' not in params:
         raise exceptions.BadParametersException()
-    if params.has_key('old_password') and not params.has_key('new_password'):
+    if 'old_password' in params and 'new_password' not in params:
         raise exceptions.BadParametersException()
-    if params.has_key('new_password') and params.has_key('old_password'):
+    if 'new_password' in params and 'old_password' in params:
         if not user.password==get_hpassword(user.uid,params['old_password']):
             raise exceptions.BadParametersException()
         if params['new_password']==params['old_password']:
             raise exceptions.BadParametersException()
         user.password=get_hpassword(user.uid,params['new_password'])
     old_email=None
-    if params.has_key('email'):
+    if 'email' in params:
         params['email']=params['email'].lower()
         new_email=params['email']
         if not new_email==user.email:

@@ -58,12 +58,12 @@ def delete_widget(username,wid):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
-    print 'obtenido user '+username
+    print('obtenido user '+username)
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
         raise exceptions.WidgetNotFoundException()
     else:
-        print 'obtenido widget'
+        print('obtenido widget')
         if cassapiwidget.delete_widget(wid=widget.wid):
 #               TODO:
 #               faltaría todo el envio de mensajes para actualizar quotas y permisos
@@ -110,9 +110,9 @@ def new_widget_dp(username,pid):
         widgets=cassapiwidget.get_widgets(uid=user.uid)
         for widget in widgets:
             if widget.type==types.DP_WIDGET:
-                dpwidget=cassapiwidget.get_widget_dp(wid=wid)
+                dpwidget=cassapiwidget.get_widget_dp(wid=widget.wid)
                 if dpwidget and dpwidget.pid==pid:
-                    return {'wid':str(wid)}
+                    return {'wid':str(widget.wid)}
         wid=uuid.uuid4()
         widget=ormwidget.WidgetDp(wid=wid,uid=user.uid,pid=datapoint.pid,creation_date=datetime.utcnow())
         if cassapiwidget.new_widget(widget=widget):

@@ -15,7 +15,8 @@ def main():
     """
     HOME = os.getenv('HOME')
     cfg_file = '.komlogs/komges.cfg'
-    app = komapp.Komapp(os.path.join(HOME,cfg_file))
+    program_name = 'komgesApp'
+    app = komapp.Komapp(os.path.join(HOME,cfg_file), program_name)
     app.start()
     
 

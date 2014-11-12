@@ -17,7 +17,8 @@ def main():
     """
     HOME = os.getenv('HOME')
     cfg_file = '.komlogs/komrc.cfg'
-    app = komapp.Komapp(os.path.join(HOME,cfg_file))
+    program_name = 'komrcApp'
+    app = komapp.Komapp(os.path.join(HOME,cfg_file), program_name)
     app.start()
 
 if __name__ == "__main__": main() 

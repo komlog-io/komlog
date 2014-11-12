@@ -18,7 +18,7 @@ def create_keyspace(session, keyspace, replication):
         session.execute('''create keyspace '''+keyspace\
         +''' WITH REPLICATION = '''+str(replication)+''';''')
     except AlreadyExists as e:
-        print 'Keyspace Already exists, aborting'
+        print('Keyspace Already exists, aborting')
         return False
     else:
         return True
@@ -57,11 +57,11 @@ def create_schema(session):
             query=getattr(segment,obj)
             session.execute(query)
     except Exception as e:
-        print 'Error creating schema '+str(e)
-        print query
+        print('Error creating schema '+str(e))
+        print(query)
         return False
     else:
-        print 'Schema created successfully'
+        print('Schema created successfully')
         return True
 
 def create_database(ip_list, keyspace=None, replication=None):

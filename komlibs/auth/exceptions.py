@@ -9,6 +9,6 @@ Authorization Exceptions
 @date: 2013/12/08
 '''
 
-class AuthorizationException:
+class AuthorizationException(Exception):
     pass
 

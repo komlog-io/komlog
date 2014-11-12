@@ -15,7 +15,8 @@ def main():
     """
     HOME = os.getenv('HOME')
     cfg_file = '.komlogs/komai.cfg'
-    app = komapp.Komapp(os.path.join(HOME,cfg_file))
+    program_name = 'komaiApp'
+    app = komapp.Komapp(os.path.join(HOME,cfg_file), program_name)
     app.start()
     
 

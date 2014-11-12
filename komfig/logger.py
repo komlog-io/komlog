@@ -7,7 +7,9 @@ logger=None
 
 def initialize_logger(module_name):
     global logger
-    logger=logging.getLogger('komlogs')
+    if logger:
+        logger=None
+    logger=logging.getLogger(module_name)
     filename=module_name+'.log'
     log_level=config.get(options.LOG_LEVEL) or defaults.LOG_LEVEL
     rotate_logs=config.get(options.LOG_ROTATION) or defaults.LOG_ROTATION
@@ -31,8 +33,8 @@ def initialize_logger(module_name):
         else:
             return False
     except Exception as e:
-        print 'Error initializing logger'
-        print str(e)
+        print('Error initializing logger')
+        print(str(e))
         return False
 
 

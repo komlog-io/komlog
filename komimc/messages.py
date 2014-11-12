@@ -8,8 +8,8 @@ messages: komlog custom messages class implementations for inter module communic
 @author: jcazor
 '''
 
-import exceptions
-import codes as msgcodes
+from komimc import exceptions
+from komimc import codes as msgcodes
 from komlibs.ifaceops import operations
 from komfig import logger
 import uuid
@@ -161,15 +161,15 @@ class PositiveVariableMessage:
             self.did=uuid.UUID(did)
             self.pid=uuid.UUID(pid)
             self.date=dateutil.parser.parse(date)
-            self.pos=str(pos)
-            self.length=str(length)
+            self.pos=int(pos)
+            self.length=int(length)
         else:
             self.type=POS_VAR_MESSAGE
             self.did=did
             self.pid=pid
             self.date=date
-            self.pos=str(pos)
-            self.length=str(length)
+            self.pos=pos
+            self.length=length
             self.serialized_message=self.type+'|'+str(self.did)+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length)
 
 class NewUserMessage:

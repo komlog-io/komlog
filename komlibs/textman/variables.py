@@ -8,9 +8,9 @@ import re
 import json
 from decimal import *
 
-FLOAT_REGEXP=u'[-+]?[0-9]*[\.,]?[0-9]+'
-VAR_SEPARATORS=(u' ',u';',u'\n',u'\t')
-VAR_SUFIX=(u'%')
+FLOAT_REGEXP='[-+]?[0-9]*[\.,]?[0-9]+'
+VAR_SEPARATORS=(' ',';','\n','\t')
+VAR_SUFIX=('%')
 
 class Variable:
     def __init__(self, start=None,length=None,content=None,fromdict=None):
@@ -32,8 +32,8 @@ class Variable:
         self.h['r'+str(offset)+':'+str(length)]=right_hash
 
     def __eq__(self, other):
-        mykeys=self.h.keys()
-        yourkeys=other.h.keys()
+        mykeys=list(self.h.keys())
+        yourkeys=list(other.h.keys())
         common=list(set(mykeys)&set(yourkeys))
         try:
             for key in common:
@@ -69,7 +69,7 @@ def get_varlist(content=None,jsoncontent=None,onlyvar=None):
             var=Variable(fromdict=vardict)
             if not onlyvar:
                 varlist.append(var)
-            elif onlyvar == str(var.s):
+            elif str(onlyvar) == str(var.s):
                 varlist.append(var)
                 return varlist
         return varlist
@@ -77,7 +77,7 @@ def get_varlist(content=None,jsoncontent=None,onlyvar=None):
 
 def calculate_varmap(varlist,content):
     offset=0
-    to_increase_depth=range(len(varlist))
+    to_increase_depth=list(range(len(varlist)))
     while len(to_increase_depth)>0:
         for i in to_increase_depth:
             left_string=get_string(offset=offset,start=varlist[i].s,content=content,before=True)
@@ -104,13 +104,13 @@ def get_string(offset,start,content,before):
         length=5
         while start>=0 and length>0:
             c=content[start]
-            if c in (u'0',u'1',u'2',u'3',u'4',u'5',u'6',u'7',u'8',u'9'):
+            if c in ('0','1','2','3','4','5','6','7','8','9'):
                 clean=True
                 start-=1
-            elif (c in (u',',u'.')) or (content[start+1] in (u'0',u'1',u'2',u'3',u'4',u'5',u'6',u'7',u'8',u'9')):
+            elif (c in (',','.')) or (content[start+1] in ('0','1','2','3','4','5','6','7','8','9')):
                 clean=True
                 start-=1
-            elif (c == u' ') and (content[start+1] == u' ') and not clean:
+            elif (c == ' ') and (content[start+1] == ' ') and not clean:
                 clean=False
                 start-=1
             else:
@@ -125,13 +125,13 @@ def get_string(offset,start,content,before):
         pos=0
         while pos<length and start<len(content):
             c=content[start]
-            if c in (u'0',u'1',u'2',u'3',u'4',u'5',u'6',u'7',u'8',u'9'):
+            if c in ('0','1','2','3','4','5','6','7','8','9'):
                 clean=True
                 start+=1
-            elif (c in (u',',u'.')) and (content[start-1] in (u'0',u'1',u'2',u'3',u'4',u'5',u'6',u'7',u'8',u'9')):
+            elif (c in (',','.')) and (content[start-1] in ('0','1','2','3','4','5','6','7','8','9')):
                 clean=True
                 start+=1
-            elif (c == u' ') and (content[start-1] == u' ') and not clean:
+            elif (c == ' ') and (content[start-1] == ' ') and not clean:
                 clean=False
                 start+=1
             else:

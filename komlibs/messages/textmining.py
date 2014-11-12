@@ -53,7 +53,7 @@ def process_message_GDTREE(message):
     for date in dates_to_get:
         dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
         varlist=variables.get_varlist(jsoncontent=dsmap.content)
-        if positive_samples.has_key(date):
+        if date in positive_samples:
             position,length=positive_samples[date]
             for var in varlist:
                 if var.s==position:
@@ -61,10 +61,10 @@ def process_message_GDTREE(message):
                 else:
                     var.h['result']=False
                 dtree_training_set.append(var.h)
-        if negative_samples.has_key(date) and not positive_samples.has_key(date):
+        if date in negative_samples and date not in positive_samples:
             negative_coordinates=negative_samples[date]
             for var in varlist:
-                if str(var.s) in negative_coordinates.iterkeys():
+                if str(var.s) in iter(negative_coordinates.keys()):
                     var.h['result']=False
                     dtree_training_set.append(var.h)
     dtree=decisiontree.DecisionTree(rawdata=dtree_training_set)
@@ -99,10 +99,12 @@ def process_message_MAPVARS(message):
             mapvarcontentlist[content['s']]=content['l']
         mapcontentjson=json.dumps(mapcontentlist)
         dsmapobj=ormdatasource.DatasourceMap(did=did,date=date,content=mapcontentjson,variables=mapvarcontentlist)
+        datasource_stats=cassapidatasource.get_datasource_stats(did=did)
         try:
             if cassapidatasource.insert_datasource_map(dsmapobj=dsmapobj):
                 logger.logger.debug('Map created for did: '+str(did))
-            cassapidatasource.set_last_mapped(did=did, last_mapped=date)
+            if not datasource_stats or not datasource_stats.last_mapped or datasource_stats.last_mapped<date:
+                cassapidatasource.set_last_mapped(did=did, last_mapped=date)
             newmsg=messages.FillDatapointMessage(did=did,date=date)
             msgresult.add_msg_originated(newmsg)
             msgresult.retcode=msgcodes.SUCCESS
@@ -195,7 +197,9 @@ def process_message_FILDTP(message):
         for var in varlist:
             for dtp in dtplist:
                 datapoint,datapoint_stats,dtree=dtp
+                logger.logger.debug('Evaluating var: '+str(var)+' with datapoint dtree: '+str(datapoint.pid))
                 if dtree.evaluate_row(var.h):
+                    logger.logger.debug('dtree matched var')
                     value,separator=variables.get_numericvalueandseparator(datapoint_stats.decimal_separator,varlist,var)
                     if cassapidatapoint.insert_datapoint_data(pid=datapoint.pid, date=dsmap.date, value=value):
                         cassapidatasource.add_datapoint_to_datasource_map(did=dsmap.did,date=dsmap.date,pid=datapoint.pid,position=var.s)

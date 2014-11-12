@@ -18,7 +18,7 @@ from komcass.api import dashboard as cassapidashboard
 from komcass.api import permission as cassapiperm
 
 def update_user_agent_perms(params):
-    if not params.has_key('aid') or not params.has_key('uid'):
+    if 'aid' not in params or 'uid' not in params:
         return False
     aid=params['aid']
     uid=params['uid']
@@ -30,7 +30,7 @@ def update_user_agent_perms(params):
     return False
 
 def update_user_datasource_perms(params):
-    if not params.has_key('did') or not params.has_key('uid') or not params.has_key('aid'):
+    if 'did' not in params or 'uid' not in params or 'aid' not in params:
         return False
     did=params['did']
     uid=params['uid']
@@ -44,7 +44,7 @@ def update_user_datasource_perms(params):
     return False
 
 def update_agent_datasource_perms(params):
-    if not params.has_key('did') or not params.has_key('uid') or not params.has_key('aid'):
+    if 'did' not in params or 'uid' not in params or 'aid' not in params:
         return False
     did=params['did']
     uid=params['uid']
@@ -58,8 +58,8 @@ def update_agent_datasource_perms(params):
     return False
 
 def update_user_datapoint_perms(params):
-    if not params.has_key('did') or not params.has_key('uid') \
-    or not params.has_key('aid') or not params.has_key('pid'):
+    if 'did' not in params or 'uid' not in params \
+    or 'aid' not in params or 'pid' not in params:
         return False
     did=params['did']
     uid=params['uid']
@@ -75,7 +75,7 @@ def update_user_datapoint_perms(params):
     return False
 
 def update_user_widget_perms(params):
-    if not params.has_key('wid') or not params.has_key('uid'):
+    if 'wid' not in params or 'uid' not in params:
         return False
     wid=params['wid']
     uid=params['uid']
@@ -87,7 +87,7 @@ def update_user_widget_perms(params):
     return False
 
 def update_user_dashboard_perms(params):
-    if not params.has_key('bid') or not params.has_key('uid'):
+    if 'bid' not in params or 'uid' not in params:
         return False
     bid=params['bid']
     uid=params['uid']

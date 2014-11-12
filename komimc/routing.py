@@ -45,7 +45,7 @@ MODULE_TO_ADDRESS_MAPPING={VALIDATION:['%m.%h','%i.%m.%h'],
 
 
 def get_address(type, module_id, module_instance, running_host):
-    if MESSAGE_TO_ADDRESS_MAPPING.has_key(type):
+    if type in MESSAGE_TO_ADDRESS_MAPPING:
         address = MESSAGE_TO_ADDRESS_MAPPING[type]
         address = address.replace('%h',running_host)
         address = address.replace('%m',module_id)
@@ -56,7 +56,7 @@ def get_address(type, module_id, module_instance, running_host):
         return None
 
 def get_mod_address(module_id, module_instance, running_host):
-    if MODULE_TO_ADDRESS_MAPPING.has_key(module_id):
+    if module_id in MODULE_TO_ADDRESS_MAPPING:
         address_list=[]
         for address in MODULE_TO_ADDRESS_MAPPING[module_id]:
             address = address.replace('%h',running_host)

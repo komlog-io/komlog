@@ -13,4 +13,4 @@ import string
 import random
 
 def get_randomstring(size=6, chars=string.ascii_uppercase + string.digits):
-    return u''+''.join(random.choice(chars) for x in range(size))
+    return ''+''.join(random.choice(chars) for x in range(size))

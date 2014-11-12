@@ -43,3 +43,7 @@ def initialize_session():
         logger.logger.error('Cassandra parameters not found. Cluster: '+str(cluster)+' keyspace: '+str(keyspace))
         return None
 
+def terminate_session():
+    global session
+    if session:
+        session.cluster.shutdown()

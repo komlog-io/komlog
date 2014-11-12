@@ -18,7 +18,7 @@ from komcass.api import dashboard as cassapidashboard
 from komcass.api import quote as cassapiquote
 
 def update_quo_static_user_total_agents(params):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return None
     uid=params['uid']
     num_agents=cassapiagent.get_number_of_agents_by_uid(uid=uid)
@@ -27,7 +27,7 @@ def update_quo_static_user_total_agents(params):
     return None
 
 def update_quo_static_user_total_datasources(params):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return None
     uid=params['uid']
     aids=cassapiagent.get_agents_aids(uid=uid)
@@ -40,7 +40,7 @@ def update_quo_static_user_total_datasources(params):
     return None
 
 def update_quo_static_user_total_datapoints(params):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return None
     uid=params['uid']
     aids=cassapiagent.get_agents_aids(uid=uid)
@@ -55,7 +55,7 @@ def update_quo_static_user_total_datapoints(params):
     return None
 
 def update_quo_static_user_total_widgets(params):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return None
     uid=params['uid']
     num_widgets=cassapiwidget.get_number_of_widgets_by_uid(uid=uid)
@@ -64,7 +64,7 @@ def update_quo_static_user_total_widgets(params):
     return None
 
 def update_quo_static_user_total_dashboards(params):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return None
     uid=params['uid']
     num_dashboards=cassapidashboard.get_number_of_dashboards_by_uid(uid=uid)
@@ -73,7 +73,7 @@ def update_quo_static_user_total_dashboards(params):
     return None
 
 def update_quo_static_agent_total_datasources(params):
-    if not params.has_key('aid'):
+    if 'aid' not in params:
         return None
     aid=params['aid']
     num_datasources=cassapidatasource.get_number_of_datasources_by_aid(aid=aid)
@@ -82,7 +82,7 @@ def update_quo_static_agent_total_datasources(params):
     return None
 
 def update_quo_static_agent_total_datapoints(params):
-    if not params.has_key('uid') or not params.has_key('aid'):
+    if 'uid' not in params or 'aid' not in params:
         return None
     uid=params['uid']
     aid=params['aid']
@@ -96,7 +96,7 @@ def update_quo_static_agent_total_datapoints(params):
     return None
 
 def update_quo_static_datasource_total_datapoints(params):
-    if not params.has_key('did'):
+    if 'did' not in params:
         return None
     did=params['did']
     total_datapoints=cassapidatapoint.get_number_of_datapoints_by_did(did=did)

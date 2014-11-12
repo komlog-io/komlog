@@ -1,6 +1,7 @@
 import os
 import glob
 import time
+import signal
 from komcass import connection as casscon
 from komfs import api as fsapi
 from komapp import modules
@@ -17,6 +18,7 @@ class Validation(modules.Module):
         self.outputdir = config.get(options.SAMPLES_VALIDATED_PATH)
             
     def start(self):
+        signal.signal(signal.SIGTERM,self.signal_handler)
         if not logger.initialize_logger(self.name+'_'+str(self.instance_number)):
             exit()
         logger.logger.info('Module started')
@@ -29,12 +31,13 @@ class Validation(modules.Module):
         if not msgbus.initialize_msgbus(self.name, self.instance_number, self.hostname):
             logger.logger.error('Error initializing broker session')
             exit()
-        self.__loop()
-        logger.logger.info('Module exiting')
+        self.loop()
+        self.terminate()
         
-    def __loop(self):
-        while True:
-            files = filter(os.path.isfile,glob.glob(os.path.join(self.watchdir,'*pspl')))
+    def loop(self):
+        while self.run:
+            logger.logger.debug('Looking for samples received...')
+            files = list(filter(os.path.isfile,glob.glob(os.path.join(self.watchdir,'*pspl'))))
             files.sort(key=lambda x: os.path.getmtime(x))
             if len(files)>0:
                 for f in files:

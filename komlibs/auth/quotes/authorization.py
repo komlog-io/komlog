@@ -8,7 +8,7 @@ This library implements authorization mechanisms based on user quotas
 @date: 2013/12/08
 '''
 
-import deny
+from komlibs.auth.quotes import deny
 from komcass.api import user as cassapiuser
 from komcass.api import datasource as cassapidatasource
 from komcass.api import interface as cassapiiface

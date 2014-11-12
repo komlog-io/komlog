@@ -6,6 +6,7 @@ author: jcazor
 '''
 
 import uuid
+from komfig import logger
 from komcass.api import agent as cassapiagent
 from komcass.api import user as cassapiuser
 from komcass.api import datasource as cassapidatasource
@@ -27,13 +28,17 @@ def decrypt(pubkey,cmsg):
     return pubkey.decrypt(cmsg)
 
 def verify_signature(pubkey,text,b64sign):
-    rsakey=RSA.importKey(pubkey)
+    logger.logger.debug(pubkey)
+    logger.logger.debug(text)
+    rsakey=RSA.importKey(pubkey.encode('utf-8'))
     signer = PKCS1_v1_5.new(rsakey)
     digest = SHA256.new()
-    digest.update(text)
-    signature=b64decode(b64sign)
+    digest.update(text.encode('utf-8'))
+    signature=b64decode(b64sign.encode('utf-8'))
     if signer.verify(digest,signature):
+        logger.logger.debug('Verification success')
         return True
+    logger.logger.debug('Verification failed')
     return False
     
 def create_agent(username,agentname,pubkey,version):
@@ -49,7 +54,7 @@ def create_agent(username,agentname,pubkey,version):
                 data={'aid':agent.pubkey}
                 return data
         ''' Register new agent '''
-        print 'llegamos al registro del agente'
+        print('llegamos al registro del agente')
         aid=uuid.uuid4()
         now=datetime.utcnow()
         agent=ormagent.Agent(aid=aid, uid=user.uid, agentname=agentname, pubkey=pubkey, version=version, state=states.AGENT['PENDING_USER_VALIDATION'],creation_date=now)
@@ -60,7 +65,7 @@ def create_agent(username,agentname,pubkey,version):
             msgapi.send_message(message)
             message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
             msgapi.send_message(message)
-            print 'Return New Agent id'
+            print('Return New Agent id')
             data={'aid':str(aid)}
             return data
         else:
@@ -119,7 +124,7 @@ def get_agents_config(username,dids_flag=False):
         return data
     
 def update_agent_config(username, aid, data):
-    if not data.has_key('ag_name'):
+    if 'ag_name' not in data:
         raise exceptions.BadParametersException()
     agent=cassapiagent.get_agent(aid=aid)
     if not agent:

@@ -172,32 +172,34 @@ def process_message_POSVAR(message):
         msgresult.retcode=msgcodes.ERROR
         return msgresult
     try:
-        value=dsmapvars[pos]
+        value=dsmapvars[int(pos)]
         if not value==int(length):
             logger.logger.exception('Received length doesnt match stored value: '+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
             msgresult.retcode=msgcodes.ERROR
             return msgresult
     except KeyError:
         logger.logger.exception('Variable not found: '+str(did)+' '+str(date)+' position: '+str(pos)+' length: '+str(length))
+        logger.logger.debug(str(dsmapvars))
         msgresult.retcode=msgcodes.ERROR
         return msgresult
     ''' en este punto hemos comprobado que la muestra y variable existen y dtp pertenece a did indicado.
     Comprobamos que no haya otros datapoints que validen esa variable, en caso contrario
     solicitaremos que esa variable se marque como negativa en ellos '''
     dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
-    varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=pos)
+    varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=str(pos))
+    logger.logger.debug('Datasource Varlist: '+str(varlist))
     datapoints=cassapidatapoint.get_datapoints(did=did)
     if datapoints:
         for datapoint in datapoints:
-            if not datapoint.pid == pid and datapoint.dtree:
-                stored_dtree=datapoint.dtree
-                dtree=decisiontree.DecisionTree(jsontree=stored_dtree)
+            datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=datapoint.pid)
+            if not datapoint.pid == pid and datapoint_stats and datapoint_stats.dtree:
+                dtree=decisiontree.DecisionTree(jsontree=datapoint_stats.dtree)
                 if dtree.evaluate_row(varlist[0].h):
                     logger.logger.debug('Variable matched other datapoint. Requesting NEGVAR on it: '+str(datapoint.pid))
                     newmsg=messages.NegativeVariableMessage(did=did,pid=datapoint.pid,date=date,pos=pos,length=length)
                     msgresult.add_msg_originated(newmsg)
     ''' establecemos la variable como positiva para este datapoint '''
-    if not cassapidatapoint.set_datapoint_dtree_positive_at(pid=pid, date=date, posisition=pos, length=length):
+    if not cassapidatapoint.set_datapoint_dtree_positive_at(pid=pid, date=date, position=pos, length=length):
         logger.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
         msgresult.retcode=msgcodes.ERROR
         return msgresult

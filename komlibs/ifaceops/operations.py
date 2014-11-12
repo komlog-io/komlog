@@ -59,7 +59,7 @@ class WIFaceOperation:
     def get_json_serialization(self):
         params=self.params
         params['opclass']=self.opclass
-        for key,value in params.iteritems():
+        for key,value in params.items():
             if not type(value) in ('str','unicode'):
                 params[key]=str(value)
         return json.dumps(params)

@@ -26,7 +26,7 @@ interfaces={'User_AgentCreation':'/user/agentcreation/',
 DEFAULT_PERM='A'
 
 def deny_quo_static_user_total_agents(params,deny):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return False
     uid=params['uid']
     iface=interfaces['User_AgentCreation']
@@ -39,7 +39,7 @@ def deny_quo_static_user_total_agents(params,deny):
     return False
 
 def deny_quo_static_user_total_datasources(params,deny):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return False
     uid=params['uid']
     iface=interfaces['User_DatasourceCreation']
@@ -52,7 +52,7 @@ def deny_quo_static_user_total_datasources(params,deny):
     return False
 
 def deny_quo_static_user_total_datapoints(params,deny):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return False
     uid=params['uid']
     iface=interfaces['User_DatapointCreation']
@@ -65,7 +65,7 @@ def deny_quo_static_user_total_datapoints(params,deny):
     return False
 
 def deny_quo_static_user_total_widgets(params,deny):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return False
     uid=params['uid']
     iface=interfaces['User_WidgetCreation']
@@ -78,7 +78,7 @@ def deny_quo_static_user_total_widgets(params,deny):
     return False
 
 def deny_quo_static_user_total_dashboards(params,deny):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return False
     uid=params['uid']
     iface=interfaces['User_DashboardCreation']
@@ -91,7 +91,7 @@ def deny_quo_static_user_total_dashboards(params,deny):
     return False
 
 def deny_quo_static_agent_total_datasources(params,deny):
-    if not params.has_key('aid') or not params.has_key('uid'):
+    if 'aid' not in params or 'uid' not in params:
         return False
     aid=params['aid']
     uid=params['uid']
@@ -106,7 +106,7 @@ def deny_quo_static_agent_total_datasources(params,deny):
     return False
 
 def deny_quo_static_agent_total_datapoints(params,deny):
-    if not params.has_key('aid') or not params.has_key('uid'):
+    if 'aid' not in params or 'uid' not in params:
         return False
     aid=params['aid']
     uid=params['uid']
@@ -121,7 +121,7 @@ def deny_quo_static_agent_total_datapoints(params,deny):
     return False
 
 def deny_quo_static_datasource_total_datapoints(params,deny):
-    if not params.has_key('did') or not params.has_key('uid'):
+    if 'did' not in params or 'uid' not in params:
         return False
     did=params['did']
     uid=params['uid']

@@ -10,9 +10,9 @@ import unittest, random, string
 
 def get_random_string(length,prefix=None):
     if prefix:
-        return prefix+u''.join(random.choice(string.digits) for x in range(length))
+        return prefix+''.join(random.choice(string.digits) for x in range(length))
     else:
-        return u''.join(random.choice(string.digits) for x in range(length))
+        return ''.join(random.choice(string.digits) for x in range(length))
 
 
 class KomdbFunctionalTestCase(unittest.TestCase):

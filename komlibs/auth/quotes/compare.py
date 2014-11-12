@@ -14,7 +14,7 @@ from komcass.api import user as cassapiuser
 from komcass.api import segment as cassapisegment
 
 def compare_quo_static_user_total_agents(params):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
@@ -33,7 +33,7 @@ def compare_quo_static_user_total_agents(params):
 
 
 def compare_quo_static_user_total_datasources(params):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
@@ -51,7 +51,7 @@ def compare_quo_static_user_total_datasources(params):
     return False
 
 def compare_quo_static_user_total_datapoints(params):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
@@ -69,7 +69,7 @@ def compare_quo_static_user_total_datapoints(params):
     return False
 
 def compare_quo_static_user_total_widgets(params):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
@@ -87,7 +87,7 @@ def compare_quo_static_user_total_widgets(params):
     return False
 
 def compare_quo_static_user_total_dashboards(params):
-    if not params.has_key('uid'):
+    if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
@@ -105,7 +105,7 @@ def compare_quo_static_user_total_dashboards(params):
     return False
 
 def compare_quo_static_agent_total_datasources(params):
-    if not params.has_key('aid') or not params.has_key('uid'):
+    if 'aid' not in params or 'uid' not in params:
         return None
     aid=params['aid']
     uid=params['uid']
@@ -124,7 +124,7 @@ def compare_quo_static_agent_total_datasources(params):
     return False
 
 def compare_quo_static_agent_total_datapoints(params):
-    if not params.has_key('aid') or not params.has_key('uid'):
+    if 'aid' not in params or 'uid' not in params:
         return None
     aid=params['aid']
     uid=params['uid']
@@ -143,7 +143,7 @@ def compare_quo_static_agent_total_datapoints(params):
     return False
 
 def compare_quo_static_datasource_total_datapoints(params):
-    if not params.has_key('did') or not params.has_key('uid'):
+    if 'did' not in params or 'uid' not in params:
         return None
     did=params['did']
     uid=params['uid']

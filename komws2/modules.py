@@ -1,12 +1,14 @@
 #coding: utf-8
 
 import webapp
+import signal
+import time
 from komcass import connection as casscon
 from komapp import modules
 from komfig import logger, config, options
 from komimc import bus as msgbus
-import tornado.httpserver
-import tornado.ioloop
+from tornado.httpserver import HTTPServer
+from tornado.ioloop import IOLoop
 
 
 class Webserver(modules.Module):
@@ -15,7 +17,16 @@ class Webserver(modules.Module):
         self.params={}
         self.params['http_listen_port']=int(config.get(options.HTTP_LISTEN_PORT))+self.instance_number if config.get(options.HTTP_LISTEN_PORT) else None
 
+    def signal_handler(self, signum, frame):
+        if signum == signal.SIGTERM:
+            logger.logger.info('SIGTERM received, terminating')
+            now=time.time()
+            self.ioloop.add_timeout(now+2,self.shutdown_ioloop)
+        else:
+            logger.logger.info('signal '+str(signum)+' received, ignoring')
+
     def start(self):
+        signal.signal(signal.SIGTERM,self.signal_handler)
         if not logger.initialize_logger(self.name+'_'+str(self.instance_number)):
             exit()
         logger.logger.info('Module started')
@@ -28,11 +39,31 @@ class Webserver(modules.Module):
         if not self.params['http_listen_port']:
             logger.logger.error('Key '+options.HTTP_LISTEN_PORT+' not found')
             exit()
-        self.__loop()
-        logger.logger.info('Webserver module exiting')
+        self.loop()
+        self.terminate()
  
-    def __loop(self):
-        http_server = tornado.httpserver.HTTPServer(webapp.Application())
-        http_server.listen(self.params['http_listen_port'])
-        tornado.ioloop.IOLoop.instance().start()
+    def loop(self):
+        self.app = webapp.Application()
+        self.http_server = HTTPServer(self.app)
+        self.http_server.listen(self.params['http_listen_port'])
+        self.ioloop = IOLoop.instance()
+        self.ioloop.start()
+
+    def shutdown_ioloop(self):
+        logger.logger.info('Stopping HTTP server')
+        self.http_server.stop()
+        deadline = time.time() + 60
+        def stop_loop():
+            now = time.time()
+            logger.logger.info('waiting for ioloop finishing requests')
+            if now < deadline and self.ioloop._callbacks:
+                self.ioloop.add_timeout(now+1, stop_loop)
+            elif not self.ioloop._callbacks:
+                self.ioloop.stop()
+                logger.logger.info('ioloop stopped')
+            elif now > deadline:
+                logger.logger.info('Timeout expired waiting for ioloop shutdown, forcing it')
+                self.ioloop.stop()
+                logger.logger.info('ioloop stopped')
+        stop_loop()
 

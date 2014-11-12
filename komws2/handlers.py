@@ -17,6 +17,7 @@ from komlibs.gestaccount import dashboard as dbapi
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.auth import authorization
 from komlibs.auth import exceptions as authexcept
+from komfig import logger
 import auth
 import os
 import uuid
@@ -129,50 +130,62 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
     @auth.userauthenticated
     def get(self,p_did):
         try:
+            logger.logger.debug('GET DatasourceData Init')
             did=uuid.UUID(p_did)
             authorization.authorize_request(request='GetDatasourceDataRequest',username=self.user,did=did)
             data=dsapi.get_datasource_data(did)
             self.set_status(200)
             self.write(json_encode(data))
         except authexcept.AuthorizationException:
+            logger.logger.debug('Authorization Exception')
             self.set_status(403)
             self.write(json_encode({'message':'Access Denied'}))
         except gestexcept.DatasourceNotFoundException:
+            logger.logger.debug('DatasourceNotFound Exception')
             self.set_status(404)
             self.write(json_encode({'message': 'Datasource not found'}))
         except Exception as e:
+            logger.logger.debug('Exception: '+str(e))
             self.set_status(500)
             self.write(json_encode({'message':'Internal Error'}))
 
     @auth.agentauthenticated
     def post(self,p_did):
+        logger.logger.debug('POST DatasourceData Init')
         did=uuid.UUID(p_did)
         aid=uuid.UUID(self.agent)
         ctype=self.request.headers.get('Content-Type')
-        content=self.request.body
+        content=self.request.body.decode('utf-8')
         dest_dir=self.application.dest_dir
         if ctype.find('application/json')>=0:
             try:
                 authorization.authorize_request(request='PostDatasourceDataRequest',username=self.user,aid=aid,did=did)
                 destfile=dsapi.upload_content(did,content,dest_dir)
+                logger.logger.debug('Data received')
                 self.set_status(202)
                 self.write(json_encode({'message':'Data received'}))
             except authexcept.AuthorizationException:
+                logger.logger.debug('Authorization Exception')
                 self.set_status(403)
                 self.write(json_encode({'message':'Access Denied'}))
             except gestexcept.DatasourceUploadContentException:
+                logger.logger.debug('DatasourceUploadContent Exception')
                 self.set_status(500)
                 self.write(json_encode({'message':'Internal Error'}))
             except gestexcept.DatasourceNotFoundException:
+                logger.logger.debug('DatasourceNotFound Exception')
                 self.set_status(404)
                 self.write(json_encode({'message':'Not Found'}))
             except TypeError as e:
+                logger.logger.debug('Bad Parameters: '+str(e))
                 self.set_status(400)
                 self.write(json_encode({'message':'Bad Parameters'}))
             except Exception as e:
+                logger.logger.debug('Exception: '+str(e))
                 self.set_status(500)
                 self.write(json_encode({'message':'Internal Error'}))
         else:
+            logger.logger.debug('Bad Request')
             self.set_status(400)
             self.write(json_encode({'message':'Bad Request'}))
 
@@ -285,9 +298,9 @@ class UsersHandler(tornado.web.RequestHandler):
         #suponemos que aquí llega una vez ha validado capcha o algo asi
         try:
             data=json_decode(self.request.body)
-            username=u''+data['username']
-            password=u''+data['password']
-            email=u''+data['email']
+            username=''+data['username']
+            password=''+data['password']
+            email=''+data['email']
         except Exception as e:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
@@ -606,8 +619,14 @@ class LoginHandler(tornado.web.RequestHandler):
         password=self.get_argument("password")
         agentid=self.get_argument("agent",None)
         signature=self.get_argument("signature",None)
+        logger.logger.debug('Init /login POST')
+        logger.logger.debug('Data received: ')
+        logger.logger.debug('username: '+str(username)+'Type: '+str(type(username)))
+        logger.logger.debug('password: '+str(password)+'Type: '+str(type(password)))
+        logger.logger.debug('agentid: '+str(agentid)+'Type: '+str(type(agentid)))
+        logger.logger.debug('signature: '+str(signature)+'Type: '+str(type(signature)))
         userinfo=cassapiuser.get_user(username=username)
-        error=u"?error=1"
+        error="?error=1"
         if userinfo:
             if userinfo.password==usrapi.get_hpassword(userinfo.uid,password):
                 self.set_secure_cookie("komlog_user",username,httponly=True)#, secure=True)

@@ -12,7 +12,7 @@ from datetime import datetime
 class dict2data(object):
     def __init__(self,dictionary):
         self.len = 0
-        for k,v in dictionary.items():
+        for k,v in list(dictionary.items()):
             setattr(self,k,v)
             self.len += 1
     

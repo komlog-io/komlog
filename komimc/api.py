@@ -19,15 +19,20 @@ def send_message(msg):
         return False
 
 def retrieve_message(timeout=0):
-    addr,s_message=msgbus.msgbus.retrieveMessage(timeout)
-    logger.logger.debug('Message received: '+str(s_message))
-    mtype = s_message.split('|')[0]
-    logger.logger.debug('Message received of type: '+mtype)
-    try:
-        message=getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[mtype])(serialized_message=s_message)
-        return message
-    except Exception as e:
-        logger.logger.exception('Cannot map message.typ to message Class: '+str(e))
+    data=msgbus.msgbus.retrieveMessage(timeout)
+    if data:
+        addr, s_message = data
+        logger.logger.debug('Message received: '+str(s_message))
+        mtype = s_message.split('|')[0]
+        logger.logger.debug('Message received of type: '+mtype)
+        try:
+            message=getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[mtype])(serialized_message=s_message)
+            return message
+        except Exception as e:
+            logger.logger.exception('Cannot map message.typ to message Class: '+str(e))
+            return None
+    else:
+        logger.logger.debug('Timeout expired waiting for messages')
         return None
 
 def process_msg_result(msg_result):

@@ -15,9 +15,9 @@ for line in fd:
     user = line.split('\n')[0]
     try:
         dbapi.delete_user(username=user,session=connection.session)
-        print 'user '+line+' deleted'
+        print('user '+line+' deleted')
     except exceptions.NotFoundUserError:
-        print 'user not found: '+user
+        print('user not found: '+user)
         user
 
 fd.close

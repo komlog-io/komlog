@@ -9,20 +9,19 @@ jcazor
 
 import tornado.web
 import functools
-import urlparse
-from urllib import urlencode
+import urllib.parse
+from urllib.parse import urlencode
+from komfig import logger
 
 def userauthenticated(method):
     @functools.wraps(method)
     def authlogic(self,*args,**kwargs):
-        self.user=self.get_secure_cookie("komlog_user")
-        print 'Usuario obtenido: ',
-        print self.user
-        if not self.user:
+        user=self.get_secure_cookie("komlog_user")
+        if not user:
             if self.request.method in ('GET','HEAD','PUT','POST'):
                 url = self.get_login_url()
                 if "?" not in url:
-                    if urlparse.urlsplit(url).scheme:
+                    if urllib.parse.urlsplit(url).scheme:
                         # if login url is absolute, make next absolute too
                         next_url = self.request.full_url()
                     else:
@@ -31,19 +30,21 @@ def userauthenticated(method):
                 self.redirect(url)
                 return
             raise tornado.web.HTTPError(403)
+        self.user=user.decode('utf-8')
+        logger.logger.debug('User obtained: '+self.user)
         return method(self, *args, **kwargs)
     return authlogic
 
 def agentauthenticated(method):
     @functools.wraps(method)
     def authlogic(self,*args,**kwargs):
-        self.agent=self.get_secure_cookie("komlog_agent")
-        self.user=self.get_secure_cookie("komlog_user")
-        if not self.agent or not self.user:
+        agent=self.get_secure_cookie("komlog_agent")
+        user=self.get_secure_cookie("komlog_user")
+        if not agent or not user:
             if self.request.method in ('GET','HEAD','PUT','POST'):
                 url = self.get_login_url()
                 if "?" not in url:
-                    if urlparse.urlsplit(url).scheme:
+                    if urllib.parse.urlsplit(url).scheme:
                         # if login url is absolute, make next absolute too
                         next_url = self.request.full_url()
                     else:
@@ -52,6 +53,10 @@ def agentauthenticated(method):
                 self.redirect(url)
                 return
             raise HTTPError(403)
+        self.agent=agent.decode('utf-8')
+        self.user=user.decode('utf-8')
+        logger.logger.debug('User obtained: '+self.user)
+        logger.logger.debug('Agent obtained: '+self.agent)
         return method(self, *args, **kwargs)
     return authlogic
 
