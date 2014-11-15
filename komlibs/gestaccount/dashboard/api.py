@@ -11,7 +11,7 @@ author: jcazor
 
 from komcass.api import dashboard as cassapidashboard
 from komcass.api import user as cassapiuser
-from komlibs.gestaccount import states,types,exceptions
+from komlibs.gestaccount import exceptions
 
 
 def get_dashboards_config(username):

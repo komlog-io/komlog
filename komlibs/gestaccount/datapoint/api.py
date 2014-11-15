@@ -15,7 +15,7 @@ import os
 import dateutil.parser
 from datetime import timedelta, datetime
 from komcass.api import datapoint as cassapidatapoint
-from komlibs.gestaccount import states,types,exceptions
+from komlibs.gestaccount import exceptions
 from komlibs.general import colors
 from komimc import messages
 from komimc import api as msgapi

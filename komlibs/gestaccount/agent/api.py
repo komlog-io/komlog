@@ -11,7 +11,7 @@ from komcass.api import agent as cassapiagent
 from komcass.api import user as cassapiuser
 from komcass.api import datasource as cassapidatasource
 from komcass.model.orm import agent as ormagent
-from komlibs.gestaccount import states as states
+from komlibs.gestaccount.agent import states
 from komlibs.gestaccount import exceptions
 from komlibs.ifaceops import operations
 from komimc import messages
@@ -57,7 +57,7 @@ def create_agent(username,agentname,pubkey,version):
         print('llegamos al registro del agente')
         aid=uuid.uuid4()
         now=datetime.utcnow()
-        agent=ormagent.Agent(aid=aid, uid=user.uid, agentname=agentname, pubkey=pubkey, version=version, state=states.AGENT['PENDING_USER_VALIDATION'],creation_date=now)
+        agent=ormagent.Agent(aid=aid, uid=user.uid, agentname=agentname, pubkey=pubkey, version=version, state=states.PENDING_USER_VALIDATION,creation_date=now)
         if cassapiagent.new_agent(agent=agent):
             ''' Send Quote and Resource Authorization Message before returning'''
             operation=operations.NewAgentOperation(uid=agent.uid,aid=agent.aid)

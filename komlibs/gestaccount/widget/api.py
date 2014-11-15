@@ -16,7 +16,8 @@ from komcass.api import user as cassapiuser
 from komcass.api import datasource as cassapidatasource
 from komcass.api import datapoint as cassapidatapoint
 from komcass.model.orm import widget as ormwidget
-from komlibs.gestaccount import states,types,exceptions
+from komlibs.gestaccount.widget import types
+from komlibs.gestaccount import exceptions
 from komlibs.ifaceops import operations
 from komimc import messages
 from komimc import api as msgapi

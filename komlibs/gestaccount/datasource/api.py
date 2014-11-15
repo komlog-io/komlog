@@ -19,12 +19,12 @@ from komcass.api import agent as cassapiagent
 from komcass.api import datasource as cassapidatasource
 from komcass.model.orm import datasource as ormdatasource
 from komfs import api as fsapi
-from komlibs.gestaccount import states,types,exceptions
-from komlibs.gestaccount import widget as gestwidget
+from komlibs.gestaccount.datasource import states
+from komlibs.gestaccount import exceptions
+from komlibs.gestaccount.widget import api as gestwidget
 from komlibs.ifaceops import operations
 from komimc import messages
 from komimc import api as msgapi
-from komlibs.general import crontab
 
 def create_datasource(username,aid,datasourcename):
     print('llegamos al create datasource')
@@ -37,7 +37,7 @@ def create_datasource(username,aid,datasourcename):
     if not agent:
         raise exceptions.AgentNotFoundException()
     print('antes de create el objeto datasource')
-    datasource=ormdatasource.Datasource(did=did,aid=aid,uid=user.uid,datasourcename=datasourcename,state=states.DATASOURCE['ACTIVE'],creation_date=now)
+    datasource=ormdatasource.Datasource(did=did,aid=aid,uid=user.uid,datasourcename=datasourcename,state=states.ACTIVE,creation_date=now)
     print('antes de lanzar el insert')
     if cassapidatasource.new_datasource(datasource=datasource):
         print('insert correcto')
@@ -77,7 +77,7 @@ def get_datasource_data(did,date=None):
                 print('aqui no llego')
         data['did']=str(did)
         data['ds_date']=last_received.isoformat()+'Z'
-        data['ds_vars']=[(pos,length) for pos,length in dsvars.items()]
+        data['ds_vars']=[(pos,length) for pos,length in dsvars.items()] if dsvars else None
         data['ds_content']=datasource_data.content
         data['ds_dtps']=dsdtps
         return data

@@ -9,8 +9,7 @@ import uuid,crypt
 from datetime import datetime
 from komcass.api import user as cassapiuser
 from komcass.model.orm import user as ormuser
-from komlibs.gestaccount import states as states
-from komlibs.gestaccount import segments
+from komlibs.gestaccount.user import states, segments
 from komlibs.gestaccount import exceptions
 from komimc import messages
 from komimc import api as msgapi
@@ -26,8 +25,8 @@ def create_user(username, password, email):
     uid=uuid.uuid4()
     hpassword=get_hpassword(uid,password)
     now=datetime.utcnow()
-    segment=segments.USER['FREE']
-    user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.USER['FREE'], creation_date=now, state=states.USER['PREACTIVE'])
+    segment=segments.FREE
+    user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.FREE, creation_date=now, state=states.PREACTIVE)
     message=messages.NewUserMessage(uid=uid)
     if cassapiuser.new_user(user=user):
         if msgapi.send_message(message):
@@ -52,7 +51,7 @@ def confirm_user(email, code):
     if not user:
         raise exceptions.UserNotFoundException()
     signup_info.utilization_date=datetime.utcnow()
-    user.state=states.USER['ACTIVE']
+    user.state=states.ACTIVE
     if not cassapiuser.insert_user(user=user):
         raise exceptions.UserConfirmationException()
     cassapiuser.insert_signup_info(signup_info=signup_info)

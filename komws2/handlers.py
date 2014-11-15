@@ -8,12 +8,12 @@ from komcass.api import user as cassapiuser
 from komcass.api import agent as cassapiagent
 from komcass.api import datasource as cassapidatasource
 from komfs import api as fsapi
-from komlibs.gestaccount import user as usrapi
-from komlibs.gestaccount import agent as agapi
-from komlibs.gestaccount import datasource as dsapi
-from komlibs.gestaccount import datapoint as dpapi
-from komlibs.gestaccount import widget as wgapi
-from komlibs.gestaccount import dashboard as dbapi
+from komlibs.gestaccount.user import api as usrapi
+from komlibs.gestaccount.agent import api as agapi
+from komlibs.gestaccount.datasource import api as dsapi
+from komlibs.gestaccount.datapoint import api as dpapi
+from komlibs.gestaccount.widget import api as wgapi
+from komlibs.gestaccount.dashboard import api as dbapi
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.auth import authorization
 from komlibs.auth import exceptions as authexcept
