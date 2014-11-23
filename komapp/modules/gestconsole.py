@@ -1,6 +1,6 @@
 #coding: utf-8
 
-from komapp import modules
+from komapp.modules import modules
 
 class Gestconsole(modules.Module):
     def __init__(self, instance_number):

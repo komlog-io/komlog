@@ -2,8 +2,7 @@
 #coding: utf-8
 
 import tornado.web
-import settings
-import handlers
+from komws2 import settings, handlers
 from komcass import connection as casscon
 from komimc import bus
 from komfig import logger

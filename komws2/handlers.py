@@ -5,7 +5,7 @@ from tornado.template import Template
 from tornado.escape import json_encode,json_decode,xhtml_escape
 from komlibs.ifaceops import ifaceops
 from komfig import logger
-import auth
+from komws2 import auth
 import os
 import uuid
 import datetime

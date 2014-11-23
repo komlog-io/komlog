@@ -1,12 +1,12 @@
 '''
-Created on 26/12/2012
+Created on 24/02/2012
 
 @author: jcazor
 '''
 
 from komapp import komapp
+from komapp.modules import gestconsole
 import os
-import modules
 
 def main():
     """ Program Init.
@@ -14,8 +14,8 @@ def main():
         Start program instance with its associated config file
     """
     HOME = os.getenv('HOME')
-    cfg_file = '.komlogs/komdc.cfg'
-    program_name = 'komdcApp'
+    cfg_file = '.komlogs/komges.cfg'
+    program_name = 'komgesApp'
     app = komapp.Komapp(os.path.join(HOME,cfg_file), program_name)
     app.start()
     

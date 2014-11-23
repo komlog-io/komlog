@@ -1,10 +1,10 @@
 #coding: utf-8
 
-import webapp
 import signal
 import time
+from komws2 import webapp
 from komcass import connection as casscon
-from komapp import modules
+from komapp.modules import modules
 from komfig import logger, config, options
 from komimc import bus as msgbus
 from tornado.httpserver import HTTPServer

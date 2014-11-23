@@ -7,7 +7,7 @@ import os
 import signal
 import time
 from komfig import config, logger, options
-from komapp import modules
+from komapp.modules import modules
 from multiprocessing import Process
 
 class Komapp(object):

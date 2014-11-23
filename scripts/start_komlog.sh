@@ -1,14 +1,14 @@
 #!/bin/bash
 
 cd $HOME
-nohup python3 komlogs/komai/komai.py &
+nohup python3 bin/komai.py &
 echo $! > /tmp/komai.pid
-nohup python3 komlogs/komges/komges.py &
+nohup python3 bin/komges.py &
 echo $! > /tmp/komges.pid
-nohup python3 komlogs/komdc/komdc.py &
+nohup python3 bin/komdc.py &
 echo $! > /tmp/komdc.pid
-nohup python3 komlogs/komrc/komrc.py &
+nohup python3 bin/komrc.py &
 echo $! > /tmp/komrc.pid
-nohup python3 komlogs/komws2/komws2.py &
-echo $! > /tmp/komws2.pid
+nohup python3 bin/komweb.py &
+echo $! > /tmp/komweb.pid
 

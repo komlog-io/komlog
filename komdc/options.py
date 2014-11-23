@@ -1,8 +1,0 @@
-MODULES = 'modules'
-MODULE_ENABLED = 'enabled'
-SAMPLES_OUTPUT_PATH = 'output_path'
-SAMPLES_INPUT_PATH = 'input_path'
-CASSANDRA_KEYSPACE = 'cassandra_keyspace'
-CASSANDRA_CLUSTER = 'cassandra_cluster'
-SQL_URI = 'sql_uri'
-MESSAGE_BROKER='message_broker'

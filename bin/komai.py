@@ -5,8 +5,8 @@ Created on 24/02/2012
 '''
 
 from komapp import komapp
+from komapp.modules import textmining
 import os
-import modules
 
 def main():
     """ Program Init.
@@ -14,8 +14,8 @@ def main():
         Start program instance with its associated config file
     """
     HOME = os.getenv('HOME')
-    cfg_file = '.komlogs/komges.cfg'
-    program_name = 'komgesApp'
+    cfg_file = '.komlogs/komai.cfg'
+    program_name = 'komaiApp'
     app = komapp.Komapp(os.path.join(HOME,cfg_file), program_name)
     app.start()
     

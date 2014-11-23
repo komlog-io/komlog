@@ -1,12 +1,14 @@
 '''
-Created on 01/11/2014
+Komlog Resource Control Daemon
+
+Created on 30/09/2013
 
 @author: jcazor
 '''
 
 from komapp import komapp
+from komapp.modules import rescontrol
 import os
-import modules
 
 def main():
     """ Program Init.
@@ -14,10 +16,9 @@ def main():
         Start program instance with its associated config file
     """
     HOME = os.getenv('HOME')
-    cfg_file = '.komlogs/komws2.cfg'
-    program_name = 'komws2App'
+    cfg_file = '.komlogs/komrc.cfg'
+    program_name = 'komrcApp'
     app = komapp.Komapp(os.path.join(HOME,cfg_file), program_name)
     app.start()
-    
 
 if __name__ == "__main__": main() 

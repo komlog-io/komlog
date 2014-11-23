@@ -2,15 +2,12 @@ import os
 import glob
 import time
 import signal
-from komcass import connection as casscon
-from komfs import api as fsapi
-from komapp import modules
+from komapp.modules import modules
 from komfig import logger, config, options
 from komimc import bus as msgbus
 from komimc import api as msgapi
-from komimc import messages as imcmessages
-from komlibs import messages
-        
+from komimc import messages
+
 class Validation(modules.Module):
     def __init__(self, instance_number):
         super(Validation,self).__init__(self.__class__.__name__, instance_number)
@@ -53,7 +50,7 @@ class Validation(modules.Module):
                                 logger.logger.debug('File validated successfully: '+f)
                                 fo = os.path.join(self.outputdir,os.path.basename(fi)[:-5]+'.vspl')
                                 os.rename(fi, fo)
-                                msgapi.send_message(imcmessages.StoreSampleMessage(sample_file=fo))
+                                msgapi.send_message(messages.StoreSampleMessage(sample_file=fo))
                             except Exception:
                                 logger.logger.exception('Error sending: STORE_SAMPLE_MESSAGE')
                                 os.rename(fo,fi)
@@ -65,8 +62,3 @@ class Validation(modules.Module):
     def validate(self, filename):
         logger.logger.debug('Validating '+filename)
         return True
-
-class Storing(modules.Module):
-    def __init__(self, instance_number):
-        super(Storing,self).__init__(name=self.__class__.__name__, instance_number=instance_number, needs_db=True, needs_msgbus=True)
-

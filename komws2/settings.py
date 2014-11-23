@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import os.path
-import web_modules
+from komws2 import web_modules
 
 DIRNAME = os.path.dirname(__file__)
 SETTINGS = {
