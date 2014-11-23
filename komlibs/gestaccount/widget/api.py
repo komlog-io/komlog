@@ -19,8 +19,6 @@ from komcass.model.orm import widget as ormwidget
 from komlibs.gestaccount.widget import types
 from komlibs.gestaccount import exceptions
 from komlibs.ifaceops import operations
-from komimc import messages
-from komimc import api as msgapi
 
 def get_widget_config(wid):
     widget=cassapiwidget.get_widget(wid=wid)
@@ -66,9 +64,6 @@ def delete_widget(username,wid):
     else:
         print('obtenido widget')
         if cassapiwidget.delete_widget(wid=widget.wid):
-#               TODO:
-#               faltaría todo el envio de mensajes para actualizar quotas y permisos
-#               pero para eso tenemos que crear operaciones nuevas, etc
             return True
         else:
             return False
@@ -91,12 +86,7 @@ def new_widget_ds(username,did):
         wid=uuid.uuid4()
         widget=ormwidget.WidgetDs(wid=wid,uid=datasource.uid,did=datasource.did,creation_date=datetime.utcnow())
         if cassapiwidget.new_widget(widget=widget):
-            operation=operations.NewWidgetOperation(uid=user.uid,wid=wid)
-            message=messages.UpdateQuotesMessage(operation=operation)
-            msgapi.send_message(message)
-            message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
-            msgapi.send_message(message)
-            return {'wid':str(wid)}
+            return widget
         else:
             raise exceptions.WidgetCreationException()
 
@@ -117,12 +107,7 @@ def new_widget_dp(username,pid):
         wid=uuid.uuid4()
         widget=ormwidget.WidgetDp(wid=wid,uid=user.uid,pid=datapoint.pid,creation_date=datetime.utcnow())
         if cassapiwidget.new_widget(widget=widget):
-            operation=operations.NewWidgetOperation(uid=user.uid,wid=wid)
-            message=messages.UpdateQuotesMessage(operation=operation)
-            msgapi.send_message(message)
-            message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
-            msgapi.send_message(message)
-            return {'wid':str(wid)}
+            return widget
         else:
             raise exceptions.WidgetCreationException()
 

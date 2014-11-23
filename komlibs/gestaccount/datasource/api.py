@@ -22,12 +22,8 @@ from komfs import api as fsapi
 from komlibs.gestaccount.datasource import states
 from komlibs.gestaccount import exceptions
 from komlibs.gestaccount.widget import api as gestwidget
-from komlibs.ifaceops import operations
-from komimc import messages
-from komimc import api as msgapi
 
 def create_datasource(username,aid,datasourcename):
-    print('llegamos al create datasource')
     now=datetime.utcnow()
     did=uuid.uuid4()
     user=cassapiuser.get_user(username=username)
@@ -36,31 +32,21 @@ def create_datasource(username,aid,datasourcename):
         raise exceptions.UserNotFoundException()
     if not agent:
         raise exceptions.AgentNotFoundException()
-    print('antes de create el objeto datasource')
     datasource=ormdatasource.Datasource(did=did,aid=aid,uid=user.uid,datasourcename=datasourcename,state=states.ACTIVE,creation_date=now)
-    print('antes de lanzar el insert')
     if cassapidatasource.new_datasource(datasource=datasource):
-        print('insert correcto')
-        ''' before returning, send quote and resource authorization message '''
-        operation=operations.NewDatasourceOperation(uid=user.uid,aid=aid,did=did)
-        message=messages.UpdateQuotesMessage(operation=operation)
-        msgapi.send_message(message)
-        message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
-        msgapi.send_message(message)
-        ''' create related widget every time a new datasource is created '''
-        gestwidget.new_widget_ds(username=username,did=did)
-        return {'did':str(did)}
+        return datasource
     else:
         raise exceptions.DatasourceCreationException()
 
 def get_datasource_data(did,date=None):
+    logger.logger.debug('getting datasource data of '+str(did))
     datasource_stats=cassapidatasource.get_datasource_stats(did=did)
     if datasource_stats:
-        logger.logger.debug('Datasource has statistics')
         data={}
         last_mapped=datasource_stats.last_mapped
+        logger.logger.debug('last mapped: '+str(last_mapped))
         last_received=date if date else datasource_stats.last_received
-        logger.logger.debug('getting data from database')
+        logger.logger.debug('last received: '+str(last_received))
         datasource_data=cassapidatasource.get_datasource_data(did=did,date=last_received)
         dsvars={}
         dsdtps=[]

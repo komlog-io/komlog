@@ -13,9 +13,6 @@ from komcass.api import datasource as cassapidatasource
 from komcass.model.orm import agent as ormagent
 from komlibs.gestaccount.agent import states
 from komlibs.gestaccount import exceptions
-from komlibs.ifaceops import operations
-from komimc import messages
-from komimc import api as msgapi
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA256
@@ -41,6 +38,21 @@ def verify_signature(pubkey,text,b64sign):
     logger.logger.debug('Verification failed')
     return False
     
+def auth_agent(agentid, signature):
+    try:
+        aid=uuid.UUID(agentid)
+    except Exception:
+        raise exceptions.BadParametersException()
+    else:
+        agent=cassapiagent.get_agent(aid=aid)
+        if not agent:
+            raise exceptions.AgentNotFoundException()
+        else:
+            if verify_signature(agent.pubkey, agentid, signature):
+                return True
+            else:
+                return False
+
 def create_agent(username,agentname,pubkey,version):
     '''
     When the agent connects the first time, we will register it in a pending state, 
@@ -54,20 +66,11 @@ def create_agent(username,agentname,pubkey,version):
                 data={'aid':agent.pubkey}
                 return data
         ''' Register new agent '''
-        print('llegamos al registro del agente')
         aid=uuid.uuid4()
         now=datetime.utcnow()
         agent=ormagent.Agent(aid=aid, uid=user.uid, agentname=agentname, pubkey=pubkey, version=version, state=states.PENDING_USER_VALIDATION,creation_date=now)
         if cassapiagent.new_agent(agent=agent):
-            ''' Send Quote and Resource Authorization Message before returning'''
-            operation=operations.NewAgentOperation(uid=agent.uid,aid=agent.aid)
-            message=messages.UpdateQuotesMessage(operation=operation)
-            msgapi.send_message(message)
-            message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
-            msgapi.send_message(message)
-            print('Return New Agent id')
-            data={'aid':str(aid)}
-            return data
+            return agent
         else:
             raise exceptions.AgentCreationException()
     else:
@@ -132,4 +135,6 @@ def update_agent_config(username, aid, data):
     agent.agentname=data['ag_name']
     if not cassapiagent.insert_agent(agent=agent):
         raise exceptions.AgentUpdateException()
+    else:
+        return True
 

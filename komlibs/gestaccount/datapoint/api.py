@@ -17,21 +17,16 @@ from datetime import timedelta, datetime
 from komcass.api import datapoint as cassapidatapoint
 from komlibs.gestaccount import exceptions
 from komlibs.general import colors
-from komimc import messages
-from komimc import api as msgapi
 
 def get_datapoint_data(pid,end_date=None,start_date=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
-    print('entramos aqui')
-    print('Recibimos: '+str(end_date)+' - '+str(start_date))
     if not end_date:
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
         end_date=datapoint_stats.last_received if datapoint_stats and datapoint_stats.last_received else datetime.utcnow()
     if not start_date:
         start_date=end_date-timedelta(days=1)
     datapoint_data_list=cassapidatapoint.get_datapoint_data(pid=pid,fromdate=start_date,todate=end_date)
-    print('salimos')
     data=[]
     if not datapoint_data_list:
         last_date=end_date-timedelta(days=1)
@@ -39,22 +34,22 @@ def get_datapoint_data(pid,end_date=None,start_date=None):
     else:
         for datapoint_data in datapoint_data_list:
             data.append({'date':datapoint_data.date.isoformat()+'Z','value':str(datapoint_data.value)})
-    print (data)
     return data
 
-def create_datapoint(did,dsdate,pos,length,name):
+def create_datapoint(did, datapointname, position, length):
     '''
     Funcion utilizada para la monitorización de una variable y
     la creación del datapoint correspondiente
     '''
-    did=uuid.UUID(did)
-    dsdate=dateutil.parser.parse(dsdate)
-    pos=str(pos)
-    length=str(length)
-    name=''+name
-    message=messages.MonitorVariableMessage(did=did,date=dsdate,pos=pos,length=length,name=name)
-    msgapi.send_message(message)
-    return True
+    datasource=cassapidatasource.get_datasource(did=did)
+    if not datasource:
+        raise exceptions.DatasourceNotFoundException()
+    pid=uuid.uuid4()
+    datapoint=ormdatapoint.Datapoint(pid=pid,did=did,datapointname=datapointname,creation_date=datetime.utcnow())
+    if cassapidatapoint.new_datapoint(datapoint) and cassapidatapoint.set_datapoint_dtree_positive_at(pid=pid, date=date, position=int(position), length=int(length)):
+        return datapoint
+    else:
+        raise exceptions.DatapointCreationException()
 
 def get_datapoint_config(pid):
     ''' como se ha pasado por las fases de autorización y autenticación, 

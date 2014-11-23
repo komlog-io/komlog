@@ -15,6 +15,10 @@ class UserAlreadyExistsException(Exception):
     def __init__(self):
         pass
 
+class UserConfirmationException(Exception):
+    def __init__(self):
+        pass
+    
 class UserCreationException(Exception):
     def __init__(self):
         pass

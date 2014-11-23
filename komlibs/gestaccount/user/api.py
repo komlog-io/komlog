@@ -11,14 +11,21 @@ from komcass.api import user as cassapiuser
 from komcass.model.orm import user as ormuser
 from komlibs.gestaccount.user import states, segments
 from komlibs.gestaccount import exceptions
-from komimc import messages
-from komimc import api as msgapi
 
 
 def get_hpassword(uid,password):
     salt='$6$'+str(uid).split('-')[1]+'$'
     hpassword=crypt.crypt(password,salt)
     return hpassword
+
+def auth_user(username, password):
+    user=cassapiuser.get_user(username=username)
+    if not user:
+        raise exceptions.UserNotFoundException()
+    if user.password==get_hpassword(user.uid, password):
+        return True
+    else:
+        return False
 
 def create_user(username, password, email):
     '''This function creates a new user in the database'''
@@ -27,15 +34,10 @@ def create_user(username, password, email):
     now=datetime.utcnow()
     segment=segments.FREE
     user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.FREE, creation_date=now, state=states.PREACTIVE)
-    message=messages.NewUserMessage(uid=uid)
     if cassapiuser.new_user(user=user):
-        if msgapi.send_message(message):
-            return True
-        else:
-            cassapiuser.delete_user(uid=user.uid)
-            return False
+        return user
     else:
-        return False
+        return None
 
 
 def confirm_user(email, code):
@@ -57,7 +59,7 @@ def confirm_user(email, code):
     cassapiuser.insert_signup_info(signup_info=signup_info)
     return {'result':email+' confirmation OK'}
     
-def update_userprofile(username, params):
+def update_user_profile(username, params):
     ''' This function is used to update user configuration parameters.
     Parameters supported:
         - password
@@ -94,7 +96,7 @@ def update_userprofile(username, params):
     else:
         return False
 
-def get_userprofile(username):
+def get_user_profile(username):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
@@ -102,4 +104,8 @@ def get_userprofile(username):
     data['email']=user.email if user.email else ''
     return data
 
-
+def get_user_config(username):
+    user=cassapiuser.get_user(username=username)
+    if not user:
+        raise exceptions.UserNotFoundException()
+    return user
