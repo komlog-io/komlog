@@ -1,4 +1,5 @@
 MODULES = 'main:modules'
+RESTART_MODULES = 'main:restart_modules'
 MODULE_ENABLED = 'enabled'
 MODULE_INSTANCES = 'instances'
 LOG_LEVEL='logging:level'

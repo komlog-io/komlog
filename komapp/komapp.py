@@ -17,7 +17,7 @@ class Komapp(object):
         self.modules = []
         self.processes = []
         self.run = True
-        
+
     def signal_handler(self, signum, frame):
         if signum == signal.SIGTERM:
             logger.logger.info('SIGTERM received, terminating')
@@ -53,7 +53,7 @@ class Komapp(object):
         else:
             print("Directory not found: "+self.path)
             exit()
-       
+
     def load_modules(self):
         modules_enabled = []
         for module in config.get(options.MODULES).split(','):
@@ -73,7 +73,7 @@ class Komapp(object):
                 except NameError as e:
                     logger.logger.exception('Module not found: '+str(e))
         self.modules = modules_enabled
-        
+
     def start_modules(self, module=None):
         if not module:
             for i,module in enumerate(self.modules):
@@ -91,16 +91,23 @@ class Komapp(object):
                 self.processes.insert(i,p)
             else:
                 logger.logger.error('Trying to start an already running module')
-            
+
     def loop(self):
         while self.run:
             time.sleep(5)
             for i, process in enumerate(self.processes):
                 logger.logger.debug('Checking Module: '+str(i))
                 if not process.is_alive():
-                    logger.logger.error('Module death detected: '+str(process.pid)+', starting it')
-                    self.start_modules(self.modules[i])
-            
+                    logger.logger.error('Module death detected: '+str(process.pid))
+                    if not str(config.get(options.RESTART_MODULES)).lower() == 'no':
+                        logger.logger.error('Starting module: '+str(process.pid))
+                        self.start_modules(self.modules[i])
+                    else:
+                        self.processes.pop(i)
+                        if len(self.processes)==0:
+                            self.run=False
+                        break
+
     def terminate(self):
         for process in self.processes:
             logger.logger.info('Sending process SIGTERM signal: '+str(process))

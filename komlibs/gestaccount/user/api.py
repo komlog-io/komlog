@@ -39,7 +39,6 @@ def create_user(username, password, email):
     else:
         return None
 
-
 def confirm_user(email, code):
     '''This function confirm the user'''
     signup_info=cassapiuser.get_signup_info(signup_code=code)
