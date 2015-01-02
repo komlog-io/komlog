@@ -15,7 +15,7 @@ def initialize_logger(module_name):
     rotate_logs=config.get(options.LOG_ROTATION) or defaults.LOG_ROTATION
     max_bytes=config.get(options.LOG_MAX_BYTES) or defaults.LOG_MAX_BYTES
     backup_count=config.get(options.LOG_BACKUP_COUNT) or defaults.LOG_BACKUP_COUNT
-    log_format=config.get(options.LOG_FORMAT) or defaults.LOG_FORMAT
+    log_format=defaults.LOG_FORMAT
     try:
         if not os.path.exists(os.path.join(config.config.root_dir,defaults.LOG_DIRNAME)):
             os.mkdir(os.path.join(config.config.root_dir,defaults.LOG_DIRNAME))

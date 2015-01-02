@@ -31,7 +31,7 @@ def get_widgets(uid):
 
 def get_number_of_widgets_by_uid(uid):
     row=connection.session.execute(stmtwidget.S_COUNT_MSTWIDGET_B_UID,(uid,))
-    return row[0]['count']
+    return row[0]['count'] if row else 0
 
 def delete_widget(wid):
     row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_WID,(wid,))
@@ -49,29 +49,27 @@ def delete_widget(wid):
         return True
 
 def new_widget(widget):
-    if widget:
-        existingwidget=get_widget(widget.wid)
-        if existingwidget:
-            return False
-        connection.session.execute(stmtwidget.I_A_MSTWIDGET,(widget.wid,widget.uid,widget.type))
-        if widget.type==prmwidget.types.WIDGET_DS:
-            _insert_widget_ds(widget)
-        elif widget.type==prmwidget.types.WIDGET_DP:
-            _insert_widget_dp(widget)
-        return True
-    else:
+    if not isinstance(widget, ormwidget.Widget):
         return False
+    existingwidget=get_widget(widget.wid)
+    if existingwidget:
+        return False
+    connection.session.execute(stmtwidget.I_A_MSTWIDGET,(widget.wid,widget.uid,widget.type))
+    if widget.type==prmwidget.types.WIDGET_DS:
+        _insert_widget_ds(widget)
+    elif widget.type==prmwidget.types.WIDGET_DP:
+        _insert_widget_dp(widget)
+    return True
 
 def insert_widget(widget):
-    if widget:
-        connection.session.execute(stmtwidget.I_A_MSTWIDGET,(widget.wid,widget.uid,widget.type))
-        if widget.type==prmwidget.types.WIDGET_DS:
-            _insert_widget_ds(widget)
-        elif widget.type==prmwidget.types.WIDGET_DP:
-            _insert_widget_dp(widget)
-        return True
-    else:
+    if not isinstance(widget, ormwidget.Widget):
         return False
+    connection.session.execute(stmtwidget.I_A_MSTWIDGET,(widget.wid,widget.uid,widget.type))
+    if widget.type==prmwidget.types.WIDGET_DS:
+        _insert_widget_ds(widget)
+    elif widget.type==prmwidget.types.WIDGET_DP:
+        _insert_widget_dp(widget)
+    return True
             
 def get_widget_ds(wid):
     row=connection.session.execute(stmtwidget.S_A_MSTWIDGETDS_B_WID,(wid,))

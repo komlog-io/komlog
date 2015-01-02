@@ -13,6 +13,7 @@
 
 import json
 import uuid
+from komlibs.general.validation import arguments
 
 OPID={'NewAgentOperation':0,
       'NewGraphOperation':1,
@@ -27,7 +28,7 @@ OPIDQUOTES={0:('quo_static_user_total_agents',),
             2:('quo_static_agent_total_datasources','quo_static_user_total_datasources'),
             3:('quo_static_datasource_total_datapoints','quo_static_agent_total_datapoints','quo_static_user_total_datapoints'),
             4:('quo_static_user_total_widgets',),
-            5:('quo_static_user_total_dashboardatasource',),
+            5:('quo_static_user_total_dashboars',),
             }
 
 OPIDAUTHS={0:('user_agent_perms',),
@@ -69,41 +70,41 @@ class NewAgentOperation(WIFaceOperation):
         self.oid=OPID[self.__class__.__name__]
         self.opclass=self.__class__.__name__
         self.params={}
-        self.params['uid']=uid if type(uid)==uuid.UUID else uuid.UUID(uid)
-        self.params['aid']=aid if type(aid)==uuid.UUID else uuid.UUID(aid)
-
-class NewGraphOperation(WIFaceOperation):
-    def __init__(self, uid, gid):
-        self.oid=OPID[self.__class__.__name__]
-        self.opclass=self.__class__.__name__
-        self.params={}
-        self.params['uid']=uid if type(uid)==uuid.UUID else uuid.UUID(uid)
-        self.params['gid']=gid if type(gid)==uuid.UUID else uuid.UUID(gid)
+        self.params['uid']=uid if arguments.is_valid_uuid(uid) else uuid.UUID(uid)
+        self.params['aid']=aid if arguments.is_valid_uuid(aid) else uuid.UUID(aid)
 
 class NewDatasourceOperation(WIFaceOperation):
     def __init__(self, uid, aid, did):
         self.oid=OPID[self.__class__.__name__]
         self.opclass=self.__class__.__name__
         self.params={}
-        self.params['uid']=uid if type(uid)==uuid.UUID else uuid.UUID(uid)
-        self.params['aid']=aid if type(aid)==uuid.UUID else uuid.UUID(aid)
-        self.params['did']=did if type(did)==uuid.UUID else uuid.UUID(did)
+        self.params['uid']=uid if arguments.is_valid_uuid(uid) else uuid.UUID(uid)
+        self.params['aid']=aid if arguments.is_valid_uuid(aid) else uuid.UUID(aid)
+        self.params['did']=did if arguments.is_valid_uuid(did) else uuid.UUID(did)
 
 class NewDatapointOperation(WIFaceOperation):
     def __init__(self, uid, aid, did, pid):
         self.oid=OPID[self.__class__.__name__]
         self.opclass=self.__class__.__name__
         self.params={}
-        self.params['uid']=uid if type(uid)==uuid.UUID else uuid.UUID(uid)
-        self.params['aid']=aid if type(aid)==uuid.UUID else uuid.UUID(aid)
-        self.params['did']=did if type(did)==uuid.UUID else uuid.UUID(did)
-        self.params['pid']=pid if type(pid)==uuid.UUID else uuid.UUID(pid)
+        self.params['uid']=uid if arguments.is_valid_uuid(uid) else uuid.UUID(uid)
+        self.params['aid']=aid if arguments.is_valid_uuid(aid) else uuid.UUID(aid)
+        self.params['did']=did if arguments.is_valid_uuid(did) else uuid.UUID(did)
+        self.params['pid']=pid if arguments.is_valid_uuid(pid) else uuid.UUID(pid)
 
 class NewWidgetOperation(WIFaceOperation):
     def __init__(self, uid, wid):
         self.oid=OPID[self.__class__.__name__]
         self.opclass=self.__class__.__name__
         self.params={}
-        self.params['uid']=uid if type(uid)==uuid.UUID else uuid.UUID(uid)
-        self.params['wid']=wid if type(wid)==uuid.UUID else uuid.UUID(wid)
+        self.params['uid']=uid if arguments.is_valid_uuid(uid) else uuid.UUID(uid)
+        self.params['wid']=uid if arguments.is_valid_uuid(wid) else uuid.UUID(wid)
+
+class NewDashboardOperation(WIFaceOperation):
+    def __init__(self, uid, bid):
+        self.oid=OPID[self.__class__.__name__]
+        self.opclass=self.__class__.__name__
+        self.params={}
+        self.params['uid']=uid if arguments.is_valid_uuid(uid) else uuid.UUID(uid)
+        self.params['bid']=uid if arguments.is_valid_uuid(bid) else uuid.UUID(bid)
 

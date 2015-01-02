@@ -56,7 +56,7 @@ def delete_agent_quote(aid, quote):
     connection.session.execute(stmtquote.D_Q_QUOAGENT_B_AID,(quote,aid))
     return True
 
-def delete_agent_quotes(aid, quotes):
+def delete_agent_quotes(aid):
     connection.session.execute(stmtquote.D_A_QUOAGENT_B_AID,(aid,))
     return True
 
@@ -81,8 +81,8 @@ def delete_datasource_quote(did, quote):
     connection.session.execute(stmtquote.D_Q_QUODATASOURCE_B_DID,(quote,did))
     return True
 
-def delete_datasource_quotes(did, quotes):
-    connection.session.execute(stmtquote.D_Q_QUODATASOURCE_B_DID,(did,))
+def delete_datasource_quotes(did):
+    connection.session.execute(stmtquote.D_A_QUODATASOURCE_B_DID,(did,))
     return True
 
 def get_datapoint_quotes(pid):

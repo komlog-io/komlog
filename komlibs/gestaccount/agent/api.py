@@ -13,6 +13,7 @@ from komcass.api import datasource as cassapidatasource
 from komcass.model.orm import agent as ormagent
 from komlibs.gestaccount.agent import states
 from komlibs.gestaccount import exceptions
+from komlibs.general.validation import arguments
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA256
@@ -58,13 +59,14 @@ def create_agent(username,agentname,pubkey,version):
     When the agent connects the first time, we will register it in a pending state, 
     waiting for the user validation to gain access to the system
     '''
+    if not arguments.is_valid_username(username) or not arguments.is_valid_agentname(agentname) or not arguments.is_valid_pubkey(pubkey) or not arguments.is_valid_version(version):
+        raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if user:
         agents=cassapiagent.get_agents(uid=user.uid)
         for agent in agents:
             if agent.pubkey==pubkey:
-                data={'aid':agent.pubkey}
-                return data
+                raise exceptions.AgentAlreadyExistsException()
         ''' Register new agent '''
         aid=uuid.uuid4()
         now=datetime.utcnow()
@@ -81,9 +83,11 @@ def activate_agent(aid):
     After an agent has been registered, the user can validate it.
     This function changes the state column of the agent to validate it
     '''
-    #TODO: Change agent state
+    if not arguments.is_valid_uuid(aid):
+        raise exceptions.BadParametersException()
     agent=cassapiagent.get_agent(aid=aid)
     if agent:
+        agent.state=states.ACTIVE
         if cassapiagent.insert_agent(agent=agent):
             return True
         else:
@@ -96,6 +100,8 @@ def get_agent_config(aid,dids_flag=False):
     This function returns agent configuration parameters, if dids_flag is set
     to True, it will also return datasource ids associated to the agent
     '''
+    if not arguments.is_valid_uuid(aid) or not arguments.is_valid_bool(dids_flag):
+        raise exceptions.BadParametersException()
     data={}
     agent=cassapiagent.get_agent(aid=aid)
     if agent:
@@ -111,6 +117,8 @@ def get_agent_config(aid,dids_flag=False):
         raise exceptions.AgentNotFoundException()
 
 def get_agents_config(username,dids_flag=False):
+    if not arguments.is_valid_username(username) or not arguments.is_valid_bool(dids_flag):
+        raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
@@ -127,7 +135,9 @@ def get_agents_config(username,dids_flag=False):
         return data
     
 def update_agent_config(username, aid, data):
-    if 'ag_name' not in data:
+    if not arguments.is_valid_username(username) or not arguments.is_valid_uuid(aid) or not arguments.is_valid_dict(data):
+        raise exceptions.BadParametersException()
+    if 'ag_name' not in data or not arguments.is_valid_agentname(data['ag_name']):
         raise exceptions.BadParametersException()
     agent=cassapiagent.get_agent(aid=aid)
     if not agent:

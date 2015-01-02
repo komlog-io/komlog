@@ -11,6 +11,7 @@ This file implements functions to deny access to resourcess because of quotes co
 '''
 
 from komcass.api import interface as cassapiiface
+from komfig import logger
 
 interfaces={'User_AgentCreation':'/user/agentcreation/',
             'User_GraphCreation':'/user/graphcreation/',
@@ -96,7 +97,6 @@ def deny_quo_static_agent_total_datasources(params,deny):
     aid=params['aid']
     uid=params['uid']
     iface=interfaces['Agent_DatasourceCreation']+str(aid)
-    uid=uid
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
             return True

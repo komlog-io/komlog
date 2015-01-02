@@ -12,3 +12,12 @@ Authorization Exceptions
 class AuthorizationException(Exception):
     pass
 
+class RequestNotFoundException(Exception):
+    pass
+
+class UserNotFoundException(Exception):
+    pass
+
+class DatasourceNotFoundException(Exception):
+    pass
+

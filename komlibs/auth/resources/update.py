@@ -30,46 +30,41 @@ def update_user_agent_perms(params):
     return False
 
 def update_user_datasource_perms(params):
-    if 'did' not in params or 'uid' not in params or 'aid' not in params:
+    if 'did' not in params or 'uid' not in params:
         return False
     did=params['did']
     uid=params['uid']
-    aid=params['aid']
     perm='A'
     datasource=cassapidatasource.get_datasource(did=did)
-    agent=cassapiagent.get_agent(aid=aid)
-    if agent and datasource and agent.uid==uid and datasource.aid==aid:
+    if datasource and datasource.uid==uid:
         if cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm):
             return True
     return False
 
 def update_agent_datasource_perms(params):
-    if 'did' not in params or 'uid' not in params or 'aid' not in params:
+    if 'did' not in params or 'aid' not in params:
         return False
     did=params['did']
-    uid=params['uid']
     aid=params['aid']
     perm='A'
     datasource=cassapidatasource.get_datasource(did=did)
     agent=cassapiagent.get_agent(aid=aid)
-    if agent and datasource and agent.uid==uid and datasource.aid==aid:
+    if agent and datasource and datasource.aid==aid:
         if cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm):
             return True
     return False
 
 def update_user_datapoint_perms(params):
-    if 'did' not in params or 'uid' not in params \
-    or 'aid' not in params or 'pid' not in params:
+    if 'uid' not in params or 'pid' not in params:
         return False
-    did=params['did']
     uid=params['uid']
-    aid=params['aid']
     pid=params['pid']
     perm='A'
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
-    datasource=cassapidatasource.get_datasource(did=did)
-    agent=cassapiagent.get_agent(aid=aid)
-    if agent and datasource and datapoint and agent.uid==uid and datasource.aid==aid and datapoint.did==did:
+    if not datapoint:
+        return False
+    datasource=cassapidatasource.get_datasource(did=datapoint.did)
+    if datasource and datasource.uid==uid:
         if cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm):
             return True
     return False

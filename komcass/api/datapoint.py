@@ -37,7 +37,7 @@ def get_datapoints_pids(did):
 
 def get_number_of_datapoints_by_did(did):
     row=connection.session.execute(stmtdatapoint.S_COUNT_MSTDATAPOINT_B_DID,(did,))
-    return row[0]['count']
+    return row[0]['count'] if row else 0
 
 def get_datapoint_stats(pid):
     row=connection.session.execute(stmtdatapoint.S_A_MSTDATAPOINTSTATS_B_PID,(pid,))
@@ -82,17 +82,14 @@ def get_datapoint_dtree_negatives_at(pid, date):
     else:
         raise excpdatapoint.DataConsistencyException(function='get_datapoint_dtree_negatives_at',field='pid',value=pid)
 
-def get_datapoint_data_at(pid, date=None):
-    if date:
-        row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINT_B_PID_DATE,(pid,date))
-        if not row:
-            return None
-        elif len(row)==1:
-            return ormdatapoint.DatapointData(row[0]['pid'],row[0]['date'],row[0]['value'])
-        else:
-            raise excpdatapoint.DataConsistencyException(function='get_datapoint_data_at',field='pid',value=pid)
-    else:
+def get_datapoint_data_at(pid, date):
+    row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINT_B_PID_DATE,(pid,date))
+    if not row:
         return None
+    elif len(row)==1:
+        return ormdatapoint.DatapointData(row[0]['pid'],row[0]['date'],row[0]['value'])
+    else:
+        raise excpdatapoint.DataConsistencyException(function='get_datapoint_data_at',field='pid',value=pid)
 
 def get_datapoint_data(pid, fromdate, todate, reverse=False, num_regs=100):
     row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINT_B_PID_INITDATE_ENDDATE_NUMREGS,(pid,fromdate,todate,num_regs))
@@ -103,7 +100,7 @@ def get_datapoint_data(pid, fromdate, todate, reverse=False, num_regs=100):
     return data
 
 def new_datapoint(datapoint):
-    if not datapoint:
+    if not isinstance(datapoint, ormdatapoint.Datapoint):
         return False
     else:
         existing_datapoint=get_datapoint(datapoint.pid)
@@ -114,10 +111,11 @@ def new_datapoint(datapoint):
             return True
 
 def insert_datapoint(datapoint):
-    if not datapoint:
+    if not isinstance(datapoint, ormdatapoint.Datapoint):
         return False
-    connection.session.execute(stmtdatapoint.I_A_MSTDATAPOINT,(datapoint.pid, datapoint.did, datapoint.datapointname, datapoint.color, datapoint.creation_date))
-    return True
+    else:
+        connection.session.execute(stmtdatapoint.I_A_MSTDATAPOINT,(datapoint.pid, datapoint.did, datapoint.datapointname, datapoint.color, datapoint.creation_date))
+        return True
 
 def insert_datapoint_data(pid, date, value):
     connection.session.execute(stmtdatapoint.I_A_DATDATAPOINT,(pid,date,value))

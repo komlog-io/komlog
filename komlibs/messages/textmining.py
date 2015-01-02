@@ -88,7 +88,7 @@ def process_message_MAPVARS(message):
     did=message.did
     date=message.date
     varlist=[]
-    dsdata=cassapidatasource.get_datasource_data(did=did, date=date)
+    dsdata=cassapidatasource.get_datasource_data_at(did=did, date=date)
     if dsdata:
         varlist = variables.get_varlist(dsdata.content)
         mapcontentlist=[]

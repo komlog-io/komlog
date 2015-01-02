@@ -44,10 +44,14 @@ class Tester(modules.Module):
         while self.run:
             results=test.run_tests()
             if results:
-                logger.logger.debug('Now, send mail with results, if configured')
+                try:
+                    logger.logger.debug('Sending tests report')
+                    test.send_report(results, logfile=True)
+                except Exception as e:
+                    logger.logger.debug('Exception sending tests report: '+str(e))
                 self.run=False
             else:
-                time.sleep(10)
+                self.run=False
 
     def terminate(self):
         if self.needs_db:

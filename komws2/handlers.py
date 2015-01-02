@@ -219,7 +219,7 @@ class DatapointsHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            status,data=ifaceops.new_datapoint_operation(username=self.user, did=did, datasourcedate=dsdate, position=pos, length=vl, datapointname=dpname)
+            status,data=ifaceops.new_datapoint_operation(username=self.user, did=did, datasourcedate=dsdate, position=cs, length=vl, datapointname=dpname)
             self.set_status(status)
             self.write(json_encode(data))
 

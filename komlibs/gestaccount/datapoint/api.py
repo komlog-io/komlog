@@ -15,12 +15,20 @@ import os
 import dateutil.parser
 from datetime import timedelta, datetime
 from komcass.api import datapoint as cassapidatapoint
+from komcass.api import datasource as cassapidatasource
+from komcass.model.orm import datapoint as ormdatapoint
 from komlibs.gestaccount import exceptions
-from komlibs.general import colors
+from komlibs.general.validation import arguments
 
 def get_datapoint_data(pid,end_date=None,start_date=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
+    if not arguments.is_valid_uuid(pid):
+        raise exceptions.BadParameterException()
+    if end_date and not arguments.is_valid_date(end_date):
+        raise exceptions.BadParameterException()
+    if start_date and not arguments.is_valid_date(start_date):
+        raise exceptions.BadParameterException()
     if not end_date:
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
         end_date=datapoint_stats.last_received if datapoint_stats and datapoint_stats.last_received else datetime.utcnow()
@@ -36,11 +44,13 @@ def get_datapoint_data(pid,end_date=None,start_date=None):
             data.append({'date':datapoint_data.date.isoformat()+'Z','value':str(datapoint_data.value)})
     return data
 
-def create_datapoint(did, datapointname, position, length):
+def create_datapoint(did, datapointname, position, length, date):
     '''
     Funcion utilizada para la monitorización de una variable y
     la creación del datapoint correspondiente
     '''
+    if not arguments.is_valid_uuid(did) or not arguments.is_valid_datapointname(datapointname) or not arguments.is_valid_string_int(position) or not arguments.is_valid_string_int(length) or not arguments.is_valid_date(date):
+        raise exceptions.BadParametersException()
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
         raise exceptions.DatasourceNotFoundException()
@@ -69,19 +79,22 @@ def get_datapoint_config(pid):
     return data
 
 def update_datapoint_config(pid,data):
+    if not arguments.is_valid_uuid(pid) or not arguments.is_valid_dict(data):
+        raise exceptions.BadParametersException()
+    if 'name' in data and not arguments.is_valid_datapointname(data['name']):
+        raise exceptions.BadParametersException()
+    if 'color' in data and not arguments.is_valid_hexcolor(data['color']):
+        raise exceptions.BadParametersException()
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if datapoint:
         if 'name' in data:
-            datapoint.datapointname=''+data['name']
+            datapoint.datapointname=data['name']
         if 'color' in data:
-            if colors.validate_hexcolor(data['color']):
-                datapoint.color=''+data['color']
-            else:
-                raise exceptions.BadParametersException()
+            datapoint.color=data['color']
         if cassapidatapoint.insert_datapoint(datapoint):
             return True
         else:
             raise exceptions.DatapointUpdateException()
     else:
         raise exceptions.DatapointNotFoundException()
-        
+

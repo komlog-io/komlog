@@ -7,11 +7,19 @@ class AgentNotFoundException(Exception):
     def __init__(self):
         pass
 
+class AgentAlreadyExistsException(Exception):
+    def __init__(self):
+        pass
+
 class UserNotFoundException(Exception):
     def __init__(self):
         pass
 
 class UserAlreadyExistsException(Exception):
+    def __init__(self):
+        pass
+
+class EmailAlreadyExistsException(Exception):
     def __init__(self):
         pass
 

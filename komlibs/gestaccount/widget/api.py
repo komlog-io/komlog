@@ -19,8 +19,11 @@ from komcass.model.orm import widget as ormwidget
 from komlibs.gestaccount.widget import types
 from komlibs.gestaccount import exceptions
 from komlibs.ifaceops import operations
+from komlibs.general.validation import arguments
 
 def get_widget_config(wid):
+    if not arguments.is_valid_uuid(wid):
+        raise exceptions.BadParametersException()
     widget=cassapiwidget.get_widget(wid=wid)
     if widget:
         data={}
@@ -37,6 +40,8 @@ def get_widget_config(wid):
         raise exceptions.WidgetNotFoundException()
 
 def get_widgets_config(username):
+    if not arguments.is_valid_username(username):
+        raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
@@ -54,21 +59,23 @@ def get_widgets_config(username):
     return data
 
 def delete_widget(username,wid):
+    if not arguments.is_valid_username(username) or not arguments.is_valid_uuid(wid):
+        raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
-    print('obtenido user '+username)
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
         raise exceptions.WidgetNotFoundException()
     else:
-        print('obtenido widget')
         if cassapiwidget.delete_widget(wid=widget.wid):
             return True
         else:
             return False
 
 def new_widget_ds(username,did):
+    if not arguments.is_valid_username(username) or not arguments.is_valid_uuid(did):
+        raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
@@ -91,6 +98,8 @@ def new_widget_ds(username,did):
             raise exceptions.WidgetCreationException()
 
 def new_widget_dp(username,pid):
+    if not arguments.is_valid_username(username) or not arguments.is_valid_uuid(pid):
+        raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()

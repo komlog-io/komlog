@@ -68,7 +68,7 @@ def update_quo_static_user_total_dashboards(params):
         return None
     uid=params['uid']
     num_dashboards=cassapidashboard.get_number_of_dashboards_by_uid(uid=uid)
-    if cassapiquote.set_user_quotes(uid=uid, quote='quo_static_user_total_dashboards', value=str(num_dashboards)):
+    if cassapiquote.set_user_quote(uid=uid, quote='quo_static_user_total_dashboards', value=str(num_dashboards)):
         return str(num_dashboards)
     return None
 
@@ -82,9 +82,8 @@ def update_quo_static_agent_total_datasources(params):
     return None
 
 def update_quo_static_agent_total_datapoints(params):
-    if 'uid' not in params or 'aid' not in params:
+    if 'aid' not in params:
         return None
-    uid=params['uid']
     aid=params['aid']
     total_datapoints=0
     dids=cassapidatasource.get_datasources_dids(aid=aid)

@@ -24,7 +24,7 @@ class Session:
             return row
         except KeyError:
             self.stmts[stmt]=self.session.prepare(statement.get_statement(stmt))
-            row = self.session.execute(self.stmts[stmt],parameters)
+            row = self.execute(stmt,parameters)
             return row
         except Exception as e:
             logger.logger.exception('Exception in cassandra session: '+str(e))

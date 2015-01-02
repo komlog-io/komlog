@@ -18,10 +18,9 @@ def compare_quo_static_user_total_agents(params):
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
-    if user:
-        segment=cassapisegment.get_user_segment(sid=user.segment)
-    else:
+    if not user:
         return None
+    segment=cassapisegment.get_user_segment(sid=user.segment)
     userquo=cassapiquote.get_user_quotes(uid=uid)
     if userquo and segment:
         quote=userquo.get_quote('quo_static_user_total_agents')
@@ -37,10 +36,9 @@ def compare_quo_static_user_total_datasources(params):
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
-    if user:
-        segment=cassapisegment.get_user_segment(sid=user.segment)
-    else:
+    if not user:
         return None
+    segment=cassapisegment.get_user_segment(sid=user.segment)
     userquo=cassapiquote.get_user_quotes(uid=uid)
     if userquo and segment:
         quote=userquo.get_quote('quo_static_user_total_datasources')
@@ -55,10 +53,9 @@ def compare_quo_static_user_total_datapoints(params):
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
-    if user:
-        segment=cassapisegment.get_user_segment(sid=user.segment)
-    else:
+    if not user:
         return None
+    segment=cassapisegment.get_user_segment(sid=user.segment)
     userquo=cassapiquote.get_user_quotes(uid=uid)
     if userquo and segment:
         quote=userquo.get_quote('quo_static_user_total_datapoints')
@@ -73,10 +70,9 @@ def compare_quo_static_user_total_widgets(params):
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
-    if user:
-        segment=cassapisegment.get_user_segment(sid=user.segment)
-    else:
+    if not user:
         return None
+    segment=cassapisegment.get_user_segment(sid=user.segment)
     userquo=cassapiquote.get_user_quotes(uid=uid)
     if userquo and segment:
         quote=userquo.get_quote('quo_static_user_total_widgets')
@@ -91,10 +87,9 @@ def compare_quo_static_user_total_dashboards(params):
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
-    if user:
-        segment=cassapisegment.get_user_segment(sid=user.segment)
-    else:
+    if not user:
         return None
+    segment=cassapisegment.get_user_segment(sid=user.segment)
     userquo=cassapiquote.get_user_quotes(uid=uid)
     if userquo and segment:
         quote=userquo.get_quote('quo_static_user_total_dashboards')
@@ -110,10 +105,9 @@ def compare_quo_static_agent_total_datasources(params):
     aid=params['aid']
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
-    if user:
-        segment=cassapisegment.get_user_segment(sid=user.segment)
-    else:
+    if not user:
         return None
+    segment=cassapisegment.get_user_segment(sid=user.segment)
     agentquo=cassapiquote.get_agent_quotes(aid=aid)
     if agentquo and segment:
         quote=agentquo.get_quote('quo_static_agent_total_datasources')
@@ -129,10 +123,9 @@ def compare_quo_static_agent_total_datapoints(params):
     aid=params['aid']
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
-    if user:
-        segment=cassapisegment.get_user_segment(sid=user.segment)
-    else:
+    if not user:
         return None
+    segment=cassapisegment.get_user_segment(sid=user.segment)
     agentquo=cassapiquote.get_agent_quotes(aid=aid)
     if agentquo and segment:
         quote=agentquo.get_quote('quo_static_agent_total_datapoints')
@@ -148,10 +141,9 @@ def compare_quo_static_datasource_total_datapoints(params):
     did=params['did']
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
-    if user:
-        segment=cassapisegment.get_user_segment(sid=user.segment)
-    else:
+    if not user:
         return None
+    segment=cassapisegment.get_user_segment(sid=user.segment)
     dsquo=cassapiquote.get_datasource_quotes(did=did)
     if dsquo and segment:
         quote=dsquo.get_quote('quo_static_datasource_total_datapoints')

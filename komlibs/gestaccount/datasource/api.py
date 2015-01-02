@@ -22,8 +22,11 @@ from komfs import api as fsapi
 from komlibs.gestaccount.datasource import states
 from komlibs.gestaccount import exceptions
 from komlibs.gestaccount.widget import api as gestwidget
+from komlibs.general.validation import arguments
 
 def create_datasource(username,aid,datasourcename):
+    if not arguments.is_valid_username(username) or not arguments.is_valid_uuid(aid) or not arguments.is_valid_datasourcename(datasourcename):
+        raise exceptions.BadParametersException()
     now=datetime.utcnow()
     did=uuid.uuid4()
     user=cassapiuser.get_user(username=username)
@@ -39,6 +42,8 @@ def create_datasource(username,aid,datasourcename):
         raise exceptions.DatasourceCreationException()
 
 def get_datasource_data(did,date=None):
+    if not arguments.is_valid_uuid(did):
+        raise exceptions.BadParametersException()
     logger.logger.debug('getting datasource data of '+str(did))
     datasource_stats=cassapidatasource.get_datasource_stats(did=did)
     if datasource_stats:
@@ -47,7 +52,7 @@ def get_datasource_data(did,date=None):
         logger.logger.debug('last mapped: '+str(last_mapped))
         last_received=date if date else datasource_stats.last_received
         logger.logger.debug('last received: '+str(last_received))
-        datasource_data=cassapidatasource.get_datasource_data(did=did,date=last_received)
+        datasource_data=cassapidatasource.get_datasource_data_at(did=did,date=last_received)
         dsvars={}
         dsdtps=[]
         if last_mapped>=last_received:
@@ -60,7 +65,6 @@ def get_datasource_data(did,date=None):
                 logger.logger.debug('Datasource datapoints: '+str(datasource_datapoints))
                 for pid,pos in datasource_datapoints.items():
                     dsdtps.append({'pid':str(pid),'id':str(pos)})
-                print('aqui no llego')
         data['did']=str(did)
         data['ds_date']=last_received.isoformat()+'Z'
         data['ds_vars']=[(pos,length) for pos,length in dsvars.items()] if dsvars else None
@@ -70,7 +74,9 @@ def get_datasource_data(did,date=None):
     else:
         raise exceptions.DatasourceNotFoundException()
 
-def upload_content(did,content,dest_dir):
+def upload_datasource_data(did,content,dest_dir):
+    if not arguments.is_valid_uuid(did) or not arguments.is_valid_datasource_content(content):
+        raise exceptions.BadParametersException()
     logger.logger.debug('upload_content Init')
     datasource=cassapidatasource.get_datasource(did=did)
     if datasource:
@@ -97,6 +103,8 @@ def upload_content(did,content,dest_dir):
         raise exceptions.DatasourceNotFoundException()
 
 def get_datasource_config(did):
+    if not arguments.is_valid_uuid(did):
+        raise exceptions.BadParametersException()
     datasource=cassapidatasource.get_datasource(did=did)
     if datasource:
         data={}
@@ -108,6 +116,8 @@ def get_datasource_config(did):
         raise exceptions.DatasourceNotFoundException()
 
 def get_datasources_config(username):
+    if not arguments.is_valid_username(username):
+        raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
@@ -120,10 +130,13 @@ def get_datasources_config(username):
         return data
 
 def update_datasource_config(did,data):
-    datasource=cassapidatasource.get_datasource(sesion, did=did)
+    if not arguments.is_valid_uuid(did) or not arguments.is_valid_dict(data):
+        raise exceptions.BadParametersException()
+    if not 'ds_name' in data or not arguments.is_valid_datasourcename(data['ds_name']):
+        raise exceptions.BadParametersException()
+    datasource=cassapidatasource.get_datasource(did=did)
     if datasource:
-        if 'ds_name' in data:
-            datasource.datasourcename=data['ds_name']
+        datasource.datasourcename=data['ds_name']
         if cassapidatasource.insert_datasource(datasource=datasource):
             return True
         else:
