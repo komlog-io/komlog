@@ -20,7 +20,7 @@ MST_USER='''
             email text,
             segment int,
             state int,
-            creation_date timestamp,
+            creation_date timeuuid,
             PRIMARY KEY (username)
         );
     '''
@@ -38,8 +38,8 @@ MST_SIGNUP='''
             username text,
             signup_code text,
             email text,
-            creation_date timestamp,
-            utilization_date timestamp,
+            creation_date timeuuid,
+            utilization_date timeuuid,
             PRIMARY KEY (username)
         );
     '''

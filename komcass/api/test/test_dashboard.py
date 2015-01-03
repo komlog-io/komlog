@@ -1,6 +1,6 @@
 import unittest
 import uuid
-import datetime
+from komlibs.general.time import timeuuid
 from komcass.api import dashboard as dashboardapi
 from komcass.model.orm import dashboard as ormdashboard
 
@@ -12,7 +12,7 @@ class KomcassApiDashboardTest(unittest.TestCase):
         bid1=uuid.uuid4()
         bid2=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         name1='test_komlog.komcass.api.dashboard_dashboard1'
         name2='test_komlog.komcass.api.dashboard_dashboard2'
         self.dashboard1=ormdashboard.Dashboard(bid=bid1, uid=uid, creation_date=creation_date, dashboardname=name1)
@@ -95,7 +95,7 @@ class KomcassApiDashboardTest(unittest.TestCase):
         ''' delete_dashboard should return True when a dashboard is deleted successfully '''
         bid=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         dashboardname='test_delete_dashboard_existent_dashboard_dashboard'
         dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, creation_date=creation_date, dashboardname=dashboardname)
         dashboardapi.new_dashboard(dashboard)
@@ -112,7 +112,7 @@ class KomcassApiDashboardTest(unittest.TestCase):
         ''' new_dashboard should return True when a dashboard is created successfully '''
         bid=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         dashboardname='test_new_dashboard_dashboard_obj'
         dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, creation_date=creation_date, dashboardname=dashboardname)
         self.assertTrue(dashboardapi.new_dashboard(dashboard))
@@ -127,7 +127,7 @@ class KomcassApiDashboardTest(unittest.TestCase):
         ''' insert_dashboard should return True when a dashboard is updated successfully '''
         bid=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         dashboardname='test_insert_dashboard_dashboard_obj'
         dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, creation_date=creation_date, dashboardname=dashboardname)
         self.assertTrue(dashboardapi.new_dashboard(dashboard))
@@ -144,7 +144,7 @@ class KomcassApiDashboardTest(unittest.TestCase):
         bid=uuid.uuid4()
         wid=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         dashboardname='test_insert_dashboard_dashboard_obj'
         dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, creation_date=creation_date, dashboardname=dashboardname)
         self.assertTrue(dashboardapi.new_dashboard(dashboard))
@@ -156,7 +156,7 @@ class KomcassApiDashboardTest(unittest.TestCase):
         bid=uuid.uuid4()
         wid=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         dashboardname='test_insert_dashboard_dashboard_obj'
         dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, creation_date=creation_date, dashboardname=dashboardname)
         self.assertTrue(dashboardapi.new_dashboard(dashboard))
@@ -175,7 +175,7 @@ class KomcassApiDashboardTest(unittest.TestCase):
         bid=uuid.uuid4()
         wid=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         dashboardname='test_delete_widget_from_dashboard_no_previous_widgets_dashboard'
         dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, creation_date=creation_date, dashboardname=dashboardname)
         self.assertTrue(dashboardapi.new_dashboard(dashboard))
@@ -186,7 +186,7 @@ class KomcassApiDashboardTest(unittest.TestCase):
         bid=uuid.uuid4()
         wid=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         dashboardname='test_delete_widget_from_dashboard_has_the_widget_dashboard'
         dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, creation_date=creation_date, dashboardname=dashboardname)
         self.assertTrue(dashboardapi.new_dashboard(dashboard))

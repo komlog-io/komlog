@@ -13,7 +13,6 @@ import uuid
 import json
 import os
 from komfig import logger
-from datetime import datetime
 from komcass.api import user as cassapiuser
 from komcass.api import agent as cassapiagent
 from komcass.api import datasource as cassapidatasource
@@ -23,11 +22,12 @@ from komlibs.gestaccount.datasource import states
 from komlibs.gestaccount import exceptions
 from komlibs.gestaccount.widget import api as gestwidget
 from komlibs.general.validation import arguments
+from komlibs.general.time import timeuuid
 
 def create_datasource(username,aid,datasourcename):
     if not arguments.is_valid_username(username) or not arguments.is_valid_uuid(aid) or not arguments.is_valid_datasourcename(datasourcename):
         raise exceptions.BadParametersException()
-    now=datetime.utcnow()
+    now=timeuuid.uuid1()
     did=uuid.uuid4()
     user=cassapiuser.get_user(username=username)
     agent=cassapiagent.get_agent(aid=aid)
@@ -41,32 +41,26 @@ def create_datasource(username,aid,datasourcename):
     else:
         raise exceptions.DatasourceCreationException()
 
-def get_datasource_data(did,date=None):
+def get_last_processed_datasource_data(did):
     if not arguments.is_valid_uuid(did):
         raise exceptions.BadParametersException()
-    logger.logger.debug('getting datasource data of '+str(did))
     datasource_stats=cassapidatasource.get_datasource_stats(did=did)
-    if datasource_stats:
-        data={}
+    if datasource_stats and datasource_stats.last_mapped:
         last_mapped=datasource_stats.last_mapped
-        logger.logger.debug('last mapped: '+str(last_mapped))
-        last_received=date if date else datasource_stats.last_received
-        logger.logger.debug('last received: '+str(last_received))
-        datasource_data=cassapidatasource.get_datasource_data_at(did=did,date=last_received)
-        dsvars={}
+        datasource_data=cassapidatasource.get_datasource_data_at(did=did,date=last_mapped)
+        if not datasource_data or not datasource_data.content:
+            raise exceptions.DatasourceNotFoundException()
+        dsvars=cassapidatasource.get_datasource_map_variables(did=did,date=last_mapped)
+        # REVISAR SI ANTES SE DEVOLVIA UNA LISTA DE TUPLAS Y AHORA UN DICT
+        datasource_datapoints=cassapidatasource.get_datasource_map_datapoints(did=did, date=last_mapped)
         dsdtps=[]
-        if last_mapped>=last_received:
-            logger.logger.debug('getting mapped data')
-            dsvars=cassapidatasource.get_datasource_map_variables(did=did,date=last_received)
-            logger.logger.debug('Datasource vars: '+str(dsvars))
-            # REVISAR SI ANTES SE DEVOLVIA UNA LISTA DE TUPLAS Y AHORA UN DICT
-            datasource_datapoints=cassapidatasource.get_datasource_map_datapoints(did=did, date=last_received)
-            if datasource_datapoints:
-                logger.logger.debug('Datasource datapoints: '+str(datasource_datapoints))
-                for pid,pos in datasource_datapoints.items():
-                    dsdtps.append({'pid':str(pid),'id':str(pos)})
+        if datasource_datapoints:
+            for pid,pos in datasource_datapoints.items():
+                dsdtps.append({'pid':str(pid),'id':str(pos)})
+        data={}
         data['did']=str(did)
-        data['ds_date']=last_received.isoformat()+'Z'
+        data['ds_date']=timeuuid.get_unix_timestamp(last_mapped)
+        data['ds_seq']=datasource_data.get_sequence()
         data['ds_vars']=[(pos,length) for pos,length in dsvars.items()] if dsvars else None
         data['ds_content']=datasource_data.content
         data['ds_dtps']=dsdtps
@@ -77,24 +71,18 @@ def get_datasource_data(did,date=None):
 def upload_datasource_data(did,content,dest_dir):
     if not arguments.is_valid_uuid(did) or not arguments.is_valid_datasource_content(content):
         raise exceptions.BadParametersException()
-    logger.logger.debug('upload_content Init')
     datasource=cassapidatasource.get_datasource(did=did)
     if datasource:
-        logger.logger.debug('Datasource Exists')
-        now=datetime.utcnow().isoformat()
+        hex_now=timeuuid.uuid1().hex
+        hex_did=did.hex
         filedata={}
-        filedata['received']=now
-        filedata['did']=str(did)
-        logger.logger.debug('json_content')
+        filedata['received']=hex_now
+        filedata['did']=hex_did
         filedata['json_content']=content
-        logger.logger.debug('preparing file content')
         json_filedata=json.dumps(filedata)
-        logger.logger.debug('generating filename')
-        filename=now+'_'+str(did)+'.pspl'
+        filename=hex_now+'_'+hex_did+'.pspl'
         destfile=os.path.join(dest_dir,filename)
-        logger.logger.debug('storing file on disk')
         if fsapi.create_sample(destfile,json_filedata):
-            logger.logger.debug('success')
             return destfile
         else:
             logger.logger.debug('failed')

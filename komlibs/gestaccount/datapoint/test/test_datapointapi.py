@@ -1,6 +1,6 @@
 import unittest
 import uuid
-import datetime
+from komlibs.general.time import timeuuid
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datasource import api as datasourceapi
@@ -29,7 +29,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datapointname='Datapoint Name'
         position='1'
         length='1'
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         self.assertRaises(exceptions.DatasourceNotFoundException,api.create_datapoint,did=did,datapointname=datapointname,position=position,length=length, date=date)
 
     def test_create_datapoint_success(self):
@@ -38,7 +38,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datapointname='test_create_datapoint_success'
         position='1'
         length='1'
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         datapoint=api.create_datapoint(did=did,datapointname=datapointname,position=position,length=length, date=date)
         self.assertIsInstance(datapoint, ormdatapoint.Datapoint)
 
@@ -53,7 +53,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datapointname='test_get_datapoint_data_no_data'
         position='1'
         length='1'
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         datapoint=api.create_datapoint(did=did,datapointname=datapointname,position=position,length=length, date=date)
         self.assertRaises(exceptions.DatapointDataNotFoundException, api.get_datapoint_data, pid=datapoint.pid)
 
@@ -68,7 +68,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datapointname='test_get_datapoint_config_success'
         position='1'
         length='1'
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         datapoint=api.create_datapoint(did=did,datapointname=datapointname,position=position,length=length, date=date)
         data=api.get_datapoint_config(pid=datapoint.pid)
         self.assertIsInstance(data, dict)
@@ -101,7 +101,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datapointname='test_update_datapoint_config_success'
         position='1'
         length='1'
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         datapoint=api.create_datapoint(did=did,datapointname=datapointname,position=position,length=length, date=date)
         data={'name':'test_update_datapoint_config_success_after_update', 'color':'#FFAA88'}
         self.assertTrue(api.update_datapoint_config(pid=datapoint.pid, data=data))

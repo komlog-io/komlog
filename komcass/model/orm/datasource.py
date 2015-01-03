@@ -21,13 +21,16 @@ class DatasourceStats:
         self.last_mapped=last_mapped
 
 class DatasourceData:
-    def __init__(self, did, date=None, content=None):
+    def __init__(self, did, date, content):
         self.did=did
         self.date=date
         self.content=content
 
+    def get_sequence(self):
+        return self.date.clock_seq
+
 class DatasourceMap:
-    def __init__(self, did, date=None, content=None, variables=None, datapoints=None):
+    def __init__(self, did, date, content=None, variables=None, datapoints=None):
         self.did=did
         self.date=date
         self.content=content

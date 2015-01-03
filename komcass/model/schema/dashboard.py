@@ -15,7 +15,7 @@ MST_DASHBOARD='''
             uid uuid,
             dashboardname text,
             widgets set<uuid>,
-            creation_date timestamp,
+            creation_date timeuuid,
             PRIMARY KEY (bid)
         );
     '''

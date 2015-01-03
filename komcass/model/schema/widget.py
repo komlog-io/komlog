@@ -29,7 +29,7 @@ MST_WIDGETDS='''
             wid uuid,
             uid uuid,
             did uuid,
-            creation_date timestamp,
+            creation_date timeuuid,
             PRIMARY KEY (wid)
         );
     '''
@@ -39,7 +39,7 @@ MST_WIDGETDP='''
             wid uuid,
             uid uuid,
             pid uuid,
-            creation_date timestamp,
+            creation_date timeuuid,
             PRIMARY KEY (wid)
         );
     '''

@@ -41,10 +41,10 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         datasource=api.create_datasource(username=username, aid=aid, datasourcename=datasourcename) 
         self.assertIsInstance(datasource, ormdatasource.Datasource)
 
-    def test_get_datasource_data_non_existent_datasource(self):
-        ''' get_datasource_data should fail if did is not in system '''
+    def test_get_last_processed_datasource_data_non_existent_datasource(self):
+        ''' get_last_processed_datasource_data should fail if did is not in system '''
         did=uuid.uuid4()
-        self.assertRaises(exceptions.DatasourceNotFoundException, api.get_datasource_data, did=did)
+        self.assertRaises(exceptions.DatasourceNotFoundException, api.get_last_processed_datasource_data, did=did)
     
     def test_upload_datasource_data_non_existent_datasource(self):
         ''' upload_datasource_data should fail if did is not in system '''

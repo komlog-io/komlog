@@ -16,7 +16,7 @@ MST_AGENT='''
             pubkey text,
             version text,
             state int,
-            creation_date timestamp,
+            creation_date timeuuid,
             PRIMARY KEY (aid)
         );
     '''

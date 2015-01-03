@@ -10,7 +10,6 @@ author: jcazor
 '''
 
 import uuid
-from datetime import datetime
 from komcass.api import widget as cassapiwidget
 from komcass.api import user as cassapiuser
 from komcass.api import datasource as cassapidatasource
@@ -20,6 +19,7 @@ from komlibs.gestaccount.widget import types
 from komlibs.gestaccount import exceptions
 from komlibs.ifaceops import operations
 from komlibs.general.validation import arguments
+from komlibs.general.time import timeuuid
 
 def get_widget_config(wid):
     if not arguments.is_valid_uuid(wid):
@@ -91,7 +91,7 @@ def new_widget_ds(username,did):
                     if widget_ds and widget_ds.did==did:
                         return {'wid':str(wid)}
         wid=uuid.uuid4()
-        widget=ormwidget.WidgetDs(wid=wid,uid=datasource.uid,did=datasource.did,creation_date=datetime.utcnow())
+        widget=ormwidget.WidgetDs(wid=wid,uid=datasource.uid,did=datasource.did,creation_date=timeuuid.uuid1())
         if cassapiwidget.new_widget(widget=widget):
             return widget
         else:
@@ -114,7 +114,7 @@ def new_widget_dp(username,pid):
                 if dpwidget and dpwidget.pid==pid:
                     return {'wid':str(widget.wid)}
         wid=uuid.uuid4()
-        widget=ormwidget.WidgetDp(wid=wid,uid=user.uid,pid=datapoint.pid,creation_date=datetime.utcnow())
+        widget=ormwidget.WidgetDp(wid=wid,uid=user.uid,pid=datapoint.pid,creation_date=timeuuid.uuid1())
         if cassapiwidget.new_widget(widget=widget):
             return widget
         else:

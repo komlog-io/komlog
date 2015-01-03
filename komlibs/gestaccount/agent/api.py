@@ -14,11 +14,11 @@ from komcass.model.orm import agent as ormagent
 from komlibs.gestaccount.agent import states
 from komlibs.gestaccount import exceptions
 from komlibs.general.validation import arguments
+from komlibs.general.time import timeuuid
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA256
 from base64 import b64encode, b64decode
-from datetime import datetime
 
 
 def decrypt(pubkey,cmsg):
@@ -69,7 +69,7 @@ def create_agent(username,agentname,pubkey,version):
                 raise exceptions.AgentAlreadyExistsException()
         ''' Register new agent '''
         aid=uuid.uuid4()
-        now=datetime.utcnow()
+        now=timeuuid.uuid1()
         agent=ormagent.Agent(aid=aid, uid=user.uid, agentname=agentname, pubkey=pubkey, version=version, state=states.PENDING_USER_VALIDATION,creation_date=now)
         if cassapiagent.new_agent(agent=agent):
             return agent

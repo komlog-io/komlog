@@ -1,7 +1,7 @@
 import unittest
 import uuid
-import datetime
 import decimal
+from komlibs.general.time import timeuuid
 from komcass.api import datapoint as datapointapi
 from komcass.model.orm import datapoint as ormdatapoint
 
@@ -15,7 +15,7 @@ class KomcassApiDatapointTest(unittest.TestCase):
         did=uuid.uuid4()
         datapointname='test_komlog.komcass.api.datapoint_datapoint1'
         datapointname='test_komlog.komcass.api.datapoint_datapoint2'
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         self.datapoint1=ormdatapoint.Datapoint(pid=pid1, did=did, creation_date=creation_date, datapointname=datapointname)
         self.datapoint2=ormdatapoint.Datapoint(pid=pid2, did=did, creation_date=creation_date, datapointname=datapointname)
         datapointapi.insert_datapoint(self.datapoint1)
@@ -78,11 +78,11 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_get_datapoint_dtree_positives_existing_pid(self):
         ''' get_datapoint_dtree_positives should succeed if we pass an existing pid '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         position=0
         length=1
         datapointapi.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length)
-        date=datetime.datetime.utcnow()-datetime.timedelta(minutes=10)
+        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-600)
         position=45
         length=1
         datapointapi.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length)
@@ -102,11 +102,11 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_get_datapoint_dtree_positives_at_existing_pid_one_positive(self):
         ''' get_datapoint_dtree_positives_at should succeed if we pass an existing pid '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         position=0
         length=1
         datapointapi.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length)
-        date=date-datetime.timedelta(minutes=10)
+        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-600)
         position=45
         length=1
         datapointapi.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length)
@@ -117,34 +117,34 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_get_datapoint_dtree_positives_at_existing_pid_no_positive(self):
         ''' get_datapoint_dtree_positives_at should succeed if we pass an existing pid, but return None if no positive is found at that date'''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         position=0
         length=1
         datapointapi.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length)
-        date=date-datetime.timedelta(minutes=10)
+        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-600)
         position=45
         length=1
         datapointapi.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length)
-        date=date-datetime.timedelta(minutes=20)
+        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-1200)
         datapoint_dtree_positives=datapointapi.get_datapoint_dtree_positives_at(pid=pid, date=date)
         self.assertIsNone(datapoint_dtree_positives)
 
     def test_get_datapoint_dtree_positives_non_existing_pid(self):
         ''' get_datapoint_dtree_positives_at should return None if we pass a non existing pid '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         datapoint_dtree_positives=datapointapi.get_datapoint_dtree_positives_at(pid=pid, date=date)
         self.assertIsNone(datapoint_dtree_positives)
 
     def test_get_datapoint_dtree_negatives_existing_pid(self):
         ''' get_datapoint_dtree_negatives should succeed if we pass an existing pid '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         position=0
         length=1
         datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
         datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position+10, length=length)
-        date=date-datetime.timedelta(minutes=10)
+        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-600)
         position=45
         length=1
         datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
@@ -164,11 +164,11 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_get_datapoint_dtree_negatives_at_existing_pid_one_negative(self):
         ''' get_datapoint_dtree_negatives_at should succeed if we pass an existing pid '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         position=0
         length=1
         datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
-        date=date-datetime.timedelta(minutes=10)
+        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-600)
         position=45
         length=1
         datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
@@ -181,22 +181,22 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_get_datapoint_dtree_negatives_at_existing_pid_no_negatives(self):
         ''' get_datapoint_dtree_negatives_at should succeed if we pass an existing pid, but return None if no positive is found at that date'''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         position=0
         length=1
         datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
-        date=date-datetime.timedelta(minutes=10)
+        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-600)
         position=45
         length=1
         datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
-        date=date-datetime.timedelta(minutes=20)
+        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-1200)
         datapoint_dtree_negatives=datapointapi.get_datapoint_dtree_negatives_at(pid=pid, date=date)
         self.assertIsNone(datapoint_dtree_negatives)
 
     def test_get_datapoint_dtree_negatives_non_existing_pid(self):
         ''' get_datapoint_dtree_negatives_at should return None if we pass a non existing pid '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         datapoint_dtree_negatives=datapointapi.get_datapoint_dtree_negatives_at(pid=pid, date=date)
         self.assertIsNone(datapoint_dtree_negatives)
 
@@ -216,7 +216,7 @@ class KomcassApiDatapointTest(unittest.TestCase):
         pid=uuid.uuid4()
         did=uuid.uuid4()
         datapointname='test_new_datapoint_success_datapoint'
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(datapointapi.new_datapoint(datapoint))
         datapoint_db=datapointapi.get_datapoint(pid=pid)
@@ -239,7 +239,7 @@ class KomcassApiDatapointTest(unittest.TestCase):
         pid=uuid.uuid4()
         did=uuid.uuid4()
         datapointname='test_insert_datapoint_success_datapoint'
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(datapointapi.insert_datapoint(datapoint))
         datapoint_db=datapointapi.get_datapoint(pid=pid)
@@ -249,14 +249,14 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_insert_datapoint_data_success(self):
         ''' insert_datapoint_data should succeed '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         value=decimal.Decimal(234223.2342342)
         self.assertTrue(datapointapi.insert_datapoint_data(pid=pid, date=date, value=value))
  
     def test_set_datapoint_last_received_success(self):
         ''' set_datapoint_last_received should succeed '''
         pid=uuid.uuid4()
-        last_received=datetime.datetime.utcnow()
+        last_received=timeuuid.uuid1()
         self.assertTrue(datapointapi.set_datapoint_last_received(pid=pid, last_received=last_received))
  
     def test_set_datapoint_dtree_success(self):
@@ -280,7 +280,7 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_set_datapoint_dtree_positive_at_success(self):
         ''' set_datapoint_dtree_positive_at should succeed even if pid does not exist '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         position=0
         length=1
         self.assertTrue(datapointapi.set_datapoint_dtree_positive_at(pid=pid,date=date,position=position,length=length))
@@ -288,7 +288,7 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_add_datapoint_dtree_negative_at_success(self):
         ''' add_datapoint_dtree_negative_at should succeed even if pid does not exist '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         position=0
         length=1
         self.assertTrue(datapointapi.add_datapoint_dtree_negative_at(pid=pid,date=date,position=position,length=length))
@@ -296,41 +296,41 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_delete_datapoint_dtree_positive_at_success(self):
         ''' delete_datapoint_dtree_positive_at should succeed even if pid does not exist '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         self.assertTrue(datapointapi.delete_datapoint_dtree_positive_at(pid=pid,date=date))
 
     def test_delete_datapoint_dtree_negatives_at_success(self):
         ''' delete_datapoint_dtree_negatives_at should succeed even if pid does not exist '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         self.assertTrue(datapointapi.delete_datapoint_dtree_negatives_at(pid=pid,date=date))
 
     def test_delete_datapoint_dtree_negative_at_success(self):
         ''' delete_datapoint_dtree_negative_at should succeed even if pid does not exist '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         position=0
         self.assertTrue(datapointapi.delete_datapoint_dtree_negative_at(pid=pid,date=date,position=position))
 
     def test_get_datapoint_data_at_non_existing_pid(self):
         ''' get_datapoint_data_at should return None if pid does not exist '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         self.assertIsNone(datapointapi.get_datapoint_data_at(pid=pid, date=date))
 
     def test_get_datapoint_data_at_existing_pid_but_no_data_at_this_date(self):
         ''' get_datapoint_data_at should return None if there is no data at this date '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         value=decimal.Decimal(12312.123123)
         datapointapi.insert_datapoint_data(pid=pid, date=date, value=value)
-        date=date-datetime.timedelta(minutes=10)
+        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-600)
         self.assertIsNone(datapointapi.get_datapoint_data_at(pid=pid, date=date))
 
     def test_get_datapoint_data_at_success(self):
         ''' get_datapoint_data_at should return DatapointData structure with the data '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         value=decimal.Decimal(12312.123123)
         datapointapi.insert_datapoint_data(pid=pid, date=date, value=value)
         data=datapointapi.get_datapoint_data_at(pid=pid, date=date)
@@ -341,8 +341,8 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_get_datapoint_data_non_existing_pid(self):
         ''' get_datapoint_data should return an empty list if pid does not exist '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
-        fromdate=date-datetime.timedelta(minutes=100)
+        date=timeuuid.uuid1()
+        fromdate=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-6000)
         data=datapointapi.get_datapoint_data(pid=pid, fromdate=fromdate, todate=date)
         self.assertTrue(isinstance(data, list))
         self.assertEqual(len(data),0)
@@ -351,11 +351,11 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_get_datapoint_data_existing_pid_but_no_data_at_this_interval(self):
         ''' get_datapoint_data should return an empty list if there is no data at this date '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         value=decimal.Decimal(12312.123123)
         datapointapi.insert_datapoint_data(pid=pid, date=date, value=value)
-        fromdate=date-datetime.timedelta(minutes=100)
-        date=date-datetime.timedelta(minutes=10)
+        fromdate=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-6000)
+        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-600)
         data=datapointapi.get_datapoint_data(pid=pid, fromdate=fromdate, todate=date)
         self.assertTrue(isinstance(data, list))
         self.assertEqual(len(data),0)
@@ -363,12 +363,12 @@ class KomcassApiDatapointTest(unittest.TestCase):
     def test_get_datapoint_data_success(self):
         ''' get_datapoint_data should return a list with DatapointData structures '''
         pid=uuid.uuid4()
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         value=decimal.Decimal(12312.123123)
-        datapointapi.insert_datapoint_data(pid=pid, date=date-datetime.timedelta(minutes=5), value=value)
+        datapointapi.insert_datapoint_data(pid=pid, date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-300), value=value)
         datapointapi.insert_datapoint_data(pid=pid, date=date, value=value)
-        fromdate=date-datetime.timedelta(minutes=100)
-        date=date-datetime.timedelta(minutes=4)
+        fromdate=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-6000)
+        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-240)
         data=datapointapi.get_datapoint_data(pid=pid, fromdate=fromdate, todate=date)
         self.assertTrue(isinstance(data, list))
         self.assertEqual(len(data),1)

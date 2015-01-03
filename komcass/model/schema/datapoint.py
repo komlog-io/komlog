@@ -18,7 +18,7 @@ MST_DATAPOINT='''
             did uuid,
             datapointname text,
             color text,
-            creation_date timestamp,
+            creation_date timeuuid,
             PRIMARY KEY (pid)
         );
     '''
@@ -32,7 +32,7 @@ MST_DATAPOINT_STATS='''
             pid uuid,
             dtree text,
             decimal_separator text,
-            last_received timestamp,
+            last_received timeuuid,
             PRIMARY KEY (pid)
         );
     '''
@@ -40,7 +40,7 @@ MST_DATAPOINT_STATS='''
 DAT_DATAPOINT='''
         CREATE TABLE dat_datapoint (
             pid uuid,
-            date timestamp,
+            date timeuuid,
             value decimal,
             PRIMARY KEY (pid,date)
         );
@@ -49,7 +49,7 @@ DAT_DATAPOINT='''
 DAT_DATAPOINT_DTREE_POSITIVES='''
         CREATE TABLE dat_datapoint_dtree_positives (
             pid uuid,
-            date timestamp,
+            date timeuuid,
             position int,
             length int,
             PRIMARY KEY (pid,date)
@@ -59,7 +59,7 @@ DAT_DATAPOINT_DTREE_POSITIVES='''
 DAT_DATAPOINT_DTREE_NEGATIVES='''
         CREATE TABLE dat_datapoint_dtree_negatives (
             pid uuid,
-            date timestamp,
+            date timeuuid,
             coordinates map<int,int>,
             PRIMARY KEY (pid,date)
         );

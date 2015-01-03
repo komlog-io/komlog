@@ -14,7 +14,6 @@ from komlibs.ifaceops import operations
 from komfig import logger
 import uuid
 import json
-import dateutil.parser
 
 
 #MESSAGE LIST
@@ -75,12 +74,12 @@ class MapVarsMessage:
             mtype,did,date=self.serialized_message.split('|')
             self.type=mtype
             self.did=uuid.UUID(did)
-            self.date=dateutil.parser.parse(date)
+            self.date=uuid.UUID(date)
         else:
             self.type=MAP_VARS_MESSAGE
             self.did=did
             self.date=date
-            self.serialized_message=self.type+'|'+str(self.did)+'|'+date.isoformat()
+            self.serialized_message=self.type+'|'+self.did.hex+'|'+self.date.hex
 
 class MonitorVariableMessage:
     def __init__(self, serialized_message=None, did=None, date=None, pos=None, length=None, name=None):
@@ -89,7 +88,7 @@ class MonitorVariableMessage:
             mtype,did,date,pos,length,name = self.serialized_message.split('|')
             self.type=mtype
             self.did=uuid.UUID(did)
-            self.date=dateutil.parser.parse(date)
+            self.date=uuid.UUID(date)
             self.pos=str(pos)
             self.length=str(length)
             self.name=str(name)
@@ -100,7 +99,7 @@ class MonitorVariableMessage:
             self.pos=str(pos)
             self.length=str(length)
             self.name=str(name)
-            self.serialized_message=self.type+'|'+str(self.did)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length)+'|'+str(self.name)
+            self.serialized_message=self.type+'|'+self.did.hex+'|'+self.date.hex+'|'+str(self.pos)+'|'+str(self.length)+'|'+str(self.name)
 
 class GenerateDTreeMessage:
     def __init__(self, serialized_message=None, pid=None, date=None):
@@ -109,12 +108,12 @@ class GenerateDTreeMessage:
             mtype,pid,date=self.serialized_message.split('|')
             self.type=mtype
             self.pid=uuid.UUID(pid)
-            self.date=dateutil.parser.parse(date)
+            self.date=uuid.UUID(date)
         else:
             self.type=GDTREE_MESSAGE
             self.pid=pid
             self.date=date
-            self.serialized_message=self.type+'|'+str(self.pid)+'|'+date.isoformat()
+            self.serialized_message=self.type+'|'+self.pid.hex+'|'+self.date.hex
 
 class FillDatapointMessage:
     def __init__(self, serialized_message=None, did=None,date=None,pid=None):
@@ -123,14 +122,14 @@ class FillDatapointMessage:
             mtype,did,date,pid=self.serialized_message.split('|')
             self.type=mtype
             self.did=uuid.UUID(did) if not str(did)=='None' else None
-            self.date=dateutil.parser.parse(date) if not str(date)=='None' else None
+            self.date=uuid.UUID(date) if not str(date)=='None' else None
             self.pid=uuid.UUID(pid) if not str(pid)=='None' else None
         else:
             self.type=FILL_DATAPOINT_MESSAGE
             self.did=did
             self.date=date
             self.pid=pid
-            self.serialized_message=self.type+'|'+str(self.did)+'|'+self.date.isoformat()+'|'+str(self.pid)
+            self.serialized_message=self.type+'|'+str(self.did)+'|'+str(self.date)+'|'+str(self.pid)
 
 class NegativeVariableMessage:
     def __init__(self, serialized_message=None, did=None, pid=None, date=None, pos=None, length=None):
@@ -140,7 +139,7 @@ class NegativeVariableMessage:
             self.type=mtype
             self.did=uuid.UUID(did)
             self.pid=uuid.UUID(pid)
-            self.date=dateutil.parser.parse(date)
+            self.date=uuid.UUID(date)
             self.pos=str(pos)
             self.length=str(length)
         else:
@@ -150,7 +149,7 @@ class NegativeVariableMessage:
             self.date=date
             self.pos=str(pos)
             self.length=str(length)
-            self.serialized_message=self.type+'|'+str(self.did)+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length)
+            self.serialized_message=self.type+'|'+self.did.hex+'|'+self.pid.hex+'|'+self.date.hex+'|'+str(self.pos)+'|'+str(self.length)
 
 class PositiveVariableMessage:
     def __init__(self, serialized_message=None, did=None, pid=None, date=None, pos=None, length=None):
@@ -160,7 +159,7 @@ class PositiveVariableMessage:
             self.type=mtype
             self.did=uuid.UUID(did)
             self.pid=uuid.UUID(pid)
-            self.date=dateutil.parser.parse(date)
+            self.date=uuid.UUID(date)
             self.pos=int(pos)
             self.length=int(length)
         else:
@@ -170,7 +169,7 @@ class PositiveVariableMessage:
             self.date=date
             self.pos=pos
             self.length=length
-            self.serialized_message=self.type+'|'+str(self.did)+'|'+str(self.pid)+'|'+date.isoformat()+'|'+str(self.pos)+'|'+str(self.length)
+            self.serialized_message=self.type+'|'+self.did.hex+'|'+self.pid.hex+'|'+self.date.hex+'|'+str(self.pos)+'|'+str(self.length)
 
 class NewUserMessage:
     def __init__(self, serialized_message=None, uid=None):
@@ -182,7 +181,7 @@ class NewUserMessage:
         else:
             self.type=NEW_USR_MESSAGE
             self.uid=uid
-            self.serialized_message=self.type+'|'+str(self.uid)
+            self.serialized_message=self.type+'|'+self.uid.hex
 
 class UpdateQuotesMessage:
     def __init__(self, serialized_message=None, operation=None):

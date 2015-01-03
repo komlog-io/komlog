@@ -5,11 +5,11 @@ Textmining message definitions
 '''
 
 import json
-from datetime import datetime,timedelta
 from komfig import logger
 from komlibs.textman import variables
 from komlibs.numeric import weight
 from komlibs.ai import decisiontree
+from komlibs.general.time import timeuuid
 from komcass.api import datasource as cassapidatasource
 from komcass.api import datapoint as cassapidatapoint
 from komcass.model.orm import datasource as ormdatasource
@@ -103,7 +103,7 @@ def process_message_MAPVARS(message):
         try:
             if cassapidatasource.insert_datasource_map(dsmapobj=dsmapobj):
                 logger.logger.debug('Map created for did: '+str(did))
-            if not datasource_stats or not datasource_stats.last_mapped or datasource_stats.last_mapped<date:
+            if not datasource_stats or not datasource_stats.last_mapped or timeuuid.get_unix_timestamp(datasource_stats.last_mapped)<timeuuid.get_unix_timestamp(date):
                 cassapidatasource.set_last_mapped(did=did, last_mapped=date)
             newmsg=messages.FillDatapointMessage(did=did,date=date)
             msgresult.add_msg_originated(newmsg)
@@ -171,9 +171,9 @@ def process_message_FILDTP(message):
         datasource_stats=cassapidatasource.get_datasource_stats(did=did)
         end_date=datasource_stats.last_received
         if not end_date:
-            end_date=datetime.utcnow()
-        if date > end_date:
-            init_date=end_date-timedelta(days=1)
+            end_date=timeuuid.uuid1()
+        if timeuuid.get_unix_timestamp(date) > timeuuid.get_unix_timestamp(end_date):
+            init_date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(end_date)-86400)
         else:
             init_date=date
         #obtenemos los datos

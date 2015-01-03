@@ -1,6 +1,6 @@
 import unittest
 import uuid
-import datetime
+from komlibs.general.time import timeuuid
 from komcass.api import widget as widgetapi
 from komcass.model.orm import widget as ormwidget
 
@@ -12,7 +12,7 @@ class KomcassApiWidgetTest(unittest.TestCase):
         widds=uuid.uuid4()
         widdp=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         did=uuid.uuid4()
         pid=uuid.uuid4()
         self.widgetds=ormwidget.WidgetDs(wid=widds, uid=uid, creation_date=creation_date, did=did)
@@ -69,7 +69,7 @@ class KomcassApiWidgetTest(unittest.TestCase):
         ''' delete_widget should return True when a widget DS is deleted successfully '''
         widds=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         did=uuid.uuid4()
         self.widgetds=ormwidget.WidgetDs(wid=widds, uid=uid, creation_date=creation_date, did=did)
         widgetapi.new_widget(self.widgetds)
@@ -80,7 +80,7 @@ class KomcassApiWidgetTest(unittest.TestCase):
         ''' delete_widget should return True when a widget DP is deleted successfully '''
         widdp=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         pid=uuid.uuid4()
         self.widgetdp=ormwidget.WidgetDp(wid=widdp, uid=uid, creation_date=creation_date, pid=pid)
         widgetapi.new_widget(self.widgetdp)
@@ -97,7 +97,7 @@ class KomcassApiWidgetTest(unittest.TestCase):
         ''' new_widget should return True when a widget DP is created successfully '''
         widdp=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         pid=uuid.uuid4()
         self.widgetdp=ormwidget.WidgetDp(wid=widdp, uid=uid, creation_date=creation_date, pid=pid)
         self.assertTrue(widgetapi.new_widget(self.widgetdp))
@@ -106,7 +106,7 @@ class KomcassApiWidgetTest(unittest.TestCase):
         ''' new_widget should return True when a widget DS is created successfully '''
         widds=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         did=uuid.uuid4()
         self.widgetds=ormwidget.WidgetDs(wid=widds, uid=uid, creation_date=creation_date, did=did)
         self.assertTrue(widgetapi.new_widget(self.widgetds))
@@ -121,7 +121,7 @@ class KomcassApiWidgetTest(unittest.TestCase):
         ''' insert_widget should return True when a widget DP is updated successfully '''
         widdp=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         pid=uuid.uuid4()
         self.widgetdp=ormwidget.WidgetDp(wid=widdp, uid=uid, creation_date=creation_date, pid=pid)
         self.assertTrue(widgetapi.new_widget(self.widgetdp))
@@ -131,7 +131,7 @@ class KomcassApiWidgetTest(unittest.TestCase):
         ''' insert_widget should return True when a widget DS is updated successfully '''
         widds=uuid.uuid4()
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         did=uuid.uuid4()
         self.widgetds=ormwidget.WidgetDs(wid=widds, uid=uid, creation_date=creation_date, did=did)
         self.assertTrue(widgetapi.new_widget(self.widgetds))

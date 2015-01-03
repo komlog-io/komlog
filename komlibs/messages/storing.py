@@ -8,13 +8,13 @@ Storing message definitions
 import os
 import json
 import uuid
-import dateutil.parser
 from komimc import messages
 from komimc import codes as msgcodes
 from komcass.api import datasource as cassapidatasource
 from komcass.model.orm import datasource as ormdatasource
 from komfig import config, logger, options
 from komfs import api as fsapi
+from komlibs.general.time import timeuuid
 
 def process_message_STOSMP(message):
         msgresult=messages.MessageResult(message)
@@ -32,7 +32,7 @@ def process_message_STOSMP(message):
             dsinfo=json.loads(metainfo['json_content'])
             did=uuid.UUID(metainfo['did'])
             ds_content=dsinfo['ds_content']
-            ds_date=dateutil.parser.parse(dsinfo['ds_date'])
+            ds_date=timeuuid.uuid1(seconds=dsinfo['ds_date'])
             dsdobj=ormdatasource.DatasourceData(did=did,date=ds_date,content=ds_content)
             try:
                 if cassapidatasource.insert_datasource_data(dsdobj=dsdobj):

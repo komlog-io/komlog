@@ -5,6 +5,7 @@ Created on 01/10/2014
 @author: komlog crew
 '''
 
+from komlibs.general.time import timeuuid
 from komcass.model.orm import datasource as ormdatasource
 from komcass.model.statement import datasource as stmtdatasource
 from komcass.exception import datasource as excpdatasource

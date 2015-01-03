@@ -6,7 +6,6 @@ This library is for implementing functions for argument validation
 
 import re
 import uuid
-import datetime
 
 
 NOTKOMLOGIDCHAR=re.compile('[^a-zA-Z0-9\-._]')
@@ -114,7 +113,7 @@ def is_valid_string_int(argument):
         return False
 
 def is_valid_date(argument):
-    if isinstance(argument, datetime.datetime):
+    if isinstance(argument, uuid.UUID) and argument.version==1:
         return True
     return False
 

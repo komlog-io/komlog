@@ -4,12 +4,11 @@ import tornado.web
 from tornado.template import Template
 from tornado.escape import json_encode,json_decode,xhtml_escape
 from komlibs.ifaceops import ifaceops
+from komlibs.general.time import timeuuid
 from komfig import logger
 from komws2 import auth
 import os
 import uuid
-import datetime
-import dateutil.parser
 import json
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -167,8 +166,8 @@ class DatapointDataHandler(tornado.web.RequestHandler):
             pid=uuid.UUID(p_pid)
             end_date=self.get_argument('ed',default=None) #ed : end date
             start_date=self.get_argument('sd',default=None) #sd : start date
-            end_date=dateutil.parser.parse(end_date) if end_date else None
-            start_date=dateutil.parser.parse(start_date) if start_date else None
+            end_date=timeuuid.uuid1(end_date) if end_date else None
+            start_date=timeuuid.uuid1(start_date) if start_date else None
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
@@ -211,6 +210,7 @@ class DatapointsHandler(tornado.web.RequestHandler):
         try:
             data=json_decode(self.request.body)
             dsdate=data['ds_date']
+            dsseq=data['ds_seq']
             did=data['did']
             cs=data['cs'] #char start
             vl=data['vl'] #var length
@@ -219,7 +219,7 @@ class DatapointsHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            status,data=ifaceops.new_datapoint_operation(username=self.user, did=did, datasourcedate=dsdate, position=cs, length=vl, datapointname=dpname)
+            status,data=ifaceops.new_datapoint_operation(username=self.user, did=did, datasourcedate=dsdate, datasourceseq=dsseq, position=cs, length=vl, datapointname=dpname)
             self.set_status(status)
             self.write(json_encode(data))
 

@@ -13,12 +13,12 @@ import uuid
 import json
 import os
 import dateutil.parser
-from datetime import timedelta, datetime
 from komcass.api import datapoint as cassapidatapoint
 from komcass.api import datasource as cassapidatasource
 from komcass.model.orm import datapoint as ormdatapoint
 from komlibs.gestaccount import exceptions
 from komlibs.general.validation import arguments
+from komlibs.general.time import timeuuid
 
 def get_datapoint_data(pid,end_date=None,start_date=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
@@ -31,17 +31,17 @@ def get_datapoint_data(pid,end_date=None,start_date=None):
         raise exceptions.BadParameterException()
     if not end_date:
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
-        end_date=datapoint_stats.last_received if datapoint_stats and datapoint_stats.last_received else datetime.utcnow()
+        end_date=datapoint_stats.last_received if datapoint_stats and datapoint_stats.last_received else timeuuid.uuid1()
     if not start_date:
-        start_date=end_date-timedelta(days=1)
+        start_date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(end_date)-1440)
     datapoint_data_list=cassapidatapoint.get_datapoint_data(pid=pid,fromdate=start_date,todate=end_date)
     data=[]
     if not datapoint_data_list:
-        last_date=end_date-timedelta(days=1)
+        last_date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(end_date)-1440)
         raise exceptions.DatapointDataNotFoundException(last_date=last_date)
     else:
         for datapoint_data in datapoint_data_list:
-            data.append({'date':datapoint_data.date.isoformat()+'Z','value':str(datapoint_data.value)})
+            data.append({'date':timeuuid.get_unix_timestamp(datapoint_data.date),'value':str(datapoint_data.value)})
     return data
 
 def create_datapoint(did, datapointname, position, length, date):
@@ -55,7 +55,7 @@ def create_datapoint(did, datapointname, position, length, date):
     if not datasource:
         raise exceptions.DatasourceNotFoundException()
     pid=uuid.uuid4()
-    datapoint=ormdatapoint.Datapoint(pid=pid,did=did,datapointname=datapointname,creation_date=datetime.utcnow())
+    datapoint=ormdatapoint.Datapoint(pid=pid,did=did,datapointname=datapointname,creation_date=timeuuid.uuid1())
     if cassapidatapoint.new_datapoint(datapoint) and cassapidatapoint.set_datapoint_dtree_positive_at(pid=pid, date=date, position=int(position), length=int(length)):
         return datapoint
     else:

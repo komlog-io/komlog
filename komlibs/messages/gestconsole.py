@@ -6,7 +6,6 @@ Gestconsole message definitions
 '''
 
 import uuid
-from datetime import datetime
 from komfig import config, logger, options
 from komcass.api import user as cassapiuser
 from komcass.api import datasource as cassapidatasource
@@ -18,6 +17,7 @@ from komimc import codes as msgcodes
 from komlibs.textman import variables
 from komlibs.ai import decisiontree
 from komlibs.general import stringops
+from komlibs.general.time import timeuuid
 from komlibs.mail import types as mailtypes
 from komlibs.mail import messages as mailmessages
 from komlibs.ifaceops import operations
@@ -82,7 +82,7 @@ def process_message_MONVAR(message):
         except KeyError:
             pass
     pid=uuid.uuid4()
-    datapoint=ormdatapoint.Datapoint(pid=pid,did=did,datapointname=name,creation_date=datetime.utcnow())
+    datapoint=ormdatapoint.Datapoint(pid=pid,did=did,datapointname=name,creation_date=timeuuid.uuid1())
     if cassapidatapoint.new_datapoint(datapoint) and cassapidatapoint.set_datapoint_dtree_positive_at(pid=pid, date=date, position=int(pos), length=int(length)):
         #TODO Creation of widget dp
         operation=operations.NewDatapointOperation(uid=datasource.uid,aid=datasource.aid,did=did,pid=pid)
@@ -231,7 +231,7 @@ def process_message_NEWUSR(message):
         msgresult.retcode=msgcodes.ERROR
         return msgresult
     signup_code=stringops.get_randomstring(size=32)
-    signup_info=ormuser.SignUp(username=user.username, signup_code=signup_code, email=email, creation_date=datetime.utcnow())
+    signup_info=ormuser.SignUp(username=user.username, signup_code=signup_code, email=email, creation_date=timeuuid.uuid1())
     if not cassapiuser.insert_signup_info(signup_info=signup_info):
         logger.logger.error('Error inserting new user code, uid: '+str(uid))
         msgresult.retcode=msgcodes.ERROR

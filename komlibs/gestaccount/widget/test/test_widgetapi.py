@@ -1,6 +1,6 @@
 import unittest
 import uuid
-import datetime
+from komlibs.general.time import timeuuid
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datasource import api as datasourceapi 
@@ -26,7 +26,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_create_datapoint_success'
         position='1'
         length='1'
-        date=datetime.datetime.utcnow()
+        date=timeuuid.uuid1()
         self.datapoint=datapointapi.create_datapoint(did=self.datasource.did,datapointname=datapointname,position=position,length=length, date=date)
 
     def test_get_widget_config_non_existent_widget(self):

@@ -2,7 +2,7 @@
 
 import unittest
 import uuid
-import datetime
+from komlibs.general.time import timeuuid
 from komlibs.general.validation import arguments
 
 class GeneralValidationArgumentsTest(unittest.TestCase):
@@ -184,7 +184,7 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
 
     def test_is_valid_date_valid(self):
         ''' is_valid_date should succeed if input is valid date'''
-        params=[datetime.datetime.utcnow()]
+        params=[timeuuid.uuid1()]
         for param in params:
             self.assertTrue(arguments.is_valid_date(param)) 
 

@@ -6,12 +6,12 @@ author: jcazor
 '''
 
 import uuid,crypt
-from datetime import datetime
 from komcass.api import user as cassapiuser
 from komcass.model.orm import user as ormuser
 from komlibs.gestaccount.user import states, segments
 from komlibs.gestaccount import exceptions
 from komlibs.general.validation import arguments
+from komlibs.general.time import timeuuid
 
 
 def get_hpassword(uid,password):
@@ -54,7 +54,7 @@ def create_user(username, password, email):
     hpassword=get_hpassword(uid,password)
     if not hpassword:
         raise exceptions.BadParametersException()
-    now=datetime.utcnow()
+    now=timeuuid.uuid1()
     segment=segments.FREE
     user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.FREE, creation_date=now, state=states.PREACTIVE)
     if cassapiuser.new_user(user=user):
@@ -78,7 +78,7 @@ def confirm_user(email, code):
     user=cassapiuser.get_user(username=signup_info.username)
     if not user:
         raise exceptions.UserNotFoundException()
-    signup_info.utilization_date=datetime.utcnow()
+    signup_info.utilization_date=timeuuid.uuid1()
     user.state=states.ACTIVE
     if not cassapiuser.insert_user(user=user):
         raise exceptions.UserConfirmationException()

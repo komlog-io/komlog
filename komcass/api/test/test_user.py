@@ -1,6 +1,6 @@
 import unittest
 import uuid
-import datetime
+from komlibs.general.time import timeuuid
 from komcass.api import user as userapi
 from komcass.model.orm import user as ormuser
 from komcass.model.statement import user as stmtuser
@@ -15,7 +15,7 @@ class KomcassApiUserTest(unittest.TestCase):
         password='password'
         email=username+'@komlog.org'
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         code='test_komlog.komcass.api.user_code'
         self.user=ormuser.User(username=username, password=password, email=email, uid=uid, creation_date=creation_date)
         self.signup_info=ormuser.SignUp(username=username, signup_code=code, email=email, creation_date=creation_date)
@@ -80,7 +80,7 @@ class KomcassApiUserTest(unittest.TestCase):
         password='password'
         email=username+'@komlog.org'
         uid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         user=ormuser.User(username=username, password=password, email=email, uid=uid, creation_date=creation_date)
         self.assertTrue(userapi.new_user(user))
 
@@ -102,7 +102,7 @@ class KomcassApiUserTest(unittest.TestCase):
         email=username+'@komlog.org'
         uid=uuid.uuid4()
         for i in range(1,10):
-            creation_date=datetime.datetime.utcnow()
+            creation_date=timeuuid.uuid1()
             user=ormuser.User(username=username, password=password, email=email, uid=uid, creation_date=creation_date)
             self.assertTrue(userapi.insert_user(user))
 
@@ -164,6 +164,6 @@ class KomcassApiUserTest(unittest.TestCase):
         ''' insert_signup_info should succeed if signup object is passed '''
         signup=self.signup_info
         for i in range(1,10):
-            signup.creation_date=datetime.datetime.utcnow()
+            signup.creation_date=timeuuid.uuid1()
             self.assertTrue(userapi.insert_signup_info(signup))
 

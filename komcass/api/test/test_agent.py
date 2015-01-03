@@ -1,6 +1,6 @@
 import unittest
 import uuid
-import datetime
+from komlibs.general.time import timeuuid
 from komcass.api import agent as agentapi
 from komcass.model.orm import agent as ormagent
 from komcass.model.statement import agent as stmtagent
@@ -16,7 +16,7 @@ class KomcassApiAgentTest(unittest.TestCase):
         version='VERSION'
         uid=uuid.uuid4()
         aid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         self.agent1=ormagent.Agent(agentname=agentname, uid=uid, aid=aid, pubkey=pubkey, version=version, creation_date=creation_date)
         agentapi.insert_agent(self.agent1)
         agentname='test_komlog.komcass.api.agent_agent2'
@@ -92,7 +92,7 @@ class KomcassApiAgentTest(unittest.TestCase):
         version='VERSION'
         uid=uuid.uuid4()
         aid=uuid.uuid4()
-        creation_date=datetime.datetime.utcnow()
+        creation_date=timeuuid.uuid1()
         agent=ormagent.Agent(agentname=agentname, uid=uid, aid=aid, pubkey=pubkey, version=version, creation_date=creation_date)
         self.assertTrue(agentapi.new_agent(agent))
 

@@ -20,7 +20,7 @@ MST_DATASOURCE='''
             uid uuid,
             datasourcename text,
             state int,
-            creation_date timestamp,
+            creation_date timeuuid,
             PRIMARY KEY (did)
         );
     '''
@@ -36,8 +36,8 @@ MST_DATASOURCE_INDEX_02='''
 MST_DATASOURCE_STATS='''
         CREATE TABLE mst_datasource_stats (
             did uuid,
-            last_received timestamp,
-            last_mapped timestamp,
+            last_received timeuuid,
+            last_mapped timeuuid,
             PRIMARY KEY (did)
         );
     '''
@@ -45,7 +45,7 @@ MST_DATASOURCE_STATS='''
 DAT_DATASOURCE='''
         CREATE TABLE dat_datasource (
             did uuid,
-            date timestamp,
+            date timeuuid,
             content text,
             PRIMARY KEY (did,date)
         );
@@ -54,7 +54,7 @@ DAT_DATASOURCE='''
 DAT_DATASOURCE_MAP='''
         CREATE TABLE dat_datasource_map (
             did uuid,
-            date timestamp,
+            date timeuuid,
             content text,
             variables map<int,int>,
             datapoints map<uuid,int>,

@@ -123,7 +123,7 @@ def get_datasource_data_operation(username, did):
 @ExceptionHandler
 def upload_datasource_data_operation(username, aid, did, content, destination):
     authorization.authorize_request(request='PostDatasourceDataRequest',username=username,aid=aid,did=did)
-    destfile=dsapi.upload_content(did,content,dest_dir)
+    destfile=dsapi.upload_datasource_data(did,content,dest_dir)
     return (STATUS_RECEIVED, {'message':'Data received'})
 
 @ExceptionHandler
