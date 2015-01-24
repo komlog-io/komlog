@@ -16,13 +16,13 @@ class DecisionTreeNode:
             self.nodeid=nodeid
         self.endnode=endnode
         self.result=result
-        print('Nuevo Nodo', end=' ')
-        print('att:'+str(self.attribute), end=' ')
-        print('val:'+str(self.value), end=' ')
-        print('pid:'+str(self.parentid), end=' ')
-        print('nid:'+str(self.nodeid), end=' ')
-        print('end:'+str(self.endnode), end=' ')
-        print('result:'+str(self.result))
+        #print('Nuevo Nodo', end=' ')
+        #print('att:'+str(self.attribute), end=' ')
+        #print('val:'+str(self.value), end=' ')
+        #print('pid:'+str(self.parentid), end=' ')
+        #print('nid:'+str(self.nodeid), end=' ')
+        #print('end:'+str(self.endnode), end=' ')
+        #print('result:'+str(self.result))
 
 
 
@@ -44,10 +44,11 @@ class DecisionTree:
         keys=list(set(keys))
         #remove result key
         keys.remove('result')
+        #print ('VAmos a generar el arbol con '+str(self.raw_data)+' Y '+str(keys))
         self.tree=self.learn_tree(rows=self.raw_data,attributes=keys)
 
     def learn_tree(self,rows,attributes,parentid=None):
-        print('LLamada nueva', end=' ')
+        #print('LLamada nueva', end=' ')
         #print rows
         #print attributes
         node_list=[]
@@ -63,41 +64,41 @@ class DecisionTree:
                     p+=1
                 else:
                     n+=1
-            print(t,p,n)
+            #print(t,p,n)
             if t==p:
-                print('Todos POSITIVOS')
+                #print('Todos POSITIVOS')
                 node_list.append(DecisionTreeNode(attribute='',value=1,parentid=parentid,endnode=True,result=True))
             elif t==n:
-                print('Todos NEGATIVOS')
+                #print('Todos NEGATIVOS')
                 node_list.append(DecisionTreeNode(attribute='',value=1,parentid=parentid,endnode=True))
             elif len(attributes)==0: #aqui deberia devolver que es necesario aumentar la precision del hash de las muestras de entrenamiento
-                print('ME QUEDE SIN ATRIBUTOS')
-                print('ESTAS SON LAS ROWS QUE NO SE HAN PODIDO DETERMINAR')
-                print(rows)
+                #print('ME QUEDE SIN ATRIBUTOS')
+                #print('ESTAS SON LAS ROWS QUE NO SE HAN PODIDO DETERMINAR')
+                #print(rows)
                 node_list.append(DecisionTreeNode(attribute='',value=1,parentid=parentid,endnode=True))
             else:
-                print('POSITIVOS Y NEGATIVOS ENTRE LAS VARIABLES')
+                #print('POSITIVOS Y NEGATIVOS ENTRE LAS VARIABLES')
                 next_att=self.__get_attribute(rows,attributes)
-                print('Siguiente atributo: ', end=' ')
-                print(next_att)
+                #print('Siguiente atributo: ', end=' ')
+                #print(next_att)
                 attributes.remove(next_att)
                 different_values=[]
                 for row in rows:
                     if row['result']:
                         different_values.append(row[next_att])
                 different_values=list(set(different_values))
-                print('VALORES POSITIVOS: '+str(different_values))
+                #print('VALORES POSITIVOS: '+str(different_values))
                 for value in different_values:
                     selected_rows=[]
                     for row in rows:
                         if row[next_att]==value:
                             selected_rows.append(row)
                     if len(selected_rows)==1:
-                        print('ULTIMA ROW DEL GRUPO')
+                        #print('ULTIMA ROW DEL GRUPO')
                         new_node=DecisionTreeNode(attribute=next_att,value=value,parentid=parentid,endnode=True,result=selected_rows[0]['result'])
                         node_list.append(new_node)
                     else:
-                        print('VARIOS ROWS CON ATTRIBUTO ENTRE LOS VALORES POSITIVOS, CONTINUAMOS CON LA SIGUIENTE ITERACION')
+                        #print('VARIOS ROWS CON ATTRIBUTO ENTRE LOS VALORES POSITIVOS, CONTINUAMOS CON LA SIGUIENTE ITERACION')
                         new_node=DecisionTreeNode(attribute=next_att,value=value,parentid=parentid,endnode=False)
                         node_list.append(new_node)
                         more_nodes=self.learn_tree(rows=selected_rows,attributes=attributes,parentid=new_node.nodeid)
@@ -111,10 +112,10 @@ class DecisionTree:
         for attribute in attributes:
             gain[attribute]=self.__G(rows,attribute)
         maxgain=0.0
-        print('Atributos: ', end=' ')
-        print(attributes)
-        print('Ganancias: ', end=' ')
-        print(gain)
+        #print('Atributos: ', end=' ')
+        #print(attributes)
+        #print('Ganancias: ', end=' ')
+        #print(gain)
         for key,value in gain.items():
             if maxgain<=value:
                 maxgain=value
@@ -202,3 +203,4 @@ class DecisionTree:
                             pass
             return False
         return eval_node()
+

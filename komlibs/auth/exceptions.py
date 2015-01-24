@@ -9,15 +9,23 @@ Authorization Exceptions
 @date: 2013/12/08
 '''
 
-class AuthorizationException(Exception):
-    pass
+class AuthException(Exception):
+    def __init__(self, error=None):
+        self.error=error
 
-class RequestNotFoundException(Exception):
-    pass
+class AuthorizationException(AuthException):
+    def __init__(self):
+        super(AuthorizationException,self).__init__()
 
-class UserNotFoundException(Exception):
-    pass
+class RequestNotFoundException(AuthException):
+    def __init__(self):
+        super(RequestNotFoundException,self).__init__()
 
-class DatasourceNotFoundException(Exception):
-    pass
+class UserNotFoundException(AuthException):
+    def __init__(self):
+        super(UserNotFoundException,self).__init__()
+
+class DatasourceNotFoundException(AuthException):
+    def __init__(self):
+        super(DatasourceNotFoundException,self).__init__()
 

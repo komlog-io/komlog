@@ -7,10 +7,12 @@ messages api
 
 '''
 
-from komimc import bus as msgbus
-from komimc import codes as msgcodes
-from komimc import messages
 from komfig import logger
+from komimc import bus as msgbus
+from komlibs.interface.imc import api as imcapi
+from komlibs.interface.imc import status
+from komlibs.interface.imc.model import messages
+
 
 def send_message(msg):
     if msgbus.msgbus.sendMessage(msg):
@@ -22,26 +24,44 @@ def retrieve_message(timeout=0):
     data=msgbus.msgbus.retrieveMessage(timeout)
     if data:
         addr, s_message = data
-        logger.logger.debug('Message received: '+str(s_message))
         mtype = s_message.split('|')[0]
-        logger.logger.debug('Message received of type: '+mtype)
         try:
             message=getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[mtype])(serialized_message=s_message)
             return message
         except Exception as e:
-            logger.logger.exception('Cannot map message.typ to message Class: '+str(e))
+            logger.logger.exception('Cannot map message.type to message Class: '+str(e))
             return None
     else:
         logger.logger.debug('Timeout expired waiting for messages')
         return None
 
+def process_message(message):
+    return imcapi.process_message(message=message)
+
 def process_msg_result(msg_result):
-    if msg_result.retcode==msgcodes.ERROR:
-        logger.logger.error('Error processing message: '+msg_result.mparams)
-    elif msg_result.retcode==msgcodes.SUCCESS:
-        logger.logger.debug('Message processed successfully: '+msg_result.mparams)
+    if msg_result.status==status.IMC_STATUS_INTERNAL_ERROR:
+        logger.logger.error('Error processing message: '+msg_result.message_params)
     for msg in msg_result.get_msg_originated():
-        if send_message(msg):
-            logger.logger.debug('Message Sent: '+msg.serialized_message)
+        send_message(msg)
     return True
 
+def send_message_to(addr, msg):
+    if msgbus.msgbus.send_message_to(addr, msg):
+        return True
+    else:
+        return False
+
+def retrieve_message_from(addr, timeout=0):
+    data=msgbus.msgbus.retrieve_message_from(addr=addr, timeout=timeout)
+    if data:
+        addr, s_message = data
+        mtype = s_message.split('|')[0]
+        try:
+            message=getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[mtype])(serialized_message=s_message)
+            return message
+        except Exception as e:
+            logger.logger.exception('Cannot map message.type to message Class: '+str(e))
+            return None
+    else:
+        logger.logger.debug('Timeout expired waiting for messages')
+        return None

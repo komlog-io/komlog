@@ -325,12 +325,19 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertTrue(datasourceapi.add_variable_to_datasource_map(did=did, date=date, position=position, length=length))
 
     def test_add_datapoint_to_datasource_map_success(self):
-        ''' add_variable_to_datasource_map should succeed if all vars are passed and are correct '''
+        ''' add_datapoint_to_datasource_map should succeed if all vars are passed and are correct '''
         did=uuid.uuid4()
         date=timeuuid.uuid1()
         pid=uuid.uuid4()
         position=0
         self.assertTrue(datasourceapi.add_datapoint_to_datasource_map(did=did, date=date, pid=pid, position=position))
+
+    def test_delete_datapoint_from_datasource_map_success(self):
+        ''' delete_datapoint_from_datasource_map should succeed if all vars are passed and are correct '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        pid=uuid.uuid4()
+        self.assertTrue(datasourceapi.delete_datapoint_from_datasource_map(did=did, date=date, pid=pid))
 
     def test_get_datasource_map_non_existing_map(self):
         ''' get_datasource_data_at should return None if did does not exist '''

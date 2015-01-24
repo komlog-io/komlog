@@ -17,7 +17,6 @@ from komcass.api import datapoint as cassapidatapoint
 from komcass.model.orm import widget as ormwidget
 from komlibs.gestaccount.widget import types
 from komlibs.gestaccount import exceptions
-from komlibs.ifaceops import operations
 from komlibs.general.validation import arguments
 from komlibs.general.time import timeuuid
 
@@ -30,11 +29,11 @@ def get_widget_config(wid):
         if widget.type==types.DS_WIDGET:
             dswidget=cassapiwidget.get_widget_ds(wid=wid)
             if dswidget:
-                data={'wid':str(dswidget.wid),'type':types.DS_WIDGET,'did':str(dswidget.did)}
+                data={'wid':dswidget.wid,'type':types.DS_WIDGET,'did':dswidget.did}
         elif widget.type==types.DP_WIDGET:
             dpwidget=cassapiwidget.get_widget_dp(wid=wid)
             if dpwidget:
-                data={'wid':str(dpwidget.wid),'type':types.DP_WIDGET,'pid':str(dpwidget.pid)}
+                data={'wid':dpwidget.wid,'type':types.DP_WIDGET,'pid':dpwidget.pid}
         return data
     else:
         raise exceptions.WidgetNotFoundException()
@@ -51,11 +50,11 @@ def get_widgets_config(username):
         if widget.type==types.DS_WIDGET:
             dswidget=cassapiwidget.get_widget_ds(wid=widget.wid)
             if dswidget:
-                data.append({'wid':str(dswidget.wid),'type':types.DS_WIDGET,'did':str(dswidget.did)})
+                data.append({'wid':dswidget.wid,'type':types.DS_WIDGET,'did':dswidget.did})
         elif widget.type==types.DP_WIDGET:
             dpwidget=cassapiwidget.get_widget_dp(wid=widget.wid)
             if dpwidget:
-                data.append({'wid':str(dpwidget.wid),'type':types.DP_WIDGET,'pid':str(dpwidget.pid)})
+                data.append({'wid':dpwidget.wid,'type':types.DP_WIDGET,'pid':dpwidget.pid})
     return data
 
 def delete_widget(username,wid):
@@ -89,11 +88,11 @@ def new_widget_ds(username,did):
                 if widget.type==types.DS_WIDGET:
                     widget_ds=cassapiwidget.get_widget_ds(wid=widget.wid)
                     if widget_ds and widget_ds.did==did:
-                        return {'wid':str(wid)}
+                        raise exceptions.WidgetAlreadyExistsException()
         wid=uuid.uuid4()
         widget=ormwidget.WidgetDs(wid=wid,uid=datasource.uid,did=datasource.did,creation_date=timeuuid.uuid1())
         if cassapiwidget.new_widget(widget=widget):
-            return widget
+            return {'wid': widget.wid, 'uid': widget.uid, 'type': widget.type, 'did': widget.did}
         else:
             raise exceptions.WidgetCreationException()
 
@@ -112,11 +111,11 @@ def new_widget_dp(username,pid):
             if widget.type==types.DP_WIDGET:
                 dpwidget=cassapiwidget.get_widget_dp(wid=widget.wid)
                 if dpwidget and dpwidget.pid==pid:
-                    return {'wid':str(widget.wid)}
+                    raise exceptions.WidgetAlreadyExistsException()
         wid=uuid.uuid4()
         widget=ormwidget.WidgetDp(wid=wid,uid=user.uid,pid=datapoint.pid,creation_date=timeuuid.uuid1())
         if cassapiwidget.new_widget(widget=widget):
-            return widget
+            return {'wid': widget.wid, 'uid': widget.uid, 'type': widget.type, 'pid': widget.pid}
         else:
             raise exceptions.WidgetCreationException()
 

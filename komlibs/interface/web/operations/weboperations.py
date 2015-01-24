@@ -58,12 +58,12 @@ class WIFaceOperation:
         return self.params
 
     def get_json_serialization(self):
-        params=self.params
-        params['opclass']=self.opclass
-        for key,value in params.items():
+        serialization={}
+        serialization['opclass']=self.opclass
+        for key,value in self.params.items():
             if not type(value) in ('str','unicode'):
-                params[key]=str(value)
-        return json.dumps(params)
+                serialization[key]=str(value)
+        return json.dumps(serialization)
 
 class NewAgentOperation(WIFaceOperation):
     def __init__(self, uid, aid):
@@ -98,7 +98,7 @@ class NewWidgetOperation(WIFaceOperation):
         self.opclass=self.__class__.__name__
         self.params={}
         self.params['uid']=uid if arguments.is_valid_uuid(uid) else uuid.UUID(uid)
-        self.params['wid']=uid if arguments.is_valid_uuid(wid) else uuid.UUID(wid)
+        self.params['wid']=wid if arguments.is_valid_uuid(wid) else uuid.UUID(wid)
 
 class NewDashboardOperation(WIFaceOperation):
     def __init__(self, uid, bid):

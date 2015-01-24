@@ -82,13 +82,13 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
 
     def test_is_valid_email_invalid(self):
         ''' is_valid_email should fail if email is not valid '''
-        params=[None, 234234,'not_an_email','email.com','@domain.com','email@','email@domain@domain.com','español@domain.com']
+        params=[None, 234234,'not_an_email','email.com','@domain.com','email@','email@domain@domain.com','español@domain.com', 'EMAIL@domain.com']
         for param in params:
             self.assertFalse(arguments.is_valid_email(param)) 
 
     def test_is_valid_email_valid(self):
         ''' is_valid_email should succeed if email is valid '''
-        params=['my_email@domain.com','my.email@mydomain.es','thisEmailIsValid@yahoo.com','info@subdomain.domain.com']
+        params=['my_email@domain.com','my.email@mydomain.es','thisemailisvalid@yahoo.com','info@subdomain.domain.com']
         for param in params:
             self.assertTrue(arguments.is_valid_email(param)) 
 
@@ -139,6 +139,18 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
         params=[uuid.uuid4()]
         for param in params:
             self.assertTrue(arguments.is_valid_uuid(param)) 
+
+    def test_is_valid_hex_uuid_invalid(self):
+        ''' is_valid_hex_uuid should fail if param is not valid uuid in hex format'''
+        params=[None, 234234,'string','string with spaces','234234',uuid.uuid1(), uuid.uuid4(),timeuuid.uuid1()]
+        for param in params:
+            self.assertFalse(arguments.is_valid_hex_uuid(param)) 
+
+    def test_is_valid_hex_uuid_valid(self):
+        ''' is_valid_hex_uuid should succeed if param is a valid hex uuid '''
+        params=[uuid.uuid4().hex]
+        for param in params:
+            self.assertTrue(arguments.is_valid_hex_uuid(param)) 
 
     def test_is_valid_dict_invalid(self):
         ''' is_valid_dict should fail if dict is not valid '''

@@ -1,15 +1,21 @@
 #coding: utf-8
 
-import tornado.web
-from tornado.template import Template
-from tornado.escape import json_encode,json_decode,xhtml_escape
-from komlibs.ifaceops import ifaceops
-from komlibs.general.time import timeuuid
-from komfig import logger
-from komws2 import auth
 import os
 import uuid
 import json
+import tornado.web
+from tornado.template import Template
+from tornado.escape import json_encode,json_decode,xhtml_escape
+from komlibs.interface.web.api import agent
+from komlibs.interface.web.api import user
+from komlibs.interface.web.api import datasource
+from komlibs.interface.web.api import datapoint
+from komlibs.interface.web.api import widget
+from komlibs.interface.web.api import login
+from komlibs.interface.web import status
+from komlibs.general.time import timeuuid
+from komfig import logger
+from komws2 import auth
 
 class BaseHandler(tornado.web.RequestHandler):
     
@@ -21,58 +27,57 @@ class AgentsHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def post(self):
-        #Aquí llega una vez ha validado
         try:
             req_data=json_decode(self.request.body)
-            ag_pubkey=req_data['ag_pubkey']
-            ag_version=req_data['ag_version']
-            ag_name=req_data['ag_name']
+            pubkey=req_data['pubkey']
+            version=req_data['version']
+            agentname=req_data['agentname']
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            status,data=ifaceops.new_agent_operation(username=self.user, agentname=ag_name, pubkey=ag_pubkey, version=ag_version)
-            self.set_status(status)
-            self.write(json_encode(data))
+            response=agent.new_agent_request(username=self.user, agentname=agentname, pubkey=pubkey, version=version)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
     @auth.userauthenticated
     def get(self):
-        status,data=ifaceops.get_agents_config_operation(username=self.user)
-        self.set_status(status)
-        self.write(json_encode(data))
+        response=agent.get_agents_config_request(username=self.user)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
 class AgentConfigHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
-    def get(self,p_aid):
-        aid=uuid.UUID(p_aid)
-        status,data=ifaceops.get_agent_config_operation(username=self.user, aid=aid)
-        self.set_status(status)
-        self.write(json_encode(data))
+    def get(self,aid):
+        response=agent.get_agent_config_request(username=self.user, aid=aid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
     @auth.userauthenticated
-    def put(self,p_aid):
-        aid=uuid.UUID(p_aid)
-        data=json_decode(self.request.body)
-        status,data=ifaceops.update_agent_config_operation(username=self.user, aid=aid, data=data)
-        self.set_status(status)
-        self.write(json_encode(data))
+    def put(self,aid):
+        try:
+            data=json_decode(self.request.body)
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=agent.update_agent_config_request(username=self.user, aid=aid, data=data)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
 class DatasourceDataHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
-    def get(self,p_did):
-        did=uuid.UUID(p_did)
-        status,data=ifaceops.get_datasource_data_operation(username=self.user, did=did)
-        self.set_status(status)
-        self.write(json_encode(data))
+    def get(self,did):
+        response=datasource.get_datasource_data_request(username=self.user, did=did)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
     @auth.agentauthenticated
-    def post(self,p_did):
+    def post(self,did):
         try:
-            logger.logger.debug('POST DatasourceData Init')
-            did=uuid.UUID(p_did)
-            aid=uuid.UUID(self.agent)
+            aid=self.agent
             ctype=self.request.headers.get('Content-Type')
             content=self.request.body.decode('utf-8')
             dest_dir=self.application.dest_dir
@@ -81,9 +86,9 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             self.write(json_encode({'message':'Bad parameters'}))
         else:
             if ctype.find('application/json')>=0:
-                status,data=ifaceops.upload_datasource_data_operation(username=self.user, aid=aid, did=did, content=content, destination=dest_dir)
-                self.set_status(status)
-                self.write(json_encode(data))
+                response=datasource.upload_datasource_data_request(username=self.user, aid=aid, did=did, content=content, destination=dest_dir)
+                self.set_status(response.status)
+                self.write(json_encode(response.data))
             else:
                 self.set_status(400)
                 self.write(json_encode({'message':'Bad Request'}))
@@ -91,19 +96,22 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
 class DatasourceConfigHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
-    def get(self,p_did):
-        did=uuid.UUID(p_did)
-        status,data=ifaceops.get_datasource_config_operation(username=self.user, did=did)
-        self.set_status(status)
-        self.write(json_encode(data))
+    def get(self,did):
+        response=datasource.get_datasource_config_request(username=self.user, did=did)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
     @auth.userauthenticated
-    def put(self, p_did):
-        did=uuid.UUID(p_did)
-        content=json_decode(self.request.body)
-        status,data=ifaceops.update_datasource_config_operation(username=self.user, did=did, content=content)
-        self.set_status(status)
-        self.write(json_encode(data))
+    def put(self, did):
+        try:
+            content=json_decode(self.request.body)
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=datasource.update_datasource_config_request(username=self.user, did=did, content=content)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
 class DatasourcesHandler(tornado.web.RequestHandler):
 
@@ -111,37 +119,36 @@ class DatasourcesHandler(tornado.web.RequestHandler):
     def post(self):
         try:
             data=json_decode(self.request.body)
-            aid=uuid.UUID(self.agent)
-            ds_name=data['ds_name']
+            datasourcename=data['datasourcename']
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            status,data=ifaceops.new_datasource_operation(username=self.user, aid=aid, datasourcename=ds_name)
-            self.set_status(status)
-            self.write(json_encode(data))
+            response=datasource.new_datasource_request(username=self.user, aid=self.agent, datasourcename=datasourcename)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
     @auth.userauthenticated
     def get(self):
-        status,data=ifaceops.get_datasources_config_operation(username=self.user)
-        self.set_status(status)
-        self.write(json_encode(data))
+        response=datasource.get_datasources_config_request(username=self.user)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
 class UsersHandler(tornado.web.RequestHandler):
     def post(self):
         #suponemos que aquí llega una vez ha validado capcha o algo asi
         try:
             data=json_decode(self.request.body)
-            username=''+data['username']
-            password=''+data['password']
-            email=''+data['email']
+            username=data['username']
+            password=data['password']
+            email=data['email']
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            status,data=ifaceops.new_user_operation(username,password,email)
-            self.set_status(status)
-            self.write(json_encode(data))
+            response=user.new_user_request(username=username,password=password,email=email)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
 class UserConfirmationHandler(tornado.web.RequestHandler):
 
@@ -154,54 +161,44 @@ class UserConfirmationHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            status,data=ifaceops.confirm_user_operation(email,code)
-            self.set_status(status)
-            self.write(json_encode(data))
+            response=user.confirm_user_request(email=email,code=code)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
 class DatapointDataHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
-    def get(self,p_pid):
+    def get(self,pid):
         try:
-            pid=uuid.UUID(p_pid)
             end_date=self.get_argument('ed',default=None) #ed : end date
             start_date=self.get_argument('sd',default=None) #sd : start date
-            end_date=timeuuid.uuid1(end_date) if end_date else None
-            start_date=timeuuid.uuid1(start_date) if start_date else None
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            status,data=ifaceops.get_datapoint_data_operation(username=self.user, pid=pid, start_date=start_date, end_date=end_date)
-            self.set_status(200)
-            self.write(json_encode(data))
+            response=datapoint.get_datapoint_data_request(username=self.user, pid=pid, start_date=start_date, end_date=end_date)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
 class DatapointConfigHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
-    def get(self,p_pid):
-        try:
-            pid=uuid.UUID(p_pid)
-        except TypeError:
-            self.set_status(400)
-            self.write(json_encode({'message':'Bad Request'}))
-        else:
-            status,data=ifaceops.get_datapoint_config_operation(username=self.user, pid=pid)
-            self.set_status(status)
-            self.write(json_encode(data))
+    def get(self,pid):
+        response=datapoint.get_datapoint_config_request(username=self.user, pid=pid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
     @auth.userauthenticated
-    def put(self, p_pid):
+    def put(self, pid):
         try:
-            pid=uuid.UUID(p_pid)
             data=json_decode(self.request.body)
         except TypeError:
             self.set_status(400)
             self.write(json_encode({'message':'Bad Parameters'}))
         else:
-            status,data=ifaceops.update_datapoint_config_operation(username=self.user, pid=pid, data=data)
-            self.set_status(status)
-            self.write(json_encode(data))
+            response=datapoint.update_datapoint_config_request(username=self.user, pid=pid, data=data)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
 class DatapointsHandler(tornado.web.RequestHandler):
 
@@ -209,33 +206,25 @@ class DatapointsHandler(tornado.web.RequestHandler):
     def post(self):
         try:
             data=json_decode(self.request.body)
-            dsdate=data['ds_date']
-            dsseq=data['ds_seq']
+            sequence=data['seq']
             did=data['did']
-            cs=data['cs'] #char start
-            vl=data['vl'] #var length
-            dpname=data['dtp_name'] #dp name
+            position=data['p']
+            length=data['l']
+            datapointname=data['datapointname'] #dp name
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            status,data=ifaceops.new_datapoint_operation(username=self.user, did=did, datasourcedate=dsdate, datasourceseq=dsseq, position=cs, length=vl, datapointname=dpname)
-            self.set_status(status)
-            self.write(json_encode(data))
+            response=datapoint.new_datapoint_request(username=self.user, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
 class UserConfigHandler(BaseHandler):
 
     @auth.userauthenticated
     def get(self):
-        status,data=ifaceops.get_user_config_operation(username=self.user)
-        self.render('config.html',userdata=data,page_title='Komlog')
-
-class UserProfileHandler(BaseHandler):
-
-    @auth.userauthenticated
-    def get(self):
-        status,data=ifaceops.get_user_profile_operation(username=self.user)
-        self.render('profile.html',data=data,page_title='Komlog')
+        response=user.get_user_config_request(username=self.user)
+        self.render('config.html',userdata=response.data,page_title='Komlog')
 
     @auth.userauthenticated
     def put(self):
@@ -245,9 +234,9 @@ class UserProfileHandler(BaseHandler):
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            status,data=ifaceops.update_user_profile_operation(username=self.user, data=data)
-            self.set_status(status)
-            self.write(json_encode(data))
+            response=user.update_user_config_request(username=self.user, data=data)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
 class UserHomeHandler(BaseHandler):
 
@@ -259,13 +248,13 @@ class LoginHandler(tornado.web.RequestHandler):
 
     def get(self):
         try:
-            errorcode=self.get_argument("error")
+            errorcode=self.get_argument('error')
         except:
-            errorcode=""
+            errorcode=''
         self.render('login.html',errorcode=errorcode)
 
     def post(self):
-        error="?error=1"
+        error='?error=1'
         try:
             username=self.get_argument('username')
             password=self.get_argument('password')
@@ -274,12 +263,13 @@ class LoginHandler(tornado.web.RequestHandler):
         except Exception:
             self.redirect(self.get_login_url()+error)
         else:
-            status,data=ifaceops.login_operation(username=username, password=password, agentid=agentid, signature=signature)
-            if status==ifaceops.STATUS_OK:
+            response=login.login_request(username=username, password=password, agentid=agentid, signature=signature)
+            logger.logger.debug('LOGIN RESULT: '+str(response.__dict__))
+            if response.status==status.WEB_STATUS_OK:
                 self.set_secure_cookie('komlog_user',username,httponly=True)#, secure=True)
                 if agentid:
                     self.set_secure_cookie('komlog_agent',agentid, httponly=True)#, secure=True)
-                    self.redirect('/etc/agent/'+agentid)
+                    self.redirect('/etc/ag/'+agentid)
                 else:
                     self.redirect('/home') 
             else:
@@ -298,46 +288,35 @@ class WidgetsHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def get(self):
-        status,data=ifaceops.get_widgets_config_operation(username=self.user)
-        self.set_status(status)
-        self.write(json_encode(data))
+        response=widget.get_widgets_config_request(username=self.user)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
 class WidgetConfigHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
-    def get(self,p_wid):
-        try:
-            wid=uuid.UUID(p_wid)
-        except Exception:
-            self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
-        else:
-            status,data=ifaceops.get_widget_config_operation(username=self.user, wid=wid)
-            self.set_status(status)
-            self.write(json_encode(data))
+    def get(self,wid):
+        response=widget.get_widget_config_request(username=self.user, wid=wid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
 class DashboardsHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def get(self):
-        status,data=ifaceops.get_dashboards_config_operation(username=self.user)
-        self.set_status(status)
-        self.write(json_encode(data))
+        response=dashboard.get_dashboards_config_request(username=self.user)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
 class DashboardConfigHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def get(self,p_bid):
-        try:
-            bid=uuid.UUID(p_bid)
-        except Exception:
-            self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
-        status,data=ifaceops.get_dashboard_config_operation(username=self.user, bid=bid)
-        self.set_status(status)
-        self.write(json_encode(data))
+        response=dashboard.get_dashboard_config_request(username=self.user, bid=bid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
-UUID4_REGEX='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+UUID4_REGEX='[0-9a-f]{32}'
 HANDLERS = [(r"/login/?", LoginHandler),
             (r"/logout/?", LogoutHandler),
             (r"/etc/ag/?", AgentsHandler),
@@ -355,7 +334,6 @@ HANDLERS = [(r"/login/?", LoginHandler),
             (r"/var/ds/("+UUID4_REGEX+")", DatasourceDataHandler),
             (r"/var/dp/("+UUID4_REGEX+")", DatapointDataHandler),
             (r"/home/config", UserConfigHandler),
-            (r"/home/profile", UserProfileHandler),
             (r"/home", UserHomeHandler)
 ]
 

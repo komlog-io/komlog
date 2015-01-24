@@ -2,18 +2,27 @@ import uuid
 import time
 import random
 
+node=0x010000000000
+str_node='010000000000'
 
 def get_unix_timestamp(u):
-    return (u.time - 0x01B21DD213814000) / 10000000.0
+    return int((u.time - 0x01B21DD213814000) / 10000000.0 * 1000)/1000.0
 
-def uuid1(node=None, clock_seq=None, seconds=None):
+def get_custom_sequence(u):
+    return u.hex[0:20]
+
+def get_uuid1_from_custom_sequence(sequence):
+    return uuid.UUID(sequence+str_node)
+
+def uuid1(clock_seq=None, seconds=None):
     '''Generate a UUID from a host ID, sequence number, and time.
     If 'node' is not given, getnode() is used to obtain the hardware
     address.  If 'clock_seq' is given, it is used as the sequence number;
     otherwise a random 14-bit sequence number is chosen.
     if seconds is given, is used to generate the timestamp of the UUID object,
     otherwise, the current time is used '''
-
+    
+    global node
     if not seconds:
         seconds=time.time()
     nanoseconds=int(seconds * 1e9)
@@ -27,8 +36,6 @@ def uuid1(node=None, clock_seq=None, seconds=None):
     time_hi_version = (timestamp >> 48) & 0x0fff
     clock_seq_low = clock_seq & 0xff
     clock_seq_hi_variant = (clock_seq >> 8) & 0x3f
-    if node is None:
-        node = uuid.getnode()
     return uuid.UUID(fields=(time_low, time_mid, time_hi_version,
                         clock_seq_hi_variant, clock_seq_low, node), version=1)
 

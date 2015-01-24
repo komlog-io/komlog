@@ -15,7 +15,7 @@ STATEMENTS={30000:'select * from mst_datapoint where pid=?',
             30001:'select * from mst_datapoint where did=?',
             30002:'select * from mst_datapoint_stats where pid=?',
             30003:'select * from dat_datapoint  where pid=? and date=?',
-            30004:'select * from dat_datapoint where pid=? and date>? and date<=? order by date desc limit ?',
+            30004:'select * from dat_datapoint where pid=? and date>=? and date<=? order by date desc limit ?',
             30005:'select * from dat_datapoint_dtree_positives where pid=?',
             30006:'select * from dat_datapoint_dtree_positives where pid=? and date=?',
             30007:'select * from dat_datapoint_dtree_negatives where pid=?',
@@ -33,6 +33,7 @@ STATEMENTS={30000:'select * from mst_datapoint where pid=?',
             32005:'delete coordinates[?] from dat_datapoint_dtree_negatives where pid=? and date=?',
             32006:'delete from dat_datapoint_dtree_positives where pid=? and date=?',
             32007:'delete from dat_datapoint_dtree_negatives where pid=? and date=?',
+            32008:'delete from dat_datapoint where pid=? and date=?',
             33000:'update dat_datapoint_dtree_negatives set coordinates[?]=? where pid=? and date=?',
             33001:'update mst_datapoint_stats set dtree=? where pid=?',
             33002:'update mst_datapoint_stats set decimal_separator=? where pid=?',
@@ -69,6 +70,7 @@ D_A_DATDATAPOINT_B_PID=32004
 D_R_DATDATAPOINTDTREENEGATIVES_B_POS_PID_DATE=32005
 D_A_DATDATAPOINTDTREEPOSITIVES_B_PID_DATE=32006
 D_A_DATDATAPOINTDTREENEGATIVES_B_PID_DATE=32007
+D_A_DATDATAPOINT_B_PID_DATE=32008
 
 # Updates
 

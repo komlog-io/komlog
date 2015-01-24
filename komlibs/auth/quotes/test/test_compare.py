@@ -10,7 +10,10 @@ class AuthQuotesCompareTest(unittest.TestCase):
         username='test_auth.quotes.compare_user'
         password='password'
         email='test_auth.quotes.compare_user@komlog.org'
-        self.user=userapi.create_user(username=username, password=password, email=email)
+        try:
+            self.user=userapi.get_user_config(username=username)
+        except Exception:
+            self.user=userapi.create_user(username=username, password=password, email=email)
 
     def test_compare_quo_static_user_total_agents_no_uid(self):
         ''' compare_quo_static_user_total_agents should fail if no uid is passed '''
@@ -24,7 +27,7 @@ class AuthQuotesCompareTest(unittest.TestCase):
 
     def test_compare_quo_static_user_total_agents_failure(self):
         ''' compare_quo_static_user_total_agents should fail because user has no quote info yet '''
-        params={'uid':self.user.uid}
+        params={'uid':self.user['uid']}
         self.assertFalse(compare.compare_quo_static_user_total_agents(params))
 
     def test_compare_quo_static_user_total_datasources_no_uid(self):
@@ -39,7 +42,7 @@ class AuthQuotesCompareTest(unittest.TestCase):
 
     def test_compare_quo_static_user_total_datasources_failure(self):
         ''' compare_quo_static_user_total_datasources should fail because user has no quote info yet '''
-        params={'uid':self.user.uid}
+        params={'uid':self.user['uid']}
         self.assertFalse(compare.compare_quo_static_user_total_datasources(params))
 
     def test_compare_quo_static_user_total_datapoints_no_uid(self):
@@ -54,7 +57,7 @@ class AuthQuotesCompareTest(unittest.TestCase):
 
     def test_compare_quo_static_user_total_datapoints_failure(self):
         ''' compare_quo_static_user_total_datapoints should fail because user has no quote info yet '''
-        params={'uid':self.user.uid}
+        params={'uid':self.user['uid']}
         self.assertFalse(compare.compare_quo_static_user_total_datapoints(params))
 
     def test_compare_quo_static_user_total_widgets_no_uid(self):
@@ -69,7 +72,7 @@ class AuthQuotesCompareTest(unittest.TestCase):
 
     def test_compare_quo_static_user_total_widgets_failure(self):
         ''' compare_quo_static_user_total_widgets should fail because user has no quote info yet '''
-        params={'uid':self.user.uid}
+        params={'uid':self.user['uid']}
         self.assertFalse(compare.compare_quo_static_user_total_widgets(params))
 
     def test_compare_quo_static_user_total_dashboards_no_uid(self):
@@ -84,7 +87,7 @@ class AuthQuotesCompareTest(unittest.TestCase):
 
     def test_compare_quo_static_user_total_dashboards_failure(self):
         ''' compare_quo_static_user_total_dashboards should fail because user has no quote info yet '''
-        params={'uid':self.user.uid}
+        params={'uid':self.user['uid']}
         self.assertFalse(compare.compare_quo_static_user_total_dashboards(params))
 
     def test_compare_quo_static_agent_total_datasources_no_uid(self):
@@ -104,7 +107,7 @@ class AuthQuotesCompareTest(unittest.TestCase):
 
     def test_compare_quo_static_agent_total_datasources_failure(self):
         ''' compare_quo_static_agent_total_datasources should fail because agent does not exist '''
-        params={'uid':self.user.uid, 'aid':uuid.uuid4()}
+        params={'uid':self.user['uid'], 'aid':uuid.uuid4()}
         self.assertFalse(compare.compare_quo_static_agent_total_datasources(params))
 
     def test_compare_quo_static_agent_total_datapoints_no_uid(self):
@@ -124,7 +127,7 @@ class AuthQuotesCompareTest(unittest.TestCase):
 
     def test_compare_quo_static_agent_total_datapoints_failure(self):
         ''' compare_quo_static_agent_total_datapoints should fail because agent does not exist '''
-        params={'uid':self.user.uid, 'aid':uuid.uuid4()}
+        params={'uid':self.user['uid'], 'aid':uuid.uuid4()}
         self.assertFalse(compare.compare_quo_static_agent_total_datapoints(params))
 
     def test_compare_quo_static_datasource_total_datapoints_no_uid(self):
@@ -144,6 +147,6 @@ class AuthQuotesCompareTest(unittest.TestCase):
 
     def test_compare_quo_static_datasource_total_datapoints_failure(self):
         ''' compare_quo_static_datasource_total_datapoints should fail because datasource does not exist '''
-        params={'uid':self.user.uid, 'did':uuid.uuid4()}
+        params={'uid':self.user['uid'], 'did':uuid.uuid4()}
         self.assertFalse(compare.compare_quo_static_datasource_total_datapoints(params))
 

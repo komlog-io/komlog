@@ -8,9 +8,9 @@ mappings: komlog message and address mappings
 @author: jcazor
 '''
 
-from komimc import messages
+from komlibs.interface.imc.model import messages
 
-#QPID ADDRESS CONSTANTS
+#ADDRESS CONSTANTS
 BASE_IMC_ADDRESS = 'org.komlog.internal.imc.address.'
 
 
@@ -27,9 +27,10 @@ MESSAGE_TO_ADDRESS_MAPPING={messages.STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             messages.MON_VAR_MESSAGE:GESTCONSOLE,
                             messages.GDTREE_MESSAGE:TEXTMINING,
                             messages.FILL_DATAPOINT_MESSAGE:TEXTMINING,
+                            messages.FILL_DATASOURCE_MESSAGE:TEXTMINING,
                             messages.NEG_VAR_MESSAGE:GESTCONSOLE,
                             messages.POS_VAR_MESSAGE:GESTCONSOLE,
-                            messages.NEW_USR_MESSAGE:GESTCONSOLE,
+                            messages.NEW_USR_NOTIF_MESSAGE:GESTCONSOLE,
                             messages.UPDATE_QUOTES_MESSAGE:RESCONTROL,
                             messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:RESCONTROL
                             }

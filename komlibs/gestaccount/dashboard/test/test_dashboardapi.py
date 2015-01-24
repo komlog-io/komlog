@@ -7,12 +7,6 @@ from komlibs.gestaccount import exceptions
 class GestaccountDashboardApiTest(unittest.TestCase):
     ''' komlog.gestaccount.dashboard.api tests '''
 
-    def setUp(self):
-        username='test_gestaccount.dashboard.api_user'
-        password='password'
-        email='test_gestaccount.dashboard.api_user@komlog.org'
-        self.user=userapi.create_user(username=username, password=password, email=email)
-
     def test_get_dashboard_config_non_existent_dashboard(self):
         ''' get_dashboard_config should fail if bid is not in system '''
         bid=uuid.uuid4()
@@ -25,8 +19,10 @@ class GestaccountDashboardApiTest(unittest.TestCase):
 
     def test_get_dashboards_config_success_no_data(self):
         ''' get_dashboards_config should succeed if username exists, but returns and empty list if there is no dashboard '''
-        username=self.user.username
+        username='test_get_dashboards_config_success_no_data_user'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
         data=api.get_dashboards_config(username=username)
-        self.assertIsInstance(data, list)
-        self.assertEqual(len(data), 0)
+        self.assertEqual(data, [])
 

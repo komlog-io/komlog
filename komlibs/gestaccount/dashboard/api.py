@@ -25,8 +25,8 @@ def get_dashboards_config(username):
     dashboards=cassapidashboard.get_dashboards(uid=user.uid)
     if dashboards:
         for dashboard in dashboards:
-            wids=[str(wid) for wid in dashboard.widgets] if dashboard.widgets else []
-            data.append({'bid':str(dashboard.bid),'name':dashboard.dashboardname,'wids':wids})
+            wids=[wid for wid in dashboard.widgets] if dashboard.widgets else []
+            data.append({'bid':dashboard.bid,'dashboardname':dashboard.dashboardname,'wids':wids})
     return data
 
 def get_dashboard_config(bid):
@@ -34,8 +34,8 @@ def get_dashboard_config(bid):
         raise exceptions.BadParametersException()
     dashboard=cassapidashboard.get_dashboard(bid=bid)
     if dashboard:
-        wids=[str(wid) for wid in dashboard.widgets] if dashboard.widgets else []
-        data={'bid':str(dashboard.bid),'name':dashboard.dashboardname,'wids':wids}
+        wids=[wid for wid in dashboard.widgets] if dashboard.widgets else []
+        data={'bid':dashboard.bid,'dashboardname':dashboard.dashboardname,'wids':wids}
         return data
     else:
         raise exceptions.DashboardNotFoundException()

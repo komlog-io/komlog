@@ -40,11 +40,10 @@ def verify_signature(pubkey,text,b64sign):
     return False
     
 def auth_agent(agentid, signature):
-    try:
-        aid=uuid.UUID(agentid)
-    except Exception:
+    if not arguments.is_valid_hex_uuid(agentid) or not arguments.is_valid_pubkey(signature):
         raise exceptions.BadParametersException()
     else:
+        aid=uuid.UUID(agentid)
         agent=cassapiagent.get_agent(aid=aid)
         if not agent:
             raise exceptions.AgentNotFoundException()
@@ -72,7 +71,7 @@ def create_agent(username,agentname,pubkey,version):
         now=timeuuid.uuid1()
         agent=ormagent.Agent(aid=aid, uid=user.uid, agentname=agentname, pubkey=pubkey, version=version, state=states.PENDING_USER_VALIDATION,creation_date=now)
         if cassapiagent.new_agent(agent=agent):
-            return agent
+            return {'uid':agent.uid, 'aid':agent.aid, 'agentname':agent.agentname, 'pubkey':agent.pubkey, 'version':agent.version, 'state':agent.state}
         else:
             raise exceptions.AgentCreationException()
     else:
@@ -105,13 +104,14 @@ def get_agent_config(aid,dids_flag=False):
     data={}
     agent=cassapiagent.get_agent(aid=aid)
     if agent:
-        data['aid']=str(aid)
-        data['name']=agent.agentname
+        data['aid']=agent.aid
+        data['uid']=agent.uid
+        data['agentname']=agent.agentname
         data['state']=agent.state
         data['version']=agent.version
         if dids_flag:
             dids=cassapidatasource.get_datasources_dids(aid=aid)
-            data['dids']=[str(did) for did in dids] if dids else []
+            data['dids']=[did for did in dids] if dids else []
         return data
     else:
         raise exceptions.AgentNotFoundException()
@@ -134,15 +134,13 @@ def get_agents_config(username,dids_flag=False):
                 data.append(agent_data)
         return data
     
-def update_agent_config(username, aid, data):
-    if not arguments.is_valid_username(username) or not arguments.is_valid_uuid(aid) or not arguments.is_valid_dict(data):
-        raise exceptions.BadParametersException()
-    if 'ag_name' not in data or not arguments.is_valid_agentname(data['ag_name']):
+def update_agent_config(username, aid, agentname):
+    if not arguments.is_valid_username(username) or not arguments.is_valid_uuid(aid) or not arguments.is_valid_agentname(agentname):
         raise exceptions.BadParametersException()
     agent=cassapiagent.get_agent(aid=aid)
     if not agent:
         raise exceptions.AgentNotFoundException()
-    agent.agentname=data['ag_name']
+    agent.agentname=agentname
     if not cassapiagent.insert_agent(agent=agent):
         raise exceptions.AgentUpdateException()
     else:

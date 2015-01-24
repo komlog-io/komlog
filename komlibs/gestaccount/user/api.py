@@ -12,6 +12,7 @@ from komlibs.gestaccount.user import states, segments
 from komlibs.gestaccount import exceptions
 from komlibs.general.validation import arguments
 from komlibs.general.time import timeuuid
+from komlibs.general.string import stringops
 
 
 def get_hpassword(uid,password):
@@ -44,12 +45,14 @@ def auth_user(username, password):
 
 def create_user(username, password, email):
     '''This function creates a new user in the database'''
-    if not arguments.is_valid_username(username):
+    if not arguments.is_valid_username(username) or not arguments.is_valid_password(password) or not arguments.is_valid_email(email):
         raise exceptions.BadParametersException()
-    if not arguments.is_valid_password(password):
-        raise exceptions.BadParametersException()
-    if not arguments.is_valid_email(email):
-        raise exceptions.BadParametersException()
+    user=cassapiuser.get_user(username=username)
+    if user:
+        raise exceptions.UserAlreadyExistsException()
+    user=cassapiuser.get_user(email=email)
+    if user:
+        raise exceptions.UserAlreadyExistsException()
     uid=uuid.uuid4()
     hpassword=get_hpassword(uid,password)
     if not hpassword:
@@ -58,21 +61,25 @@ def create_user(username, password, email):
     segment=segments.FREE
     user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.FREE, creation_date=now, state=states.PREACTIVE)
     if cassapiuser.new_user(user=user):
-        return user
+        signup_code=stringops.get_randomstring(size=32)
+        signup_info=ormuser.SignUp(username=user.username, signup_code=signup_code, email=user.email, creation_date=user.creation_date)
+        if cassapiuser.insert_signup_info(signup_info=signup_info):
+            return {'uid':user.uid, 'email':user.email, 'signup_code':signup_info.signup_code, 'username':user.username}
+        else:
+            cassapiuser.delete_user(username=user.username)
+            return None
     else:
         return None
 
 def confirm_user(email, code):
     '''This function confirm the user'''
-    if not arguments.is_valid_email(email):
+    if not arguments.is_valid_email(email) or not arguments.is_valid_code(code):
         raise exceptions.BadParametersException()
-    if not arguments.is_valid_code(code):
-        raise exceptions.BadParametersException()
-    signup_info=cassapiuser.get_signup_info(signup_code=code)
-    if not signup_info:
+    signup_info=cassapiuser.get_signup_info(email=email)
+    if signup_info is None:
         raise exceptions.UserNotFoundException()
-    if not signup_info.email==email:
-        raise exceptions.UserNotFoundException()
+    if signup_info.signup_code!=code:
+        raise exceptions.UserConfirmationException()
     if signup_info.utilization_date:
         raise exceptions.UserConfirmationException()
     user=cassapiuser.get_user(username=signup_info.username)
@@ -85,7 +92,7 @@ def confirm_user(email, code):
     cassapiuser.insert_signup_info(signup_info=signup_info)
     return True
     
-def update_user_profile(username, params):
+def update_user_config(username, new_email=None, old_password=None, new_password=None):
     ''' This function is used to update user configuration parameters.
     Parameters supported:
         - password
@@ -93,52 +100,39 @@ def update_user_profile(username, params):
     '''
     if not arguments.is_valid_username(username):
         raise exceptions.BadParametersException()
-    if not arguments.is_valid_dict(params):
-        raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
-    user_bck=user
     if not user:
         raise exceptions.UserNotFoundException()
-    if 'email' not in params and 'new_password' not in params:
+    user_bck=user
+    if new_email is None and old_password is None and new_password is None:
         raise exceptions.BadParametersException()
-    if bool('old_password' in params) ^ bool('new_password' in params):
+    if bool(old_password) ^ bool(new_password):
         raise exceptions.BadParametersException()
-    if 'new_password' in params and 'old_password' in params:
-        if not arguments.is_valid_password(params['new_password']):
+    if new_password and old_password:
+        if not arguments.is_valid_password(new_password) or not arguments.is_valid_password(old_password):
             raise exceptions.BadParametersException()
-        if not arguments.is_valid_password(params['old_password']):
+        if not user.password==get_hpassword(user.uid,old_password):
+            raise exceptions.InvalidPasswordException()
+        if new_password==old_password:
             raise exceptions.BadParametersException()
-        if not user.password==get_hpassword(user.uid,params['old_password']):
+        new_password=get_hpassword(user.uid,new_password)
+        if new_password:
+            user.password=new_password
+        else:
             raise exceptions.BadParametersException()
-        if params['new_password']==params['old_password']:
+    if new_email:
+        if not arguments.is_valid_email(new_email):
             raise exceptions.BadParametersException()
-        user.password=get_hpassword(user.uid,params['new_password'])
-    old_email=None
-    if 'email' in params:
-        if not arguments.is_valid_email(params['email']):
-            raise exceptions.BadParametersException()
-        params['email']=params['email'].lower()
-        new_email=params['email']
         if not new_email==user.email:
             user2=cassapiuser.get_user(email=new_email)
             if user2:
                 ''' Email already used'''
                 raise exceptions.EmailAlreadyExistsException()
-            user.email=params['email']
+            user.email=new_email
     if cassapiuser.insert_user(user=user):
         return True
     else:
         return False
-
-def get_user_profile(username):
-    if not arguments.is_valid_username(username):
-        raise exceptions.BadParametersException()
-    user=cassapiuser.get_user(username=username)
-    if not user:
-        raise exceptions.UserNotFoundException()
-    data={}
-    data['email']=user.email if user.email else ''
-    return data
 
 def get_user_config(username):
     if not arguments.is_valid_username(username):
@@ -146,4 +140,10 @@ def get_user_config(username):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException()
-    return user
+    data={}
+    data['email']=user.email if user.email else ''
+    data['uid']=user.uid
+    data['username']=user.username
+    data['state']=user.state
+    return data
+

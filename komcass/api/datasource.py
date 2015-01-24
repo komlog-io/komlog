@@ -129,11 +129,15 @@ def insert_datasource_map(dsmapobj):
         return True
 
 def add_variable_to_datasource_map(did, date, position, length):
-    connection.session.execute(stmtdatasource.U_VARIABLES_DATASOURCEMAP_B_DID_DATE,(position,length,did,date))
+    connection.session.execute(stmtdatasource.U_VARIABLES_DATDATASOURCEMAP_B_DID_DATE,(position,length,did,date))
     return True
 
 def add_datapoint_to_datasource_map(did, date, pid, position):
-    connection.session.execute(stmtdatasource.U_DATAPOINTS_DATASOURCEMAP_B_DID_DATE,(pid, position, did,date))
+    connection.session.execute(stmtdatasource.U_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE,(pid, position, did,date))
+    return True
+
+def delete_datapoint_from_datasource_map(did, date, pid):
+    connection.session.execute(stmtdatasource.D_DATAPOINT_DATDATASOURCEMAP_B_PID_DID_DATE,(pid, did, date))
     return True
 
 def get_datasource_map(did, date):

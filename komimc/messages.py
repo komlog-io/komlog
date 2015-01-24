@@ -8,9 +8,9 @@ messages: komlog custom messages class implementations for inter module communic
 @author: jcazor
 '''
 
+from komlibs.interface.web.operations import weboperations
 from komimc import exceptions
 from komimc import codes as msgcodes
-from komlibs.ifaceops import operations
 from komfig import logger
 import uuid
 import json
@@ -24,7 +24,7 @@ GDTREE_MESSAGE='GDTREE'
 FILL_DATAPOINT_MESSAGE='FILDTP'
 NEG_VAR_MESSAGE='NEGVAR'
 POS_VAR_MESSAGE='POSVAR'
-NEW_USR_MESSAGE='NEWUSR'
+NEW_USR_NOTIF_MESSAGE='NEWUSR'
 UPDATE_QUOTES_MESSAGE='UPDQUO'
 RESOURCE_AUTHORIZATION_UPDATE_MESSAGE='RESAUTH'
 
@@ -36,7 +36,7 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           FILL_DATAPOINT_MESSAGE:'FillDatapointMessage',
                           NEG_VAR_MESSAGE:'NegativeVariableMessage',
                           POS_VAR_MESSAGE:'PositiveVariableMessage',
-                          NEW_USR_MESSAGE:'NewUserMessage',
+                          NEW_USR_NOTIF_MESSAGE:'NewUserNotificationMessage',
                           UPDATE_QUOTES_MESSAGE:'UpdateQuotesMessage',
                           RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:'ResourceAuthorizationUpdateMessage',
                           }
@@ -82,24 +82,26 @@ class MapVarsMessage:
             self.serialized_message=self.type+'|'+self.did.hex+'|'+self.date.hex
 
 class MonitorVariableMessage:
-    def __init__(self, serialized_message=None, did=None, date=None, pos=None, length=None, name=None):
+    def __init__(self, serialized_message=None, username=None, did=None, date=None, position=None, length=None, datapointname=None):
         if serialized_message:
             self.serialized_message=serialized_message
-            mtype,did,date,pos,length,name = self.serialized_message.split('|')
+            mtype,username,did,date,position,length,datapointname = self.serialized_message.split('|')
             self.type=mtype
+            self.username=username
             self.did=uuid.UUID(did)
             self.date=uuid.UUID(date)
-            self.pos=str(pos)
-            self.length=str(length)
-            self.name=str(name)
+            self.position=int(position)
+            self.length=int(length)
+            self.datapointname=datapointname
         else:
             self.type=MON_VAR_MESSAGE
+            self.username=username
             self.did=did
             self.date=date
-            self.pos=str(pos)
-            self.length=str(length)
-            self.name=str(name)
-            self.serialized_message=self.type+'|'+self.did.hex+'|'+self.date.hex+'|'+str(self.pos)+'|'+str(self.length)+'|'+str(self.name)
+            self.position=position
+            self.length=length
+            self.datapointname=datapointname
+            self.serialized_message=self.type+'|'+self.username+'|'+self.did.hex+'|'+self.date.hex+'|'+str(self.position)+'|'+str(self.length)+'|'+self.datapointname
 
 class GenerateDTreeMessage:
     def __init__(self, serialized_message=None, pid=None, date=None):
@@ -132,56 +134,58 @@ class FillDatapointMessage:
             self.serialized_message=self.type+'|'+str(self.did)+'|'+str(self.date)+'|'+str(self.pid)
 
 class NegativeVariableMessage:
-    def __init__(self, serialized_message=None, did=None, pid=None, date=None, pos=None, length=None):
+    def __init__(self, serialized_message=None, did=None, pid=None, date=None, position=None, length=None):
         if serialized_message:
             self.serialized_message=serialized_message
-            mtype,did,pid,date,pos,length = self.serialized_message.split('|')
+            mtype,did,pid,date,position,length = self.serialized_message.split('|')
             self.type=mtype
             self.did=uuid.UUID(did)
             self.pid=uuid.UUID(pid)
             self.date=uuid.UUID(date)
-            self.pos=str(pos)
-            self.length=str(length)
+            self.position=int(position)
+            self.length=int(length)
         else:
             self.type=NEG_VAR_MESSAGE
             self.did=did
             self.pid=pid
             self.date=date
-            self.pos=str(pos)
-            self.length=str(length)
-            self.serialized_message=self.type+'|'+self.did.hex+'|'+self.pid.hex+'|'+self.date.hex+'|'+str(self.pos)+'|'+str(self.length)
+            self.position=position
+            self.length=length
+            self.serialized_message=self.type+'|'+self.did.hex+'|'+self.pid.hex+'|'+self.date.hex+'|'+str(self.position)+'|'+str(self.length)
 
 class PositiveVariableMessage:
-    def __init__(self, serialized_message=None, did=None, pid=None, date=None, pos=None, length=None):
+    def __init__(self, serialized_message=None, did=None, pid=None, date=None, position=None, length=None):
         if serialized_message:
             self.serialized_message=serialized_message
-            mtype,did,pid,date,pos,length = self.serialized_message.split('|')
+            mtype,did,pid,date,position,length = self.serialized_message.split('|')
             self.type=mtype
             self.did=uuid.UUID(did)
             self.pid=uuid.UUID(pid)
             self.date=uuid.UUID(date)
-            self.pos=int(pos)
+            self.position=int(position)
             self.length=int(length)
         else:
             self.type=POS_VAR_MESSAGE
             self.did=did
             self.pid=pid
             self.date=date
-            self.pos=pos
+            self.position=position
             self.length=length
-            self.serialized_message=self.type+'|'+self.did.hex+'|'+self.pid.hex+'|'+self.date.hex+'|'+str(self.pos)+'|'+str(self.length)
+            self.serialized_message=self.type+'|'+self.did.hex+'|'+self.pid.hex+'|'+self.date.hex+'|'+str(self.position)+'|'+str(self.length)
 
-class NewUserMessage:
-    def __init__(self, serialized_message=None, uid=None):
+class NewUserNotificationMessage:
+    def __init__(self, serialized_message=None, email=None, code=None):
         if serialized_message:
             self.serialized_message=serialized_message
-            mtype,uid = self.serialized_message.split('|')
+            mtype,email,code = self.serialized_message.split('|')
             self.type=mtype
-            self.uid=uuid.UUID(uid)
+            self.email=email
+            self.code=code
         else:
-            self.type=NEW_USR_MESSAGE
-            self.uid=uid
-            self.serialized_message=self.type+'|'+self.uid.hex
+            self.type=NEW_USR_NOTIF_MESSAGE
+            self.email=email
+            self.code=code
+            self.serialized_message=('|').join((self.type,self.email,self.code))
 
 class UpdateQuotesMessage:
     def __init__(self, serialized_message=None, operation=None):
@@ -192,7 +196,7 @@ class UpdateQuotesMessage:
             operation_dict=json.loads(json_serialization)
             operation_class=operation_dict['opclass']
             operation_dict.pop('opclass',None)
-            self.operation=getattr(operations,operation_class)(**operation_dict)
+            self.operation=getattr(weboperations,operation_class)(**operation_dict)
         else:
             self.type=UPDATE_QUOTES_MESSAGE
             self.operation=operation
@@ -207,7 +211,7 @@ class ResourceAuthorizationUpdateMessage:
             operation_dict=json.loads(json_serialization)
             operation_class=operation_dict['opclass']
             operation_dict.pop('opclass',None)
-            self.operation=getattr(operations,operation_class)(**operation_dict)
+            self.operation=getattr(weboperations,operation_class)(**operation_dict)
         else:
             self.type=RESOURCE_AUTHORIZATION_UPDATE_MESSAGE
             self.operation=operation

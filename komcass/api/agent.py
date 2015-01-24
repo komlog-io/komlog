@@ -13,10 +13,10 @@ from komcass import connection
 
 def get_agent(aid):
     row=connection.session.execute(stmtagent.S_A_MSTAGENT_B_AID,(aid,))
-    if len(row)==1:
-        return ormagent.Agent(**row[0])
-    elif len(row)==0:
+    if not row:
         return None
+    elif len(row)==1:
+        return ormagent.Agent(**row[0])
     else:
         raise excpagent.DataConsistencyException(function='get_agent',field='aid',value=aid)
 
@@ -38,7 +38,7 @@ def get_agents_aids(uid):
 
 def get_number_of_agents_by_uid(uid):
     row=connection.session.execute(stmtagent.S_COUNT_MSTAGENT_B_UID,(uid,))
-    return row[0]['count']
+    return row[0]['count'] if row else 0
 
 def new_agent(agent):
     if not isinstance(agent, ormagent.Agent):

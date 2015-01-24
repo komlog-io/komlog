@@ -121,6 +121,10 @@ def insert_datapoint_data(pid, date, value):
     connection.session.execute(stmtdatapoint.I_A_DATDATAPOINT,(pid,date,value))
     return True
 
+def delete_datapoint_data_at(pid, date):
+    connection.session.execute(stmtdatapoint.D_A_DATDATAPOINT_B_PID_DATE,(pid,date))
+    return True
+
 def set_datapoint_last_received(pid, last_received):
     connection.session.execute(stmtdatapoint.U_LASTRECEIVED_MSTDATAPOINTSTATS,(last_received,pid))
     return True

@@ -28,6 +28,17 @@ MODULES = [
     'komcass.api.test.test_permission.KomcassApiPermissionTest',
     'komcass.api.test.test_quote.KomcassApiQuoteTest',
     'komcass.api.test.test_segment.KomcassApiSegmentTest',
+    'komlibs.interface.web.api.test.test_user.InterfaceWebApiUserTest',
+    'komlibs.interface.web.api.test.test_agent.InterfaceWebApiAgentTest',
+    'komlibs.interface.web.api.test.test_datasource.InterfaceWebApiDatasourceTest',
+    'komlibs.interface.web.api.test.test_datapoint.InterfaceWebApiDatapointTest',
+    'komlibs.interface.web.api.test.test_widget.InterfaceWebApiWidgetTest',
+    'komlibs.interface.web.api.test.test_dashboard.InterfaceWebApiDashboardTest',
+    'komlibs.interface.imc.model.test.test_messages.InterfaceImcModelMessagesTest',
+    'komlibs.interface.imc.api.test.test_gestconsole.InterfaceImcApiGestconsoleTest',
+    'komlibs.interface.imc.api.test.test_rescontrol.InterfaceImcApiRescontrolTest',
+    'komlibs.interface.imc.api.test.test_storing.InterfaceImcApiStoringTest',
+    'komlibs.interface.imc.api.test.test_textmining.InterfaceImcApiTextminingTest',
     ]
 
 def run_tests():

@@ -35,6 +35,7 @@ STATEMENTS={20000:'select * from mst_datasource where did=?',
             22003:'delete from dat_datasource_map where did=?',
             22004:'delete from dat_datasource where did=? and date=?',
             22005:'delete from dat_datasource_map where did=? and date=?',
+            22006:'delete datapoints[?] from dat_datasource_map where did=? and date=?',
             23000:'update dat_datasource_map set variables[?]=? where did=? and date=?',
             23001:'update dat_datasource_map set datapoints[?]=? where did=? and date=?'
            }
@@ -71,8 +72,9 @@ D_A_DATDATASOURCE_B_DID=22002
 D_A_DATDATASOURCEMAP_B_DID=22003
 D_A_DATDATASOURCE_B_DID_DATE=22004
 D_A_DATDATASOURCEMAP_B_DID_DATE=22005
+D_DATAPOINT_DATDATASOURCEMAP_B_PID_DID_DATE=22006
 
 # Updates
 
-U_VARIABLES_DATASOURCEMAP_B_DID_DATE=23000
-U_DATAPOINTS_DATASOURCEMAP_B_DID_DATE=23001
+U_VARIABLES_DATDATASOURCEMAP_B_DID_DATE=23000
+U_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE=23001

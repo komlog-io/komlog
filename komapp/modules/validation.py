@@ -47,7 +47,7 @@ class Validation(modules.Module):
                         fi = f[:-5]+'.qspl'
                         if self.validate(fi):
                             try:
-                                logger.logger.debug('File validated successfully: '+f)
+                                logger.logger.debug('File validated successfully: '+fi)
                                 fo = os.path.join(self.outputdir,os.path.basename(fi)[:-5]+'.vspl')
                                 os.rename(fi, fo)
                                 msgapi.send_message(messages.StoreSampleMessage(sample_file=fo))

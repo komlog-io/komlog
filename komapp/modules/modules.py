@@ -10,7 +10,6 @@ from komfig import logger
 from komcass import connection as casscon
 from komimc import api as msgapi
 from komimc import bus as msgbus
-from komlibs import messages
 from komlibs.mail import connection as mailcon
 
 class Module(object):
@@ -54,7 +53,7 @@ class Module(object):
             message = msgapi.retrieve_message(5)
             if message:
                 try:
-                    msgresult=messages.process_message(message)
+                    msgresult=msgapi.process_message(message)
                     if msgresult:
                         msgapi.process_msg_result(msgresult)
                     else:

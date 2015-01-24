@@ -1,97 +1,124 @@
+class GestaccountException(Exception):
+    def __init__(self, error=None):
+        self.error=error
 
-class AgentCreationException(Exception):
-    def __init__(self):
-        pass
+    def __str__(self):
+        return str(self.__class__)
 
-class AgentNotFoundException(Exception):
+class AgentCreationException(GestaccountException):
     def __init__(self):
-        pass
+        super(AgentCreationException,self).__init__()
 
-class AgentAlreadyExistsException(Exception):
+class AgentNotFoundException(GestaccountException):
     def __init__(self):
-        pass
+        super(AgentNotFoundException,self).__init__()
 
-class UserNotFoundException(Exception):
+class AgentAlreadyExistsException(GestaccountException):
     def __init__(self):
-        pass
+        super(AgentAlreadyExistsException,self).__init__()
 
-class UserAlreadyExistsException(Exception):
+class UserNotFoundException(GestaccountException):
     def __init__(self):
-        pass
+        super(UserNotFoundException,self).__init__()
 
-class EmailAlreadyExistsException(Exception):
+class UserAlreadyExistsException(GestaccountException):
     def __init__(self):
-        pass
+        super(UserAlreadyExistsException,self).__init__()
 
-class UserConfirmationException(Exception):
+class EmailAlreadyExistsException(GestaccountException):
     def __init__(self):
-        pass
+        super(EmailAlreadyExistsException,self).__init__()
+
+class UserConfirmationException(GestaccountException):
+    def __init__(self):
+        super(UserConfirmationException,self).__init__()
     
-class UserCreationException(Exception):
+class UserCreationException(GestaccountException):
     def __init__(self):
-        pass
+        super(UserCreationException,self).__init__()
 
-class DatasourceCreationException(Exception):
+class InvalidPasswordException(GestaccountException):
     def __init__(self):
-        pass
+        super(InvalidPasswordException,self).__init__()
 
-class DatasourceNotFoundException(Exception):
+class DatasourceCreationException(GestaccountException):
     def __init__(self):
-        pass
+        super(DatasourceCreationException,self).__init__()
 
-class DatasourceUploadContentException(Exception):
+class DatasourceNotFoundException(GestaccountException):
     def __init__(self):
-        pass
+        super(DatasourceNotFoundException,self).__init__()
 
-class DatasourceUpdateException(Exception):
+class DatasourceDataNotFoundException(GestaccountException):
     def __init__(self):
-        pass
+        super(DatasourceDataNotFoundException,self).__init__()
 
-class DatapointDataNotFoundException(Exception):
-    def __init__(self, last_date):
+class DatasourceVariableNotFoundException(GestaccountException):
+    def __init__(self):
+        super(DatasourceVariableNotFoundException,self).__init__()
+
+class DatasourceMapNotFoundException(GestaccountException):
+    def __init__(self):
+        super(DatasourceMapNotFoundException,self).__init__()
+
+class DatasourceUploadContentException(GestaccountException):
+    def __init__(self):
+        super(DatasourceUploadContentException,self).__init__()
+
+class DatasourceUpdateException(GestaccountException):
+    def __init__(self):
+        super(DatasourceUpdateException,self).__init__()
+
+class DatapointDataNotFoundException(GestaccountException):
+    def __init__(self, last_date=None):
         self.last_date=last_date
+        super(DatapointDataNotFoundException,self).__init__()
 
-class DatapointNotFoundException(Exception):
+class DatapointNotFoundException(GestaccountException):
     def __init__(self):
-        pass
+        super(DatapointNotFoundException,self).__init__()
 
-class DatapointUpdateException(Exception):
+class DatapointUpdateException(GestaccountException):
     def __init__(self):
-        pass
+        super(DatapointUpdateException,self).__init__()
 
-class DatapointCreationException(Exception):
-    def __init__(self, last_date):
-        self.last_date=last_date
-
-class BadParametersException(Exception):
+class DatapointCreationException(GestaccountException):
     def __init__(self):
-        pass
+        super(DatapointCreationException,self).__init__()
 
-class GraphNotFoundException(Exception):
+class DatapointDTreeTrainingSetEmptyException(GestaccountException):
     def __init__(self):
-        pass
+        super(DatapointDTreeTrainingSetEmptyException,self).__init__()
 
-class GraphCreationException(Exception):
+class DatapointDTreeNotFoundException(GestaccountException):
     def __init__(self):
-        pass
+        super(DatapointDTreeNotFoundException,self).__init__()
 
-class GraphUpdateException(Exception):
+class VariableMatchesExistingDatapointException(GestaccountException):
     def __init__(self):
-        pass
+        super(VariableMatchesExistingDatapointException,self).__init__()
 
-class WidgetCreationException(Exception):
+class BadParametersException(GestaccountException):
     def __init__(self):
-        pass
+        super(BadParametersException,self).__init__()
 
-class WidgetNotFoundException(Exception):
+class WidgetCreationException(GestaccountException):
     def __init__(self):
-        pass
+        super(WidgetCreationException,self).__init__()
 
-class WidgetTypeNotFoundException(Exception):
+class WidgetNotFoundException(GestaccountException):
     def __init__(self):
-        pass
+        super(WidgetNotFoundException,self).__init__()
 
-class DashboardNotFoundException(Exception):
+class WidgetAlreadyExistsException(GestaccountException):
     def __init__(self):
-        pass
+        super(WidgetAlreadyExistsException,self).__init__()
+
+class WidgetTypeNotFoundException(GestaccountException):
+    def __init__(self):
+        super(WidgetTypeNotFoundException,self).__init__()
+
+class DashboardNotFoundException(GestaccountException):
+    def __init__(self):
+        super(DashboardNotFoundException,self).__init__()
 

@@ -23,6 +23,7 @@ from komlibs.gestaccount import exceptions
 from komlibs.gestaccount.widget import api as gestwidget
 from komlibs.general.validation import arguments
 from komlibs.general.time import timeuuid
+from komlibs.textman import variables
 
 def create_datasource(username,aid,datasourcename):
     if not arguments.is_valid_username(username) or not arguments.is_valid_uuid(aid) or not arguments.is_valid_datasourcename(datasourcename):
@@ -37,7 +38,7 @@ def create_datasource(username,aid,datasourcename):
         raise exceptions.AgentNotFoundException()
     datasource=ormdatasource.Datasource(did=did,aid=aid,uid=user.uid,datasourcename=datasourcename,state=states.ACTIVE,creation_date=now)
     if cassapidatasource.new_datasource(datasource=datasource):
-        return datasource
+        return {'did':datasource.did, 'datasourcename':datasource.datasourcename, 'uid': datasource.uid, 'aid':datasource.aid, 'state':datasource.state}
     else:
         raise exceptions.DatasourceCreationException()
 
@@ -56,39 +57,74 @@ def get_last_processed_datasource_data(did):
         dsdtps=[]
         if datasource_datapoints:
             for pid,pos in datasource_datapoints.items():
-                dsdtps.append({'pid':str(pid),'id':str(pos)})
+                dsdtps.append({'pid':pid,'position':pos})
         data={}
-        data['did']=str(did)
-        data['ds_date']=timeuuid.get_unix_timestamp(last_mapped)
-        data['ds_seq']=datasource_data.get_sequence()
-        data['ds_vars']=[(pos,length) for pos,length in dsvars.items()] if dsvars else None
-        data['ds_content']=datasource_data.content
-        data['ds_dtps']=dsdtps
+        data['did']=did
+        data['last_processed']=last_mapped
+        data['variables']=[(pos,length) for pos,length in dsvars.items()] if dsvars else None
+        data['content']=datasource_data.content
+        data['datapoints']=dsdtps
         return data
     else:
         raise exceptions.DatasourceNotFoundException()
 
 def upload_datasource_data(did,content,dest_dir):
-    if not arguments.is_valid_uuid(did) or not arguments.is_valid_datasource_content(content):
+    if not arguments.is_valid_uuid(did) or not arguments.is_valid_datasource_content(content) or not arguments.is_valid_string(dest_dir):
         raise exceptions.BadParametersException()
     datasource=cassapidatasource.get_datasource(did=did)
     if datasource:
-        hex_now=timeuuid.uuid1().hex
-        hex_did=did.hex
+        now=timeuuid.uuid1()
         filedata={}
-        filedata['received']=hex_now
-        filedata['did']=hex_did
+        filedata['received']=now.hex
+        filedata['did']=did.hex
         filedata['json_content']=content
-        json_filedata=json.dumps(filedata)
-        filename=hex_now+'_'+hex_did+'.pspl'
+        try:
+            json_filedata=json.dumps(filedata)
+        except Exception:
+            raise exceptions.BadParametersException()
+        filename=now.hex+'_'+did.hex+'.pspl'
         destfile=os.path.join(dest_dir,filename)
         if fsapi.create_sample(destfile,json_filedata):
             return destfile
         else:
-            logger.logger.debug('failed')
+            logger.logger.debug('Could not store datasource content on disk: '+str(destfile))
             raise exceptions.DatasourceUploadContentException()
     else:
         raise exceptions.DatasourceNotFoundException()
+
+def get_datasource_data(did, date):
+    if not arguments.is_valid_uuid(did) or not arguments.is_valid_date(date):
+        raise exceptions.BadParametersException()
+    dsdata=cassapidatasource.get_datasource_data_at(did=did, date=date)
+    if dsdata:
+        dsvars=cassapidatasource.get_datasource_map_variables(did=did,date=date)
+        datasource_datapoints=cassapidatasource.get_datasource_map_datapoints(did=did, date=date)
+        dsdtps=[]
+        if datasource_datapoints:
+            for pid,pos in datasource_datapoints.items():
+                dsdtps.append({'pid':pid,'position':pos})
+        data={}
+        data['did']=dsdata.did
+        data['date']=dsdata.date
+        data['variables']=[(pos,length) for pos,length in dsvars.items()] if dsvars else None
+        data['content']=dsdata.content
+        data['datapoints']=dsdtps
+        return data
+    else:
+        raise exceptions.DatasourceDataNotFoundException()
+
+def store_datasource_data(did, date, content):
+    if not arguments.is_valid_uuid(did) or not arguments.is_valid_datasource_content(content) or not arguments.is_valid_date(date):
+        return False
+    dsdobj=ormdatasource.DatasourceData(did=did,date=date,content=content)
+    if cassapidatasource.insert_datasource_data(dsdobj=dsdobj):
+        if cassapidatasource.set_last_received(did=did, last_received=date):
+            return True
+        else:
+            cassapidatasource.delete_datasource_data_at(did=did, date=date)
+            return False
+    else:
+        return False
 
 def get_datasource_config(did):
     if not arguments.is_valid_uuid(did):
@@ -96,9 +132,10 @@ def get_datasource_config(did):
     datasource=cassapidatasource.get_datasource(did=did)
     if datasource:
         data={}
-        data['did']=str(did)
-        data['aid']=str(datasource.aid)
-        data['name']=datasource.datasourcename
+        data['did']=did
+        data['aid']=datasource.aid
+        data['uid']=datasource.uid
+        data['datasourcename']=datasource.datasourcename
         return data
     else:
         raise exceptions.DatasourceNotFoundException()
@@ -114,21 +151,56 @@ def get_datasources_config(username):
         data=[]
         if datasources:
             for datasource in datasources:
-                data.append({'did':str(datasource.did),'aid':str(datasource.aid),'name':datasource.datasourcename})
+                data.append({'did':datasource.did,'aid':datasource.aid,'datasourcename':datasource.datasourcename})
         return data
 
-def update_datasource_config(did,data):
-    if not arguments.is_valid_uuid(did) or not arguments.is_valid_dict(data):
-        raise exceptions.BadParametersException()
-    if not 'ds_name' in data or not arguments.is_valid_datasourcename(data['ds_name']):
+def update_datasource_config(did,datasourcename):
+    if not arguments.is_valid_uuid(did) or not arguments.is_valid_datasourcename(datasourcename):
         raise exceptions.BadParametersException()
     datasource=cassapidatasource.get_datasource(did=did)
     if datasource:
-        datasource.datasourcename=data['ds_name']
+        datasource.datasourcename=datasourcename
         if cassapidatasource.insert_datasource(datasource=datasource):
             return True
         else:
             raise exceptions.DatasourceUpdateException()
     else:
         raise exceptions.DatasourceNotFoundException()
-        
+
+def generate_datasource_map(did, date):
+    '''
+    Los pasos son los siguientes:
+    - Obtenemos el contenido
+    - extraemos las variables que contiene, con la informacion necesaria para ser identificadas univocamente
+    - almacenamos esta informacion en bbdd 
+    '''
+    if not arguments.is_valid_uuid(did) or not arguments.is_valid_date(date):
+        raise exceptions.BadParametersException()
+    varlist=[]
+    dsdata=cassapidatasource.get_datasource_data_at(did=did, date=date)
+    if dsdata:
+        varlist = variables.get_varlist(dsdata.content)
+        mapcontentlist=[]
+        mapvarcontentlist={}
+        for var in varlist:
+            content=var.__dict__
+            mapcontentlist.append(content)
+            mapvarcontentlist[content['s']]=content['l']
+        mapcontentjson=json.dumps(mapcontentlist)
+        dsmapobj=ormdatasource.DatasourceMap(did=did,date=date,content=mapcontentjson,variables=mapvarcontentlist)
+        datasource_stats=cassapidatasource.get_datasource_stats(did=did)
+        try:
+            if not cassapidatasource.insert_datasource_map(dsmapobj=dsmapobj):
+                return False
+            if not datasource_stats or not datasource_stats.last_mapped or timeuuid.get_unix_timestamp(datasource_stats.last_mapped)<timeuuid.get_unix_timestamp(date):
+                cassapidatasource.set_last_mapped(did=did, last_mapped=date)
+            return True
+        except Exception as e:
+            #rollback
+            logger.logger.exception('Exception creating Map for did '+str(did)+': '+str(e))
+            cassapidatasource.delete_datasource_map(did=did, date=date)
+            return False
+    else:
+        logger.logger.error('Datasource data not found: '+str(did)+' '+str(date))
+        raise exceptions.DatasourceDataNotFoundException()
+
