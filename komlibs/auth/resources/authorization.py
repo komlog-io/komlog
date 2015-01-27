@@ -84,3 +84,7 @@ def authorize_put_dashboard_config(uid,bid):
     permission=cassapiperm.get_user_dashboard_perm(uid=uid, bid=bid)
     return True if permission else False
 
+def authorize_mark_positive_variable(uid,pid):
+    permission=cassapiperm.get_user_datapoint_perm(uid=uid, pid=pid)
+    return True if permission else False
+

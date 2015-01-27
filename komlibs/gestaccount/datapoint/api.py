@@ -25,11 +25,11 @@ def get_datapoint_data(pid, fromdate=None, todate=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
     if not arguments.is_valid_uuid(pid):
-        raise exceptions.BadParameterException()
+        raise exceptions.BadParametersException()
     if todate and not arguments.is_valid_date(todate):
-        raise exceptions.BadParameterException()
+        raise exceptions.BadParametersException()
     if fromdate and not arguments.is_valid_date(fromdate):
-        raise exceptions.BadParameterException()
+        raise exceptions.BadParametersException()
     if not todate:
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
         todate=datapoint_stats.last_received if datapoint_stats and datapoint_stats.last_received else timeuuid.uuid1()
@@ -217,15 +217,22 @@ def generate_decision_tree(pid):
             dates_to_get.append(dtp_negative.date)
     dates_to_get=sorted(set(dates_to_get))
     dsmaps=[]
+    logger.logger.debug('Vamos a obtener los siguientes dsmaps: '+str(dates_to_get))
     for date in dates_to_get:
+        logger.logger.debug('Estamos en: '+str(date))
         dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
         varlist=variables.get_varlist(jsoncontent=dsmap.content)
+        logger.logger.debug('sus variables: '+str(varlist))
         if date in positive_samples:
+            logger.logger.debug('Esta fecha esta dentro de los positivos')
             position,length=positive_samples[date]
+            logger.logger.debug('buscando la variable...')
             for var in varlist:
                 if var.s==position:
+                    logger.logger.debug('Encontrada, marcando como positiva: '+str(var))
                     var.h['result']=True
                 else:
+                    logger.logger.debug('NO Encontrada, marcando como negativa: '+str(var))
                     var.h['result']=False
                 dtree_training_set.append(var.h)
         if date in negative_samples and date not in positive_samples:

@@ -456,7 +456,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         username=self.userinfo['username']
         did=self.userinfo['agents'][0]['dids'][0]
         datas=[{'a':'dict'},]
-        for datasourcename in [None, 234234, 23423.234234, ['a','list'],{'a':'dict'},('a','tuple'),'invalid/datsourcename','Invalid\tdatasourcename','Invalid\n','ÑÑnovalid']:
+        for datasourcename in [None, 234234, 23423.234234, ['a','list'],{'a':'dict'},('a','tuple'),'Invalid\tdatasourcename','Invalid\n','ÑÑnovalid']:
             datas.append({'datasourcename':datasourcename})
         for data in datas:
             self.assertRaises(exceptions.BadParametersException, datasourceapi.update_datasource_config_request, username=username, did=did, data=data)

@@ -9,6 +9,7 @@ from komfig import logger
 from komlibs.general.validation import arguments as args
 from komlibs.gestaccount.datapoint import api as datapointapi
 from komlibs.gestaccount.datasource import api as datasourceapi
+from komlibs.gestaccount.widget import api as widgetapi
 from komlibs.gestaccount.widget import types as widgettypes
 from komlibs.interface.imc.model import messages, responses
 from komlibs.interface.imc import status, exceptions
@@ -36,16 +37,13 @@ def process_message_MONVAR(message):
         if datapoint:
             datasource=datasourceapi.get_datasource_config(did=did)
             operation=weboperations.NewDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=datapoint['pid'])
-            newmsg=messages.UpdateQuotesMessage(operation=operation)
-            response.add_msg_originated(newmsg)
-            newmsg=messages.ResourceAuthorizationUpdateMessage(operation=operation)
-            response.add_msg_originated(newmsg)
-            #hay que solicitar el fildtp tambien
-            #newmsg=messages.NewWidgetMessage(username=username,widget_type=widgettypes.DP_WIDGET,params={'pid':datapoint['pid']})
-            #response.add_msg_originated(newmsg)
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=operation))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=operation))
+            response.add_msg_originated(messages.FillDatapointMessage(pid=datapoint['pid'],date=date))
+            response.add_msg_originated(messages.NewDPWidgetMessage(username=username,pid=datapoint['pid']))
             response.status=status.IMC_STATUS_OK
         else:
-            logger.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position))
+            logger.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position)+' length: '+str(length))
             response.status=status.IMC_STATUS_INTERNAL_ERROR
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -112,6 +110,44 @@ def process_message_NEWUSR(message):
             response.status=status.IMC_STATUS_OK
         else:
             logger.logger.error('Error sending new user welcome mail to: '+usermail)
+            response.status=status.IMC_STATUS_INTERNAL_ERROR
+    else:
+        response.status=status.IMC_STATUS_BAD_PARAMETERS
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_NEWDSW(message):
+    ''' this message creates a new DS_WIDGET associated to a did and username '''
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    did=message.did
+    username=message.username
+    if args.is_valid_uuid(did) and args.is_valid_username(username):
+        widget=widgetapi.new_widget_ds(username=username, did=did)
+        if widget:
+            operation=weboperations.NewWidgetOperation(uid=widget['uid'],wid=widget['wid'])
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=operation))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=operation))
+            response.status=status.IMC_STATUS_OK
+        else:
+            response.status=status.IMC_STATUS_INTERNAL_ERROR
+    else:
+        response.status=status.IMC_STATUS_BAD_PARAMETERS
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_NEWDPW(message):
+    ''' this message creates a new DP_WIDGET associated to a pid and username'''
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    pid=message.pid
+    username=message.username
+    if args.is_valid_uuid(pid) and args.is_valid_username(username):
+        widget=widgetapi.new_widget_dp(username=username, pid=pid)
+        if widget:
+            operation=weboperations.NewWidgetOperation(uid=widget['uid'],wid=widget['wid'])
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=operation))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=operation))
+            response.status=status.IMC_STATUS_OK
+        else:
             response.status=status.IMC_STATUS_INTERNAL_ERROR
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS

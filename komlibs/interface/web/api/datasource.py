@@ -10,7 +10,7 @@ from komlibs.auth import authorization
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.gestaccount.datasource import api as datasourceapi
 from komlibs.gestaccount.widget import api as widgetapi
-from komimc import messages
+from komlibs.interface.imc.model import messages
 from komimc import api as msgapi
 from komlibs.interface.web import status, exceptions
 from komlibs.interface.web.model import webmodel
@@ -93,17 +93,12 @@ def new_datasource_request(username, aid, datasourcename):
         authorization.authorize_request('NewDatasourceRequest',username,aid=aid)
         datasource=datasourceapi.create_datasource(username=username,aid=aid,datasourcename=datasourcename)
         if datasource:
-            widget=widgetapi.new_widget_ds(username=username, did=datasource['did'])
-            if widget:
-                operation=weboperations.NewWidgetOperation(uid=widget['uid'],wid=widget['wid'])
-                message=messages.UpdateQuotesMessage(operation=operation)
-                msgapi.send_message(message)
-                message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
-                msgapi.send_message(message)
             operation=weboperations.NewDatasourceOperation(uid=datasource['uid'],aid=aid,did=datasource['did'])
             message=messages.UpdateQuotesMessage(operation=operation)
             msgapi.send_message(message)
             message=messages.ResourceAuthorizationUpdateMessage(operation=operation)
+            msgapi.send_message(message)
+            message=messages.NewDSWidgetMessage(username=username, did=datasource['did'])
             msgapi.send_message(message)
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
     else:

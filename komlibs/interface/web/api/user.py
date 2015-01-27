@@ -10,11 +10,11 @@ from komlibs.auth import authorization
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
-from komimc import messages
 from komimc import api as msgapi
 from komlibs.interface.web import status, exceptions
 from komlibs.interface.web.model import webmodel
 from komlibs.interface.web.operations import weboperations
+from komlibs.interface.imc.model import messages
 from komlibs.general.validation import arguments as args
 
 

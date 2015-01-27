@@ -32,6 +32,7 @@ func_requests={
                'NewDashboardRequest':'authorize_new_dashboard_creation',
                'GetDashboardConfigRequest':'authorize_get_dashboard_config',
                'DashboardUpdateConfigurationRequest':'authorize_dashboard_update_configuration',
+               'MarkPositiveVariableRequest':'authorize_mark_positive_variable',
                }
 
 def authorize_request(request,username,aid=None,did=None,pid=None,gid=None,wid=None,bid=None):
@@ -169,5 +170,12 @@ def authorize_new_dashboard_creation(params):
     uid=params['uid']
     if not quoauth.authorize_new_dashboard(uid=uid) \
         or not resauth.authorize_new_dashboard(uid=uid):
+        raise authexcept.AuthorizationException()
+
+def authorize_mark_positive_variable(params):
+    uid=params['uid']
+    pid=params['pid']
+    if not quoauth.authorize_mark_positive_variable(uid,pid=pid) \
+        or not resauth.authorize_mark_positive_variable(uid,pid=pid):
         raise authexcept.AuthorizationException()
 

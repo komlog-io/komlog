@@ -5,6 +5,7 @@ author: jcazor@komlog.org
 date: 2013/03/09
 '''
 import re
+import zlib
 import json
 from decimal import *
 
@@ -82,17 +83,17 @@ def calculate_varmap(varlist,content):
         for i in to_increase_depth:
             left_string=get_string(offset=offset,start=varlist[i].s,content=content,before=True)
             right_string=get_string(offset=offset,start=varlist[i].s+varlist[i].l-1,content=content,before=False)
-            left_hash=hash(left_string)
-            right_hash=hash(right_string)
+            left_hash=zlib.adler32(bytes(left_string,'utf-8'),0xffffffff)
+            right_hash=zlib.adler32(bytes(right_string,'utf-8'),0xffffffff)
             varlist[i].sethash(offset,5,left_hash,right_hash)
         offset+=10
         to_increase_depth=[]
         for i,var_1 in enumerate(varlist):
-           for j,var_2 in enumerate(varlist):
-               if i != j:
-                   if var_1==var_2:
-                       to_increase_depth.append(i)
-                       break
+            for j,var_2 in enumerate(varlist):
+                if i != j:
+                    if var_1==var_2:
+                        to_increase_depth.append(i)
+                        break
         to_increase_depth=list(set(to_increase_depth))
 
 def get_string(offset,start,content,before):

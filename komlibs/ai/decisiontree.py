@@ -4,6 +4,8 @@
 import math
 import uuid
 import json
+import copy
+from komfig import logger
 
 class DecisionTreeNode:
     def __init__(self, attribute,value,parentid=None,nodeid=None,endnode=False,result=False):
@@ -16,16 +18,6 @@ class DecisionTreeNode:
             self.nodeid=nodeid
         self.endnode=endnode
         self.result=result
-        #print('Nuevo Nodo', end=' ')
-        #print('att:'+str(self.attribute), end=' ')
-        #print('val:'+str(self.value), end=' ')
-        #print('pid:'+str(self.parentid), end=' ')
-        #print('nid:'+str(self.nodeid), end=' ')
-        #print('end:'+str(self.endnode), end=' ')
-        #print('result:'+str(self.result))
-
-
-
 
 class DecisionTree:
     def __init__(self, jsontree=None,rawdata=None):
@@ -44,14 +36,16 @@ class DecisionTree:
         keys=list(set(keys))
         #remove result key
         keys.remove('result')
-        #print ('VAmos a generar el arbol con '+str(self.raw_data)+' Y '+str(keys))
+        #logger.logger.debug('VAmos a generar el arbol con '+str(self.raw_data)+' Y '+str(keys))
         self.tree=self.learn_tree(rows=self.raw_data,attributes=keys)
 
     def learn_tree(self,rows,attributes,parentid=None):
+        #logger.logger.debug('llamada a learn_tree, con rows: '+str(rows)+' y attr:'+str(attributes))
         #print('LLamada nueva', end=' ')
         #print rows
         #print attributes
         node_list=[]
+        local_attributes=copy.deepcopy(attributes)
         if len(rows)==0:
             node_list.append(DecisionTreeNode(attribute='',value=1,parentid=parentid,endnode=True,result=False))
         else:
@@ -71,24 +65,25 @@ class DecisionTree:
             elif t==n:
                 #print('Todos NEGATIVOS')
                 node_list.append(DecisionTreeNode(attribute='',value=1,parentid=parentid,endnode=True))
-            elif len(attributes)==0: #aqui deberia devolver que es necesario aumentar la precision del hash de las muestras de entrenamiento
+            elif len(local_attributes)==0: #aqui deberia devolver que es necesario aumentar la precision del hash de las muestras de entrenamiento
                 #print('ME QUEDE SIN ATRIBUTOS')
                 #print('ESTAS SON LAS ROWS QUE NO SE HAN PODIDO DETERMINAR')
                 #print(rows)
                 node_list.append(DecisionTreeNode(attribute='',value=1,parentid=parentid,endnode=True))
             else:
                 #print('POSITIVOS Y NEGATIVOS ENTRE LAS VARIABLES')
-                next_att=self.__get_attribute(rows,attributes)
-                #print('Siguiente atributo: ', end=' ')
+                next_att=self.__get_attribute(rows,local_attributes)
+                #logger.logger.debug('Atributo seleccionado: '+next_att)
                 #print(next_att)
-                attributes.remove(next_att)
+                local_attributes.remove(next_att)
                 different_values=[]
                 for row in rows:
                     if row['result']:
                         different_values.append(row[next_att])
                 different_values=list(set(different_values))
-                #print('VALORES POSITIVOS: '+str(different_values))
+                #logger.logger.debug('Evaluaremos rows con '+next_att+'='+str(different_values))
                 for value in different_values:
+                    #logger.logger.debug('Empezamos con '+next_att+'='+str(value))
                     selected_rows=[]
                     for row in rows:
                         if row[next_att]==value:
@@ -96,12 +91,14 @@ class DecisionTree:
                     if len(selected_rows)==1:
                         #print('ULTIMA ROW DEL GRUPO')
                         new_node=DecisionTreeNode(attribute=next_att,value=value,parentid=parentid,endnode=True,result=selected_rows[0]['result'])
+                        #logger.logger.debug('ultima row del grupo. anadimos el siguiente nodo: '+str(new_node.__dict__))
                         node_list.append(new_node)
                     else:
                         #print('VARIOS ROWS CON ATTRIBUTO ENTRE LOS VALORES POSITIVOS, CONTINUAMOS CON LA SIGUIENTE ITERACION')
                         new_node=DecisionTreeNode(attribute=next_att,value=value,parentid=parentid,endnode=False)
                         node_list.append(new_node)
-                        more_nodes=self.learn_tree(rows=selected_rows,attributes=attributes,parentid=new_node.nodeid)
+                        #logger.logger.debug('Iterando nuevamente con las siguientes rows: '+str(selected_rows)+'attributes: '+str(local_attributes))
+                        more_nodes=self.learn_tree(rows=selected_rows,attributes=local_attributes,parentid=new_node.nodeid)
                         for node in more_nodes:
                             node_list.append(node)
         return node_list
@@ -194,8 +191,6 @@ class DecisionTree:
                                 return node.result
                             else:
                                 return eval_node(parentid=node.nodeid)
-                        else:
-                            return False
                     except KeyError:
                         if node.attribute=='' and node.endnode:
                             return node.result

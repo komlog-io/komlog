@@ -24,7 +24,7 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
     def test_MonitorVariableMessage_failure_invalid_datapointname(self):
         ''' creation of a MonitorVariableMessage object should fail if datapointname is invalid '''
         username='test_monitorvariablemessage_failure'
-        datapointnames=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4(), json.dumps('username'), 'user\nname','user\tname']
+        datapointnames=[None, 23423, 2323.2342, {'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4(), json.dumps('username'), 'user\nname','user\tname']
         did=uuid.uuid4()
         date=timeuuid.uuid1()
         position=1

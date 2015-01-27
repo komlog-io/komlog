@@ -6,7 +6,7 @@ from komapp.modules import modules
 from komfig import logger, config, options
 from komimc import bus as msgbus
 from komimc import api as msgapi
-from komimc import messages
+from komlibs.interface.imc.model import messages
 
 class Validation(modules.Module):
     def __init__(self, instance_number):

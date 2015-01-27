@@ -81,7 +81,7 @@ angular.module('komlogApp')
                 stored=true
                 $http.get(dp_obj._baseUrl,{params:params}).success(function (data) {
                     for (var j=0;j<data.length;j++) {
-                        dp_obj['data'][data[j].date]=data[j].value
+                        dp_obj['data'][data[j].timestamp]=data[j].value
                     }
                 })
                 break;
@@ -92,7 +92,7 @@ angular.module('komlogApp')
             $http.get(new_dtp._baseUrl,{params:params}).success(function (data) {
                 new_dtp._last_updated=new Date()
                 for (var j=0;j<data.length;j++) {
-                    new_dtp.data[data[j].date]=data[j].value
+                    new_dtp.data[data[j].timestamp]=data[j].value
                 }
                 $scope.dp_d.push(new_dtp)
             })
@@ -118,10 +118,10 @@ angular.module('komlogApp')
     var loadDatasourceWidgetContents = function (did) {
         datasourcesDataResource.get({id:did}).$promise.then( function (data) {
            updateDatasourceData(data);
-           if (data.ds_dtps.length>0) {
-               for (var i=0;i<data.ds_dtps.length;i++){
-                   updateDatapointConfig(data.ds_dtps[i].pid)
-                   updateDatapointData(data.ds_dtps[i].pid)
+           if (data.datapoints.length>0) {
+               for (var i=0;i<data.datapoints.length;i++){
+                   updateDatapointConfig(data.datapoints[i].pid)
+                   updateDatapointData(data.datapoints[i].pid)
                    }
                }
            })
@@ -223,8 +223,8 @@ angular.module('komlogApp')
     $scope.requestWidgetData = function (wid) {
         for (var i=0;i<$scope.wg_lc.length;i++) {
             if ($scope.wg_lc[i].wid==wid && $scope.wg_lc[i].bid==$scope.currentDashboard) {
-                init=$scope.wg_lc[i].interval_init
-                end=$scope.wg_lc[i].interval_end
+                init=new Date($scope.wg_lc[i].interval_init).getTime()/1000
+                end=new Date($scope.wg_lc[i].interval_end).getTime()/1000
                 for (var j=0;j<$scope.wg_lc[i].vars.length;j++) {
                     pid=$scope.wg_lc[i].vars[j];
                     dataServices.loadDatapointData(pid,init,end);
@@ -249,10 +249,10 @@ angular.module('komlogApp')
         }
 
         var updateElementContent = function () {
-            var e_content=ds_content.ds_content
-            var dtps=ds_content.ds_dtps
-            for (var i=ds_content.ds_vars.length; i>0; i--) {
-                e_content=labelSubstringStartingAtOfLength(e_content,ds_content.ds_vars[i-1][0],ds_content.ds_vars[i-1][1]);
+            var e_content=ds_content.content
+            var datapoints=ds_content.datapoints
+            for (var i=ds_content.variables.length; i>0; i--) {
+                e_content=labelSubstringStartingAtOfLength(e_content,ds_content.variables[i-1][0],ds_content.variables[i-1][1]);
             }
             element.html(e_content);
             vars=element.children();
@@ -261,14 +261,14 @@ angular.module('komlogApp')
                 id=vars.eq(i).prop('id')
                 if (id!=null){
                     monitored_var=null
-                    for (var j=0;j<dtps.length;j++) {
-                        if (dtps[j].id==id) {
+                    for (var j=0;j<datapoints.length;j++) {
+                        if (datapoints[j].index==id) {
                             monitored_var=angular.element('<div>')
                                     .addClass('monitored-var')
-                                    .attr('pid',dtps[j].pid)
+                                    .attr('pid',datapoints[j].pid)
                                     .attr('id',id).text(vars.eq(i).text());
                             vars.eq(i).replaceWith($compile(monitored_var)(scope))
-                            dtps.splice(j,1);
+                            datapoints.splice(j,1);
                         }
                     }
                     if (monitored_var==null){
@@ -276,7 +276,7 @@ angular.module('komlogApp')
                                     .addClass('detected-var')
                                     .text(vars.eq(i).text())
                                     .attr('id',id)
-                                    .attr('date',ds_content.ds_date)
+                                    .attr('date',ds_content.timestamp)
                         vars.eq(i).replaceWith($compile(detected_var)(scope))
                     }
                 }
@@ -399,13 +399,13 @@ angular.module('komlogApp')
                 for (var i=0;i<scope.dp_d.length;i++){
                     if (scope.dp_d[i].pid==my_wg_lc.vars[0]) {
                         for (var j in scope.dp_d[i].data) {
-                            my_dp_d.push({date:new Date(j),value:scope.dp_d[i].data[j]})
+                            my_dp_d.push({date:new Date(j*1000),value:scope.dp_d[i].data[j]})
                         }
                     }
                 }
-
                 my_wg_lc.interval_init=d3.min(my_dp_d, function(d) {return d.date.toISOString()}) 
                 my_wg_lc.interval_end=d3.max(my_dp_d, function(d) {return d.date.toISOString()}) 
+                console.log(my_wg_lc);
             }
         }
 
@@ -418,7 +418,7 @@ angular.module('komlogApp')
             for (var i=0;i<scope.dp_d.length;i++){
                 if (scope.dp_d[i].pid==my_wg_lc.vars[0]) {
                     for (var j in scope.dp_d[i].data) {
-                        d_date=new Date(j)
+                        d_date=new Date(j*1000)
                         if ((d_date>=new Date(my_wg_lc.interval_init)) && (d_date<=new Date(my_wg_lc.interval_end))) {
                             my_dp_d.push({date:d_date,value:scope.dp_d[i].data[j]})
                         }
@@ -528,7 +528,7 @@ angular.module('komlogApp')
         for (var i=0;i<scope.dp_d.length;i++) {
             if (scope.dp_d[i].pid == pid) {
                 for (var s_date in scope.dp_d[i].data) {
-                    date=new Date(s_date)
+                    date=new Date(s_date*1000)
                     if ((date >= new Date(my_wg_lc.interval_init)) &&
                         (date <= new Date(my_wg_lc.interval_end))) {
                         hg_data.push(scope.dp_d[i].data[s_date])
@@ -536,6 +536,7 @@ angular.module('komlogApp')
                 }
             }
         }
+        console.log(hg_data);
 
         var formatCount = d3.format(",.0f");
         var formatPercent = d3.format(",.1f");
@@ -637,7 +638,7 @@ angular.module('komlogApp')
                 if (scope.dp_d[i].pid == pids[j]) {
                     data=[]
                     for (var k in scope.dp_d[i].data) {
-                        date=new Date(k)
+                        date=new Date(k*1000)
                         if (new Date(my_wg_lc.interval_init)<=date && new Date(my_wg_lc.interval_end)>=date) {
                             data.push({date:date,value:scope.dp_d[i].data[k]})
                         }

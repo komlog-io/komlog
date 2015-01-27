@@ -28,6 +28,8 @@ POS_VAR_MESSAGE='POSVAR'
 NEW_USR_NOTIF_MESSAGE='NEWUSR'
 UPDATE_QUOTES_MESSAGE='UPDQUO'
 RESOURCE_AUTHORIZATION_UPDATE_MESSAGE='RESAUTH'
+NEW_DP_WIDGET_MESSAGE='NEWDPW'
+NEW_DS_WIDGET_MESSAGE='NEWDSW'
 
 #MESSAGE MAPPINGS
 MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
@@ -41,6 +43,8 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           NEW_USR_NOTIF_MESSAGE:'NewUserNotificationMessage',
                           UPDATE_QUOTES_MESSAGE:'UpdateQuotesMessage',
                           RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:'ResourceAuthorizationUpdateMessage',
+                          NEW_DP_WIDGET_MESSAGE:'NewDPWidgetMessage',
+                          NEW_DS_WIDGET_MESSAGE:'NewDSWidgetMessage',
                           }
 
 
@@ -138,7 +142,7 @@ class FillDatasourceMessage:
         else:
             if not args.is_valid_uuid(did) or not args.is_valid_date(date):
                 raise exceptions.BadParametersException()
-            self.type=FILL_DATAPOINT_MESSAGE
+            self.type=FILL_DATASOURCE_MESSAGE
             self.did=did
             self.date=date
             self.serialized_message='|'.join((self.type,self.did.hex,self.date.hex))
@@ -228,4 +232,36 @@ class ResourceAuthorizationUpdateMessage:
             self.type=RESOURCE_AUTHORIZATION_UPDATE_MESSAGE
             self.operation=operation
             self.serialized_message=self.type+'|'+self.operation.get_json_serialization()
+
+class NewDPWidgetMessage:
+    def __init__(self, serialized_message=None, username=None, pid=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,username,pid = self.serialized_message.split('|')
+            self.type=mtype
+            self.username=username
+            self.pid=uuid.UUID(pid)
+        else:
+            if not args.is_valid_username(username) or not args.is_valid_uuid(pid):
+                raise exceptions.BadParametersException()
+            self.type=NEW_DP_WIDGET_MESSAGE
+            self.username=username
+            self.pid=pid
+            self.serialized_message='|'.join((self.type,self.username,self.pid.hex))
+
+class NewDSWidgetMessage:
+    def __init__(self, serialized_message=None, username=None, did=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,username,did = self.serialized_message.split('|')
+            self.type=mtype
+            self.username=username
+            self.did=uuid.UUID(did)
+        else:
+            if not args.is_valid_username(username) or not args.is_valid_uuid(did):
+                raise exceptions.BadParametersException()
+            self.type=NEW_DS_WIDGET_MESSAGE
+            self.username=username
+            self.did=did
+            self.serialized_message='|'.join((self.type,self.username,self.did.hex))
 

@@ -11,7 +11,7 @@ from komlibs.interface.web.operations import weboperations
 from komlibs.interface.web import status, exceptions
 from komlibs.general.validation import arguments as args
 from komlibs.interface.imc.model import messages
-from komlibs.interface.imc.api import rescontrol
+from komlibs.interface.imc.api import rescontrol, gestconsole
 from komimc import bus, routing
 from komimc import api as msgapi
 
@@ -76,6 +76,21 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.NEW_DS_WIDGET_MESSAGE or msg.did.hex!=response.data['did']:
+                msgapi.send_message(msg)
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertFalse(count>=1000)
+        msg_result=gestconsole.process_message_NEWDSW(message=msg)
+        msgapi.process_msg_result(msg_result)
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -181,10 +196,25 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.NEW_DS_WIDGET_MESSAGE or msg.did.hex!=response.data['did']:
+                msgapi.send_message(msg)
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertFalse(count>=1000)
+        msg_result=gestconsole.process_message_NEWDSW(message=msg)
+        msgapi.process_msg_result(msg_result)
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             self.assertIsNotNone(msg)
             if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewDatasourceOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(aid) and msg.operation.params['did']==uuid.UUID(response.data['did'])):
                 msgapi.send_message(msg)
@@ -197,7 +227,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         rescontrol.process_message_UPDQUO(msg)
         count=0
         while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             self.assertIsNotNone(msg)
             if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewDatasourceOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(aid) and msg.operation.params['did']==uuid.UUID(response.data['did'])): 
                 msgapi.send_message(msg)
@@ -211,11 +241,11 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if not msg:
                 break
             if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and isinstance(msg.operation,weboperations.NewWidgetOperation) and msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']):
-                rescontrol.process_message_UPDQUO(msg)
+                rescontrol.process_message_UPDQUO(message=msg)
             else:
                 msgapi.send_message(msg)
                 count+=1
@@ -223,11 +253,11 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                     break
         count=0
         while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if not msg:
                 break
             if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and isinstance(msg.operation,weboperations.NewWidgetOperation) and msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']): 
-                rescontrol.process_message_RESAUTH(msg)
+                rescontrol.process_message_RESAUTH(message=msg)
             else:
                 msgapi.send_message(msg)
                 count+=1
@@ -267,6 +297,21 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.NEW_DS_WIDGET_MESSAGE or msg.did.hex!=response.data['did']:
+                msgapi.send_message(msg)
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertFalse(count>=1000)
+        msg_result=gestconsole.process_message_NEWDSW(message=msg)
+        msgapi.process_msg_result(msg_result)
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:

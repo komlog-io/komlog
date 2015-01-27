@@ -268,8 +268,9 @@ class LoginHandler(tornado.web.RequestHandler):
             if response.status==status.WEB_STATUS_OK:
                 self.set_secure_cookie('komlog_user',username,httponly=True)#, secure=True)
                 if agentid:
+                    aid=uuid.UUID(agentid)
                     self.set_secure_cookie('komlog_agent',agentid, httponly=True)#, secure=True)
-                    self.redirect('/etc/ag/'+agentid)
+                    self.redirect('/etc/ag/'+aid.hex)
                 else:
                     self.redirect('/home') 
             else:

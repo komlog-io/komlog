@@ -32,7 +32,9 @@ MESSAGE_TO_ADDRESS_MAPPING={messages.STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             messages.POS_VAR_MESSAGE:GESTCONSOLE,
                             messages.NEW_USR_NOTIF_MESSAGE:GESTCONSOLE,
                             messages.UPDATE_QUOTES_MESSAGE:RESCONTROL,
-                            messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:RESCONTROL
+                            messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:RESCONTROL,
+                            messages.NEW_DP_WIDGET_MESSAGE:GESTCONSOLE,
+                            messages.NEW_DS_WIDGET_MESSAGE:GESTCONSOLE,
                             }
 
 

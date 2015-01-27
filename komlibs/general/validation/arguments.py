@@ -151,6 +151,19 @@ def is_valid_string_int(argument):
     else:
         return False
 
+def is_valid_string_float(argument):
+    if isinstance(argument,str):
+        try:
+            number=float(argument)
+            if number>=0:
+                return True
+            else:
+                return False
+        except Exception:
+            return False
+    else:
+        return False
+
 def is_valid_date(argument):
     if isinstance(argument, uuid.UUID) and argument.version==1:
         return True
