@@ -1,5 +1,5 @@
 import unittest
-from komlibs.auth import authorization
+from komlibs.auth import authorization, requests
 from komlibs.auth import exceptions
 from komlibs.gestaccount.user import api as gestuserapi
 
@@ -19,7 +19,7 @@ class AuthAuthorizationTest(unittest.TestCase):
     def test_authorize_request_non_existent_user(self):
         ''' authorize_request should fail if user does not exist. '''
         username='test_authorize_request_non_existent_user'
-        request='NewAgentRequest'
+        request=requests.NEW_AGENT
         self.assertRaises(exceptions.UserNotFoundException, authorization.authorize_request, request=request, username=username)
 
     def test_authorize_request_success(self):
@@ -29,6 +29,6 @@ class AuthAuthorizationTest(unittest.TestCase):
         password = 'password'
         email = 'test_auth.authorization_user@komlog.org'
         user = gestuserapi.create_user(username=username, password=password, email=email)
-        request='NewAgentRequest'
+        request=requests.NEW_AGENT
         self.assertIsNone(authorization.authorize_request(request=request, username=username))
 

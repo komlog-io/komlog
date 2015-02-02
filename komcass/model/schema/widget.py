@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 This file defines the cassandra statements for the creation of widget related tables
 
@@ -8,7 +7,9 @@ from komcass.model.schema import keyspace
 OBJECTS=['MST_WIDGET',
          'MST_WIDGET_INDEX_01',
          'MST_WIDGETDS',
-         'MST_WIDGETDP'
+         'MST_WIDGETDS_INDEX_01',
+         'MST_WIDGETDP',
+         'MST_WIDGETDP_INDEX_01',
         ]
 
 MST_WIDGET='''
@@ -34,6 +35,10 @@ MST_WIDGETDS='''
         );
     '''
 
+MST_WIDGETDS_INDEX_01='''
+        CREATE INDEX ON mst_widget_ds (did);
+    '''
+
 MST_WIDGETDP='''
         CREATE TABLE mst_widget_dp (
             wid uuid,
@@ -42,5 +47,9 @@ MST_WIDGETDP='''
             creation_date timeuuid,
             PRIMARY KEY (wid)
         );
+    '''
+
+MST_WIDGETDP_INDEX_01='''
+        CREATE INDEX ON mst_widget_dp (pid);
     '''
 

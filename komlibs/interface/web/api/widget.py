@@ -7,11 +7,13 @@ This file defines the logic associated with web interface operations
 
 import uuid
 from komfig import logger
-from komlibs.auth import authorization
+from komimc import api as msgapi
+from komlibs.auth import authorization, requests
 from komlibs.gestaccount.widget import api as widgetapi
 from komlibs.gestaccount.widget import types
 from komlibs.interface.web import status, exceptions
 from komlibs.interface.web.model import webmodel
+from komlibs.interface.imc.model import messages
 from komlibs.general.validation import arguments as args
 
 
@@ -39,7 +41,7 @@ def get_widgets_config_request(username):
 def get_widget_config_request(username, wid):
     if args.is_valid_username(username) and args.is_valid_hex_uuid(wid):
         wid=uuid.UUID(wid)
-        authorization.authorize_request(request='GetWidgetConfigRequest',username=username,wid=wid)
+        authorization.authorize_request(request=requests.GET_WIDGET_CONFIG,username=username,wid=wid)
         data=widgetapi.get_widget_config(wid=wid)
         widget={'wid':wid.hex}
         if data['type']==types.DS_WIDGET:
@@ -49,6 +51,17 @@ def get_widget_config_request(username, wid):
             widget['type']=types.DP_WIDGET
             widget['pid']=data['pid'].hex
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=widget)
+    else:
+        raise exceptions.BadParametersException()
+
+@exceptions.ExceptionHandler
+def delete_widget_request(username, wid):
+    if args.is_valid_username(username) and args.is_valid_hex_uuid(wid):
+        wid=uuid.UUID(wid)
+        authorization.authorize_request(request=requests.DELETE_WIDGET,username=username,wid=wid)
+        message=messages.DeleteWidgetMessage(wid=wid)
+        msgapi.send_message(message=message)
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
     else:
         raise exceptions.BadParametersException()
 

@@ -1,5 +1,6 @@
 import unittest
 import uuid
+from komlibs.auth import permissions
 from komlibs.auth.resources import authorization
 from komcass.api import permission as cassapiperm
 from komlibs.gestaccount.user import api as userapi
@@ -22,7 +23,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_get_agent_config should succeed if permission is granted'''
         uid=self.user['uid']
         aid=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_READ
         cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
         self.assertTrue(authorization.authorize_get_agent_config(uid=uid, aid=aid))
 
@@ -36,7 +37,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_get_datasource_config should succeed if permission is granted'''
         uid=self.user['uid']
         did=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_READ
         cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
         self.assertTrue(authorization.authorize_get_datasource_config(uid=uid, did=did))
 
@@ -50,7 +51,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_put_datasource_config should succeed if permission is granted'''
         uid=self.user['uid']
         did=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_EDIT
         cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
         self.assertTrue(authorization.authorize_put_datasource_config(uid=uid, did=did))
 
@@ -64,7 +65,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_get_datasource_data should succeed if permission is granted'''
         uid=self.user['uid']
         did=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_READ
         cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
         self.assertTrue(authorization.authorize_get_datasource_data(uid=uid, did=did))
 
@@ -79,7 +80,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=self.user['uid']
         aid=uuid.uuid4()
         did=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_EDIT
         cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
         cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
         cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
@@ -97,7 +98,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=self.user['uid']
         aid=uuid.uuid4()
         did=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_EDIT
         cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
         cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
         self.assertFalse(authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did))
@@ -107,7 +108,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=self.user['uid']
         aid=uuid.uuid4()
         did=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_EDIT
         cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
         cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
         self.assertFalse(authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did))
@@ -117,7 +118,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=self.user['uid']
         aid=uuid.uuid4()
         did=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_EDIT
         cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
         cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
         self.assertFalse(authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did))
@@ -131,7 +132,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_new_datasource should succeed if permission is granted'''
         uid=self.user['uid']
         aid=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_EDIT
         cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
         self.assertTrue(authorization.authorize_new_datasource(uid=uid, aid=aid))
 
@@ -145,7 +146,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_get_datapoint_data should succeed if permission is granted'''
         uid=self.user['uid']
         pid=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_READ
         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         self.assertTrue(authorization.authorize_get_datapoint_data(uid=uid, pid=pid))
 
@@ -159,7 +160,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_get_datapoint_config should succeed if permission is granted'''
         uid=self.user['uid']
         pid=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_READ
         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         self.assertTrue(authorization.authorize_get_datapoint_config(uid=uid, pid=pid))
 
@@ -173,7 +174,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_put_datapoint_config should succeed if permission is granted'''
         uid=self.user['uid']
         pid=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_EDIT
         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         self.assertTrue(authorization.authorize_put_datapoint_config(uid=uid, pid=pid))
 
@@ -187,7 +188,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_new_datapoint should succeed if permission is granted'''
         uid=self.user['uid']
         did=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_EDIT
         cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
         self.assertTrue(authorization.authorize_new_datapoint(uid=uid, did=did))
 
@@ -201,7 +202,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_put_agent_config should succeed if permission is granted'''
         uid=self.user['uid']
         aid=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_EDIT
         cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
         self.assertTrue(authorization.authorize_put_agent_config(uid=uid, aid=aid))
 
@@ -220,7 +221,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_get_widget_config should succeed if permission is granted'''
         uid=self.user['uid']
         wid=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_READ
         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
         self.assertTrue(authorization.authorize_get_widget_config(uid=uid, wid=wid))
 
@@ -234,7 +235,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_put_widget_config should succeed if permission is granted'''
         uid=self.user['uid']
         wid=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_EDIT
         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
         self.assertTrue(authorization.authorize_put_widget_config(uid=uid, wid=wid))
 
@@ -253,7 +254,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_get_dashboard_config should succeed if permission is granted'''
         uid=self.user['uid']
         bid=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_READ
         cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
         self.assertTrue(authorization.authorize_get_dashboard_config(uid=uid, bid=bid))
 
@@ -267,7 +268,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         ''' authorize_put_dashboard_config should succeed if permission is granted'''
         uid=self.user['uid']
         bid=uuid.uuid4()
-        perm='A'
+        perm=permissions.CAN_EDIT
         cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
         self.assertTrue(authorization.authorize_put_dashboard_config(uid=uid, bid=bid))
 

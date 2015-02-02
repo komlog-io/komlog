@@ -1,6 +1,7 @@
 import unittest
 import uuid
 import json
+from komlibs.auth import operations
 from komlibs.gestaccount.datasource import api as gestdatasourceapi
 from komlibs.gestaccount.datapoint import api as gestdatapointapi
 from komlibs.interface.web.api import user as userapi 
@@ -8,7 +9,6 @@ from komlibs.interface.web.api import agent as agentapi
 from komlibs.interface.web.api import datasource as datasourceapi 
 from komlibs.interface.web.api import datapoint as datapointapi 
 from komlibs.interface.web.model import webmodel
-from komlibs.interface.web.operations import weboperations
 from komlibs.interface.web import status, exceptions
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
@@ -45,7 +45,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             while True:
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 self.assertIsNotNone(msg)
-                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                     msgapi.send_message(msg)
                     count+=1
                     if count>=1000:
@@ -57,7 +57,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             while True:
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 self.assertIsNotNone(msg)
-                if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+                if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                     msgapi.send_message(msg)
                     count+=1
                     if count>=1000:
@@ -76,7 +76,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             while True:
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 self.assertIsNotNone(msg)
-                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewDatasourceOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(aid) and msg.operation.params['did']==uuid.UUID(response.data['did'])):
+                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])):
                     msgapi.send_message(msg)
                     count+=1
                     if count>=1000:
@@ -89,7 +89,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             while True:
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 self.assertIsNotNone(msg)
-                if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewDatasourceOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(aid) and msg.operation.params['did']==uuid.UUID(response.data['did'])): 
+                if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])): 
                     msgapi.send_message(msg)
                     count+=1
                     if count>=1000:
@@ -104,7 +104,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 if not msg:
                     break
-                if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and isinstance(msg.operation,weboperations.NewWidgetOperation) and msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']):
+                if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==uuid.UUID(self.userinfo['uid']):
                     rescontrol.process_message_UPDQUO(msg)
                 else:
                     msgapi.send_message(msg)
@@ -116,7 +116,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 if not msg:
                     break
-                if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and isinstance(msg.operation,weboperations.NewWidgetOperation) and msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']): 
+                if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==uuid.UUID(self.userinfo['uid']): 
                     rescontrol.process_message_RESAUTH(msg)
                 else:
                     msgapi.send_message(msg)
@@ -168,7 +168,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         sequence='23423234565432345678'
         variable=(0,1)
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, datapointapi.new_datapoint_request, username=username, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_datapoint_request_failure_invalid_did(self):
         ''' new_datapoint_request should fail if did is invalid '''
@@ -178,7 +179,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         sequence='23423234565432345678'
         variable=(0,1)
         for did in dids:
-            self.assertRaises(exceptions.BadParametersException, datapointapi.new_datapoint_request, username=username, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_datapoint_request_failure_invalid_datapointname(self):
         ''' new_datapoint_request should fail if datapointname is invalid '''
@@ -188,7 +190,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         sequence='23423234565432345678'
         variable=(0,1)
         for datapointname in datapointnames:
-            self.assertRaises(exceptions.BadParametersException, datapointapi.new_datapoint_request, username=username, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_datapoint_request_failure_invalid_sequence(self):
         ''' new_datapoint_request should fail if sequence is invalid '''
@@ -198,7 +201,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_new_datapoint_request_failure'
         variable=(0,1)
         for sequence in sequences:
-            self.assertRaises(exceptions.BadParametersException, datapointapi.new_datapoint_request, username=username, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_datapoint_request_failure_invalid_position(self):
         ''' new_datapoint_request should fail if position is invalid '''
@@ -209,7 +213,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         sequence='23423234565432345678'
         length=1
         for position in positions:
-            self.assertRaises(exceptions.BadParametersException, datapointapi.new_datapoint_request, username=username, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+            response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_datapoint_request_failure_invalid_length(self):
         ''' new_datapoint_request should fail if length is invalid '''
@@ -220,7 +225,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         sequence='23423234565432345678'
         position=1
         for length in lengths:
-            self.assertRaises(exceptions.BadParametersException, datapointapi.new_datapoint_request, username=username, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+            response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_datapoint_request_failure_no_permission_user_does_not_exist(self):
         ''' new_datapoint_request should fail if user does not exist '''
@@ -250,7 +256,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         pid=uuid.uuid4().hex
         data={'datapointname':'datapointname','color':'#FFAADD'}
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, datapointapi.update_datapoint_config_request, username=username, pid=pid, data=data)
+            response=datapointapi.update_datapoint_config_request(username=username, pid=pid, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_datapoint_config_request_failure_invalid_data(self):
         ''' update_datapoint_config_request should fail if data is invalid '''
@@ -258,7 +265,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         username=self.userinfo['username']
         pid=uuid.uuid4().hex
         for data in datas:
-            self.assertRaises(exceptions.BadParametersException, datapointapi.update_datapoint_config_request, username=username, pid=pid, data=data)
+            response=datapointapi.update_datapoint_config_request(username=username, pid=pid, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_datapoint_config_request_failure_invalid_pid(self):
         ''' update_datapoint_config_request should fail if pid is invalid '''
@@ -266,7 +274,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         username=self.userinfo['username']
         data={'datapointname':'datapointname','color':'#FFAADD'}
         for pid in pids:
-            self.assertRaises(exceptions.BadParametersException, datapointapi.update_datapoint_config_request, username=username, pid=pid, data=data)
+            response=datapointapi.update_datapoint_config_request(username=username, pid=pid, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_datapoint_config_request_failure_non_existent_pid(self):
         ''' update_datapoint_config_request should fail if pid does not exist '''
@@ -526,12 +535,30 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         usernames=[None, 233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
         pid=uuid.uuid4().hex
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, datapointapi.get_datapoint_config_request, username=username, pid=pid)
+            response=datapointapi.get_datapoint_config_request(username=username, pid=pid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_datapoint_config_request_failure_invalid_pid(self):
         ''' get_datapoint_config_request should fail if pid is invalid '''
         pids=[None, 233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
         username=self.userinfo['username']
         for pid in pids:
-            self.assertRaises(exceptions.BadParametersException, datapointapi.get_datapoint_config_request, username=username, pid=pid)
+            response=datapointapi.get_datapoint_config_request(username=username, pid=pid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_delete_datapoint_request_failure_invalid_username(self):
+        ''' delete_datapoint_request should fail if username is invalid '''
+        usernames=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        pid=uuid.uuid4().hex
+        for username in usernames:
+            response=datapointapi.delete_datapoint_request(username=username, pid=pid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_delete_datapoint_request_failure_invalid_pid(self):
+        ''' delete_datapoint_request should fail if pid is invalid '''
+        pids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_delete_datapoint_request_failure_invalid_pid'
+        for pid in pids:
+            response=datapointapi.delete_datapoint_request(username=username, pid=pid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 

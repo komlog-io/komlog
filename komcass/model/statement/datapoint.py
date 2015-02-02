@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 This file contains the statements to operate with datapoint tables
 Statements range (30000-39999)

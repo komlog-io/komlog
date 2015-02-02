@@ -59,6 +59,6 @@ def insert_agent(agent):
         return True
 
 def delete_agent(aid):
-    connection.session.execute(stmtagent.D_A_MSTAGENT,(aid,))
+    connection.session.execute(stmtagent.D_A_MSTAGENT_B_AID,(aid,))
     return True
 

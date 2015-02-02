@@ -1,0 +1,31 @@
+'''
+In this file we declare the different requests that
+can be authorized
+'''
+
+
+NEW_AGENT                 = 0
+NEW_DATASOURCE            = 1
+NEW_DATAPOINT             = 2
+NEW_WIDGET                = 3
+NEW_DASHBOARD             = 4
+POST_DATASOURCE_DATA      = 5
+GET_AGENT_CONFIG          = 6
+GET_DATASOURCE_DATA       = 7
+GET_DATASOURCE_CONFIG     = 8
+GET_DATAPOINT_DATA        = 9
+GET_DATAPOINT_CONFIG      = 10
+GET_WIDGET_CONFIG         = 11
+GET_DASHBOARD_CONFIG      = 12
+UPDATE_DATASOURCE_CONFIG  = 13
+UPDATE_DATAPOINT_CONFIG   = 14
+UPDATE_AGENT_CONFIG       = 15
+UPDATE_WIDGET_CONFIG      = 16
+UPDATE_DASHBOARD_CONFIG   = 17
+MARK_POSITIVE_VARIABLE    = 18
+DELETE_AGENT              = 19
+DELETE_DATASOURCE         = 20
+DELETE_DATAPOINT          = 21
+DELETE_WIDGET             = 22
+DELETE_DASHBOARD          = 23
+

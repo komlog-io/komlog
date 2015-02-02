@@ -71,13 +71,13 @@ class KomcassApiDashboardTest(unittest.TestCase):
     def test_get_dashboard_widgets_non_existing_dashboard(self):
         ''' get_dashboard_widgets should return an empty list if no existing bid is passed '''
         bid=uuid.uuid4()
-        self.assertIsNone(dashboardapi.get_dashboard_widgets(bid))
+        self.assertEqual(dashboardapi.get_dashboard_widgets(bid),[])
 
     def test_get_dashboard_widgets_no_widgets(self):
         ''' get_dashboard_widgets should return None if dashboard has no widgets '''
         bid=self.dashboard1.bid
-        widgets=dashboardapi.get_dashboard_widgets(bid)
-        self.assertIsNone(widgets)
+        widgets=dashboardapi.get_dashboard_widgets(bid=bid)
+        self.assertEqual(widgets,[])
 
     def test_get_dashboard_widgets_some_widgets(self):
         ''' get_dashboard_widgets should return a list with dasbhoard's widgets '''
@@ -89,6 +89,7 @@ class KomcassApiDashboardTest(unittest.TestCase):
     def test_delete_dashboard_non_existent_dashboard(self):
         ''' delete_dashboard should return True even if we try to delete a non existent dashboard '''
         bid=uuid.uuid4()
+        self.assertIsNone(dashboardapi.get_dashboard(bid))
         self.assertTrue(dashboardapi.delete_dashboard(bid))
 
     def test_delete_dashboard_existent_dashboard(self):
@@ -99,6 +100,7 @@ class KomcassApiDashboardTest(unittest.TestCase):
         dashboardname='test_delete_dashboard_existent_dashboard_dashboard'
         dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, creation_date=creation_date, dashboardname=dashboardname)
         dashboardapi.new_dashboard(dashboard)
+        self.assertIsNotNone(dashboardapi.get_dashboard(bid))
         self.assertTrue(dashboardapi.delete_dashboard(bid))
         self.assertIsNone(dashboardapi.get_dashboard(bid))
 
@@ -179,7 +181,10 @@ class KomcassApiDashboardTest(unittest.TestCase):
         dashboardname='test_delete_widget_from_dashboard_no_previous_widgets_dashboard'
         dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, creation_date=creation_date, dashboardname=dashboardname)
         self.assertTrue(dashboardapi.new_dashboard(dashboard))
+        self.assertIsNotNone(dashboardapi.get_dashboard(bid=bid))
+        self.assertTrue(wid not in dashboardapi.get_dashboard_widgets(bid=bid))
         self.assertTrue(dashboardapi.delete_widget_from_dashboard(wid=wid, bid=bid))
+        self.assertTrue(wid not in dashboardapi.get_dashboard_widgets(bid=bid))
 
     def test_delete_widget_from_dashboard_has_the_widget(self):
         ''' delete_widget_from_dashboard should return True if dashboard exists and has the widget we want to delete '''
@@ -192,6 +197,7 @@ class KomcassApiDashboardTest(unittest.TestCase):
         self.assertTrue(dashboardapi.new_dashboard(dashboard))
         self.assertTrue(dashboardapi.add_widget_to_dashboard(wid=uuid.uuid4(), bid=bid))
         self.assertTrue(dashboardapi.add_widget_to_dashboard(wid=wid, bid=bid))
+        self.assertTrue(wid in dashboardapi.get_dashboard_widgets(bid=bid))
         self.assertTrue(dashboardapi.delete_widget_from_dashboard(wid=wid, bid=bid))
         self.assertTrue(wid not in dashboardapi.get_dashboard_widgets(bid=bid))
 

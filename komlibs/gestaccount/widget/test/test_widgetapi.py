@@ -104,12 +104,6 @@ class GestaccountWidgetApiTest(unittest.TestCase):
                 self.assertEqual(widget['pid'],widget_dp['pid'])
                 self.assertEqual(widget['type'],widget_dp['type'])
 
-    def test_delete_widget_non_existent_username(self):
-        ''' delete_widget should fail if username is not in system '''
-        username='test_delete_widget_non_existent_username'
-        wid=uuid.uuid4()
-        self.assertRaises(exceptions.UserNotFoundException, api.delete_widget, username=username, wid=wid)
-
     def test_delete_widget_non_existent_widget(self):
         ''' delete_widget should fail if widget is not in system '''
         username='test_delete_widget_config_non_existent_widget_user'
@@ -122,7 +116,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         wid=uuid.uuid4()
-        self.assertRaises(exceptions.WidgetNotFoundException, api.delete_widget, username=username, wid=wid)
+        self.assertRaises(exceptions.WidgetNotFoundException, api.delete_widget, wid=wid)
 
     def test_delete_widget_ds_success(self):
         ''' delete_widget should succeed if wid and user exist '''
@@ -138,8 +132,8 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
         widget=api.new_widget_ds(username=username, did=datasource['did']) 
-        self.assertTrue(api.delete_widget(username=username, wid=widget['wid']))
-        self.assertRaises(exceptions.WidgetNotFoundException, api.delete_widget, username=username, wid=widget['wid'])
+        self.assertTrue(api.delete_widget(wid=widget['wid']))
+        self.assertRaises(exceptions.WidgetNotFoundException, api.delete_widget, wid=widget['wid'])
 
     def test_delete_widget_dp_success(self):
         ''' delete_widget should succeed if wid and user exist '''
@@ -156,8 +150,8 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname)
         widget=api.new_widget_dp(username=username, pid=datapoint['pid']) 
-        self.assertTrue(api.delete_widget(username=username, wid=widget['wid']))
-        self.assertRaises(exceptions.WidgetNotFoundException, api.delete_widget, username=username, wid=widget['wid'])
+        self.assertTrue(api.delete_widget(wid=widget['wid']))
+        self.assertRaises(exceptions.WidgetNotFoundException, api.delete_widget, wid=widget['wid'])
 
     def test_new_widget_ds_non_existent_username(self):
         ''' new_widget_ds should fail if username does not exist '''

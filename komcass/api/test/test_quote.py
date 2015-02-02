@@ -32,7 +32,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, quotes)
         self.assertEqual(quotes_db.uid, uid)
 
-    def test_set_user_quote_previosly_uid_had_other_quotes(self):
+    def test_set_user_quote_previously_uid_had_other_quotes(self):
         ''' set_user_quotes should return True and set quotes successfully '''
         uid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -45,7 +45,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.uid, uid)
 
-    def test_set_user_quote_previosly_uid_did_not_have_other_quotes(self):
+    def test_set_user_quote_previously_uid_did_not_have_other_quotes(self):
         ''' set_user_quotes should return True and set quotes successfully '''
         uid=uuid.uuid4()
         self.assertTrue(quoteapi.set_user_quote(uid=uid, quote='quote4', value='value4'))
@@ -55,7 +55,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.uid, uid)
 
-    def test_set_user_quote_previosly_uid_had_other_quotes_and_we_update_it(self):
+    def test_set_user_quote_previously_uid_had_other_quotes_and_we_update_it(self):
         ''' set_user_quotes should return True and update the selected quote successfully '''
         uid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -68,7 +68,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.uid, uid)
 
-    def test_delete_user_quote_previosly_uid_had_the_quote(self):
+    def test_delete_user_quote_previously_uid_had_the_quote(self):
         ''' delete_user_quotes should return True and delete quote properly '''
         uid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -81,7 +81,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.uid, uid)
 
-    def test_delete_user_quote_previosly_uid_didnt_have_the_quote(self):
+    def test_delete_user_quote_previously_uid_didnt_have_the_quote(self):
         ''' delete_user_quotes should return True and delete quote properly '''
         uid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -93,7 +93,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.uid, uid)
 
-    def test_delete_user_quote_previosly_uid_did_not_have_any_quotes(self):
+    def test_delete_user_quote_previously_uid_did_not_have_any_quotes(self):
         ''' set_user_quotes should return True and set quotes successfully '''
         uid=uuid.uuid4()
         self.assertTrue(quoteapi.delete_user_quote(uid=uid, quote='quote4'))
@@ -142,7 +142,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, quotes)
         self.assertEqual(quotes_db.aid, aid)
 
-    def test_set_agent_quote_previosly_aid_had_other_quotes(self):
+    def test_set_agent_quote_previously_aid_had_other_quotes(self):
         ''' set_agent_quotes should return True and set quotes successfully '''
         aid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -155,7 +155,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.aid, aid)
 
-    def test_set_agent_quote_previosly_aid_did_not_have_other_quotes(self):
+    def test_set_agent_quote_previously_aid_did_not_have_other_quotes(self):
         ''' set_agent_quotes should return True and set quotes successfully '''
         aid=uuid.uuid4()
         self.assertTrue(quoteapi.set_agent_quote(aid=aid, quote='quote4', value='value4'))
@@ -165,7 +165,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.aid, aid)
 
-    def test_set_agent_quote_previosly_aid_had_other_quotes_and_we_update_it(self):
+    def test_set_agent_quote_previously_aid_had_other_quotes_and_we_update_it(self):
         ''' set_agent_quotes should return True and update the selected quote successfully '''
         aid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -178,7 +178,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.aid, aid)
 
-    def test_delete_agent_quote_previosly_aid_had_the_quote(self):
+    def test_delete_agent_quote_previously_aid_had_the_quote(self):
         ''' delete_agent_quotes should return True and delete quote properly '''
         aid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -191,7 +191,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.aid, aid)
 
-    def test_delete_agent_quote_previosly_aid_didnt_have_the_quote(self):
+    def test_delete_agent_quote_previously_aid_didnt_have_the_quote(self):
         ''' delete_agent_quotes should return True and delete quote properly '''
         aid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -203,7 +203,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.aid, aid)
 
-    def test_delete_agent_quote_previosly_aid_did_not_have_any_quotes(self):
+    def test_delete_agent_quote_previously_aid_did_not_have_any_quotes(self):
         ''' set_agent_quotes should return True and set quotes successfully '''
         aid=uuid.uuid4()
         self.assertTrue(quoteapi.delete_agent_quote(aid=aid, quote='quote4'))
@@ -252,7 +252,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, quotes)
         self.assertEqual(quotes_db.did, did)
 
-    def test_set_datasource_quote_previosly_did_had_other_quotes(self):
+    def test_set_datasource_quote_previously_did_had_other_quotes(self):
         ''' set_datasource_quotes should return True and set quotes successfully '''
         did=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -265,7 +265,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.did, did)
 
-    def test_set_datasource_quote_previosly_did_did_not_have_other_quotes(self):
+    def test_set_datasource_quote_previously_did_did_not_have_other_quotes(self):
         ''' set_datasource_quotes should return True and set quotes successfully '''
         did=uuid.uuid4()
         self.assertTrue(quoteapi.set_datasource_quote(did=did, quote='quote4', value='value4'))
@@ -275,7 +275,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.did, did)
 
-    def test_set_datasource_quote_previosly_did_had_other_quotes_and_we_update_it(self):
+    def test_set_datasource_quote_previously_did_had_other_quotes_and_we_update_it(self):
         ''' set_datasource_quotes should return True and update the selected quote successfully '''
         did=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -288,7 +288,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.did, did)
 
-    def test_delete_datasource_quote_previosly_did_had_the_quote(self):
+    def test_delete_datasource_quote_previously_did_had_the_quote(self):
         ''' delete_datasource_quotes should return True and delete quote properly '''
         did=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -301,7 +301,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.did, did)
 
-    def test_delete_datasource_quote_previosly_did_didnt_have_the_quote(self):
+    def test_delete_datasource_quote_previously_did_didnt_have_the_quote(self):
         ''' delete_datasource_quotes should return True and delete quote properly '''
         did=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -313,7 +313,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.did, did)
 
-    def test_delete_datasource_quote_previosly_did_did_not_have_any_quotes(self):
+    def test_delete_datasource_quote_previously_did_did_not_have_any_quotes(self):
         ''' set_datasource_quotes should return True and set quotes successfully '''
         did=uuid.uuid4()
         self.assertTrue(quoteapi.delete_datasource_quote(did=did, quote='quote4'))
@@ -362,7 +362,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, quotes)
         self.assertEqual(quotes_db.pid, pid)
 
-    def test_set_datapoint_quote_previosly_pid_had_other_quotes(self):
+    def test_set_datapoint_quote_previously_pid_had_other_quotes(self):
         ''' set_datapoint_quotes should return True and set quotes successfully '''
         pid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -375,7 +375,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.pid, pid)
 
-    def test_set_datapoint_quote_previosly_pid_did_not_have_other_quotes(self):
+    def test_set_datapoint_quote_previously_pid_did_not_have_other_quotes(self):
         ''' set_datapoint_quotes should return True and set quotes successfully '''
         pid=uuid.uuid4()
         self.assertTrue(quoteapi.set_datapoint_quote(pid=pid, quote='quote4', value='value4'))
@@ -385,7 +385,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.pid, pid)
 
-    def test_set_datapoint_quote_previosly_pid_had_other_quotes_and_we_update_it(self):
+    def test_set_datapoint_quote_previously_pid_had_other_quotes_and_we_update_it(self):
         ''' set_datapoint_quotes should return True and update the selected quote successfully '''
         pid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -398,7 +398,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.pid, pid)
 
-    def test_delete_datapoint_quote_previosly_pid_had_the_quote(self):
+    def test_delete_datapoint_quote_previously_pid_had_the_quote(self):
         ''' delete_datapoint_quotes should return True and delete quote properly '''
         pid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -411,7 +411,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.pid, pid)
 
-    def test_delete_datapoint_quote_previosly_pid_pidnt_have_the_quote(self):
+    def test_delete_datapoint_quote_previously_pid_pidnt_have_the_quote(self):
         ''' delete_datapoint_quotes should return True and delete quote properly '''
         pid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -423,7 +423,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.pid, pid)
 
-    def test_delete_datapoint_quote_previosly_pid_did_not_have_any_quotes(self):
+    def test_delete_datapoint_quote_previously_pid_did_not_have_any_quotes(self):
         ''' set_datapoint_quotes should return True and set quotes successfully '''
         pid=uuid.uuid4()
         self.assertTrue(quoteapi.delete_datapoint_quote(pid=pid, quote='quote4'))
@@ -472,7 +472,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, quotes)
         self.assertEqual(quotes_db.wid, wid)
 
-    def test_set_widget_quote_previosly_wid_had_other_quotes(self):
+    def test_set_widget_quote_previously_wid_had_other_quotes(self):
         ''' set_widget_quotes should return True and set quotes successfully '''
         wid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -485,7 +485,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.wid, wid)
 
-    def test_set_widget_quote_previosly_wid_wid_not_have_other_quotes(self):
+    def test_set_widget_quote_previously_wid_wid_not_have_other_quotes(self):
         ''' set_widget_quotes should return True and set quotes successfully '''
         wid=uuid.uuid4()
         self.assertTrue(quoteapi.set_widget_quote(wid=wid, quote='quote4', value='value4'))
@@ -495,7 +495,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.wid, wid)
 
-    def test_set_widget_quote_previosly_wid_had_other_quotes_and_we_update_it(self):
+    def test_set_widget_quote_previously_wid_had_other_quotes_and_we_update_it(self):
         ''' set_widget_quotes should return True and update the selected quote successfully '''
         wid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -508,7 +508,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.wid, wid)
 
-    def test_delete_widget_quote_previosly_wid_had_the_quote(self):
+    def test_delete_widget_quote_previously_wid_had_the_quote(self):
         ''' delete_widget_quotes should return True and delete quote properly '''
         wid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -521,7 +521,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.wid, wid)
 
-    def test_delete_widget_quote_previosly_wid_widnt_have_the_quote(self):
+    def test_delete_widget_quote_previously_wid_widnt_have_the_quote(self):
         ''' delete_widget_quotes should return True and delete quote properly '''
         wid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -533,7 +533,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.wid, wid)
 
-    def test_delete_widget_quote_previosly_wid_wid_not_have_any_quotes(self):
+    def test_delete_widget_quote_previously_wid_wid_not_have_any_quotes(self):
         ''' set_widget_quotes should return True and set quotes successfully '''
         wid=uuid.uuid4()
         self.assertTrue(quoteapi.delete_widget_quote(wid=wid, quote='quote4'))
@@ -582,7 +582,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, quotes)
         self.assertEqual(quotes_db.bid, bid)
 
-    def test_set_dashboard_quote_previosly_bid_had_other_quotes(self):
+    def test_set_dashboard_quote_previously_bid_had_other_quotes(self):
         ''' set_dashboard_quotes should return True and set quotes successfully '''
         bid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -595,7 +595,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.bid, bid)
 
-    def test_set_dashboard_quote_previosly_bid_bid_not_have_other_quotes(self):
+    def test_set_dashboard_quote_previously_bid_did_not_have_other_quotes(self):
         ''' set_dashboard_quotes should return True and set quotes successfully '''
         bid=uuid.uuid4()
         self.assertTrue(quoteapi.set_dashboard_quote(bid=bid, quote='quote4', value='value4'))
@@ -605,7 +605,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.bid, bid)
 
-    def test_set_dashboard_quote_previosly_bid_had_other_quotes_and_we_update_it(self):
+    def test_set_dashboard_quote_previously_bid_had_other_quotes_and_we_update_it(self):
         ''' set_dashboard_quotes should return True and update the selected quote successfully '''
         bid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -618,7 +618,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.bid, bid)
 
-    def test_delete_dashboard_quote_previosly_bid_had_the_quote(self):
+    def test_delete_dashboard_quote_previously_bid_had_the_quote(self):
         ''' delete_dashboard_quotes should return True and delete quote properly '''
         bid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -631,7 +631,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.bid, bid)
 
-    def test_delete_dashboard_quote_previosly_bid_bidnt_have_the_quote(self):
+    def test_delete_dashboard_quote_previously_bid_didnt_have_the_quote(self):
         ''' delete_dashboard_quotes should return True and delete quote properly '''
         bid=uuid.uuid4()
         quotes={'quote1':'value1', 'quote2':'value2', 'quote3':'value3'}
@@ -643,7 +643,7 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(quotes_db.quotes, new_quotes)
         self.assertEqual(quotes_db.bid, bid)
 
-    def test_delete_dashboard_quote_previosly_bid_bid_not_have_any_quotes(self):
+    def test_delete_dashboard_quote_previously_bid_did_not_have_any_quotes(self):
         ''' set_dashboard_quotes should return True and set quotes successfully '''
         bid=uuid.uuid4()
         self.assertTrue(quoteapi.delete_dashboard_quote(bid=bid, quote='quote4'))

@@ -11,28 +11,34 @@ import sys
 from komlibs.auth.quotes import authorization as quoauth
 from komlibs.auth.resources import authorization as resauth
 from komlibs.auth import exceptions as authexcept
+from komlibs.auth import requests
 from komcass.api import user as cassapiuser
 
 func_requests={
-               'NewAgentRequest':'authorize_new_agent_creation',
-               'NewDatasourceRequest':'authorize_new_datasource_creation',
-               'NewDatapointRequest':'authorize_new_datapoint_creation',
-               'GetAgentConfigRequest':'authorize_get_agent_config',
-               'GetDatasourceDataRequest':'authorize_get_datasource_data',
-               'PostDatasourceDataRequest':'authorize_post_datasource_data',
-               'GetDatasourceConfigRequest':'authorize_get_datasource_config',
-               'DatasourceUpdateConfigurationRequest':'authorize_datasource_update_configuration',
-               'DatapointUpdateConfigurationRequest':'authorize_datapoint_update_configuration',
-               'GetDatapointDataRequest':'authorize_get_datapoint_data',
-               'GetDatapointConfigRequest':'authorize_get_datapoint_config',
-               'AgentUpdateConfigurationRequest':'authorize_agent_update_configuration',
-               'NewWidgetRequest':'authorize_new_widget_creation',
-               'GetWidgetConfigRequest':'authorize_get_widget_config',
-               'WidgetUpdateConfigurationRequest':'authorize_widget_update_configuration',
-               'NewDashboardRequest':'authorize_new_dashboard_creation',
-               'GetDashboardConfigRequest':'authorize_get_dashboard_config',
-               'DashboardUpdateConfigurationRequest':'authorize_dashboard_update_configuration',
-               'MarkPositiveVariableRequest':'authorize_mark_positive_variable',
+               requests.NEW_AGENT:'authorize_new_agent_creation',
+               requests.NEW_DATASOURCE:'authorize_new_datasource_creation',
+               requests.NEW_DATAPOINT:'authorize_new_datapoint_creation',
+               requests.NEW_WIDGET:'authorize_new_widget_creation',
+               requests.NEW_DASHBOARD:'authorize_new_dashboard_creation',
+               requests.POST_DATASOURCE_DATA:'authorize_post_datasource_data',
+               requests.GET_AGENT_CONFIG:'authorize_get_agent_config',
+               requests.GET_DATASOURCE_DATA:'authorize_get_datasource_data',
+               requests.GET_DATASOURCE_CONFIG:'authorize_get_datasource_config',
+               requests.GET_DATAPOINT_DATA:'authorize_get_datapoint_data',
+               requests.GET_DATAPOINT_CONFIG:'authorize_get_datapoint_config',
+               requests.GET_WIDGET_CONFIG:'authorize_get_widget_config',
+               requests.GET_DASHBOARD_CONFIG:'authorize_get_dashboard_config',
+               requests.UPDATE_DATASOURCE_CONFIG:'authorize_datasource_update_configuration',
+               requests.UPDATE_DATAPOINT_CONFIG:'authorize_datapoint_update_configuration',
+               requests.UPDATE_AGENT_CONFIG:'authorize_agent_update_configuration',
+               requests.UPDATE_WIDGET_CONFIG:'authorize_widget_update_configuration',
+               requests.UPDATE_DASHBOARD_CONFIG:'authorize_dashboard_update_configuration',
+               requests.MARK_POSITIVE_VARIABLE:'authorize_mark_positive_variable',
+               requests.DELETE_AGENT:'authorize_delete_agent',
+               requests.DELETE_DATASOURCE:'authorize_delete_datasource',
+               requests.DELETE_DATAPOINT:'authorize_delete_datapoint',
+               requests.DELETE_WIDGET:'authorize_delete_widget',
+               requests.DELETE_DASHBOARD:'authorize_delete_dashboard',
                }
 
 def authorize_request(request,username,aid=None,did=None,pid=None,gid=None,wid=None,bid=None):
@@ -177,5 +183,35 @@ def authorize_mark_positive_variable(params):
     pid=params['pid']
     if not quoauth.authorize_mark_positive_variable(uid,pid=pid) \
         or not resauth.authorize_mark_positive_variable(uid,pid=pid):
+        raise authexcept.AuthorizationException()
+
+def authorize_delete_agent(params):
+    uid=params['uid']
+    aid=params['aid']
+    if not resauth.authorize_delete_agent(uid,aid):
+        raise authexcept.AuthorizationException()
+
+def authorize_delete_datasource(params):
+    uid=params['uid']
+    did=params['did']
+    if not resauth.authorize_delete_datasource(uid,did):
+        raise authexcept.AuthorizationException()
+
+def authorize_delete_datapoint(params):
+    uid=params['uid']
+    pid=params['pid']
+    if not resauth.authorize_delete_datapoint(uid,pid):
+        raise authexcept.AuthorizationException()
+
+def authorize_delete_widget(params):
+    uid=params['uid']
+    wid=params['wid']
+    if not resauth.authorize_delete_widget(uid,wid):
+        raise authexcept.AuthorizationException()
+
+def authorize_delete_dashboard(params):
+    uid=params['uid']
+    bid=params['bid']
+    if not resauth.authorize_delete_dashboard(uid,bid):
         raise authexcept.AuthorizationException()
 

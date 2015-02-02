@@ -12,6 +12,8 @@ class ExceptionHandler(object):
         try:
             response=self.f(**kwargs)
             return response if response else webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
+        except BadParametersException:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS)
         except authexcept.AuthException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED,error=e.error)
         except gestexcept.BadParametersException as e:

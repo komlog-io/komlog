@@ -7,10 +7,12 @@ This file defines the logic associated with web interface operations
 
 import uuid
 from komfig import logger
-from komlibs.auth import authorization
+from komimc import api as msgapi
+from komlibs.auth import authorization, requests
 from komlibs.gestaccount.dashboard import api as dashboardapi
 from komlibs.interface.web import status, exceptions
 from komlibs.interface.web.model import webmodel
+from komlibs.interface.imc.model import messages
 from komlibs.general.validation import arguments as args
 
 @exceptions.ExceptionHandler
@@ -32,13 +34,24 @@ def get_dashboards_config_request(username):
 def get_dashboard_config_request(username, bid):
     if args.is_valid_username(username) and args.is_valid_hex_uuid(bid):
         bid=uuid.UUID(bid)
-        authorization.authorize_request(request='GetDashboardConfigRequest',username=username,bid=bid)
+        authorization.authorize_request(request=requests.GET_DASHBOARD_CONFIG,username=username,bid=bid)
         data=dashboardapi.get_dashboard_config(bid=bid)
         dashboard={}
         dashboard['bid']=data['bid'].hex
         dashboard['dashboardname']=data['dashboardname']
         dashboard['wids']=[wid.hex for wid in data['wids']]
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=dashboard)
+    else:
+        raise exceptions.BadParametersException()
+
+@exceptions.ExceptionHandler
+def delete_dashboard_request(username, bid):
+    if args.is_valid_username(username) and args.is_valid_hex_uuid(bid):
+        bid=uuid.UUID(bid)
+        authorization.authorize_request(request=requests.DELETE_DASHBOARD,username=username,bid=bid)
+        message=messages.DeleteDashboardMessage(bid=bid)
+        msgapi.send_message(message=message)
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
     else:
         raise exceptions.BadParametersException()
 

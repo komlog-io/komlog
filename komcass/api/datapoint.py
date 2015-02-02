@@ -117,12 +117,20 @@ def insert_datapoint(datapoint):
         connection.session.execute(stmtdatapoint.I_A_MSTDATAPOINT,(datapoint.pid, datapoint.did, datapoint.datapointname, datapoint.color, datapoint.creation_date))
         return True
 
+def delete_datapoint(pid):
+    connection.session.execute(stmtdatapoint.D_A_MSTDATAPOINT_B_PID,(pid,))
+    return True
+
 def insert_datapoint_data(pid, date, value):
     connection.session.execute(stmtdatapoint.I_A_DATDATAPOINT,(pid,date,value))
     return True
 
 def delete_datapoint_data_at(pid, date):
     connection.session.execute(stmtdatapoint.D_A_DATDATAPOINT_B_PID_DATE,(pid,date))
+    return True
+
+def delete_datapoint_data(pid):
+    connection.session.execute(stmtdatapoint.D_A_DATDATAPOINT_B_PID,(pid,))
     return True
 
 def set_datapoint_last_received(pid, last_received):
@@ -140,14 +148,6 @@ def set_datapoint_decimal_separator(pid, decimal_separator):
         connection.session.execute(stmtdatapoint.U_DECIMALSEPARATOR_MSTDATAPOINTSTATS,(decimal_separator,pid))
         return True
 
-def delete_datapoint(pid):
-    connection.session.execute(stmtdatapoint.D_A_MSTDATAPOINT_B_PID,(pid,))
-    connection.session.execute(stmtdatapoint.D_A_MSTDATAPOINTSTATS_B_PID,(pid,))
-    connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREEPOSITIVES_B_PID,(pid,))
-    connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREENEGATIVES_B_PID,(pid,))
-    connection.session.execute(stmtdatapoint.D_A_DATDATAPOINT_B_PID,(pid,))
-    return True
-
 def set_datapoint_dtree_positive_at(pid, date, position, length):
     connection.session.execute(stmtdatapoint.U_POSITIONLENGTH_DATDATAPOINTDTREEPOSITIVES_B_PID_DATE,(position,length, pid, date))
     return True
@@ -160,11 +160,23 @@ def delete_datapoint_dtree_positive_at(pid, date):
     connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREEPOSITIVES_B_PID_DATE,(pid, date))
     return True
 
+def delete_datapoint_dtree_positives(pid):
+    connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREEPOSITIVES_B_PID,(pid,))
+    return True
+
 def delete_datapoint_dtree_negatives_at(pid, date):
     connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREENEGATIVES_B_PID_DATE,(pid, date))
     return True
 
 def delete_datapoint_dtree_negative_at(pid, date, position):
     connection.session.execute(stmtdatapoint.D_R_DATDATAPOINTDTREENEGATIVES_B_POS_PID_DATE,(position, pid, date))
+    return True
+
+def delete_datapoint_dtree_negatives(pid):
+    connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREENEGATIVES_B_PID,(pid,))
+    return True
+
+def delete_datapoint_stats(pid):
+    connection.session.execute(stmtdatapoint.D_A_MSTDATAPOINTSTATS_B_PID,(pid,))
     return True
 

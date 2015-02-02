@@ -15,6 +15,7 @@ STATEMENTS={100000:'select * from mst_dashboard where bid=?',
             100001:'select * from mst_dashboard where uid=?',
             100002:'select count(*) from mst_dashboard where uid=?',
             100003:'select widgets from mst_dashboard where bid=?',
+            100004:'select bid from mst_dashboard where uid=?',
             101000:'insert into mst_dashboard (bid,uid,dashboardname,creation_date,widgets) values (?,?,?,?,?)',
             102000:'delete from mst_dashboard where bid=?',
             103000:'update mst_dashboard set widgets=? where bid=?',
@@ -26,6 +27,7 @@ S_A_MSTDASHBOARD_B_BID=100000
 S_A_MSTDASHBOARD_B_UID=100001
 S_COUNT_MSTDASHBOARD_B_UID=100002
 S_WIDGETS_MSTDASHBOARD_B_BID=100003
+S_BID_MSTDASHBOARD_B_UID=100004
 
 # Inserts
 

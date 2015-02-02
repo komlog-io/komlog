@@ -12,7 +12,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         aid1=uuid.uuid4()
         aid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_agent_perm(uid=uid, aid=aid1, perm=perm))
         self.assertIsNone(permissionapi.get_user_agent_perm(uid=uid, aid=aid2))
 
@@ -27,7 +27,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         aid1=uuid.uuid4()
         aid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_agent_perm(uid=uid, aid=aid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_agent_perm(uid=uid, aid=aid2, perm=perm))
         perm_db=permissionapi.get_user_agent_perm(uid=uid, aid=aid2)
@@ -52,7 +52,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         aid1=uuid.uuid4()
         aid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_agent_perm(uid=uid, aid=aid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_agent_perm(uid=uid, aid=aid2, perm=perm))
         perms=permissionapi.get_user_agents_perm(uid=uid)
@@ -66,7 +66,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         aid1=uuid.uuid4()
         aid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_agent_perm(uid=uid, aid=aid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_agent_perm(uid=uid, aid=aid2, perm=perm))
         perm_db=permissionapi.get_user_agent_perm(uid=uid, aid=aid1)
@@ -85,7 +85,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         aid1=uuid.uuid4()
         aid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_agent_perm(uid=uid, aid=aid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_agent_perm(uid=uid, aid=aid2, perm=perm))
         perm_db=permissionapi.get_user_agent_perm(uid=uid, aid=aid1)
@@ -108,7 +108,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         aid1=uuid.uuid4()
         aid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_agent_perm(uid=uid, aid=aid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_agent_perm(uid=uid, aid=aid2, perm=perm))
         perms=permissionapi.get_user_agents_perm(uid=uid)
@@ -122,7 +122,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datasource_perm(uid=uid, did=did1, perm=perm))
         self.assertIsNone(permissionapi.get_user_datasource_perm(uid=uid, did=did2))
 
@@ -137,7 +137,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datasource_perm(uid=uid, did=did1, perm=perm))
         self.assertTrue(permissionapi.insert_user_datasource_perm(uid=uid, did=did2, perm=perm))
         perm_db=permissionapi.get_user_datasource_perm(uid=uid, did=did2)
@@ -162,7 +162,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datasource_perm(uid=uid, did=did1, perm=perm))
         self.assertTrue(permissionapi.insert_user_datasource_perm(uid=uid, did=did2, perm=perm))
         perms=permissionapi.get_user_datasources_perm(uid=uid)
@@ -176,7 +176,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datasource_perm(uid=uid, did=did1, perm=perm))
         self.assertTrue(permissionapi.insert_user_datasource_perm(uid=uid, did=did2, perm=perm))
         perm_db=permissionapi.get_user_datasource_perm(uid=uid, did=did1)
@@ -195,7 +195,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datasource_perm(uid=uid, did=did1, perm=perm))
         self.assertTrue(permissionapi.insert_user_datasource_perm(uid=uid, did=did2, perm=perm))
         perm_db=permissionapi.get_user_datasource_perm(uid=uid, did=did1)
@@ -218,7 +218,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datasource_perm(uid=uid, did=did1, perm=perm))
         self.assertTrue(permissionapi.insert_user_datasource_perm(uid=uid, did=did2, perm=perm))
         perms=permissionapi.get_user_datasources_perm(uid=uid)
@@ -232,7 +232,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datapoint_perm(uid=uid, pid=pid1, perm=perm))
         self.assertIsNone(permissionapi.get_user_datapoint_perm(uid=uid, pid=pid2))
 
@@ -247,7 +247,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datapoint_perm(uid=uid, pid=pid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_datapoint_perm(uid=uid, pid=pid2, perm=perm))
         perm_db=permissionapi.get_user_datapoint_perm(uid=uid, pid=pid2)
@@ -272,7 +272,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datapoint_perm(uid=uid, pid=pid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_datapoint_perm(uid=uid, pid=pid2, perm=perm))
         perms=permissionapi.get_user_datapoints_perm(uid=uid)
@@ -286,7 +286,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datapoint_perm(uid=uid, pid=pid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_datapoint_perm(uid=uid, pid=pid2, perm=perm))
         perm_db=permissionapi.get_user_datapoint_perm(uid=uid, pid=pid1)
@@ -305,7 +305,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datapoint_perm(uid=uid, pid=pid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_datapoint_perm(uid=uid, pid=pid2, perm=perm))
         perm_db=permissionapi.get_user_datapoint_perm(uid=uid, pid=pid1)
@@ -328,7 +328,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_datapoint_perm(uid=uid, pid=pid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_datapoint_perm(uid=uid, pid=pid2, perm=perm))
         perms=permissionapi.get_user_datapoints_perm(uid=uid)
@@ -342,7 +342,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         wid1=uuid.uuid4()
         wid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_widget_perm(uid=uid, wid=wid1, perm=perm))
         self.assertIsNone(permissionapi.get_user_widget_perm(uid=uid, wid=wid2))
 
@@ -357,7 +357,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         wid1=uuid.uuid4()
         wid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_widget_perm(uid=uid, wid=wid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_widget_perm(uid=uid, wid=wid2, perm=perm))
         perm_db=permissionapi.get_user_widget_perm(uid=uid, wid=wid2)
@@ -382,7 +382,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         wid1=uuid.uuid4()
         wid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_widget_perm(uid=uid, wid=wid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_widget_perm(uid=uid, wid=wid2, perm=perm))
         perms=permissionapi.get_user_widgets_perm(uid=uid)
@@ -396,7 +396,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         wid1=uuid.uuid4()
         wid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_widget_perm(uid=uid, wid=wid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_widget_perm(uid=uid, wid=wid2, perm=perm))
         perm_db=permissionapi.get_user_widget_perm(uid=uid, wid=wid1)
@@ -415,7 +415,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         wid1=uuid.uuid4()
         wid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_widget_perm(uid=uid, wid=wid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_widget_perm(uid=uid, wid=wid2, perm=perm))
         perm_db=permissionapi.get_user_widget_perm(uid=uid, wid=wid1)
@@ -438,7 +438,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         wid1=uuid.uuid4()
         wid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_widget_perm(uid=uid, wid=wid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_widget_perm(uid=uid, wid=wid2, perm=perm))
         perms=permissionapi.get_user_widgets_perm(uid=uid)
@@ -452,7 +452,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         bid1=uuid.uuid4()
         bid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_dashboard_perm(uid=uid, bid=bid1, perm=perm))
         self.assertIsNone(permissionapi.get_user_dashboard_perm(uid=uid, bid=bid2))
 
@@ -467,7 +467,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         bid1=uuid.uuid4()
         bid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_dashboard_perm(uid=uid, bid=bid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_dashboard_perm(uid=uid, bid=bid2, perm=perm))
         perm_db=permissionapi.get_user_dashboard_perm(uid=uid, bid=bid2)
@@ -492,7 +492,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         bid1=uuid.uuid4()
         bid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_dashboard_perm(uid=uid, bid=bid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_dashboard_perm(uid=uid, bid=bid2, perm=perm))
         perms=permissionapi.get_user_dashboards_perm(uid=uid)
@@ -506,7 +506,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         bid1=uuid.uuid4()
         bid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_dashboard_perm(uid=uid, bid=bid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_dashboard_perm(uid=uid, bid=bid2, perm=perm))
         perm_db=permissionapi.get_user_dashboard_perm(uid=uid, bid=bid1)
@@ -525,7 +525,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         bid1=uuid.uuid4()
         bid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_dashboard_perm(uid=uid, bid=bid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_dashboard_perm(uid=uid, bid=bid2, perm=perm))
         perm_db=permissionapi.get_user_dashboard_perm(uid=uid, bid=bid1)
@@ -548,7 +548,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         uid=uuid.uuid4()
         bid1=uuid.uuid4()
         bid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_user_dashboard_perm(uid=uid, bid=bid1, perm=perm))
         self.assertTrue(permissionapi.insert_user_dashboard_perm(uid=uid, bid=bid2, perm=perm))
         perms=permissionapi.get_user_dashboards_perm(uid=uid)
@@ -562,7 +562,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datasource_perm(aid=aid, did=did1, perm=perm))
         self.assertIsNone(permissionapi.get_agent_datasource_perm(aid=aid, did=did2))
 
@@ -577,7 +577,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datasource_perm(aid=aid, did=did1, perm=perm))
         self.assertTrue(permissionapi.insert_agent_datasource_perm(aid=aid, did=did2, perm=perm))
         perm_db=permissionapi.get_agent_datasource_perm(aid=aid, did=did2)
@@ -602,7 +602,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datasource_perm(aid=aid, did=did1, perm=perm))
         self.assertTrue(permissionapi.insert_agent_datasource_perm(aid=aid, did=did2, perm=perm))
         perms=permissionapi.get_agent_datasources_perm(aid=aid)
@@ -616,7 +616,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datasource_perm(aid=aid, did=did1, perm=perm))
         self.assertTrue(permissionapi.insert_agent_datasource_perm(aid=aid, did=did2, perm=perm))
         perm_db=permissionapi.get_agent_datasource_perm(aid=aid, did=did1)
@@ -635,7 +635,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datasource_perm(aid=aid, did=did1, perm=perm))
         self.assertTrue(permissionapi.insert_agent_datasource_perm(aid=aid, did=did2, perm=perm))
         perm_db=permissionapi.get_agent_datasource_perm(aid=aid, did=did1)
@@ -658,7 +658,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         did1=uuid.uuid4()
         did2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datasource_perm(aid=aid, did=did1, perm=perm))
         self.assertTrue(permissionapi.insert_agent_datasource_perm(aid=aid, did=did2, perm=perm))
         perms=permissionapi.get_agent_datasources_perm(aid=aid)
@@ -672,7 +672,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datapoint_perm(aid=aid, pid=pid1, perm=perm))
         self.assertIsNone(permissionapi.get_agent_datapoint_perm(aid=aid, pid=pid2))
 
@@ -687,7 +687,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datapoint_perm(aid=aid, pid=pid1, perm=perm))
         self.assertTrue(permissionapi.insert_agent_datapoint_perm(aid=aid, pid=pid2, perm=perm))
         perm_db=permissionapi.get_agent_datapoint_perm(aid=aid, pid=pid2)
@@ -712,7 +712,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datapoint_perm(aid=aid, pid=pid1, perm=perm))
         self.assertTrue(permissionapi.insert_agent_datapoint_perm(aid=aid, pid=pid2, perm=perm))
         perms=permissionapi.get_agent_datapoints_perm(aid=aid)
@@ -726,7 +726,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datapoint_perm(aid=aid, pid=pid1, perm=perm))
         self.assertTrue(permissionapi.insert_agent_datapoint_perm(aid=aid, pid=pid2, perm=perm))
         perm_db=permissionapi.get_agent_datapoint_perm(aid=aid, pid=pid1)
@@ -745,7 +745,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datapoint_perm(aid=aid, pid=pid1, perm=perm))
         self.assertTrue(permissionapi.insert_agent_datapoint_perm(aid=aid, pid=pid2, perm=perm))
         perm_db=permissionapi.get_agent_datapoint_perm(aid=aid, pid=pid1)
@@ -768,7 +768,7 @@ class KomcassApiPermissionTest(unittest.TestCase):
         aid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
-        perm='A'
+        perm=1
         self.assertTrue(permissionapi.insert_agent_datapoint_perm(aid=aid, pid=pid1, perm=perm))
         self.assertTrue(permissionapi.insert_agent_datapoint_perm(aid=aid, pid=pid2, perm=perm))
         perms=permissionapi.get_agent_datapoints_perm(aid=aid)

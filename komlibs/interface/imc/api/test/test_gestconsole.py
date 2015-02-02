@@ -42,3 +42,61 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         response=gestconsole.process_message_POSVAR(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
 
+    def test_process_message_NEWDSW_failure_non_existent_user(self):
+        ''' process_message_NEWDSW should fail if user does not exist '''
+        username='test_process_messsage_newdsw_failure_non_existent_user'
+        did=uuid.uuid4()
+        message=messages.NewDSWidgetMessage(username=username, did=did)
+        response=gestconsole.process_message_NEWDSW(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+
+    def test_process_message_NEWDPW_failure_non_existent_user(self):
+        ''' process_message_NEWDPW should fail if user does not exist '''
+        username='test_process_messsage_newdpw_failure_non_existent_user'
+        pid=uuid.uuid4()
+        message=messages.NewDPWidgetMessage(username=username, pid=pid)
+        response=gestconsole.process_message_NEWDPW(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+
+    def test_process_message_DELUSER_failure_non_existent_user(self):
+        ''' process_message_DELUSER should fail if user does not exist '''
+        username='test_process_messsage_deluser_failure_non_existent_user'
+        message=messages.DeleteUserMessage(username=username)
+        response=gestconsole.process_message_DELUSER(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+
+    def test_process_message_DELAGENT_failure_non_existent_agent(self):
+        ''' process_message_DELAGENT should fail if agent does not exist '''
+        aid=uuid.uuid4()
+        message=messages.DeleteAgentMessage(aid=aid)
+        response=gestconsole.process_message_DELAGENT(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+
+    def test_process_message_DELDS_failure_non_existent_datasource(self):
+        ''' process_message_DELDS should fail if datasource does not exist '''
+        did=uuid.uuid4()
+        message=messages.DeleteDatasourceMessage(did=did)
+        response=gestconsole.process_message_DELDS(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+
+    def test_process_message_DELDP_failure_non_existent_datasource(self):
+        ''' process_message_DELDP should fail if datapoint does not exist '''
+        pid=uuid.uuid4()
+        message=messages.DeleteDatapointMessage(pid=pid)
+        response=gestconsole.process_message_DELDP(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+
+    def test_process_message_DELWIDGET_failure_non_existent_widget(self):
+        ''' process_message_DELWIDGET should fail if widget does not exist '''
+        wid=uuid.uuid4()
+        message=messages.DeleteWidgetMessage(wid=wid)
+        response=gestconsole.process_message_DELWIDGET(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+
+    def test_process_message_DELDASHB_failure_non_existent_dashboard(self):
+        ''' process_message_DELDASHB should fail if dashboard does not exist '''
+        bid=uuid.uuid4()
+        message=messages.DeleteDashboardMessage(bid=bid)
+        response=gestconsole.process_message_DELDASHB(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+

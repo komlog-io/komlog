@@ -10,7 +10,6 @@ messages: komlog custom messages class implementations for inter module communic
 
 import uuid
 import json
-from komlibs.interface.web.operations import weboperations
 from komlibs.interface.imc import exceptions
 from komlibs.general.validation import arguments as args
 from komfig import logger
@@ -30,6 +29,13 @@ UPDATE_QUOTES_MESSAGE='UPDQUO'
 RESOURCE_AUTHORIZATION_UPDATE_MESSAGE='RESAUTH'
 NEW_DP_WIDGET_MESSAGE='NEWDPW'
 NEW_DS_WIDGET_MESSAGE='NEWDSW'
+DELETE_USER_MESSAGE='DELUSER'
+DELETE_AGENT_MESSAGE='DELAGENT'
+DELETE_DATASOURCE_MESSAGE='DELDS'
+DELETE_DATAPOINT_MESSAGE='DELDP'
+DELETE_WIDGET_MESSAGE='DELWIDGET'
+DELETE_DASHBOARD_MESSAGE='DELDASHB'
+
 
 #MESSAGE MAPPINGS
 MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
@@ -45,6 +51,12 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:'ResourceAuthorizationUpdateMessage',
                           NEW_DP_WIDGET_MESSAGE:'NewDPWidgetMessage',
                           NEW_DS_WIDGET_MESSAGE:'NewDSWidgetMessage',
+                          DELETE_USER_MESSAGE:'DeleteUserMessage',
+                          DELETE_AGENT_MESSAGE:'DeleteAgentMessage',
+                          DELETE_DATASOURCE_MESSAGE:'DeleteDatasourceMessage',
+                          DELETE_DATAPOINT_MESSAGE:'DeleteDatapointMessage',
+                          DELETE_WIDGET_MESSAGE:'DeleteWidgetMessage',
+                          DELETE_DASHBOARD_MESSAGE:'DeleteDashboardMessage',
                           }
 
 
@@ -204,34 +216,70 @@ class NewUserNotificationMessage:
             self.serialized_message='|'.join((self.type,self.email,self.code))
 
 class UpdateQuotesMessage:
-    def __init__(self, serialized_message=None, operation=None):
+    def __init__(self, serialized_message=None, operation=None, params=None):
         if serialized_message:
             self.serialized_message=serialized_message
-            mtype,json_serialization = self.serialized_message.split('|')
+            mtype,operation,str_params = self.serialized_message.split('|')
             self.type=mtype
-            operation_dict=json.loads(json_serialization)
-            operation_class=operation_dict['opclass']
-            operation_dict.pop('opclass',None)
-            self.operation=getattr(weboperations,operation_class)(**operation_dict)
+            self.operation=int(operation)
+            self.params={}
+            for key,value in json.loads(str_params).items():
+                if isinstance(value,list):
+                    tmp_list=[]
+                    for item in value:
+                        tmp_list.append(uuid.UUID(item)) if args.is_valid_hex_uuid(item) or args.is_valid_hex_date(item) else item
+                    self.params[key]=tmp_list
+                else:
+                    self.params[key]=uuid.UUID(value) if args.is_valid_hex_uuid(value) or args.is_valid_hex_date(value) else value
         else:
+            if not args.is_valid_int(operation) or not args.is_valid_dict(params):
+                raise exceptions.BadParametersException()
             self.type=UPDATE_QUOTES_MESSAGE
             self.operation=operation
-            self.serialized_message=self.type+'|'+self.operation.get_json_serialization()
+            self.params=params
+            str_params={}
+            for key,value in params.items():
+                if isinstance(value,list):
+                    tmp_list=[]
+                    for item in value:
+                        tmp_list.append(item.hex) if args.is_valid_uuid(item) or args.is_valid_date(item) else item
+                    str_params[key]=tmp_list
+                else:
+                    str_params[key]=value.hex if args.is_valid_uuid(value) or args.is_valid_date(value) else value
+            self.serialized_message='|'.join((self.type,str(self.operation),json.dumps(str_params)))
 
 class ResourceAuthorizationUpdateMessage:
-    def __init__(self, serialized_message=None, operation=None):
+    def __init__(self, serialized_message=None, operation=None, params=None):
         if serialized_message:
             self.serialized_message=serialized_message
-            mtype,json_serialization = self.serialized_message.split('|')
+            mtype,operation,str_params = self.serialized_message.split('|')
             self.type=mtype
-            operation_dict=json.loads(json_serialization)
-            operation_class=operation_dict['opclass']
-            operation_dict.pop('opclass',None)
-            self.operation=getattr(weboperations,operation_class)(**operation_dict)
+            self.operation=int(operation)
+            self.params={}
+            for key,value in json.loads(str_params).items():
+                if isinstance(value,list):
+                    tmp_list=[]
+                    for item in value:
+                        tmp_list.append(uuid.UUID(item)) if args.is_valid_hex_uuid(item) or args.is_valid_hex_date(item) else item
+                    self.params[key]=tmp_list
+                else:
+                    self.params[key]=uuid.UUID(value) if args.is_valid_hex_uuid(value) or args.is_valid_hex_date(value) else value
         else:
+            if not args.is_valid_int(operation) or not args.is_valid_dict(params):
+                raise exceptions.BadParametersException()
             self.type=RESOURCE_AUTHORIZATION_UPDATE_MESSAGE
             self.operation=operation
-            self.serialized_message=self.type+'|'+self.operation.get_json_serialization()
+            self.params=params
+            str_params={}
+            for key,value in params.items():
+                if isinstance(value,list):
+                    tmp_list=[]
+                    for item in value:
+                        tmp_list.append(item.hex) if args.is_valid_uuid(item) or args.is_valid_date(item) else item
+                    str_params[key]=tmp_list
+                else:
+                    str_params[key]=value.hex if args.is_valid_uuid(value) or args.is_valid_date(value) else value
+            self.serialized_message='|'.join((self.type,str(self.operation),json.dumps(str_params)))
 
 class NewDPWidgetMessage:
     def __init__(self, serialized_message=None, username=None, pid=None):
@@ -264,4 +312,88 @@ class NewDSWidgetMessage:
             self.username=username
             self.did=did
             self.serialized_message='|'.join((self.type,self.username,self.did.hex))
+
+class DeleteUserMessage:
+    def __init__(self, serialized_message=None, username=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,username = self.serialized_message.split('|')
+            self.type=mtype
+            self.username=username
+        else:
+            if not args.is_valid_username(username):
+                raise exceptions.BadParametersException()
+            self.type=DELETE_USER_MESSAGE
+            self.username=username
+            self.serialized_message='|'.join((self.type,self.username))
+
+class DeleteAgentMessage:
+    def __init__(self, serialized_message=None, aid=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,aid = self.serialized_message.split('|')
+            self.type=mtype
+            self.aid=uuid.UUID(aid)
+        else:
+            if not args.is_valid_uuid(aid):
+                raise exceptions.BadParametersException()
+            self.type=DELETE_AGENT_MESSAGE
+            self.aid=aid
+            self.serialized_message='|'.join((self.type,self.aid.hex))
+
+class DeleteDatasourceMessage:
+    def __init__(self, serialized_message=None, did=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,did = self.serialized_message.split('|')
+            self.type=mtype
+            self.did=uuid.UUID(did)
+        else:
+            if not args.is_valid_uuid(did):
+                raise exceptions.BadParametersException()
+            self.type=DELETE_DATASOURCE_MESSAGE
+            self.did=did
+            self.serialized_message='|'.join((self.type,self.did.hex))
+
+class DeleteDatapointMessage:
+    def __init__(self, serialized_message=None, pid=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,pid = self.serialized_message.split('|')
+            self.type=mtype
+            self.pid=uuid.UUID(pid)
+        else:
+            if not args.is_valid_uuid(pid):
+                raise exceptions.BadParametersException()
+            self.type=DELETE_DATAPOINT_MESSAGE
+            self.pid=pid
+            self.serialized_message='|'.join((self.type,self.pid.hex))
+
+class DeleteWidgetMessage:
+    def __init__(self, serialized_message=None, wid=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,wid = self.serialized_message.split('|')
+            self.type=mtype
+            self.wid=uuid.UUID(wid)
+        else:
+            if not args.is_valid_uuid(wid):
+                raise exceptions.BadParametersException()
+            self.type=DELETE_WIDGET_MESSAGE
+            self.wid=wid
+            self.serialized_message='|'.join((self.type,self.wid.hex))
+
+class DeleteDashboardMessage:
+    def __init__(self, serialized_message=None, bid=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,bid = self.serialized_message.split('|')
+            self.type=mtype
+            self.bid=uuid.UUID(bid)
+        else:
+            if not args.is_valid_uuid(bid):
+                raise exceptions.BadParametersException()
+            self.type=DELETE_DASHBOARD_MESSAGE
+            self.bid=bid
+            self.serialized_message='|'.join((self.type,self.bid.hex))
 

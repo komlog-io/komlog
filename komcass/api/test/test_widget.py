@@ -140,30 +140,40 @@ class KomcassApiWidgetTest(unittest.TestCase):
     def test_get_widget_ds_inexistent_widget(self):
         ''' get_widget_ds should return None if wid does not exist '''
         wid=uuid.uuid4()
-        self.assertIsNone(widgetapi.get_widget_ds(wid))
+        self.assertIsNone(widgetapi.get_widget_ds(wid=wid))
 
     def test_get_widget_ds_different_type_widget(self):
         ''' get_widget_ds should return None if wid does not exist (because is of different type) '''
         wid=self.widgetdp.wid
-        self.assertIsNone(widgetapi.get_widget_ds(wid))
+        self.assertIsNone(widgetapi.get_widget_ds(wid=wid))
         
-    def test_get_widget_ds_success(self):
+    def test_get_widget_ds_success_by_wid(self):
         ''' get_widget_ds should return the widget ds object '''
         wid=self.widgetds.wid
-        self.assertTrue(isinstance(widgetapi.get_widget_ds(wid), ormwidget.WidgetDs))
+        self.assertTrue(isinstance(widgetapi.get_widget_ds(wid=wid), ormwidget.WidgetDs))
+
+    def test_get_widget_ds_success_by_did(self):
+        ''' get_widget_ds should return the widget ds object '''
+        did=self.widgetds.did
+        self.assertTrue(isinstance(widgetapi.get_widget_ds(did=did), ormwidget.WidgetDs))
 
     def test_get_widget_dp_inexistent_widget(self):
         ''' get_widget_dp should return None if wid does not exist '''
         wid=uuid.uuid4()
-        self.assertIsNone(widgetapi.get_widget_dp(wid))
+        self.assertIsNone(widgetapi.get_widget_dp(wid=wid))
 
     def test_get_widget_dp_different_type_widget(self):
         ''' get_widget_dp should return None if wid does not exist (because is of different type) '''
         wid=self.widgetds.wid
-        self.assertIsNone(widgetapi.get_widget_dp(wid))
+        self.assertIsNone(widgetapi.get_widget_dp(wid=wid))
         
-    def test_get_widget_dp_success(self):
-        ''' get_widget_dp should return the widget ds object '''
+    def test_get_widget_dp_success_by_wid(self):
+        ''' get_widget_dp should return the widget dp object '''
         wid=self.widgetdp.wid
-        self.assertTrue(isinstance(widgetapi.get_widget_dp(wid), ormwidget.WidgetDp))
+        self.assertTrue(isinstance(widgetapi.get_widget_dp(wid=wid), ormwidget.WidgetDp))
+
+    def test_get_widget_dp_success_by_pid(self):
+        ''' get_widget_dp should return the widget dp object '''
+        pid=self.widgetdp.pid
+        self.assertTrue(isinstance(widgetapi.get_widget_dp(pid=pid), ormwidget.WidgetDp))
 

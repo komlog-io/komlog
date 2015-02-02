@@ -85,7 +85,8 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = 'user@komlog.org'
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, userapi.new_user_request, username=username, password=password, email=email)
+            response=userapi.new_user_request(username=username, password=password, email=email)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_user_request_failure_invalid_password(self):
         ''' new_user_request should fail if password is invalid'''
@@ -93,7 +94,8 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         passwords = [None, 23423424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','short']
         email = username+'@komlog.org'
         for password in passwords:
-            self.assertRaises(exceptions.BadParametersException, userapi.new_user_request, username=username, password=password, email=email)
+            response=userapi.new_user_request(username=username, password=password, email=email)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_user_request_failure_invalid_email(self):
         ''' new_user_request should fail if email is invalid'''
@@ -101,7 +103,8 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         emails = ['u@ser@komlog.org', 'invalid_email_ñ@domain.com','email@.com','.@domain.com','my email@domain.com','email . @email.com',234234,None,{'a':'dict'}, ['a list',],('a','tuple')]
         for email in emails:
-            self.assertRaises(exceptions.BadParametersException, userapi.new_user_request, username=username, password=password, email=email)
+            response=userapi.new_user_request(username=username, password=password, email=email)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_confirm_user_request_success(self):
         ''' confirm_user_request should succeed if arguments are valid and the user state is set to activated '''
@@ -141,14 +144,16 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         code='ACODE'
         emails = ['u@ser@komlog.org', 'invalid_email_ñ@domain.com','email@.com','.@domain.com','my email@domain.com','email . @email.com',234234,None,{'a':'dict'}, ['a list',],('a','tuple')]
         for email in emails:
-            self.assertRaises(exceptions.BadParametersException, userapi.confirm_user_request, code=code, email=email)
+            response=userapi.confirm_user_request(code=code, email=email)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_confirm_user_request_failure_invalid_code(self):
         ''' new_user_request should fail if email is invalid/malformed'''
         email='user@komlog.org'
         codes = ['u@ser@komlog.org', 'invalid_code','my code',234234,None,{'a':'dict'}, ['a list',],('a','tuple')]
         for code in codes:
-            self.assertRaises(exceptions.BadParametersException, userapi.confirm_user_request, code=code, email=email)
+            response=userapi.confirm_user_request(code=code, email=email)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_confirm_user_request_failure_wrong_email(self):
         ''' confirm_user_request should fail if email is not in the system or is not associated with the code given '''
@@ -262,7 +267,8 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         ''' get_user_config_request should fail if username is invalid'''
         usernames = [None, 23423424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','/asdfa','my user']
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, userapi.get_user_config_request, username=username)
+            response=userapi.get_user_config_request(username=username)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_user_config_request_failure_non_existent_user(self):
         ''' get_user_config_request should return an error if user does not exists '''
@@ -295,14 +301,16 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         users=['Invalid User','invalidUser',None, 23423423, 'user@user',{'a':'dict'},['a','list'],json.dumps('username')]
         data={}
         for username in users:
-            self.assertRaises(exceptions.BadParametersException, userapi.update_user_config_request, username=username, data=data)
+            response=userapi.update_user_config_request(username=username, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_invalid_data(self):
         ''' update_user_config_request should fail if data is invalid '''
         datas=['Invalid User','invalidUser',None, 23423423, 'user@user','validuser',['a','list'],json.dumps('username')]
         username='username'
         for data in datas:
-            self.assertRaises(exceptions.BadParametersException, userapi.update_user_config_request, username=username, data=data)
+            response=userapi.update_user_config_request(username=username, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_invalid_email(self):
         ''' update_user_config_request should fail if email is invalid '''
@@ -311,7 +319,8 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         emails=['Wrong@email.com','.@mail.com','invalid@email@email.com','@|invalid.email@email.com',json.dumps('valid@email.com'),{'a':'dict'},['a','list'],None,23423423423,23423.23234]
         for email in emails:
             data['email']=email
-            self.assertRaises(exceptions.BadParametersException, userapi.update_user_config_request, username=username, data=data)
+            response=userapi.update_user_config_request(username=username, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_invalid_new_password(self):
         ''' update_user_config_request should fail if new_password is invalid '''
@@ -321,7 +330,8 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         data['old_password']='validpassword'
         for password in passwords:
             data['new_password']=password
-            self.assertRaises(exceptions.BadParametersException, userapi.update_user_config_request, username=username, data=data)
+            response=userapi.update_user_config_request(username=username, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_invalid_old_password(self):
         ''' update_user_config_request should fail if old_password is invalid '''
@@ -331,7 +341,8 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         data['new_password']='validpassword'
         for password in passwords:
             data['old_password']=password
-            self.assertRaises(exceptions.BadParametersException, userapi.update_user_config_request, username=username, data=data)
+            response=userapi.update_user_config_request(username=username, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_old_password_authorization_error(self):
         ''' update_user_config_request should fail if old_password is invalid '''
@@ -381,4 +392,11 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         data['new_password']=password
         response2 = userapi.update_user_config_request(username=username, data=data)
         self.assertEqual(response2.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_delete_user_request_failure_invalid_username(self):
+        ''' delete_user_request should fail if username is invalid '''
+        usernames=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        for username in usernames:
+            response=userapi.delete_user_request(username=username)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 

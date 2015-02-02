@@ -62,7 +62,7 @@ def insert_user(user):
         return True
 
 def delete_user(username):
-    connection.session.execute(stmtuser.D_A_MSTUSER_B_UID,(username,))
+    connection.session.execute(stmtuser.D_A_MSTUSER_B_USERNAME,(username,))
     return True
 
 def get_signup_info(email=None, signup_code=None, username=None):
@@ -99,4 +99,8 @@ def insert_signup_info(signup_info):
     else:
         connection.session.execute(stmtuser.I_A_MSTSIGNUP,(signup_info.username,signup_info.signup_code,signup_info.email,signup_info.creation_date,signup_info.utilization_date))
         return True
+
+def delete_signup_info(username):
+    connection.session.execute(stmtuser.D_A_MSTSIGNUP_B_USERNAME,(username,))
+    return True
 

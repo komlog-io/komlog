@@ -252,7 +252,49 @@ class KomcassApiDatapointTest(unittest.TestCase):
         date=timeuuid.uuid1()
         value=decimal.Decimal(234223.2342342)
         self.assertTrue(datapointapi.insert_datapoint_data(pid=pid, date=date, value=value))
+        data=datapointapi.get_datapoint_data_at(pid=pid, date=date)
+        self.assertEqual(data.date,date)
+        self.assertEqual(data.value,value)
+        self.assertEqual(data.pid,pid)
  
+    def test_delete_datapoint_data_at_success_non_existent_data(self):
+        ''' delete_datapoint_data_at should succeed even if data does not exist '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertTrue(datapointapi.delete_datapoint_data_at(pid=pid, date=date))
+
+    def test_delete_datapoint_data_at_success_existent_data(self):
+        ''' delete_datapoint_data_at should succeed even if data exists '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        value=decimal.Decimal(234223.2342342)
+        self.assertTrue(datapointapi.insert_datapoint_data(pid=pid, date=date, value=value))
+        data=datapointapi.get_datapoint_data_at(pid=pid, date=date)
+        self.assertEqual(data.date,date)
+        self.assertEqual(data.value,value)
+        self.assertEqual(data.pid,pid)
+        self.assertTrue(datapointapi.delete_datapoint_data_at(pid=pid, date=date))
+        self.assertIsNone(datapointapi.get_datapoint_data_at(pid=pid, date=date))
+
+    def test_delete_datapoint_data_success_non_existent_data(self):
+        ''' delete_datapoint_data should succeed even if data does not exist '''
+        pid=uuid.uuid4()
+        self.assertTrue(datapointapi.delete_datapoint_data(pid=pid))
+
+    def test_delete_datapoint_data_success_existent_data(self):
+        ''' delete_datapoint_data should succeed even if data exists '''
+        pid=uuid.uuid4()
+        for i in range(0,100):
+            date=timeuuid.uuid1()
+            value=decimal.Decimal(i)
+            self.assertTrue(datapointapi.insert_datapoint_data(pid=pid, date=date, value=value))
+            data=datapointapi.get_datapoint_data_at(pid=pid, date=date)
+            self.assertEqual(data.date,date)
+            self.assertEqual(data.value,value)
+            self.assertEqual(data.pid,pid)
+        self.assertTrue(datapointapi.delete_datapoint_data(pid=pid))
+        self.assertEqual(datapointapi.get_datapoint_data(pid=pid, fromdate=timeuuid.uuid1(seconds=1), todate=timeuuid.uuid1()),[])
+
     def test_set_datapoint_last_received_success(self):
         ''' set_datapoint_last_received should succeed '''
         pid=uuid.uuid4()
@@ -272,10 +314,18 @@ class KomcassApiDatapointTest(unittest.TestCase):
         for d in decimal_separators:
             self.assertTrue(datapointapi.set_datapoint_decimal_separator(pid=pid, decimal_separator=d))
 
-    def test_delete_datapoint_success(self):
+    def test_delete_datapoint_success_non_existent_pid(self):
         ''' delete_datapoint should succeed even if pid does not exist '''
         pid=uuid.uuid4()
         self.assertTrue(datapointapi.delete_datapoint(pid=pid))
+
+    def test_delete_datapoint_success_existent_pid(self):
+        ''' delete_datapoint should succeed even if pid does not exist '''
+        datapoint=ormdatapoint.Datapoint(pid=uuid.uuid4(), did=uuid.uuid4())
+        self.assertTrue(datapointapi.insert_datapoint(datapoint))
+        self.assertIsNotNone(datapointapi.get_datapoint(pid=datapoint.pid))
+        self.assertTrue(datapointapi.delete_datapoint(pid=datapoint.pid))
+        self.assertIsNone(datapointapi.get_datapoint(pid=datapoint.pid))
 
     def test_set_datapoint_dtree_positive_at_success(self):
         ''' set_datapoint_dtree_positive_at should succeed even if pid does not exist '''
@@ -311,6 +361,20 @@ class KomcassApiDatapointTest(unittest.TestCase):
         date=timeuuid.uuid1()
         position=0
         self.assertTrue(datapointapi.delete_datapoint_dtree_negative_at(pid=pid,date=date,position=position))
+
+    def test_delete_datapoint_stats_success_non_existent_pid(self):
+        ''' delete_datapoint_stats should succeed even if pid does not exist '''
+        pid=uuid.uuid4()
+        self.assertTrue(datapointapi.delete_datapoint_stats(pid=pid))
+
+    def test_delete_datapoint_stats_success_existent_pid(self):
+        ''' delete_datapoint_stats should succeed if pid exists '''
+        pid=uuid.uuid4()
+        last_received=timeuuid.uuid1()
+        self.assertTrue(datapointapi.set_datapoint_last_received(pid=pid, last_received=last_received))
+        self.assertIsNotNone(datapointapi.get_datapoint_stats(pid=pid))
+        self.assertTrue(datapointapi.delete_datapoint_stats(pid=pid))
+        self.assertIsNone(datapointapi.get_datapoint_stats(pid=pid))
 
     def test_get_datapoint_data_at_non_existing_pid(self):
         ''' get_datapoint_data_at should return None if pid does not exist '''

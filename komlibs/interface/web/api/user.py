@@ -6,11 +6,11 @@ This file defines the logic associated with web interface requests
 '''
 
 from komfig import logger
+from komimc import api as msgapi
 from komlibs.auth import authorization
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
-from komimc import api as msgapi
 from komlibs.interface.web import status, exceptions
 from komlibs.interface.web.model import webmodel
 from komlibs.interface.web.operations import weboperations
@@ -84,6 +84,15 @@ def update_user_config_request(username, data):
             request_params['old_password']=data['old_password']
         if userapi.update_user_config(username=username, **request_params):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    else:
+        raise exceptions.BadParametersException()
+
+@exceptions.ExceptionHandler
+def delete_user_request(username):
+    if args.is_valid_username(username):
+        message=messages.DeleteUserMessage(username=username)
+        msgapi.send_message(message=message)
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
     else:
         raise exceptions.BadParametersException()
 

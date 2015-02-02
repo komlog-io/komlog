@@ -45,7 +45,7 @@ def authorize_put_datasource_config(uid,aid,did):
 def authorize_new_datasource(uid,aid):
     interfaces=[]
     interfaces.append(deny.interfaces['User_DatasourceCreation'])
-    interfaces.append(deny.interfaces['Agent_DatasourceCreation']+str(aid))
+    interfaces.append(deny.interfaces['Agent_DatasourceCreation']+aid.hex)
     for iface in interfaces:
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
             return False
@@ -65,8 +65,8 @@ def authorize_new_datapoint(uid,did):
         raise authexcept.DatasourceNotFoundException()
     interfaces=[]
     interfaces.append(deny.interfaces['User_DatapointCreation'])
-    interfaces.append(deny.interfaces['Agent_DatapointCreation']+str(datasource.aid))
-    interfaces.append(deny.interfaces['Datasource_DatapointCreation']+str(did))
+    interfaces.append(deny.interfaces['Agent_DatapointCreation']+datasource.aid.hex)
+    interfaces.append(deny.interfaces['Datasource_DatapointCreation']+did.hex)
     for iface in interfaces:
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
             return False

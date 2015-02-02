@@ -71,9 +71,6 @@ def insert_datasource(datasource):
 
 def delete_datasource(did):
     connection.session.execute(stmtdatasource.D_A_MSTDATASOURCE_B_DID,(did,))
-    connection.session.execute(stmtdatasource.D_A_MSTDATASOURCESTATS_B_DID,(did,))
-    connection.session.execute(stmtdatasource.D_A_DATDATASOURCE_B_DID,(did,))
-    connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMAP_B_DID,(did,))
     return True
 
 def get_datasource_stats(did):
@@ -91,6 +88,10 @@ def set_last_received(did, last_received):
 
 def set_last_mapped(did, last_mapped):
     connection.session.execute(stmtdatasource.I_LASTMAPPED_MSTDATASOURCESTATS_B_DID,(did,last_mapped))
+    return True
+
+def delete_datasource_stats(did):
+    connection.session.execute(stmtdatasource.D_A_MSTDATASOURCESTATS_B_DID,(did,))
     return True
 
 def get_datasource_data_at(did, date):
@@ -119,6 +120,10 @@ def insert_datasource_data(dsdobj):
 
 def delete_datasource_data_at(did, date):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCE_B_DID_DATE,(did,date))
+    return True
+
+def delete_datasource_data(did):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCE_B_DID,(did,))
     return True
 
 def insert_datasource_map(dsmapobj):
@@ -157,6 +162,13 @@ def get_datasource_maps(did, fromdate, todate):
             data.append(ormdatasource.DatasourceMap(**m))
     return data
 
+def get_datasource_map_dates(did, fromdate, todate):
+    row=connection.session.execute(stmtdatasource.S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
+    data=[]
+    if row:
+        data=[r['date'] for r in row]
+    return data
+
 def get_datasource_map_variables(did, date):
     row=connection.session.execute(stmtdatasource.S_VARIABLES_DATDATASOURCEMAP_B_DID_DATE,(did,date))
     return row[0]['variables'] if row else None
@@ -167,5 +179,9 @@ def get_datasource_map_datapoints(did, date):
 
 def delete_datasource_map(did, date):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMAP_B_DID_DATE,(did,date))
+    return True
+
+def delete_datasource_maps(did):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMAP_B_DID,(did,))
     return True
 

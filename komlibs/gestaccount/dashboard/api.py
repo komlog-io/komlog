@@ -12,11 +12,11 @@ author: jcazor
 from komcass.api import dashboard as cassapidashboard
 from komcass.api import user as cassapiuser
 from komlibs.gestaccount import exceptions
-from komlibs.general.validation import arguments
+from komlibs.general.validation import arguments as args
 
 
 def get_dashboards_config(username):
-    if not arguments.is_valid_username(username):
+    if not args.is_valid_username(username):
         raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
@@ -30,7 +30,7 @@ def get_dashboards_config(username):
     return data
 
 def get_dashboard_config(bid):
-    if not arguments.is_valid_uuid(bid):
+    if not args.is_valid_uuid(bid):
         raise exceptions.BadParametersException()
     dashboard=cassapidashboard.get_dashboard(bid=bid)
     if dashboard:
@@ -39,4 +39,13 @@ def get_dashboard_config(bid):
         return data
     else:
         raise exceptions.DashboardNotFoundException()
+
+def delete_dashboard(bid):
+    if not args.is_valid_uuid(bid):
+        raise exceptions.BadParametersException()
+    dashboard=cassapidashboard.get_dashboard(bid=bid)
+    if not dashboard:
+        raise exceptions.DashboardNotFoundException()
+    cassapidashboard.delete_dashboard(bid=bid)
+    return True
 

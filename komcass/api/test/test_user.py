@@ -106,10 +106,11 @@ class KomcassApiUserTest(unittest.TestCase):
             user=ormuser.User(username=username, password=password, email=email, uid=uid, creation_date=creation_date)
             self.assertTrue(userapi.insert_user(user))
 
-    def test_delete_user(self):
+    def test_delete_user_sucess_by_username(self):
         ''' delete_user should succeed always the query can be executed, independently the user exists or not '''
         username=self.user.username
-        self.assertTrue(userapi.delete_user(username))
+        self.assertTrue(userapi.delete_user(username=username))
+        self.assertIsNone(userapi.get_user(username=username))
 
     def test_get_signup_info_no_arguments(self):
         ''' get_signup_info should return None if no argument is passed '''
@@ -166,4 +167,10 @@ class KomcassApiUserTest(unittest.TestCase):
         for i in range(1,10):
             signup.creation_date=timeuuid.uuid1()
             self.assertTrue(userapi.insert_signup_info(signup))
+
+    def test_delete_signup_info_sucess_by_username(self):
+        ''' delete_signup_info should succeed always, independently the user exists or not, and if exists, delete the user info properly '''
+        username=self.signup_info.username
+        self.assertTrue(userapi.delete_signup_info(username=username))
+        self.assertIsNone(userapi.get_signup_info(username=username))
 

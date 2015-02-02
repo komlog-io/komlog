@@ -24,6 +24,7 @@ STATEMENTS={20000:'select * from mst_datasource where did=?',
             20010:'select * from dat_datasource_map where did=? and date=?',
             20011:'select * from dat_datasource_map where did=? and date>=? and date<=? order by date desc',
             20012:'select * from dat_datasource where did=? and date>=? and date<=? order by date desc',
+            20013:'select date from dat_datasource_map where did=? and date>=? and date<=? order by date desc',
             21000:'insert into mst_datasource (did,aid,uid,datasourcename,state,creation_date) values (?,?,?,?,?,?)',
             21001:'insert into mst_datasource_stats (did,last_received) values (?,?)',
             21002:'insert into mst_datasource_stats (did,last_mapped) values (?,?)',
@@ -55,6 +56,7 @@ S_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE=20009
 S_A_DATDATASOURCEMAP_B_DID_DATE=20010
 S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20011
 S_A_DATDATASOURCE_B_DID_INITDATE_ENDDATE=20012
+S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20013
 
 # Inserts
 

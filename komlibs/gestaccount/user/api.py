@@ -7,18 +7,23 @@ author: jcazor
 
 import uuid,crypt
 from komcass.api import user as cassapiuser
+from komcass.api import agent as cassapiagent
+from komcass.api import datasource as cassapidatasource
+from komcass.api import datapoint as cassapidatapoint
+from komcass.api import widget as cassapiwidget
+from komcass.api import dashboard as cassapidashboard
 from komcass.model.orm import user as ormuser
 from komlibs.gestaccount.user import states, segments
 from komlibs.gestaccount import exceptions
-from komlibs.general.validation import arguments
+from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.general.string import stringops
 
 
 def get_hpassword(uid,password):
-    if not arguments.is_valid_uuid(uid):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException()
-    if not arguments.is_valid_password(password):
+    if not args.is_valid_password(password):
         raise exceptions.BadParametersException()
     salt='$6$'+str(uid).split('-')[1]+'$'
     try:
@@ -28,9 +33,9 @@ def get_hpassword(uid,password):
     return hpassword
 
 def auth_user(username, password):
-    if not arguments.is_valid_username(username):
+    if not args.is_valid_username(username):
         raise exceptions.BadParametersException()
-    if not arguments.is_valid_password(password):
+    if not args.is_valid_password(password):
         raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
@@ -45,7 +50,7 @@ def auth_user(username, password):
 
 def create_user(username, password, email):
     '''This function creates a new user in the database'''
-    if not arguments.is_valid_username(username) or not arguments.is_valid_password(password) or not arguments.is_valid_email(email):
+    if not args.is_valid_username(username) or not args.is_valid_password(password) or not args.is_valid_email(email):
         raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if user:
@@ -73,7 +78,7 @@ def create_user(username, password, email):
 
 def confirm_user(email, code):
     '''This function confirm the user'''
-    if not arguments.is_valid_email(email) or not arguments.is_valid_code(code):
+    if not args.is_valid_email(email) or not args.is_valid_code(code):
         raise exceptions.BadParametersException()
     signup_info=cassapiuser.get_signup_info(email=email)
     if signup_info is None:
@@ -98,7 +103,7 @@ def update_user_config(username, new_email=None, old_password=None, new_password
         - password
         - email
     '''
-    if not arguments.is_valid_username(username):
+    if not args.is_valid_username(username):
         raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
@@ -109,7 +114,7 @@ def update_user_config(username, new_email=None, old_password=None, new_password
     if bool(old_password) ^ bool(new_password):
         raise exceptions.BadParametersException()
     if new_password and old_password:
-        if not arguments.is_valid_password(new_password) or not arguments.is_valid_password(old_password):
+        if not args.is_valid_password(new_password) or not args.is_valid_password(old_password):
             raise exceptions.BadParametersException()
         if not user.password==get_hpassword(user.uid,old_password):
             raise exceptions.InvalidPasswordException()
@@ -121,7 +126,7 @@ def update_user_config(username, new_email=None, old_password=None, new_password
         else:
             raise exceptions.BadParametersException()
     if new_email:
-        if not arguments.is_valid_email(new_email):
+        if not args.is_valid_email(new_email):
             raise exceptions.BadParametersException()
         if not new_email==user.email:
             user2=cassapiuser.get_user(email=new_email)
@@ -135,7 +140,7 @@ def update_user_config(username, new_email=None, old_password=None, new_password
         return False
 
 def get_user_config(username):
-    if not arguments.is_valid_username(username):
+    if not args.is_valid_username(username):
         raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
@@ -146,4 +151,38 @@ def get_user_config(username):
     data['username']=user.username
     data['state']=user.state
     return data
+
+def delete_user(username):
+    if not args.is_valid_username(username):
+        raise exceptions.BadParametersException()
+    user=cassapiuser.get_user(username=username)
+    if not user:
+        raise exceptions.UserNotFoundException()
+    aids=cassapiagent.get_agents_aids(uid=user.uid)
+    dids=cassapidatasource.get_datasources_dids(uid=user.uid)
+    pids=[]
+    for did in dids:
+        did_pids=cassapidatapoint.get_datapoints_pids(did=did)
+        for pid in did_pids:
+            pids.append(pid)
+    wids=cassapiwidget.get_widgets_wids(uid=user.uid)
+    bids=cassapidashboard.get_dashboards_bids(uid=user.uid)
+    cassapiuser.delete_user(username=username)
+    cassapiuser.delete_signup_info(username=username)
+    for aid in aids:
+        cassapiagent.delete_agent(aid=aid)
+    for wid in wids:
+        cassapiwidget.delete_widget(wid=wid)
+    for bid in bids:
+        cassapidashboard.delete_dashboard(bid=bid)
+    for pid in pids:
+        cassapidatapoint.delete_datapoint(pid=pid)
+        cassapidatapoint.delete_datapoint_stats(pid=pid)
+        cassapidatapoint.delete_datapoint_data(pid=pid)
+    for did in dids:
+        cassapidatasource.delete_datasource(did=did)
+        cassapidatasource.delete_datasource_stats(did=did)
+        cassapidatasource.delete_datasource_data(did=did)
+        cassapidatasource.delete_datasource_maps(did=did)
+    return True
 

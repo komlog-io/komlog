@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 Created on 01/10/2014
 
@@ -28,6 +27,14 @@ def get_widgets(uid):
             widget=ormwidget.Widget(**w)
             widgets.append(widget)
     return widgets
+
+def get_widgets_wids(uid):
+    row=connection.session.execute(stmtwidget.S_WID_MSTWIDGET_B_UID,(uid,))
+    wids=[]
+    if row:
+        for r in row:
+            wids.append(r['wid'])
+    return wids
 
 def get_number_of_widgets_by_uid(uid):
     row=connection.session.execute(stmtwidget.S_COUNT_MSTWIDGET_B_UID,(uid,))
@@ -71,8 +78,13 @@ def insert_widget(widget):
         _insert_widget_dp(widget)
     return True
             
-def get_widget_ds(wid):
-    row=connection.session.execute(stmtwidget.S_A_MSTWIDGETDS_B_WID,(wid,))
+def get_widget_ds(wid=None, did=None):
+    if wid:
+        row=connection.session.execute(stmtwidget.S_A_MSTWIDGETDS_B_WID,(wid,))
+    elif did:
+        row=connection.session.execute(stmtwidget.S_A_MSTWIDGETDS_B_DID,(did,))
+    else:
+        return None
     if not row:
         return None
     elif len(row)==1:
@@ -80,8 +92,13 @@ def get_widget_ds(wid):
     else:
         raise excpwidget.DataConsistencyException(function='_get_widget_ds',field='wid',value=wid)
 
-def get_widget_dp(wid):
-    row=connection.session.execute(stmtwidget.S_A_MSTWIDGETDP_B_WID,(wid,))
+def get_widget_dp(wid=None, pid=None):
+    if wid:
+        row=connection.session.execute(stmtwidget.S_A_MSTWIDGETDP_B_WID,(wid,))
+    elif pid:
+        row=connection.session.execute(stmtwidget.S_A_MSTWIDGETDP_B_PID,(pid,))
+    else:
+        return None
     if not row:
         return None
     elif len(row)==1:

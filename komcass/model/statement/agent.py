@@ -16,7 +16,7 @@ STATEMENTS={10000:'select * from mst_agent where aid=?',
             10002:'select count(*) from mst_agent where uid=?',
             10003:'select aid from mst_agent where uid=?',
             11000:'insert into mst_agent (aid,uid,agentname,pubkey,version,state,creation_date) values (?,?,?,?,?,?,?)',
-            12000:'delete from mst_agent where aid=?'
+            12000:'delete from mst_agent where aid=?',
            }
 
 # selects
@@ -32,5 +32,5 @@ I_A_MSTAGENT=11000
 
 # Deletes
 
-D_A_MSTAGENT=12000
+D_A_MSTAGENT_B_AID=12000
 

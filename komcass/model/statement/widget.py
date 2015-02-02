@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 This file contains the statements to operate with widget tables
 Statements range (90000-99999)
@@ -16,6 +15,9 @@ STATEMENTS={90000:'select * from mst_widget where wid=?',
             90002:'select * from mst_widget_ds where wid=?',
             90003:'select * from mst_widget_dp where wid=?',
             90004:'select count(*) from mst_widget where uid=?',
+            90005:'select * from mst_widget_ds where did=?',
+            90006:'select * from mst_widget_dp where pid=?',
+            90007:'select wid from mst_widget where uid=?',
             91000:'insert into mst_widget (wid,uid,type) values (?,?,?)',
             91001:'insert into mst_widget_ds (wid,uid,creation_date,did) values (?,?,?,?)',
             91002:'insert into mst_widget_dp (wid,uid,creation_date,pid) values (?,?,?,?)',
@@ -34,6 +36,9 @@ S_A_MSTWIDGET_B_UID=90001
 S_A_MSTWIDGETDS_B_WID=90002
 S_A_MSTWIDGETDP_B_WID=90003
 S_COUNT_MSTWIDGET_B_UID=90004
+S_A_MSTWIDGETDS_B_DID=90005
+S_A_MSTWIDGETDP_B_PID=90006
+S_WID_MSTWIDGET_B_UID=90007
 
 # Inserts
 

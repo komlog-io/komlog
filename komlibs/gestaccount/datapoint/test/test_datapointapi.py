@@ -4,8 +4,10 @@ from komlibs.general.time import timeuuid
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datasource import api as datasourceapi
+from komlibs.gestaccount.widget import api as widgetapi
 from komlibs.gestaccount.datapoint import api
 from komlibs.gestaccount import exceptions
+from komfig import logger
 
 class GestaccountDatapointApiTest(unittest.TestCase):
     ''' komlog.gestaccount.datapoint.api tests '''
@@ -472,4 +474,63 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertTrue(api.store_datasource_values(did=did, date=date))
         data=api.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
         self.assertEqual(len(data),1)
+
+    def test_delete_datapoint_failure_bad_parameters(self):
+        ''' delete_datapoint should fail if we pass incorrect parameters '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for pid in pids:
+            self.assertRaises(exceptions.BadParametersException, api.delete_datapoint, pid=pid)
+
+    def test_delete_datapoint_failure_non_existent_datapoint(self):
+        ''' delete_datapoint should fail if we pass incorrect parameters '''
+        pid=uuid.uuid4()
+        self.assertRaises(exceptions.DatapointNotFoundException, api.delete_datapoint, pid=pid)
+
+    def test_delete_datapoint_success_maps(self):
+        ''' delete_datapoint should succeed, and delete it from the maps where appears '''
+        datasourcename='test_delete_datapoint_success_maps'
+        datasource=datasourceapi.create_datasource(username=self.user['username'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 8 and length 2
+        position=8
+        length=2
+        datapointname='test_store_datasource_values_success'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(api.store_datasource_values(did=did, date=date))
+        data=api.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        dsdata=datasourceapi.get_datasource_data(did=did, date=date)
+        self.assertTrue({'pid':datapoint['pid'],'position':8} in dsdata['datapoints'])
+        self.assertTrue(api.delete_datapoint(pid=datapoint['pid']))
+        dsdata=datasourceapi.get_datasource_data(did=did, date=date)
+        self.assertFalse({'pid':datapoint['pid'],'position':8} in dsdata['datapoints'])
+        self.assertRaises(exceptions.DatapointNotFoundException, api.get_datapoint_config, pid=datapoint['pid'])
+        self.assertRaises(exceptions.DatapointDataNotFoundException, api.get_datapoint_data, pid=datapoint['pid'], fromdate=date, todate=date)
+
+    def test_delete_datapoint_success_widgets(self):
+        ''' delete_datapoint should succeed, and delete it from the widgets where it appears '''
+        datasourcename='test_delete_datapoint_success_maps_flag_true'
+        datasource=datasourceapi.create_datasource(username=self.user['username'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 8 and length 2
+        position=8
+        length=2
+        datapointname='test_store_datasource_values_success'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        widget=widgetapi.new_widget_dp(username=self.user['username'], pid=datapoint['pid'])
+        self.assertTrue(api.store_datasource_values(did=did, date=date))
+        data=api.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        self.assertTrue(api.delete_datapoint(pid=datapoint['pid']))
+        self.assertRaises(exceptions.DatapointNotFoundException, api.get_datapoint_config, pid=datapoint['pid'])
+        self.assertRaises(exceptions.DatapointDataNotFoundException, api.get_datapoint_data, pid=datapoint['pid'], fromdate=date, todate=date)
+        self.assertRaises(exceptions.WidgetNotFoundException, widgetapi.get_widget_config, wid=widget['wid'])
 

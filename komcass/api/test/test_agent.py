@@ -113,6 +113,10 @@ class KomcassApiAgentTest(unittest.TestCase):
         self.assertTrue(agentapi.insert_agent(agent))
 
     def test_delete_agent_success(self):
-        ''' delete_agent should succeed if argument is an UUID '''
-        self.assertTrue(agentapi.delete_agent(uuid.uuid4()))
+        ''' delete_agent should delete the agent successfully '''
+        uid=uuid.uuid4()
+        agent1=ormagent.Agent(aid=uuid.uuid4(),uid=uid,agentname='agent1')
+        self.assertTrue(agentapi.insert_agent(agent1))
+        self.assertTrue(agentapi.delete_agent(aid=agent1.aid))
+        self.assertIsNone(agentapi.get_agent(aid=agent1.aid))
 

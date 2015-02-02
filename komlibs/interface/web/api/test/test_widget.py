@@ -1,13 +1,13 @@
 import unittest
 import uuid
 import json
+from komlibs.auth import operations
 from komlibs.gestaccount.widget import types
 from komlibs.interface.web.api import user as userapi 
 from komlibs.interface.web.api import agent as agentapi 
 from komlibs.interface.web.api import datasource as datasourceapi 
 from komlibs.interface.web.api import widget as widgetapi 
 from komlibs.interface.web.model import webmodel
-from komlibs.interface.web.operations import weboperations
 from komlibs.interface.web import status, exceptions
 from komlibs.general.validation import arguments as args
 from komlibs.interface.imc.model import messages
@@ -43,7 +43,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             while True:
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
                 self.assertIsNotNone(msg)
-                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                     msgapi.send_message(msg)
                     count+=1
                     if count>=1000:
@@ -55,7 +55,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             while True:
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
                 self.assertIsNotNone(msg)
-                if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+                if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                     msgapi.send_message(msg)
                     count+=1
                     if count>=1000:
@@ -96,7 +96,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewDatasourceOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(aid) and msg.operation.params['did']==uuid.UUID(response.data['did'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -109,7 +109,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewDatasourceOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(aid) and msg.operation.params['did']==uuid.UUID(response.data['did'])): 
+            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])): 
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -124,7 +124,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
             if not msg:
                 break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and isinstance(msg.operation,weboperations.NewWidgetOperation) and msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']):
+            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==uuid.UUID(self.userinfo['uid']):
                 rescontrol.process_message_UPDQUO(msg)
             else:
                 msgapi.send_message(msg)
@@ -136,7 +136,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
             if not msg:
                 break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and isinstance(msg.operation,weboperations.NewWidgetOperation) and msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']): 
+            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==uuid.UUID(self.userinfo['uid']): 
                 rescontrol.process_message_RESAUTH(msg)
             else:
                 msgapi.send_message(msg)
@@ -164,14 +164,16 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         usernames=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
         wid=uuid.uuid4().hex
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, widgetapi.get_widget_config_request, username=username, wid=wid)
+            response=widgetapi.get_widget_config_request(username=username, wid=wid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_widget_config_request_failure_invalid_wid(self):
         ''' get_widget_config_request should fail if wid is invalid '''
         wids=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
         username='test_get_widget_config_request_failure_invalid_wid'
         for wid in wids:
-            self.assertRaises(exceptions.BadParametersException, widgetapi.get_widget_config_request, username=username, wid=wid)
+            response=widgetapi.get_widget_config_request(username=username, wid=wid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_widget_config_request_failure_non_existent_username(self):
         ''' get_widget_config_request should fail if username does not exist '''
@@ -216,7 +218,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewDatasourceOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(aid) and msg.operation.params['did']==uuid.UUID(response.data['did'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -229,7 +231,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewDatasourceOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(aid) and msg.operation.params['did']==uuid.UUID(response.data['did'])): 
+            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])): 
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -244,7 +246,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if not msg:
                 break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and isinstance(msg.operation,weboperations.NewWidgetOperation) and msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']):
+            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==uuid.UUID(self.userinfo['uid']):
                 rescontrol.process_message_UPDQUO(message=msg)
             else:
                 msgapi.send_message(msg)
@@ -256,7 +258,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if not msg:
                 break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and isinstance(msg.operation,weboperations.NewWidgetOperation) and msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']): 
+            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==uuid.UUID(self.userinfo['uid']): 
                 rescontrol.process_message_RESAUTH(message=msg)
             else:
                 msgapi.send_message(msg)
@@ -317,7 +319,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewDatasourceOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(aid) and msg.operation.params['did']==uuid.UUID(response.data['did'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -330,7 +332,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewDatasourceOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(aid) and msg.operation.params['did']==uuid.UUID(response.data['did'])): 
+            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])): 
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -345,7 +347,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
             if not msg:
                 break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and isinstance(msg.operation,weboperations.NewWidgetOperation) and msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']):
+            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==uuid.UUID(self.userinfo['uid']):
                 rescontrol.process_message_UPDQUO(msg)
             else:
                 msgapi.send_message(msg)
@@ -357,7 +359,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
             if not msg:
                 break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and isinstance(msg.operation,weboperations.NewWidgetOperation) and msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']): 
+            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==uuid.UUID(self.userinfo['uid']): 
                 rescontrol.process_message_RESAUTH(msg)
             else:
                 msgapi.send_message(msg)
@@ -373,12 +375,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 found+=1
         self.assertEqual(found,1)
 
-
     def test_get_widgets_config_request_failure_invalid_username(self):
         ''' get_widgets_config_request should fail if username is invalid '''
         usernames=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, widgetapi.get_widgets_config_request, username=username)
+            response=widgetapi.get_widgets_config_request(username=username)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_widgets_config_request_failure_non_existent_username(self):
         ''' get_widgets_config_request should fail if username does not exist '''
@@ -397,4 +399,20 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response2=widgetapi.get_widgets_config_request(username=username)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response2.data, [])
+
+    def test_delete_widget_request_failure_invalid_username(self):
+        ''' delete_widget_request should fail if username is invalid '''
+        usernames=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        wid=uuid.uuid4().hex
+        for username in usernames:
+            response=widgetapi.delete_widget_request(username=username, wid=wid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_delete_widget_request_failure_invalid_wid(self):
+        ''' delete_widget_request should fail if wid is invalid '''
+        wids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_delete_widget_request_failure_invalid_wid'
+        for wid in wids:
+            response=widgetapi.delete_widget_request(username=username, wid=wid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 

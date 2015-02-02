@@ -9,6 +9,7 @@
 #
 ###############################################################################
 
+from komlibs.auth import operations
 from komcass.api import user as cassapiuser
 from komcass.api import agent as cassapiagent
 from komcass.api import datasource as cassapidatasource
@@ -17,7 +18,22 @@ from komcass.api import widget as cassapiwidget
 from komcass.api import dashboard as cassapidashboard
 from komcass.api import quote as cassapiquote
 
-def update_quo_static_user_total_agents(params):
+update_funcs = {
+                operations.NEW_AGENT: ['quo_static_user_total_agents'],
+                operations.NEW_DATASOURCE: ['quo_static_agent_total_datasources','quo_static_user_total_datasources'],
+                operations.NEW_DATAPOINT: ['quo_static_datasource_total_datapoints','quo_static_agent_total_datapoints','quo_static_user_total_datapoints'],
+                operations.NEW_WIDGET: ['quo_static_user_total_widgets'],
+                operations.NEW_DASHBOARD: ['quo_static_user_total_dashboards'],
+                operations.NEW_WIDGET_SYSTEM: ['quo_static_user_total_widgets'],
+}
+
+def get_update_funcs(operation):
+    try:
+        return update_funcs[operation]
+    except KeyError:
+        return []
+
+def quo_static_user_total_agents(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
@@ -26,7 +42,7 @@ def update_quo_static_user_total_agents(params):
         return str(num_agents)
     return None
 
-def update_quo_static_user_total_datasources(params):
+def quo_static_user_total_datasources(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
@@ -39,7 +55,7 @@ def update_quo_static_user_total_datasources(params):
         return str(total_datasources)
     return None
 
-def update_quo_static_user_total_datapoints(params):
+def quo_static_user_total_datapoints(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
@@ -54,7 +70,7 @@ def update_quo_static_user_total_datapoints(params):
         return str(total_datapoints)
     return None
 
-def update_quo_static_user_total_widgets(params):
+def quo_static_user_total_widgets(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
@@ -63,7 +79,7 @@ def update_quo_static_user_total_widgets(params):
         return str(num_widgets)
     return None
 
-def update_quo_static_user_total_dashboards(params):
+def quo_static_user_total_dashboards(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
@@ -72,7 +88,7 @@ def update_quo_static_user_total_dashboards(params):
         return str(num_dashboards)
     return None
 
-def update_quo_static_agent_total_datasources(params):
+def quo_static_agent_total_datasources(params):
     if 'aid' not in params:
         return None
     aid=params['aid']
@@ -81,7 +97,7 @@ def update_quo_static_agent_total_datasources(params):
         return str(num_datasources)
     return None
 
-def update_quo_static_agent_total_datapoints(params):
+def quo_static_agent_total_datapoints(params):
     if 'aid' not in params:
         return None
     aid=params['aid']
@@ -94,7 +110,7 @@ def update_quo_static_agent_total_datapoints(params):
         return str(total_datapoints)
     return None
 
-def update_quo_static_datasource_total_datapoints(params):
+def quo_static_datasource_total_datapoints(params):
     if 'did' not in params:
         return None
     did=params['did']

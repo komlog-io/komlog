@@ -2,6 +2,7 @@ import unittest
 import uuid
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
+from komlibs.gestaccount.widget import api as widgetapi
 from komlibs.gestaccount.datasource import api
 from komlibs.gestaccount import exceptions
 from komlibs.general.time import timeuuid
@@ -77,11 +78,11 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         aid=self.agent['aid']
         datasourcename='test_get_datasource_config_success'
         datasource=api.create_datasource(username=username, aid=aid, datasourcename=datasourcename) 
-        data=api.get_datasource_config(did=datasource['did'])
+        data=api.get_datasource_config(did=datasource['did'], pids_flag=True)
         self.assertIsInstance(data, dict)
         self.assertEqual(datasource['aid'],aid)
         self.assertEqual(datasource['datasourcename'],datasourcename)
-        self.assertEqual(len(data),4)
+        self.assertEqual(len(data),5)
 
     def test_get_datasources_config_non_existent_username(self):
         ''' get_datasource_config should fail if user is not in system '''
@@ -180,4 +181,45 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         self.assertEqual(data['date'], date)
         self.assertEqual(data['content'], content)
         self.assertTrue(api.generate_datasource_map(did=did, date=date))
+
+    def test_delete_datasource_failure_invalid_did(self):
+        ''' delete_datasource should fail if did is invalid '''
+        dids=[None, '234234',23423,233.2324,{'a':'dict'},['a','list'],{'set'},('a','tuple'),timeuuid.uuid1(), uuid.uuid4().hex]
+        for did in dids:
+            self.assertRaises(exceptions.BadParametersException, api.delete_datasource, did=did)
+
+    def test_delete_datasource_failure_non_existent_did(self):
+        ''' delete_datasource should fail did does not exist '''
+        did=uuid.uuid4()
+        self.assertRaises(exceptions.DatasourceNotFoundException, api.delete_datasource, did=did)
+
+    def test_delete_datasource_success(self):
+        ''' delete_datasource should succeed and delete datasource completely from db, even its associated widgets and those from its dashboards '''
+        username=self.user['username']
+        aid=self.agent['aid']
+        datasourcename='test_delete_datasource_success'
+        datasource=api.create_datasource(username=username, aid=aid, datasourcename=datasourcename)
+        date=timeuuid.uuid1()
+        content='delete_datasource_success content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(api.store_datasource_data(did=datasource['did'], date=date, content=content))
+        widget=widgetapi.new_widget_ds(username=username, did=datasource['did'])
+        data=api.get_datasource_data(did=datasource['did'], date=date)
+        self.assertIsNotNone(data)
+        self.assertEqual(data['did'], datasource['did'])
+        self.assertEqual(data['date'], date)
+        self.assertEqual(data['content'], content)
+        datasource2=api.get_datasource_config(did=datasource['did'])
+        self.assertEqual(datasource['did'],datasource2['did'])
+        self.assertEqual(datasource['aid'],datasource2['aid'])
+        self.assertEqual(datasource['uid'],datasource2['uid'])
+        self.assertEqual(datasource['datasourcename'],datasource2['datasourcename'])
+        widget2=widgetapi.get_widget_config(wid=widget['wid'])
+        self.assertEqual(widget['wid'],widget2['wid'])
+        self.assertEqual(widget['did'],widget2['did'])
+        self.assertEqual(widget['type'],widget2['type'])
+        self.assertTrue(api.delete_datasource(did=datasource['did']))
+        self.assertRaises(exceptions.DatasourceDataNotFoundException, api.get_datasource_data, did=datasource['did'], date=date)
+        self.assertRaises(exceptions.DatasourceNotFoundException, api.get_last_processed_datasource_data, did=datasource['did'])
+        self.assertRaises(exceptions.DatasourceNotFoundException, api.get_datasource_config, did=datasource['did'])
+        self.assertRaises(exceptions.WidgetNotFoundException, widgetapi.get_widget_config, wid=widget['wid'])
 

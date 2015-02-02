@@ -11,11 +11,13 @@ author: jcazor
 
 import uuid
 import json
-from komcass.api import datapoint as cassapidatapoint
 from komcass.api import datasource as cassapidatasource
+from komcass.api import datapoint as cassapidatapoint
+from komcass.api import widget as cassapiwidget
+from komcass.api import dashboard as cassapidashboard
 from komcass.model.orm import datapoint as ormdatapoint
 from komlibs.gestaccount import exceptions
-from komlibs.general.validation import arguments
+from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.textman import variables
 from komlibs.ai import decisiontree
@@ -24,11 +26,11 @@ from komfig import logger
 def get_datapoint_data(pid, fromdate=None, todate=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
-    if not arguments.is_valid_uuid(pid):
+    if not args.is_valid_uuid(pid):
         raise exceptions.BadParametersException()
-    if todate and not arguments.is_valid_date(todate):
+    if todate and not args.is_valid_date(todate):
         raise exceptions.BadParametersException()
-    if fromdate and not arguments.is_valid_date(fromdate):
+    if fromdate and not args.is_valid_date(fromdate):
         raise exceptions.BadParametersException()
     if not todate:
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
@@ -48,7 +50,7 @@ def create_datapoint(did, datapointname):
     '''
     Funcion utilizada para la creacion de un datapoint sin asociar a ninguna variable en particular
     '''
-    if not arguments.is_valid_uuid(did) or not arguments.is_valid_datapointname(datapointname):
+    if not args.is_valid_uuid(did) or not args.is_valid_datapointname(datapointname):
         raise exceptions.BadParametersException()
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
@@ -63,6 +65,8 @@ def create_datapoint(did, datapointname):
 def get_datapoint_config(pid):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException()
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
     data={}
@@ -78,11 +82,11 @@ def get_datapoint_config(pid):
     return data
 
 def update_datapoint_config(pid, datapointname=None, color=None):
-    if not arguments.is_valid_uuid(pid):
+    if not args.is_valid_uuid(pid):
         raise exceptions.BadParametersException()
-    if datapointname and not arguments.is_valid_datapointname(datapointname):
+    if datapointname and not args.is_valid_datapointname(datapointname):
         raise exceptions.BadParametersException()
-    if color and not arguments.is_valid_hexcolor(color):
+    if color and not args.is_valid_hexcolor(color):
         raise exceptions.BadParametersException()
     if not datapointname and not color:
         raise exceptions.BadParametersException()
@@ -104,6 +108,8 @@ def mark_negative_variable(pid, date, position, length):
     - Comprobamos que la variable exista en el sample (ds en un dtdo momento)
     - Añadimos la variable a la lista de negativos del datapoint
     '''
+    if not args.is_valid_uuid(pid) or not args.is_valid_date(date) or not args.is_valid_int(position) or not args.is_valid_int(length):
+        raise exceptions.BadParametersException()
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException()
@@ -141,6 +147,8 @@ def mark_positive_variable(pid, date, position, length, replace=True):
     - Si algun otro datapoint valida la variable marcada, solicitamos la regeneracion del DTREE de dicho datapoint 
     y mandamos un NEGVAR sobre esa variable y ese dtp
     '''
+    if not args.is_valid_uuid(pid) or not args.is_valid_date(date) or not args.is_valid_int(position) or not args.is_valid_int(length):
+        raise exceptions.BadParametersException()
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException()
@@ -197,6 +205,8 @@ def generate_decision_tree(pid):
     - En base a la clasificacion obtenida, creamos el arbol de decision
     - lo almacenamos en bbdd
     '''
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException()
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException()
@@ -251,6 +261,8 @@ def generate_decision_tree(pid):
         raise exceptions.DatapointDTreeTrainingSetEmptyException()
 
 def monitor_new_datapoint(did, date, position, length, datapointname):
+    if not args.is_valid_uuid(did) or not args.is_valid_date(date) or not args.is_valid_int(position) or not args.is_valid_int(length) or not args.is_valid_datapointname(datapointname):
+        raise exceptions.BadParametersException()
     try:
         datapoint={}
         datapoint=create_datapoint(did=did, datapointname=datapointname)
@@ -278,6 +290,8 @@ def store_datapoint_values(pid, date, store_newer=True):
             - Posteriormente obtenemos las variables del dsmap y comprobamos una por una si valida el dtree
             - en caso afirmativo se almacena y pasamos al siguiente dsmap. En caso negativo, comprobadas todas las variables, pasariamos al siguiente dsmap tambien.
     '''
+    if not args.is_valid_uuid(pid) or not args.is_valid_date(date):
+        raise exceptions.BadParametersException()
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
     if datapoint==None:
@@ -326,6 +340,8 @@ def store_datasource_values(did, date):
             - si valida se almacena su valor y pasamos a la siguiente variable.
             - si no valida pasamos al siguiente dtree y volvemos a probar la validacion
     '''
+    if not args.is_valid_uuid(did) or not args.is_valid_date(date):
+        raise exceptions.BadParametersException()
     dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
     if dsmap==None:
         raise exceptions.DatasourceMapNotFoundException()
@@ -370,5 +386,30 @@ def store_datasource_values(did, date):
                 else:
                     logger.logger.error('Error inserting datapoint data. pid: %s, dsmap.date: %s.' %(pid.hex,date.hex))
                     break
+    return True
+
+def delete_datapoint(pid):
+    ''' Delete all datapoint info. '''
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException()
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    if not datapoint:
+        raise exceptions.DatapointNotFoundException()
+    datasource=cassapidatasource.get_datasource(did=datapoint.did)
+    bids=cassapidashboard.get_dashboards_bids(uid=datasource.uid) if datasource else []
+    widget=cassapiwidget.get_widget_dp(pid=pid)
+    if widget:
+        cassapiwidget.delete_widget(wid=widget.wid)
+        for bid in bids:
+            cassapidashboard.delete_widget_from_dashboard(wid=widget.wid, bid=bid)
+    fromdate=datasource.creation_date if datasource and datasource.creation_date else timeuuid.uuid1(seconds=1)
+    dsmap_dates=cassapidatasource.get_datasource_map_dates(did=datapoint.did, fromdate=fromdate, todate=timeuuid.uuid1())
+    for date in dsmap_dates:
+        cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid)
+    cassapidatapoint.delete_datapoint(pid=pid)
+    cassapidatapoint.delete_datapoint_stats(pid=pid)
+    cassapidatapoint.delete_datapoint_dtree_positives(pid=pid)
+    cassapidatapoint.delete_datapoint_dtree_negatives(pid=pid)
+    cassapidatapoint.delete_datapoint_data(pid=pid)
     return True
 

@@ -7,9 +7,12 @@ Gestconsole message definitions
 
 from komfig import logger
 from komlibs.general.validation import arguments as args
+from komlibs.gestaccount.user import api as userapi
+from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datapoint import api as datapointapi
 from komlibs.gestaccount.datasource import api as datasourceapi
 from komlibs.gestaccount.widget import api as widgetapi
+from komlibs.gestaccount.dashboard import api as dashboardapi
 from komlibs.gestaccount.widget import types as widgettypes
 from komlibs.interface.imc.model import messages, responses
 from komlibs.interface.imc import status, exceptions
@@ -37,8 +40,10 @@ def process_message_MONVAR(message):
         if datapoint:
             datasource=datasourceapi.get_datasource_config(did=did)
             operation=weboperations.NewDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=datapoint['pid'])
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=operation))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=operation))
+            auth_op=operation.get_auth_operation()
+            params=operation.get_params()
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
             response.add_msg_originated(messages.FillDatapointMessage(pid=datapoint['pid'],date=date))
             response.add_msg_originated(messages.NewDPWidgetMessage(username=username,pid=datapoint['pid']))
             response.status=status.IMC_STATUS_OK
@@ -124,9 +129,11 @@ def process_message_NEWDSW(message):
     if args.is_valid_uuid(did) and args.is_valid_username(username):
         widget=widgetapi.new_widget_ds(username=username, did=did)
         if widget:
-            operation=weboperations.NewWidgetOperation(uid=widget['uid'],wid=widget['wid'])
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=operation))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=operation))
+            operation=weboperations.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
+            auth_op=operation.get_auth_operation()
+            params=operation.get_params()
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
             response.status=status.IMC_STATUS_OK
         else:
             response.status=status.IMC_STATUS_INTERNAL_ERROR
@@ -143,12 +150,124 @@ def process_message_NEWDPW(message):
     if args.is_valid_uuid(pid) and args.is_valid_username(username):
         widget=widgetapi.new_widget_dp(username=username, pid=pid)
         if widget:
-            operation=weboperations.NewWidgetOperation(uid=widget['uid'],wid=widget['wid'])
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=operation))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=operation))
+            operation=weboperations.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
+            auth_op=operation.get_auth_operation()
+            params=operation.get_params()
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
             response.status=status.IMC_STATUS_OK
         else:
             response.status=status.IMC_STATUS_INTERNAL_ERROR
+    else:
+        response.status=status.IMC_STATUS_BAD_PARAMETERS
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_DELUSER(message):
+    ''' this message deletes a user from the system '''
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    username=message.username
+    if args.is_valid_username(username):
+        user=userapi.get_user_config(username=username)
+        agents=agentapi.get_agents_config(username=username)
+        userapi.delete_user(username=username)
+        #operation=weboperations.DeleteUserOperation(uid=user['uid'],aids=[agent['aid'] for agent in agents])
+        #auth_op=operation.get_auth_operation()
+        #params=operation.get_params()
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        response.status=status.IMC_STATUS_OK
+    else:
+        response.status=status.IMC_STATUS_BAD_PARAMETERS
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_DELAGENT(message):
+    ''' this message deletes an agent from the system '''
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    aid=message.aid
+    if args.is_valid_uuid(aid):
+        agent=agentapi.get_agent_config(aid=aid, dids_flag=True)
+        agentapi.delete_agent(aid=agent['aid'])
+        #operation=weboperations.DeleteAgentOperation(aid=aid,uid=agent['uid'])
+        #auth_op=operation.get_auth_operation()
+        #params=operation.get_params()
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        response.status=status.IMC_STATUS_OK
+    else:
+        response.status=status.IMC_STATUS_BAD_PARAMETERS
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_DELDS(message):
+    ''' this message deletes a datasource from the system '''
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    did=message.did
+    if args.is_valid_uuid(did):
+        datasource=datasourceapi.get_datasource_config(did=did)
+        datasourceapi.delete_datasource(did=did)
+        #operation=weboperations.DeleteDatasourceOperation(did=did,aid=datasource['aid'],uid=datasource['uid'],pids=datasource['pids'])
+        #auth_op=operation.get_auth_operation()
+        #params=operation.get_params()
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        response.status=status.IMC_STATUS_OK
+    else:
+        response.status=status.IMC_STATUS_BAD_PARAMETERS
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_DELDP(message):
+    ''' this message deletes a datapoint from the system '''
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    pid=message.pid
+    if args.is_valid_uuid(pid):
+        datapoint=datapointapi.get_datapoint_config(pid=pid)
+        datasource=datasourceapi.get_datasource_config(did=datapoint['did'])
+        datapointapi.delete_datapoint(pid=pid)
+        #operation=weboperations.DeleteDatapointOperation(pid=pid,aid=datasource['aid'],uid=datasource['uid'])
+        #auth_op=operation.get_auth_operation()
+        #params=operation.get_params()
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        response.status=status.IMC_STATUS_OK
+    else:
+        response.status=status.IMC_STATUS_BAD_PARAMETERS
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_DELWIDGET(message):
+    ''' this message deletes a widget from the system '''
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    wid=message.wid
+    if args.is_valid_uuid(wid):
+        widget=widgetapi.get_widget_config(wid=wid)
+        widgetapi.delete_widget(wid=wid)
+        #operation=weboperations.DeleteWidgetOperation(wid=wid,uid=widget['uid'])
+        #auth_op=operation.get_auth_operation()
+        #params=operation.get_params()
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        response.status=status.IMC_STATUS_OK
+    else:
+        response.status=status.IMC_STATUS_BAD_PARAMETERS
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_DELDASHB(message):
+    ''' this message deletes a dashboard from the system '''
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    bid=message.bid
+    if args.is_valid_uuid(bid):
+        dashboard=dashboardapi.get_dashboard_config(bid=bid)
+        dashboardapi.delete_dashboard(bid=bid)
+        #operation=weboperations.DeleteDashboardOperation(bid=bid,uid=dashboard['uid'])
+        #auth_op=operation.get_auth_operation()
+        #params=operation.get_params()
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response

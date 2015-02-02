@@ -1,188 +1,683 @@
 import unittest
 import uuid
+from komlibs.auth import operations, permissions
 from komlibs.auth.resources import update
 from komcass.api import permission as cassapiperm
-from komlibs.gestaccount.user import api as userapi
-from komlibs.gestaccount.agent import api as agentapi
-from komlibs.gestaccount.datasource import api as datasourceapi
-from komlibs.gestaccount.datapoint import api as datapointapi
-from komlibs.gestaccount.widget import api as widgetapi
-from komlibs.gestaccount.dashboard import api as dashboardapi
+from komcass.api import user as cassapiuser
+from komcass.api import agent as cassapiagent
+from komcass.api import datasource as cassapidatasource
+from komcass.api import datapoint as cassapidatapoint
+from komcass.api import widget as cassapiwidget
+from komcass.api import dashboard as cassapidashboard
+from komcass.model.orm import user as ormuser
+from komcass.model.orm import agent as ormagent
+from komcass.model.orm import datasource as ormdatasource
+from komcass.model.orm import datapoint as ormdatapoint
+from komcass.model.orm import widget as ormwidget
+from komcass.model.orm import dashboard as ormdashboard
 
 
 class AuthResourcesUpdateTest(unittest.TestCase):
     ''' komlog.auth.resources.update tests '''
     
-    def setUp(self):
-        username = 'test_komlibs.auth.resources.authorization_user'
-        password = 'password'
-        email = 'test_komlibs.auth.resources.update_user@komlog.org'
-        try:
-            self.user=userapi.get_user_config(username=username)
-        except Exception:
-            self.user=userapi.create_user(username=username, password=password, email=email)
-        
+    def test_get_update_funcs_success(self):
+        ''' test_update_funcs should return a list of functions '''
+        operation=operations.NEW_AGENT
+        update_funcs=update.get_update_funcs(operation=operation)
+        self.assertTrue(isinstance(update_funcs, list))
 
-    def test_update_user_agent_perms_no_uid(self):
-        ''' update_user_agent_perms should fail if no uid is passed'''
+    def test_get_update_funcs_success_empty_list(self):
+        '''test_update_funcs should return an empty list of functions if operation does not exist'''
+        operation='234234234'
+        update_funcs=update.get_update_funcs(operation=operation)
+        self.assertTrue(isinstance(update_funcs, list))
+        self.assertEqual(update_funcs, [])
+
+    def test_new_agent_no_uid(self):
+        ''' new_agent should fail if no uid is passed'''
         params={'aid':uuid.uuid4()}
-        self.assertFalse(update.update_user_agent_perms(params))
+        self.assertFalse(update.new_agent(params))
 
-    def test_update_user_agent_perms_no_aid(self):
-        ''' update_user_agent_perms should fail if no aid is passed'''
-        params={'uid':self.user['uid']}
-        self.assertFalse(update.update_user_agent_perms(params))
+    def test_new_agent_no_aid(self):
+        ''' new_agent should fail if no aid is passed'''
+        params={'uid':uuid.uuid4()}
+        self.assertFalse(update.new_agent(params))
 
-    def test_update_user_agent_perms_success(self):
-        ''' update_user_agent_perms should succeed if agent belongs to user'''
-        user=self.user
-        agentname='test_update_user_agent_perms_success_agent'
-        pubkey=''.join(agentname.split('_'))+'PUBKEY'
-        version='tests'
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        params={'uid':user['uid'],'aid':agent['aid']}
-        self.assertTrue(update.update_user_agent_perms(params))
+    def test_new_agent_success(self):
+        ''' new_agent should succeed if permissions can be set'''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        params={'uid':uid,'aid':aid}
+        self.assertTrue(update.new_agent(params))
+        permission=cassapiperm.get_user_agent_perm(uid=uid, aid=aid)
+        self.assertIsNotNone(permission)
+        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
 
-    def test_update_user_agent_perms_failure(self):
-        ''' update_user_agent_perms should fail if agent does not belong to user'''
-        user=self.user
-        params={'uid':user['uid'],'aid':uuid.uuid4()}
-        self.assertFalse(update.update_user_agent_perms(params))
+    def test_new_datasource_no_uid(self):
+        ''' new_datasource should fail if no uid is passed'''
+        params={'aid':uuid.uuid4(),'did':uuid.uuid4()}
+        self.assertFalse(update.new_datasource(params))
 
-    def test_update_user_datasource_perms_no_uid(self):
-        ''' update_user_datasource_perms should fail if no uid is passed'''
-        params={'did':uuid.uuid4()}
-        self.assertFalse(update.update_user_datasource_perms(params))
+    def test_new_datasource_no_aid(self):
+        ''' new_datasource should fail if no aid is passed'''
+        params={'uid':uuid.uuid4(),'did':uuid.uuid4()}
+        self.assertFalse(update.new_datasource(params))
 
-    def test_update_user_datasource_perms_no_did(self):
-        ''' update_user_datasource_perms should fail if no did is passed'''
-        params={'uid':self.user['uid']}
-        self.assertFalse(update.update_user_datasource_perms(params))
+    def test_new_datasource_no_did(self):
+        ''' new_datasource should fail if no did is passed'''
+        params={'uid':uuid.uuid4(),'aid':uuid.uuid4()}
+        self.assertFalse(update.new_datasource(params))
 
-    def test_update_user_datasource_perms_success(self):
-        ''' update_user_datasource_perms should succeed if datasource belongs to user'''
-        user=self.user
-        agentname='test_update_user_datasource_perms_success_agent'
-        pubkey=''.join(agentname.split('_'))+'PUBKEY'
-        version='tests'
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasourcename='test_update_user_datasource_perms_success_datasource'
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
-        params={'uid':user['uid'],'did':datasource['did']}
-        self.assertTrue(update.update_user_datasource_perms(params))
+    def test_new_datasource_success(self):
+        ''' new_datasource should succeed if permissions can be set'''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        params={'uid':uid,'aid':aid,'did':did}
+        self.assertTrue(update.new_datasource(params))
+        permission=cassapiperm.get_user_datasource_perm(uid=uid, did=did)
+        self.assertIsNotNone(permission)
+        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
+        permission=cassapiperm.get_agent_datasource_perm(aid=aid, did=did)
+        self.assertIsNotNone(permission)
+        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
 
-    def test_update_user_datasource_perms_failure(self):
-        ''' update_user_datasource_perms should fail if datasource does not belong to user'''
-        user=self.user
-        params={'uid':user['uid'],'did':uuid.uuid4()}
-        self.assertFalse(update.update_user_datasource_perms(params))
-
-    def test_update_agent_datasource_perms_no_aid(self):
-        ''' update_agent_datasource_perms should fail if no aid is passed'''
-        params={'did':uuid.uuid4()}
-        self.assertFalse(update.update_agent_datasource_perms(params))
-
-    def test_update_agent_datasource_perms_no_did(self):
-        ''' update_agent_datasource_perms should fail if no did is passed'''
-        params={'aid':self.user['uid']}
-        self.assertFalse(update.update_agent_datasource_perms(params))
-
-    def test_update_agent_datasource_perms_success(self):
-        ''' update_agent_datasource_perms should succeed if datasource belongs to agent'''
-        user=self.user
-        agentname='test_update_agent_datasource_perms_success_agent'
-        pubkey=''.join(agentname.split('_'))+'PUBKEY'
-        version='tests'
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasourcename='test_update_agent_datasource_perms_success_datasource'
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
-        params={'aid':agent['aid'],'did':datasource['did']}
-        self.assertTrue(update.update_agent_datasource_perms(params))
-
-    def test_update_agent_datasource_perms_failure(self):
-        ''' update_agent_datasource_perms should fail if datasource does not belong to agent'''
-        user=self.user
-        agentname='test_update_agent_datasource_perms_failure_agent'
-        pubkey=''.join(agentname.split('_'))+'PUBKEY'
-        version='tests'
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        params={'aid':agent['aid'],'did':uuid.uuid4()}
-        self.assertFalse(update.update_agent_datasource_perms(params))
-
-    def test_update_user_datapoint_perms_no_uid(self):
-        ''' update_user_datapoint_perms should fail if no uid is passed'''
+    def test_new_datapoint_no_uid(self):
+        ''' new_datapoint should fail if no uid is passed'''
         params={'pid':uuid.uuid4()}
-        self.assertFalse(update.update_user_datapoint_perms(params))
+        self.assertFalse(update.new_datapoint(params))
 
-    def test_update_user_datapoint_perms_no_pid(self):
-        ''' update_user_datapoint_perms should fail if no pid is passed'''
-        params={'uid':self.user['uid']}
-        self.assertFalse(update.update_user_datapoint_perms(params))
+    def test_new_datapoint_no_pid(self):
+        ''' new_datapoint should fail if no uid is passed'''
+        params={'uid':uuid.uuid4()}
+        self.assertFalse(update.new_datapoint(params))
 
-    def test_update_user_datapoint_perms_success(self):
-        ''' update_user_datapoint_perms should succeed if datapoint belongs to user'''
-        user=self.user
-        agentname='test_update_user_datapoint_perms_success_agent'
-        pubkey=''.join(agentname.split('_'))+'PUBKEY'
-        version='tests'
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasourcename='test_update_user_datapoint_perms_success_datasource'
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
-        datapointname='test_update_user_datapoint_perms_success_datapoint'
-        datapoint=datapointapi.create_datapoint(did=datasource['did'], datapointname=datapointname)
-        params={'uid':user['uid'],'pid':datapoint['pid']}
-        self.assertTrue(update.update_user_datapoint_perms(params))
+    def test_new_datapoint_success(self):
+        ''' new_datapoint should succeed if permissions can be set'''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        params={'uid':uid,'pid':pid}
+        self.assertTrue(update.new_datapoint(params))
+        permission=cassapiperm.get_user_datapoint_perm(uid=uid, pid=pid)
+        self.assertIsNotNone(permission)
+        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
 
-    def test_update_user_datapoint_perms_failure(self):
-        ''' update_user_datapoint_perms should fail if datapoint does not belong to user'''
-        user=self.user
-        params={'uid':user['uid'],'pid':uuid.uuid4()}
-        self.assertFalse(update.update_user_datapoint_perms(params))
-
-    def test_update_user_widget_perms_no_uid(self):
-        ''' update_user_widget_perms should fail if no uid is passed'''
+    def test_new_widget_no_uid(self):
+        ''' new_widget should fail if no uid is passed'''
         params={'wid':uuid.uuid4()}
-        self.assertFalse(update.update_user_widget_perms(params))
+        self.assertFalse(update.new_widget(params))
 
-    def test_update_user_widget_perms_no_wid(self):
-        ''' update_user_widget_perms should fail if no wid is passed'''
-        params={'uid':self.user['uid']}
-        self.assertFalse(update.update_user_widget_perms(params))
+    def test_new_widget_no_wid(self):
+        ''' new_widget should fail if no wid is passed'''
+        params={'uid':uuid.uuid4()}
+        self.assertFalse(update.new_widget(params))
 
-    def test_update_user_widget_perms_success(self):
-        ''' update_user_widget_perms should succeed if widget belongs to user'''
-        user=self.user
-        agentname='test_update_user_widget_perms_success_agent'
-        pubkey=''.join(agentname.split('_'))+'PUBKEY'
-        version='tests'
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasourcename='test_update_user_widget_perms_success_datasource'
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
-        widget=widgetapi.new_widget_ds(username=user['username'], did=datasource['did'])
-        params={'uid':user['uid'],'wid':widget['wid']}
-        self.assertTrue(update.update_user_widget_perms(params))
+    def test_new_widget_success(self):
+        ''' new_widget should succeed if permissions can be set'''
+        uid=uuid.uuid4()
+        wid=uuid.uuid4()
+        params={'uid':uid,'wid':wid}
+        self.assertTrue(update.new_widget(params))
+        permission=cassapiperm.get_user_widget_perm(uid=uid, wid=wid)
+        self.assertIsNotNone(permission)
+        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
 
-    def test_update_user_widget_perms_failure(self):
-        ''' update_user_widget_perms should fail if widget does not belong to user'''
-        user=self.user
-        params={'uid':user['uid'],'wid':uuid.uuid4()}
-        self.assertFalse(update.update_user_widget_perms(params))
-
-    def test_update_user_dashboard_perms_no_uid(self):
-        ''' update_user_dashboard_perms should fail if no uid is passed'''
+    def test_new_dashboard_no_uid(self):
+        ''' new_dahsboard should fail if no uid is passed'''
         params={'bid':uuid.uuid4()}
-        self.assertFalse(update.update_user_dashboard_perms(params))
+        self.assertFalse(update.new_dashboard(params))
 
-    def test_update_user_dashboard_perms_no_bid(self):
-        ''' update_user_dashboard_perms should fail if no bid is passed'''
-        params={'uid':self.user['uid']}
-        self.assertFalse(update.update_user_dashboard_perms(params))
+    def test_new_dashboard_no_bid(self):
+        ''' new_dahsboard should fail if no bid is passed'''
+        params={'uid':uuid.uuid4()}
+        self.assertFalse(update.new_dashboard(params))
 
-#TODO Faltaria crear funciones para probar la ejecucion correcta de update_user_dashboard_perms, pero todavia no existe funcion en el dashboardapi para crear un dashbaord.
+    def test_new_dashboard_success(self):
+        ''' new_dashboard should succeed if permissions can be set'''
+        uid=uuid.uuid4()
+        bid=uuid.uuid4()
+        params={'uid':uid,'bid':bid}
+        self.assertTrue(update.new_dashboard(params))
+        permission=cassapiperm.get_user_dashboard_perm(uid=uid, bid=bid)
+        self.assertIsNotNone(permission)
+        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
 
-    def test_update_user_dashboard_perms_failure(self):
-        ''' update_user_dashboard_perms should fail if dashboard does not belong to user'''
-        user=self.user
-        params={'uid':user['uid'],'bid':uuid.uuid4()}
-        self.assertFalse(update.update_user_dashboard_perms(params))
+    def test_new_widget_system_no_uid(self):
+        ''' new_widget_system should fail if no uid is passed'''
+        params={'wid':uuid.uuid4()}
+        self.assertFalse(update.new_widget_system(params))
+
+    def test_new_widget_system_no_wid(self):
+        ''' new_widget_system should fail if no wid is passed'''
+        params={'uid':uuid.uuid4()}
+        self.assertFalse(update.new_widget_system(params))
+
+    def test_new_widget_system_success(self):
+        ''' new_widget_system should succeed if permissions can be set'''
+        uid=uuid.uuid4()
+        wid=uuid.uuid4()
+        params={'uid':uid,'wid':wid}
+        self.assertTrue(update.new_widget_system(params))
+        permission=cassapiperm.get_user_widget_perm(uid=uid, wid=wid)
+        self.assertIsNotNone(permission)
+        self.assertTrue(permission.perm & permissions.CAN_READ)
+
+    def test_delete_user_success(self):
+        ''' delete_user should revoke all user and agents permissions '''
+        uid=uuid.uuid4()
+        aids=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        perm=permissions.CAN_READ | permissions.CAN_EDIT | permissions.CAN_DELETE
+        for aid in aids:
+            agent=ormagent.Agent(aid=aid, uid=uid, agentname=aid.hex)
+            cassapiagent.insert_agent(agent)
+            cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
+        for aid in aids:
+            for i in range(0,100):
+                did=uuid.uuid4()
+                datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
+                cassapidatasource.insert_datasource(datasource)
+                cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+                cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
+                for i in range(0,10):
+                    pid=uuid.uuid4()
+                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                    cassapidatapoint.insert_datapoint(datapoint)
+                    cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+                    cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
+        for i in range(0,100):
+            wid=uuid.uuid4()
+            bid=uuid.uuid4()
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            cassapiwidget.insert_widget(widget)
+            dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
+            cassapidashboard.insert_dashboard(dashboard)
+            cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+            cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        self.assertTrue(update.delete_user(uid=uid))
+        perm_list=cassapiperm.get_user_agents_perm(uid=uid)
+        self.assertEqual(len(perm_list),3)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.NONE)
+        perm_list=cassapiperm.get_user_datasources_perm(uid=uid)
+        self.assertEqual(len(perm_list),300)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.NONE)
+        perm_list=cassapiperm.get_user_datapoints_perm(uid=uid)
+        self.assertEqual(len(perm_list),3000)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.NONE)
+        perm_list=cassapiperm.get_user_widgets_perm(uid=uid)
+        self.assertEqual(len(perm_list),100)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.NONE)
+        perm_list=cassapiperm.get_user_dashboards_perm(uid=uid)
+        self.assertEqual(len(perm_list),100)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.NONE)
+        for aid in aids:
+            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
+            self.assertEqual(len(perm_list),100)
+            for item in perm_list:
+                self.assertEqual(item.perm, permissions.NONE)
+            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
+            self.assertEqual(len(perm_list),1000)
+            for item in perm_list:
+                self.assertEqual(item.perm, permissions.NONE)
+
+    def test_delete_agent_success(self):
+        ''' delete_agent should revoke permission to the user and agents to the agent and its datasoruces and datapoints '''
+        uid=uuid.uuid4()
+        aids=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        selected_aid=aids[0]
+        selected_dids=[]
+        selected_pids=[]
+        selected_wids=[]
+        perm=permissions.CAN_READ | permissions.CAN_EDIT | permissions.CAN_DELETE
+        for aid in aids:
+            agent=ormagent.Agent(aid=aid, uid=uid, agentname=aid.hex)
+            cassapiagent.insert_agent(agent)
+            cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
+        for aid in aids:
+            if aid==selected_aid:
+                for i in range(0,100):
+                    did=uuid.uuid4()
+                    selected_dids.append(did)
+                    datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
+                    cassapidatasource.insert_datasource(datasource)
+                    cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
+                    wid=uuid.uuid4()
+                    widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=did)
+                    cassapiwidget.insert_widget(widget)
+                    selected_wids.append(wid)
+                    cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+                    for i in range(0,10):
+                        pid=uuid.uuid4()
+                        selected_pids.append(pid)
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        cassapidatapoint.insert_datapoint(datapoint)
+                        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+                        cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
+                        wid=uuid.uuid4()
+                        widget=ormwidget.WidgetDp(wid=wid, uid=uid, creation_date=uuid.uuid1(), pid=pid)
+                        cassapiwidget.insert_widget(widget)
+                        selected_wids.append(wid)
+                        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+            else:
+                for i in range(0,100):
+                    did=uuid.uuid4()
+                    datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
+                    cassapidatasource.insert_datasource(datasource)
+                    cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
+                    for i in range(0,10):
+                        pid=uuid.uuid4()
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        cassapidatapoint.insert_datapoint(datapoint)
+                        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        for i in range(0,100):
+            wid=uuid.uuid4()
+            bid=uuid.uuid4()
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            cassapiwidget.insert_widget(widget)
+            dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
+            cassapidashboard.insert_dashboard(dashboard)
+            cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+            cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        aid=selected_aid
+        self.assertTrue(update.delete_agent(aid=aid))
+        perm_list=cassapiperm.get_user_agents_perm(uid=uid)
+        self.assertEqual(len(perm_list),3)
+        for item in perm_list:
+            if item.aid==aid:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datasources_perm(uid=uid)
+        self.assertEqual(len(perm_list),300)
+        for item in perm_list:
+            if item.did in selected_dids:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datapoints_perm(uid=uid)
+        self.assertEqual(len(perm_list),3000)
+        for item in perm_list:
+            if item.pid in selected_pids:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_widgets_perm(uid=uid)
+        self.assertEqual(len(perm_list),1200)
+        for item in perm_list:
+            if item.wid in selected_wids:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_dashboards_perm(uid=uid)
+        self.assertEqual(len(perm_list),100)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        for aid in aids:
+            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
+            self.assertEqual(len(perm_list),100)
+            if aid == selected_aid:
+                for item in perm_list:
+                    self.assertEqual(item.perm, permissions.NONE)
+            else:
+                for item in perm_list:
+                    self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
+            if aid == selected_aid:
+                self.assertEqual(len(perm_list),1000)
+                for item in perm_list:
+                    self.assertEqual(item.perm, permissions.NONE)
+            else:
+                for item in perm_list:
+                    self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+
+    def test_delete_widget_success(self):
+        ''' delete_widget should revoke access to the selected widget '''
+        uid=uuid.uuid4()
+        selected_wid=None
+        aids=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        perm=permissions.CAN_READ | permissions.CAN_EDIT | permissions.CAN_DELETE
+        for aid in aids:
+            agent=ormagent.Agent(aid=aid, uid=uid, agentname=aid.hex)
+            cassapiagent.insert_agent(agent)
+            cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
+        for aid in aids:
+            for i in range(0,10):
+                did=uuid.uuid4()
+                datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
+                cassapidatasource.insert_datasource(datasource)
+                cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+                cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
+                for i in range(0,10):
+                    pid=uuid.uuid4()
+                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                    cassapidatapoint.insert_datapoint(datapoint)
+                    cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+                    cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
+        for i in range(0,10):
+            wid=uuid.uuid4()
+            if i==0:
+                selected_wid=wid
+            bid=uuid.uuid4()
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            cassapiwidget.insert_widget(widget)
+            dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
+            cassapidashboard.insert_dashboard(dashboard)
+            cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+            cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        self.assertTrue(update.delete_widget(wid=selected_wid))
+        perm_list=cassapiperm.get_user_agents_perm(uid=uid)
+        self.assertEqual(len(perm_list),3)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datasources_perm(uid=uid)
+        self.assertEqual(len(perm_list),30)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datapoints_perm(uid=uid)
+        self.assertEqual(len(perm_list),300)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_widgets_perm(uid=uid)
+        self.assertEqual(len(perm_list),10)
+        for item in perm_list:
+            if item.wid==selected_wid:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_dashboards_perm(uid=uid)
+        self.assertEqual(len(perm_list),10)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        for aid in aids:
+            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
+            self.assertEqual(len(perm_list),10)
+            for item in perm_list:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
+            self.assertEqual(len(perm_list),100)
+            for item in perm_list:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+
+    def test_delete_dashboard_success(self):
+        ''' delete_dashboard should revoke access to the selected dashboard '''
+        uid=uuid.uuid4()
+        selected_bid=None
+        aids=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        perm=permissions.CAN_READ | permissions.CAN_EDIT | permissions.CAN_DELETE
+        for aid in aids:
+            agent=ormagent.Agent(aid=aid, uid=uid, agentname=aid.hex)
+            cassapiagent.insert_agent(agent)
+            cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
+        for aid in aids:
+            for i in range(0,10):
+                did=uuid.uuid4()
+                datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
+                cassapidatasource.insert_datasource(datasource)
+                cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+                cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
+                for i in range(0,10):
+                    pid=uuid.uuid4()
+                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                    cassapidatapoint.insert_datapoint(datapoint)
+                    cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+                    cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
+        for i in range(0,10):
+            wid=uuid.uuid4()
+            bid=uuid.uuid4()
+            if i==0:
+                selected_bid=bid
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            cassapiwidget.insert_widget(widget)
+            dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
+            cassapidashboard.insert_dashboard(dashboard)
+            cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+            cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        self.assertTrue(update.delete_dashboard(bid=selected_bid))
+        perm_list=cassapiperm.get_user_agents_perm(uid=uid)
+        self.assertEqual(len(perm_list),3)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datasources_perm(uid=uid)
+        self.assertEqual(len(perm_list),30)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datapoints_perm(uid=uid)
+        self.assertEqual(len(perm_list),300)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_widgets_perm(uid=uid)
+        self.assertEqual(len(perm_list),10)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_dashboards_perm(uid=uid)
+        self.assertEqual(len(perm_list),10)
+        for item in perm_list:
+            if item.bid==selected_bid:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        for aid in aids:
+            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
+            self.assertEqual(len(perm_list),10)
+            for item in perm_list:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
+            self.assertEqual(len(perm_list),100)
+            for item in perm_list:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+
+    def test_delete_datasource_success(self):
+        ''' delete_datasource should revoke permission to the user and agents to the datasource and its datapoints (and their associated widgetds and widgetdp '''
+        uid=uuid.uuid4()
+        aids=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        selected_aid=aids[0]
+        selected_did=None
+        selected_pids=[]
+        selected_wids=[]
+        perm=permissions.CAN_READ | permissions.CAN_EDIT | permissions.CAN_DELETE
+        for aid in aids:
+            agent=ormagent.Agent(aid=aid, uid=uid, agentname=aid.hex)
+            cassapiagent.insert_agent(agent)
+            cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
+        for aid in aids:
+            if aid==selected_aid:
+                for i in range(0,100):
+                    did=uuid.uuid4()
+                    wid=uuid.uuid4()
+                    if i == 0:
+                        selected_did=did
+                        selected_wids.append(wid)
+                    datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
+                    cassapidatasource.insert_datasource(datasource)
+                    cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
+                    widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=did)
+                    cassapiwidget.insert_widget(widget)
+                    cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+                    for i in range(0,10):
+                        pid=uuid.uuid4()
+                        wid=uuid.uuid4()
+                        if did == selected_did:
+                            selected_pids.append(pid)
+                            selected_wids.append(wid)
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        cassapidatapoint.insert_datapoint(datapoint)
+                        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+                        cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
+                        widget=ormwidget.WidgetDp(wid=wid, uid=uid, creation_date=uuid.uuid1(), pid=pid)
+                        cassapiwidget.insert_widget(widget)
+                        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+            else:
+                for i in range(0,100):
+                    did=uuid.uuid4()
+                    datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
+                    cassapidatasource.insert_datasource(datasource)
+                    cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
+                    for i in range(0,10):
+                        pid=uuid.uuid4()
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        cassapidatapoint.insert_datapoint(datapoint)
+                        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        for i in range(0,100):
+            wid=uuid.uuid4()
+            bid=uuid.uuid4()
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            cassapiwidget.insert_widget(widget)
+            dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
+            cassapidashboard.insert_dashboard(dashboard)
+            cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+            cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        did=selected_did
+        self.assertTrue(update.delete_datasource(did=did))
+        perm_list=cassapiperm.get_user_agents_perm(uid=uid)
+        self.assertEqual(len(perm_list),3)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datasources_perm(uid=uid)
+        self.assertEqual(len(perm_list),300)
+        for item in perm_list:
+            if item.did == selected_did:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datapoints_perm(uid=uid)
+        self.assertEqual(len(perm_list),3000)
+        for item in perm_list:
+            if item.pid in selected_pids:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_widgets_perm(uid=uid)
+        self.assertEqual(len(perm_list),1200)
+        for item in perm_list:
+            if item.wid in selected_wids:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_dashboards_perm(uid=uid)
+        self.assertEqual(len(perm_list),100)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        for aid in aids:
+            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
+            self.assertEqual(len(perm_list),100)
+            for item in perm_list:
+                if item.did == selected_did:
+                    self.assertEqual(item.perm, permissions.NONE)
+                else:
+                    self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
+            for item in perm_list:
+                if item.pid in selected_pids:
+                    self.assertEqual(item.perm, permissions.NONE)
+                else:
+                    self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+
+    def test_delete_datapoint_success(self):
+        ''' delete_point should revoke permission to the user and agents to the datapoint (and widgetdp) '''
+        uid=uuid.uuid4()
+        aids=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        selected_aid=aids[0]
+        selected_did=None
+        selected_pid=None
+        selected_wid=None
+        perm=permissions.CAN_READ | permissions.CAN_EDIT | permissions.CAN_DELETE
+        for aid in aids:
+            agent=ormagent.Agent(aid=aid, uid=uid, agentname=aid.hex)
+            cassapiagent.insert_agent(agent)
+            cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
+        for aid in aids:
+            if aid==selected_aid:
+                for i in range(0,100):
+                    did=uuid.uuid4()
+                    wid=uuid.uuid4()
+                    if i == 0:
+                        selected_did=did
+                    datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
+                    cassapidatasource.insert_datasource(datasource)
+                    cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
+                    widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=did)
+                    cassapiwidget.insert_widget(widget)
+                    cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+                    for i in range(0,10):
+                        pid=uuid.uuid4()
+                        wid=uuid.uuid4()
+                        if i == 0 and did == selected_did:
+                            selected_pid=pid
+                            selected_wid=wid
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        cassapidatapoint.insert_datapoint(datapoint)
+                        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+                        cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
+                        widget=ormwidget.WidgetDp(wid=wid, uid=uid, creation_date=uuid.uuid1(), pid=pid)
+                        cassapiwidget.insert_widget(widget)
+                        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+            else:
+                for i in range(0,100):
+                    did=uuid.uuid4()
+                    datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
+                    cassapidatasource.insert_datasource(datasource)
+                    cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
+                    for i in range(0,10):
+                        pid=uuid.uuid4()
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        cassapidatapoint.insert_datapoint(datapoint)
+                        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        for i in range(0,100):
+            wid=uuid.uuid4()
+            bid=uuid.uuid4()
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            cassapiwidget.insert_widget(widget)
+            dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
+            cassapidashboard.insert_dashboard(dashboard)
+            cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+            cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        pid=selected_pid
+        self.assertTrue(update.delete_datapoint(pid=pid))
+        perm_list=cassapiperm.get_user_agents_perm(uid=uid)
+        self.assertEqual(len(perm_list),3)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datasources_perm(uid=uid)
+        self.assertEqual(len(perm_list),300)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datapoints_perm(uid=uid)
+        self.assertEqual(len(perm_list),3000)
+        for item in perm_list:
+            if item.pid == selected_pid:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_widgets_perm(uid=uid)
+        self.assertEqual(len(perm_list),1200)
+        for item in perm_list:
+            if item.wid == selected_wid:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_dashboards_perm(uid=uid)
+        self.assertEqual(len(perm_list),100)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        for aid in aids:
+            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
+            self.assertEqual(len(perm_list),100)
+            for item in perm_list:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
+            for item in perm_list:
+                if item.pid == selected_pid:
+                    self.assertEqual(item.perm, permissions.NONE)
+                else:
+                    self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
 

@@ -29,14 +29,16 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         usernames=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
         bid=uuid.uuid4().hex
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, dashboardapi.get_dashboard_config_request, username=username, bid=bid)
+            response=dashboardapi.get_dashboard_config_request(username=username, bid=bid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_dashboard_config_request_failure_invalid_bid(self):
         ''' get_dashboard_config_request should fail if bid is invalid '''
         bids=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
         username='test_get_dashboard_config_request_failure_invalid_bid'
         for bid in bids:
-            self.assertRaises(exceptions.BadParametersException, dashboardapi.get_dashboard_config_request, username=username, bid=bid)
+            response=dashboardapi.get_dashboard_config_request(username=username, bid=bid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_dashboard_config_request_failure_non_existent_username(self):
         ''' get_dashboard_config_request should fail if username does not exist '''
@@ -56,7 +58,8 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         ''' get_dashboards_config_request should fail if username is invalid '''
         usernames=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, dashboardapi.get_dashboards_config_request, username=username)
+            response=dashboardapi.get_dashboards_config_request(username=username)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_dashboards_config_request_failure_non_existent_username(self):
         ''' get_dashboards_config_request should fail if username does not exist '''
@@ -75,4 +78,20 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         response2=dashboardapi.get_dashboards_config_request(username=username)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response2.data, [])
+
+    def test_delete_dashboard_request_failure_invalid_username(self):
+        ''' delete_dashboard_request should fail if username is invalid '''
+        usernames=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        bid=uuid.uuid4().hex
+        for username in usernames:
+            response=dashboardapi.delete_dashboard_request(username=username, bid=bid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_delete_dashboard_request_failure_invalid_bid(self):
+        ''' delete_dashboard_request should fail if bid is invalid '''
+        bids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_delete_dashboard_request_failure_invalid_bid'
+        for bid in bids:
+            response=dashboardapi.delete_dashboard_request(username=username, bid=bid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 

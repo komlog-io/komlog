@@ -182,6 +182,17 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         last_mapped=timeuuid.uuid1()
         self.assertTrue(datasourceapi.set_last_mapped(did=did, last_mapped=last_mapped))
 
+    def test_delete_datasource_stats_success(self):
+        ''' delete_datasource_stats should delete the associated entry of the did '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.set_last_received(did=did, last_received=date))
+        datasource_stats=datasourceapi.get_datasource_stats(did=did)
+        self.assertTrue(isinstance(datasource_stats,ormdatasource.DatasourceStats))
+        self.assertEqual(datasource_stats.did, did)
+        self.assertTrue(datasourceapi.delete_datasource_stats(did=did))
+        self.assertIsNone(datasourceapi.get_datasource_stats(did=did))
+
     def test_get_datasource_data_at_non_existing_did(self):
         ''' get_datasource_data_at should return None if did does not exist '''
         did=uuid.uuid4()
@@ -302,6 +313,16 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertTrue(datasourceapi.delete_datasource_data_at(did=did, date=date))
         self.assertIsNone(datasourceapi.get_datasource_data_at(did=did, date=date))
 
+    def test_delete_datasource_data_success(self):
+        ''' delete_datasource_data should delete all entries belonging to a did '''
+        did=uuid.uuid4()
+        for i in range(0,100):
+            dsdobj=ormdatasource.DatasourceData(did=did, date=timeuuid.uuid1(),content=str(i))
+            self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=dsdobj))
+        self.assertEqual(len(datasourceapi.get_datasource_data(did=did, fromdate=timeuuid.uuid1(seconds=1), todate=timeuuid.uuid1())),100)
+        self.assertTrue(datasourceapi.delete_datasource_data(did=did))
+        self.assertEqual(datasourceapi.get_datasource_data(did=did, fromdate=timeuuid.uuid1(seconds=1), todate=timeuuid.uuid1()),[])
+
     def test_insert_datasource_map_success(self):
         ''' insert_datasource_map should succeed if a DatasourceMap object is passed'''
         did=uuid.uuid4()
@@ -406,6 +427,22 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertTrue(timeuuid.get_unix_timestamp(data[0].date)>=end_subinterval-1)
         self.assertTrue(timeuuid.get_unix_timestamp(data[-1].date)<=init_subinterval+1)
 
+    def test_get_datasource_map_dates_success(self):
+        ''' get_datasource_map_dates should return the map dates between an interval '''
+        did=uuid.uuid4()
+        dates=[]
+        for i in range(1,1000):
+            date=timeuuid.uuid1(seconds=i)
+            dates.append(date)
+            data=ormdatasource.DatasourceMap(did=did, date=date, content=str(i))
+            self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=data))
+        data=datasourceapi.get_datasource_map_dates(did=did, fromdate=dates[250], todate=dates[499])
+        self.assertTrue(isinstance(data, list))
+        self.assertEqual(len(data),250)
+        for d in data:
+            self.assertTrue(isinstance(d, uuid.UUID))
+
+
     def test_get_datasource_map_variables_success(self):
         ''' get_datasource_map_variables should return a dict with the variables '''
         did=uuid.uuid4()
@@ -469,4 +506,17 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertTrue(isinstance(data, ormdatasource.DatasourceMap))
         self.assertTrue(datasourceapi.delete_datasource_map(did=did, date=date))
         self.assertIsNone(datasourceapi.get_datasource_map(did=did, date=date))
+
+    def test_delete_datasource_maps_sucess(self):
+        ''' delete_datasource_maps should delete all map entries of a did '''
+        did=uuid.uuid4()
+        for i in range(0,100):
+            date=timeuuid.uuid1()
+            content='TEST_DELETE_DATASOURCE_MAPS_SUCCESS_'+str(i)
+            datasourcemap=ormdatasource.DatasourceMap(did=did, date=date, content=content)
+            self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=datasourcemap))
+            data=datasourceapi.get_datasource_map(did=did, date=date)
+            self.assertTrue(isinstance(data, ormdatasource.DatasourceMap))
+        self.assertTrue(datasourceapi.delete_datasource_maps(did=did))
+        self.assertEqual(datasourceapi.get_datasource_maps(did=did, fromdate=timeuuid.uuid1(seconds=1), todate=timeuuid.uuid1()),[])
 

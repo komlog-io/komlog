@@ -105,6 +105,16 @@ def is_valid_hex_uuid(argument):
     except Exception:
         return False
 
+def is_valid_hex_date(argument):
+    try:
+        u=uuid.UUID(argument)
+        if u.version==1:
+            return True
+        else:
+            return False
+    except Exception:
+        return False
+
 def is_valid_int(argument):
     if isinstance(argument, int) and argument>=0:
         return True

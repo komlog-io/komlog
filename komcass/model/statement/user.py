@@ -19,7 +19,8 @@ STATEMENTS={0:'select * from mst_user where username=?',
             5:'select * from mst_user where email=?',
             1000:'insert into mst_user (username,uid,password,email,state,segment,creation_date) values (?,?,?,?,?,?,?)',
             1001:'insert into mst_signup (username,signup_code,email,creation_date,utilization_date) values (?,?,?,?,?)',
-            2000:'delete from mst_user where username=?'
+            2000:'delete from mst_user where username=?',
+            2001:'delete from mst_signup where username=?',
            }
 
 # selects
@@ -38,5 +39,6 @@ I_A_MSTSIGNUP=1001
 
 # Deletes
 
-D_A_MSTUSER_B_UID=2000
+D_A_MSTUSER_B_USERNAME=2000
+D_A_MSTSIGNUP_B_USERNAME=2001
 

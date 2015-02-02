@@ -66,6 +66,12 @@ class AgentConfigHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json_encode(response.data))
 
+    @auth.userauthenticated
+    def delete(self, aid):
+        response=agent.delete_agent_request(username=self.user, aid=aid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
 class DatasourceDataHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
@@ -112,6 +118,12 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
             response=datasource.update_datasource_config_request(username=self.user, did=did, content=content)
             self.set_status(response.status)
             self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def delete(self, did):
+        response=datasource.delete_datasource_request(username=self.user, did=did)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
 class DatasourcesHandler(tornado.web.RequestHandler):
 
@@ -200,6 +212,12 @@ class DatapointConfigHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json_encode(response.data))
 
+    @auth.userauthenticated
+    def delete(self, pid):
+        response=datapoint.delete_datapoint_request(username=self.user, pid=pid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
 class DatapointsHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
@@ -237,6 +255,12 @@ class UserConfigHandler(BaseHandler):
             response=user.update_user_config_request(username=self.user, data=data)
             self.set_status(response.status)
             self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def delete(self):
+        response=user.delete_user_request(username=self.user)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
 
 class UserHomeHandler(BaseHandler):
 
@@ -301,6 +325,12 @@ class WidgetConfigHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
+    @auth.userauthenticated
+    def delete(self, wid):
+        response=widget.delete_widget_request(username=self.user, wid=wid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
 class DashboardsHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
@@ -314,6 +344,12 @@ class DashboardConfigHandler(tornado.web.RequestHandler):
     @auth.userauthenticated
     def get(self,p_bid):
         response=dashboard.get_dashboard_config_request(username=self.user, bid=bid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def delete(self, bid):
+        response=dashboard.delete_dashboard_request(username=self.user, bid=bid)
         self.set_status(response.status)
         self.write(json_encode(response.data))
 

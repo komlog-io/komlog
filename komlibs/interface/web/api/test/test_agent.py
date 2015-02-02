@@ -1,6 +1,7 @@
 import unittest
 import uuid
 import json
+from komlibs.auth import operations
 from komlibs.interface.web.api import user as userapi 
 from komlibs.interface.web.api import agent as agentapi 
 from komlibs.interface.web.model import webmodel
@@ -47,7 +48,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -59,7 +60,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -76,7 +77,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         pubkey='TESTNEWAGENTREQUESTFAILURE'
         version='test library vX.XX'
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, agentapi.new_agent_request, username=username, agentname=agentname, pubkey=pubkey, version=version)
+            response=agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_agent_request_failure_invalid_agentname(self):
         ''' new_agent_request should fail if agentname is invalid '''
@@ -85,7 +87,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         pubkey='TESTNEWAGENTREQUESTFAILURE'
         version='test library vX.XX'
         for agentname in agentnames:
-            self.assertRaises(exceptions.BadParametersException, agentapi.new_agent_request, username=username, agentname=agentname, pubkey=pubkey, version=version)
+            response=agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_agent_request_failure_invalid_pubkey(self):
         ''' new_agent_request should fail if pubkey is invalid '''
@@ -94,7 +97,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         username='test_new_agent_request_failure_invalid_pubkey'
         version='test library vX.XX'
         for pubkey in pubkeys:
-            self.assertRaises(exceptions.BadParametersException, agentapi.new_agent_request, username=username, agentname=agentname, pubkey=pubkey, version=version)
+            response=agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_agent_request_failure_invalid_version(self):
         ''' new_agent_request should fail if version is invalid '''
@@ -103,7 +107,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         username='test_new_agent_request_failure_invalid_version'
         pubkey='TESTNEWAGENTREQUESTFAILURE'
         for version in versions:
-            self.assertRaises(exceptions.BadParametersException, agentapi.new_agent_request, username=username, agentname=agentname, pubkey=pubkey, version=version)
+            response=agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_agent_request_failure_non_existent_user(self):
         ''' new_agent_request should fail if user does not exists '''
@@ -127,7 +132,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -140,7 +145,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -168,7 +173,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -180,7 +185,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -201,14 +206,16 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         usernames=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
         aid=uuid.uuid4().hex
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, agentapi.get_agent_config_request, username=username, aid=aid)
+            response=agentapi.get_agent_config_request(username=username, aid=aid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_agent_config_request_failure_invalid_aid(self):
         ''' get_agent_config_request should fail if aid is invalid '''
         aids=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
         username='test_get_agent_config_request_failure_invalid_aid'
         for aid in aids:
-            self.assertRaises(exceptions.BadParametersException, agentapi.get_agent_config_request, username=username, aid=aid)
+            response=agentapi.get_agent_config_request(username=username, aid=aid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_agent_config_request_failure_non_existent_username(self):
         ''' get_agent_config_request should fail if username does not exist '''
@@ -237,7 +244,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -250,7 +257,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -284,7 +291,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response1.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response1.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -296,7 +303,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response1.data['aid'])):
+            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response1.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -317,7 +324,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response2.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response2.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -329,7 +336,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response2.data['aid'])):
+            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response2.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -359,7 +366,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' get_agents_config_request should fail if username is invalid '''
         usernames=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, agentapi.get_agents_config_request, username=username)
+            response=agentapi.get_agents_config_request( username=username)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_agents_config_request_failure_non_existent_username(self):
         ''' get_agents_config_request should fail if username does not exist '''
@@ -394,7 +402,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -406,7 +414,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not isinstance(msg.operation,weboperations.NewAgentOperation) or not (msg.operation.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.operation.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -432,7 +440,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         aid=uuid.uuid4().hex
         data={'agentname':'test_update_agent_config_request_failure'}
         for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, agentapi.update_agent_config_request, username=username, aid=aid, data=data)
+            response=agentapi.update_agent_config_request(username=username, aid=aid, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_agent_config_request_failure_invalid_aid(self):
         ''' update_agent_config_request should fail if aid is invalid '''
@@ -440,7 +449,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         username=self.userinfo['username']
         data={'agentname':'test_update_agent_config_request_failure'}
         for aid in aids:
-            self.assertRaises(exceptions.BadParametersException, agentapi.update_agent_config_request, username=username, aid=aid, data=data)
+            response=agentapi.update_agent_config_request(username=username, aid=aid, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_agent_config_request_failure_invalid_data(self):
         ''' update_agent_config_request should fail if data is invalid '''
@@ -448,7 +458,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         aid=uuid.uuid4().hex
         username=self.userinfo['username']
         for data in datas:
-            self.assertRaises(exceptions.BadParametersException, agentapi.update_agent_config_request, username=username, aid=aid, data=data)
+            response=agentapi.update_agent_config_request(username=username, aid=aid, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_agent_config_request_failure_invalid_data_keys(self):
         ''' update_agent_config_request should fail if data is invalid '''
@@ -458,7 +469,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         new_agentname='test_update_agent_config_request_failure'
         for key in keys:
             data={key:new_agentname}
-            self.assertRaises(exceptions.BadParametersException, agentapi.update_agent_config_request, username=username, aid=aid, data=data)
+            response=agentapi.update_agent_config_request(username=username, aid=aid, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_agent_config_request_failure_invalid_data_new_agentname(self):
         ''' update_agent_config_request should fail if data is invalid '''
@@ -467,7 +479,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         username=self.userinfo['username']
         for name in agentnames:
             data={'agentname':name}
-            self.assertRaises(exceptions.BadParametersException, agentapi.update_agent_config_request, username=username, aid=aid, data=data)
+            response=agentapi.update_agent_config_request(username=username, aid=aid, data=data)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_agent_config_request_failure_non_existent_agent(self):
         ''' update_agent_config_request should fail if agent does not exists '''
@@ -476,4 +489,20 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         data={'agentname':'new_agentname'}
         response=agentapi.update_agent_config_request(username=username, aid=aid, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+
+    def test_delete_agent_request_failure_invalid_username(self):
+        ''' delete_agent_request should fail if username is invalid '''
+        usernames=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        aid=uuid.uuid4().hex
+        for username in usernames:
+            response=agentapi.delete_agent_request(username=username, aid=aid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_delete_agent_request_failure_invalid_aid(self):
+        ''' delete_agent_request should fail if aid is invalid '''
+        aids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_delete_agent_request_failure_invalid_aid'
+        for aid in aids:
+            response=agentapi.delete_agent_request(username=username, aid=aid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 

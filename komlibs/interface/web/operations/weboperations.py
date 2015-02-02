@@ -1,45 +1,45 @@
 #coding:utf-8
 '''
- operations.py
+operations.py
 
- This file contains classes and functions related with web interface operations (operation=requests done)
- We associate user operations with qoutes, so that we can
- update user resource utilization and control access based on this
- We also associate operations to resources, so the authorization schema can be generated.
+This file contains classes and functions related with web interface operations (operation=requests done)
+We associate web operations with auth operations, so that we can
+update user resource utilization and control access based on this
 
- author: jcazor
- date: 2013/09/29
 '''
 
 import json
 import uuid
 from komlibs.general.validation import arguments
+from komlibs.auth import operations
 
-OPID={'NewAgentOperation':0,
-      'NewGraphOperation':1,
-      'NewDatasourceOperation':2,
-      'NewDatapointOperation':3,
-      'NewWidgetOperation':4,
-      'NewDashboardOperation':5
-      }
-
-OPIDQUOTES={0:('quo_static_user_total_agents',),
-            1:('quo_static_user_total_graphs',),
-            2:('quo_static_agent_total_datasources','quo_static_user_total_datasources'),
-            3:('quo_static_datasource_total_datapoints','quo_static_agent_total_datapoints','quo_static_user_total_datapoints'),
-            4:('quo_static_user_total_widgets',),
-            5:('quo_static_user_total_dashboars',),
-            }
-
-OPIDAUTHS={0:('user_agent_perms',),
-           1:('user_graph_perms',),
-           2:('user_datasource_perms','agent_datasource_perms'),
-           3:('user_datapoint_perms',),
-           4:('user_widget_perms',),
-           5:('user_dashboard_perms',),
-           }
+NEW_AGENT             = 0
+NEW_DATASOURCE        = 1
+NEW_DATAPOINT         = 2
+NEW_WIDGET            = 3
+NEW_DASHBOARD         = 4
+NEW_WIDGET_SYSTEM     = 5
+DELETE_USER           = 6
+DELETE_AGENT          = 7
+DELETE_DATASOURCE     = 8
+DELETE_DATAPOINT      = 9
+DELETE_WIDGET         = 10
+DELETE_DASHBOARD      = 11
 
 
+OPAUTHS={NEW_AGENT:operations.NEW_AGENT,
+         NEW_DATASOURCE:operations.NEW_DATASOURCE,
+         NEW_DATAPOINT:operations.NEW_DATAPOINT,
+         NEW_WIDGET:operations.NEW_WIDGET,
+         NEW_DASHBOARD:operations.NEW_DASHBOARD,
+         NEW_WIDGET_SYSTEM:operations.NEW_WIDGET_SYSTEM,
+         DELETE_USER: operations.DELETE_USER,
+         DELETE_AGENT: operations.DELETE_AGENT,
+         DELETE_DATASOURCE: operations.DELETE_DATASOURCE,
+         DELETE_DATAPOINT: operations.DELETE_DATAPOINT,
+         DELETE_WIDGET: operations.DELETE_WIDGET,
+         DELETE_DASHBOARD: operations.DELETE_DASHBOARD,
+         }
 
 class WIFaceOperation:
     def __init__(self):
@@ -48,63 +48,99 @@ class WIFaceOperation:
     def get_operationid(self):
         return self.oid 
     
-    def get_quotes_to_update(self):
-        return OPIDQUOTES[self.oid]
-
-    def get_auths_to_update(self):
-        return OPIDAUTHS[self.oid]
+    def get_auth_operation(self):
+        return OPAUTHS[self.oid]
 
     def get_params(self):
         return self.params
 
-    def get_json_serialization(self):
-        serialization={}
-        serialization['opclass']=self.opclass
-        for key,value in self.params.items():
-            if not type(value) in ('str','unicode'):
-                serialization[key]=str(value)
-        return json.dumps(serialization)
-
 class NewAgentOperation(WIFaceOperation):
     def __init__(self, uid, aid):
-        self.oid=OPID[self.__class__.__name__]
-        self.opclass=self.__class__.__name__
+        self.oid=NEW_AGENT
         self.params={}
-        self.params['uid']=uid if arguments.is_valid_uuid(uid) else uuid.UUID(uid)
-        self.params['aid']=aid if arguments.is_valid_uuid(aid) else uuid.UUID(aid)
+        self.params['uid']=uid
+        self.params['aid']=aid
 
 class NewDatasourceOperation(WIFaceOperation):
     def __init__(self, uid, aid, did):
-        self.oid=OPID[self.__class__.__name__]
-        self.opclass=self.__class__.__name__
+        self.oid=NEW_DATASOURCE
         self.params={}
-        self.params['uid']=uid if arguments.is_valid_uuid(uid) else uuid.UUID(uid)
-        self.params['aid']=aid if arguments.is_valid_uuid(aid) else uuid.UUID(aid)
-        self.params['did']=did if arguments.is_valid_uuid(did) else uuid.UUID(did)
+        self.params['uid']=uid
+        self.params['aid']=aid
+        self.params['did']=did
 
 class NewDatapointOperation(WIFaceOperation):
     def __init__(self, uid, aid, did, pid):
-        self.oid=OPID[self.__class__.__name__]
-        self.opclass=self.__class__.__name__
+        self.oid=NEW_DATAPOINT
         self.params={}
-        self.params['uid']=uid if arguments.is_valid_uuid(uid) else uuid.UUID(uid)
-        self.params['aid']=aid if arguments.is_valid_uuid(aid) else uuid.UUID(aid)
-        self.params['did']=did if arguments.is_valid_uuid(did) else uuid.UUID(did)
-        self.params['pid']=pid if arguments.is_valid_uuid(pid) else uuid.UUID(pid)
+        self.params['uid']=uid
+        self.params['aid']=aid
+        self.params['did']=did
+        self.params['pid']=pid
 
 class NewWidgetOperation(WIFaceOperation):
     def __init__(self, uid, wid):
-        self.oid=OPID[self.__class__.__name__]
-        self.opclass=self.__class__.__name__
+        self.oid=NEW_WIDGET
         self.params={}
-        self.params['uid']=uid if arguments.is_valid_uuid(uid) else uuid.UUID(uid)
-        self.params['wid']=wid if arguments.is_valid_uuid(wid) else uuid.UUID(wid)
+        self.params['uid']=uid
+        self.params['wid']=wid
 
 class NewDashboardOperation(WIFaceOperation):
     def __init__(self, uid, bid):
-        self.oid=OPID[self.__class__.__name__]
-        self.opclass=self.__class__.__name__
+        self.oid=NEW_DASHBOARD
         self.params={}
-        self.params['uid']=uid if arguments.is_valid_uuid(uid) else uuid.UUID(uid)
-        self.params['bid']=uid if arguments.is_valid_uuid(bid) else uuid.UUID(bid)
+        self.params['uid']=uid
+        self.params['bid']=uid
+
+class NewWidgetSystemOperation(WIFaceOperation):
+    def __init__(self, uid, wid):
+        self.oid=NEW_WIDGET_SYSTEM
+        self.params={}
+        self.params['uid']=uid
+        self.params['wid']=wid
+
+class DeleteUserOperation(WIFaceOperation):
+    def __init__(self, uid, aids):
+        self.oid=DELETE_USER
+        self.params={}
+        self.params['uid']=uid
+        self.params['aids']=aids
+
+class DeleteAgentOperation(WIFaceOperation):
+    def __init__(self, uid, aid):
+        self.oid=DELETE_AGENT
+        self.params={}
+        self.params['uid']=uid
+        self.params['aid']=aid
+
+class DeleteDatasourceOperation(WIFaceOperation):
+    def __init__(self, uid, aid, did, pids):
+        self.oid=DELETE_DATASOURCE
+        self.params={}
+        self.params['uid']=uid
+        self.params['aid']=aid
+        self.params['did']=did
+        self.params['pids']=pids
+
+class DeleteDatapointOperation(WIFaceOperation):
+    def __init__(self, uid, aid, pid):
+        self.oid=DELETE_DATAPOINT
+        self.params={}
+        self.params['uid']=uid
+        self.params['aid']=aid
+        self.params['pid']=pid
+
+class DeleteWidgetOperation(WIFaceOperation):
+    def __init__(self, uid, wid):
+        self.oid=DELETE_WIDGET
+        self.params={}
+        self.params['uid']=uid
+        self.params['wid']=wid
+
+class DeleteDashboardOperation(WIFaceOperation):
+    def __init__(self, uid, bid):
+        self.oid=DELETE_DASHBOARD
+        self.params={}
+        self.params['uid']=uid
+        self.params['bid']=bid
 

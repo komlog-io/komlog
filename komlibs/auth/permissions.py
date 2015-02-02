@@ -1,0 +1,10 @@
+'''
+In this file we declare the different permissions that 
+can be applied to an element 
+'''
+
+
+NONE          =  0b00000000000000000000000000000000
+CAN_READ      =  0b00000000000000000000000000000001
+CAN_EDIT      =  0b00000000000000000000000000000010
+CAN_DELETE    =  0b00000000000000000000000000000100

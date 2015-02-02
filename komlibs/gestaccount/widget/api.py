@@ -14,6 +14,7 @@ from komcass.api import widget as cassapiwidget
 from komcass.api import user as cassapiuser
 from komcass.api import datasource as cassapidatasource
 from komcass.api import datapoint as cassapidatapoint
+from komcass.api import dashboard as cassapidashboard
 from komcass.model.orm import widget as ormwidget
 from komlibs.gestaccount.widget import types
 from komlibs.gestaccount import exceptions
@@ -29,11 +30,11 @@ def get_widget_config(wid):
         if widget.type==types.DS_WIDGET:
             dswidget=cassapiwidget.get_widget_ds(wid=wid)
             if dswidget:
-                data={'wid':dswidget.wid,'type':types.DS_WIDGET,'did':dswidget.did}
+                data={'uid':dswidget.uid, 'wid':dswidget.wid,'type':types.DS_WIDGET,'did':dswidget.did}
         elif widget.type==types.DP_WIDGET:
             dpwidget=cassapiwidget.get_widget_dp(wid=wid)
             if dpwidget:
-                data={'wid':dpwidget.wid,'type':types.DP_WIDGET,'pid':dpwidget.pid}
+                data={'uid':dpwidget.uid, 'wid':dpwidget.wid,'type':types.DP_WIDGET,'pid':dpwidget.pid}
         return data
     else:
         raise exceptions.WidgetNotFoundException()
@@ -50,27 +51,24 @@ def get_widgets_config(username):
         if widget.type==types.DS_WIDGET:
             dswidget=cassapiwidget.get_widget_ds(wid=widget.wid)
             if dswidget:
-                data.append({'wid':dswidget.wid,'type':types.DS_WIDGET,'did':dswidget.did})
+                data.append({'uid':dswidget.uid, 'wid':dswidget.wid,'type':types.DS_WIDGET,'did':dswidget.did})
         elif widget.type==types.DP_WIDGET:
             dpwidget=cassapiwidget.get_widget_dp(wid=widget.wid)
             if dpwidget:
-                data.append({'wid':dpwidget.wid,'type':types.DP_WIDGET,'pid':dpwidget.pid})
+                data.append({'uid':dpwidget.uid, 'wid':dpwidget.wid,'type':types.DP_WIDGET,'pid':dpwidget.pid})
     return data
 
-def delete_widget(username,wid):
-    if not arguments.is_valid_username(username) or not arguments.is_valid_uuid(wid):
+def delete_widget(wid):
+    if not arguments.is_valid_uuid(wid):
         raise exceptions.BadParametersException()
-    user=cassapiuser.get_user(username=username)
-    if not user:
-        raise exceptions.UserNotFoundException()
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
         raise exceptions.WidgetNotFoundException()
-    else:
-        if cassapiwidget.delete_widget(wid=widget.wid):
-            return True
-        else:
-            return False
+    bids=cassapidashboard.get_dashboards_bids(uid=widget.uid)
+    for bid in bids:
+        cassapidashboard.delete_widget_from_dashboard(bid=bid, wid=wid)
+    cassapiwidget.delete_widget(wid=wid)
+    return True
 
 def new_widget_ds(username,did):
     if not arguments.is_valid_username(username) or not arguments.is_valid_uuid(did):
