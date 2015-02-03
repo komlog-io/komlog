@@ -107,6 +107,23 @@ def mark_positive_variable_request(username, pid, sequence, position, length):
         raise exceptions.BadParametersException()
 
 @exceptions.ExceptionHandler
+def mark_negative_variable_request(username, pid, sequence, position, length):
+    if args.is_valid_username(username) and args.is_valid_sequence(sequence) and args.is_valid_int(position) and args.is_valid_int(length) and args.is_valid_hex_uuid(pid):
+        pid=uuid.UUID(pid)
+        authorization.authorize_request(request=requests.MARK_NEGATIVE_VARIABLE,username=username,pid=pid)
+        date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
+        datapoints_to_update=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
+        if datapoints_to_update!=None:
+            for datapoint in datapoints_to_update:
+                message=messages.FillDatapointMessage(pid=pid, date=date)
+                msgapi.send_message(message)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        else:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
+    else:
+        raise exceptions.BadParametersException()
+
+@exceptions.ExceptionHandler
 def delete_datapoint_request(username, pid):
     if args.is_valid_username(username) and args.is_valid_hex_uuid(pid):
         pid=uuid.UUID(pid)

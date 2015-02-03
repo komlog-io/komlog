@@ -34,6 +34,7 @@ func_requests={
                requests.UPDATE_WIDGET_CONFIG:'authorize_widget_update_configuration',
                requests.UPDATE_DASHBOARD_CONFIG:'authorize_dashboard_update_configuration',
                requests.MARK_POSITIVE_VARIABLE:'authorize_mark_positive_variable',
+               requests.MARK_NEGATIVE_VARIABLE:'authorize_mark_negative_variable',
                requests.DELETE_AGENT:'authorize_delete_agent',
                requests.DELETE_DATASOURCE:'authorize_delete_datasource',
                requests.DELETE_DATAPOINT:'authorize_delete_datapoint',
@@ -183,6 +184,13 @@ def authorize_mark_positive_variable(params):
     pid=params['pid']
     if not quoauth.authorize_mark_positive_variable(uid,pid=pid) \
         or not resauth.authorize_mark_positive_variable(uid,pid=pid):
+        raise authexcept.AuthorizationException()
+
+def authorize_mark_negative_variable(params):
+    uid=params['uid']
+    pid=params['pid']
+    if not quoauth.authorize_mark_negative_variable(uid,pid=pid) \
+        or not resauth.authorize_mark_negative_variable(uid,pid=pid):
         raise authexcept.AuthorizationException()
 
 def authorize_delete_agent(params):

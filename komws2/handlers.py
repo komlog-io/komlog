@@ -237,6 +237,40 @@ class DatapointsHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json_encode(response.data))
 
+class DatapointPositivesHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def post(self, pid):
+        try:
+            data=json_decode(self.request.body)
+            sequence=data['seq']
+            position=data['p']
+            length=data['l']
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=datapoint.mark_positive_variable_request(username=self.user, pid=pid, sequence=sequence, position=position, length=length)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
+
+class DatapointNegativesHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def post(self, pid):
+        try:
+            data=json_decode(self.request.body)
+            sequence=data['seq']
+            position=data['p']
+            length=data['l']
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=datapoint.mark_negative_variable_request(username=self.user, pid=pid, sequence=sequence, position=position, length=length)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
+
 class UserConfigHandler(BaseHandler):
 
     @auth.userauthenticated
@@ -354,23 +388,25 @@ class DashboardConfigHandler(tornado.web.RequestHandler):
         self.write(json_encode(response.data))
 
 UUID4_REGEX='[0-9a-f]{32}'
-HANDLERS = [(r"/login/?", LoginHandler),
-            (r"/logout/?", LogoutHandler),
-            (r"/etc/ag/?", AgentsHandler),
-            (r"/etc/ag/("+UUID4_REGEX+")", AgentConfigHandler),
-            (r"/etc/ds/?", DatasourcesHandler),
-            (r"/etc/ds/("+UUID4_REGEX+")", DatasourceConfigHandler),
-            (r"/etc/dp/?", DatapointsHandler),
-            (r"/etc/dp/("+UUID4_REGEX+")", DatapointConfigHandler),
-            (r"/etc/wg/?", WidgetsHandler),
-            (r"/etc/wg/("+UUID4_REGEX+")", WidgetConfigHandler),
-            (r"/etc/db/?", DashboardsHandler),
-            (r"/etc/db/("+UUID4_REGEX+")", DashboardConfigHandler),
-            (r"/etc/usr/confirm/", UserConfirmationHandler),
-            (r"/etc/usr/?", UsersHandler),
-            (r"/var/ds/("+UUID4_REGEX+")", DatasourceDataHandler),
-            (r"/var/dp/("+UUID4_REGEX+")", DatapointDataHandler),
-            (r"/home/config", UserConfigHandler),
-            (r"/home", UserHomeHandler)
+HANDLERS = [(r'/login/?', LoginHandler),
+            (r'/logout/?', LogoutHandler),
+            (r'/etc/ag/?', AgentsHandler),
+            (r'/etc/ag/('+UUID4_REGEX+')', AgentConfigHandler),
+            (r'/etc/ds/?', DatasourcesHandler),
+            (r'/etc/ds/('+UUID4_REGEX+')', DatasourceConfigHandler),
+            (r'/etc/dp/?', DatapointsHandler),
+            (r'/etc/dp/('+UUID4_REGEX+')', DatapointConfigHandler),
+            (r'/etc/dp/('+UUID4_REGEX+')/positives/?', DatapointPositivesHandler),
+            (r'/etc/dp/('+UUID4_REGEX+')/negatives/?', DatapointNegativesHandler),
+            (r'/etc/wg/?', WidgetsHandler),
+            (r'/etc/wg/('+UUID4_REGEX+')', WidgetConfigHandler),
+            (r'/etc/db/?', DashboardsHandler),
+            (r'/etc/db/('+UUID4_REGEX+')', DashboardConfigHandler),
+            (r'/etc/usr/confirm/', UserConfirmationHandler),
+            (r'/etc/usr/?', UsersHandler),
+            (r'/var/ds/('+UUID4_REGEX+')', DatasourceDataHandler),
+            (r'/var/dp/('+UUID4_REGEX+')', DatapointDataHandler),
+            (r'/home/config', UserConfigHandler),
+            (r'/home', UserHomeHandler)
 ]
 

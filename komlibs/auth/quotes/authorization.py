@@ -104,6 +104,10 @@ def authorize_put_dashboard_config(uid,bid):
     ''' Not quotes authorization needed '''
     return True
 
+def authorize_mark_negative_variable(uid,pid):
+    ''' Not quotes authorization needed '''
+    return True
+
 def authorize_mark_positive_variable(uid,pid):
     ''' Not quotes authorization needed '''
     return True

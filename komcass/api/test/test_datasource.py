@@ -457,7 +457,6 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         length=1
         self.assertTrue(datasourceapi.add_variable_to_datasource_map(did=did, date=date, position=position, length=length))
         variables=datasourceapi.get_datasource_map_variables(did=did, date=date)
-        self.assertTrue(isinstance(variables, dict))
         self.assertEqual(variables,{0:1,10:1,20:1})
 
     def test_get_datasource_map_variables_no_variables(self):
@@ -480,7 +479,6 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         pid3=uuid.uuid4()
         self.assertTrue(datasourceapi.add_datapoint_to_datasource_map(did=did, date=date, position=position, pid=pid3))
         datapoints=datasourceapi.get_datasource_map_datapoints(did=did, date=date)
-        self.assertTrue(isinstance(datapoints, dict))
         self.assertEqual(datapoints,{pid1:0,pid2:0,pid3:0})
 
     def test_get_datasource_map_datapoints_no_datapoints(self):

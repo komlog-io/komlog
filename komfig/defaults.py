@@ -5,7 +5,7 @@ Default values for komlogs configuration parameters
 
 CONFIG_DIR = '.komlogs'
 PASSWD_FILE = '/etc/passwd'
-LOG_DIRNAME='logs/'
+LOG_DIRNAME='log/'
 LOG_LEVEL='DEBUG'
 LOG_ROTATION=True
 LOG_MAX_BYTES=10000

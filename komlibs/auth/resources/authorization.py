@@ -92,6 +92,10 @@ def authorize_mark_positive_variable(uid,pid):
     permission=cassapiperm.get_user_datapoint_perm(uid=uid, pid=pid)
     return True if permission and permission.perm & permissions.CAN_EDIT else False
 
+def authorize_mark_negative_variable(uid,pid):
+    permission=cassapiperm.get_user_datapoint_perm(uid=uid, pid=pid)
+    return True if permission and permission.perm & permissions.CAN_EDIT else False
+
 def authorize_delete_agent(uid,aid):
     permission=cassapiperm.get_user_agent_perm(uid=uid, aid=aid)
     return True if permission and permission.perm & permissions.CAN_DELETE else False

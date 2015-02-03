@@ -132,7 +132,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.userinfo=userresponse.data
 
     def test_new_datapoint_request_success(self):
-        ''' new_datasource_request should succeed if parameters exists, and user has permission '''
+        ''' new_datapoint_request should succeed if parameters exists, and user has permission '''
         username=self.userinfo['username']
         did=self.userinfo['agents'][0]['dids'][0]
         datapointname='test_new_datapoint_request_success'
@@ -560,5 +560,115 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         username='test_delete_datapoint_request_failure_invalid_pid'
         for pid in pids:
             response=datapointapi.delete_datapoint_request(username=username, pid=pid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_mark_positive_variable_request_failure_invalid_username(self):
+        ''' mark_positive_variable_request should fail if username is invalid '''
+        usernames=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        pid=uuid.uuid4().hex
+        sequence='23423234565432345678'
+        position=10
+        length=1
+        for username in usernames:
+            response=datapointapi.mark_positive_variable_request(username=username, pid=pid, sequence=sequence, position=position, length=length)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_mark_positive_variable_request_failure_invalid_pid(self):
+        ''' mark_positive_variable_request should fail if pid is invalid '''
+        pids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_mark_positive_variable_request_failure_invalid_pid'
+        sequence='23423234565432345678'
+        position=10
+        length=1
+        for pid in pids:
+            response=datapointapi.mark_positive_variable_request(username=username, pid=pid, sequence=sequence, position=position, length=length)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_mark_positive_variable_request_failure_invalid_sequence(self):
+        ''' mark_positive_variable_request should fail if sequence is invalid '''
+        sequences=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_mark_positive_variable_request_failure_invalid_sequence'
+        pid=uuid.uuid4().hex
+        position=10
+        length=1
+        for sequence in sequences:
+            response=datapointapi.mark_positive_variable_request(username=username, pid=pid, sequence=sequence, position=position, length=length)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_mark_positive_variable_request_failure_invalid_position(self):
+        ''' mark_positive_variable_request should fail if position is invalid '''
+        positions=['Username','userñame',None, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_mark_positive_variable_request_failure_invalid_sequence'
+        pid=uuid.uuid4().hex
+        sequence='23423234565432345678'
+        length=1
+        for position in positions:
+            response=datapointapi.mark_positive_variable_request(username=username, pid=pid, sequence=sequence, position=position, length=length)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_mark_positive_variable_request_failure_invalid_length(self):
+        ''' mark_positive_variable_request should fail if length is invalid '''
+        lengths=['Username','userñame',None, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_mark_positive_variable_request_failure_invalid_sequence'
+        pid=uuid.uuid4().hex
+        sequence='23423234565432345678'
+        position=1
+        for length in lengths:
+            response=datapointapi.mark_positive_variable_request(username=username, pid=pid, sequence=sequence, position=position, length=length)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_mark_negative_variable_request_failure_invalid_username(self):
+        ''' mark_negative_variable_request should fail if username is invalid '''
+        usernames=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        pid=uuid.uuid4().hex
+        sequence='23423234565432345678'
+        position=10
+        length=1
+        for username in usernames:
+            response=datapointapi.mark_negative_variable_request(username=username, pid=pid, sequence=sequence, position=position, length=length)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_mark_negative_variable_request_failure_invalid_pid(self):
+        ''' mark_negative_variable_request should fail if pid is invalid '''
+        pids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_mark_negative_variable_request_failure_invalid_pid'
+        sequence='23423234565432345678'
+        position=10
+        length=1
+        for pid in pids:
+            response=datapointapi.mark_negative_variable_request(username=username, pid=pid, sequence=sequence, position=position, length=length)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_mark_negative_variable_request_failure_invalid_sequence(self):
+        ''' mark_negative_variable_request should fail if sequence is invalid '''
+        sequences=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_mark_negative_variable_request_failure_invalid_sequence'
+        pid=uuid.uuid4().hex
+        position=10
+        length=1
+        for sequence in sequences:
+            response=datapointapi.mark_negative_variable_request(username=username, pid=pid, sequence=sequence, position=position, length=length)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_mark_negative_variable_request_failure_invalid_position(self):
+        ''' mark_negative_variable_request should fail if position is invalid '''
+        positions=['Username','userñame',None, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_mark_negative_variable_request_failure_invalid_sequence'
+        pid=uuid.uuid4().hex
+        sequence='23423234565432345678'
+        length=1
+        for position in positions:
+            response=datapointapi.mark_negative_variable_request(username=username, pid=pid, sequence=sequence, position=position, length=length)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_mark_negative_variable_request_failure_invalid_length(self):
+        ''' mark_negative_variable_request should fail if length is invalid '''
+        lengths=['Username','userñame',None, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        username='test_mark_negative_variable_request_failure_invalid_sequence'
+        pid=uuid.uuid4().hex
+        sequence='23423234565432345678'
+        position=1
+        for length in lengths:
+            response=datapointapi.mark_negative_variable_request(username=username, pid=pid, sequence=sequence, position=position, length=length)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
