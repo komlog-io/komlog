@@ -122,3 +122,11 @@ class DashboardNotFoundException(GestaccountException):
     def __init__(self):
         super(DashboardNotFoundException,self).__init__()
 
+class DashboardCreationException(GestaccountException):
+    def __init__(self):
+        super(DashboardCreationException,self).__init__()
+
+class DashboardUpdateException(GestaccountException):
+    def __init__(self):
+        super(DashboardUpdateException,self).__init__()
+

@@ -10,6 +10,7 @@ This library implements authorization mechanisms to Komlog interfaces and object
 
 from komlibs.auth import permissions
 from komcass.api import permission as cassapiperm
+from komfig import logger
 
 def authorize_get_agent_config(uid,aid):
     permission=cassapiperm.get_user_agent_perm(uid=uid,aid=aid)
@@ -96,6 +97,15 @@ def authorize_mark_negative_variable(uid,pid):
     permission=cassapiperm.get_user_datapoint_perm(uid=uid, pid=pid)
     return True if permission and permission.perm & permissions.CAN_EDIT else False
 
+def authorize_add_widget_to_dashboard(uid,bid,wid):
+    dbperm=cassapiperm.get_user_dashboard_perm(uid=uid, bid=bid)
+    wgperm=cassapiperm.get_user_widget_perm(uid=uid, wid=wid)
+    return True if dbperm and dbperm.perm & permissions.CAN_EDIT and wgperm and wgperm.perm & permissions.CAN_READ else False
+
+def authorize_delete_widget_from_dashboard(uid,bid):
+    dbperm=cassapiperm.get_user_dashboard_perm(uid=uid, bid=bid)
+    return True if dbperm and dbperm.perm & permissions.CAN_EDIT else False
+
 def authorize_delete_agent(uid,aid):
     permission=cassapiperm.get_user_agent_perm(uid=uid, aid=aid)
     return True if permission and permission.perm & permissions.CAN_DELETE else False
@@ -112,7 +122,7 @@ def authorize_delete_widget(uid,wid):
     permission=cassapiperm.get_user_widget_perm(uid=uid, wid=wid)
     return True if permission and permission.perm & permissions.CAN_DELETE else False
 
-def authorize_delete_dashboard(uid,wid):
+def authorize_delete_dashboard(uid,bid):
     permission=cassapiperm.get_user_dashboard_perm(uid=uid, bid=bid)
     return True if permission and permission.perm & permissions.CAN_DELETE else False
 

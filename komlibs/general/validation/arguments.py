@@ -48,6 +48,13 @@ def is_valid_datapointname(argument):
         return False
     return True
 
+def is_valid_dashboardname(argument):
+    if not isinstance(argument,str):
+        return False
+    if NOTKOMLOGDESCCHAR.search(argument):
+        return False
+    return True
+
 def is_valid_datasource_content(argument):
     if not isinstance(argument,str):
         return False

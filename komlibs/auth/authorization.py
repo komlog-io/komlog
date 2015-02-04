@@ -35,6 +35,8 @@ func_requests={
                requests.UPDATE_DASHBOARD_CONFIG:'authorize_dashboard_update_configuration',
                requests.MARK_POSITIVE_VARIABLE:'authorize_mark_positive_variable',
                requests.MARK_NEGATIVE_VARIABLE:'authorize_mark_negative_variable',
+               requests.ADD_WIDGET_TO_DASHBOARD:'authorize_add_widget_to_dashboard',
+               requests.DELETE_WIDGET_FROM_DASHBOARD:'authorize_delete_widget_from_dashboard',
                requests.DELETE_AGENT:'authorize_delete_agent',
                requests.DELETE_DATASOURCE:'authorize_delete_datasource',
                requests.DELETE_DATAPOINT:'authorize_delete_datapoint',
@@ -191,6 +193,21 @@ def authorize_mark_negative_variable(params):
     pid=params['pid']
     if not quoauth.authorize_mark_negative_variable(uid,pid=pid) \
         or not resauth.authorize_mark_negative_variable(uid,pid=pid):
+        raise authexcept.AuthorizationException()
+
+def authorize_add_widget_to_dashboard(params):
+    uid=params['uid']
+    bid=params['bid']
+    wid=params['wid']
+    if not quoauth.authorize_add_widget_to_dashboard(uid=uid,bid=bid,wid=wid) \
+        or not resauth.authorize_add_widget_to_dashboard(uid=uid,bid=bid,wid=wid):
+        raise authexcept.AuthorizationException()
+
+def authorize_delete_widget_from_dashboard(params):
+    uid=params['uid']
+    bid=params['bid']
+    if not quoauth.authorize_delete_widget_from_dashboard(uid=uid,bid=bid) \
+        or not resauth.authorize_delete_widget_from_dashboard(uid=uid,bid=bid):
         raise authexcept.AuthorizationException()
 
 def authorize_delete_agent(params):

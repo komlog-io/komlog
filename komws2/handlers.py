@@ -376,7 +376,7 @@ class DashboardsHandler(tornado.web.RequestHandler):
 class DashboardConfigHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
-    def get(self,p_bid):
+    def get(self,bid):
         response=dashboard.get_dashboard_config_request(username=self.user, bid=bid)
         self.set_status(response.status)
         self.write(json_encode(response.data))
@@ -384,6 +384,20 @@ class DashboardConfigHandler(tornado.web.RequestHandler):
     @auth.userauthenticated
     def delete(self, bid):
         response=dashboard.delete_dashboard_request(username=self.user, bid=bid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
+class DashboardWidgetsHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def post(self, bid, wid):
+        response=dashboard.add_widget_request(username=self.user, bid=bid, wid=wid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def delete(self, bid, wid):
+        response=dashboard.delete_widget_request(username=self.user, bid=bid, wid=wid)
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
@@ -402,6 +416,7 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/etc/wg/('+UUID4_REGEX+')', WidgetConfigHandler),
             (r'/etc/db/?', DashboardsHandler),
             (r'/etc/db/('+UUID4_REGEX+')', DashboardConfigHandler),
+            (r'/etc/db/(?P<bid>'+UUID4_REGEX+')/wg/(?P<wid>'+UUID4_REGEX+')', DashboardWidgetsHandler),
             (r'/etc/usr/confirm/', UserConfirmationHandler),
             (r'/etc/usr/?', UsersHandler),
             (r'/var/ds/('+UUID4_REGEX+')', DatasourceDataHandler),

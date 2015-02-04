@@ -4,6 +4,7 @@ from komlibs.auth import permissions
 from komlibs.auth.resources import authorization
 from komcass.api import permission as cassapiperm
 from komlibs.gestaccount.user import api as userapi
+from komfig import logger
 
 
 class AuthResourcesAuthorizationTest(unittest.TestCase):
@@ -277,4 +278,97 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=self.user['uid']
         bid=uuid.uuid4()
         self.assertFalse(authorization.authorize_put_dashboard_config(uid=uid, bid=bid))
+
+    def test_authorize_add_widget_to_dashboard_failure_no_bid(self):
+        ''' authorize_add_widget_to_dashboard should fail if user has no permissions over bid '''
+        uid=self.user['uid']
+        bid=uuid.uuid4()
+        wid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        self.assertFalse(authorization.authorize_add_widget_to_dashboard(uid=uid,bid=bid,wid=wid))
+
+    def test_authorize_add_widget_to_dashboard_failure_no_bid_edit_perm(self):
+        ''' authorize_add_widget_to_dashboard should fail if user has no edit permission over bid '''
+        uid=self.user['uid']
+        bid=uuid.uuid4()
+        wid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        self.assertFalse(authorization.authorize_add_widget_to_dashboard(uid=uid,bid=bid,wid=wid))
+
+    def test_authorize_add_widget_to_dashboard_failure_no_wid(self):
+        ''' authorize_add_widget_to_dashboard should fail if user has no edit permission over wid '''
+        uid=self.user['uid']
+        bid=uuid.uuid4()
+        wid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        self.assertFalse(authorization.authorize_add_widget_to_dashboard(uid=uid,bid=bid,wid=wid))
+
+    def test_authorize_add_widget_to_dashboard_failure_no_wid_read_perm(self):
+        ''' authorize_add_widget_to_dashboard should fail if user has no read permission over wid '''
+        uid=self.user['uid']
+        bid=uuid.uuid4()
+        wid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        self.assertFalse(authorization.authorize_add_widget_to_dashboard(uid=uid,bid=bid,wid=wid))
+
+    def test_authorize_add_widget_to_dashboard_success(self):
+        ''' authorize_add_widget_to_dashboard should succeed '''
+        uid=self.user['uid']
+        bid=uuid.uuid4()
+        wid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        self.assertTrue(authorization.authorize_add_widget_to_dashboard(uid=uid,bid=bid,wid=wid))
+
+    def test_authorize_delete_widget_from_dashboard_failure_no_bid(self):
+        ''' authorize_delete_widget_from_dashboard should fail if user has no permissions over bid '''
+        uid=self.user['uid']
+        bid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_delete_widget_from_dashboard(uid=uid,bid=bid))
+
+    def test_authorize_delete_widget_from_dashboard_failure_no_bid_edit_perm(self):
+        ''' authorize_delete_widget_to_dashboard should fail if user has no edit permission over bid '''
+        uid=self.user['uid']
+        bid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        self.assertFalse(authorization.authorize_delete_widget_from_dashboard(uid=uid,bid=bid))
+
+    def test_authorize_delete_widget_from_dashboard_success(self):
+        ''' authorize_delete_widget_from_dashboard should succeed '''
+        uid=self.user['uid']
+        bid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        self.assertTrue(authorization.authorize_delete_widget_from_dashboard(uid=uid,bid=bid))
+
+    def test_authorize_delete_dashboard_failure_non_existent_bid(self):
+        ''' authorize_delete_dashboard should fail if no bid exists '''
+        uid=self.user['uid']
+        bid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_delete_dashboard(uid=uid, bid=bid))
+
+    def test_authorize_delete_dashboard_failure_no_delete_perm(self):
+        ''' authorize_delete_dashboard should fail if user has no delete perm over bid '''
+        uid=self.user['uid']
+        bid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        self.assertFalse(authorization.authorize_delete_dashboard(uid=uid, bid=bid))
+
+    def test_authorize_delete_dashboard_success(self):
+        ''' authorize_delete_dashboard should succeed if user has delete perm over bid '''
+        uid=self.user['uid']
+        bid=uuid.uuid4()
+        perm=permissions.CAN_DELETE
+        cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        self.assertTrue(authorization.authorize_delete_dashboard(uid=uid, bid=bid))
 
