@@ -142,24 +142,24 @@ def delete_datapoint_request(username, wid, pid):
 def update_widget_config_request(username, wid, data):
     if args.is_valid_username(username) and args.is_valid_hex_uuid(wid) and args.is_valid_dict(data):
         wid=uuid.UUID(wid)
-        if not 'widgetname' in data and not 'colors' in data:
+        if not 'widgetname' in data and not 'datapoints' in data:
             raise exceptions.BadParametersException()
         if 'widgetname' in data and not args.is_valid_widgetname(data['widgetname']):
             raise exceptions.BadParametersException()
-        if 'colors' in data:
-            if not isinstance(data['colors'],list):
+        if 'datapoints' in data:
+            if not isinstance(data['datapoints'],list):
                 raise exceptions.BadParametersException()
-            if len(data['colors'])==0:
+            if len(data['datapoints'])==0:
                 raise exceptions.BadParametersException()
-            for element in data['colors']:
+            for element in data['datapoints']:
                 if not args.is_valid_dict(element) or not 'pid' in element or not 'color' in element or not args.is_valid_hex_uuid(element['pid']) or not args.is_valid_hexcolor(element['color']):
                     raise exceptions.BadParametersException()
         authorization.authorize_request(request=requests.UPDATE_WIDGET_CONFIG, username=username, wid=wid)
         widgetname=data['widgetname'] if 'widgetname' in data else None
-        colors=None
-        if 'colors' in data:
+        datapoints=None
+        if 'datapoints' in data:
             colors=dict()
-            for element in data['colors']:
+            for element in data['datapoints']:
                 colors[uuid.UUID(element['pid'])]=element['color']
         if widgetapi.update_widget_config(wid=wid, widgetname=widgetname, colors=colors):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)

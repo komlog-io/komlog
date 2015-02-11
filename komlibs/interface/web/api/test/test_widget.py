@@ -1455,7 +1455,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_update_widget_config_request_failure_invalid_data(self):
         ''' update_widget_config_request should fail if wid is invalid '''
-        datas=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame', {'widgetname':None},{'widgetname':'widgetname','colors':[]}, {'colors':{'pid':uuid.uuid4(), 'color':None}}]
+        datas=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame', {'widgetname':None},{'widgetname':'widgetname','datapoints':[]}, {'colors':{'pid':uuid.uuid4(), 'color':None}}]
         username='test_update_widget_config_request_failure_invalid_data'
         wid=uuid.uuid4().hex
         for data in datas:
@@ -1569,7 +1569,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response5.data['wid'],wid)
         new_widgetname='test_update_widget_config_request_success_histogram_widget_2'
         new_color={'pid':pid,'color':'#CCDDEE'}
-        data={'widgetname':new_widgetname,'colors':[new_color]}
+        data={'widgetname':new_widgetname,'datapoints':[new_color]}
         response6=widgetapi.update_widget_config_request(username=username, wid=wid, data=data)
         self.assertEqual(response6.status, status.WEB_STATUS_OK)
         response7=widgetapi.get_widget_config_request(username=username, wid=wid)
