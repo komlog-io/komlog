@@ -127,7 +127,7 @@ def process_message_NEWDSW(message):
     did=message.did
     username=message.username
     if args.is_valid_uuid(did) and args.is_valid_username(username):
-        widget=widgetapi.new_widget_ds(username=username, did=did)
+        widget=widgetapi.new_widget_datasource(username=username, did=did)
         if widget:
             operation=weboperations.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
             auth_op=operation.get_auth_operation()
@@ -148,7 +148,7 @@ def process_message_NEWDPW(message):
     pid=message.pid
     username=message.username
     if args.is_valid_uuid(pid) and args.is_valid_username(username):
-        widget=widgetapi.new_widget_dp(username=username, pid=pid)
+        widget=widgetapi.new_widget_datapoint(username=username, pid=pid)
         if widget:
             operation=weboperations.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
             auth_op=operation.get_auth_operation()

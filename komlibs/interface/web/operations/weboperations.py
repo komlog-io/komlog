@@ -90,7 +90,7 @@ class NewDashboardOperation(WIFaceOperation):
         self.oid=NEW_DASHBOARD
         self.params={}
         self.params['uid']=uid
-        self.params['bid']=uid
+        self.params['bid']=bid
 
 class NewWidgetSystemOperation(WIFaceOperation):
     def __init__(self, uid, wid):

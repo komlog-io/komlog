@@ -80,14 +80,6 @@ def add_widget_to_dashboard(wid, bid):
     return True
 
 def delete_widget_from_dashboard(wid, bid):
-    widgets=get_dashboard_widgets(bid)
-    if not widgets:
-        return True
-    try:
-        widgets.remove(wid)
-    except KeyError:
-        return True
-    else:
-        connection.session.execute(stmtdashboard.U_WIDGETS_MSTDASHBOARD_B_BID,(widgets,bid))
-        return True
+    connection.session.execute(stmtdashboard.D_WID_MSTDASHBOARD_B_WID_BID,(wid,bid))
+    return True
 

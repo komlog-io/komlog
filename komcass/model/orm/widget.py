@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 Created on 01/10/2014
 
@@ -14,15 +13,41 @@ class Widget(object):
         self.type=type
 
 class WidgetDs(Widget):
-    def __init__(self,wid,uid,creation_date,did):
+    def __init__(self,wid,uid,widgetname,creation_date,did):
+        self.widgetname=widgetname
         self.creation_date=creation_date
         self.did=did
-        super(WidgetDs,self).__init__(wid,uid,types.WIDGET_DS)
+        super(WidgetDs,self).__init__(wid,uid,types.DATASOURCE)
 
 class WidgetDp(Widget):
-    def __init__(self,wid,uid,creation_date,pid):
+    def __init__(self,wid,uid,widgetname,creation_date,pid):
+        self.widgetname=widgetname
         self.creation_date=creation_date
         self.pid=pid
-        super(WidgetDp,self).__init__(wid,uid,types.WIDGET_DP)
+        super(WidgetDp,self).__init__(wid,uid,types.DATAPOINT)
 
+
+class WidgetHistogram(Widget):
+    def __init__(self,wid,uid,widgetname,creation_date,datapoints=None,colors=None):
+        self.widgetname=widgetname
+        self.creation_date=creation_date
+        self.datapoints=datapoints if datapoints else set()
+        self.colors=colors if colors else dict()
+        super(WidgetHistogram,self).__init__(wid,uid,types.HISTOGRAM)
+
+class WidgetLinegraph(Widget):
+    def __init__(self,wid,uid,widgetname,creation_date,datapoints=None,colors=None):
+        self.widgetname=widgetname
+        self.creation_date=creation_date
+        self.datapoints=datapoints if datapoints else set()
+        self.colors=colors if colors else dict()
+        super(WidgetLinegraph,self).__init__(wid,uid,types.LINEGRAPH)
+
+class WidgetTable(Widget):
+    def __init__(self,wid,uid,widgetname,creation_date,datapoints=None,colors=None):
+        self.widgetname=widgetname
+        self.creation_date=creation_date
+        self.datapoints=datapoints if datapoints else set()
+        self.colors=colors if colors else dict()
+        super(WidgetTable,self).__init__(wid,uid,types.TABLE)
 

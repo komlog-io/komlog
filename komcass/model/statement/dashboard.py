@@ -18,6 +18,7 @@ STATEMENTS={100000:'select * from mst_dashboard where bid=?',
             100004:'select bid from mst_dashboard where uid=?',
             101000:'insert into mst_dashboard (bid,uid,dashboardname,creation_date,widgets) values (?,?,?,?,?)',
             102000:'delete from mst_dashboard where bid=?',
+            102001:'delete widgets[?] from mst_dashboard where bid=?',
             103000:'update mst_dashboard set widgets=? where bid=?',
            }
 
@@ -36,6 +37,7 @@ I_A_MSTDASHBOARD=101000
 # Deletes
 
 D_A_MSTDASHBOARD_B_BID=102000
+D_WID_MSTDASHBOARD_B_WID_BID=102001
 
 # Updates
 

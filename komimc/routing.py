@@ -35,6 +35,12 @@ MESSAGE_TO_ADDRESS_MAPPING={messages.STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:RESCONTROL,
                             messages.NEW_DP_WIDGET_MESSAGE:GESTCONSOLE,
                             messages.NEW_DS_WIDGET_MESSAGE:GESTCONSOLE,
+                            messages.DELETE_USER_MESSAGE:GESTCONSOLE,
+                            messages.DELETE_AGENT_MESSAGE:GESTCONSOLE,
+                            messages.DELETE_DATASOURCE_MESSAGE:GESTCONSOLE,
+                            messages.DELETE_DATAPOINT_MESSAGE:GESTCONSOLE,
+                            messages.DELETE_WIDGET_MESSAGE:GESTCONSOLE,
+                            messages.DELETE_DASHBOARD_MESSAGE:GESTCONSOLE,
                             }
 
 

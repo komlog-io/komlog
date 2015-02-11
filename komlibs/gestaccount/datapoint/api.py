@@ -19,6 +19,7 @@ from komcass.model.orm import datapoint as ormdatapoint
 from komlibs.gestaccount import exceptions
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
+from komlibs.general import colors
 from komlibs.textman import variables
 from komlibs.ai import decisiontree
 from komfig import logger
@@ -46,19 +47,19 @@ def get_datapoint_data(pid, fromdate=None, todate=None):
             data.append({'date':datapoint_data.date,'value':datapoint_data.value})
     return data
 
-def create_datapoint(did, datapointname):
+def create_datapoint(did, datapointname, color):
     '''
     Funcion utilizada para la creacion de un datapoint sin asociar a ninguna variable en particular
     '''
-    if not args.is_valid_uuid(did) or not args.is_valid_datapointname(datapointname):
+    if not args.is_valid_uuid(did) or not args.is_valid_datapointname(datapointname) or not args.is_valid_hexcolor(color):
         raise exceptions.BadParametersException()
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
         raise exceptions.DatasourceNotFoundException()
     pid=uuid.uuid4()
-    datapoint=ormdatapoint.Datapoint(pid=pid,did=did,datapointname=datapointname,creation_date=timeuuid.uuid1())
+    datapoint=ormdatapoint.Datapoint(pid=pid,did=did,datapointname=datapointname,color=color, creation_date=timeuuid.uuid1())
     if cassapidatapoint.new_datapoint(datapoint):
-        return {'pid':datapoint.pid, 'did':datapoint.did, 'datapointname':datapoint.datapointname}
+        return {'pid':datapoint.pid, 'did':datapoint.did, 'datapointname':datapoint.datapointname, 'color':datapoint.color}
     else:
         raise exceptions.DatapointCreationException()
 
@@ -264,8 +265,9 @@ def monitor_new_datapoint(did, date, position, length, datapointname):
     if not args.is_valid_uuid(did) or not args.is_valid_date(date) or not args.is_valid_int(position) or not args.is_valid_int(length) or not args.is_valid_datapointname(datapointname):
         raise exceptions.BadParametersException()
     try:
+        color=colors.get_random_color()
         datapoint={}
-        datapoint=create_datapoint(did=did, datapointname=datapointname)
+        datapoint=create_datapoint(did=did, datapointname=datapointname, color=color)
         datapoints_to_update=mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length, replace=False)
         if datapoints_to_update==None:
             return None

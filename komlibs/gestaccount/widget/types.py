@@ -5,5 +5,8 @@ creation date: 2013/04/07
 author: jcazor
 '''
 
-DS_WIDGET='ds'
-DP_WIDGET='dp'
+DATASOURCE='ds'
+DATAPOINT='dp'
+HISTOGRAM='hg'
+LINEGRAPH='lg'
+TABLE='tb'

@@ -1,2 +1,6 @@
-WIDGET_DS='ds'
-WIDGET_DP='dp'
+DATASOURCE='ds'
+DATAPOINT='dp'
+HISTOGRAM='hg'
+LINEGRAPH='lg'
+TABLE='tb'
+

@@ -28,6 +28,16 @@ class ExceptionHandler(object):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND,error=e.error)
         except gestexcept.AgentCreationException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
+        except gestexcept.WidgetCreationException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
+        except gestexcept.DashboardCreationException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
+        except gestexcept.DashboardUpdateException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
+        except gestexcept.AddDatapointToWidgetException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
+        except gestexcept.DeleteDatapointFromWidgetException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
         except gestexcept.UserConfirmationException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
         except gestexcept.DatasourceNotFoundException as e:
@@ -46,6 +56,8 @@ class ExceptionHandler(object):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED,error=e.error)
         except gestexcept.DatasourceUploadContentException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
+        except gestexcept.WidgetUnsupportedOperationException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED,error=e.error)
 
 
 class BadParametersException(Exception):

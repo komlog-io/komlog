@@ -372,3 +372,74 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
         self.assertTrue(authorization.authorize_delete_dashboard(uid=uid, bid=bid))
 
+    def test_authorize_add_datapoint_to_widget_failure_non_existent_wid(self):
+        ''' authorize_add_datapoint_to_widget should fail if user has not the wid '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        wid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        self.assertFalse(authorization.authorize_add_datapoint_to_widget(uid=uid, wid=wid, pid=pid))
+
+    def test_authorize_add_datapoint_to_widget_failure_no_edit_perm_over_wid(self):
+        ''' authorize_add_datapoint_to_widget should fail if user has no edit perm over the wid '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        wid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        self.assertFalse(authorization.authorize_add_datapoint_to_widget(uid=uid, wid=wid, pid=pid))
+
+    def test_authorize_add_datapoint_to_widget_failure_non_existent_pid(self):
+        ''' authorize_add_datapoint_to_widget should fail if user has no edit perm over the wid '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        wid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        self.assertFalse(authorization.authorize_add_datapoint_to_widget(uid=uid, wid=wid, pid=pid))
+
+    def test_authorize_add_datapoint_to_widget_failure_no_read_perm_over_pid(self):
+        ''' authorize_add_datapoint_to_widget should fail if user has no edit perm over the wid '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        wid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        self.assertFalse(authorization.authorize_add_datapoint_to_widget(uid=uid, wid=wid, pid=pid))
+
+    def test_authorize_add_datapoint_to_widget_success(self):
+        ''' authorize_add_datapoint_to_widget should succeed if user has permissions over pid and wid '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        wid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        self.assertTrue(authorization.authorize_add_datapoint_to_widget(uid=uid, wid=wid, pid=pid))
+
+    def test_authorize_delete_datapoint_from_widget_failure_non_existent_wid(self):
+        ''' authorize_delete_datapoint_from_widget should fail if user has not the wid '''
+        uid=self.user['uid']
+        wid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_delete_datapoint_from_widget(uid=uid, wid=wid))
+
+    def test_authorize_delete_datapoint_from_widget_failure_no_edit_perm_over_wid(self):
+        ''' authorize_delete_datapoint_from_widget should fail if user has not edit perm over the wid '''
+        uid=self.user['uid']
+        wid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        self.assertFalse(authorization.authorize_delete_datapoint_from_widget(uid=uid, wid=wid))
+
+    def test_authorize_delete_datapoint_from_widget_success(self):
+        ''' authorize_delete_datapoint_from_widget should succeed if user has permssion over the wid '''
+        uid=self.user['uid']
+        wid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        self.assertTrue(authorization.authorize_delete_datapoint_from_widget(uid=uid, wid=wid))
+

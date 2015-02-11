@@ -202,7 +202,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         date=timeuuid.uuid1()
         content='delete_datasource_success content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(api.store_datasource_data(did=datasource['did'], date=date, content=content))
-        widget=widgetapi.new_widget_ds(username=username, did=datasource['did'])
+        widget=widgetapi.new_widget_datasource(username=username, did=datasource['did'])
         data=api.get_datasource_data(did=datasource['did'], date=date)
         self.assertIsNotNone(data)
         self.assertEqual(data['did'], datasource['did'])

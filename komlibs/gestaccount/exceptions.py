@@ -118,6 +118,18 @@ class WidgetTypeNotFoundException(GestaccountException):
     def __init__(self):
         super(WidgetTypeNotFoundException,self).__init__()
 
+class WidgetUnsupportedOperationException(GestaccountException):
+    def __init__(self):
+        super(WidgetUnsupportedOperationException,self).__init__()
+
+class AddDatapointToWidgetException(GestaccountException):
+    def __init__(self):
+        super(AddDatapointToWidgetException,self).__init__()
+
+class DeleteDatapointFromWidgetException(GestaccountException):
+    def __init__(self):
+        super(DeleteDatapointFromWidgetException,self).__init__()
+
 class DashboardNotFoundException(GestaccountException):
     def __init__(self):
         super(DashboardNotFoundException,self).__init__()

@@ -93,12 +93,12 @@ def new_dashboard(params):
 
 def new_widget_system(params):
     ''' the *_system operations are those that automatically launches the system. In this case, 
-        owner is the user, but it can't delete or edit the widget '''
+        owner is the user, but it can't delete the widget '''
     if not 'uid' in params or not 'wid' in params:
         return False
     uid=params['uid']
     wid=params['wid']
-    user_perm=permissions.CAN_READ
+    user_perm=permissions.CAN_READ|permissions.CAN_EDIT
     if cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=user_perm):
         return True
     return False

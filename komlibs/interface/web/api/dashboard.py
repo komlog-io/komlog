@@ -12,6 +12,7 @@ from komlibs.auth import authorization, requests
 from komlibs.gestaccount.dashboard import api as dashboardapi
 from komlibs.interface.web import status, exceptions
 from komlibs.interface.web.model import webmodel
+from komlibs.interface.web.operations import weboperations
 from komlibs.interface.imc.model import messages
 from komlibs.general.validation import arguments as args
 
@@ -67,7 +68,7 @@ def delete_dashboard_request(username, bid):
         bid=uuid.UUID(bid)
         authorization.authorize_request(request=requests.DELETE_DASHBOARD,username=username,bid=bid)
         message=messages.DeleteDashboardMessage(bid=bid)
-        msgapi.send_message(message=message)
+        msgapi.send_message(msg=message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
     else:
         raise exceptions.BadParametersException()

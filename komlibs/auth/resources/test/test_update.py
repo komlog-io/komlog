@@ -187,7 +187,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         for i in range(0,100):
             wid=uuid.uuid4()
             bid=uuid.uuid4()
-            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=wid.hex, creation_date=uuid.uuid1(), did=uuid.uuid4())
             cassapiwidget.insert_widget(widget)
             dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
             cassapidashboard.insert_dashboard(dashboard)
@@ -247,7 +247,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
                     cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
                     wid=uuid.uuid4()
-                    widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=did)
+                    widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=did.hex, creation_date=uuid.uuid1(), did=did)
                     cassapiwidget.insert_widget(widget)
                     selected_wids.append(wid)
                     cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
@@ -259,7 +259,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
                         cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
                         wid=uuid.uuid4()
-                        widget=ormwidget.WidgetDp(wid=wid, uid=uid, creation_date=uuid.uuid1(), pid=pid)
+                        widget=ormwidget.WidgetDp(wid=wid, uid=uid, widgetname=pid.hex, creation_date=uuid.uuid1(), pid=pid)
                         cassapiwidget.insert_widget(widget)
                         selected_wids.append(wid)
                         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
@@ -278,7 +278,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         for i in range(0,100):
             wid=uuid.uuid4()
             bid=uuid.uuid4()
-            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=wid.hex, creation_date=uuid.uuid1(), did=uuid.uuid4())
             cassapiwidget.insert_widget(widget)
             dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
             cassapidashboard.insert_dashboard(dashboard)
@@ -364,7 +364,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
             if i==0:
                 selected_wid=wid
             bid=uuid.uuid4()
-            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=wid.hex, creation_date=uuid.uuid1(), did=uuid.uuid4())
             cassapiwidget.insert_widget(widget)
             dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
             cassapidashboard.insert_dashboard(dashboard)
@@ -432,7 +432,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
             bid=uuid.uuid4()
             if i==0:
                 selected_bid=bid
-            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=wid.hex, creation_date=uuid.uuid1(), did=uuid.uuid4())
             cassapiwidget.insert_widget(widget)
             dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
             cassapidashboard.insert_dashboard(dashboard)
@@ -497,7 +497,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     cassapidatasource.insert_datasource(datasource)
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
                     cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
-                    widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=did)
+                    widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=did.hex, creation_date=uuid.uuid1(), did=did)
                     cassapiwidget.insert_widget(widget)
                     cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
                     for i in range(0,10):
@@ -510,7 +510,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                         cassapidatapoint.insert_datapoint(datapoint)
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
                         cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
-                        widget=ormwidget.WidgetDp(wid=wid, uid=uid, creation_date=uuid.uuid1(), pid=pid)
+                        widget=ormwidget.WidgetDp(wid=wid, uid=uid, widgetname=pid.hex, creation_date=uuid.uuid1(), pid=pid)
                         cassapiwidget.insert_widget(widget)
                         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
             else:
@@ -528,7 +528,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         for i in range(0,100):
             wid=uuid.uuid4()
             bid=uuid.uuid4()
-            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=wid.hex, creation_date=uuid.uuid1(), did=uuid.uuid4())
             cassapiwidget.insert_widget(widget)
             dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
             cassapidashboard.insert_dashboard(dashboard)
@@ -604,7 +604,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     cassapidatasource.insert_datasource(datasource)
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
                     cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
-                    widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=did)
+                    widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=did.hex, creation_date=uuid.uuid1(), did=did)
                     cassapiwidget.insert_widget(widget)
                     cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
                     for i in range(0,10):
@@ -617,7 +617,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                         cassapidatapoint.insert_datapoint(datapoint)
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
                         cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
-                        widget=ormwidget.WidgetDp(wid=wid, uid=uid, creation_date=uuid.uuid1(), pid=pid)
+                        widget=ormwidget.WidgetDp(wid=wid, uid=uid, widgetname=pid.hex, creation_date=uuid.uuid1(), pid=pid)
                         cassapiwidget.insert_widget(widget)
                         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
             else:
@@ -635,7 +635,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         for i in range(0,100):
             wid=uuid.uuid4()
             bid=uuid.uuid4()
-            widget=ormwidget.WidgetDs(wid=wid, uid=uid, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=wid.hex, creation_date=uuid.uuid1(), did=uuid.uuid4())
             cassapiwidget.insert_widget(widget)
             dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
             cassapidashboard.insert_dashboard(dashboard)

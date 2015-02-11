@@ -115,8 +115,16 @@ def authorize_mark_positive_variable(uid,pid):
 def authorize_add_widget_to_dashboard(uid,bid,wid):
     ''' Not quotes authorization needed '''
     return True
-    
+
 def authorize_delete_widget_from_dashboard(uid,bid):
     ''' Not quotes authorization needed '''
     return True
-    
+
+def authorize_add_datapoint_to_widget(uid, pid, wid):
+    ''' Not quotes authorization needed '''
+    return True
+
+def authorize_delete_datapoint_from_widget(uid, wid):
+    ''' Not quotes authorization needed '''
+    return True
+

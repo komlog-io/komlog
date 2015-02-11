@@ -126,3 +126,12 @@ def authorize_delete_dashboard(uid,bid):
     permission=cassapiperm.get_user_dashboard_perm(uid=uid, bid=bid)
     return True if permission and permission.perm & permissions.CAN_DELETE else False
 
+def authorize_add_datapoint_to_widget(uid, pid, wid):
+    uwperm=cassapiperm.get_user_widget_perm(uid=uid, wid=wid)
+    upperm=cassapiperm.get_user_datapoint_perm(uid=uid, pid=pid)
+    return True if uwperm and uwperm.perm & permissions.CAN_EDIT and upperm and upperm.perm & permissions.CAN_READ else False
+
+def authorize_delete_datapoint_from_widget(uid, wid):
+    uwperm=cassapiperm.get_user_widget_perm(uid=uid, wid=wid)
+    return True if uwperm and uwperm.perm & permissions.CAN_EDIT else False
+

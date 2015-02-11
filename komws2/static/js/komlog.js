@@ -21,8 +21,8 @@ angular.module('komlogApp')
         }
     };
 })
-.constant('baseConfigUrl','http://localhost:8000/etc/')
-.constant('baseDataUrl','http://localhost:8000/var/')
+.constant('baseConfigUrl','/etc/')
+.constant('baseDataUrl','/var/')
 .controller('mainCtrl',function($scope,$http,$resource,baseConfigUrl,baseDataUrl,contentAreaServices,dataServices) {
 
     var datasourcesDataResource=$resource(baseDataUrl + "ds/:id",{id: "@did"})

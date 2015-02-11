@@ -360,8 +360,34 @@ class WidgetConfigHandler(tornado.web.RequestHandler):
         self.write(json_encode(response.data))
 
     @auth.userauthenticated
+    def put(self, wid):
+        try:
+            data=json_decode(self.request.body)
+        except TypeError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad Parameters'}))
+        else:
+            response=widget.update_widget_config_request(username=self.user, wid=wid, data=data)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
+
+    @auth.userauthenticated
     def delete(self, wid):
         response=widget.delete_widget_request(username=self.user, wid=wid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
+class WidgetDatapointsHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def post(self, wid, pid):
+        response=widget.add_datapoint_request(username=self.user, wid=wid, pid=pid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def delete(self, wid, pid):
+        response=widget.delete_datapoint_request(username=self.user, wid=wid, pid=pid)
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
@@ -380,6 +406,18 @@ class DashboardConfigHandler(tornado.web.RequestHandler):
         response=dashboard.get_dashboard_config_request(username=self.user, bid=bid)
         self.set_status(response.status)
         self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def put(self, bid):
+        try:
+            data=json_decode(self.request.body)
+        except TypeError:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad Parameters'}))
+        else:
+            response=dashboard.update_dashboard_config_request(username=self.user, bid=bid, data=data)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
     @auth.userauthenticated
     def delete(self, bid):
@@ -414,6 +452,7 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/etc/dp/('+UUID4_REGEX+')/negatives/?', DatapointNegativesHandler),
             (r'/etc/wg/?', WidgetsHandler),
             (r'/etc/wg/('+UUID4_REGEX+')', WidgetConfigHandler),
+            (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/dp/(?<pid>'+UUID4_REGEX+')', WidgetDatapointsHandler),
             (r'/etc/db/?', DashboardsHandler),
             (r'/etc/db/('+UUID4_REGEX+')', DashboardConfigHandler),
             (r'/etc/db/(?P<bid>'+UUID4_REGEX+')/wg/(?P<wid>'+UUID4_REGEX+')', DashboardWidgetsHandler),
