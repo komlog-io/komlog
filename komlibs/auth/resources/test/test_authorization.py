@@ -443,3 +443,107 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
         self.assertTrue(authorization.authorize_delete_datapoint_from_widget(uid=uid, wid=wid))
 
+    def test_authorize_new_snapshot_failure_non_existent_wid(self):
+        ''' authorize_new_snapshot should succeed if permission is granted'''
+        uid=self.user['uid']
+        wid=uuid.uuid4()
+        perm=permissions.CAN_SNAPSHOT
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        wid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_new_snapshot(uid=uid,wid=wid))
+
+    def test_authorize_new_snapshot_failure_non_existent_uid(self):
+        ''' authorize_new_snapshot should succeed if permission is granted'''
+        uid=self.user['uid']
+        wid=uuid.uuid4()
+        perm=permissions.CAN_SNAPSHOT
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        uid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_new_snapshot(uid=uid,wid=wid))
+
+    def test_authorize_new_snapshot_success(self):
+        ''' authorize_new_snapshot should succeed if permission is granted'''
+        uid=self.user['uid']
+        wid=uuid.uuid4()
+        perm=permissions.CAN_SNAPSHOT
+        cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+        self.assertTrue(authorization.authorize_new_snapshot(uid=uid,wid=wid))
+
+    def test_authorize_get_snapshot_data_failure_non_existent_nid(self):
+        ''' authorize_get_snapshot_data should fail if nid does not exist '''
+        uid=self.user['uid']
+        nid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_snapshot_perm(uid=uid, nid=nid, perm=perm)
+        nid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_get_snapshot_data(uid=uid,nid=nid))
+
+    def test_authorize_get_snapshot_data_failure_non_existent_uid(self):
+        ''' authorize_get_snapshot_data should fail if nid does not exist '''
+        uid=self.user['uid']
+        nid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_snapshot_perm(uid=uid, nid=nid, perm=perm)
+        uid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_get_snapshot_data(uid=uid,nid=nid))
+
+    def test_authorize_get_snapshot_data_success(self):
+        ''' authorize_get_snapshot_data should succeed '''
+        uid=self.user['uid']
+        nid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_snapshot_perm(uid=uid, nid=nid, perm=perm)
+        self.assertTrue(authorization.authorize_get_snapshot_data(uid=uid,nid=nid))
+
+    def test_authorize_get_snapshot_config_failure_non_existent_nid(self):
+        ''' authorize_get_snapshot_config should fail if nid does not exist '''
+        uid=self.user['uid']
+        nid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_snapshot_perm(uid=uid, nid=nid, perm=perm)
+        nid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_get_snapshot_config(uid=uid,nid=nid))
+
+    def test_authorize_get_snapshot_config_failure_non_existent_uid(self):
+        ''' authorize_get_snapshot_config should fail if nid does not exist '''
+        uid=self.user['uid']
+        nid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_snapshot_perm(uid=uid, nid=nid, perm=perm)
+        uid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_get_snapshot_config(uid=uid,nid=nid))
+
+    def test_authorize_get_snapshot_config_success(self):
+        ''' authorize_get_snapshot_config should succeed '''
+        uid=self.user['uid']
+        nid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_snapshot_perm(uid=uid, nid=nid, perm=perm)
+        self.assertTrue(authorization.authorize_get_snapshot_config(uid=uid,nid=nid))
+
+    def test_authorize_delete_snapshot_failure_non_existent_uid(self):
+        ''' authorize_delete_snapshot should fail if uid does not exist '''
+        uid=self.user['uid']
+        nid=uuid.uuid4()
+        perm=permissions.CAN_DELETE
+        cassapiperm.insert_user_snapshot_perm(uid=uid, nid=nid, perm=perm)
+        uid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_delete_snapshot(uid=uid,nid=nid))
+
+    def test_authorize_delete_snapshot_failure_non_existent_nid(self):
+        ''' authorize_delete_snapshot should fail if nid does not exist '''
+        uid=self.user['uid']
+        nid=uuid.uuid4()
+        perm=permissions.CAN_DELETE
+        cassapiperm.insert_user_snapshot_perm(uid=uid, nid=nid, perm=perm)
+        nid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_delete_snapshot(uid=uid,nid=nid))
+
+    def test_authorize_delete_snapshot_success(self):
+        ''' authorize_delete_snapshot should succeed '''
+        uid=self.user['uid']
+        nid=uuid.uuid4()
+        perm=permissions.CAN_DELETE
+        cassapiperm.insert_user_snapshot_perm(uid=uid, nid=nid, perm=perm)
+        self.assertTrue(authorization.authorize_delete_snapshot(uid=uid,nid=nid))
+

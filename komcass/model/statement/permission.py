@@ -25,6 +25,8 @@ STATEMENTS={80000:'select * from perm_user_agent where uid=?',
             80011:'select * from perm_agent_datasource where aid=? and did=?',
             80012:'select * from perm_agent_datapoint where aid=?',
             80013:'select * from perm_agent_datapoint where aid=? and pid=?',
+            80014:'select * from perm_user_snapshot where uid=?',
+            80015:'select * from perm_user_snapshot where uid=? and nid=?',
             81000:'insert into perm_user_agent (uid,aid,perm) values (?,?,?)',
             81001:'insert into perm_user_datasource (uid,did,perm) values (?,?,?)',
             81002:'insert into perm_user_datapoint (uid,pid,perm) values (?,?,?)',
@@ -32,6 +34,7 @@ STATEMENTS={80000:'select * from perm_user_agent where uid=?',
             81004:'insert into perm_user_dashboard (uid,bid,perm) values (?,?,?)',
             81005:'insert into perm_agent_datasource (aid,did,perm) values (?,?,?)',
             81006:'insert into perm_agent_datapoint (aid,pid,perm) values (?,?,?)',
+            81007:'insert into perm_user_snapshot (uid,nid,perm) values (?,?,?)',
             82000:'delete from perm_user_agent where uid=?',
             82001:'delete from perm_user_agent where uid=? and aid=?',
             82002:'delete from perm_user_datasource where uid=?',
@@ -45,7 +48,9 @@ STATEMENTS={80000:'select * from perm_user_agent where uid=?',
             82010:'delete from perm_agent_datasource where aid=?',
             82011:'delete from perm_agent_datasource where aid=? and did=?',
             82012:'delete from perm_agent_datapoint where aid=?',
-            82013:'delete from perm_agent_datapoint where aid=? and pid=?'
+            82013:'delete from perm_agent_datapoint where aid=? and pid=?',
+            82014:'delete from perm_user_snapshot where uid=?',
+            82015:'delete from perm_user_snapshot where uid=? and nid=?',
            }
 
 # selects
@@ -64,6 +69,8 @@ S_A_PERMAGENTDATASOURCE_B_AID=80010
 S_A_PERMAGENTDATASOURCE_B_AID_DID=80011
 S_A_PERMAGENTDATAPOINT_B_AID=80012
 S_A_PERMAGENTDATAPOINT_B_AID_PID=80013
+S_A_PERMUSERSNAPSHOT_B_UID=80014
+S_A_PERMUSERSNAPSHOT_B_UID_NID=80015
 
 # Inserts
 
@@ -74,6 +81,7 @@ I_A_PERMUSERWIDGET=81003
 I_A_PERMUSERDASHBOARD=81004
 I_A_PERMAGENTDATASOURCE=81005
 I_A_PERMAGENTDATAPOINT=81006
+I_A_PERMUSERSNAPSHOT=81007
 
 # Deletes
 
@@ -91,4 +99,6 @@ D_P_PERMAGENTDATASOURCE_B_AID=82010
 D_P_PERMAGENTDATASOURCE_B_AID_DID=82011
 D_P_PERMAGENTDATAPOINT_B_AID=82012
 D_P_PERMAGENTDATAPOINT_B_AID_PID=82013
+D_P_PERMUSERSNAPSHOT_B_UID=82014
+D_P_PERMUSERSNAPSHOT_B_UID_NID=82015
 

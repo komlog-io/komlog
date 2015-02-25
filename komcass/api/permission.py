@@ -212,3 +212,27 @@ def delete_agent_datapoints_perm(aid):
     connection.session.execute(stmtperm.D_P_PERMAGENTDATAPOINT_B_AID,(aid,))
     return True
 
+def get_user_snapshot_perm(uid, nid):
+    row=connection.session.execute(stmtperm.S_A_PERMUSERSNAPSHOT_B_UID_NID,(uid,nid))
+    return ormperm.UserSnapshotPerm(**row[0]) if row else None
+
+def get_user_snapshots_perm(uid):
+    perms=[]
+    row=connection.session.execute(stmtperm.S_A_PERMUSERSNAPSHOT_B_UID,(uid,))
+    if row:
+        for perm in row:
+            perms.append(ormperm.UserSnapshotPerm(**perm))
+    return perms
+
+def insert_user_snapshot_perm(uid, nid, perm):
+    connection.session.execute(stmtperm.I_A_PERMUSERSNAPSHOT,(uid,nid,perm))
+    return True
+
+def delete_user_snapshot_perm(uid, nid):
+    connection.session.execute(stmtperm.D_P_PERMUSERSNAPSHOT_B_UID_NID,(uid,nid))
+    return True
+
+def delete_user_snapshots_perm(uid):
+    connection.session.execute(stmtperm.D_P_PERMUSERSNAPSHOT_B_UID,(uid,))
+    return True
+

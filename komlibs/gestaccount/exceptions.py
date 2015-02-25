@@ -142,3 +142,11 @@ class DashboardUpdateException(GestaccountException):
     def __init__(self):
         super(DashboardUpdateException,self).__init__()
 
+class SnapshotNotFoundException(GestaccountException):
+    def __init__(self):
+        super(SnapshotNotFoundException,self).__init__()
+
+class SnapshotCreationException(GestaccountException):
+    def __init__(self):
+        super(SnapshotCreationException,self).__init__()
+

@@ -150,3 +150,18 @@ class AuthQuotesCompareTest(unittest.TestCase):
         params={'uid':self.user['uid'], 'did':uuid.uuid4()}
         self.assertFalse(compare.quo_static_datasource_total_datapoints(params))
 
+    def test_quo_static_user_total_snapshots_no_uid(self):
+        ''' quo_static_user_total_snapshots should fail if no uid is passed '''
+        params={}
+        self.assertIsNone(compare.quo_static_user_total_snapshots(params))
+
+    def test_quo_static_user_total_snapshots_non_existent_user(self):
+        ''' quo_static_user_total_snapshots should fail if uid does not exist on system '''
+        params={'uid':uuid.uuid4()}
+        self.assertIsNone(compare.quo_static_user_total_snapshots(params))
+
+    def test_quo_static_user_total_snapshots_failure(self):
+        ''' quo_static_user_total_snapshots should fail because user has no quote info yet '''
+        params={'uid':self.user['uid']}
+        self.assertFalse(compare.quo_static_user_total_snapshots(params))
+

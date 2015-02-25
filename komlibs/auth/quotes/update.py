@@ -1,13 +1,12 @@
-#coding: utf-8
-###############################################################################
-# update.py 
-# 
-# This file implements functions to update quotes
-#
-# @author: jcazor
-# @date: 01/10/2013
-#
-###############################################################################
+'''
+ update.py 
+ 
+ This file implements functions to update quotes
+
+ @author: jcazor
+ @date: 01/10/2013
+
+'''
 
 from komlibs.auth import operations
 from komcass.api import user as cassapiuser
@@ -16,6 +15,7 @@ from komcass.api import datasource as cassapidatasource
 from komcass.api import datapoint as cassapidatapoint
 from komcass.api import widget as cassapiwidget
 from komcass.api import dashboard as cassapidashboard
+from komcass.api import snapshot as cassapisnapshot
 from komcass.api import quote as cassapiquote
 
 update_funcs = {
@@ -25,6 +25,7 @@ update_funcs = {
                 operations.NEW_WIDGET: ['quo_static_user_total_widgets'],
                 operations.NEW_DASHBOARD: ['quo_static_user_total_dashboards'],
                 operations.NEW_WIDGET_SYSTEM: ['quo_static_user_total_widgets'],
+                operations.NEW_SNAPSHOT: ['quo_static_user_total_snapshots'],
 }
 
 def get_update_funcs(operation):
@@ -117,5 +118,14 @@ def quo_static_datasource_total_datapoints(params):
     total_datapoints=cassapidatapoint.get_number_of_datapoints_by_did(did=did)
     if cassapiquote.set_datasource_quote(did=did, quote='quo_static_datasource_total_datapoints', value=str(total_datapoints)):
         return str(total_datapoints)
+    return None
+
+def quo_static_user_total_snapshots(params):
+    if 'uid' not in params:
+        return None
+    uid=params['uid']
+    num_snapshots=cassapisnapshot.get_number_of_snapshots_by_uid(uid=uid)
+    if cassapiquote.set_user_quote(uid=uid, quote='quo_static_user_total_snapshots', value=str(num_snapshots)):
+        return str(num_snapshots)
     return None
 

@@ -26,11 +26,15 @@ class ExceptionHandler(object):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND,error=e.error)
         except gestexcept.DashboardNotFoundException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND,error=e.error)
+        except gestexcept.SnapshotNotFoundException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND,error=e.error)
         except gestexcept.AgentCreationException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
         except gestexcept.WidgetCreationException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
         except gestexcept.DashboardCreationException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
+        except gestexcept.SnapshotCreationException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
         except gestexcept.DashboardUpdateException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)

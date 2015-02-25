@@ -120,7 +120,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         self.assertTrue(update.new_widget(params))
         permission=cassapiperm.get_user_widget_perm(uid=uid, wid=wid)
         self.assertIsNotNone(permission)
-        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
+        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE | permissions.CAN_SNAPSHOT))
 
     def test_new_dashboard_no_uid(self):
         ''' new_dahsboard should fail if no uid is passed'''
@@ -160,7 +160,27 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         self.assertTrue(update.new_widget_system(params))
         permission=cassapiperm.get_user_widget_perm(uid=uid, wid=wid)
         self.assertIsNotNone(permission)
-        self.assertTrue(permission.perm & permissions.CAN_READ)
+        self.assertTrue(permission.perm & (permissions.CAN_READ|permissions.CAN_SNAPSHOT))
+
+    def test_new_snapshot_no_uid(self):
+        ''' new_snapshot should fail if no uid is passed'''
+        params={'nid':uuid.uuid4()}
+        self.assertFalse(update.new_snapshot(params))
+
+    def test_new_snapshot_no_nid(self):
+        ''' new_widget should fail if no wid is passed'''
+        params={'uid':uuid.uuid4()}
+        self.assertFalse(update.new_snapshot(params))
+
+    def test_new_snapshot_success(self):
+        ''' new_snapshot should succeed if permissions can be set'''
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        params={'uid':uid,'nid':nid}
+        self.assertTrue(update.new_snapshot(params))
+        permission=cassapiperm.get_user_snapshot_perm(uid=uid, nid=nid)
+        self.assertIsNotNone(permission)
+        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
 
     def test_delete_user_success(self):
         ''' delete_user should revoke all user and agents permissions '''
@@ -680,4 +700,72 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     self.assertEqual(item.perm, permissions.NONE)
                 else:
                     self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+
+    def NO_test_delete_snapshot_success(self):
+        ''' delete_snapshot should revoke access to the selected snapshot '''
+        uid=uuid.uuid4()
+        selected_wid=None
+        aids=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        perm=permissions.CAN_READ | permissions.CAN_EDIT | permissions.CAN_DELETE
+        for aid in aids:
+            agent=ormagent.Agent(aid=aid, uid=uid, agentname=aid.hex)
+            cassapiagent.insert_agent(agent)
+            cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
+        for aid in aids:
+            for i in range(0,10):
+                did=uuid.uuid4()
+                datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
+                cassapidatasource.insert_datasource(datasource)
+                cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+                cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
+                for i in range(0,10):
+                    pid=uuid.uuid4()
+                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                    cassapidatapoint.insert_datapoint(datapoint)
+                    cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+                    cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
+        for i in range(0,10):
+            wid=uuid.uuid4()
+            if i==0:
+                selected_wid=wid
+            bid=uuid.uuid4()
+            widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=wid.hex, creation_date=uuid.uuid1(), did=uuid.uuid4())
+            cassapiwidget.insert_widget(widget)
+            dashboard=ormdashboard.Dashboard(bid=bid, uid=uid, dashboardname=bid.hex,creation_date=uuid.uuid1())
+            cassapidashboard.insert_dashboard(dashboard)
+            cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
+            cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
+        self.assertTrue(update.delete_widget(wid=selected_wid))
+        perm_list=cassapiperm.get_user_agents_perm(uid=uid)
+        self.assertEqual(len(perm_list),3)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datasources_perm(uid=uid)
+        self.assertEqual(len(perm_list),30)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_datapoints_perm(uid=uid)
+        self.assertEqual(len(perm_list),300)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_widgets_perm(uid=uid)
+        self.assertEqual(len(perm_list),10)
+        for item in perm_list:
+            if item.wid==selected_wid:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        perm_list=cassapiperm.get_user_dashboards_perm(uid=uid)
+        self.assertEqual(len(perm_list),10)
+        for item in perm_list:
+            self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+        for aid in aids:
+            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
+            self.assertEqual(len(perm_list),10)
+            for item in perm_list:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
+            self.assertEqual(len(perm_list),100)
+            for item in perm_list:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
 

@@ -54,3 +54,10 @@ class UserDashboardPerm:
         self.bid=bid
         self.perm=perm
 
+class UserSnapshotPerm:
+    ''' This class is used to access User-Snapshot permission relation '''
+    def __init__(self, uid, nid=None, perm=None):
+        self.uid=uid
+        self.nid=nid
+        self.perm=perm
+

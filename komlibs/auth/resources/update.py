@@ -16,6 +16,7 @@ from komcass.api import datasource as cassapidatasource
 from komcass.api import datapoint as cassapidatapoint
 from komcass.api import widget as cassapiwidget
 from komcass.api import dashboard as cassapidashboard
+from komcass.api import snapshot as cassapisnapshot
 from komcass.api import permission as cassapiperm
 
 update_funcs = {
@@ -25,12 +26,14 @@ update_funcs = {
                 operations.NEW_WIDGET: ['new_widget'],
                 operations.NEW_DASHBOARD: ['new_dashboard'],
                 operations.NEW_WIDGET_SYSTEM: ['new_widget_system'],
+                operations.NEW_SNAPSHOT: ['new_snapshot'],
                 operations.DELETE_USER: ['delete_user'],
                 operations.DELETE_AGENT: ['delete_agent'],
                 operations.DELETE_DATASOURCE: ['delete_datasource'],
                 operations.DELETE_DATAPOINT: ['delete_datapoint'],
                 operations.DELETE_WIDGET: ['delete_widget'],
                 operations.DELETE_DASHBOARD: ['delete_dashboard'],
+                operations.DELETE_SNAPSHOT: ['delete_snapshot'],
 }
 
 def get_update_funcs(operation):
@@ -76,7 +79,7 @@ def new_widget(params):
         return False
     uid=params['uid']
     wid=params['wid']
-    user_perm=permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE
+    user_perm=permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE|permissions.CAN_SNAPSHOT
     if cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=user_perm):
         return True
     return False
@@ -98,8 +101,18 @@ def new_widget_system(params):
         return False
     uid=params['uid']
     wid=params['wid']
-    user_perm=permissions.CAN_READ|permissions.CAN_EDIT
+    user_perm=permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_SNAPSHOT
     if cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=user_perm):
+        return True
+    return False
+
+def new_snapshot(params):
+    if not 'uid' in params or not 'nid' in params:
+        return False
+    uid=params['uid']
+    nid=params['nid']
+    user_perm=permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE
+    if cassapiperm.insert_user_snapshot_perm(uid=uid, nid=nid, perm=user_perm):
         return True
     return False
 
@@ -205,5 +218,13 @@ def delete_dashboard(bid):
     dashboard=cassapidashboard.get_dashboard(bid=bid)
     if dashboard:
         cassapiperm.insert_user_dashboard_perm(uid=dashboard.uid, bid=bid, perm=perm)
+    return True
+
+def delete_snapshot(nid):
+    ''' This function revoke all access to the snapshot passed '''
+    perm=permissions.NONE
+    snapshot=cassapisnapshot.get_snapshot(nid=nid)
+    if snapshot:
+        cassapiperm.insert_user_snapshot_perm(uid=snapshot.uid, nid=nid, perm=perm)
     return True
 

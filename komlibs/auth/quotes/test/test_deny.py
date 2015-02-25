@@ -177,3 +177,21 @@ class AuthQuotesDenyTest(unittest.TestCase):
         flag=False
         self.assertTrue(deny.quo_static_datasource_total_datapoints(params,flag))
 
+    def test_quo_static_user_total_snapshots_no_uid(self):
+        ''' quo_static_user_total_snapshots should fail if no uid is passed '''
+        params={}
+        flag=True
+        self.assertFalse(deny.quo_static_user_total_snapshots(params,flag))
+
+    def test_quo_static_user_total_snapshots_success(self):
+        ''' quo_static_user_total_snapshots should succeed if deny flag is True and UID is set '''
+        params={'uid':self.user['uid']}
+        flag=True
+        self.assertTrue(deny.quo_static_user_total_snapshots(params,flag))
+
+    def test_quo_static_user_total_snapshots_unsuccess(self):
+        ''' quo_static_user_total_snapshots should succeed if deny flag is False and UID is set '''
+        params={'uid':self.user['uid']}
+        flag=False
+        self.assertTrue(deny.quo_static_user_total_snapshots(params,flag))
+

@@ -19,12 +19,14 @@ NEW_DATAPOINT         = 2
 NEW_WIDGET            = 3
 NEW_DASHBOARD         = 4
 NEW_WIDGET_SYSTEM     = 5
-DELETE_USER           = 6
-DELETE_AGENT          = 7
-DELETE_DATASOURCE     = 8
-DELETE_DATAPOINT      = 9
-DELETE_WIDGET         = 10
-DELETE_DASHBOARD      = 11
+NEW_SNAPSHOT          = 6
+DELETE_USER           = 7
+DELETE_AGENT          = 8
+DELETE_DATASOURCE     = 9
+DELETE_DATAPOINT      = 10
+DELETE_WIDGET         = 11
+DELETE_DASHBOARD      = 12
+DELETE_SNAPSHOT       = 13
 
 
 OPAUTHS={NEW_AGENT:operations.NEW_AGENT,
@@ -33,12 +35,14 @@ OPAUTHS={NEW_AGENT:operations.NEW_AGENT,
          NEW_WIDGET:operations.NEW_WIDGET,
          NEW_DASHBOARD:operations.NEW_DASHBOARD,
          NEW_WIDGET_SYSTEM:operations.NEW_WIDGET_SYSTEM,
+         NEW_SNAPSHOT:operations.NEW_SNAPSHOT,
          DELETE_USER: operations.DELETE_USER,
          DELETE_AGENT: operations.DELETE_AGENT,
          DELETE_DATASOURCE: operations.DELETE_DATASOURCE,
          DELETE_DATAPOINT: operations.DELETE_DATAPOINT,
          DELETE_WIDGET: operations.DELETE_WIDGET,
          DELETE_DASHBOARD: operations.DELETE_DASHBOARD,
+         DELETE_SNAPSHOT:operations.DELETE_SNAPSHOT,
          }
 
 class WIFaceOperation:
@@ -99,6 +103,14 @@ class NewWidgetSystemOperation(WIFaceOperation):
         self.params['uid']=uid
         self.params['wid']=wid
 
+class NewSnapshotOperation(WIFaceOperation):
+    def __init__(self, uid, wid, nid):
+        self.oid=NEW_SNAPSHOT
+        self.params={}
+        self.params['uid']=uid
+        self.params['wid']=wid
+        self.params['nid']=nid
+
 class DeleteUserOperation(WIFaceOperation):
     def __init__(self, uid, aids):
         self.oid=DELETE_USER
@@ -143,4 +155,11 @@ class DeleteDashboardOperation(WIFaceOperation):
         self.params={}
         self.params['uid']=uid
         self.params['bid']=bid
+
+class DeleteSnapshotOperation(WIFaceOperation):
+    def __init__(self, uid, nid):
+        self.oid=DELETE_SNAPSHOT
+        self.params={}
+        self.params['uid']=uid
+        self.params['nid']=nid
 

@@ -11,6 +11,7 @@ from komcass.model.schema import quote
 from komcass.model.schema import permission
 from komcass.model.schema import interface
 from komcass.model.schema import segment
+from komcass.model.schema import snapshot
 
 from komcass import connection
 
@@ -59,6 +60,9 @@ def create_schema(session):
             session.execute(query)
         for obj in segment.OBJECTS:
             query=getattr(segment,obj)
+            session.execute(query)
+        for obj in snapshot.OBJECTS:
+            query=getattr(snapshot,obj)
             session.execute(query)
     except Exception as e:
         logger.logger.debug('Error creating schema '+str(e))

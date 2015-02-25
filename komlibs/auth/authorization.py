@@ -13,6 +13,7 @@ from komlibs.auth.resources import authorization as resauth
 from komlibs.auth import exceptions as authexcept
 from komlibs.auth import requests
 from komcass.api import user as cassapiuser
+from komfig import logger
 
 func_requests={
                requests.NEW_AGENT:'authorize_new_agent_creation',
@@ -44,16 +45,22 @@ func_requests={
                requests.ADD_WIDGET_TO_DASHBOARD:'authorize_add_widget_to_dashboard',
                requests.DELETE_WIDGET_FROM_DASHBOARD:'authorize_delete_widget_from_dashboard',
                requests.DELETE_DASHBOARD:'authorize_delete_dashboard',
+               requests.NEW_SNAPSHOT:'authorize_new_snapshot_creation',
+               requests.GET_SNAPSHOT_DATA:'authorize_get_snapshot_data',
+               requests.GET_SNAPSHOT_CONFIG:'authorize_get_snapshot_config',
+               requests.DELETE_SNAPSHOT:'authorize_delete_snapshot',
                }
 
-def authorize_request(request,username,aid=None,did=None,pid=None,gid=None,wid=None,bid=None):
+def authorize_request(request,username,aid=None,did=None,pid=None,gid=None,wid=None,bid=None,nid=None):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise authexcept.UserNotFoundException()
-    params={'aid':aid,'did':did,'uid':user.uid,'pid':pid,'wid':wid,'bid':bid}
+    params={'aid':aid,'did':did,'uid':user.uid,'pid':pid,'wid':wid,'bid':bid,'nid':nid}
     try:
         getattr(sys.modules[__name__],func_requests[request])(params)
-    except KeyError:
+    except KeyError as e:
+        logger.logger.error('REQUEST NOT FOUND: '+str(request))
+        logger.logger.debug(str(e))
         raise authexcept.RequestNotFoundException()
 
 def authorize_new_agent_creation(params):
@@ -255,5 +262,32 @@ def authorize_delete_datapoint_from_widget(params):
     wid=params['wid']
     if not resauth.authorize_delete_datapoint_from_widget(uid=uid, wid=wid) \
         or not quoauth.authorize_delete_datapoint_from_widget(uid=uid, wid=wid):
+        raise authexcept.AuthorizationException()
+
+def authorize_new_snapshot_creation(params):
+    uid=params['uid']
+    wid=params['wid']
+    if not quoauth.authorize_new_snapshot(uid=uid) \
+        or not resauth.authorize_new_snapshot(uid=uid,wid=wid):
+        raise authexcept.AuthorizationException()
+
+def authorize_get_snapshot_data(params):
+    uid=params['uid']
+    nid=params['nid']
+    if not quoauth.authorize_get_snapshot_data(uid,nid=nid) \
+        or not resauth.authorize_get_snapshot_data(uid,nid=nid):
+        raise authexcept.AuthorizationException()
+
+def authorize_get_snapshot_config(params):
+    uid=params['uid']
+    nid=params['nid']
+    if not quoauth.authorize_get_snapshot_config(uid=uid,nid=nid) \
+        or not resauth.authorize_get_snapshot_config(uid=uid,nid=nid):
+        raise authexcept.AuthorizationException()
+
+def authorize_delete_snapshot(params):
+    uid=params['uid']
+    nid=params['nid']
+    if not resauth.authorize_delete_snapshot(uid,nid):
         raise authexcept.AuthorizationException()
 

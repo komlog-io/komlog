@@ -8,6 +8,7 @@ OBJECTS=['PERM_USER_AGENT',
          'PERM_USER_DATAPOINT',
          'PERM_USER_WIDGET',
          'PERM_USER_DASHBOARD',
+         'PERM_USER_SNAPSHOT',
          'PERM_AGENT_DATASOURCE',
          'PERM_AGENT_DATAPOINT',
         ]
@@ -54,6 +55,15 @@ PERM_USER_DASHBOARD='''
             bid uuid,
             perm int,
             PRIMARY KEY (uid,bid)
+        );
+    '''
+
+PERM_USER_SNAPSHOT='''
+        CREATE TABLE perm_user_snapshot (
+            uid uuid,
+            nid uuid,
+            perm int,
+            PRIMARY KEY (uid,nid)
         );
     '''
 

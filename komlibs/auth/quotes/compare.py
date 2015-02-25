@@ -153,3 +153,20 @@ def quo_static_datasource_total_datapoints(params):
                 return True
     return False
 
+def quo_static_user_total_snapshots(params):
+    if 'uid' not in params:
+        return None
+    uid=params['uid']
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        return None
+    segment=cassapisegment.get_user_segment(sid=user.segment)
+    userquo=cassapiquote.get_user_quotes(uid=uid)
+    if userquo and segment:
+        quote=userquo.get_quote('quo_static_user_total_snapshots')
+        limit=segment.get_param('quo_static_user_max_snapshots')
+        if limit is not None and quote is not None:
+            if int(quote)>=int(limit)-1:
+                return True
+    return False
+

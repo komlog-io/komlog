@@ -391,6 +391,23 @@ class WidgetDatapointsHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
+class WidgetSnapshotsHandler(tornado.web.RequestHandler):
+    
+    @auth.userauthenticated
+    def post(self, wid):
+        try:
+            data=json_decode(self.request.body)
+            its=data['its'] if 'its' in data else None
+            ets=data['ets'] if 'ets' in data else None
+            seq=data['seq'] if 'seq' in data else None
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=snapshot.new_snapshot_request(username=self.user, wid=wid, its=its, ets=ets, seq=seq)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
+
 class DashboardsHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
@@ -439,6 +456,20 @@ class DashboardWidgetsHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
+class SnapshotConfigHandler(tornado.web.RequestHandler):
+    
+    @auth.userauthenticated
+    def get(self, nid):
+        response=snapshot.get_snapshot_config_request(username=self.user, nid=nid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def delete(self, nid):
+        response=snapshot.delete_snapshot_request(username=self.user, nid=nid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
 UUID4_REGEX='[0-9a-f]{32}'
 HANDLERS = [(r'/login/?', LoginHandler),
             (r'/logout/?', LogoutHandler),
@@ -453,14 +484,16 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/etc/wg/?', WidgetsHandler),
             (r'/etc/wg/('+UUID4_REGEX+')', WidgetConfigHandler),
             (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/dp/(?<pid>'+UUID4_REGEX+')', WidgetDatapointsHandler),
+            (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/sn/?', WidgetSnapshotsHandler),
             (r'/etc/db/?', DashboardsHandler),
             (r'/etc/db/('+UUID4_REGEX+')', DashboardConfigHandler),
             (r'/etc/db/(?P<bid>'+UUID4_REGEX+')/wg/(?P<wid>'+UUID4_REGEX+')', DashboardWidgetsHandler),
+            (r'/etc/sn/('+UUID4_REGEX+')', SnapshotConfigHandler),
             (r'/etc/usr/confirm/', UserConfirmationHandler),
             (r'/etc/usr/?', UsersHandler),
             (r'/var/ds/('+UUID4_REGEX+')', DatasourceDataHandler),
             (r'/var/dp/('+UUID4_REGEX+')', DatapointDataHandler),
             (r'/home/config', UserConfigHandler),
-            (r'/home', UserHomeHandler)
+            (r'/home', UserHomeHandler),
 ]
 

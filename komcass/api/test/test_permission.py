@@ -777,3 +777,113 @@ class KomcassApiPermissionTest(unittest.TestCase):
         self.assertTrue(permissionapi.delete_agent_datapoints_perm(aid=aid))
         self.assertEqual(permissionapi.get_agent_datapoints_perm(aid=aid), [])
 
+    def test_get_user_snapshot_perm_non_existing_nid(self):
+        ''' get_user_snapshot_perm should return None if nid does not exist '''
+        uid=uuid.uuid4()
+        nid1=uuid.uuid4()
+        nid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_snapshot_perm(uid=uid, nid=nid1, perm=perm))
+        self.assertIsNone(permissionapi.get_user_snapshot_perm(uid=uid, nid=nid2))
+
+    def test_get_user_snapshot_perm_non_existing_uid(self):
+        ''' get_user_snapshot_perm should return None if uid does not exist '''
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        self.assertIsNone(permissionapi.get_user_snapshot_perm(uid=uid, nid=nid))
+
+    def test_get_user_snapshot_perm_success(self):
+        ''' get_user_snapshot_perm should return a UserSnapshotPerm object if perm exists '''
+        uid=uuid.uuid4()
+        nid1=uuid.uuid4()
+        nid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_snapshot_perm(uid=uid, nid=nid1, perm=perm))
+        self.assertTrue(permissionapi.insert_user_snapshot_perm(uid=uid, nid=nid2, perm=perm))
+        perm_db=permissionapi.get_user_snapshot_perm(uid=uid, nid=nid2)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserSnapshotPerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(nid2, perm_db.nid)
+        self.assertEqual(perm, perm_db.perm)
+        perm_db=permissionapi.get_user_snapshot_perm(uid=uid, nid=nid1)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserSnapshotPerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(nid1, perm_db.nid)
+        self.assertEqual(perm, perm_db.perm)
+
+    def test_get_user_snapshots_perm_non_existing_uid(self):
+        ''' get_user_snapshots_perm should return an empty list if uid does not exist '''
+        uid=uuid.uuid4()
+        perms=permissionapi.get_user_snapshots_perm(uid=uid)
+        self.assertEqual(perms, [])
+
+    def test_get_user_snapshots_perm_success(self):
+        ''' get_user_snapshots_perm should return a UserSnapshotPerm objects list if uid has snapshots associated '''
+        uid=uuid.uuid4()
+        nid1=uuid.uuid4()
+        nid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_snapshot_perm(uid=uid, nid=nid1, perm=perm))
+        self.assertTrue(permissionapi.insert_user_snapshot_perm(uid=uid, nid=nid2, perm=perm))
+        perms=permissionapi.get_user_snapshots_perm(uid=uid)
+        self.assertTrue(isinstance(perms, list))
+        self.assertEqual(len(perms), 2)
+        self.assertTrue(isinstance(perms[0], ormpermission.UserSnapshotPerm))
+        self.assertTrue(isinstance(perms[1], ormpermission.UserSnapshotPerm))
+
+    def test_insert_user_snapshot_perm_success(self):
+        ''' insert_user_snapshot_perm should return True '''
+        uid=uuid.uuid4()
+        nid1=uuid.uuid4()
+        nid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_snapshot_perm(uid=uid, nid=nid1, perm=perm))
+        self.assertTrue(permissionapi.insert_user_snapshot_perm(uid=uid, nid=nid2, perm=perm))
+        perm_db=permissionapi.get_user_snapshot_perm(uid=uid, nid=nid1)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserSnapshotPerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(nid1, perm_db.nid)
+        self.assertEqual(perm, perm_db.perm)
+        perm_db=permissionapi.get_user_snapshot_perm(uid=uid, nid=nid2)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserSnapshotPerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(nid2, perm_db.nid)
+        self.assertEqual(perm, perm_db.perm)
+
+    def test_delete_user_snapshot_perm_success(self):
+        ''' delete_user_snapshot_perm should return True and delete perm successfully '''
+        uid=uuid.uuid4()
+        nid1=uuid.uuid4()
+        nid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_snapshot_perm(uid=uid, nid=nid1, perm=perm))
+        self.assertTrue(permissionapi.insert_user_snapshot_perm(uid=uid, nid=nid2, perm=perm))
+        perm_db=permissionapi.get_user_snapshot_perm(uid=uid, nid=nid1)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserSnapshotPerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(nid1, perm_db.nid)
+        self.assertEqual(perm, perm_db.perm)
+        perm_db=permissionapi.get_user_snapshot_perm(uid=uid, nid=nid2)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserSnapshotPerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(nid2, perm_db.nid)
+        self.assertEqual(perm, perm_db.perm)
+        self.assertTrue(permissionapi.delete_user_snapshot_perm(uid=uid, nid=nid1))
+        self.assertIsNone(permissionapi.get_user_snapshot_perm(uid=uid, nid=nid1))
+        self.assertTrue(permissionapi.delete_user_snapshot_perm(uid=uid, nid=nid2))
+        self.assertIsNone(permissionapi.get_user_snapshot_perm(uid=uid, nid=nid2))
+
+    def test_delete_user_snapshots_perm_success(self):
+        ''' delete_user_snapshots_perm should return True and delete perms successfully '''
+        uid=uuid.uuid4()
+        nid1=uuid.uuid4()
+        nid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_snapshot_perm(uid=uid, nid=nid1, perm=perm))
+        self.assertTrue(permissionapi.insert_user_snapshot_perm(uid=uid, nid=nid2, perm=perm))
+        perms=permissionapi.get_user_snapshots_perm(uid=uid)
+        self.assertTrue(isinstance(perms, list))
+        self.assertEqual(len(perms), 2)
+        self.assertTrue(permissionapi.delete_user_snapshots_perm(uid=uid))
+        self.assertEqual(permissionapi.get_user_snapshots_perm(uid=uid), [])
+

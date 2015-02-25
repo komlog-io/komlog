@@ -135,3 +135,41 @@ def authorize_delete_datapoint_from_widget(uid, wid):
     uwperm=cassapiperm.get_user_widget_perm(uid=uid, wid=wid)
     return True if uwperm and uwperm.perm & permissions.CAN_EDIT else False
 
+def authorize_new_snapshot(uid,wid):
+    ''' check that user has permission over widget '''
+    uwperm=cassapiperm.get_user_widget_perm(uid=uid, wid=wid)
+    return True if uwperm and uwperm.perm & permissions.CAN_SNAPSHOT else False
+
+def authorize_get_snapshot_data(uid,nid):
+    uperm=cassapiperm.get_user_snapshot_perm(uid=uid,nid=nid)
+    if uperm and uperm.perm & permissions.CAN_READ:
+        return True
+    #else:
+    #    for cid in cids:
+    #        cperm=cassapiperm.get_circle_snapshot_perm(cid=cid, nid=nid)
+    #        if cperm and cperm & permissions.CAN_READ:
+    #            return True
+    return False
+
+def authorize_get_snapshot_config(uid,nid):
+    uperm=cassapiperm.get_user_snapshot_perm(uid=uid,nid=nid)
+    if uperm and uperm.perm & permissions.CAN_READ:
+        return True
+    #else:
+    #    for cid in cids:
+    #        cperm=cassapiperm.get_circle_snapshot_perm(cid=cid, nid=nid)
+    #        if cperm and cperm & permissions.CAN_READ:
+    #            return True
+    return False
+
+def authorize_delete_snapshot(uid,nid):
+    uperm=cassapiperm.get_user_snapshot_perm(uid=uid,nid=nid)
+    if uperm and uperm.perm & permissions.CAN_DELETE:
+        return True
+    #else:
+    #    for cid in cids:
+    #        cperm=cassapiperm.get_circle_snapshot_perm(cid=cid, nid=nid)
+    #        if cperm and cperm & permissions.CAN_DELETE:
+    #            return True
+    return False
+

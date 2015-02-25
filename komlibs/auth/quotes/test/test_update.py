@@ -125,3 +125,16 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         datasource_quotes=cassapiquote.get_datasource_quotes(did=did)
         self.assertEqual(datasource_quotes.get_quote('quo_static_datasource_total_datapoints'),result)
 
+    def test_quo_static_user_total_snapshots_no_uid(self):
+        ''' quo_static_user_total_snapshots should fail if no uid is passed '''
+        params={}
+        self.assertIsNone(update.quo_static_user_total_snapshots(params))
+
+    def test_quo_static_user_total_snapshots_success(self):
+        ''' quo_static_user_total_snapshots should succeed if UID is set'''
+        uid=uuid.uuid4()
+        params={'uid':uid}
+        result=update.quo_static_user_total_snapshots(params)
+        user_quotes=cassapiquote.get_user_quotes(uid=uid)
+        self.assertEqual(user_quotes.get_quote('quo_static_user_total_snapshots'),result)
+

@@ -22,6 +22,7 @@ interfaces={'User_AgentCreation':'/user/agentcreation/',
             'Datasource_DatapointCreation':'/ds/dpcreation/',
             'User_WidgetCreation':'/user/wgcreation/',
             'User_DashboardCreation':'/user/dbcreation/',
+            'User_SnapshotCreation':'/user/snapshotcreation/',
            }
 
 DEFAULT_PERM='A'
@@ -126,6 +127,19 @@ def quo_static_datasource_total_datapoints(params,deny):
     did=params['did']
     uid=params['uid']
     iface=interfaces['Datasource_DatapointCreation']+did.hex
+    if deny:
+        if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
+            return True
+    else:
+        if cassapiiface.delete_user_iface_deny(uid=uid, iface=iface):
+            return True
+    return False
+
+def quo_static_user_total_snapshots(params,deny):
+    if 'uid' not in params:
+        return False
+    uid=params['uid']
+    iface=interfaces['User_SnapshotCreation']
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
             return True

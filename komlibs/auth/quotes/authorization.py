@@ -128,3 +128,19 @@ def authorize_delete_datapoint_from_widget(uid, wid):
     ''' Not quotes authorization needed '''
     return True
 
+def authorize_new_snapshot(uid):
+    interfaces=[]
+    interfaces.append(deny.interfaces['User_SnapshotCreation'])
+    for iface in interfaces:
+        if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
+            return False
+    return True
+
+def authorize_get_snapshot_data(uid,nid):
+    ''' Not quotes authorization needed '''
+    return True
+
+def authorize_get_snapshot_config(uid,nid):
+    ''' Not quotes authorization needed '''
+    return True
+

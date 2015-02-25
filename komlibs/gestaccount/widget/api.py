@@ -14,6 +14,7 @@ from komcass.api import user as cassapiuser
 from komcass.api import datasource as cassapidatasource
 from komcass.api import datapoint as cassapidatapoint
 from komcass.api import dashboard as cassapidashboard
+from komcass.api import snapshot as cassapisnapshot
 from komcass.model.orm import widget as ormwidget
 from komlibs.gestaccount.widget import types
 from komlibs.gestaccount import exceptions
@@ -90,6 +91,9 @@ def delete_widget(wid):
     bids=cassapidashboard.get_dashboards_bids(uid=widget.uid)
     for bid in bids:
         cassapidashboard.delete_widget_from_dashboard(bid=bid, wid=wid)
+    nids=cassapisnapshot.get_snapshots_nids(uid=widget.uid)
+    for nid in nids:
+        cassapisnapshot.delete_snapshot(nid=nid)
     cassapiwidget.delete_widget(wid=wid)
     return True
 
