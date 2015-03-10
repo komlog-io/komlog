@@ -4,6 +4,7 @@ from komfig import logger
 
 MODULES = [
     'komlibs.general.validation.test.test_arguments.GeneralValidationArgumentsTest',
+    'komlibs.graph.test.test_api.GraphApiTest',
     'komlibs.gestaccount.user.test.test_userapi.GestaccountUserApiTest',
     'komlibs.gestaccount.agent.test.test_agentapi.GestaccountAgentApiTest',
     'komlibs.gestaccount.datasource.test.test_datasourceapi.GestaccountDatasourceApiTest',
@@ -18,6 +19,8 @@ MODULES = [
     'komlibs.auth.quotes.test.test_update.AuthQuotesUpdateTest',
     'komlibs.auth.resources.test.test_authorization.AuthResourcesAuthorizationTest',
     'komlibs.auth.resources.test.test_update.AuthResourcesUpdateTest',
+    'komlibs.auth.shared.test.test_authorization.AuthSharedAuthorizationTest',
+    'komlibs.auth.shared.test.test_update.AuthSharedUpdateTest',
     'komfs.test.test_api.KomfsApiTest',
     'komcass.api.test.test_user.KomcassApiUserTest',
     'komcass.api.test.test_agent.KomcassApiAgentTest',
@@ -30,6 +33,7 @@ MODULES = [
     'komcass.api.test.test_quote.KomcassApiQuoteTest',
     'komcass.api.test.test_segment.KomcassApiSegmentTest',
     'komcass.api.test.test_snapshot.KomcassApiSnapshotTest',
+    'komcass.api.test.test_graph.KomcassApiGraphTest',
     'komlibs.interface.web.api.test.test_user.InterfaceWebApiUserTest',
     'komlibs.interface.web.api.test.test_agent.InterfaceWebApiAgentTest',
     'komlibs.interface.web.api.test.test_datasource.InterfaceWebApiDatasourceTest',

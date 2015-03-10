@@ -141,7 +141,7 @@ def _delete_snapshot_ds(nid):
     return True
 
 def _insert_snapshot_ds(snapshot):
-    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTDS,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.did))
+    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTDS,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.did,snapshot.shared_with_uids))
     return True
 
 def _delete_snapshot_dp(nid):
@@ -149,7 +149,7 @@ def _delete_snapshot_dp(nid):
     return True
 
 def _insert_snapshot_dp(snapshot):
-    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTDP,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.pid))
+    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTDP,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.pid,snapshot.shared_with_uids))
     return True
 
 def _delete_snapshot_histogram(nid):
@@ -157,7 +157,7 @@ def _delete_snapshot_histogram(nid):
     return True
 
 def _insert_snapshot_histogram(snapshot):
-    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTHISTOGRAM,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.datapoints,snapshot.colors))
+    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTHISTOGRAM,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.datapoints,snapshot.colors,snapshot.shared_with_uids))
     return True
 
 def _delete_snapshot_linegraph(nid):
@@ -165,7 +165,7 @@ def _delete_snapshot_linegraph(nid):
     return True
 
 def _insert_snapshot_linegraph(snapshot):
-    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTLINEGRAPH,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.datapoints,snapshot.colors))
+    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTLINEGRAPH,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.datapoints,snapshot.colors,snapshot.shared_with_uids))
     return True
 
 def _delete_snapshot_table(nid):
@@ -173,6 +173,6 @@ def _delete_snapshot_table(nid):
     return True
 
 def _insert_snapshot_table(snapshot):
-    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTTABLE,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.datapoints,snapshot.colors))
+    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTTABLE,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.datapoints,snapshot.colors,snapshot.shared_with_uids))
     return True
 

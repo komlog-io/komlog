@@ -62,7 +62,7 @@ def get_last_processed_datasource_data(did):
                 dsdtps.append({'pid':pid,'position':pos})
         data={}
         data['did']=did
-        data['last_processed']=last_mapped
+        data['date']=last_mapped
         data['variables']=[(pos,length) for pos,length in dsvars.items()] if dsvars else None
         data['content']=datasource_data.content
         data['datapoints']=dsdtps

@@ -10,6 +10,7 @@ This file is the entry point of authorization mechanisms
 import sys
 from komlibs.auth.quotes import authorization as quoauth
 from komlibs.auth.resources import authorization as resauth
+from komlibs.auth.shared import authorization as sharedauth
 from komlibs.auth import exceptions as authexcept
 from komlibs.auth import requests
 from komcass.api import user as cassapiuser
@@ -51,11 +52,11 @@ func_requests={
                requests.DELETE_SNAPSHOT:'authorize_delete_snapshot',
                }
 
-def authorize_request(request,username,aid=None,did=None,pid=None,gid=None,wid=None,bid=None,nid=None):
+def authorize_request(request,username,aid=None,did=None,pid=None,gid=None,wid=None,bid=None,nid=None,ii=None,ie=None):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise authexcept.UserNotFoundException()
-    params={'aid':aid,'did':did,'uid':user.uid,'pid':pid,'wid':wid,'bid':bid,'nid':nid}
+    params={'aid':aid,'did':did,'uid':user.uid,'pid':pid,'wid':wid,'bid':bid,'nid':nid,'ii':ii,'ie':ie}
     try:
         getattr(sys.modules[__name__],func_requests[request])(params)
     except KeyError as e:
@@ -79,9 +80,15 @@ def authorize_get_agent_config(params):
 def authorize_get_datasource_data(params):
     uid=params['uid']
     did=params['did']
+    ii=params['ii']
+    ie=params['ie']
     if not quoauth.authorize_get_datasource_data(uid=uid,did=did) \
         or not resauth.authorize_get_datasource_data(uid=uid,did=did):
-        raise authexcept.AuthorizationException()
+        if ii and ie:
+            if not sharedauth.authorize_get_datasource_data(uid=uid, did=did, ii=ii, ie=ie):
+                raise authexcept.AuthorizationException()
+        else:
+            raise authexcept.AuthorizationException()
 
 def authorize_post_datasource_data(params):
     uid=params['uid']
@@ -94,9 +101,10 @@ def authorize_post_datasource_data(params):
 def authorize_get_datasource_config(params):
     uid=params['uid']
     did=params['did']
-    if not quoauth.authorize_get_datasource_config(uid=uid,did=did) \
-        or not resauth.authorize_get_datasource_config(uid=uid,did=did):
-        raise authexcept.AuthorizationException()
+    if not quoauth.authorize_get_datasource_config(uid=uid,did=did)\
+        or not (resauth.authorize_get_datasource_config(uid=uid,did=did)\
+        or sharedauth.authorize_get_datasource_config(uid=uid, did=did)):
+            raise authexcept.AuthorizationException()
 
 def authorize_datasource_update_configuration(params):
     uid=params['uid']
@@ -114,16 +122,23 @@ def authorize_new_datasource_creation(params):
 def authorize_get_datapoint_data(params):
     uid=params['uid']
     pid=params['pid']
+    ii=params['ii']
+    ie=params['ie']
     if not quoauth.authorize_get_datapoint_data(uid,pid=pid) \
         or not resauth.authorize_get_datapoint_data(uid,pid=pid):
-        raise authexcept.AuthorizationException()
+        if ii and ie:
+            if not sharedauth.authorize_get_datapoint_data(uid=uid, pid=pid, ii=ii, ie=ie):
+                raise authexcept.AuthorizationException()
+        else:
+            raise authexcept.AuthorizationException()
 
 def authorize_get_datapoint_config(params):
     uid=params['uid']
     pid=params['pid']
-    if not quoauth.authorize_get_datapoint_config(uid=uid,pid=pid) \
-        or not resauth.authorize_get_datapoint_config(uid=uid,pid=pid):
-        raise authexcept.AuthorizationException()
+    if not quoauth.authorize_get_datapoint_config(uid=uid,pid=pid)\
+        or not (resauth.authorize_get_datapoint_config(uid=uid,pid=pid)\
+        or sharedauth.authorize_get_datapoint_config(uid=uid, pid=pid)):
+            raise authexcept.AuthorizationException()
 
 def authorize_new_datapoint_creation(params):
     uid=params['uid']
@@ -281,9 +296,10 @@ def authorize_get_snapshot_data(params):
 def authorize_get_snapshot_config(params):
     uid=params['uid']
     nid=params['nid']
-    if not quoauth.authorize_get_snapshot_config(uid=uid,nid=nid) \
-        or not resauth.authorize_get_snapshot_config(uid=uid,nid=nid):
-        raise authexcept.AuthorizationException()
+    if not quoauth.authorize_get_snapshot_config(uid=uid,nid=nid)\
+        or not (resauth.authorize_get_snapshot_config(uid=uid,nid=nid)\
+        or sharedauth.authorize_get_snapshot_config(uid=uid, nid=nid)):
+            raise authexcept.AuthorizationException()
 
 def authorize_delete_snapshot(params):
     uid=params['uid']

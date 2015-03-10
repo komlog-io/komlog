@@ -27,6 +27,7 @@ POS_VAR_MESSAGE='POSVAR'
 NEW_USR_NOTIF_MESSAGE='NEWUSR'
 UPDATE_QUOTES_MESSAGE='UPDQUO'
 RESOURCE_AUTHORIZATION_UPDATE_MESSAGE='RESAUTH'
+SHARED_AUTHORIZATION_UPDATE_MESSAGE='SHAREDAUTH'
 NEW_DP_WIDGET_MESSAGE='NEWDPW'
 NEW_DS_WIDGET_MESSAGE='NEWDSW'
 DELETE_USER_MESSAGE='DELUSER'
@@ -49,6 +50,7 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           NEW_USR_NOTIF_MESSAGE:'NewUserNotificationMessage',
                           UPDATE_QUOTES_MESSAGE:'UpdateQuotesMessage',
                           RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:'ResourceAuthorizationUpdateMessage',
+                          SHARED_AUTHORIZATION_UPDATE_MESSAGE:'SharedAuthorizationUpdateMessage',
                           NEW_DP_WIDGET_MESSAGE:'NewDPWidgetMessage',
                           NEW_DS_WIDGET_MESSAGE:'NewDSWidgetMessage',
                           DELETE_USER_MESSAGE:'DeleteUserMessage',
@@ -268,6 +270,39 @@ class ResourceAuthorizationUpdateMessage:
             if not args.is_valid_int(operation) or not args.is_valid_dict(params):
                 raise exceptions.BadParametersException()
             self.type=RESOURCE_AUTHORIZATION_UPDATE_MESSAGE
+            self.operation=operation
+            self.params=params
+            str_params={}
+            for key,value in params.items():
+                if isinstance(value,list):
+                    tmp_list=[]
+                    for item in value:
+                        tmp_list.append(item.hex) if args.is_valid_uuid(item) or args.is_valid_date(item) else item
+                    str_params[key]=tmp_list
+                else:
+                    str_params[key]=value.hex if args.is_valid_uuid(value) or args.is_valid_date(value) else value
+            self.serialized_message='|'.join((self.type,str(self.operation),json.dumps(str_params)))
+
+class SharedAuthorizationUpdateMessage:
+    def __init__(self, serialized_message=None, operation=None, params=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,operation,str_params = self.serialized_message.split('|')
+            self.type=mtype
+            self.operation=int(operation)
+            self.params={}
+            for key,value in json.loads(str_params).items():
+                if isinstance(value,list):
+                    tmp_list=[]
+                    for item in value:
+                        tmp_list.append(uuid.UUID(item)) if args.is_valid_hex_uuid(item) or args.is_valid_hex_date(item) else item
+                    self.params[key]=tmp_list
+                else:
+                    self.params[key]=uuid.UUID(value) if args.is_valid_hex_uuid(value) or args.is_valid_hex_date(value) else value
+        else:
+            if not args.is_valid_int(operation) or not args.is_valid_dict(params):
+                raise exceptions.BadParametersException()
+            self.type=SHARED_AUTHORIZATION_UPDATE_MESSAGE
             self.operation=operation
             self.params=params
             str_params={}

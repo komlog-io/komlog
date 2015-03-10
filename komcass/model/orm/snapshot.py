@@ -13,27 +13,29 @@ class Snapshot(object):
         self.type=type
 
 class SnapshotDs(Snapshot):
-    def __init__(self,nid,uid,wid,interval_init,interval_end,widgetname,creation_date,did):
+    def __init__(self,nid,uid,wid,interval_init,interval_end,widgetname,creation_date,did,shared_with_uids):
         self.wid=wid
         self.interval_init=interval_init
         self.interval_end=interval_end
         self.widgetname=widgetname
         self.creation_date=creation_date
         self.did=did
+        self.shared_with_uids=shared_with_uids
         super(SnapshotDs,self).__init__(nid,uid,types.DATASOURCE)
 
 class SnapshotDp(Snapshot):
-    def __init__(self,nid,uid,wid,interval_init, interval_end, widgetname,creation_date,pid):
+    def __init__(self,nid,uid,wid,interval_init, interval_end, widgetname,creation_date,pid,shared_with_uids):
         self.wid=wid
         self.interval_init=interval_init
         self.interval_end=interval_end
         self.widgetname=widgetname
         self.creation_date=creation_date
         self.pid=pid
+        self.shared_with_uids=shared_with_uids
         super(SnapshotDp,self).__init__(nid,uid,types.DATAPOINT)
 
 class SnapshotHistogram(Snapshot):
-    def __init__(self,nid,uid,wid,interval_init, interval_end, widgetname,creation_date,datapoints,colors):
+    def __init__(self,nid,uid,wid,interval_init, interval_end, widgetname,creation_date,datapoints,colors,shared_with_uids):
         self.wid=wid
         self.interval_init=interval_init
         self.interval_end=interval_end
@@ -41,10 +43,11 @@ class SnapshotHistogram(Snapshot):
         self.creation_date=creation_date
         self.datapoints=datapoints
         self.colors=colors
+        self.shared_with_uids=shared_with_uids
         super(SnapshotHistogram,self).__init__(nid,uid,types.HISTOGRAM)
 
 class SnapshotLinegraph(Snapshot):
-    def __init__(self,nid,uid,wid,interval_init, interval_end, widgetname,creation_date,datapoints,colors):
+    def __init__(self,nid,uid,wid,interval_init, interval_end, widgetname,creation_date,datapoints,colors,shared_with_uids):
         self.wid=wid
         self.interval_init=interval_init
         self.interval_end=interval_end
@@ -52,10 +55,11 @@ class SnapshotLinegraph(Snapshot):
         self.creation_date=creation_date
         self.datapoints=datapoints
         self.colors=colors
+        self.shared_with_uids=shared_with_uids
         super(SnapshotLinegraph,self).__init__(nid,uid,types.LINEGRAPH)
 
 class SnapshotTable(Snapshot):
-    def __init__(self,nid,uid,wid,interval_init, interval_end, widgetname,creation_date,datapoints,colors):
+    def __init__(self,nid,uid,wid,interval_init, interval_end, widgetname,creation_date,datapoints,colors,shared_with_uids):
         self.wid=wid
         self.interval_init=interval_init
         self.interval_end=interval_end
@@ -63,5 +67,6 @@ class SnapshotTable(Snapshot):
         self.creation_date=creation_date
         self.datapoints=datapoints
         self.colors=colors
+        self.shared_with_uids=shared_with_uids
         super(SnapshotTable,self).__init__(nid,uid,types.TABLE)
 

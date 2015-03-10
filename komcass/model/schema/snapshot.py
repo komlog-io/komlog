@@ -42,6 +42,7 @@ MST_SNAPSHOTDS='''
             widgetname text,
             creation_date timeuuid,
             did uuid,
+            shared_with_uids set<uuid>,
             PRIMARY KEY (nid)
         );
     '''
@@ -60,6 +61,7 @@ MST_SNAPSHOTDP='''
             widgetname text,
             creation_date timeuuid,
             pid uuid,
+            shared_with_uids set<uuid>,
             PRIMARY KEY (nid)
         );
     '''
@@ -79,6 +81,7 @@ MST_SNAPSHOT_HISTOGRAM='''
             creation_date timeuuid,
             datapoints set<uuid>,
             colors map<uuid,text>,
+            shared_with_uids set<uuid>,
             PRIMARY KEY (nid)
         );
     '''
@@ -98,6 +101,7 @@ MST_SNAPSHOT_LINEGRAPH='''
             creation_date timeuuid,
             datapoints set<uuid>,
             colors map<uuid,text>,
+            shared_with_uids set<uuid>,
             PRIMARY KEY (nid)
         );
     '''
@@ -117,6 +121,7 @@ MST_SNAPSHOT_TABLE='''
             creation_date timeuuid,
             datapoints set<uuid>,
             colors map<uuid,text>,
+            shared_with_uids set<uuid>,
             PRIMARY KEY (nid)
         );
     '''

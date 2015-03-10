@@ -76,9 +76,15 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def get(self,did):
-        response=datasource.get_datasource_data_request(username=self.user, did=did)
-        self.set_status(response.status)
-        self.write(json_encode(response.data))
+        try:
+            seq=self.get_argument('seq',default=None)
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=datasource.get_datasource_data_request(username=self.user, did=did, seq=seq)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
     @auth.agentauthenticated
     def post(self,did):
@@ -184,11 +190,13 @@ class DatapointDataHandler(tornado.web.RequestHandler):
         try:
             end_date=self.get_argument('ed',default=None) #ed : end date
             start_date=self.get_argument('sd',default=None) #sd : start date
+            iseq=self.get_argument('iseq',default=None)
+            eseq=self.get_argument('eseq',default=None)
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            response=datapoint.get_datapoint_data_request(username=self.user, pid=pid, start_date=start_date, end_date=end_date)
+            response=datapoint.get_datapoint_data_request(username=self.user, pid=pid, start_date=start_date, end_date=end_date,iseq=iseq,eseq=eseq)
             self.set_status(response.status)
             self.write(json_encode(response.data))
 
@@ -400,11 +408,12 @@ class WidgetSnapshotsHandler(tornado.web.RequestHandler):
             its=data['its'] if 'its' in data else None
             ets=data['ets'] if 'ets' in data else None
             seq=data['seq'] if 'seq' in data else None
+            user_list=data['ul']
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            response=snapshot.new_snapshot_request(username=self.user, wid=wid, its=its, ets=ets, seq=seq)
+            response=snapshot.new_snapshot_request(username=self.user, wid=wid, user_list=user_list, its=its, ets=ets, seq=seq)
             self.set_status(response.status)
             self.write(json_encode(response.data))
 

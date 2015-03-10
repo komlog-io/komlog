@@ -10,7 +10,6 @@ This library implements authorization mechanisms to Komlog interfaces and object
 
 from komlibs.auth import permissions
 from komcass.api import permission as cassapiperm
-from komfig import logger
 
 def authorize_get_agent_config(uid,aid):
     permission=cassapiperm.get_user_agent_perm(uid=uid,aid=aid)
@@ -144,32 +143,17 @@ def authorize_get_snapshot_data(uid,nid):
     uperm=cassapiperm.get_user_snapshot_perm(uid=uid,nid=nid)
     if uperm and uperm.perm & permissions.CAN_READ:
         return True
-    #else:
-    #    for cid in cids:
-    #        cperm=cassapiperm.get_circle_snapshot_perm(cid=cid, nid=nid)
-    #        if cperm and cperm & permissions.CAN_READ:
-    #            return True
     return False
 
 def authorize_get_snapshot_config(uid,nid):
     uperm=cassapiperm.get_user_snapshot_perm(uid=uid,nid=nid)
     if uperm and uperm.perm & permissions.CAN_READ:
         return True
-    #else:
-    #    for cid in cids:
-    #        cperm=cassapiperm.get_circle_snapshot_perm(cid=cid, nid=nid)
-    #        if cperm and cperm & permissions.CAN_READ:
-    #            return True
     return False
 
 def authorize_delete_snapshot(uid,nid):
     uperm=cassapiperm.get_user_snapshot_perm(uid=uid,nid=nid)
     if uperm and uperm.perm & permissions.CAN_DELETE:
         return True
-    #else:
-    #    for cid in cids:
-    #        cperm=cassapiperm.get_circle_snapshot_perm(cid=cid, nid=nid)
-    #        if cperm and cperm & permissions.CAN_DELETE:
-    #            return True
     return False
 

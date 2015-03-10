@@ -100,30 +100,36 @@ def delete_snapshot(nid):
     cassapisnapshot.delete_snapshot(nid=nid)
     return True
 
-def new_snapshot(username, wid, interval_init, interval_end):
-    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end) or interval_init>interval_end:
+def new_snapshot(username, wid, interval_init, interval_end, shared_with_users=[]):
+    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end) or interval_init>interval_end or not args.is_valid_list(shared_with_users):
         raise exceptions.BadParametersException()
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
         raise exceptions.WidgetNotFoundException()
     snapshot=None
+    uids=set()
+    for username_to_share in shared_with_users:
+        if args.is_valid_username(username_to_share):
+            user=cassapiuser.get_user(username=username_to_share)
+            if user:
+                uids.add(user.uid)
     if widget.type==types.DATASOURCE:
-        snapshot=new_snapshot_datasource(username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+        snapshot=new_snapshot_datasource(username=username, wid=wid, interval_init=interval_init, interval_end=interval_end,shared_with_uids=uids)
     elif widget.type==types.DATAPOINT:
-        snapshot=new_snapshot_datapoint(username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+        snapshot=new_snapshot_datapoint(username=username, wid=wid, interval_init=interval_init, interval_end=interval_end,shared_with_uids=uids)
     elif widget.type==types.HISTOGRAM:
-        snapshot=new_snapshot_histogram(username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+        snapshot=new_snapshot_histogram(username=username, wid=wid, interval_init=interval_init, interval_end=interval_end,shared_with_uids=uids)
     elif widget.type==types.LINEGRAPH:
-        snapshot=new_snapshot_linegraph(username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+        snapshot=new_snapshot_linegraph(username=username, wid=wid, interval_init=interval_init, interval_end=interval_end,shared_with_uids=uids)
     elif widget.type==types.TABLE:
-        snapshot=new_snapshot_table(username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+        snapshot=new_snapshot_table(username=username, wid=wid, interval_init=interval_init, interval_end=interval_end,shared_with_uids=uids)
     if snapshot:
         return snapshot
     else:
         raise exceptions.SnapshotCreationException()
 
-def new_snapshot_datasource(username,wid,interval_init, interval_end):
-    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end):
+def new_snapshot_datasource(username,wid,interval_init, interval_end,shared_with_uids={}):
+    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end) or not args.is_valid_set(shared_with_uids):
         raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
@@ -133,14 +139,14 @@ def new_snapshot_datasource(username,wid,interval_init, interval_end):
         raise exceptions.WidgetNotFoundException()
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
-    snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=user.uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, did=widget.did)
+    snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=user.uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, did=widget.did,shared_with_uids=shared_with_uids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':snapshot.nid,'uid':user.uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
         raise exceptions.SnapshotCreationException()
 
-def new_snapshot_datapoint(username,wid,interval_init, interval_end):
-    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end):
+def new_snapshot_datapoint(username,wid,interval_init, interval_end,shared_with_uids={}):
+    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end) or not args.is_valid_set(shared_with_uids):
         raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
@@ -150,14 +156,14 @@ def new_snapshot_datapoint(username,wid,interval_init, interval_end):
         raise exceptions.WidgetNotFoundException()
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
-    snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=user.uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, pid=widget.pid)
+    snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=user.uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, pid=widget.pid,shared_with_uids=shared_with_uids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':snapshot.nid,'uid':user.uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
         raise exceptions.SnapshotCreationException()
 
-def new_snapshot_histogram(username,wid,interval_init, interval_end):
-    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end):
+def new_snapshot_histogram(username,wid,interval_init, interval_end,shared_with_uids={}):
+    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end) or not args.is_valid_set(shared_with_uids):
         raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
@@ -169,14 +175,14 @@ def new_snapshot_histogram(username,wid,interval_init, interval_end):
         raise exceptions.WidgetUnsupportedOperationException()
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
-    snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=user.uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, datapoints=widget.datapoints, colors=widget.colors)
+    snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=user.uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, datapoints=widget.datapoints, colors=widget.colors,shared_with_uids=shared_with_uids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':snapshot.nid,'uid':user.uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
         raise exceptions.SnapshotCreationException()
 
-def new_snapshot_linegraph(username,wid,interval_init, interval_end):
-    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end):
+def new_snapshot_linegraph(username,wid,interval_init, interval_end, shared_with_uids={}):
+    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end) or not args.is_valid_set(shared_with_uids):
         raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
@@ -188,14 +194,14 @@ def new_snapshot_linegraph(username,wid,interval_init, interval_end):
         raise exceptions.WidgetUnsupportedOperationException()
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
-    snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=user.uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, datapoints=widget.datapoints, colors=widget.colors)
+    snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=user.uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, datapoints=widget.datapoints, colors=widget.colors,shared_with_uids=shared_with_uids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':snapshot.nid,'uid':user.uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
         raise exceptions.SnapshotCreationException()
 
-def new_snapshot_table(username,wid,interval_init, interval_end):
-    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end):
+def new_snapshot_table(username,wid,interval_init, interval_end, shared_with_uids={}):
+    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end) or not args.is_valid_set(shared_with_uids):
         raise exceptions.BadParametersException()
     user=cassapiuser.get_user(username=username)
     if not user:
@@ -207,7 +213,7 @@ def new_snapshot_table(username,wid,interval_init, interval_end):
         raise exceptions.WidgetUnsupportedOperationException()
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
-    snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=user.uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, datapoints=widget.datapoints, colors=widget.colors)
+    snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=user.uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, datapoints=widget.datapoints, colors=widget.colors,shared_with_uids=shared_with_uids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':snapshot.nid,'uid':user.uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:

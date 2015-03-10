@@ -157,6 +157,16 @@ def is_valid_dict(argument):
         return True
     return False
 
+def is_valid_set(argument):
+    if isinstance(argument, set):
+        return True
+    return False
+
+def is_valid_list(argument):
+    if isinstance(argument, list):
+        return True
+    return False
+
 def is_valid_bool(argument):
     if isinstance(argument, bool):
         return True

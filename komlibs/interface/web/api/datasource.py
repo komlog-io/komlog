@@ -20,15 +20,26 @@ from komlibs.general.time import timeuuid
 
 
 @exceptions.ExceptionHandler
-def get_datasource_data_request(username, did):
+def get_datasource_data_request(username, did, seq=None):
     if args.is_valid_username(username) and args.is_valid_hex_uuid(did):
+        if seq and not args.is_valid_sequence(seq):
+            raise exceptions.BadParametersException()
         did=uuid.UUID(did)
-        authorization.authorize_request(request=requests.GET_DATASOURCE_DATA,username=username,did=did)
-        data=datasourceapi.get_last_processed_datasource_data(did)
+        if seq:
+            ii=timeuuid.get_uuid1_from_custom_sequence(seq)
+            ie=ii
+        else:
+            ii=None
+            ie=None
+        authorization.authorize_request(request=requests.GET_DATASOURCE_DATA,username=username,did=did,ii=ii,ie=ie)
+        if ii:
+            data=datasourceapi.get_datasource_data(did,date=ii)
+        else:
+            data=datasourceapi.get_last_processed_datasource_data(did)
         datasource={}
         datasource['did']=data['did'].hex
-        datasource['timestamp']=timeuuid.get_unix_timestamp(data['last_processed'])
-        datasource['sequence']=timeuuid.get_custom_sequence(data['last_processed'])
+        datasource['timestamp']=timeuuid.get_unix_timestamp(data['date'])
+        datasource['sequence']=timeuuid.get_custom_sequence(data['date'])
         datasource['variables']=data['variables']
         datasource['content']=data['content']
         datasource['datapoints']=[]

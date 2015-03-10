@@ -19,12 +19,21 @@ class InterfaceImcApiRescontrolTest(unittest.TestCase):
         response=rescontrol.process_message_UPDQUO(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
 
-    def test_process_message_RESAUTH_failure(self):
+    def test_process_message_RESAUTH_success(self):
         ''' process_message_RESAUTH should succeed if operation and params are correct '''
         operation=weboperations.NewAgentOperation(uid=uuid.uuid4(), aid=uuid.uuid4())
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
         message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
         response=rescontrol.process_message_RESAUTH(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+
+    def test_process_message_SHAREDAUTH_success_non_existent_snapshot(self):
+        ''' process_message_SHAREDAUTH should succeed but do nothing if snapshot does not exist '''
+        operation=weboperations.NewSnapshotOperation(uid=uuid.uuid4(), nid=uuid.uuid4(), wid=uuid.uuid4())
+        auth_op=operation.get_auth_operation()
+        params=operation.get_params()
+        message=messages.SharedAuthorizationUpdateMessage(operation=auth_op, params=params)
+        response=rescontrol.process_message_SHAREDAUTH(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
 

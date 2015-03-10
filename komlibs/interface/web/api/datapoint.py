@@ -22,16 +22,33 @@ from komlibs.general.time import timeuuid
 
 
 @exceptions.ExceptionHandler
-def get_datapoint_data_request(username, pid, start_date, end_date):
+def get_datapoint_data_request(username, pid, start_date, end_date, iseq=None, eseq=None):
     if start_date and not args.is_valid_string_float(start_date):
         raise exceptions.BadParametersException()
     if end_date and not args.is_valid_string_float(end_date):
         raise exceptions.BadParametersException()
+    if iseq and not args.is_valid_sequence(iseq):
+        raise exceptions.BadParametersException()
+    if eseq and not args.is_valid_sequence(eseq):
+        raise exceptions.BadParametersException()
+    if bool(iseq) ^ bool(eseq):
+        raise exceptions.BadParametersException()
     if args.is_valid_username(username) and args.is_valid_hex_uuid(pid):
         pid=uuid.UUID(pid)
-        authorization.authorize_request(request=requests.GET_DATAPOINT_DATA,username=username,pid=pid)
+        ii=timeuuid.get_uuid1_from_custom_sequence(iseq) if iseq else None
+        ie=timeuuid.get_uuid1_from_custom_sequence(eseq) if eseq else None
+        authorization.authorize_request(request=requests.GET_DATAPOINT_DATA,username=username,pid=pid,ii=ii,ie=ie)
         end_date=timeuuid.uuid1(seconds=float(end_date)) if end_date else None
         start_date=timeuuid.uuid1(seconds=float(start_date)) if start_date else None
+        if ii or ie:
+            if ii>start_date:
+                start_date=ii
+            if ie<end_date:
+                end_date=ie
+        if start_date>end_date:
+            tmp_date=end_date
+            end_date=start_date
+            start_date=tmp_date
         data=datapointapi.get_datapoint_data(pid, fromdate=start_date, todate=end_date)
         response_data=[]
         for point in data:
