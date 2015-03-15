@@ -547,3 +547,124 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_snapshot_perm(uid=uid, nid=nid, perm=perm)
         self.assertTrue(authorization.authorize_delete_snapshot(uid=uid,nid=nid))
 
+    def test_authorize_get_circle_config_failure_non_existent_uid(self):
+        ''' authorize_get_circle_config should fail if cid does not exist '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        uid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_get_circle_config(uid=uid,cid=cid))
+
+    def test_authorize_get_circle_config_success(self):
+        ''' authorize_get_circle_config should succeed '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        self.assertTrue(authorization.authorize_get_circle_config(uid=uid,cid=cid))
+
+    def test_authorize_delete_circle_failure_non_existent_uid(self):
+        ''' authorize_delete_circle should fail if uid does not exist '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_DELETE
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        uid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_delete_circle(uid=uid,cid=cid))
+
+    def test_authorize_delete_circle_failure_non_existent_cid(self):
+        ''' authorize_delete_circle should fail if cid does not exist '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_DELETE
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        cid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_delete_circle(uid=uid,cid=cid))
+
+    def test_authorize_delete_circle_success(self):
+        ''' authorize_delete_circle should succeed '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_DELETE
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        self.assertTrue(authorization.authorize_delete_circle(uid=uid,cid=cid))
+
+    def test_authorize_update_circle_config_failure_non_existent_uid(self):
+        ''' authorize_update_circle should fail if uid does not exist '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        uid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_update_circle_config(uid=uid,cid=cid))
+
+    def test_authorize_update_circle_config_failure_non_existent_cid(self):
+        ''' authorize_update_circle should fail if cid does not exist '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        cid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_update_circle_config(uid=uid,cid=cid))
+
+    def test_authorize_update_circle_config_success(self):
+        ''' authorize_update_circle should succeed '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        self.assertTrue(authorization.authorize_update_circle_config(uid=uid,cid=cid))
+
+    def test_authorize_add_member_to_circle_failure_non_existent_uid(self):
+        ''' authorize_add_member_to_circle should fail if uid does not exist '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        uid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_add_member_to_circle(uid=uid,cid=cid))
+
+    def test_authorize_add_member_to_circle_failure_non_existent_cid(self):
+        ''' authorize_add_member_to_circle should fail if cid does not exist '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        cid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_add_member_to_circle(uid=uid,cid=cid))
+
+    def test_authorize_add_member_to_circle_success(self):
+        ''' authorize_add_member_to_circle should succeed '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        self.assertTrue(authorization.authorize_add_member_to_circle(uid=uid,cid=cid))
+
+    def test_authorize_delete_member_from_circle_failure_non_existent_uid(self):
+        ''' authorize_delete_member_from_circle should fail if uid does not exist '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        uid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_delete_member_from_circle(uid=uid,cid=cid))
+
+    def test_authorize_delete_member_from_circle_failure_non_existent_cid(self):
+        ''' authorize_delete_member_from_circle should fail if cid does not exist '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        cid=uuid.uuid4()
+        self.assertFalse(authorization.authorize_delete_member_from_circle(uid=uid,cid=cid))
+
+    def test_authorize_delete_member_from_circle_success(self):
+        ''' authorize_delete_member_from_circle should succeed '''
+        uid=self.user['uid']
+        cid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        self.assertTrue(authorization.authorize_delete_member_from_circle(uid=uid,cid=cid))
+

@@ -165,3 +165,38 @@ class AuthQuotesCompareTest(unittest.TestCase):
         params={'uid':self.user['uid']}
         self.assertFalse(compare.quo_static_user_total_snapshots(params))
 
+    def test_quo_static_user_total_circles_no_uid(self):
+        ''' quo_static_user_total_circles should fail if no uid is passed '''
+        params={}
+        self.assertIsNone(compare.quo_static_user_total_circles(params))
+
+    def test_quo_static_user_total_circles_non_existent_user(self):
+        ''' quo_static_user_total_circles should fail if uid does not exist on system '''
+        params={'uid':uuid.uuid4()}
+        self.assertIsNone(compare.quo_static_user_total_circles(params))
+
+    def test_quo_static_user_total_circles_failure(self):
+        ''' quo_static_user_total_circles should fail because user has no quote info yet '''
+        params={'uid':self.user['uid']}
+        self.assertFalse(compare.quo_static_user_total_circles(params))
+
+    def test_quo_static_circle_total_members_no_uid(self):
+        ''' quo_static_circle_total_members should fail if no uid is passed '''
+        params={'cid':uuid.uuid4()}
+        self.assertIsNone(compare.quo_static_circle_total_members(params))
+
+    def test_quo_static_circle_total_members_no_cid(self):
+        ''' quo_static_circle_total_members should fail if no uid is passed '''
+        params={'uid':uuid.uuid4()}
+        self.assertIsNone(compare.quo_static_circle_total_members(params))
+
+    def test_quo_static_circle_total_members_non_existent_user(self):
+        ''' quo_static_circle_total_members should fail if uid does not exist on system '''
+        params={'uid':uuid.uuid4(),'cid':uuid.uuid4()}
+        self.assertIsNone(compare.quo_static_circle_total_members(params))
+
+    def test_quo_static_circle_total_members_failure(self):
+        ''' quo_static_circle_total_members should fail because circle has no quote info yet '''
+        params={'uid':self.user['uid']}
+        self.assertFalse(compare.quo_static_circle_total_members(params))
+

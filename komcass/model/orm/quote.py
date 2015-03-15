@@ -45,3 +45,8 @@ class DashboardQuo(Quote):
         self.bid=bid
         super(DashboardQuo,self).__init__(quotes)
 
+class CircleQuo(Quote):
+    def __init__(self,cid, quotes=None):
+        self.cid=cid
+        super(CircleQuo,self).__init__(quotes)
+

@@ -50,13 +50,19 @@ func_requests={
                requests.GET_SNAPSHOT_DATA:'authorize_get_snapshot_data',
                requests.GET_SNAPSHOT_CONFIG:'authorize_get_snapshot_config',
                requests.DELETE_SNAPSHOT:'authorize_delete_snapshot',
+               requests.NEW_CIRCLE:'authorize_new_circle_creation',
+               requests.GET_CIRCLE_CONFIG:'authorize_get_circle_config',
+               requests.UPDATE_CIRCLE_CONFIG:'authorize_update_circle_config',
+               requests.DELETE_CIRCLE:'authorize_delete_circle',
+               requests.ADD_MEMBER_TO_CIRCLE:'authorize_add_member_to_circle',
+               requests.DELETE_MEMBER_FROM_CIRCLE:'authorize_delete_member_from_circle',
                }
 
-def authorize_request(request,username,aid=None,did=None,pid=None,gid=None,wid=None,bid=None,nid=None,ii=None,ie=None):
+def authorize_request(request,username,aid=None,did=None,pid=None,gid=None,wid=None,bid=None,nid=None,cid=None,ii=None,ie=None):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise authexcept.UserNotFoundException()
-    params={'aid':aid,'did':did,'uid':user.uid,'pid':pid,'wid':wid,'bid':bid,'nid':nid,'ii':ii,'ie':ie}
+    params={'aid':aid,'did':did,'uid':user.uid,'pid':pid,'wid':wid,'bid':bid,'nid':nid,'cid':cid,'ii':ii,'ie':ie}
     try:
         getattr(sys.modules[__name__],func_requests[request])(params)
     except KeyError as e:
@@ -305,5 +311,41 @@ def authorize_delete_snapshot(params):
     uid=params['uid']
     nid=params['nid']
     if not resauth.authorize_delete_snapshot(uid,nid):
+        raise authexcept.AuthorizationException()
+
+def authorize_new_circle_creation(params):
+    uid=params['uid']
+    if not quoauth.authorize_new_circle(uid=uid):
+        raise authexcept.AuthorizationException()
+
+def authorize_get_circle_config(params):
+    uid=params['uid']
+    cid=params['cid']
+    if not resauth.authorize_get_circle_config(uid=uid,cid=cid):
+            raise authexcept.AuthorizationException()
+
+def authorize_update_circle_config(params):
+    uid=params['uid']
+    cid=params['cid']
+    if not resauth.authorize_update_circle_config(uid=uid,cid=cid):
+        raise authexcept.AuthorizationException()
+
+def authorize_delete_circle(params):
+    uid=params['uid']
+    cid=params['cid']
+    if not resauth.authorize_delete_circle(uid,cid):
+        raise authexcept.AuthorizationException()
+
+def authorize_add_member_to_circle(params):
+    uid=params['uid']
+    cid=params['cid']
+    if not resauth.authorize_add_member_to_circle(uid=uid, cid=cid) \
+        or not quoauth.authorize_add_member_to_circle(uid=uid, cid=cid):
+        raise authexcept.AuthorizationException()
+
+def authorize_delete_member_from_circle(params):
+    uid=params['uid']
+    cid=params['cid']
+    if not resauth.authorize_delete_member_from_circle(uid=uid, cid=cid):
         raise authexcept.AuthorizationException()
 

@@ -160,3 +160,28 @@ def delete_dashboard_quotes(bid):
     connection.session.execute(stmtquote.D_A_QUODASHBOARD_B_BID,(bid,))
     return True
 
+def get_circle_quotes(cid):
+    row=connection.session.execute(stmtquote.S_A_QUOCIRCLE_B_CID,(cid,))
+    if not row:
+        return None
+    if len(row)==1:
+        return ormquote.CircleQuo(**row[0])
+    else:
+        raise excpquote.DataConsistencyException(function='get_circle_quotes',field='cid',value=cid)
+
+def set_circle_quotes(cid, quotes):
+    connection.session.execute(stmtquote.I_A_QUOCIRCLE,(cid,quotes))
+    return True
+
+def set_circle_quote(cid, quote, value):
+    connection.session.execute(stmtquote.U_QUOTE_QUOCIRCLE_B_CID,(quote,value,cid))
+    return True
+
+def delete_circle_quote(cid, quote):
+    connection.session.execute(stmtquote.D_Q_QUOCIRCLE_B_CID,(quote,cid))
+    return True
+
+def delete_circle_quotes(cid):
+    connection.session.execute(stmtquote.D_A_QUOCIRCLE_B_CID,(cid,))
+    return True
+

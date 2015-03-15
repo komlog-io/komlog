@@ -9,7 +9,8 @@ OBJECTS=['QUO_USER',
          'QUO_DATASOURCE',
          'QUO_DATAPOINT',
          'QUO_WIDGET',
-         'QUO_DASHBOARD'
+         'QUO_DASHBOARD',
+         'QUO_CIRCLE',
         ]
 
 QUO_USER='''
@@ -57,6 +58,14 @@ QUO_DASHBOARD='''
             bid uuid,
             quotes map<text,text>,
             PRIMARY KEY (bid)
+        );
+    '''
+
+QUO_CIRCLE='''
+        CREATE TABLE quo_circle (
+            cid uuid,
+            quotes map<text,text>,
+            PRIMARY KEY (cid)
         );
     '''
 

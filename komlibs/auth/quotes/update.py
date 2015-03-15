@@ -16,6 +16,7 @@ from komcass.api import datapoint as cassapidatapoint
 from komcass.api import widget as cassapiwidget
 from komcass.api import dashboard as cassapidashboard
 from komcass.api import snapshot as cassapisnapshot
+from komcass.api import circle as cassapicircle
 from komcass.api import quote as cassapiquote
 
 update_funcs = {
@@ -26,6 +27,8 @@ update_funcs = {
                 operations.NEW_DASHBOARD: ['quo_static_user_total_dashboards'],
                 operations.NEW_WIDGET_SYSTEM: ['quo_static_user_total_widgets'],
                 operations.NEW_SNAPSHOT: ['quo_static_user_total_snapshots'],
+                operations.NEW_CIRCLE: ['quo_static_user_total_circles','quo_static_circle_total_members'],
+                operations.UPDATE_CIRCLE_MEMBERS: ['quo_static_circle_total_members'],
 }
 
 def get_update_funcs(operation):
@@ -127,5 +130,26 @@ def quo_static_user_total_snapshots(params):
     num_snapshots=cassapisnapshot.get_number_of_snapshots_by_uid(uid=uid)
     if cassapiquote.set_user_quote(uid=uid, quote='quo_static_user_total_snapshots', value=str(num_snapshots)):
         return str(num_snapshots)
+    return None
+
+def quo_static_user_total_circles(params):
+    if 'uid' not in params:
+        return None
+    uid=params['uid']
+    num_circles=cassapicircle.get_number_of_circles(uid=uid)
+    if cassapiquote.set_user_quote(uid=uid, quote='quo_static_user_total_circles', value=str(num_circles)):
+        return str(num_circles)
+    return None
+
+def quo_static_circle_total_members(params):
+    if 'cid' not in params:
+        return None
+    cid=params['cid']
+    circle=cassapicircle.get_circle(cid=cid)
+    if not circle:
+        return '0'
+    num_members=len(circle.members)
+    if cassapiquote.set_circle_quote(cid=cid, quote='quo_static_circle_total_members', value=str(num_members)):
+        return str(num_members)
     return None
 

@@ -466,7 +466,7 @@ class DashboardWidgetsHandler(tornado.web.RequestHandler):
         self.write(json_encode(response.data))
 
 class SnapshotConfigHandler(tornado.web.RequestHandler):
-    
+
     @auth.userauthenticated
     def get(self, nid):
         response=snapshot.get_snapshot_config_request(username=self.user, nid=nid)
@@ -479,7 +479,71 @@ class SnapshotConfigHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
+class CirclesHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def post(self):
+        try:
+            req_data=json_decode(self.request.body)
+            circlename=req_data['circlename']
+            members=req_data['members'] if 'members' in req_data else None
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=circle.new_circle_request(username=self.user, circlename=circlename, members_list=members)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def get(self):
+        response=circle.get_users_circles_config_request(username=self.user)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
+class CircleConfigHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def get(self, cid):
+        response=circle.get_users_circle_config_request(username=self.user, cid=cid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def put(self,cid):
+        try:
+            data=json_decode(self.request.body)
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=circle.update_circle_request(username=self.user, cid=cid, data=data)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def delete(self, cid):
+        response=circle.delete_circle_request(username=self.user, cid=cid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
+class CircleMembersHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def post(self, cid, member):
+        response=circle.add_user_to_circle_request(username=self.user, cid=cid, member=member)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def delete(self, cid, member):
+        response=circle.delete_user_from_circle_request(username=self.user, cid=cid, member=member)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
 UUID4_REGEX='[0-9a-f]{32}'
+USERNAME_REGEX='[0-9a-z\-._]'
+
 HANDLERS = [(r'/login/?', LoginHandler),
             (r'/logout/?', LogoutHandler),
             (r'/etc/ag/?', AgentsHandler),
@@ -498,6 +562,9 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/etc/db/('+UUID4_REGEX+')', DashboardConfigHandler),
             (r'/etc/db/(?P<bid>'+UUID4_REGEX+')/wg/(?P<wid>'+UUID4_REGEX+')', DashboardWidgetsHandler),
             (r'/etc/sn/('+UUID4_REGEX+')', SnapshotConfigHandler),
+            (r'/etc/cr/?', CirclesHandler),
+            (r'/etc/cr/('+UUID4_REGEX+')', CircleConfigHandler),
+            (r'/etc/cr/(?P<cid>'+UUID4_REGEX+')/u/(?P<member>'+USERNAME_REGEX+')',CircleMembersHandler),
             (r'/etc/usr/confirm/', UserConfirmationHandler),
             (r'/etc/usr/?', UsersHandler),
             (r'/var/ds/('+UUID4_REGEX+')', DatasourceDataHandler),

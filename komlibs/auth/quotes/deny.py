@@ -23,6 +23,8 @@ interfaces={'User_AgentCreation':'/user/agentcreation/',
             'User_WidgetCreation':'/user/wgcreation/',
             'User_DashboardCreation':'/user/dbcreation/',
             'User_SnapshotCreation':'/user/snapshotcreation/',
+            'User_CircleCreation':'/user/circlecreation/',
+            'User_AddMemberToCircle':'/user/addmembertocircle/',
            }
 
 DEFAULT_PERM='A'
@@ -92,6 +94,19 @@ def quo_static_user_total_dashboards(params,deny):
             return True
     return False
 
+def quo_static_user_total_circles(params,deny):
+    if 'uid' not in params:
+        return False
+    uid=params['uid']
+    iface=interfaces['User_CircleCreation']
+    if deny:
+        if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
+            return True
+    else:
+        if cassapiiface.delete_user_iface_deny(uid=uid, iface=iface):
+            return True
+    return False
+
 def quo_static_agent_total_datasources(params,deny):
     if 'aid' not in params or 'uid' not in params:
         return False
@@ -140,6 +155,20 @@ def quo_static_user_total_snapshots(params,deny):
         return False
     uid=params['uid']
     iface=interfaces['User_SnapshotCreation']
+    if deny:
+        if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
+            return True
+    else:
+        if cassapiiface.delete_user_iface_deny(uid=uid, iface=iface):
+            return True
+    return False
+
+def quo_static_circle_total_members(params,deny):
+    if 'uid' not in params or 'cid' not in params:
+        return False
+    uid=params['uid']
+    cid=params['cid']
+    iface=interfaces['User_AddMemberToCircle']+cid.hex
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
             return True

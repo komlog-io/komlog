@@ -150,3 +150,23 @@ class SnapshotCreationException(GestaccountException):
     def __init__(self):
         super(SnapshotCreationException,self).__init__()
 
+class CircleCreationException(GestaccountException):
+    def __init__(self):
+        super(CircleCreationException,self).__init__()
+
+class CircleNotFoundException(GestaccountException):
+    def __init__(self):
+        super(CircleNotFoundException,self).__init__()
+
+class CircleUpdateException(GestaccountException):
+    def __init__(self):
+        super(CircleUpdateException,self).__init__()
+
+class CircleAddMemberException(GestaccountException):
+    def __init__(self):
+        super(CircleAddMemberException,self).__init__()
+
+class CircleDeleteMemberException(GestaccountException):
+    def __init__(self):
+        super(CircleDeleteMemberException,self).__init__()
+

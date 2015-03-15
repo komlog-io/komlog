@@ -20,13 +20,16 @@ NEW_WIDGET            = 3
 NEW_DASHBOARD         = 4
 NEW_WIDGET_SYSTEM     = 5
 NEW_SNAPSHOT          = 6
-DELETE_USER           = 7
-DELETE_AGENT          = 8
-DELETE_DATASOURCE     = 9
-DELETE_DATAPOINT      = 10
-DELETE_WIDGET         = 11
-DELETE_DASHBOARD      = 12
-DELETE_SNAPSHOT       = 13
+NEW_CIRCLE            = 7
+DELETE_USER           = 8
+DELETE_AGENT          = 9
+DELETE_DATASOURCE     = 10
+DELETE_DATAPOINT      = 11
+DELETE_WIDGET         = 12
+DELETE_DASHBOARD      = 13
+DELETE_SNAPSHOT       = 14
+DELETE_CIRCLE         = 15
+UPDATE_CIRCLE_MEMBERS = 16
 
 
 OPAUTHS={NEW_AGENT:operations.NEW_AGENT,
@@ -36,6 +39,7 @@ OPAUTHS={NEW_AGENT:operations.NEW_AGENT,
          NEW_DASHBOARD:operations.NEW_DASHBOARD,
          NEW_WIDGET_SYSTEM:operations.NEW_WIDGET_SYSTEM,
          NEW_SNAPSHOT:operations.NEW_SNAPSHOT,
+         NEW_CIRCLE:operations.NEW_CIRCLE,
          DELETE_USER: operations.DELETE_USER,
          DELETE_AGENT: operations.DELETE_AGENT,
          DELETE_DATASOURCE: operations.DELETE_DATASOURCE,
@@ -43,6 +47,8 @@ OPAUTHS={NEW_AGENT:operations.NEW_AGENT,
          DELETE_WIDGET: operations.DELETE_WIDGET,
          DELETE_DASHBOARD: operations.DELETE_DASHBOARD,
          DELETE_SNAPSHOT:operations.DELETE_SNAPSHOT,
+         DELETE_CIRCLE:operations.DELETE_CIRCLE,
+         UPDATE_CIRCLE_MEMBERS:operations.UPDATE_CIRCLE_MEMBERS,
          }
 
 class WIFaceOperation:
@@ -111,6 +117,13 @@ class NewSnapshotOperation(WIFaceOperation):
         self.params['wid']=wid
         self.params['nid']=nid
 
+class NewCircleOperation(WIFaceOperation):
+    def __init__(self, uid, cid):
+        self.oid=NEW_CIRCLE
+        self.params={}
+        self.params['uid']=uid
+        self.params['cid']=cid
+
 class DeleteUserOperation(WIFaceOperation):
     def __init__(self, uid, aids):
         self.oid=DELETE_USER
@@ -162,4 +175,17 @@ class DeleteSnapshotOperation(WIFaceOperation):
         self.params={}
         self.params['uid']=uid
         self.params['nid']=nid
+
+class DeleteCircleOperation(WIFaceOperation):
+    def __init__(self, uid, cid):
+        self.oid=DELETE_CIRCLE
+        self.params={}
+        self.params['uid']=uid
+        self.params['cid']=cid
+
+class UpdateCircleMembersOperation(WIFaceOperation):
+    def __init__(self, cid):
+        self.oid=UPDATE_CIRCLE_MEMBERS
+        self.params={}
+        self.params['cid']=cid
 

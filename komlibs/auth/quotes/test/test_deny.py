@@ -195,3 +195,45 @@ class AuthQuotesDenyTest(unittest.TestCase):
         flag=False
         self.assertTrue(deny.quo_static_user_total_snapshots(params,flag))
 
+    def test_quo_static_user_total_circles_no_uid(self):
+        ''' quo_static_user_total_circles should fail if no uid is passed '''
+        params={}
+        flag=True
+        self.assertFalse(deny.quo_static_user_total_circles(params,flag))
+
+    def test_quo_static_user_total_circles_success(self):
+        ''' quo_static_user_total_circles should succeed if deny flag is True and UID is set '''
+        params={'uid':self.user['uid']}
+        flag=True
+        self.assertTrue(deny.quo_static_user_total_circles(params,flag))
+
+    def test_quo_static_user_total_circles_unsuccess(self):
+        ''' quo_static_user_total_circles should succeed if deny flag is False and UID is set '''
+        params={'uid':self.user['uid']}
+        flag=False
+        self.assertTrue(deny.quo_static_user_total_circles(params,flag))
+
+    def test_quo_static_circle_total_members_no_uid(self):
+        ''' quo_static_circle_total_members should fail if no uid is passed '''
+        params={'cid':uuid.uuid4()}
+        flag=True
+        self.assertFalse(deny.quo_static_circle_total_members(params,flag))
+
+    def test_quo_static_circle_total_members_no_cid(self):
+        ''' quo_static_circle_total_members should fail if no cid is passed '''
+        params={'uid':uuid.uuid4()}
+        flag=True
+        self.assertFalse(deny.quo_static_circle_total_members(params,flag))
+
+    def test_quo_static_circle_total_members_success(self):
+        ''' quo_static_circle_total_members should succeed if deny flag is True and UID is set '''
+        params={'uid':self.user['uid'],'cid':uuid.uuid4()}
+        flag=True
+        self.assertTrue(deny.quo_static_circle_total_members(params,flag))
+
+    def test_quo_static_circle_total_members_unsuccess(self):
+        ''' quo_static_circle_total_members should succeed if deny flag is False and UID is set '''
+        params={'uid':self.user['uid'],'cid':uuid.uuid4()}
+        flag=False
+        self.assertTrue(deny.quo_static_circle_total_members(params,flag))
+

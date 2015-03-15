@@ -9,12 +9,14 @@ from komcass.api import datasource as cassapidatasource
 from komcass.api import datapoint as cassapidatapoint
 from komcass.api import widget as cassapiwidget
 from komcass.api import dashboard as cassapidashboard
+from komcass.api import circle as cassapicircle
 from komcass.model.orm import user as ormuser
 from komcass.model.orm import agent as ormagent
 from komcass.model.orm import datasource as ormdatasource
 from komcass.model.orm import datapoint as ormdatapoint
 from komcass.model.orm import widget as ormwidget
 from komcass.model.orm import dashboard as ormdashboard
+from komcass.model.orm import circle as ormcircle
 
 
 class AuthResourcesUpdateTest(unittest.TestCase):
@@ -767,5 +769,47 @@ class AuthResourcesUpdateTest(unittest.TestCase):
             perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
             self.assertEqual(len(perm_list),100)
             for item in perm_list:
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
+
+    def test_new_circle_no_uid(self):
+        ''' new_circle should fail if no uid is passed'''
+        params={'cid':uuid.uuid4()}
+        self.assertFalse(update.new_circle(params))
+
+    def test_new_circle_no_cid(self):
+        ''' new_widget should fail if no cid is passed'''
+        params={'uid':uuid.uuid4()}
+        self.assertFalse(update.new_circle(params))
+
+    def test_new_circle_success(self):
+        ''' new_circle should succeed if permissions can be set'''
+        uid=uuid.uuid4()
+        cid=uuid.uuid4()
+        params={'uid':uid,'cid':cid}
+        self.assertTrue(update.new_circle(params))
+        permission=cassapiperm.get_user_circle_perm(uid=uid, cid=cid)
+        self.assertIsNotNone(permission)
+        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
+
+    def test_delete_circle_success(self):
+        ''' delete_circle should revoke permission to the user to the circle '''
+        uid=uuid.uuid4()
+        cids=[uuid.uuid4(),uuid.uuid4(), uuid.uuid4()]
+        perm=permissions.CAN_READ | permissions.CAN_EDIT | permissions.CAN_DELETE
+        members=None
+        type='a type for a circle'
+        for cid in cids:
+            creation_date=uuid.uuid1()
+            circle=ormcircle.Circle(cid=cid, uid=uid, circlename=cid.hex,creation_date=creation_date,type=type,members=members)
+            cassapicircle.insert_circle(circle)
+            cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
+        selected_cid=cids[0]
+        self.assertTrue(update.delete_circle(cid=selected_cid))
+        perm_list=cassapiperm.get_user_circles_perm(uid=uid)
+        self.assertEqual(len(perm_list),3)
+        for item in perm_list:
+            if item.cid==selected_cid:
+                self.assertEqual(item.perm, permissions.NONE)
+            else:
                 self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
 

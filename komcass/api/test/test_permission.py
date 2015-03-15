@@ -887,3 +887,113 @@ class KomcassApiPermissionTest(unittest.TestCase):
         self.assertTrue(permissionapi.delete_user_snapshots_perm(uid=uid))
         self.assertEqual(permissionapi.get_user_snapshots_perm(uid=uid), [])
 
+    def test_get_user_circle_perm_non_existing_cid(self):
+        ''' get_user_circle_perm should return None if cid does not exist '''
+        uid=uuid.uuid4()
+        cid1=uuid.uuid4()
+        cid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_circle_perm(uid=uid, cid=cid1, perm=perm))
+        self.assertIsNone(permissionapi.get_user_circle_perm(uid=uid, cid=cid2))
+
+    def test_get_user_circle_perm_non_existing_uid(self):
+        ''' get_user_circle_perm should return None if uid does not exist '''
+        uid=uuid.uuid4()
+        cid=uuid.uuid4()
+        self.assertIsNone(permissionapi.get_user_circle_perm(uid=uid, cid=cid))
+
+    def test_get_user_circle_perm_success(self):
+        ''' get_user_circle_perm should return a UserCirclePerm object if perm exists '''
+        uid=uuid.uuid4()
+        cid1=uuid.uuid4()
+        cid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_circle_perm(uid=uid, cid=cid1, perm=perm))
+        self.assertTrue(permissionapi.insert_user_circle_perm(uid=uid, cid=cid2, perm=perm))
+        perm_db=permissionapi.get_user_circle_perm(uid=uid, cid=cid2)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserCirclePerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(cid2, perm_db.cid)
+        self.assertEqual(perm, perm_db.perm)
+        perm_db=permissionapi.get_user_circle_perm(uid=uid, cid=cid1)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserCirclePerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(cid1, perm_db.cid)
+        self.assertEqual(perm, perm_db.perm)
+
+    def test_get_user_circles_perm_non_existing_uid(self):
+        ''' get_user_circles_perm should return an empty list if uid does not exist '''
+        uid=uuid.uuid4()
+        perms=permissionapi.get_user_circles_perm(uid=uid)
+        self.assertEqual(perms, [])
+
+    def test_get_user_circles_perm_success(self):
+        ''' get_user_circles_perm should return a UserCirclePerm objects list if uid has circles associated '''
+        uid=uuid.uuid4()
+        cid1=uuid.uuid4()
+        cid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_circle_perm(uid=uid, cid=cid1, perm=perm))
+        self.assertTrue(permissionapi.insert_user_circle_perm(uid=uid, cid=cid2, perm=perm))
+        perms=permissionapi.get_user_circles_perm(uid=uid)
+        self.assertTrue(isinstance(perms, list))
+        self.assertEqual(len(perms), 2)
+        self.assertTrue(isinstance(perms[0], ormpermission.UserCirclePerm))
+        self.assertTrue(isinstance(perms[1], ormpermission.UserCirclePerm))
+
+    def test_insert_user_circle_perm_success(self):
+        ''' insert_user_circle_perm should return True '''
+        uid=uuid.uuid4()
+        cid1=uuid.uuid4()
+        cid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_circle_perm(uid=uid, cid=cid1, perm=perm))
+        self.assertTrue(permissionapi.insert_user_circle_perm(uid=uid, cid=cid2, perm=perm))
+        perm_db=permissionapi.get_user_circle_perm(uid=uid, cid=cid1)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserCirclePerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(cid1, perm_db.cid)
+        self.assertEqual(perm, perm_db.perm)
+        perm_db=permissionapi.get_user_circle_perm(uid=uid, cid=cid2)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserCirclePerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(cid2, perm_db.cid)
+        self.assertEqual(perm, perm_db.perm)
+
+    def test_delete_user_circle_perm_success(self):
+        ''' delete_user_circle_perm should return True and delete perm successfully '''
+        uid=uuid.uuid4()
+        cid1=uuid.uuid4()
+        cid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_circle_perm(uid=uid, cid=cid1, perm=perm))
+        self.assertTrue(permissionapi.insert_user_circle_perm(uid=uid, cid=cid2, perm=perm))
+        perm_db=permissionapi.get_user_circle_perm(uid=uid, cid=cid1)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserCirclePerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(cid1, perm_db.cid)
+        self.assertEqual(perm, perm_db.perm)
+        perm_db=permissionapi.get_user_circle_perm(uid=uid, cid=cid2)
+        self.assertTrue(isinstance(perm_db, ormpermission.UserCirclePerm))
+        self.assertEqual(uid, perm_db.uid)
+        self.assertEqual(cid2, perm_db.cid)
+        self.assertEqual(perm, perm_db.perm)
+        self.assertTrue(permissionapi.delete_user_circle_perm(uid=uid, cid=cid1))
+        self.assertIsNone(permissionapi.get_user_circle_perm(uid=uid, cid=cid1))
+        self.assertTrue(permissionapi.delete_user_circle_perm(uid=uid, cid=cid2))
+        self.assertIsNone(permissionapi.get_user_circle_perm(uid=uid, cid=cid2))
+
+    def test_delete_user_circles_perm_success(self):
+        ''' delete_user_circles_perm should return True and delete perms successfully '''
+        uid=uuid.uuid4()
+        cid1=uuid.uuid4()
+        cid2=uuid.uuid4()
+        perm=1
+        self.assertTrue(permissionapi.insert_user_circle_perm(uid=uid, cid=cid1, perm=perm))
+        self.assertTrue(permissionapi.insert_user_circle_perm(uid=uid, cid=cid2, perm=perm))
+        perms=permissionapi.get_user_circles_perm(uid=uid)
+        self.assertTrue(isinstance(perms, list))
+        self.assertEqual(len(perms), 2)
+        self.assertTrue(permissionapi.delete_user_circles_perm(uid=uid))
+        self.assertEqual(permissionapi.get_user_circles_perm(uid=uid), [])
+

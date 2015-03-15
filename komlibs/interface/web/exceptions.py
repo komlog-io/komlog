@@ -28,6 +28,8 @@ class ExceptionHandler(object):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND,error=e.error)
         except gestexcept.SnapshotNotFoundException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND,error=e.error)
+        except gestexcept.CircleNotFoundException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND,error=e.error)
         except gestexcept.AgentCreationException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
         except gestexcept.WidgetCreationException as e:
@@ -36,7 +38,11 @@ class ExceptionHandler(object):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
         except gestexcept.SnapshotCreationException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
+        except gestexcept.CircleCreationException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
         except gestexcept.DashboardUpdateException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
+        except gestexcept.CircleUpdateException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
         except gestexcept.AddDatapointToWidgetException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
@@ -62,6 +68,10 @@ class ExceptionHandler(object):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
         except gestexcept.WidgetUnsupportedOperationException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED,error=e.error)
+        except gestexcept.CircleAddMemberException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
+        except gestexcept.CircleDeleteMemberException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
 
 
 class BadParametersException(Exception):

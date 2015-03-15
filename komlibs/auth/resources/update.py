@@ -17,6 +17,7 @@ from komcass.api import datapoint as cassapidatapoint
 from komcass.api import widget as cassapiwidget
 from komcass.api import dashboard as cassapidashboard
 from komcass.api import snapshot as cassapisnapshot
+from komcass.api import circle as cassapicircle
 from komcass.api import permission as cassapiperm
 
 update_funcs = {
@@ -27,6 +28,7 @@ update_funcs = {
                 operations.NEW_DASHBOARD: ['new_dashboard'],
                 operations.NEW_WIDGET_SYSTEM: ['new_widget_system'],
                 operations.NEW_SNAPSHOT: ['new_snapshot'],
+                operations.NEW_CIRCLE: ['new_circle'],
                 operations.DELETE_USER: ['delete_user'],
                 operations.DELETE_AGENT: ['delete_agent'],
                 operations.DELETE_DATASOURCE: ['delete_datasource'],
@@ -34,6 +36,7 @@ update_funcs = {
                 operations.DELETE_WIDGET: ['delete_widget'],
                 operations.DELETE_DASHBOARD: ['delete_dashboard'],
                 operations.DELETE_SNAPSHOT: ['delete_snapshot'],
+                operations.DELETE_CIRCLE: ['delete_circle'],
 }
 
 def get_update_funcs(operation):
@@ -226,5 +229,23 @@ def delete_snapshot(nid):
     snapshot=cassapisnapshot.get_snapshot(nid=nid)
     if snapshot:
         cassapiperm.insert_user_snapshot_perm(uid=snapshot.uid, nid=nid, perm=perm)
+    return True
+
+def new_circle(params):
+    if not 'uid' in params or not 'cid' in params:
+        return False
+    uid=params['uid']
+    cid=params['cid']
+    user_perm=permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE
+    if cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=user_perm):
+        return True
+    return False
+
+def delete_circle(cid):
+    ''' This function revoke all access to the circle passed '''
+    perm=permissions.NONE
+    circle=cassapicircle.get_circle(cid=cid)
+    if circle:
+        cassapiperm.insert_user_circle_perm(uid=circle.uid, cid=cid, perm=perm)
     return True
 

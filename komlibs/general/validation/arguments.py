@@ -62,6 +62,13 @@ def is_valid_widgetname(argument):
         return False
     return True
 
+def is_valid_circlename(argument):
+    if not isinstance(argument,str):
+        return False
+    if NOTKOMLOGDESCCHAR.search(argument):
+        return False
+    return True
+
 def is_valid_datasource_content(argument):
     if not isinstance(argument,str):
         return False

@@ -236,3 +236,27 @@ def delete_user_snapshots_perm(uid):
     connection.session.execute(stmtperm.D_P_PERMUSERSNAPSHOT_B_UID,(uid,))
     return True
 
+def get_user_circle_perm(uid, cid):
+    row=connection.session.execute(stmtperm.S_A_PERMUSERCIRCLE_B_UID_CID,(uid,cid))
+    return ormperm.UserCirclePerm(**row[0]) if row else None
+
+def get_user_circles_perm(uid):
+    perms=[]
+    row=connection.session.execute(stmtperm.S_A_PERMUSERCIRCLE_B_UID,(uid,))
+    if row:
+        for perm in row:
+            perms.append(ormperm.UserCirclePerm(**perm))
+    return perms
+
+def insert_user_circle_perm(uid, cid, perm):
+    connection.session.execute(stmtperm.I_A_PERMUSERCIRCLE,(uid,cid,perm))
+    return True
+
+def delete_user_circle_perm(uid, cid):
+    connection.session.execute(stmtperm.D_P_PERMUSERCIRCLE_B_UID_CID,(uid,cid))
+    return True
+
+def delete_user_circles_perm(uid):
+    connection.session.execute(stmtperm.D_P_PERMUSERCIRCLE_B_UID,(uid,))
+    return True
+

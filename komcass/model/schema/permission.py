@@ -9,6 +9,7 @@ OBJECTS=['PERM_USER_AGENT',
          'PERM_USER_WIDGET',
          'PERM_USER_DASHBOARD',
          'PERM_USER_SNAPSHOT',
+         'PERM_USER_CIRCLE',
          'PERM_AGENT_DATASOURCE',
          'PERM_AGENT_DATAPOINT',
         ]
@@ -64,6 +65,15 @@ PERM_USER_SNAPSHOT='''
             nid uuid,
             perm int,
             PRIMARY KEY (uid,nid)
+        );
+    '''
+
+PERM_USER_CIRCLE='''
+        CREATE TABLE perm_user_circle (
+            uid uuid,
+            cid uuid,
+            perm int,
+            PRIMARY KEY (uid,cid)
         );
     '''
 

@@ -157,3 +157,27 @@ def authorize_delete_snapshot(uid,nid):
         return True
     return False
 
+def authorize_get_circle_config(uid,cid):
+    uperm=cassapiperm.get_user_circle_perm(uid=uid,cid=cid)
+    if uperm and uperm.perm & permissions.CAN_READ:
+        return True
+    return False
+
+def authorize_delete_circle(uid,cid):
+    uperm=cassapiperm.get_user_circle_perm(uid=uid,cid=cid)
+    if uperm and uperm.perm & permissions.CAN_DELETE:
+        return True
+    return False
+
+def authorize_update_circle_config(uid,cid):
+    uperm=cassapiperm.get_user_circle_perm(uid=uid,cid=cid)
+    return True if uperm and uperm.perm & permissions.CAN_EDIT else False
+
+def authorize_add_member_to_circle(uid,cid):
+    uperm=cassapiperm.get_user_circle_perm(uid=uid,cid=cid)
+    return True if uperm and uperm.perm & permissions.CAN_EDIT else False
+
+def authorize_delete_member_from_circle(uid,cid):
+    uperm=cassapiperm.get_user_circle_perm(uid=uid,cid=cid)
+    return True if uperm and uperm.perm & permissions.CAN_EDIT else False
+

@@ -61,3 +61,10 @@ class UserSnapshotPerm:
         self.nid=nid
         self.perm=perm
 
+class UserCirclePerm:
+    ''' This class is used to access User-Circle permission relation '''
+    def __init__(self, uid, cid=None, perm=None):
+        self.uid=uid
+        self.cid=cid
+        self.perm=perm
+

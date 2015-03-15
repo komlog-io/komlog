@@ -144,3 +144,19 @@ def authorize_get_snapshot_config(uid,nid):
     ''' Not quotes authorization needed '''
     return True
 
+def authorize_new_circle(uid):
+    interfaces=[]
+    interfaces.append(deny.interfaces['User_CircleCreation'])
+    for iface in interfaces:
+        if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
+            return False
+    return True
+
+def authorize_add_member_to_circle(uid, cid):
+    interfaces=[]
+    interfaces.append(deny.interfaces['User_AddMemberToCircle']+cid.hex)
+    for iface in interfaces:
+        if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
+            return False
+    return True
+

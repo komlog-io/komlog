@@ -170,3 +170,38 @@ def quo_static_user_total_snapshots(params):
                 return True
     return False
 
+def quo_static_user_total_circles(params):
+    if 'uid' not in params:
+        return None
+    uid=params['uid']
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        return None
+    segment=cassapisegment.get_user_segment(sid=user.segment)
+    userquo=cassapiquote.get_user_quotes(uid=uid)
+    if userquo and segment:
+        quote=userquo.get_quote('quo_static_user_total_circles')
+        limit=segment.get_param('quo_static_user_max_circles')
+        if limit is not None and quote is not None:
+            if int(quote)>=int(limit)-1:
+                return True
+    return False
+
+def quo_static_circle_total_members(params):
+    if 'uid' not in params or 'cid' not in params:
+        return None
+    uid=params['uid']
+    cid=params['cid']
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        return None
+    segment=cassapisegment.get_user_segment(sid=user.segment)
+    circlequo=cassapiquote.get_circle_quotes(cid=cid)
+    if circlequo and segment:
+        quote=circlequo.get_quote('quo_static_circle_total_members')
+        limit=segment.get_param('quo_static_circle_max_members')
+        if limit is not None and quote is not None:
+            if int(quote)>=int(limit)-1:
+                return True
+    return False
+

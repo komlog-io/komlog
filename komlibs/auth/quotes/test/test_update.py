@@ -3,6 +3,9 @@ import uuid
 from komlibs.auth import operations
 from komlibs.auth.quotes import update
 from komcass.api import quote as cassapiquote
+from komcass.api import circle as cassapicircle
+from komcass.model.orm import circle as ormcircle
+from komlibs.general.time import timeuuid
 
 
 class AuthQuotesUpdateTest(unittest.TestCase):
@@ -137,4 +140,44 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         result=update.quo_static_user_total_snapshots(params)
         user_quotes=cassapiquote.get_user_quotes(uid=uid)
         self.assertEqual(user_quotes.get_quote('quo_static_user_total_snapshots'),result)
+
+    def test_quo_static_user_total_circles_no_uid(self):
+        ''' quo_static_user_total_circles should fail if no uid is passed '''
+        params={}
+        self.assertIsNone(update.quo_static_user_total_circles(params))
+
+    def test_quo_static_user_total_circles_success(self):
+        ''' quo_static_user_total_circles should succeed if UID is set'''
+        uid=uuid.uuid4()
+        params={'uid':uid}
+        result=update.quo_static_user_total_circles(params)
+        user_quotes=cassapiquote.get_user_quotes(uid=uid)
+        self.assertEqual(user_quotes.get_quote('quo_static_user_total_circles'),result)
+
+    def test_quo_static_circle_total_members_no_cid(self):
+        ''' quo_static_circle_total_members should fail if no cid is passed '''
+        params={}
+        self.assertIsNone(update.quo_static_circle_total_members(params))
+
+    def test_quo_static_circle_total_members_non_existent_cid(self):
+        ''' quo_static_circle_total_members should return None if cid does not exist '''
+        cid=uuid.uuid4()
+        params={'cid':cid}
+        self.assertEqual(update.quo_static_circle_total_members(params),'0')
+
+    def test_quo_static_circle_total_members_existent_cid(self):
+        ''' quo_static_circle_total_members should return None if cid does not exist '''
+        cid=uuid.uuid4()
+        uid=uuid.uuid4()
+        circlename='test_quo_static_circle_total_members_existent_cid'
+        creation_date=timeuuid.uuid1()
+        type='circletype'
+        members={uuid.uuid4()}
+        circle=ormcircle.Circle(uid=uid,cid=cid,circlename=circlename,creation_date=creation_date,type=type,members=members)
+        cassapicircle.insert_circle(circle)
+        params={'cid':cid}
+        result=update.quo_static_circle_total_members(params)
+        self.assertEqual(result,'1')
+        circle_quotes=cassapiquote.get_circle_quotes(cid=cid)
+        self.assertEqual(circle_quotes.get_quote('quo_static_circle_total_members'),result)
 
