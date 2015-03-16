@@ -408,12 +408,13 @@ class WidgetSnapshotsHandler(tornado.web.RequestHandler):
             its=data['its'] if 'its' in data else None
             ets=data['ets'] if 'ets' in data else None
             seq=data['seq'] if 'seq' in data else None
-            user_list=data['ul']
+            user_list=data['ul'] if 'ul' in data else None
+            cid_list=data['cl'] if 'cl' in data else None
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            response=snapshot.new_snapshot_request(username=self.user, wid=wid, user_list=user_list, its=its, ets=ets, seq=seq)
+            response=snapshot.new_snapshot_request(username=self.user, wid=wid, user_list=user_list, cid_list=cid_list, its=its, ets=ets, seq=seq)
             self.set_status(response.status)
             self.write(json_encode(response.data))
 

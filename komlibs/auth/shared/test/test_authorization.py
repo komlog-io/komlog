@@ -206,6 +206,19 @@ class AuthSharedAuthorizationTest(unittest.TestCase):
         self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         self.assertTrue(authorization.authorize_get_snapshot_config(uid=uid, nid=nid))
 
+    def test_authorize_get_snapshot_config_success_through_circle_membership(self):
+        ''' authorize_get_snapshot_config should succeed if permission is found and granted '''
+        uid=uuid.uuid4()
+        cid=uuid.uuid4()
+        pid=uuid.uuid4()
+        nid=uuid.uuid4()
+        ii=timeuuid.uuid1()
+        ie=timeuuid.uuid1()
+        self.assertTrue(graphapi.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
+        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=cid, vertex_type=vertex.SNAPSHOT_CIRCLE_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphapi.set_member_edge(ido=uid,idd=cid,vertex_type=vertex.USER_CIRCLE_RELATION))
+        self.assertTrue(authorization.authorize_get_snapshot_config(uid=uid, nid=nid))
+
     def test_authorize_get_snapshot_config_failure_no_read_permission(self):
         ''' authorize_get_snapshot_config should fail if no read permission is found '''
         uid=uuid.uuid4()

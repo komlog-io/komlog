@@ -89,14 +89,22 @@ def delete_snapshot_request(username, nid):
         raise exceptions.BadParametersException()
 
 @exceptions.ExceptionHandler
-def new_snapshot_request(username, wid, user_list, its=None, ets=None, seq=None):
-    if args.is_valid_username(username) and args.is_valid_hex_uuid(wid) and args.is_valid_list(user_list):
-        if user_list==[]:
+def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None, ets=None, seq=None):
+    if args.is_valid_username(username) and args.is_valid_hex_uuid(wid):
+        if user_list and not args.is_valid_list(user_list):
             raise exceptions.BadParametersException()
-        for user in user_list:
-            if not args.is_valid_username(user):
-                raise exceptions.BadParametersException()
+        if cid_list and not args.is_valid_list(cid_list):
+            raise exceptions.BadParametersException()
+        if user_list:
+            for user in user_list:
+                if not args.is_valid_username(user):
+                    raise exceptions.BadParametersException()
+        if cid_list:
+            for cid in cid_list:
+                if not args.is_valid_hex_uuid(cid):
+                    raise exceptions.BadParametersException()
         wid=uuid.UUID(wid)
+        cid_uuid_list=[uuid.UUID(cid) for cid in cid_list] if cid_list else None
         if seq and args.is_valid_sequence(seq):
             interval_init=timeuuid.get_uuid1_from_custom_sequence(seq)
             interval_end=interval_init
@@ -110,7 +118,7 @@ def new_snapshot_request(username, wid, user_list, its=None, ets=None, seq=None)
         else:
             raise exceptions.BadParametersException()
         authorization.authorize_request(request=requests.NEW_SNAPSHOT, username=username, wid=wid)
-        snapshot=snapshotapi.new_snapshot(username=username,wid=wid,interval_init=interval_init,interval_end=interval_end,shared_with_users=user_list)
+        snapshot=snapshotapi.new_snapshot(username=username,wid=wid,interval_init=interval_init,interval_end=interval_end,shared_with_users=user_list,shared_with_cids=cid_uuid_list)
         if snapshot:
             operation=weboperations.NewSnapshotOperation(uid=snapshot['uid'], nid=snapshot['nid'],wid=snapshot['wid'])
             auth_op=operation.get_auth_operation()

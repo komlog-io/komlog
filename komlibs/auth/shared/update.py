@@ -64,9 +64,10 @@ def new_snapshot(params):
         ii=snapshot.interval_init
         ie=snapshot.interval_end
         perm=permissions.CAN_READ
-        uids=snapshot.shared_with_uids
-        for uid in uids:
+        for uid in snapshot.shared_with_uids:
             graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=perm, interval_init=ii, interval_end=ie)
+        for cid in snapshot.shared_with_cids:
+            graphapi.set_bounded_share_edge(ido=nid, idd=cid, vertex_type=vertex.SNAPSHOT_CIRCLE_RELATION, perm=perm, interval_init=ii, interval_end=ie)
         return True
     else:
         #nothing to do

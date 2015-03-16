@@ -40,7 +40,7 @@ class AuthSharedUpdateTest(unittest.TestCase):
         interval_end=timeuuid.uuid1()
         creation_date=timeuuid.uuid1()
         widgetname='test_new_snapshot_success_snapshot_ds'
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did,shared_with_uids={shared_with_uid1,shared_with_uid2})
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did,shared_with_uids={shared_with_uid1,shared_with_uid2},shared_with_cids=None)
         self.assertTrue(cassapisnapshot.new_snapshot(snapshot=snapshot))
         params={'nid':nid}
         self.assertTrue(update.new_snapshot(params))
@@ -63,7 +63,7 @@ class AuthSharedUpdateTest(unittest.TestCase):
         interval_end=timeuuid.uuid1()
         creation_date=timeuuid.uuid1()
         widgetname='test_new_snapshot_success_snapshot_dp'
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid,shared_with_uids={shared_with_uid1,shared_with_uid2})
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid,shared_with_uids={shared_with_uid1,shared_with_uid2},shared_with_cids=None)
         self.assertTrue(cassapisnapshot.new_snapshot(snapshot=snapshot))
         params={'nid':nid}
         self.assertTrue(update.new_snapshot(params))
@@ -90,7 +90,7 @@ class AuthSharedUpdateTest(unittest.TestCase):
         interval_end=timeuuid.uuid1()
         creation_date=timeuuid.uuid1()
         widgetname='test_new_snapshot_success_snapshot_histogram'
-        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=pids,colors=colors,shared_with_uids={shared_with_uid1,shared_with_uid2})
+        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=pids,colors=colors,shared_with_uids={shared_with_uid1,shared_with_uid2},shared_with_cids=None)
         self.assertTrue(cassapisnapshot.new_snapshot(snapshot=snapshot))
         params={'nid':nid}
         self.assertTrue(update.new_snapshot(params))
@@ -118,7 +118,7 @@ class AuthSharedUpdateTest(unittest.TestCase):
         interval_end=timeuuid.uuid1()
         creation_date=timeuuid.uuid1()
         widgetname='test_new_snapshot_success_snapshot_linegraph'
-        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=pids,colors=colors,shared_with_uids={shared_with_uid1,shared_with_uid2})
+        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=pids,colors=colors,shared_with_uids={shared_with_uid1,shared_with_uid2},shared_with_cids=None)
         self.assertTrue(cassapisnapshot.new_snapshot(snapshot=snapshot))
         params={'nid':nid}
         self.assertTrue(update.new_snapshot(params))
@@ -146,7 +146,7 @@ class AuthSharedUpdateTest(unittest.TestCase):
         interval_end=timeuuid.uuid1()
         creation_date=timeuuid.uuid1()
         widgetname='test_new_snapshot_success_snapshot_table'
-        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=pids,colors=colors,shared_with_uids={shared_with_uid1,shared_with_uid2})
+        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=pids,colors=colors,shared_with_uids={shared_with_uid1,shared_with_uid2},shared_with_cids=None)
         self.assertTrue(cassapisnapshot.new_snapshot(snapshot=snapshot))
         params={'nid':nid}
         self.assertTrue(update.new_snapshot(params))

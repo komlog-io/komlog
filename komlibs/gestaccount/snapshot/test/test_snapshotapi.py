@@ -54,9 +54,20 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         for interval_end in interval_ends:
             self.assertRaises(exceptions.BadParametersException, snapshotapi.new_snapshot, username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
 
+    def test_new_snapshot_failure_non_existent_user(self):
+        ''' new_widget should fail if user does not exist '''
+        username='test_new_snapshot_failure_non_existent_user'
+        wid=uuid.uuid4()
+        interval_init=timeuuid.uuid1()
+        interval_end=timeuuid.uuid1()
+        self.assertRaises(exceptions.UserNotFoundException, snapshotapi.new_snapshot, username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+
     def test_new_snapshot_failure_non_existent_widget(self):
         ''' new_widget should fail if widget does not exist '''
         username='test_new_snapshot_failure_non_existent_widget'
+        email=username+'@komlog.org'
+        password='password'
+        user=userapi.create_user(username=username, password=password, email=email)
         wid=uuid.uuid4()
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()

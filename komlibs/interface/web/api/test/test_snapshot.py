@@ -10,6 +10,7 @@ from komlibs.interface.web.api import datasource as datasourceapi
 from komlibs.interface.web.api import datapoint as datapointapi
 from komlibs.interface.web.api import widget as widgetapi
 from komlibs.interface.web.api import snapshot as snapshotapi
+from komlibs.interface.web.api import circle as circleapi
 from komlibs.interface.web.model import webmodel
 from komlibs.interface.web import status, exceptions
 from komlibs.general.validation import arguments as args
@@ -553,6 +554,96 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['iseq'],sequence)
         self.assertEqual(response7.data['eseq'],sequence)
         self.assertEqual(response7.data['did'],did)
+
+    def test_get_snapshot_config_request_success_snapshot_datasource_shared_to_circle(self):
+        ''' new_snapshot_request should succeed and accesses from circle members granted '''
+        username=self.userinfo['username']
+        aid=self.userinfo['agents'][0]['aid']
+        datasourcename='test_get_snapshot_config_request_success_snapshot_datasource_shared_to_circle'
+        response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        did=response.data['did']
+        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        datasourcecontent='DATASOURCE CONTENT 1 2 3'
+        date=timeuuid.uuid1()
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
+        self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
+        sequence=datasourcedata.data['sequence']
+        response2 = widgetapi.get_widgets_config_request(username=username)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        wid=None
+        for widget in response2.data:
+            if widget['type']==types.DATASOURCE and widget['did']==did:
+                wid=widget['wid']
+        response5=widgetapi.get_widget_config_request(username=username, wid=wid)
+        self.assertEqual(response5.status, status.WEB_STATUS_OK)
+        self.assertEqual(response5.data['type'],types.DATASOURCE)
+        self.assertEqual(response5.data['widgetname'],datasourcename)
+        self.assertEqual(response5.data['wid'],wid)
+        #we create a circle with the member username_to_share
+        username_to_share=self.userinfo_to_share['username']
+        circlename='test_get_snapshot_config_request_success_snapshot_datasource_shared_with_circle'
+        circle_response=circleapi.new_users_circle_request(username=username,circlename=circlename,members_list=[username_to_share])
+        self.assertEqual(circle_response.status, status.WEB_STATUS_OK)
+        cid=circle_response.data['cid']
+        response6 = snapshotapi.new_snapshot_request(username=username,wid=wid,cid_list=[cid],seq=sequence)
+        self.assertEqual(response6.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        #username_to_share should have access to the snapshot and datapoints
+        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'])
+        self.assertEqual(response7.status, status.WEB_STATUS_OK)
+        self.assertEqual(response7.data['nid'],response6.data['nid'])
+        self.assertEqual(response7.data['type'],types.DATASOURCE)
+        self.assertEqual(response7.data['widgetname'],datasourcename)
+        self.assertEqual(response7.data['its'],timeuuid.get_unix_timestamp(date))
+        self.assertEqual(response7.data['ets'],timeuuid.get_unix_timestamp(date))
+        self.assertEqual(response7.data['did'],did)
+        response8=datasourceapi.get_datasource_config_request(username=username_to_share, did=did)
+        self.assertEqual(response8.status, status.WEB_STATUS_OK)
+        self.assertEqual(response8.data['did'],did)
+        self.assertEqual(response8.data['datasourcename'],datasourcename)
+        response9=datasourceapi.get_datasource_data_request(username=username_to_share, did=did, seq=response7.data['iseq'])
+        self.assertEqual(response9.status, status.WEB_STATUS_OK)
+        self.assertEqual(response9.data['content'],datasourcecontent)
+        self.assertEqual(response9.data['did'],did)
+        response9=datasourceapi.get_datasource_data_request(username=username_to_share, did=did)
+        self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
+        #request from other users should be denied
+        username_to_deny='username_to_deny'
+        response10=snapshotapi.get_snapshot_config_request(username=username_to_deny, nid=response6.data['nid'])
+        self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
+        response11=datasourceapi.get_datasource_config_request(username=username_to_deny, did=did)
+        self.assertEqual(response11.status, status.WEB_STATUS_ACCESS_DENIED)
 
     def test_get_snapshot_config_request_success_snapshot_datapoint(self):
         ''' get_snapshot_config_request should succeed '''
