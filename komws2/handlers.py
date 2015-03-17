@@ -188,8 +188,8 @@ class DatapointDataHandler(tornado.web.RequestHandler):
     @auth.userauthenticated
     def get(self,pid):
         try:
-            end_date=self.get_argument('ed',default=None) #ed : end date
-            start_date=self.get_argument('sd',default=None) #sd : start date
+            start_date=self.get_argument('its',default=None) #sd : start date
+            end_date=self.get_argument('ets',default=None) #ed : end date
             iseq=self.get_argument('iseq',default=None)
             eseq=self.get_argument('eseq',default=None)
         except Exception:

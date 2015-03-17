@@ -52,7 +52,7 @@ def get_datapoint_data_request(username, pid, start_date, end_date, iseq=None, e
         data=datapointapi.get_datapoint_data(pid, fromdate=start_date, todate=end_date)
         response_data=[]
         for point in data:
-            response_data.append({'timestamp':timeuuid.get_unix_timestamp(point['date']),
+            response_data.append({'ts':timeuuid.get_unix_timestamp(point['date']),
                                   'value':int(point['value']) if point['value']%1==0 else float(point['value'])
                                  })
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
