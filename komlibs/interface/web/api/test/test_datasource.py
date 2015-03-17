@@ -654,7 +654,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response=datasourceapi.get_datasource_data_request(username=username, did=did)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['did'],did)
-        self.assertEqual(response.data['timestamp'],timeuuid.get_unix_timestamp(date))
+        self.assertEqual(response.data['ts'],timeuuid.get_unix_timestamp(date))
         self.assertEqual(response.data['variables'],[(28,1),(30,1),(32,1)])
         self.assertEqual(response.data['content'],content)
         self.assertEqual(response.data['datapoints'],[])

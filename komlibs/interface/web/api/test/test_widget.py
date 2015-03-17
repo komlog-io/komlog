@@ -850,7 +850,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_add_datapoint_request_success_widget_linegraph'
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
@@ -947,7 +947,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_add_datapoint_request_success_widget_histogram'
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
@@ -1044,7 +1044,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_add_datapoint_request_success_widget_table'
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
@@ -1176,7 +1176,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_datapoint_request_success_widget_linegraph'
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
@@ -1281,7 +1281,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_datapoint_request_success_widget_histogram'
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
@@ -1386,7 +1386,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_datapoint_request_success_widget_table'
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
@@ -1527,7 +1527,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_update_widget_config_request_success_widget_histogram'
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)

@@ -12,6 +12,8 @@ from komcass.api import datasource as cassapidatasource
 from komcass.api import datapoint as cassapidatapoint
 from komcass.api import widget as cassapiwidget
 from komcass.api import dashboard as cassapidashboard
+from komcass.api import circle as cassapicircle
+from komcass.api import snapshot as cassapisnapshot
 from komcass.model.orm import user as ormuser
 from komlibs.gestaccount.user import states, segments
 from komlibs.gestaccount import exceptions
@@ -167,6 +169,8 @@ def delete_user(username):
             pids.append(pid)
     wids=cassapiwidget.get_widgets_wids(uid=user.uid)
     bids=cassapidashboard.get_dashboards_bids(uid=user.uid)
+    cids=cassapicircle.get_circles_cids(uid=user.uid)
+    nids=cassapisnapshot.get_snapshots_nids(uid=user.uid)
     cassapiuser.delete_user(username=username)
     cassapiuser.delete_signup_info(username=username)
     for aid in aids:
@@ -184,5 +188,9 @@ def delete_user(username):
         cassapidatasource.delete_datasource_stats(did=did)
         cassapidatasource.delete_datasource_data(did=did)
         cassapidatasource.delete_datasource_maps(did=did)
+    for cid in cids:
+        cassapicircle.delete_circle(cid=cid)
+    for nid in nids:
+        cassapisnapshot.delete_snapshot(nid=nid)
     return True
 

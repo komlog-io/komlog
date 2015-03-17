@@ -138,7 +138,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_new_datapoint_request_success'
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
@@ -292,7 +292,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_update_datapoint_config_request_failure_non_existent_username'
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][1]
         response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
@@ -326,7 +326,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_update_datapoint_config_request_success_new_datapointname'
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][2]
         response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
@@ -379,7 +379,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_update_datapoint_config_request_success_new_datapointname'
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][3]
         response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
@@ -432,7 +432,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_update_datapoint_config_request_success_new_datapointname'
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][4]
         response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
@@ -486,7 +486,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_get_datapoint_config_request_success'
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['sequence']
+        sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][5]
         response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
