@@ -17,17 +17,17 @@ from komcass.api import dashboard as cassapidashboard
 from komcass.api import snapshot as cassapisnapshot
 from komcass.model.orm import widget as ormwidget
 from komlibs.gestaccount.widget import types
-from komlibs.gestaccount import exceptions
+from komlibs.gestaccount import exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.general import colors
 
 def get_widget_config(wid):
     if not args.is_valid_uuid(wid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_GWC_IW)
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_GWC_WNF)
     data={}
     if widget.type==types.DATASOURCE:
         widget=cassapiwidget.get_widget_ds(wid=wid)
@@ -53,10 +53,10 @@ def get_widget_config(wid):
 
 def get_widgets_config(username):
     if not args.is_valid_username(username):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_GWSC_IU)
     user=cassapiuser.get_user(username=username)
     if not user:
-        raise exceptions.UserNotFoundException()
+        raise exceptions.UserNotFoundException(error=errors.E_GWA_GWSC_UNF)
     data=[]
     widgets=cassapiwidget.get_widgets(uid=user.uid)
     for widget in widgets:
@@ -84,10 +84,10 @@ def get_widgets_config(username):
 
 def delete_widget(wid):
     if not args.is_valid_uuid(wid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_DW_IW)
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_DW_WNF)
     bids=cassapidashboard.get_dashboards_bids(uid=widget.uid)
     for bid in bids:
         cassapidashboard.delete_widget_from_dashboard(bid=bid, wid=wid)
@@ -98,154 +98,168 @@ def delete_widget(wid):
     return True
 
 def new_widget_datasource(username,did):
-    if not args.is_valid_username(username) or not args.is_valid_uuid(did):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_username(username):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWDS_IU)
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWDS_ID)
     user=cassapiuser.get_user(username=username)
     if not user:
-        raise exceptions.UserNotFoundException()
+        raise exceptions.UserNotFoundException(error=errors.E_GWA_NWDS_UNF)
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
-        raise exceptions.DatasourceNotFoundException()
+        raise exceptions.DatasourceNotFoundException(error=errors.E_GWA_NWDS_DNF)
     userwidgets=cassapiwidget.get_widgets(uid=user.uid)
     if userwidgets:
         for widget in userwidgets:
             if widget.type==types.DATASOURCE:
                 widget_ds=cassapiwidget.get_widget_ds(wid=widget.wid)
                 if widget_ds and widget_ds.did==did:
-                    raise exceptions.WidgetAlreadyExistsException()
+                    raise exceptions.WidgetAlreadyExistsException(error=errors.E_GWA_NWDS_WAE)
     wid=uuid.uuid4()
     widget=ormwidget.WidgetDs(wid=wid,widgetname=datasource.datasourcename, uid=datasource.uid,did=datasource.did,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type, 'did': widget.did}
     else:
-        raise exceptions.WidgetCreationException()
+        raise exceptions.WidgetCreationException(error=errors.E_GWA_NWDS_IWE)
 
 def new_widget_datapoint(username,pid):
-    if not args.is_valid_username(username) or not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_username(username):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWDP_IU)
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWDP_ID)
     user=cassapiuser.get_user(username=username)
     if not user:
-        raise exceptions.UserNotFoundException()
+        raise exceptions.UserNotFoundException(error=errors.E_GWA_NWDP_UNF)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
-        raise exceptions.DatapointNotFoundException()
+        raise exceptions.DatapointNotFoundException(error=errors.E_GWA_NWDP_DNF)
     widgets=cassapiwidget.get_widgets(uid=user.uid)
     for widget in widgets:
         if widget.type==types.DATAPOINT:
             dpwidget=cassapiwidget.get_widget_dp(wid=widget.wid)
             if dpwidget and dpwidget.pid==pid:
-                raise exceptions.WidgetAlreadyExistsException()
+                raise exceptions.WidgetAlreadyExistsException(error=errors.E_GWA_NWDP_WAE)
     wid=uuid.uuid4()
     widget=ormwidget.WidgetDp(wid=wid,widgetname=datapoint.datapointname, uid=user.uid,pid=datapoint.pid,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type, 'pid': widget.pid}
     else:
-        raise exceptions.WidgetCreationException()
+        raise exceptions.WidgetCreationException(error=errors.E_GWA_NWDP_IWE)
 
 def new_widget_histogram(username, widgetname):
-    if not args.is_valid_username(username) or not args.is_valid_widgetname(widgetname):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_username(username):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWH_IU)
+    if not args.is_valid_widgetname(widgetname):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWH_IWN)
     user=cassapiuser.get_user(username=username)
     if not user:
-        raise exceptions.UserNotFoundException()
+        raise exceptions.UserNotFoundException(error=errors.E_GWA_NWH_UNF)
     wid=uuid.uuid4()
     widget=ormwidget.WidgetHistogram(wid=wid,uid=user.uid,widgetname=widgetname,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type}
     else:
-        raise exceptions.WidgetCreationException()
+        raise exceptions.WidgetCreationException(error=errors.E_GWA_NWH_IWE)
 
 def new_widget_linegraph(username, widgetname):
-    if not args.is_valid_username(username) or not args.is_valid_widgetname(widgetname):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_username(username):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWL_IU)
+    if not args.is_valid_widgetname(widgetname):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWL_IWN)
     user=cassapiuser.get_user(username=username)
     if not user:
-        raise exceptions.UserNotFoundException()
+        raise exceptions.UserNotFoundException(error=errors.E_GWA_NWL_UNF)
     wid=uuid.uuid4()
     widget=ormwidget.WidgetLinegraph(wid=wid,uid=user.uid,widgetname=widgetname,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type}
     else:
-        raise exceptions.WidgetCreationException()
+        raise exceptions.WidgetCreationException(error=errors.E_GWA_NWL_IWE)
 
 def new_widget_table(username, widgetname):
-    if not args.is_valid_username(username) or not args.is_valid_widgetname(widgetname):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_username(username):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWT_IU)
+    if not args.is_valid_widgetname(widgetname):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWT_IWN)
     user=cassapiuser.get_user(username=username)
     if not user:
-        raise exceptions.UserNotFoundException()
+        raise exceptions.UserNotFoundException(error=errors.E_GWA_NWT_UNF)
     wid=uuid.uuid4()
     widget=ormwidget.WidgetTable(wid=wid,uid=user.uid,widgetname=widgetname,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type}
     else:
-        raise exceptions.WidgetCreationException()
+        raise exceptions.WidgetCreationException(error=errors.E_GWA_NWT_IWE)
 
 def add_datapoint_to_widget(wid, pid):
-    if not args.is_valid_uuid(wid) or not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_uuid(wid):
+        raise exceptions.BadParametersException(error=errors.E_GWA_ADTW_IW)
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=errors.E_GWA_ADTW_IP)
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_ADTW_WNF)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
-        raise exceptions.DatapointNotFoundException()
+        raise exceptions.DatapointNotFoundException(error=errors.E_GWA_ADTW_DNF)
     color=datapoint.color if datapoint.color else colors.get_random_color()
     if widget.type==types.HISTOGRAM:
         if cassapiwidget.add_datapoint_to_histogram(wid=wid, pid=pid, color=color):
             return True
         else:
-            raise exceptions.AddDatapointToWidgetException()
+            raise exceptions.AddDatapointToWidgetException(error=errors.E_GWA_ADTW_IDHE)
     elif widget.type==types.LINEGRAPH:
         if cassapiwidget.add_datapoint_to_linegraph(wid=wid, pid=pid, color=color):
             return True
         else:
-            raise exceptions.AddDatapointToWidgetException()
+            raise exceptions.AddDatapointToWidgetException(error=errors.E_GWA_ADTW_IDLE)
     elif widget.type==types.TABLE:
         if cassapiwidget.add_datapoint_to_table(wid=wid, pid=pid, color=color):
             return True
         else:
-            raise exceptions.AddDatapointToWidgetException()
+            raise exceptions.AddDatapointToWidgetException(error=errors.E_GWA_ADTW_IDTE)
     else:
-        raise exceptions.WidgetUnsupportedOperationException()
+        raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GWA_ADTW_WUO)
 
 def delete_datapoint_from_widget(wid, pid):
-    if not args.is_valid_uuid(wid) or not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_uuid(wid):
+        raise exceptions.BadParametersException(error=errors.E_GWA_DDFW_IW)
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=errors.E_GWA_DDFW_IP)
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_DDFW_WNF)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
-        raise exceptions.DatapointNotFoundException()
+        raise exceptions.DatapointNotFoundException(error=errors.E_GWA_DDFW_DNF)
     if widget.type==types.HISTOGRAM:
         if cassapiwidget.delete_datapoint_from_histogram(wid=wid, pid=pid):
             return True
         else:
-            raise exceptions.DeleteDatapointFromWidgetException()
+            raise exceptions.DeleteDatapointFromWidgetException(error=errors.E_GWA_DDFW_IDHE)
     elif widget.type==types.LINEGRAPH:
         if cassapiwidget.delete_datapoint_from_linegraph(wid=wid, pid=pid):
             return True
         else:
-            raise exceptions.DeleteDatapointFromWidgetException()
+            raise exceptions.DeleteDatapointFromWidgetException(error=errors.E_GWA_DDFW_IDLE)
     elif widget.type==types.TABLE:
         if cassapiwidget.delete_datapoint_from_table(wid=wid, pid=pid):
             return True
         else:
-            raise exceptions.DeleteDatapointFromWidgetException()
+            raise exceptions.DeleteDatapointFromWidgetException(error=errors.E_GWA_DDFW_IDTE)
     else:
-        raise exceptions.WidgetUnsupportedOperationException()
+        raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GWA_DDFW_WUO)
 
 def update_widget_config(wid, widgetname=None, colors=None):
     if not args.is_valid_uuid(wid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWC_IW)
     if widgetname and not args.is_valid_widgetname(widgetname):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWC_IWN)
     if colors and not args.is_valid_dict(colors):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWC_IC)
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
-        raise exceptions.WdigetNotFoundException()
+        raise exceptions.WdigetNotFoundException(error=errors.E_GWA_UWC_WNF)
     if widget.type==types.DATASOURCE:
         return update_widget_datasource(wid=wid, widgetname=widgetname)
     elif widget.type==types.DATAPOINT:
@@ -257,25 +271,29 @@ def update_widget_config(wid, widgetname=None, colors=None):
     elif widget.type==types.TABLE:
         return update_widget_table(wid=wid, widgetname=widgetname, colors=colors)
     else:
-        raise exceptions.WidgetUnsupportedOperationException()
+        raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GWA_UWC_WUO)
 
 def update_widget_datasource(wid, widgetname):
-    if not args.is_valid_uuid(wid) or not args.is_valid_widgetname(widgetname):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_uuid(wid):
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWDS_IW)
+    if not args.is_valid_widgetname(widgetname):
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWDS_IWN)
     widget=cassapiwidget.get_widget_ds(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_UWDS_WNF)
     if cassapiwidget.insert_widget_widgetname(wid=wid, widgetname=widgetname):
         return True
     else:
         return False
 
 def update_widget_datapoint(wid, widgetname):
-    if not args.is_valid_uuid(wid) or not args.is_valid_widgetname(widgetname):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_uuid(wid):
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWDP_IW)
+    if not args.is_valid_widgetname(widgetname):
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWDP_IWN)
     widget=cassapiwidget.get_widget_dp(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_UWDP_WNF)
     if cassapiwidget.insert_widget_widgetname(wid=wid, widgetname=widgetname):
         return True
     else:
@@ -283,21 +301,21 @@ def update_widget_datapoint(wid, widgetname):
 
 def update_widget_histogram(wid, widgetname=None, colors=None):
     if not args.is_valid_uuid(wid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWH_IW)
     if widgetname and not args.is_valid_widgetname(widgetname):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWH_IWN)
     if colors and not args.is_valid_dict(colors):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWH_ICD)
     widget=cassapiwidget.get_widget_histogram(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_UWH_WNF)
     if colors:
         pids=list(colors.keys())
         for pid in pids:
             if not pid in widget.datapoints:
-                raise exceptions.DatapointNotFoundException()
+                raise exceptions.DatapointNotFoundException(error=errors.E_GWA_UWH_DNF)
             elif not args.is_valid_hexcolor(colors[pid]):
-                raise exceptions.BadParametersException()
+                raise exceptions.BadParametersException(error=errors.E_GWA_UWH_IC)
     if widgetname:
         if not cassapiwidget.insert_widget_widgetname(wid,widgetname):
             return False
@@ -310,21 +328,21 @@ def update_widget_histogram(wid, widgetname=None, colors=None):
 
 def update_widget_linegraph(wid, widgetname=None, colors=None):
     if not args.is_valid_uuid(wid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWL_IW)
     if widgetname and not args.is_valid_widgetname(widgetname):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWL_IWN)
     if colors and not args.is_valid_dict(colors):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWL_ICD)
     widget=cassapiwidget.get_widget_linegraph(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_UWL_WNF)
     if colors:
         pids=list(colors.keys())
         for pid in pids:
             if not pid in widget.datapoints:
-                raise exceptions.DatapointNotFoundException()
+                raise exceptions.DatapointNotFoundException(error=errors.E_GWA_UWL_DNF)
             elif not args.is_valid_hexcolor(colors[pid]):
-                raise exceptions.BadParametersException()
+                raise exceptions.BadParametersException(error=errors.E_GWA_UWL_IC)
     if widgetname:
         if not cassapiwidget.insert_widget_widgetname(wid,widgetname):
             return False
@@ -337,21 +355,21 @@ def update_widget_linegraph(wid, widgetname=None, colors=None):
 
 def update_widget_table(wid, widgetname=None, colors=None):
     if not args.is_valid_uuid(wid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWT_IW)
     if widgetname and not args.is_valid_widgetname(widgetname):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWT_IWN)
     if colors and not args.is_valid_dict(colors):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWT_ICD)
     widget=cassapiwidget.get_widget_table(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_UWT_WNF)
     if colors:
         pids=list(colors.keys())
         for pid in pids:
             if not pid in widget.datapoints:
-                raise exceptions.DatapointNotFoundException()
+                raise exceptions.DatapointNotFoundException(error=errors.E_GWA_UWT_DNF)
             elif not args.is_valid_hexcolor(colors[pid]):
-                raise exceptions.BadParametersException()
+                raise exceptions.BadParametersException(error=errors.E_GWA_UWT_IC)
     if widgetname:
         if not cassapiwidget.insert_widget_widgetname(wid,widgetname):
             return False

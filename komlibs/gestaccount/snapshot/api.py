@@ -17,17 +17,17 @@ from komcass.api import datapoint as cassapidatapoint
 from komcass.api import circle as cassapicircle
 from komcass.model.orm import snapshot as ormsnapshot
 from komlibs.gestaccount.widget import types
-from komlibs.gestaccount import exceptions
+from komlibs.gestaccount import exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komfig import logger
 
 def get_snapshot_config(nid):
     if not args.is_valid_uuid(nid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GSA_GSC_IN)
     snapshot=cassapisnapshot.get_snapshot(nid=nid)
     if not snapshot:
-        raise exceptions.SnapshotNotFoundException()
+        raise exceptions.SnapshotNotFoundException(error=errors.E_GSA_GSC_SNF)
     data={}
     if snapshot.type==types.DATASOURCE:
         snapshot=cassapisnapshot.get_snapshot_ds(nid=nid)
@@ -53,10 +53,10 @@ def get_snapshot_config(nid):
 
 def get_snapshots_config(username):
     if not args.is_valid_username(username):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GSA_GSSC_IU)
     user=cassapiuser.get_user(username=username)
     if not user:
-        raise exceptions.UserNotFoundException()
+        raise exceptions.UserNotFoundException(error=errors.E_GSA_GSSC_UNF)
     data=[]
     nids=cassapisnapshot.get_snapshots_nids(uid=user.uid)
     for nid in nids:
@@ -66,7 +66,7 @@ def get_snapshots_config(username):
 
 def get_snapshot_data(nid):
     if not args.is_valid_uuid(nid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GSA_GSD_IN)
     snapshot_config=get_snapshot_config(nid=nid)
     data={}
     if snapshot_config['type']==types.DATASOURCE:
@@ -94,26 +94,34 @@ def get_snapshot_data(nid):
 
 def delete_snapshot(nid):
     if not args.is_valid_uuid(nid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GSA_DS_IN)
     snapshot=cassapisnapshot.get_snapshot(nid=nid)
     if not snapshot:
-        raise exceptions.SnapshotNotFoundException()
+        raise exceptions.SnapshotNotFoundException(error=errors.E_GSA_DS_SNF)
     cassapisnapshot.delete_snapshot(nid=nid)
     return True
 
 def new_snapshot(username, wid, interval_init, interval_end, shared_with_users=None,shared_with_cids=None):
-    if not args.is_valid_username(username) or not args.is_valid_uuid(wid) or not args.is_valid_date(interval_init) or not args.is_valid_date(interval_end) or interval_init>interval_end:
-        raise exceptions.BadParametersException()
+    if not args.is_valid_username(username):
+        raise exceptions.BadParametersException(error=errors.E_GSA_NS_IU)
+    if not args.is_valid_uuid(wid):
+        raise exceptions.BadParametersException(error=errors.E_GSA_NS_IW)
+    if not args.is_valid_date(interval_init):
+        raise exceptions.BadParametersException(error=errors.E_GSA_NS_III)
+    if not args.is_valid_date(interval_end):
+        raise exceptions.BadParametersException(error=errors.E_GSA_NS_IIE)
+    if interval_init>interval_end:
+        raise exceptions.BadParametersException(error=errors.E_GSA_NS_IIO)
     if shared_with_users and not args.is_valid_list(shared_with_users):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GSA_NS_ISWU)
     if shared_with_cids and not args.is_valid_list(shared_with_cids):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GSA_NS_ISWC)
     user=cassapiuser.get_user(username=username)
     if not user:
-        raise exceptions.UserNotFoundException()
+        raise exceptions.UserNotFoundException(error=errors.E_GSA_NS_UNF)
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NS_WNF)
     snapshot=None
     uids=set()
     cids=set()
@@ -142,71 +150,71 @@ def new_snapshot(username, wid, interval_init, interval_end, shared_with_users=N
     if snapshot:
         return snapshot
     else:
-        raise exceptions.SnapshotCreationException()
+        raise exceptions.SnapshotCreationException(error=errors.E_GSA_NS_SCE)
 
 def _new_snapshot_datasource(uid,wid,interval_init, interval_end,shared_with_uids,shared_with_cids):
     widget=cassapiwidget.get_widget_ds(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NSDS_WNF)
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
     snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, did=widget.did, shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
-        raise exceptions.SnapshotCreationException()
+        raise exceptions.SnapshotCreationException(error=errors.E_GSA_NSDS_SCE)
 
 def _new_snapshot_datapoint(uid,wid,interval_init, interval_end,shared_with_uids,shared_with_cids):
     widget=cassapiwidget.get_widget_dp(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NSDP_WNF)
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
     snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, pid=widget.pid,shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
-        raise exceptions.SnapshotCreationException()
+        raise exceptions.SnapshotCreationException(error=errors.E_GSA_NSDP_SCE)
 
 def _new_snapshot_histogram(uid,wid,interval_init, interval_end,shared_with_uids,shared_with_cids):
     widget=cassapiwidget.get_widget_histogram(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NSH_WNF)
     if len(widget.datapoints)==0:
-        raise exceptions.WidgetUnsupportedOperationException()
+        raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GSA_NSH_ZDP)
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
     snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, datapoints=widget.datapoints, colors=widget.colors,shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
-        raise exceptions.SnapshotCreationException()
+        raise exceptions.SnapshotCreationException(error=errors.E_GSA_NSH_SCE)
 
 def _new_snapshot_linegraph(uid,wid,interval_init, interval_end, shared_with_uids,shared_with_cids):
     widget=cassapiwidget.get_widget_linegraph(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NSL_WNF)
     if len(widget.datapoints)==0:
-        raise exceptions.WidgetUnsupportedOperationException()
+        raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GSA_NSL_ZDP)
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
     snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, datapoints=widget.datapoints, colors=widget.colors,shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
-        raise exceptions.SnapshotCreationException()
+        raise exceptions.SnapshotCreationException(error=errors.E_GSA_NSL_SCE)
 
 def _new_snapshot_table(uid,wid,interval_init, interval_end, shared_with_uids,shared_with_cids):
     widget=cassapiwidget.get_widget_table(wid=wid)
     if not widget:
-        raise exceptions.WidgetNotFoundException()
+        raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NST_WNF)
     if len(widget.datapoints)==0:
-        raise exceptions.WidgetUnsupportedOperationException()
+        raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GSA_NST_ZDP)
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
     snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, datapoints=widget.datapoints, colors=widget.colors,shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
-        raise exceptions.SnapshotCreationException()
+        raise exceptions.SnapshotCreationException(error=errors.E_GSA_NST_SCE)
 

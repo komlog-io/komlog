@@ -16,7 +16,7 @@ from komcass.api import datapoint as cassapidatapoint
 from komcass.api import widget as cassapiwidget
 from komcass.api import dashboard as cassapidashboard
 from komcass.model.orm import datapoint as ormdatapoint
-from komlibs.gestaccount import exceptions
+from komlibs.gestaccount import exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.general import colors
@@ -28,11 +28,11 @@ def get_datapoint_data(pid, fromdate=None, todate=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
     if not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GPA_GDD_IP)
     if todate and not args.is_valid_date(todate):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GPA_GDD_ITD)
     if fromdate and not args.is_valid_date(fromdate):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GPA_GDD_IFD)
     if not todate:
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
         todate=datapoint_stats.last_received if datapoint_stats and datapoint_stats.last_received else timeuuid.uuid1()
@@ -41,7 +41,7 @@ def get_datapoint_data(pid, fromdate=None, todate=None):
     datapoint_data_list=cassapidatapoint.get_datapoint_data(pid=pid,fromdate=fromdate,todate=todate)
     data=[]
     if datapoint_data_list==[]:
-        raise exceptions.DatapointDataNotFoundException(last_date=fromdate)
+        raise exceptions.DatapointDataNotFoundException(error=errors.E_GPA_GDD_DDNF, last_date=fromdate)
     else:
         for datapoint_data in datapoint_data_list:
             data.append({'date':datapoint_data.date,'value':datapoint_data.value})
@@ -51,23 +51,27 @@ def create_datapoint(did, datapointname, color):
     '''
     Funcion utilizada para la creacion de un datapoint sin asociar a ninguna variable en particular
     '''
-    if not args.is_valid_uuid(did) or not args.is_valid_datapointname(datapointname) or not args.is_valid_hexcolor(color):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=errors.E_GPA_CRD_ID)
+    if not args.is_valid_datapointname(datapointname):
+        raise exceptions.BadParametersException(error=errors.E_GPA_CRD_IDN)
+    if not args.is_valid_hexcolor(color):
+        raise exceptions.BadParametersException(error=errors.E_GPA_CRD_IC)
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
-        raise exceptions.DatasourceNotFoundException()
+        raise exceptions.DatasourceNotFoundException(error=errors.E_GPA_CRD_DNF)
     pid=uuid.uuid4()
     datapoint=ormdatapoint.Datapoint(pid=pid,did=did,datapointname=datapointname,color=color, creation_date=timeuuid.uuid1())
     if cassapidatapoint.new_datapoint(datapoint):
         return {'pid':datapoint.pid, 'did':datapoint.did, 'datapointname':datapoint.datapointname, 'color':datapoint.color}
     else:
-        raise exceptions.DatapointCreationException()
+        raise exceptions.DatapointCreationException(error=errors.E_GPA_CRD_IDE)
 
 def get_datapoint_config(pid):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
     if not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GPA_GDC_IP)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
     data={}
@@ -79,18 +83,18 @@ def get_datapoint_config(pid):
         if datapoint_stats:
             data['decimalseparator']=datapoint_stats.decimal_separator if datapoint_stats.decimal_separator else ''
     else:
-        raise exceptions.DatapointNotFoundException()
+        raise exceptions.DatapointNotFoundException(error=errors.E_GPA_GDC_DNF)
     return data
 
 def update_datapoint_config(pid, datapointname=None, color=None):
     if not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GPA_UDC_IP)
     if datapointname and not args.is_valid_datapointname(datapointname):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GPA_UDC_IDN)
     if color and not args.is_valid_hexcolor(color):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GPA_UDC_IC)
     if not datapointname and not color:
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GPA_UDC_EMP)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if datapoint:
         if datapointname:
@@ -100,31 +104,37 @@ def update_datapoint_config(pid, datapointname=None, color=None):
         if cassapidatapoint.insert_datapoint(datapoint):
             return True
         else:
-            raise exceptions.DatapointUpdateException()
+            raise exceptions.DatapointUpdateException(error=errors.E_GPA_UDC_IDE)
     else:
-        raise exceptions.DatapointNotFoundException()
+        raise exceptions.DatapointNotFoundException(error=errors.E_GPA_UDC_DNF)
 
 def mark_negative_variable(pid, date, position, length):
     ''' Los pasos son los siguientes:
     - Comprobamos que la variable exista en el sample (ds en un dtdo momento)
     - Añadimos la variable a la lista de negativos del datapoint
     '''
-    if not args.is_valid_uuid(pid) or not args.is_valid_date(date) or not args.is_valid_int(position) or not args.is_valid_int(length):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MNV_IP)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MNV_IDT)
+    if not args.is_valid_int(position):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MNV_IPO)
+    if not args.is_valid_int(length):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MNV_IL)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
-        raise exceptions.DatapointNotFoundException()
+        raise exceptions.DatapointNotFoundException(error=errors.E_GPA_MNV_DNF)
     dsmapvars = cassapidatasource.get_datasource_map_variables(did=datapoint.did, date=date)
     if not dsmapvars: 
-        raise exceptions.DatasourceMapNotFoundException()
+        raise exceptions.DatasourceMapNotFoundException(error=errors.E_GPA_MNV_DMNF)
     try:
         value=dsmapvars[position]
         if not value==length:
             logger.logger.debug('Received length doesnt match stored value: '+str(datapoint.did)+' '+str(date)+' position: '+str(position)+' length: '+str(length))
-            raise exceptions.DatasourceVariableNotFoundException()
+            raise exceptions.DatasourceVariableNotFoundException(error=errors.E_GPA_MNV_VLNF)
     except KeyError:
         logger.logger.debug('Variable not found: '+str(datapoint.did)+' '+str(date)+' position: '+str(position)+' length: '+str(length))
-        raise exceptions.DatasourceVariableNotFoundException()
+        raise exceptions.DatasourceVariableNotFoundException(error=errors.E_GPA_MNV_VPNF)
     #en este punto hemos comprobado que la muestra y variable existen, falta añadirla al listado de negativos
     if not cassapidatapoint.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length):
         logger.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
@@ -148,22 +158,28 @@ def mark_positive_variable(pid, date, position, length, replace=True):
     - Si algun otro datapoint valida la variable marcada, solicitamos la regeneracion del DTREE de dicho datapoint 
     y mandamos un NEGVAR sobre esa variable y ese dtp
     '''
-    if not args.is_valid_uuid(pid) or not args.is_valid_date(date) or not args.is_valid_int(position) or not args.is_valid_int(length):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MPV_IP)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MPV_IDT)
+    if not args.is_valid_int(position):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MPV_IPO)
+    if not args.is_valid_int(length):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MPV_IL)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
-        raise exceptions.DatapointNotFoundException()
+        raise exceptions.DatapointNotFoundException(error=errors.E_GPA_MPV_DNF)
     dsmap = cassapidatasource.get_datasource_map(did=datapoint.did, date=date)
     if not dsmap:
         logger.logger.debug('DSMAP NOT FOUND EXCEPTION: date: '+date.hex+' did: '+datapoint.did.hex)
-        raise exceptions.DatasourceMapNotFoundException()
+        raise exceptions.DatasourceMapNotFoundException(error=errors.E_GPA_MPV_DMNF)
     did=datapoint.did
     try:
         value=dsmap.variables[position]
         if not value==length:
-            raise exceptions.DatasourceVariableNotFoundException()
+            raise exceptions.DatasourceVariableNotFoundException(error=errors.E_GPA_MPV_VLNF)
     except KeyError:
-        raise exceptions.DatasourceVariableNotFoundException()
+        raise exceptions.DatasourceVariableNotFoundException(error=errors.E_GPA_MPV_VPNF)
     ''' en este punto hemos comprobado que la muestra y variable existen y dtp pertenece a did indicado.
     Comprobamos que no haya otros datapoints que validen esa variable, en caso contrario
     solicitaremos que esa variable se marque como negativa en ellos '''
@@ -184,7 +200,7 @@ def mark_positive_variable(pid, date, position, length, replace=True):
                     datapoints_to_update.append(a_pid)
                     mark_negative_variable(pid=a_pid, date=date, position=position, length=length)
                 else:
-                    raise exceptions.VariableMatchesExistingDatapointException()
+                    raise exceptions.VariableMatchesExistingDatapointException(error=errors.E_GPA_MPV_VAE)
     ''' establecemos la variable como positiva para este datapoint '''
     if not cassapidatapoint.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length):
         logger.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
@@ -207,10 +223,10 @@ def generate_decision_tree(pid):
     - lo almacenamos en bbdd
     '''
     if not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GPA_GDT_IP)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
-        raise exceptions.DatapointNotFoundException()
+        raise exceptions.DatapointNotFoundException(error=errors.E_GPA_GDT_DNF)
     did=datapoint.did
     dates_to_get=[]
     positive_samples={}
@@ -259,11 +275,19 @@ def generate_decision_tree(pid):
         else:
             return False
     else:
-        raise exceptions.DatapointDTreeTrainingSetEmptyException()
+        raise exceptions.DatapointDTreeTrainingSetEmptyException(error=errors.E_GPA_GDT_ETS)
 
 def monitor_new_datapoint(did, date, position, length, datapointname):
-    if not args.is_valid_uuid(did) or not args.is_valid_date(date) or not args.is_valid_int(position) or not args.is_valid_int(length) or not args.is_valid_datapointname(datapointname):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MND_ID)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MND_IDT)
+    if not args.is_valid_int(position):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MND_IPO)
+    if not args.is_valid_int(length):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MND_IL)
+    if not args.is_valid_datapointname(datapointname):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MND_IDN)
     try:
         color=colors.get_random_color()
         datapoint={}
@@ -292,14 +316,16 @@ def store_datapoint_values(pid, date, store_newer=True):
             - Posteriormente obtenemos las variables del dsmap y comprobamos una por una si valida el dtree
             - en caso afirmativo se almacena y pasamos al siguiente dsmap. En caso negativo, comprobadas todas las variables, pasariamos al siguiente dsmap tambien.
     '''
-    if not args.is_valid_uuid(pid) or not args.is_valid_date(date):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=errors.E_GPA_SDPV_IP)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=errors.E_GPA_SDPV_IDT)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
     if datapoint==None:
-        raise exceptions.DatapointNotFoundException()
+        raise exceptions.DatapointNotFoundException(error=errors.E_GPA_SDPV_DNF)
     if datapoint_stats==None or datapoint_stats.dtree==None:
-        raise exceptions.DatapointDTreeNotFoundException()
+        raise exceptions.DatapointDTreeNotFoundException(error=errors.E_GPA_SDPV_DTNF)
     did=datapoint.did
     dtree=decisiontree.DecisionTree(jsontree=datapoint_stats.dtree)
     datasource_stats=cassapidatasource.get_datasource_stats(did=did)
@@ -310,7 +336,7 @@ def store_datapoint_values(pid, date, store_newer=True):
         fromdate=date
         todate=date
     if timeuuid.get_unix_timestamp(date) > timeuuid.get_unix_timestamp(datasource_stats.last_mapped):
-        raise exceptions.DatasourceMapNotFoundException()
+        raise exceptions.DatasourceMapNotFoundException(error=errors.E_GPA_SDPV_DMNF)
     dsmaps=cassapidatasource.get_datasource_maps(did=did, fromdate=fromdate, todate=todate)
     for dsmap in dsmaps:
         cassapidatasource.delete_datapoint_from_datasource_map(did=did, date=dsmap.date, pid=datapoint.pid)
@@ -327,7 +353,7 @@ def store_datapoint_values(pid, date, store_newer=True):
                         cassapidatapoint.set_datapoint_last_received(pid=datapoint.pid, last_received=dsmap.date)
                     break
                 else:
-                    raise exceptions.DatapointStoreValueException()
+                    raise exceptions.DatapointStoreValueException(error=errors.E_GPA_SDPV_IDDE)
     return True
 
 def store_datasource_values(did, date):
@@ -342,11 +368,13 @@ def store_datasource_values(did, date):
             - si valida se almacena su valor y pasamos a la siguiente variable.
             - si no valida pasamos al siguiente dtree y volvemos a probar la validacion
     '''
-    if not args.is_valid_uuid(did) or not args.is_valid_date(date):
-        raise exceptions.BadParametersException()
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=errors.E_GPA_SDSV_ID)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=errors.E_GPA_SDSV_IDT)
     dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
     if dsmap==None:
-        raise exceptions.DatasourceMapNotFoundException()
+        raise exceptions.DatasourceMapNotFoundException(error=errors.E_GPA_SDSV_DMNF)
     pids=cassapidatapoint.get_datapoints_pids(did=did)
     if pids==[]:
         return True
@@ -393,10 +421,10 @@ def store_datasource_values(did, date):
 def delete_datapoint(pid):
     ''' Delete all datapoint info. '''
     if not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException()
+        raise exceptions.BadParametersException(error=errors.E_GPA_DDP_IP)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
-        raise exceptions.DatapointNotFoundException()
+        raise exceptions.DatapointNotFoundException(error=errors.E_GPA_DDP_DNF)
     datasource=cassapidatasource.get_datasource(did=datapoint.did)
     bids=cassapidashboard.get_dashboards_bids(uid=datasource.uid) if datasource else []
     widget=cassapiwidget.get_widget_dp(pid=pid)

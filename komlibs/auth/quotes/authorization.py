@@ -12,6 +12,7 @@ from komlibs.auth.quotes import deny
 from komcass.api import datasource as cassapidatasource
 from komcass.api import interface as cassapiiface
 from komlibs.auth import exceptions as authexcept
+from komlibs.auth import errors
 
 
 def authorize_new_agent(uid):
@@ -62,7 +63,7 @@ def authorize_get_datapoint_config(uid,pid):
 def authorize_new_datapoint(uid,did):
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
-        raise authexcept.DatasourceNotFoundException()
+        raise authexcept.DatasourceNotFoundException(error=errors.E_AQA_ANDP_DSNF)
     interfaces=[]
     interfaces.append(deny.interfaces['User_DatapointCreation'])
     interfaces.append(deny.interfaces['Agent_DatapointCreation']+datasource.aid.hex)

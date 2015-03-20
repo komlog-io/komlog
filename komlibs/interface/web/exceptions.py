@@ -12,8 +12,8 @@ class ExceptionHandler(object):
         try:
             response=self.f(**kwargs)
             return response if response else webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
-        except BadParametersException:
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS)
+        except BadParametersException as e:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, error=e.error)
         except authexcept.AuthException as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED,error=e.error)
         except gestexcept.BadParametersException as e:
@@ -75,8 +75,8 @@ class ExceptionHandler(object):
 
 
 class BadParametersException(Exception):
-    def __init__(self):
-        pass
+    def __init__(self, error):
+        self.error=error
 
     def __str__(self):
         return str(self.__class__)
