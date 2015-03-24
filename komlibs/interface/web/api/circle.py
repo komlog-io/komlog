@@ -117,12 +117,11 @@ def add_user_to_circle_request(username, cid, member):
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.ADD_MEMBER_TO_CIRCLE, uid=uid, cid=cid)
     if circleapi.add_user_to_circle(cid=cid, username=member):
-        operation=weboperations.UpdateCircleMembersOperation(cid=cid)
+        operation=weboperations.UpdateCircleMembersOperation(uid=uid, cid=cid)
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
-        #ESTE MENSAJE SE ENVIARA CUANDO OBTENGAMOS EL UID EN LAS FUNCIONES DE INTERFAZ
-        #message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
-        #msgapi.send_message(message)
+        message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
+        msgapi.send_message(message)
         message=messages.MembershipAuthorizationUpdateMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
@@ -141,12 +140,11 @@ def delete_user_from_circle_request(username, cid, member):
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.DELETE_MEMBER_FROM_CIRCLE, uid=uid, cid=cid)
     if circleapi.delete_user_from_circle(cid=cid, username=member):
-        operation=weboperations.UpdateCircleMembersOperation(cid=cid)
+        operation=weboperations.UpdateCircleMembersOperation(uid=uid, cid=cid)
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
-        #ESTE MENSAJE SE ENVIARA CUANDO OBTENGAMOS EL UID EN LAS FUNCIONES DE INTERFAZ
-        #message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
-        #msgapi.send_message(message)
+        message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
+        msgapi.send_message(message)
         message=messages.MembershipAuthorizationUpdateMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)

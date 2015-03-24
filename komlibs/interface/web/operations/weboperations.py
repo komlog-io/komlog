@@ -184,8 +184,9 @@ class DeleteCircleOperation(WIFaceOperation):
         self.params['cid']=cid
 
 class UpdateCircleMembersOperation(WIFaceOperation):
-    def __init__(self, cid):
+    def __init__(self, uid, cid):
         self.oid=UPDATE_CIRCLE_MEMBERS
         self.params={}
+        self.params['uid']=uid
         self.params['cid']=cid
 
