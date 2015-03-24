@@ -235,7 +235,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         username='test_get_widget_config_request_failure_non_existent_username'
         wid=uuid.uuid4().hex
         response=widgetapi.get_widget_config_request(username=username, wid=wid)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_get_widget_config_request_failure_non_existent_widget(self):
         ''' get_widget_config_request should fail if widget does not exist '''
@@ -664,7 +664,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         username='test_new_widget_request_failure_non_existing_user'
         data={'type':'ds'}
         response=widgetapi.new_widget_request(username=username, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_new_widget_request_failure_no_widget_type(self):
         username=self.userinfo['username']
@@ -792,7 +792,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         pid=uuid.uuid4().hex
         wid=uuid.uuid4().hex
         response=widgetapi.add_datapoint_request(username=username, wid=wid, pid=pid)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_add_datapoint_request_success_widget_linegraph(self):
         ''' add_datapoint_request should add the datapoint to the linegraph widget successfully '''
@@ -1118,7 +1118,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         pid=uuid.uuid4().hex
         wid=uuid.uuid4().hex
         response=widgetapi.delete_datapoint_request(username=username, wid=wid, pid=pid)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_delete_datapoint_request_success_widget_linegraph(self):
         ''' delete_datapoint_request should delete the datapoint from the linegraph widget successfully '''
@@ -1462,14 +1462,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             response=widgetapi.update_widget_config_request(username=username, wid=wid, data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_update_widget_config_request_failure_no_permission_over_widget(self):
+    def test_update_widget_config_request_failure_username_does_not_exist(self):
         ''' update_widget_config_request should fail if wid is invalid '''
         data={'widgetname':'test_update_widget_config_request_failure',
               'colors':[{'pid':uuid.uuid4().hex,'color':'#AAAAAA'}]}
-        username='test_update_widget_config_request_failure_no_permission'
+        username='test_update_widget_config_request_failure_username_does_not_exist'
         wid=uuid.uuid4().hex
         response=widgetapi.update_widget_config_request(username=username, wid=wid, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_update_widget_config_request_success_widget_histogram(self):
         ''' update_widget_config_request should update successfylly the widget configuration '''

@@ -20,47 +20,47 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
 
     def test_new_snapshot_failure_invalid_username(self):
         ''' new_snapshot should fail if username is invalid '''
-        usernames=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4(), uuid.uuid1(), 'Usernames','user name']
+        uids=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4().hex, uuid.uuid1(), 'Usernames','user name']
         wid=uuid.uuid4()
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, snapshotapi.new_snapshot, username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+        for uid in uids:
+            self.assertRaises(exceptions.BadParametersException, snapshotapi.new_snapshot,uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end)
 
     def test_new_snapshot_failure_invalid_wid(self):
         ''' new_snapshot should fail if wid is invalid '''
         wids=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4().hex, uuid.uuid1(), 'Usernames','user name']
-        username='test_new_snapshot_username'
+        uid=uuid.uuid4()
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
         for wid in wids:
-            self.assertRaises(exceptions.BadParametersException, snapshotapi.new_snapshot, username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+            self.assertRaises(exceptions.BadParametersException, snapshotapi.new_snapshot,uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end)
 
     def test_new_snapshot_failure_invalid_interval_init(self):
         ''' new_snapshot should fail if interval_init is invalid '''
         interval_inits=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4(), uuid.uuid1().hex, 'Usernames','user name']
-        username='test_new_snapshot_username'
+        uid=uuid.uuid4()
         wid=uuid.uuid4()
         interval_end=timeuuid.uuid1()
         for interval_init in interval_inits:
-            self.assertRaises(exceptions.BadParametersException, snapshotapi.new_snapshot, username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+            self.assertRaises(exceptions.BadParametersException, snapshotapi.new_snapshot,uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end)
 
     def test_new_snapshot_failure_invalid_interval_end(self):
         ''' new_snapshot should fail if interval_end is invalid '''
         interval_ends=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4(), uuid.uuid1().hex, 'Usernames','user name']
-        username='test_new_snapshot_username'
+        uid=uuid.uuid4()
         wid=uuid.uuid4()
         interval_init=timeuuid.uuid1()
         for interval_end in interval_ends:
-            self.assertRaises(exceptions.BadParametersException, snapshotapi.new_snapshot, username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+            self.assertRaises(exceptions.BadParametersException, snapshotapi.new_snapshot,uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end)
 
     def test_new_snapshot_failure_non_existent_user(self):
         ''' new_widget should fail if user does not exist '''
-        username='test_new_snapshot_failure_non_existent_user'
+        uid=uuid.uuid4()
         wid=uuid.uuid4()
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        self.assertRaises(exceptions.UserNotFoundException, snapshotapi.new_snapshot, username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+        self.assertRaises(exceptions.UserNotFoundException, snapshotapi.new_snapshot,uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end)
 
     def test_new_snapshot_failure_non_existent_widget(self):
         ''' new_widget should fail if widget does not exist '''
@@ -71,7 +71,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         wid=uuid.uuid4()
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        self.assertRaises(exceptions.WidgetNotFoundException, snapshotapi.new_snapshot, username=username, wid=wid, interval_init=interval_init, interval_end=interval_end)
+        self.assertRaises(exceptions.WidgetNotFoundException, snapshotapi.new_snapshot,uid=user['uid'], wid=wid, interval_init=interval_init, interval_end=interval_end)
 
     def test_new_snapshot_datasource_success(self):
         ''' new_snapshot_datasource should succeed if widget exists and user too '''
@@ -84,20 +84,20 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testnewsnapshotdssuccesspubkey'
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         uid=user['uid']
         did=datasource['did']
-        widget=widgetapi.new_widget_datasource(username=username, did=did)
+        widget=widgetapi.new_widget_datasource(uid=user['uid'], did=did)
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['did'], did)
         self.assertEqual(widget['uid'], uid)
         self.assertEqual(widget['type'], types.DATASOURCE)
         self.assertEqual(widget['widgetname'],datasourcename)
         self.assertEqual(len(widget.keys()),5)
-        interval_init=timeuuid.uuid1()
-        interval_end=timeuuid.uuid1()
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        interval_init=timeuuid.uuid1(seconds=1)
+        interval_end=timeuuid.uuid1(seconds=2)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         self.assertEqual(snapshot['wid'],widget['wid'])
         self.assertEqual(snapshot['uid'],uid)
         self.assertEqual(snapshot['interval_init'],interval_init)
@@ -115,11 +115,11 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testnewsnapshotdpsuccesspubkey'
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_datapoint(username=username, pid=datapoint['pid']) 
+        widget=widgetapi.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid']) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['pid'], datapoint['pid'])
         self.assertEqual(widget['uid'], user['uid'])
@@ -127,7 +127,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertEqual(widget['widgetname'],datapointname)
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         self.assertEqual(snapshot['wid'],widget['wid'])
         self.assertEqual(snapshot['uid'],user['uid'])
         self.assertEqual(snapshot['interval_init'],interval_init)
@@ -146,18 +146,18 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testpubkey'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_histogram(username=username, widgetname=widgetname) 
+        widget=widgetapi.new_widget_histogram(uid=user['uid'], widgetname=widgetname) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.HISTOGRAM)
         self.assertEqual(widget['widgetname'],widgetname)
         interval_init=timeuuid.uuid1(seconds=1)
         interval_end=timeuuid.uuid1(seconds=3)
-        self.assertRaises(exceptions.WidgetUnsupportedOperationException, snapshotapi.new_snapshot, username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        self.assertRaises(exceptions.WidgetUnsupportedOperationException, snapshotapi.new_snapshot,uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
 
     def test_new_snapshot_histogram_success(self):
         ''' new_snapshot_histogram should succeed if widget exists and user too '''
@@ -171,11 +171,11 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testpubkey'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_histogram(username=username, widgetname=widgetname) 
+        widget=widgetapi.new_widget_histogram(uid=user['uid'], widgetname=widgetname) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.HISTOGRAM)
@@ -183,7 +183,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint['pid']))
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         self.assertEqual(snapshot['wid'],widget['wid'])
         self.assertEqual(snapshot['uid'],user['uid'])
         self.assertEqual(snapshot['interval_init'],interval_init)
@@ -202,18 +202,18 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testpubkey'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_linegraph(username=username, widgetname=widgetname) 
+        widget=widgetapi.new_widget_linegraph(uid=user['uid'], widgetname=widgetname) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.LINEGRAPH)
         self.assertEqual(widget['widgetname'],widgetname)
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        self.assertRaises(exceptions.WidgetUnsupportedOperationException, snapshotapi.new_snapshot, username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        self.assertRaises(exceptions.WidgetUnsupportedOperationException, snapshotapi.new_snapshot,uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
 
     def test_new_snapshot_linegraph_success(self):
         ''' new_snapshot_linegraph should succeed if widget exists and user too '''
@@ -227,11 +227,11 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testpubkey'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_linegraph(username=username, widgetname=widgetname) 
+        widget=widgetapi.new_widget_linegraph(uid=user['uid'], widgetname=widgetname) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.LINEGRAPH)
@@ -239,7 +239,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint['pid']))
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         self.assertEqual(snapshot['wid'],widget['wid'])
         self.assertEqual(snapshot['uid'],user['uid'])
         self.assertEqual(snapshot['interval_init'],interval_init)
@@ -258,18 +258,18 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testpubkey'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_table(username=username, widgetname=widgetname) 
+        widget=widgetapi.new_widget_table(uid=user['uid'], widgetname=widgetname) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.TABLE)
         self.assertEqual(widget['widgetname'],widgetname)
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        self.assertRaises(exceptions.WidgetUnsupportedOperationException, snapshotapi.new_snapshot, username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        self.assertRaises(exceptions.WidgetUnsupportedOperationException, snapshotapi.new_snapshot,uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
 
     def test_new_snapshot_table_success(self):
         ''' new_snapshot_linegraph should succeed if widget exists and user too '''
@@ -283,11 +283,11 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testpubkey'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_table(username=username, widgetname=widgetname) 
+        widget=widgetapi.new_widget_table(uid=user['uid'], widgetname=widgetname) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.TABLE)
@@ -295,7 +295,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint['pid']))
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         self.assertEqual(snapshot['wid'],widget['wid'])
         self.assertEqual(snapshot['uid'],user['uid'])
         self.assertEqual(snapshot['interval_init'],interval_init)
@@ -323,11 +323,11 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testgetsnapshotconfigsuccesspubkey'
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         uid=user['uid']
         did=datasource['did']
-        widget=widgetapi.new_widget_datasource(username=username, did=did)
+        widget=widgetapi.new_widget_datasource(uid=uid, did=did)
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['did'], did)
         self.assertEqual(widget['uid'], uid)
@@ -336,7 +336,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertEqual(len(widget.keys()),5)
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(interval_init)+1)
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=uid, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         self.assertEqual(snapshot['wid'],widget['wid'])
         self.assertEqual(snapshot['uid'],uid)
         self.assertEqual(snapshot['interval_init'],interval_init)
@@ -363,11 +363,11 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testgetsnapshotconfigdpsuccesspubkey'
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_datapoint(username=username, pid=datapoint['pid']) 
+        widget=widgetapi.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid']) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['pid'], datapoint['pid'])
         self.assertEqual(widget['uid'], user['uid'])
@@ -375,7 +375,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertEqual(widget['widgetname'],datapointname)
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         self.assertEqual(snapshot['wid'],widget['wid'])
         self.assertEqual(snapshot['uid'],user['uid'])
         self.assertEqual(snapshot['interval_init'],interval_init)
@@ -403,11 +403,11 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         password='password'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_histogram(username=username, widgetname=widgetname) 
+        widget=widgetapi.new_widget_histogram(uid=user['uid'], widgetname=widgetname) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.HISTOGRAM)
@@ -415,7 +415,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint['pid']))
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         self.assertEqual(snapshot['wid'],widget['wid'])
         self.assertEqual(snapshot['uid'],user['uid'])
         self.assertEqual(snapshot['interval_init'],interval_init)
@@ -444,11 +444,11 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testpubkey'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_linegraph(username=username, widgetname=widgetname) 
+        widget=widgetapi.new_widget_linegraph(uid=user['uid'], widgetname=widgetname) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.LINEGRAPH)
@@ -456,7 +456,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint['pid']))
         interval_init=timeuuid.uuid1(seconds=1)
         interval_end=timeuuid.uuid1(seconds=2)
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         self.assertEqual(snapshot['wid'],widget['wid'])
         self.assertEqual(snapshot['uid'],user['uid'])
         self.assertEqual(snapshot['interval_init'],interval_init)
@@ -485,11 +485,11 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testpubkey'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_table(username=username, widgetname=widgetname) 
+        widget=widgetapi.new_widget_table(uid=user['uid'], widgetname=widgetname) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.TABLE)
@@ -497,7 +497,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint['pid']))
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         self.assertEqual(snapshot['wid'],widget['wid'])
         self.assertEqual(snapshot['uid'],user['uid'])
         self.assertEqual(snapshot['interval_init'],interval_init)
@@ -516,14 +516,14 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
 
     def test_get_snapshots_config_failure_invalid_username(self):
         ''' get_snapshots_config should fail if username is not valid '''
-        usernames=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4(), uuid.uuid1(), 'Usernames','user name']
-        for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, snapshotapi.get_snapshots_config, username=username)
+        uids=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4().hex, uuid.uuid1(), 'Usernames','user name']
+        for uid in uids:
+            self.assertRaises(exceptions.BadParametersException, snapshotapi.get_snapshots_config,uid=uid)
 
     def test_get_snapshots_config_failure_non_existent_username(self):
         ''' get_snapshots_config should fail if username does not exist '''
-        username='test_get_snapshots_config_failure_non_existent_username'
-        self.assertRaises(exceptions.UserNotFoundException, snapshotapi.get_snapshots_config, username=username)
+        uid=uuid.uuid4()
+        self.assertRaises(exceptions.UserNotFoundException, snapshotapi.get_snapshots_config,uid=uid)
 
     def test_get_snapshots_config_success_no_snapshots(self):
         ''' get_snapshots should succeed and return an empty array if user has no snapshots '''
@@ -531,7 +531,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         email=username+'@komlog.org'
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
-        self.assertEqual(snapshotapi.get_snapshots_config(username=username),[])
+        self.assertEqual(snapshotapi.get_snapshots_config(uid=user['uid']),[])
     
     def test_get_snapshots_config_success_some_snapshots(self):
         ''' get_snapshots should succeed and return some snapshots '''
@@ -545,18 +545,18 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testpubkey'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget_tb=widgetapi.new_widget_table(username=username, widgetname=widgetname) 
+        widget_tb=widgetapi.new_widget_table(uid=user['uid'], widgetname=widgetname) 
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget_tb['wid'],pid=datapoint['pid']))
-        widget_ds=widgetapi.new_widget_datasource(username=username, did=datasource['did'])
+        widget_ds=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did'])
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        snapshot_ds=snapshotapi.new_snapshot(username=username, wid=widget_ds['wid'], interval_init=interval_init, interval_end=interval_end)
-        snapshot_tb=snapshotapi.new_snapshot(username=username, wid=widget_tb['wid'], interval_init=interval_init, interval_end=interval_end)
-        snapshots=snapshotapi.get_snapshots_config(username=username)
+        snapshot_ds=snapshotapi.new_snapshot(uid=user['uid'], wid=widget_ds['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot_tb=snapshotapi.new_snapshot(uid=user['uid'], wid=widget_tb['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshots=snapshotapi.get_snapshots_config(uid=user['uid'])
         self.assertEqual(len(snapshots),2)
         counter=0
         for snapshot in snapshots:
@@ -603,11 +603,11 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testpubkey'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=widgetapi.new_widget_table(username=username, widgetname=widgetname) 
+        widget=widgetapi.new_widget_table(uid=user['uid'], widgetname=widgetname) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.TABLE)
@@ -615,7 +615,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint['pid']))
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         self.assertEqual(snapshot['wid'],widget['wid'])
         self.assertEqual(snapshot['uid'],user['uid'])
         self.assertEqual(snapshot['interval_init'],interval_init)
@@ -655,11 +655,11 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testgetsnapshotdatasuccesspubkey'
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         uid=user['uid']
         did=datasource['did']
-        widget=widgetapi.new_widget_datasource(username=username, did=did)
+        widget=widgetapi.new_widget_datasource(uid=user['uid'], did=did)
         content='DATASOURCE CONTENT'
         date=timeuuid.uuid1()
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
@@ -667,7 +667,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date2,content=content))
         interval_init=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-1)
         interval_end=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)+1)
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'],interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=uid, wid=widget['wid'],interval_init=interval_init, interval_end=interval_end)
         snapshot_config=snapshotapi.get_snapshot_config(nid=snapshot['nid'])
         snapshot_data=snapshotapi.get_snapshot_data(nid=snapshot_config['nid'])
         self.assertEqual(list(snapshot_data.keys()),[datasource['did']])
@@ -687,18 +687,18 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testgetsnapshotdatasuccesspubkey'
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
         for i in range(1,100):
             date=timeuuid.uuid1(seconds=i)
             value=i
             cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value),pid=datapoint['pid'])
-        widget=widgetapi.new_widget_datapoint(username=username, pid=datapoint['pid'])
+        widget=widgetapi.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid'])
         interval_init=timeuuid.uuid1(seconds=10.5)
         interval_end=timeuuid.uuid1(seconds=30.5)
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         snapshot_config=snapshotapi.get_snapshot_config(nid=snapshot['nid'])
         snapshot_data=snapshotapi.get_snapshot_data(nid=snapshot_config['nid'])
         self.assertEqual(list(snapshot_data.keys()),[datapoint['pid']])
@@ -720,8 +720,8 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testgetsnapshotdatasuccesspubkey'
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint1=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname1, color=color)
         color=libcolors.get_random_color()
@@ -734,13 +734,13 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
             cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+1000),pid=datapoint1['pid'])
             cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+2000),pid=datapoint2['pid'])
             cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+3000),pid=datapoint3['pid'])
-        widget=widgetapi.new_widget_histogram(username=username, widgetname=widgetname)
+        widget=widgetapi.new_widget_histogram(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint1['pid']))
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint2['pid']))
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint3['pid']))
         interval_init=timeuuid.uuid1(seconds=10.5)
         interval_end=timeuuid.uuid1(seconds=30.5)
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         snapshot_config=snapshotapi.get_snapshot_config(nid=snapshot['nid'])
         snapshot_data=snapshotapi.get_snapshot_data(nid=snapshot_config['nid'])
         self.assertEqual(sorted(list(snapshot_data.keys())),sorted([datapoint1['pid'],datapoint2['pid'],datapoint3['pid']]))
@@ -766,8 +766,8 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testgetsnapshotdatasuccesspubkey'
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint1=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname1, color=color)
         color=libcolors.get_random_color()
@@ -780,13 +780,13 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
             cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+1000),pid=datapoint1['pid'])
             cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+2000),pid=datapoint2['pid'])
             cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+3000),pid=datapoint3['pid'])
-        widget=widgetapi.new_widget_linegraph(username=username, widgetname=widgetname)
+        widget=widgetapi.new_widget_linegraph(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint1['pid']))
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint2['pid']))
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint3['pid']))
         interval_init=timeuuid.uuid1(seconds=10.5)
         interval_end=timeuuid.uuid1(seconds=30.5)
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         snapshot_config=snapshotapi.get_snapshot_config(nid=snapshot['nid'])
         snapshot_data=snapshotapi.get_snapshot_data(nid=snapshot_config['nid'])
         self.assertEqual(sorted(list(snapshot_data.keys())),sorted([datapoint1['pid'],datapoint2['pid'],datapoint3['pid']]))
@@ -812,8 +812,8 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         pubkey='testgetsnapshotdatasuccesspubkey'
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(username=user['username'], aid=agent['aid'], datasourcename=datasourcename)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         color=libcolors.get_random_color()
         datapoint1=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname1, color=color)
         color=libcolors.get_random_color()
@@ -826,13 +826,13 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
             cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+1000),pid=datapoint1['pid'])
             cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+2000),pid=datapoint2['pid'])
             cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+3000),pid=datapoint3['pid'])
-        widget=widgetapi.new_widget_table(username=username, widgetname=widgetname)
+        widget=widgetapi.new_widget_table(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint1['pid']))
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint2['pid']))
         self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint3['pid']))
         interval_init=timeuuid.uuid1(seconds=10.5)
         interval_end=timeuuid.uuid1(seconds=30.5)
-        snapshot=snapshotapi.new_snapshot(username=username, wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
+        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
         snapshot_config=snapshotapi.get_snapshot_config(nid=snapshot['nid'])
         snapshot_data=snapshotapi.get_snapshot_data(nid=snapshot_config['nid'])
         self.assertEqual(sorted(list(snapshot_data.keys())),sorted([datapoint1['pid'],datapoint2['pid'],datapoint3['pid']]))

@@ -123,7 +123,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
     def test_get_snapshot_config_request_failure_non_existent_nid(self):
         ''' get_snapshot_config_request should fail if nid does not exist '''
         nid=uuid.uuid4().hex
-        username='test_get_snapshot_config_request_failure_non_existent_nid'
+        username=self.userinfo['username']
         response=snapshotapi.get_snapshot_config_request(username=username,nid=nid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
 
@@ -641,9 +641,9 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         #request from other users should be denied
         username_to_deny='username_to_deny'
         response10=snapshotapi.get_snapshot_config_request(username=username_to_deny, nid=response6.data['nid'])
-        self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response10.status, status.WEB_STATUS_NOT_FOUND)
         response11=datasourceapi.get_datasource_config_request(username=username_to_deny, did=did)
-        self.assertEqual(response11.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response11.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_get_snapshot_config_request_success_snapshot_datapoint(self):
         ''' get_snapshot_config_request should succeed '''
@@ -763,7 +763,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         username='test_delete_snapshot_request_failure_non_existent_username'
         nid=uuid.uuid4().hex
         response=snapshotapi.delete_snapshot_request(username=username, nid=nid)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_delete_snapshot_request_failure_non_existent_nid(self):
         ''' delete_snapshot_request should fail if username does not exist '''
@@ -1532,9 +1532,9 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         #request from other users should be denied
         username_to_deny='username_to_deny'
         response10=snapshotapi.get_snapshot_config_request(username=username_to_deny, nid=response6.data['nid'])
-        self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response10.status, status.WEB_STATUS_NOT_FOUND)
         response11=datapointapi.get_datapoint_config_request(username=username_to_deny, pid=pid)
-        self.assertEqual(response11.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response11.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_new_snapshot_request_failure_widget_histogram_has_no_datapoints(self):
         ''' new_snapshot_request should fail if the histogram widget has no datapoints '''
@@ -1700,9 +1700,9 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         #request from other users should be denied
         username_to_deny='username_to_deny'
         response10=snapshotapi.get_snapshot_config_request(username=username_to_deny, nid=response6.data['nid'])
-        self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response10.status, status.WEB_STATUS_NOT_FOUND)
         response11=datapointapi.get_datapoint_config_request(username=username_to_deny, pid=pid)
-        self.assertEqual(response11.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response11.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_new_snapshot_request_failure_widget_table_has_no_datapoints(self):
         ''' new_snapshot_request should fail if the table widget has no datapoints '''
@@ -1868,9 +1868,9 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         #request from other users should be denied
         username_to_deny='username_to_deny'
         response10=snapshotapi.get_snapshot_config_request(username=username_to_deny, nid=response6.data['nid'])
-        self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response10.status, status.WEB_STATUS_NOT_FOUND)
         response11=datapointapi.get_datapoint_config_request(username=username_to_deny, pid=pid)
-        self.assertEqual(response11.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response11.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_new_snapshot_request_success_widget_datasource(self):
         ''' new_snapshot_request should succeed '''
@@ -1953,9 +1953,9 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         #request from other users should be denied
         username_to_deny='username_to_deny'
         response10=snapshotapi.get_snapshot_config_request(username=username_to_deny, nid=response6.data['nid'])
-        self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response10.status, status.WEB_STATUS_NOT_FOUND)
         response11=datasourceapi.get_datasource_config_request(username=username_to_deny, did=did)
-        self.assertEqual(response11.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response11.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_new_snapshot_request_success_widget_datapoint(self):
         ''' new_snapshot_request should succeed '''
@@ -2065,7 +2065,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         #request from other users should be denied
         username_to_deny='username_to_deny'
         response10=snapshotapi.get_snapshot_config_request(username=username_to_deny, nid=response6.data['nid'])
-        self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response10.status, status.WEB_STATUS_NOT_FOUND)
         response11=datapointapi.get_datapoint_config_request(username=username_to_deny, pid=pid)
-        self.assertEqual(response11.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response11.status, status.WEB_STATUS_NOT_FOUND)
 

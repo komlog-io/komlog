@@ -51,10 +51,10 @@ def get_snapshot_config(nid):
             data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.TABLE,'datapoints':snapshot.datapoints, 'colors':snapshot.colors, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
     return data
 
-def get_snapshots_config(username):
-    if not args.is_valid_username(username):
+def get_snapshots_config(uid):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GSA_GSSC_IU)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GSA_GSSC_UNF)
     data=[]
@@ -101,8 +101,8 @@ def delete_snapshot(nid):
     cassapisnapshot.delete_snapshot(nid=nid)
     return True
 
-def new_snapshot(username, wid, interval_init, interval_end, shared_with_users=None,shared_with_cids=None):
-    if not args.is_valid_username(username):
+def new_snapshot(uid, wid, interval_init, interval_end, shared_with_users=None,shared_with_cids=None):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GSA_NS_IU)
     if not args.is_valid_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_GSA_NS_IW)
@@ -116,7 +116,7 @@ def new_snapshot(username, wid, interval_init, interval_end, shared_with_users=N
         raise exceptions.BadParametersException(error=errors.E_GSA_NS_ISWU)
     if shared_with_cids and not args.is_valid_list(shared_with_cids):
         raise exceptions.BadParametersException(error=errors.E_GSA_NS_ISWC)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GSA_NS_UNF)
     widget=cassapiwidget.get_widget(wid=wid)
@@ -128,9 +128,9 @@ def new_snapshot(username, wid, interval_init, interval_end, shared_with_users=N
     if shared_with_users:
         for username_to_share in shared_with_users:
             if args.is_valid_username(username_to_share):
-                user_to_share=cassapiuser.get_user(username=username_to_share)
-                if user_to_share:
-                    uids.add(user_to_share.uid)
+                uid_to_share=cassapiuser.get_uid(username=username_to_share)
+                if uid_to_share:
+                    uids.add(uid_to_share)
     if shared_with_cids:
         for cid_to_share in shared_with_cids:
             if args.is_valid_uuid(cid_to_share):

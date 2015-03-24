@@ -8,6 +8,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.circle import api as circleapi
 from komlibs.interface.web import status, exceptions, errors
 from komlibs.interface.web.model import webmodel
@@ -21,7 +22,8 @@ from komlibs.general.time import timeuuid
 def get_users_circles_config_request(username):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWACI_GUCSCR_IU)
-    data=circleapi.get_users_circles_config(username=username)
+    uid=userapi.get_uid(username=username)
+    data=circleapi.get_users_circles_config(uid=uid)
     response_data=[]
     for circle in data:
         reg={}
@@ -40,7 +42,8 @@ def get_users_circle_config_request(username, cid):
     if not args.is_valid_hex_uuid(cid):
         raise exceptions.BadParametersException(error=errors.E_IWACI_GUCCR_IC)
     cid=uuid.UUID(cid)
-    authorization.authorize_request(request=requests.GET_CIRCLE_CONFIG,username=username,cid=cid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.GET_CIRCLE_CONFIG,uid=uid,cid=cid)
     data=circleapi.get_users_circle_config(cid=cid)
     circle={'cid':cid.hex}
     circle['circlename']=data['circlename']
@@ -56,7 +59,8 @@ def delete_circle_request(username, cid):
     if not args.is_valid_hex_uuid(cid):
         raise exceptions.BadParametersException(error=errors.E_IWACI_DCR_IC)
     cid=uuid.UUID(cid)
-    authorization.authorize_request(request=requests.DELETE_CIRCLE,username=username,cid=cid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.DELETE_CIRCLE,uid=uid,cid=cid)
     circleapi.delete_circle(cid=cid)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
@@ -68,8 +72,9 @@ def new_users_circle_request(username, circlename, members_list=None):
         raise exceptions.BadParametersException(error=errors.E_IWACI_NUCR_ICN)
     if members_list and not args.is_valid_list(members_list):
         raise exceptions.BadParametersException(error=errors.E_IWACI_NUCR_IML)
-    authorization.authorize_request(request=requests.NEW_CIRCLE, username=username)
-    circle=circleapi.new_users_circle(username=username,circlename=circlename,members_list=members_list)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.NEW_CIRCLE, uid=uid)
+    circle=circleapi.new_users_circle(uid=uid,circlename=circlename,members_list=members_list)
     if circle:
         operation=weboperations.NewCircleOperation(uid=circle['uid'], cid=circle['cid'])
         auth_op=operation.get_auth_operation()
@@ -95,7 +100,8 @@ def update_circle_request(username, cid, data):
     if not 'circlename' in data or not args.is_valid_circlename(data['circlename']):
         raise exceptions.BadParametersException(error=errors.E_IWACI_UCR_ICN)
     cid=uuid.UUID(cid)
-    authorization.authorize_request(request=requests.UPDATE_CIRCLE_CONFIG, username=username, cid=cid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.UPDATE_CIRCLE_CONFIG, uid=uid, cid=cid)
     circleapi.update_circle(cid=cid, circlename=data['circlename'])
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
@@ -108,7 +114,8 @@ def add_user_to_circle_request(username, cid, member):
     if not args.is_valid_username(member):
         raise exceptions.BadParametersException(error=errors.E_IWACI_AUTCR_IM)
     cid=uuid.UUID(cid)
-    authorization.authorize_request(request=requests.ADD_MEMBER_TO_CIRCLE,username=username, cid=cid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.ADD_MEMBER_TO_CIRCLE, uid=uid, cid=cid)
     if circleapi.add_user_to_circle(cid=cid, username=member):
         operation=weboperations.UpdateCircleMembersOperation(cid=cid)
         auth_op=operation.get_auth_operation()
@@ -131,7 +138,8 @@ def delete_user_from_circle_request(username, cid, member):
     if not args.is_valid_username(member):
         raise exceptions.BadParametersException(error=errors.E_IWACI_DUFCR_IM)
     cid=uuid.UUID(cid)
-    authorization.authorize_request(request=requests.DELETE_MEMBER_FROM_CIRCLE,username=username, cid=cid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.DELETE_MEMBER_FROM_CIRCLE, uid=uid, cid=cid)
     if circleapi.delete_user_from_circle(cid=cid, username=member):
         operation=weboperations.UpdateCircleMembersOperation(cid=cid)
         auth_op=operation.get_auth_operation()

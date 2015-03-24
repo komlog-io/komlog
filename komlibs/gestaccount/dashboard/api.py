@@ -19,10 +19,10 @@ from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 
 
-def get_dashboards_config(username):
-    if not args.is_valid_username(username):
+def get_dashboards_config(uid):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GBA_GDSC_IU)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GBA_GDSC_UNF)
     data=[]
@@ -55,12 +55,12 @@ def delete_dashboard(bid):
     else:
         return False
 
-def create_dashboard(username, dashboardname):
-    if not args.is_valid_username(username):
+def create_dashboard(uid, dashboardname):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GBA_CRD_IU)
     if not args.is_valid_dashboardname(dashboardname):
         raise exceptions.BadParametersException(error=errors.E_GBA_CRD_IDN)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GBA_CRD_UNF)
     bid=uuid.uuid4()

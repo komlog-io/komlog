@@ -94,28 +94,28 @@ class MapVarsMessage:
             self.serialized_message='|'.join((self.type,self.did.hex,self.date.hex))
 
 class MonitorVariableMessage:
-    def __init__(self, serialized_message=None, username=None, did=None, date=None, position=None, length=None, datapointname=None):
+    def __init__(self, serialized_message=None, uid=None, did=None, date=None, position=None, length=None, datapointname=None):
         if serialized_message:
             self.serialized_message=serialized_message
-            mtype,username,did,date,position,length,datapointname = self.serialized_message.split('|')
+            mtype,uid,did,date,position,length,datapointname = self.serialized_message.split('|')
             self.type=mtype
-            self.username=username
+            self.uid=uuid.UUID(uid)
             self.did=uuid.UUID(did)
             self.date=uuid.UUID(date)
             self.position=int(position)
             self.length=int(length)
             self.datapointname=datapointname
         else:
-            if not args.is_valid_username(username) or not args.is_valid_uuid(did) or not args.is_valid_date(date) or not args.is_valid_int(position) or not args.is_valid_int(length) or not args.is_valid_datapointname(datapointname):
+            if not args.is_valid_uuid(uid) or not args.is_valid_uuid(did) or not args.is_valid_date(date) or not args.is_valid_int(position) or not args.is_valid_int(length) or not args.is_valid_datapointname(datapointname):
                 raise exceptions.BadParametersException()
             self.type=MON_VAR_MESSAGE
-            self.username=username
+            self.uid=uid
             self.did=did
             self.date=date
             self.position=position
             self.length=length
             self.datapointname=datapointname
-            self.serialized_message=self.type+'|'+self.username+'|'+self.did.hex+'|'+self.date.hex+'|'+str(self.position)+'|'+str(self.length)+'|'+self.datapointname
+            self.serialized_message=self.type+'|'+self.uid.hex+'|'+self.did.hex+'|'+self.date.hex+'|'+str(self.position)+'|'+str(self.length)+'|'+self.datapointname
 
 class GenerateDTreeMessage:
     def __init__(self, serialized_message=None, pid=None):
@@ -352,36 +352,36 @@ class MembershipAuthorizationUpdateMessage:
             self.serialized_message='|'.join((self.type,str(self.operation),json.dumps(str_params)))
 
 class NewDPWidgetMessage:
-    def __init__(self, serialized_message=None, username=None, pid=None):
+    def __init__(self, serialized_message=None, uid=None, pid=None):
         if serialized_message:
             self.serialized_message=serialized_message
-            mtype,username,pid = self.serialized_message.split('|')
+            mtype,uid,pid = self.serialized_message.split('|')
             self.type=mtype
-            self.username=username
+            self.uid=uuid.UUID(uid)
             self.pid=uuid.UUID(pid)
         else:
-            if not args.is_valid_username(username) or not args.is_valid_uuid(pid):
+            if not args.is_valid_uuid(uid) or not args.is_valid_uuid(pid):
                 raise exceptions.BadParametersException()
             self.type=NEW_DP_WIDGET_MESSAGE
-            self.username=username
+            self.uid=uid
             self.pid=pid
-            self.serialized_message='|'.join((self.type,self.username,self.pid.hex))
+            self.serialized_message='|'.join((self.type,self.uid.hex,self.pid.hex))
 
 class NewDSWidgetMessage:
-    def __init__(self, serialized_message=None, username=None, did=None):
+    def __init__(self, serialized_message=None, uid=None, did=None):
         if serialized_message:
             self.serialized_message=serialized_message
-            mtype,username,did = self.serialized_message.split('|')
+            mtype,uid,did = self.serialized_message.split('|')
             self.type=mtype
-            self.username=username
+            self.uid=uuid.UUID(uid)
             self.did=uuid.UUID(did)
         else:
-            if not args.is_valid_username(username) or not args.is_valid_uuid(did):
+            if not args.is_valid_uuid(uid) or not args.is_valid_uuid(did):
                 raise exceptions.BadParametersException()
             self.type=NEW_DS_WIDGET_MESSAGE
-            self.username=username
+            self.uid=uid
             self.did=did
-            self.serialized_message='|'.join((self.type,self.username,self.did.hex))
+            self.serialized_message='|'.join((self.type,self.uid.hex,self.did.hex))
 
 class DeleteUserMessage:
     def __init__(self, serialized_message=None, username=None):

@@ -13,34 +13,34 @@ class GestaccountCircleApiTest(unittest.TestCase):
 
     def test_new_users_circle_failure_invalid_username(self):
         ''' new_users_circle should fail if username is invalid '''
-        usernames=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4(), uuid.uuid1(), 'Usernames','user name']
+        uids=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4().hex, uuid.uuid1(), 'Usernames','user name']
         circlename='circlename'
         members_list=['user1','user2']
-        for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, circleapi.new_users_circle, username=username, circlename=circlename, members_list=members_list)
+        for uid in uids:
+            self.assertRaises(exceptions.BadParametersException, circleapi.new_users_circle, uid=uid, circlename=circlename, members_list=members_list)
 
     def test_new_users_circle_failure_invalid_circlename(self):
         ''' new_users_circle should fail if circlename is invalid '''
         circlenames=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4(), uuid.uuid1()]
-        username='test_new_users_circle_failure_invalid_circlename'
+        uid=uuid.uuid4()
         members_list=['user1','user2']
         for circlename in circlenames:
-            self.assertRaises(exceptions.BadParametersException, circleapi.new_users_circle, username=username, circlename=circlename, members_list=members_list)
+            self.assertRaises(exceptions.BadParametersException, circleapi.new_users_circle, uid=uid, circlename=circlename, members_list=members_list)
 
     def test_new_users_circle_failure_invalid_members_list(self):
         ''' new_users_circle should fail if members_list is invalid '''
         members_lists=[24232, 2342.23423, {'a':'dict'},('a','tuple'),{'set'},uuid.uuid4(), uuid.uuid1(), 'Usernames','user name']
-        username='test_new_users_circle_failure_invalid_members_list'
+        uid=uuid.uuid4()
         circlename='circlename'
         for members_list in members_lists:
-            self.assertRaises(exceptions.BadParametersException, circleapi.new_users_circle, username=username, circlename=circlename, members_list=members_list)
+            self.assertRaises(exceptions.BadParametersException, circleapi.new_users_circle, uid=uid, circlename=circlename, members_list=members_list)
 
     def test_new_users_circle_failure_non_existent_username(self):
         ''' new_users_circle should fail if username does not exist '''
-        username='test_new_users_circle_failure_non_existent_username'
+        uid=uuid.uuid4()
         circlename='circlename'
         members_list=['user1','user2']
-        self.assertRaises(exceptions.UserNotFoundException, circleapi.new_users_circle, username=username, circlename=circlename, members_list=members_list)
+        self.assertRaises(exceptions.UserNotFoundException, circleapi.new_users_circle, uid=uid, circlename=circlename, members_list=members_list)
 
     def test_new_users_circle_success_empty_members_list(self):
         ''' new_users_circle should succeed if user exists and parameters are correct. if no member is passed the circle should be created successfully without members '''
@@ -49,7 +49,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         password='password'
         circlename='test_new_users_circle_success_empty_members_list_circlename'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -67,7 +67,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         circlename='test_new_users_circle_success_non_existent_members_list_circlename'
         members_list=['a_member','other_member','a non valid username']
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename,members_list=members_list)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename,members_list=members_list)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -96,7 +96,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         valid_members=[]
         valid_members.append({'username':member1,'uid':member1_user['uid']})
         valid_members.append({'username':member2,'uid':member2_user['uid']})
-        circle=circleapi.new_users_circle(username=username, circlename=circlename,members_list=members_list)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename,members_list=members_list)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -147,7 +147,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         valid_members=[]
         valid_members.append({'username':member1,'uid':member1_user['uid']})
         valid_members.append({'username':member2,'uid':member2_user['uid']})
-        circle=circleapi.new_users_circle(username=username, circlename=circlename,members_list=members_list)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename,members_list=members_list)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -159,14 +159,14 @@ class GestaccountCircleApiTest(unittest.TestCase):
 
     def test_get_users_circles_config_failure_invalid_username(self):
         ''' get_users_circles_config should fail if username is invalid '''
-        usernames=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4(), uuid.uuid1(), 'Usernames','user name']
-        for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, circleapi.get_users_circles_config, username=username)
+        uids=[None, 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4().hex, uuid.uuid1(), 'Usernames','user name']
+        for uid in uids:
+            self.assertRaises(exceptions.BadParametersException, circleapi.get_users_circles_config, uid=uid)
 
     def test_get_users_circles_config_failure_non_existent_user(self):
         ''' get_users_circles_config should fail if user does not exist '''
-        username='test_get_users_circles_config_failure_non_existent_user'
-        self.assertRaises(exceptions.UserNotFoundException, circleapi.get_users_circles_config, username=username)
+        uid=uuid.uuid4()
+        self.assertRaises(exceptions.UserNotFoundException, circleapi.get_users_circles_config, uid=uid)
 
     def test_get_users_circles_config_success_user_has_no_circles(self):
         ''' get_users_circles should succeed if user exist. if no circle is found, then no data is returned '''
@@ -174,7 +174,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         email=username+'@komlog.org'
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
-        self.assertEqual(circleapi.get_users_circles_config(username=username),[])
+        self.assertEqual(circleapi.get_users_circles_config(uid=user['uid']),[])
 
     def test_get_users_circles_config_success_one_circle_only(self):
         ''' get_users_circles should succeed. in this case will return an array with one circle '''
@@ -195,11 +195,11 @@ class GestaccountCircleApiTest(unittest.TestCase):
         valid_members=[]
         valid_members.append({'username':member1,'uid':member1_user['uid']})
         valid_members.append({'username':member2,'uid':member2_user['uid']})
-        circle=circleapi.new_users_circle(username=username, circlename=circlename,members_list=members_list)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename,members_list=members_list)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
-        db_circles=circleapi.get_users_circles_config(username=username)
+        db_circles=circleapi.get_users_circles_config(uid=user['uid'])
         self.assertTrue(len(db_circles),1)
         db_circle=db_circles[0]
         self.assertEqual(db_circle['cid'],circle['cid'])
@@ -216,10 +216,10 @@ class GestaccountCircleApiTest(unittest.TestCase):
         circlename2='test_get_users_circles_success_some_circles_2'
         circlename3='test_get_users_circles_success_some_circles_3'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle1=circleapi.new_users_circle(username=username, circlename=circlename1)
-        circle2=circleapi.new_users_circle(username=username, circlename=circlename2)
-        circle3=circleapi.new_users_circle(username=username, circlename=circlename3)
-        db_circles=circleapi.get_users_circles_config(username=username)
+        circle1=circleapi.new_users_circle(uid=user['uid'], circlename=circlename1)
+        circle2=circleapi.new_users_circle(uid=user['uid'], circlename=circlename2)
+        circle3=circleapi.new_users_circle(uid=user['uid'], circlename=circlename3)
+        db_circles=circleapi.get_users_circles_config(uid=user['uid'])
         self.assertTrue(len(db_circles),3)
 
     def test_get_users_circles_config_success_some_circles_avoiding_non_users_circles(self):
@@ -231,9 +231,9 @@ class GestaccountCircleApiTest(unittest.TestCase):
         circlename2='test_get_users_circles_success_some_circles_2_avoiding_non_users_circles'
         circlename3='test_get_users_circles_success_some_circles_3_avoiding_non_users_circles'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle1=circleapi.new_users_circle(username=username, circlename=circlename1)
-        circle2=circleapi.new_users_circle(username=username, circlename=circlename2)
-        circle3=circleapi.new_users_circle(username=username, circlename=circlename3)
+        circle1=circleapi.new_users_circle(uid=user['uid'], circlename=circlename1)
+        circle2=circleapi.new_users_circle(uid=user['uid'], circlename=circlename2)
+        circle3=circleapi.new_users_circle(uid=user['uid'], circlename=circlename3)
         cid=uuid.uuid4()
         uid=uuid.uuid4()
         circlename4='test_get_users_circles_success_some_circles_3_avoiding_non_users_circles'
@@ -242,7 +242,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         circle4=ormcircle.Circle(cid=cid,uid=user['uid'],type=type,creation_date=creation_date,circlename=circlename4,members=None)
         self.assertTrue(cassapicircle.new_circle(circle=circle4))
         self.assertRaises(exceptions.CircleNotFoundException, circleapi.get_users_circle_config, cid=cid)
-        db_circles=circleapi.get_users_circles_config(username=username)
+        db_circles=circleapi.get_users_circles_config(uid=user['uid'])
         self.assertTrue(len(db_circles),3)
 
     def test_delete_circle_failure_invalid_cid(self):
@@ -263,7 +263,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         password='password'
         circlename='test_delete_circle_success_circlename'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -302,7 +302,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         password='password'
         circlename='test_update_circle_success_circlename_initial'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -358,7 +358,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         password='password'
         circlename='test_add_user_to_circle_failure_new_member_does_not_exist_circle'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -377,7 +377,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         password='password'
         circlename='test_add_user_to_circle_success_circle'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -404,7 +404,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         password='password'
         circlename='test_add_user_to_circle_success_even_if_added_twice_circle'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -437,7 +437,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         password='password'
         circlename='test_add_user_to_circle_success_some_members_circle'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -504,7 +504,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         password='password'
         circlename='test_delete_user_from_circle_failure_member_does_not_exist_circle'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -523,7 +523,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         password='password'
         circlename='test_delete_user_from_circle_success_circle'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -556,7 +556,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         password='password'
         circlename='test_delete_user_from_circle_success_no_previous_members_circle'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']
@@ -587,7 +587,7 @@ class GestaccountCircleApiTest(unittest.TestCase):
         password='password'
         circlename='test_delete_user_from_circle_success_some_members_left_circle'
         user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(username=username, circlename=circlename)
+        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
         self.assertIsNotNone(circle)
         self.assertTrue(isinstance(circle['cid'],uuid.UUID))
         cid=circle['cid']

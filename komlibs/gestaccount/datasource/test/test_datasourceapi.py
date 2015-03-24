@@ -17,39 +17,39 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         try:
             self.user=userapi.get_user_config(username=username)
         except Exception:
-            self.user=userapi.create_user(username=username, password=password, email=email)
+            userapi.create_user(username=username, password=password, email=email)
+            self.user=userapi.get_user_config(username=username)
         agentname='test_gestaccount.datasource.api_agent'
         pubkey='pubkey'
         version='Test Version'
         try:
-            self.agent=agentapi.create_agent(username=self.user['username'], agentname=agentname, pubkey=pubkey, version=version)
+            self.agent=agentapi.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         except Exception:
-            agents=agentapi.get_agents_config(username=self.user['username'])
+            agents=agentapi.get_agents_config(uid=self.user['uid'])
             for agent in agents:
                 if agent['agentname']==agentname:
                     self.agent=agent
 
     def test_create_datasource_non_existent_user(self):
         ''' create_datasource should fail if user is not found in system '''
-        username='test_user_non_existent_datasource_creation'
+        uid=uuid.uuid4()
         aid=uuid.uuid4()
         datasourcename='Datasource Name'
-        self.assertRaises(exceptions.UserNotFoundException, api.create_datasource,username=username, aid=aid, datasourcename=datasourcename ) 
+        self.assertRaises(exceptions.UserNotFoundException, api.create_datasource,uid=uid, aid=aid, datasourcename=datasourcename ) 
 
     def test_create_datasource_non_existent_agent(self):
         ''' create_datasource should fail if agent is not found in system '''
-        username=self.user['username']
+        uid=self.user['uid']
         aid=uuid.uuid4()
         datasourcename='test_create_datasource_non_existent_agent'
-        self.assertRaises(exceptions.AgentNotFoundException, api.create_datasource,username=username, aid=aid, datasourcename=datasourcename ) 
+        self.assertRaises(exceptions.AgentNotFoundException, api.create_datasource,uid=uid, aid=aid, datasourcename=datasourcename ) 
 
     def test_create_datasource_success(self):
         ''' create_datasource should succeed if user and agent exist '''
-        username=self.user['username']
         uid=self.user['uid']
         aid=self.agent['aid']
         datasourcename='test_create_datasource_success'
-        datasource=api.create_datasource(username=username, aid=aid, datasourcename=datasourcename) 
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename) 
         self.assertIsInstance(datasource, dict)
         self.assertEqual(datasource['aid'],aid)
         self.assertEqual(datasource['uid'],uid)
@@ -74,10 +74,10 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
 
     def test_get_datasource_config_success(self):
         ''' get_datasource_config should succeed if datasource exists '''
-        username=self.user['username']
+        uid=self.user['uid']
         aid=self.agent['aid']
         datasourcename='test_get_datasource_config_success'
-        datasource=api.create_datasource(username=username, aid=aid, datasourcename=datasourcename) 
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename) 
         data=api.get_datasource_config(did=datasource['did'], pids_flag=True)
         self.assertIsInstance(data, dict)
         self.assertEqual(datasource['aid'],aid)
@@ -86,8 +86,8 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
 
     def test_get_datasources_config_non_existent_username(self):
         ''' get_datasource_config should fail if user is not in system '''
-        username='test_get_datasources_config_non_existent_username'
-        self.assertRaises(exceptions.UserNotFoundException, api.get_datasources_config, username=username)
+        uid=uuid.uuid4()
+        self.assertRaises(exceptions.UserNotFoundException, api.get_datasources_config,uid=uid)
 
     def test_get_datasources_config_success(self):
         ''' get_datasources_config should succeed if user exists '''
@@ -98,8 +98,8 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         agentname='test_get_datasources_config_success_agent'
         pubkey='pubkey'
         version='Test Version'
-        self.agent=agentapi.create_agent(username=user['username'], agentname=agentname, pubkey=pubkey, version=version)
-        data=api.get_datasources_config(username=username)
+        self.agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        data=api.get_datasources_config(uid=user['uid'])
         self.assertEqual(data, [])
 
     def test_update_datasource_config_data_with_empty_datasourcename(self):
@@ -122,10 +122,10 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
 
     def test_update_datasource_config_success(self):
         ''' update_datasource_config should succeed if datasource exists '''
-        username=self.user['username']
+        uid=self.user['uid']
         aid=self.agent['aid']
         datasourcename='test_update_datasource_config_success'
-        datasource=api.create_datasource(username=username, aid=aid, datasourcename=datasourcename) 
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename) 
         datasourcename='test_update_datasource_config_success_after_update'
         self.assertTrue(api.update_datasource_config(did=datasource['did'], datasourcename=datasourcename))
 
@@ -162,10 +162,10 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
 
     def test_generate_datasource_map_non_existent_data_at_given_time(self):
         ''' generate_datasource_map should fail if did does not exist '''
-        username=self.user['username']
+        uid=self.user['uid']
         aid=self.agent['aid']
         datasourcename='test_update_datasource_config_success'
-        datasource=api.create_datasource(username=username, aid=aid, datasourcename=datasourcename) 
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename) 
         date=timeuuid.uuid1()
         self.assertRaises(exceptions.DatasourceDataNotFoundException, api.generate_datasource_map, did=datasource['did'], date=date)
 
@@ -195,14 +195,14 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
 
     def test_delete_datasource_success(self):
         ''' delete_datasource should succeed and delete datasource completely from db, even its associated widgets and those from its dashboards '''
-        username=self.user['username']
+        uid=self.user['uid']
         aid=self.agent['aid']
         datasourcename='test_delete_datasource_success'
-        datasource=api.create_datasource(username=username, aid=aid, datasourcename=datasourcename)
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
         date=timeuuid.uuid1()
         content='delete_datasource_success content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(api.store_datasource_data(did=datasource['did'], date=date, content=content))
-        widget=widgetapi.new_widget_datasource(username=username, did=datasource['did'])
+        widget=widgetapi.new_widget_datasource(uid=uid, did=datasource['did'])
         data=api.get_datasource_data(did=datasource['did'], date=date)
         self.assertIsNotNone(data)
         self.assertEqual(data['did'], datasource['did'])

@@ -18,13 +18,13 @@ class AuthAuthorizationTest(unittest.TestCase):
         user = gestuserapi.create_user(username=username, password=password, email=email)
         requests=[None,234234234,'TEST_AUTHORIZE_REQUEST_NON_EXISTENT_REQUEST']
         for request in requests:
-            self.assertRaises(exceptions.RequestNotFoundException, authorization.authorize_request, request=request, username=username)
+            self.assertRaises(exceptions.RequestNotFoundException, authorization.authorize_request, request=request, uid=user['uid'])
 
     def test_authorize_request_non_existent_user(self):
         ''' authorize_request should fail if user does not exist. '''
-        username='test_authorize_request_non_existent_user'
+        uid=uuid.uuid4()
         request=requests.NEW_AGENT
-        self.assertRaises(exceptions.UserNotFoundException, authorization.authorize_request, request=request, username=username)
+        self.assertRaises(exceptions.UserNotFoundException, authorization.authorize_request, request=request, uid=uid)
 
     def test_authorize_request_success(self):
         ''' authorize_request should succeed if user exists and has authorization.
@@ -34,7 +34,7 @@ class AuthAuthorizationTest(unittest.TestCase):
         email = 'test_auth.authorization_user@komlog.org'
         user = gestuserapi.create_user(username=username, password=password, email=email)
         request=requests.NEW_AGENT
-        self.assertIsNone(authorization.authorize_request(request=request, username=username))
+        self.assertIsNone(authorization.authorize_request(request=request, uid=user['uid']))
 
     def test_authorize_get_datasource_config_success_shared_auth_success(self):
         ''' authorize_get_datasource_config should succeed if the datasource is shared to the user '''

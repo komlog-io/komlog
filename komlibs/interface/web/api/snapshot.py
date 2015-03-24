@@ -8,6 +8,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.snapshot import api as snapshotapi
 from komlibs.gestaccount.widget import types
 from komlibs.interface.web import status, exceptions, errors
@@ -22,7 +23,8 @@ from komlibs.general.time import timeuuid
 def get_snapshots_config_request(username):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWASN_GSNSCR_IU)
-    data=snapshotapi.get_snapshots_config(username=username)
+    uid=userapi.get_uid(username=username)
+    data=snapshotapi.get_snapshots_config(uid=uid)
     response_data=[]
     for snapshot in data:
         reg={}
@@ -55,7 +57,8 @@ def get_snapshot_config_request(username, nid):
     if not args.is_valid_hex_uuid(nid):
         raise exceptions.BadParametersException(error=errors.E_IWASN_GSNCR_IN)
     nid=uuid.UUID(nid)
-    authorization.authorize_request(request=requests.GET_SNAPSHOT_CONFIG,username=username,nid=nid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.GET_SNAPSHOT_CONFIG,uid=uid,nid=nid)
     data=snapshotapi.get_snapshot_config(nid=nid)
     snapshot={'nid':nid.hex}
     snapshot['type']=data['type']
@@ -85,7 +88,8 @@ def delete_snapshot_request(username, nid):
     if not args.is_valid_hex_uuid(nid):
         raise exceptions.BadParametersException(error=errors.E_IWASN_DSNR_IN)
     nid=uuid.UUID(nid)
-    authorization.authorize_request(request=requests.DELETE_SNAPSHOT,username=username,nid=nid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.DELETE_SNAPSHOT,uid=uid,nid=nid)
     snapshotapi.delete_snapshot(nid=nid)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
@@ -121,8 +125,9 @@ def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None,
             interval_init=temp
     else:
         raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_NSNTS)
-    authorization.authorize_request(request=requests.NEW_SNAPSHOT, username=username, wid=wid)
-    snapshot=snapshotapi.new_snapshot(username=username,wid=wid,interval_init=interval_init,interval_end=interval_end,shared_with_users=user_list,shared_with_cids=cid_uuid_list)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.NEW_SNAPSHOT, uid=uid, wid=wid)
+    snapshot=snapshotapi.new_snapshot(uid=uid,wid=wid,interval_init=interval_init,interval_end=interval_end,shared_with_users=user_list,shared_with_cids=cid_uuid_list)
     if snapshot:
         operation=weboperations.NewSnapshotOperation(uid=snapshot['uid'], nid=snapshot['nid'],wid=snapshot['wid'])
         auth_op=operation.get_auth_operation()
@@ -144,7 +149,8 @@ def get_snapshot_data_request(username, nid):
     if not args.is_valid_hex_uuid(nid):
         raise exceptions.BadParametersException(error=errors.E_IWASN_GSNDR_IN)
     nid=uuid.UUID(nid)
-    authorization.authorize_request(request=requests.GET_SNAPSHOT_DATA, username=username, nid=nid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.GET_SNAPSHOT_DATA, uid=uid, nid=nid)
     data=snapshotapi.get_snapshot_data(nid=nid)
     response_data=[]
     for item in data.keys():

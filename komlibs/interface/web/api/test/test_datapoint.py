@@ -38,7 +38,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             agentname='test_komlibs.interface.web.api.datapoint_agent'
             pubkey='TESTKOMLIBSINTERFACEWEBAPIDATAPOINTAGENT'
             version='test library vX.XX'
-            response = agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
+            response = agentapi.new_agent_request(username=self.userinfo['username'], agentname=agentname, pubkey=pubkey, version=version)
             aid=response.data['aid']
             msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
             count=0
@@ -67,7 +67,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             self.assertFalse(count>=1000)
             rescontrol.process_message_RESAUTH(msg)
             datasourcename='test_komlibs.interface.web.api.datapoint_datasource'
-            response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
+            response = datasourceapi.new_datasource_request(username=self.userinfo['username'], aid=aid, datasourcename=datasourcename)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
@@ -228,16 +228,16 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_new_datapoint_request_failure_no_permission_user_does_not_exist(self):
+    def test_new_datapoint_request_failure_user_does_not_exist(self):
         ''' new_datapoint_request should fail if user does not exist '''
-        username='test_new_datapoint_request_failure_no_permission_user_does_not_exist'
+        username='test_new_datapoint_request_failure_user_does_not_exist'
         did=self.userinfo['agents'][0]['dids'][0]
         datapointname='test_new_datapoint_request_failure'
         sequence='23423234565432345678'
         position=1
         length=1
         response=datapointapi.new_datapoint_request(username=username, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_new_datapoint_request_failure_no_permission_did_does_not_exist(self):
         ''' new_datapoint_request should fail if did does not exist '''
@@ -317,7 +317,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         pid=datapoint['pid'].hex
         data={'datapointname':'datapointname','color':'#FFAADD'}
         response=datapointapi.update_datapoint_config_request(username=username, pid=pid, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_update_datapoint_config_request_success_new_datapointname(self):
         ''' update_datapoint_config_request should succeed, updating datapointname only '''

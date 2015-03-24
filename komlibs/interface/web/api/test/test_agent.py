@@ -117,7 +117,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         pubkey='TESTNEWAGENTREQUESTFAILURE'
         version='test library vX.XX'
         response=agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_new_agent_request_failure_agent_already_exists(self):
         ''' new_agent_request should succeed if arguments are valid and return the agent id '''
@@ -222,7 +222,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         username='test_get_agent_config_request_failure_non_existent_username'
         aid=uuid.uuid4().hex
         response=agentapi.get_agent_config_request(username=username, aid=aid)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_get_agent_config_request_failure_non_existent_agent(self):
         ''' get_agent_config_request should fail if agent does not exist '''

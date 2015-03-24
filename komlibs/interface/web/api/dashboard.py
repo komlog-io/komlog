@@ -9,6 +9,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.dashboard import api as dashboardapi
 from komlibs.interface.web import status, exceptions, errors
 from komlibs.interface.web.model import webmodel
@@ -20,7 +21,8 @@ from komlibs.general.validation import arguments as args
 def get_dashboards_config_request(username):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWADB_GDBSCR_IU)
-    data=dashboardapi.get_dashboards_config(username=username)
+    uid=userapi.get_uid(username=username)
+    data=dashboardapi.get_dashboards_config(uid=uid)
     response_data=[]
     for dashboard in data:
         reg={}
@@ -37,7 +39,8 @@ def get_dashboard_config_request(username, bid):
     if not args.is_valid_hex_uuid(bid):
         raise exceptions.BadParametersException(error=errors.E_IWADB_GDBCR_IB)
     bid=uuid.UUID(bid)
-    authorization.authorize_request(request=requests.GET_DASHBOARD_CONFIG,username=username,bid=bid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.GET_DASHBOARD_CONFIG,uid=uid,bid=bid)
     data=dashboardapi.get_dashboard_config(bid=bid)
     dashboard={}
     dashboard['bid']=data['bid'].hex
@@ -51,8 +54,9 @@ def new_dashboard_request(username, dashboardname):
         raise exceptions.BadParametersException(error=errors.E_IWADB_NDBR_IU)
     if not args.is_valid_dashboardname(dashboardname):
         raise exceptions.BadParametersException(error=errors.E_IWADB_NDBR_IDN)
-    authorization.authorize_request(request=requests.NEW_DASHBOARD, username=username)
-    dashboard=dashboardapi.create_dashboard(username=username, dashboardname=dashboardname)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.NEW_DASHBOARD, uid=uid)
+    dashboard=dashboardapi.create_dashboard(uid=uid, dashboardname=dashboardname)
     if dashboard:
         operation=weboperations.NewDashboardOperation(uid=dashboard['uid'],bid=dashboard['bid'])
         auth_op=operation.get_auth_operation()
@@ -70,7 +74,8 @@ def delete_dashboard_request(username, bid):
     if not args.is_valid_hex_uuid(bid):
         raise exceptions.BadParametersException(error=errors.E_IWADB_DDBR_IB)
     bid=uuid.UUID(bid)
-    authorization.authorize_request(request=requests.DELETE_DASHBOARD,username=username,bid=bid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.DELETE_DASHBOARD,uid=uid,bid=bid)
     message=messages.DeleteDashboardMessage(bid=bid)
     msgapi.send_message(msg=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
@@ -86,7 +91,8 @@ def update_dashboard_config_request(username, bid, data):
     if not 'dashboardname' in data or not args.is_valid_dashboardname(data['dashboardname']):
         raise exceptions.BadParametersException(error=errors.E_IWADB_UDBCR_IDN)
     bid=uuid.UUID(bid)
-    authorization.authorize_request(request=requests.UPDATE_DASHBOARD_CONFIG, username=username, bid=bid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.UPDATE_DASHBOARD_CONFIG, uid=uid, bid=bid)
     if dashboardapi.update_dashboard_config(bid=bid, dashboardname=data['dashboardname']):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
@@ -100,7 +106,8 @@ def add_widget_request(username, bid, wid):
         raise exceptions.BadParametersException(error=errors.E_IWADB_AWR_IW)
     bid=uuid.UUID(bid)
     wid=uuid.UUID(wid)
-    authorization.authorize_request(request=requests.ADD_WIDGET_TO_DASHBOARD, username=username, bid=bid, wid=wid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.ADD_WIDGET_TO_DASHBOARD, uid=uid, bid=bid, wid=wid)
     if dashboardapi.add_widget_to_dashboard(bid=bid, wid=wid):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
@@ -114,7 +121,8 @@ def delete_widget_request(username, bid, wid):
         raise exceptions.BadParametersException(error=errors.E_IWADB_DWR_IW)
     bid=uuid.UUID(bid)
     wid=uuid.UUID(wid)
-    authorization.authorize_request(request=requests.DELETE_WIDGET_FROM_DASHBOARD, username=username, bid=bid, wid=wid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.DELETE_WIDGET_FROM_DASHBOARD, uid=uid, bid=bid, wid=wid)
     if dashboardapi.delete_widget_from_dashboard(bid=bid, wid=wid):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 

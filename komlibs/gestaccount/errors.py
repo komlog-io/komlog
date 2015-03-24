@@ -59,6 +59,9 @@ E_GUA_GUC_UNF=71
 E_GUA_DU_IU=80
 E_GUA_DU_UNF=81
 
+E_GUA_GUID_IU=85
+E_GUA_GUID_UNF=86
+
 #gestaccount agent api
 
 E_GAA_AUA_IA=200

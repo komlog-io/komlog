@@ -12,13 +12,13 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
 
     def test_process_message_MONVAR_failure_non_existent_did(self):
         ''' process_message_MONVAR should fail if did does not exists '''
-        username='test_process_message_monvar_failure'
+        uid=uuid.uuid4()
         did=uuid.uuid4()
         date=timeuuid.uuid1()
         position=1
         length=1
-        datapointname='test_process_message_MONVAR_failure_invalid_username_datapointname'
-        message=messages.MonitorVariableMessage(username=username, did=did, date=date, position=position, length=length, datapointname=datapointname)
+        datapointname='test_process_message_MONVAR_failure_invalid_uid_datapointname'
+        message=messages.MonitorVariableMessage(uid=uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
         response=gestconsole.process_message_MONVAR(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
 
@@ -44,17 +44,17 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
 
     def test_process_message_NEWDSW_failure_non_existent_user(self):
         ''' process_message_NEWDSW should fail if user does not exist '''
-        username='test_process_messsage_newdsw_failure_non_existent_user'
+        uid=uuid.uuid4()
         did=uuid.uuid4()
-        message=messages.NewDSWidgetMessage(username=username, did=did)
+        message=messages.NewDSWidgetMessage(uid=uid, did=did)
         response=gestconsole.process_message_NEWDSW(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
 
     def test_process_message_NEWDPW_failure_non_existent_user(self):
         ''' process_message_NEWDPW should fail if user does not exist '''
-        username='test_process_messsage_newdpw_failure_non_existent_user'
+        uid=uuid.uuid4()
         pid=uuid.uuid4()
-        message=messages.NewDPWidgetMessage(username=username, pid=pid)
+        message=messages.NewDPWidgetMessage(uid=uid, pid=pid)
         response=gestconsole.process_message_NEWDPW(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
 

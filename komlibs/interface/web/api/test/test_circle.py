@@ -81,7 +81,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         username='test_get_users_circle_config_request_failure_non_existent_user'
         cid=uuid.uuid4().hex
         response=circleapi.get_users_circle_config_request(username=username, cid=cid)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_get_users_circle_config_request_failure_non_existent_cid(self):
         ''' get_users_circle_config should fail if cid does not exist '''
@@ -171,7 +171,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         username='test_delete_circle_request_failure_non_existent_user'
         cid=uuid.uuid4().hex
         response=circleapi.delete_circle_request(username=username, cid=cid)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_delete_circle_request_failure_no_permissions_over_cid(self):
         ''' delete_circle_request should fail if user has no permissions over cid '''
@@ -262,7 +262,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         username='test_new_users_circle_request_failure_non_existent_user'
         circlename='test_new_users_circle_request_failure_non_existent_user'
         response=circleapi.new_users_circle_request(username=username, circlename=circlename)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_new_users_circle_request_success(self):
         ''' new_users_circle_request should succeed and return the circle id '''
@@ -318,7 +318,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         circlename='test_update_circle_request_failure_non_existent_user'
         data={'circlename':circlename}
         response=circleapi.update_circle_request(username=username, cid=cid, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_update_circle_request_failure_no_permissions_over_cid(self):
         ''' update_circle_request should fail if user has no permissions over cid '''
@@ -418,7 +418,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         username='test_add_user_to_circle_request_failure_non_existent_user'
         member='test_add_user_to_circle_request_failure_non_existent_user_member'
         response=circleapi.add_user_to_circle_request(username=username, cid=cid, member=member)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_add_user_to_circle_request_failure_non_existent_circle(self):
         ''' add_user_to_circle_request should fail if circle does not exist '''
@@ -543,12 +543,12 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         username='test_delete_user_from_circle_request_failure_non_existent_user'
         member='test_delete_user_from_circle_request_failure_non_existent_user_member'
         response=circleapi.delete_user_from_circle_request(username=username, cid=cid, member=member)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_delete_user_from_circle_request_failure_non_existent_circle(self):
         ''' delete_user_from_circle_request should fail if circle does not exist '''
         cid=uuid.uuid4().hex
-        username='test_delete_user_from_circle_request_failure_non_existent_circle'
+        username=self.userinfo['username']
         member='test_delete_user_from_circle_request_failure_non_existent_circle_member'
         response=circleapi.delete_user_from_circle_request(username=username, cid=cid, member=member)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)

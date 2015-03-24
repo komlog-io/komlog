@@ -9,6 +9,7 @@ from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
 from komlibs.gestaccount import exceptions as gestexcept
+from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.datasource import api as datasourceapi
 from komlibs.gestaccount.widget import api as widgetapi
 from komlibs.interface.web import status, exceptions, errors
@@ -34,7 +35,8 @@ def get_datasource_data_request(username, did, seq=None):
     else:
         ii=None
         ie=None
-    authorization.authorize_request(request=requests.GET_DATASOURCE_DATA,username=username,did=did,ii=ii,ie=ie)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.GET_DATASOURCE_DATA,uid=uid,did=did,ii=ii,ie=ie)
     if ii:
         data=datasourceapi.get_datasource_data(did,date=ii)
     else:
@@ -64,7 +66,8 @@ def upload_datasource_data_request(username, aid, did, content, destination):
         raise exceptions.BadParametersException(error=errors.E_IWADS_UDSDR_IDST)
     aid=uuid.UUID(aid)
     did=uuid.UUID(did)
-    authorization.authorize_request(request=requests.POST_DATASOURCE_DATA,username=username,aid=aid,did=did)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.POST_DATASOURCE_DATA,uid=uid,aid=aid,did=did)
     destfile=datasourceapi.upload_datasource_data(did,content,destination)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 
@@ -72,7 +75,8 @@ def upload_datasource_data_request(username, aid, did, content, destination):
 def get_datasources_config_request(username):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWADS_GDSSCR_IU)
-    data=datasourceapi.get_datasources_config(username=username)
+    uid=userapi.get_uid(username=username)
+    data=datasourceapi.get_datasources_config(uid=uid)
     response_data=[]
     for datasource in data:
         response_data.append({'did':datasource['did'].hex, 'aid':datasource['aid'].hex, 'datasourcename':datasource['datasourcename']})
@@ -85,7 +89,8 @@ def get_datasource_config_request(username, did):
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_IWADS_GDSCR_ID)
     did=uuid.UUID(did)
-    authorization.authorize_request(request=requests.GET_DATASOURCE_CONFIG,username=username,did=did)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.GET_DATASOURCE_CONFIG,uid=uid,did=did)
     data=datasourceapi.get_datasource_config(did)
     datasource={}
     datasource['did']=data['did'].hex
@@ -104,7 +109,8 @@ def update_datasource_config_request(username, did, data):
     if 'datasourcename' not in data or not args.is_valid_datasourcename(data['datasourcename']):
         raise exceptions.BadParametersException(error=errors.E_IWADS_UDSCR_IDN)
     did=uuid.UUID(did)
-    authorization.authorize_request(request=requests.UPDATE_DATASOURCE_CONFIG,username=username,did=did)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.UPDATE_DATASOURCE_CONFIG,uid=uid,did=did)
     datasourceapi.update_datasource_config(did=did,datasourcename=data['datasourcename'])
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
@@ -117,17 +123,18 @@ def new_datasource_request(username, aid, datasourcename):
     if not args.is_valid_datasourcename(datasourcename):
         raise exceptions.BadParametersException(error=errors.E_IWADS_NDSR_IDN)
     aid=uuid.UUID(aid)
-    authorization.authorize_request(request=requests.NEW_DATASOURCE,username=username,aid=aid)
-    datasource=datasourceapi.create_datasource(username=username,aid=aid,datasourcename=datasourcename)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.NEW_DATASOURCE,uid=uid,aid=aid)
+    datasource=datasourceapi.create_datasource(uid=uid,aid=aid,datasourcename=datasourcename)
     if datasource:
-        operation=weboperations.NewDatasourceOperation(uid=datasource['uid'],aid=aid,did=datasource['did'])
+        operation=weboperations.NewDatasourceOperation(uid=uid,aid=aid,did=datasource['did'])
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
         message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
         message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op,params=params)
         msgapi.send_message(message)
-        message=messages.NewDSWidgetMessage(username=username, did=datasource['did'])
+        message=messages.NewDSWidgetMessage(uid=uid, did=datasource['did'])
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
 
@@ -138,7 +145,8 @@ def delete_datasource_request(username, did):
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_IWADS_DDSR_ID)
     did=uuid.UUID(did)
-    authorization.authorize_request(request=requests.DELETE_DATASOURCE,username=username,did=did)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.DELETE_DATASOURCE,uid=uid,did=did)
     message=messages.DeleteDatasourceMessage(did=did)
     msgapi.send_message(message=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)

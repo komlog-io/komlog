@@ -158,7 +158,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         username='test_get_datasource_config_request_failure_non_existent_username'
         did=uuid.uuid4().hex
         response=datasourceapi.get_datasource_config_request(username=username, did=did)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_get_datasource_config_request_failure_non_existent_datasource(self):
         ''' get_datasource_config_request should fail if datasource does not exist '''
@@ -364,7 +364,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         content='Datasource Content upload_datasource_data_request_success 0 1 2 3 4'
         destination='/tmp'
         response=datasourceapi.upload_datasource_data_request(username=username, aid=aid, did=did, content=content, destination=destination)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_upload_datasource_data_request_failure_non_existent_agent(self):
         ''' upload_datasource_data should fail if agent does not exists '''
@@ -480,7 +480,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         new_datasourcename='test_update_datasource_config_request_failure'
         data={'datasourcename':new_datasourcename}
         response=datasourceapi.update_datasource_config_request(username=username, did=did, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_update_datasource_config_request_failure_non_existent_did(self):
         ''' update_datasource_config should succeed if user and did exists, user have permission and datasourcename parameter is passed '''
@@ -634,7 +634,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         username='test_get_datasource_data_request_failure_non_existent_username'
         did=self.userinfo['agents'][0]['dids'][0]
         response=datasourceapi.get_datasource_data_request(username=username, did=did)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_get_datasource_data_request_data_not_found(self):
         ''' get_datasource_data should return a 404 error indicating no data was found '''

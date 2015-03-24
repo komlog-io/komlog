@@ -29,13 +29,13 @@ def process_message_MONVAR(message):
     - creamos el widget dp
     '''
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
-    username=message.username
+    uid=message.uid
     did=message.did
     date=message.date
     position=message.position
     length=message.length
     datapointname=message.datapointname
-    if args.is_valid_username(username) and args.is_valid_uuid(did) and args.is_valid_date(date) and args.is_valid_int(position) and args.is_valid_int(length) and args.is_valid_datapointname(datapointname):
+    if args.is_valid_uuid(uid) and args.is_valid_uuid(did) and args.is_valid_date(date) and args.is_valid_int(position) and args.is_valid_int(length) and args.is_valid_datapointname(datapointname):
         datapoint=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
         if datapoint:
             datasource=datasourceapi.get_datasource_config(did=did)
@@ -45,7 +45,7 @@ def process_message_MONVAR(message):
             response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
             response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
             response.add_msg_originated(messages.FillDatapointMessage(pid=datapoint['pid'],date=date))
-            response.add_msg_originated(messages.NewDPWidgetMessage(username=username,pid=datapoint['pid']))
+            response.add_msg_originated(messages.NewDPWidgetMessage(uid=uid,pid=datapoint['pid']))
             response.status=status.IMC_STATUS_OK
         else:
             logger.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position)+' length: '+str(length))
@@ -122,12 +122,12 @@ def process_message_NEWUSR(message):
 
 @exceptions.ExceptionHandler
 def process_message_NEWDSW(message):
-    ''' this message creates a new DS_WIDGET associated to a did and username '''
+    ''' this message creates a new DS_WIDGET associated to a did and uid '''
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
     did=message.did
-    username=message.username
-    if args.is_valid_uuid(did) and args.is_valid_username(username):
-        widget=widgetapi.new_widget_datasource(username=username, did=did)
+    uid=message.uid
+    if args.is_valid_uuid(did) and args.is_valid_uuid(uid):
+        widget=widgetapi.new_widget_datasource(uid=uid, did=did)
         if widget:
             operation=weboperations.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
             auth_op=operation.get_auth_operation()
@@ -143,12 +143,12 @@ def process_message_NEWDSW(message):
 
 @exceptions.ExceptionHandler
 def process_message_NEWDPW(message):
-    ''' this message creates a new DP_WIDGET associated to a pid and username'''
+    ''' this message creates a new DP_WIDGET associated to a pid and uid '''
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
     pid=message.pid
-    username=message.username
-    if args.is_valid_uuid(pid) and args.is_valid_username(username):
-        widget=widgetapi.new_widget_datapoint(username=username, pid=pid)
+    uid=message.uid
+    if args.is_valid_uuid(pid) and args.is_valid_uuid(uid):
+        widget=widgetapi.new_widget_datapoint(uid=uid, pid=pid)
         if widget:
             operation=weboperations.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
             auth_op=operation.get_auth_operation()

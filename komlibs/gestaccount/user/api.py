@@ -200,3 +200,11 @@ def delete_user(username):
         cassapisnapshot.delete_snapshot(nid=nid)
     return True
 
+def get_uid(username):
+    if not args.is_valid_username(username):
+        raise exceptions.BadParametersException(error=errors.E_GUA_GUID_IU)
+    uid=cassapiuser.get_uid(username=username)
+    if not uid:
+        raise exceptions.UserNotFoundException(error=errors.E_GUA_GUID_UNF)
+    return uid
+

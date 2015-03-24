@@ -13,7 +13,8 @@ class GestaccountUserApiTest(unittest.TestCase):
         try:
             self.userinfo=userapi.get_user_config(username=self.username)
         except Exception:
-            self.userinfo=userapi.create_user(username=self.username, password=self.password, email=self.email)
+            userapi.create_user(username=self.username, password=self.password, email=self.email)
+            self.userinfo=userapi.get_user_config(username=self.username)
         code = 'RANDOMCODE'
 
     def test_create_user(self):
@@ -137,4 +138,22 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertEqual(user['state'],self.userinfo['state'])
         self.assertTrue(userapi.delete_user(username=username))
         self.assertRaises(exceptions.UserNotFoundException, userapi.get_user_config, username=username)
+
+    def test_get_uid_failure_invalid_username(self):
+        ''' get_uid should fail if username is invalid '''
+        usernames=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4(), uuid.uuid1()]
+        for username in usernames:
+            self.assertRaises(exceptions.BadParametersException, userapi.get_uid, username=username)
+
+    def test_get_uid_failure_non_existent_username(self):
+        ''' get_uid should fail if username does not exist '''
+        username='test_get_uid_failure_non_existent_username'
+        self.assertRaises(exceptions.UserNotFoundException, userapi.get_uid, username=username)
+
+    def test_get_uid_success(self):
+        ''' get_uid should return the user's uid '''
+        username=self.username
+        uid=userapi.get_uid(username=username)
+        self.assertTrue(isinstance(uid, uuid.UUID))
+        self.assertEqual(uid, self.userinfo['uid'])
 

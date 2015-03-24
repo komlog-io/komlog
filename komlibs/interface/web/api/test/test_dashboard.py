@@ -57,7 +57,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         username='test_get_dashboard_config_request_failure_non_existent_username'
         bid=uuid.uuid4().hex
         response=dashboardapi.get_dashboard_config_request(username=username, bid=bid)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_get_dashboard_config_request_success(self):
         ''' get_dashboard_config_request should return the dashboard info '''
@@ -213,12 +213,12 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
             response=dashboardapi.delete_dashboard_request(username=username, bid=bid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_delete_dashboard_request_failure_no_permission(self):
-        ''' delete_dashboard_request should fail if user has no access '''
+    def test_delete_dashboard_request_failure_non_existent_user(self):
+        ''' delete_dashboard_request should fail if user does not exist '''
         username='test_delete_dashboard_request_failure_no_permission'
         bid=uuid.uuid4().hex
         response=dashboardapi.delete_dashboard_request(username=username, bid=bid)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_delete_dashboard_request_success(self):
         ''' delete_dashboard_request should delete the dashboard info '''
@@ -343,13 +343,13 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
             response=dashboardapi.update_dashboard_config_request(username=username, bid=bid, data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_update_dashboard_config_request_failure_no_permission(self):
-        ''' update_dashboard_config_request should fail if user has no access '''
+    def test_update_dashboard_config_request_failure_non_existent_user(self):
+        ''' update_dashboard_config_request should fail if user does not exist '''
         username='test_update_dashboard_config_request_failure_no_permission'
         bid=uuid.uuid4().hex
         data={'dashboardname':'new_dashboard_name'}
         response=dashboardapi.update_dashboard_config_request(username=username, bid=bid, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_update_dashboard_config_request_success(self):
         ''' update_dashboard_config_request should succeed '''
@@ -416,7 +416,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         wid=uuid.uuid4().hex
         bid=uuid.uuid4().hex
         response=dashboardapi.add_widget_request(username=username, bid=bid, wid=wid)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_add_widget_request_failure_no_existing_bid(self):
         ''' add_widget_request should fail if user has no access over bid or wid '''
@@ -479,13 +479,13 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
             response=dashboardapi.delete_widget_request(username=username, bid=bid, wid=wid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_delete_widget_request_failure_no_access(self):
+    def test_delete_widget_request_failure_non_existent_user(self):
         ''' delete_widget_request should fail if user has no access over bid or wid '''
         username='test_delete_widget_request_failure_no_access'
         wid=uuid.uuid4().hex
         bid=uuid.uuid4().hex
         response=dashboardapi.delete_widget_request(username=username, bid=bid, wid=wid)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_delete_widget_request_failure_no_existing_bid(self):
         ''' delete_widget_request should fail if user has no access over bid '''
@@ -547,7 +547,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         username='test_new_dashboard_request_failure_non_existent_user'
         dashboardname='test_new_dashboard_request_failure_non_existent_user'
         response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_new_dashboard_request_success(self):
         ''' new_dashboard_request should fail if user does not exist '''

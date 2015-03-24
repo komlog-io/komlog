@@ -174,3 +174,14 @@ class KomcassApiUserTest(unittest.TestCase):
         self.assertTrue(userapi.delete_signup_info(username=username))
         self.assertIsNone(userapi.get_signup_info(username=username))
 
+    def test_get_uid_non_existing_username(self):
+        ''' get_uid should return None if username does not exist on system '''
+        username='test_get_uid_non_existing_username'
+        self.assertIsNone(userapi.get_uid(username=username))
+
+    def test_get_uid_existing_username(self):
+        ''' get_uid should return the username's uid if it exists on system '''
+        username=self.user.username
+        uid=userapi.get_uid(username=username)
+        self.assertTrue(isinstance(uid, uuid.UUID))
+

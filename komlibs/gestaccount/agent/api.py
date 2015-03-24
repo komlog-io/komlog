@@ -56,12 +56,12 @@ def auth_agent(agentid, signature):
     else:
         return False
 
-def create_agent(username,agentname,pubkey,version):
+def create_agent(uid,agentname,pubkey,version):
     '''
     When the agent connects the first time, we will register it in a pending state, 
     waiting for the user validation to gain access to the system
     '''
-    if not args.is_valid_username(username):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GAA_CRA_IU)
     if not args.is_valid_agentname(agentname):
         raise exceptions.BadParametersException(error=errors.E_GAA_CRA_IA)
@@ -69,16 +69,16 @@ def create_agent(username,agentname,pubkey,version):
         raise exceptions.BadParametersException(error=errors.E_GAA_CRA_IPK)
     if not args.is_valid_version(version):
         raise exceptions.BadParametersException(error=errors.E_GAA_CRA_IV)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if user:
-        agents=cassapiagent.get_agents(uid=user.uid)
+        agents=cassapiagent.get_agents(uid=uid)
         for agent in agents:
             if agent.pubkey==pubkey:
                 raise exceptions.AgentAlreadyExistsException(error=errors.E_GAA_CRA_AAE)
         ''' Register new agent '''
         aid=uuid.uuid4()
         now=timeuuid.uuid1()
-        agent=ormagent.Agent(aid=aid, uid=user.uid, agentname=agentname, pubkey=pubkey, version=version, state=states.PENDING_USER_VALIDATION,creation_date=now)
+        agent=ormagent.Agent(aid=aid, uid=uid, agentname=agentname, pubkey=pubkey, version=version, state=states.PENDING_USER_VALIDATION,creation_date=now)
         if cassapiagent.new_agent(agent=agent):
             return {'uid':agent.uid, 'aid':agent.aid, 'agentname':agent.agentname, 'pubkey':agent.pubkey, 'version':agent.version, 'state':agent.state}
         else:
@@ -127,16 +127,16 @@ def get_agent_config(aid,dids_flag=False):
     else:
         raise exceptions.AgentNotFoundException(error=errors.E_GAA_GAC_ANF)
 
-def get_agents_config(username,dids_flag=False):
-    if not args.is_valid_username(username):
+def get_agents_config(uid,dids_flag=False):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GAA_GASC_IU)
     if not args.is_valid_bool(dids_flag):
         raise exceptions.BadParametersException(error=errors.E_GAA_GASC_IF)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GAA_GASC_UNF)
     else:
-        aids=cassapiagent.get_agents_aids(uid=user.uid)
+        aids=cassapiagent.get_agents_aids(uid=uid)
         data=[]
         for aid in aids:
             try:
@@ -147,9 +147,7 @@ def get_agents_config(username,dids_flag=False):
                 data.append(agent_data)
         return data
     
-def update_agent_config(username, aid, agentname):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_GAA_UAC_IU)
+def update_agent_config(aid, agentname):
     if not args.is_valid_uuid(aid):
         raise exceptions.BadParametersException(error=errors.E_GAA_UAC_IA)
     if not args.is_valid_agentname(agentname):

@@ -58,11 +58,11 @@ func_requests={
                requests.DELETE_MEMBER_FROM_CIRCLE:'authorize_delete_member_from_circle',
                }
 
-def authorize_request(request,username,aid=None,did=None,pid=None,gid=None,wid=None,bid=None,nid=None,cid=None,ii=None,ie=None):
-    user=cassapiuser.get_user(username=username)
+def authorize_request(request,uid,aid=None,did=None,pid=None,gid=None,wid=None,bid=None,nid=None,cid=None,ii=None,ie=None):
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise authexcept.UserNotFoundException(error=errors.E_AA_AR_UNF)
-    params={'aid':aid,'did':did,'uid':user.uid,'pid':pid,'wid':wid,'bid':bid,'nid':nid,'cid':cid,'ii':ii,'ie':ie}
+    params={'aid':aid,'did':did,'uid':uid,'pid':pid,'wid':wid,'bid':bid,'nid':nid,'cid':cid,'ii':ii,'ie':ie}
     try:
         getattr(sys.modules[__name__],func_requests[request])(params)
     except KeyError as e:

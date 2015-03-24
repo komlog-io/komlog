@@ -12,69 +12,69 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
 
     def test_MonitorVariableMessage_failure_invalid_username(self):
         ''' creation of a MonitorVariableMessage object should fail if username is invalid '''
-        usernames=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4(), json.dumps('username'), 'user\nname','user\tname']
+        uids=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4().hex, uuid.uuid1(), json.dumps('username'), 'user\nname','user\tname']
         did=uuid.uuid4()
         date=timeuuid.uuid1()
         position=1
         length=1
         datapointname='test_MonitorVariableMessage_failure_invalid_username_datapointname'
-        for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage, username=username, did=did, date=date, position=position, length=length, datapointname=datapointname)
+        for uid in uids:
+            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage, uid=uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
 
     def test_MonitorVariableMessage_failure_invalid_datapointname(self):
         ''' creation of a MonitorVariableMessage object should fail if datapointname is invalid '''
-        username='test_monitorvariablemessage_failure'
+        uid=uuid.uuid4()
         datapointnames=[None, 23423, 2323.2342, {'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4(), json.dumps('username'), 'user\nname','user\tname']
         did=uuid.uuid4()
         date=timeuuid.uuid1()
         position=1
         length=1
         for datapointname in datapointnames:
-            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage, username=username, did=did, date=date, position=position, length=length, datapointname=datapointname)
+            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage, uid=uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
 
     def test_MonitorVariableMessage_failure_invalid_did(self):
         ''' creation of a MonitorVariableMessage object should fail if did is invalid '''
-        username='test_monitorvariablemessage_failure'
+        uid=uuid.uuid4()
         dids=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]
         date=timeuuid.uuid1()
         position=1
         length=1
         datapointname='test_MonitorVariableMessage_failure'
         for did in dids:
-            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage, username=username, did=did, date=date, position=position, length=length, datapointname=datapointname)
+            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage,uid=uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
 
     def test_MonitorVariableMessage_failure_invalid_date(self):
         ''' creation of a MonitorVariableMessage object should fail if date is invalid '''
-        username='test_monitorvariablemessage_failure'
+        uid=uuid.uuid4()
         dates=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4(), json.dumps('username'), 'user\nname','user\tname']
         did=uuid.uuid4()
         position=1
         length=1
         datapointname='test_MonitorVariableMessage_failure'
         for date in dates:
-            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage, username=username, did=did, date=date, position=position, length=length, datapointname=datapointname)
+            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage,uid=uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
 
     def test_MonitorVariableMessage_failure_invalid_position(self):
         ''' creation of a MonitorVariableMessage object should fail if position is invalid '''
-        username='test_monitorvariablemessage_failure'
+        uid=uuid.uuid4()
         positions=[None, -23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4(), json.dumps('username'), 'user\nname','user\tname']
         did=uuid.uuid4()
         date=timeuuid.uuid1()
         length=1
         datapointname='test_MonitorVariableMessage_failure'
         for position in positions:
-            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage, username=username, did=did, date=date, position=position, length=length, datapointname=datapointname)
+            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage,uid=uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
 
     def test_MonitorVariableMessage_failure_invalid_length(self):
         ''' creation of a MonitorVariableMessage object should fail if length is invalid '''
-        username='test_monitorvariablemessage_failure'
+        uid=uuid.uuid4()
         lengths=[None, -23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4(), json.dumps('username'), 'user\nname','user\tname']
         did=uuid.uuid4()
         date=timeuuid.uuid1()
         position=1
         datapointname='test_MonitorVariableMessage_failure'
         for length in lengths:
-            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage, username=username, did=did, date=date, position=position, length=length, datapointname=datapointname)
+            self.assertRaises(exceptions.BadParametersException, messages.MonitorVariableMessage,uid=uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
 
     def test_NegativeVariableMessage_failure_invalid_pid(self):
         ''' creation of a NegativeVariableMessage object should fail if pid is invalid '''

@@ -17,22 +17,23 @@ class GestaccountAgentApiTest(unittest.TestCase):
         try:
             self.user=userapi.get_user_config(username=self.username)
         except Exception:
-            self.user=userapi.create_user(username=self.username, password=self.password, email=self.email)
+            userapi.create_user(username=self.username, password=self.password, email=self.email)
+            self.user=userapi.get_user_config(username=self.username)
 
     def test_create_agent_non_existent_user(self):
         ''' create_agent should fail if user is not found in system '''
-        username='my_user_9'
+        uid=uuid.uuid4()
         agentname='My Agent #9'
         pubkey='pubkeycreateagentnonexistentuser'
         version='Version X'
-        self.assertRaises(exceptions.UserNotFoundException, api.create_agent,username=username, agentname=agentname, pubkey=pubkey, version=version) 
+        self.assertRaises(exceptions.UserNotFoundException, api.create_agent,uid=uid, agentname=agentname, pubkey=pubkey, version=version) 
 
     def test_create_agent_success(self):
         ''' create_agent should succeed if arguments are OK, agent does not exists yet and user exists '''
         agentname='test_create_agent_success'
         pubkey='pubkeycreateagentsuccess'
         version='Test Version'
-        agent=api.create_agent(username=self.username, agentname=agentname, pubkey=pubkey, version=version)
+        agent=api.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(isinstance(agent['aid'], uuid.UUID))
         self.assertEqual(agent['agentname'], agentname)
@@ -45,8 +46,8 @@ class GestaccountAgentApiTest(unittest.TestCase):
         agentname='test_create_agent_already_existing_agent'
         pubkey='pubkeycreateagentalreadyexistingagent'
         version='Test Version'
-        agent=api.create_agent(username=self.username, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertRaises(exceptions.AgentAlreadyExistsException, api.create_agent, username=self.username, agentname=agentname, pubkey=pubkey, version=version)
+        agent=api.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        self.assertRaises(exceptions.AgentAlreadyExistsException, api.create_agent, uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
 
     def test_activate_agent_non_existent_agent(self):
         ''' activate_agent should fail if agent is not found in system '''
@@ -58,7 +59,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         agentname='test_activate_agent_success'
         pubkey='pubkeyactivateagentsuccess'
         version='Test Version'
-        agent=api.create_agent(username=self.username, agentname=agentname, pubkey=pubkey, version=version)
+        agent=api.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         self.assertTrue(api.activate_agent(aid=agent['aid']))
         data=api.get_agent_config(aid=agent['aid'])
         self.assertEqual(data['state'],states.ACTIVE) 
@@ -73,7 +74,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         agentname='test_get_agent_config_success'
         pubkey='pubkeygetagentconfigsuccess'
         version='Test Version'
-        agent=api.create_agent(username=self.username, agentname=agentname, pubkey=pubkey, version=version)
+        agent=api.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         data=api.get_agent_config(aid=agent['aid'])
         self.assertIsInstance(data,dict) 
         self.assertEqual(data['aid'],agent['aid']) 
@@ -83,38 +84,36 @@ class GestaccountAgentApiTest(unittest.TestCase):
 
     def test_get_agents_config_non_existent_user(self):
         ''' get_agents_config should fail if username is not found in system '''
-        username='my_user_10'
-        self.assertRaises(exceptions.UserNotFoundException, api.get_agents_config,username=username)
+        uid=uuid.uuid4()
+        self.assertRaises(exceptions.UserNotFoundException, api.get_agents_config,uid=uid)
 
     def test_get_agents_config_success(self):
         ''' get_agents_config should succeed if username exists in system '''
-        username=self.username
-        data=api.get_agents_config(username=username)
+        uid=self.user['uid']
+        data=api.get_agents_config(uid=uid)
         self.assertIsInstance(data,list) 
 
     def test_update_agent_config_data_with_invalid_agentname(self):
         ''' update_agent_config should fail if data has invalid agentname'''
-        username='my_user_17'
         aid=uuid.uuid4()
         agentnames=[None, 3423423243, {'a':'dict'},['a','list'],uuid.uuid4(),2342342.23423423,0,1,'agent_with_ñññ']
         for agentname in agentnames:
-            self.assertRaises(exceptions.BadParametersException, api.update_agent_config,username=username, aid=aid, agentname=agentname)
+            self.assertRaises(exceptions.BadParametersException, api.update_agent_config, aid=aid, agentname=agentname)
 
     def test_update_agent_config_non_existent_agent(self):
         ''' update_agent_config should fail if agent is not in system '''
-        username='my_user_18'
         aid=uuid.uuid4()
         agentname='Agent Name #19'
-        self.assertRaises(exceptions.AgentNotFoundException, api.update_agent_config,username=username, aid=aid, agentname=agentname)
+        self.assertRaises(exceptions.AgentNotFoundException, api.update_agent_config, aid=aid, agentname=agentname)
 
     def test_update_agent_config_success(self):
         ''' update_agent_config should succeed if agent exists in system '''
         agentname='test_update_agent_config_success'
         pubkey='pubkeyupdateagentconfigsuccess'
         version='Test Version'
-        agent=api.create_agent(username=self.username, agentname=agentname, pubkey=pubkey, version=version)
+        agent=api.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         agentname='test_update_agent_config_success_after_update'
-        self.assertTrue(api.update_agent_config(username=self.username, aid=agent['aid'], agentname=agentname)) 
+        self.assertTrue(api.update_agent_config( aid=agent['aid'], agentname=agentname)) 
 
     def test_delete_agent_failure_invalid_aid(self):
         ''' delete_agent should fail if aid is invalid '''
@@ -132,7 +131,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         agentname='test_delete_agent_success'
         pubkey='pubkeydeleteagentsuccess'
         version='Test Version'
-        agent=api.create_agent(username=self.username, agentname=agentname, pubkey=pubkey, version=version)
+        agent=api.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         agent2=api.get_agent_config(aid=agent['aid'])
         self.assertEqual(agent['aid'],agent2['aid'])
         self.assertEqual(agent['uid'],agent2['uid'])

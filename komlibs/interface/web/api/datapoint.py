@@ -11,6 +11,7 @@ from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
 from komlibs.gestaccount import exceptions as gestexcept
+from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.datapoint import api as datapointapi
 from komlibs.gestaccount.widget import api as widgetapi
 from komlibs.interface.web import status, exceptions, errors
@@ -40,7 +41,8 @@ def get_datapoint_data_request(username, pid, start_date, end_date, iseq=None, e
     pid=uuid.UUID(pid)
     ii=timeuuid.get_uuid1_from_custom_sequence(iseq) if iseq else None
     ie=timeuuid.get_uuid1_from_custom_sequence(eseq) if eseq else None
-    authorization.authorize_request(request=requests.GET_DATAPOINT_DATA,username=username,pid=pid,ii=ii,ie=ie)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.GET_DATAPOINT_DATA,uid=uid,pid=pid,ii=ii,ie=ie)
     end_date=timeuuid.uuid1(seconds=float(end_date)) if end_date else None
     start_date=timeuuid.uuid1(seconds=float(start_date)) if start_date else None
     if ii or ie:
@@ -67,7 +69,8 @@ def get_datapoint_config_request(username, pid):
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_IWADP_GDPCR_IP)
     pid=uuid.UUID(pid)
-    authorization.authorize_request(request=requests.GET_DATAPOINT_CONFIG,username=username,pid=pid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.GET_DATAPOINT_CONFIG,uid=uid,pid=pid)
     data=datapointapi.get_datapoint_config(pid=pid)
     datapoint={}
     datapoint['did']=data['did'].hex
@@ -95,7 +98,8 @@ def update_datapoint_config_request(username, pid, data):
     datapointname=data['datapointname'] if 'datapointname' in data else None
     color=data['color'] if 'color' in data else None
     pid=uuid.UUID(pid)
-    authorization.authorize_request(request=requests.UPDATE_DATAPOINT_CONFIG,username=username,pid=pid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.UPDATE_DATAPOINT_CONFIG,uid=uid,pid=pid)
     datapointapi.update_datapoint_config(pid=pid,datapointname=datapointname, color=color)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
@@ -114,9 +118,10 @@ def new_datapoint_request(username, did, sequence, position, length, datapointna
     if not args.is_valid_datapointname(datapointname):
         raise exceptions.BadParametersException(error=errors.E_IWADP_NDPR_IDN)
     did=uuid.UUID(did)
-    authorization.authorize_request(request=requests.NEW_DATAPOINT,username=username,did=did)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.NEW_DATAPOINT,uid=uid,did=did)
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
-    message=messages.MonitorVariableMessage(username=username, did=did, date=date, position=position, length=length, datapointname=datapointname)
+    message=messages.MonitorVariableMessage(uid=uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
     msgapi.send_message(message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 
@@ -133,7 +138,8 @@ def mark_positive_variable_request(username, pid, sequence, position, length):
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_IWADP_MPVR_IP)
     pid=uuid.UUID(pid)
-    authorization.authorize_request(request=requests.MARK_POSITIVE_VARIABLE,username=username,pid=pid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.MARK_POSITIVE_VARIABLE,uid=uid,pid=pid)
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
     datapoints_to_update=datapointapi.mark_positive_variable(pid=pid, date=date, position=position, length=length)
     if datapoints_to_update!=None:
@@ -157,7 +163,8 @@ def mark_negative_variable_request(username, pid, sequence, position, length):
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_IWADP_MNVR_IP)
     pid=uuid.UUID(pid)
-    authorization.authorize_request(request=requests.MARK_NEGATIVE_VARIABLE,username=username,pid=pid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.MARK_NEGATIVE_VARIABLE,uid=uid,pid=pid)
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
     datapoints_to_update=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
     if datapoints_to_update!=None:
@@ -175,7 +182,8 @@ def delete_datapoint_request(username, pid):
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_IWADP_DDPR_IP)
     pid=uuid.UUID(pid)
-    authorization.authorize_request(request=requests.DELETE_DATAPOINT,username=username,pid=pid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.DELETE_DATAPOINT,uid=uid,pid=pid)
     message=messages.DeleteDatapointMessage(pid=pid)
     msgapi.send_message(message=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)

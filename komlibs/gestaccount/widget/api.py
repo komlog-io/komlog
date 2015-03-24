@@ -51,10 +51,10 @@ def get_widget_config(wid):
             data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.TABLE,'datapoints':widget.datapoints, 'colors':widget.colors}
     return data
 
-def get_widgets_config(username):
-    if not args.is_valid_username(username):
+def get_widgets_config(uid):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_GWSC_IU)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GWA_GWSC_UNF)
     data=[]
@@ -97,12 +97,12 @@ def delete_widget(wid):
     cassapiwidget.delete_widget(wid=wid)
     return True
 
-def new_widget_datasource(username,did):
-    if not args.is_valid_username(username):
+def new_widget_datasource(uid,did):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWDS_IU)
     if not args.is_valid_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWDS_ID)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GWA_NWDS_UNF)
     datasource=cassapidatasource.get_datasource(did=did)
@@ -116,18 +116,18 @@ def new_widget_datasource(username,did):
                 if widget_ds and widget_ds.did==did:
                     raise exceptions.WidgetAlreadyExistsException(error=errors.E_GWA_NWDS_WAE)
     wid=uuid.uuid4()
-    widget=ormwidget.WidgetDs(wid=wid,widgetname=datasource.datasourcename, uid=datasource.uid,did=datasource.did,creation_date=timeuuid.uuid1())
+    widget=ormwidget.WidgetDs(wid=wid,widgetname=datasource.datasourcename, uid=user.uid,did=datasource.did,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type, 'did': widget.did}
     else:
         raise exceptions.WidgetCreationException(error=errors.E_GWA_NWDS_IWE)
 
-def new_widget_datapoint(username,pid):
-    if not args.is_valid_username(username):
+def new_widget_datapoint(uid,pid):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWDP_IU)
     if not args.is_valid_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWDP_ID)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GWA_NWDP_UNF)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
@@ -146,12 +146,12 @@ def new_widget_datapoint(username,pid):
     else:
         raise exceptions.WidgetCreationException(error=errors.E_GWA_NWDP_IWE)
 
-def new_widget_histogram(username, widgetname):
-    if not args.is_valid_username(username):
+def new_widget_histogram(uid, widgetname):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWH_IU)
     if not args.is_valid_widgetname(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWH_IWN)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GWA_NWH_UNF)
     wid=uuid.uuid4()
@@ -161,12 +161,12 @@ def new_widget_histogram(username, widgetname):
     else:
         raise exceptions.WidgetCreationException(error=errors.E_GWA_NWH_IWE)
 
-def new_widget_linegraph(username, widgetname):
-    if not args.is_valid_username(username):
+def new_widget_linegraph(uid, widgetname):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWL_IU)
     if not args.is_valid_widgetname(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWL_IWN)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GWA_NWL_UNF)
     wid=uuid.uuid4()
@@ -176,12 +176,12 @@ def new_widget_linegraph(username, widgetname):
     else:
         raise exceptions.WidgetCreationException(error=errors.E_GWA_NWL_IWE)
 
-def new_widget_table(username, widgetname):
-    if not args.is_valid_username(username):
+def new_widget_table(uid, widgetname):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWT_IU)
     if not args.is_valid_widgetname(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWT_IWN)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GWA_NWT_UNF)
     wid=uuid.uuid4()

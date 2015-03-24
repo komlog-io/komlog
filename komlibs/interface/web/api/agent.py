@@ -2,6 +2,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.interface.web import status, exceptions, errors
 from komlibs.interface.web.model import webmodel
@@ -20,10 +21,11 @@ def new_agent_request(username, agentname, pubkey, version):
         raise exceptions.BadParametersException(error=errors.E_IWAA_NAGR_IPK)
     if not args.is_valid_version(version):
         raise exceptions.BadParametersException(error=errors.E_IWAA_NAGR_IV)
-    authorization.authorize_request(request=requests.NEW_AGENT,username=username)
-    agent=agentapi.create_agent(username, agentname, pubkey, version)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.NEW_AGENT,uid=uid)
+    agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
     if agent:
-        operation=weboperations.NewAgentOperation(uid=agent['uid'],aid=agent['aid'])
+        operation=weboperations.NewAgentOperation(uid=uid,aid=agent['aid'])
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
         message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
@@ -36,7 +38,8 @@ def new_agent_request(username, agentname, pubkey, version):
 def get_agents_config_request(username):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWAA_GAGSCR_IU)
-    data=agentapi.get_agents_config(username=username, dids_flag=True)
+    uid=userapi.get_uid(username=username)
+    data=agentapi.get_agents_config(uid=uid, dids_flag=True)
     response_data=[]
     for reg in data:
         agent_config={}
@@ -58,7 +61,8 @@ def get_agent_config_request(username, aid):
     if not args.is_valid_hex_uuid(aid):
         raise exceptions.BadParametersException(error=errors.E_IWAA_GAGCR_IA)
     aid=uuid.UUID(aid)
-    authorization.authorize_request(request=requests.GET_AGENT_CONFIG,username=username,aid=aid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.GET_AGENT_CONFIG,uid=uid,aid=aid)
     data=agentapi.get_agent_config(aid=aid,dids_flag=True)
     response_data={}
     response_data['aid']=data['aid'].hex
@@ -82,8 +86,9 @@ def update_agent_config_request(username, aid, data):
     aid=uuid.UUID(aid)
     if not 'agentname' in data or not args.is_valid_agentname(data['agentname']):
         raise exceptions.BadParametersException(error=errors.E_IWAA_UAGCR_IAN)
-    authorization.authorize_request(request=requests.UPDATE_AGENT_CONFIG,username=username, aid=aid)
-    if agentapi.update_agent_config(username=username, aid=aid, agentname=data['agentname']):
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.UPDATE_AGENT_CONFIG,uid=uid, aid=aid)
+    if agentapi.update_agent_config(aid=aid, agentname=data['agentname']):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
@@ -93,7 +98,8 @@ def delete_agent_request(username, aid):
     if not args.is_valid_hex_uuid(aid):
         raise exceptions.BadParametersException(error=errors.E_IWAA_DAGR_IA)
     aid=uuid.UUID(aid)
-    authorization.authorize_request(request=requests.DELETE_AGENT,username=username,aid=aid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.DELETE_AGENT,uid=uid,aid=aid)
     message=messages.DeleteAgentMessage(aid=aid)
     msgapi.send_message(message=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)

@@ -50,7 +50,7 @@ def get_user_config_request(username):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWAU_GUSCR_IU)
     user=userapi.get_user_config(username=username)
-    agents=agentapi.get_agents_config(username=username, dids_flag=True)
+    agents=agentapi.get_agents_config(uid=user['uid'], dids_flag=True)
     agents_data=[]
     for agent in agents:
         dids=[]

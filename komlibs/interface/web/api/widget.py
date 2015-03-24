@@ -8,6 +8,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.widget import api as widgetapi
 from komlibs.gestaccount.widget import types
 from komlibs.interface.web import status, exceptions, errors
@@ -21,7 +22,8 @@ from komlibs.general.validation import arguments as args
 def get_widgets_config_request(username):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWAW_GWSCR_IU)
-    data=widgetapi.get_widgets_config(username=username)
+    uid=userapi.get_uid(username=username)
+    data=widgetapi.get_widgets_config(uid=uid)
     response_data=[]
     for widget in data:
         reg={}
@@ -56,7 +58,8 @@ def get_widget_config_request(username, wid):
     if not args.is_valid_hex_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_IWAW_GWCR_IW)
     wid=uuid.UUID(wid)
-    authorization.authorize_request(request=requests.GET_WIDGET_CONFIG,username=username,wid=wid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.GET_WIDGET_CONFIG,uid=uid,wid=wid)
     data=widgetapi.get_widget_config(wid=wid)
     widget={'wid':wid.hex}
     widget['widgetname']=data['widgetname']
@@ -85,7 +88,8 @@ def delete_widget_request(username, wid):
     if not args.is_valid_hex_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_IWAW_DWR_IW)
     wid=uuid.UUID(wid)
-    authorization.authorize_request(request=requests.DELETE_WIDGET,username=username,wid=wid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.DELETE_WIDGET,uid=uid,wid=wid)
     message=messages.DeleteWidgetMessage(wid=wid)
     msgapi.send_message(msg=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
@@ -96,18 +100,19 @@ def new_widget_request(username, data):
         raise exceptions.BadParametersException(error=errors.E_IWAW_NWR_IU)
     if not args.is_valid_dict(data):
         raise exceptions.BadParametersException(error=errors.E_IWAW_NWR_ID)
-    authorization.authorize_request(request=requests.NEW_WIDGET, username=username)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.NEW_WIDGET, uid=uid)
     if not 'type' in data or not data['type'] in [types.LINEGRAPH, types.TABLE, types.HISTOGRAM]:
         raise exceptions.BadParametersException(error=errors.E_IWAW_NWR_IT)
     if not 'widgetname' in data or not args.is_valid_widgetname(data['widgetname']):
         raise exceptions.BadParametersException(error=errors.E_IWAW_NWR_IWN)
     widget=None
     if data['type']==types.LINEGRAPH:
-        widget=widgetapi.new_widget_linegraph(username=username, widgetname=data['widgetname'])
+        widget=widgetapi.new_widget_linegraph(uid=uid, widgetname=data['widgetname'])
     elif data['type']==types.TABLE:
-        widget=widgetapi.new_widget_table(username=username, widgetname=data['widgetname'])
+        widget=widgetapi.new_widget_table(uid=uid, widgetname=data['widgetname'])
     elif data['type']==types.HISTOGRAM:
-        widget=widgetapi.new_widget_histogram(username=username, widgetname=data['widgetname'])
+        widget=widgetapi.new_widget_histogram(uid=uid, widgetname=data['widgetname'])
     if widget:
         operation=weboperations.NewWidgetOperation(uid=widget['uid'], wid=widget['wid'])
         auth_op=operation.get_auth_operation()
@@ -130,7 +135,8 @@ def add_datapoint_request(username, wid, pid):
         raise exceptions.BadParametersException(error=errors.E_IWAW_ADPR_IP)
     wid=uuid.UUID(wid)
     pid=uuid.UUID(pid)
-    authorization.authorize_request(request=requests.ADD_DATAPOINT_TO_WIDGET, username=username, wid=wid, pid=pid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.ADD_DATAPOINT_TO_WIDGET, uid=uid, wid=wid, pid=pid)
     if widgetapi.add_datapoint_to_widget(wid=wid, pid=pid):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
@@ -144,7 +150,8 @@ def delete_datapoint_request(username, wid, pid):
         raise exceptions.BadParametersException(error=errors.E_IWAW_DDPR_IP)
     wid=uuid.UUID(wid)
     pid=uuid.UUID(pid)
-    authorization.authorize_request(request=requests.DELETE_DATAPOINT_FROM_WIDGET, username=username, wid=wid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.DELETE_DATAPOINT_FROM_WIDGET, uid=uid, wid=wid)
     if widgetapi.delete_datapoint_from_widget(wid=wid, pid=pid):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
@@ -177,7 +184,8 @@ def update_widget_config_request(username, wid, data):
             if not args.is_valid_hexcolor(element['color']):
                 raise exceptions.BadParametersException(error=errors.E_IWAW_UWCR_IEC)
     wid=uuid.UUID(wid)
-    authorization.authorize_request(request=requests.UPDATE_WIDGET_CONFIG, username=username, wid=wid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.UPDATE_WIDGET_CONFIG, uid=uid, wid=wid)
     widgetname=data['widgetname'] if 'widgetname' in data else None
     datapoints=None
     if 'datapoints' in data:

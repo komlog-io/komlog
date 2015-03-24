@@ -31,10 +31,10 @@ def get_users_circle_config(cid):
             data['members'].append({'username':user.username,'uid':user.uid})
     return data
 
-def get_users_circles_config(username):
-    if not args.is_valid_username(username):
+def get_users_circles_config(uid):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GCA_GUCSC_IU)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GCA_GUCSC_UNF)
     data=[]
@@ -53,14 +53,14 @@ def delete_circle(cid):
     cassapicircle.delete_circle(cid=cid)
     return True
 
-def new_users_circle(username, circlename, members_list=None):
-    if not args.is_valid_username(username):
+def new_users_circle(uid, circlename, members_list=None):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GCA_NUC_IU)
     if not args.is_valid_circlename(circlename):
         raise exceptions.BadParametersException(error=errors.E_GCA_NUC_ICN)
     if members_list and not args.is_valid_list(members_list):
         raise exceptions.BadParametersException(error=errors.E_GCA_NUC_IML)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GCA_NUC_UNF)
     if members_list:

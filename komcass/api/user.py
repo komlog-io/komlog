@@ -38,6 +38,10 @@ def get_user(username=None, uid=None, email=None):
     else:
         return None
 
+def get_uid(username):
+    row=connection.session.execute(stmtuser.S_UID_MSTUSER_B_USERNAME,(username,))
+    return row[0]['uid'] if row else None
+
 def new_user(user):
     if not isinstance(user, ormuser.User):
         return False

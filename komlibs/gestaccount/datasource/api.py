@@ -28,8 +28,8 @@ from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.textman import variables
 
-def create_datasource(username,aid,datasourcename):
-    if not args.is_valid_username(username):
+def create_datasource(uid,aid,datasourcename):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GDA_CRD_IU)
     if not args.is_valid_uuid(aid):
         raise exceptions.BadParametersException(error=errors.E_GDA_CRD_IA)
@@ -37,13 +37,13 @@ def create_datasource(username,aid,datasourcename):
         raise exceptions.BadParametersException(error=errors.E_GDA_CRD_IDN)
     now=timeuuid.uuid1()
     did=uuid.uuid4()
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     agent=cassapiagent.get_agent(aid=aid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GDA_CRD_UNF)
     if not agent:
         raise exceptions.AgentNotFoundException(error=errors.E_GDA_CRD_ANF)
-    datasource=ormdatasource.Datasource(did=did,aid=aid,uid=user.uid,datasourcename=datasourcename,state=states.ACTIVE,creation_date=now)
+    datasource=ormdatasource.Datasource(did=did,aid=aid,uid=uid,datasourcename=datasourcename,state=states.ACTIVE,creation_date=now)
     if cassapidatasource.new_datasource(datasource=datasource):
         return {'did':datasource.did, 'datasourcename':datasource.datasourcename, 'uid': datasource.uid, 'aid':datasource.aid, 'state':datasource.state}
     else:
@@ -155,14 +155,14 @@ def get_datasource_config(did, pids_flag=True):
     else:
         raise exceptions.DatasourceNotFoundException(error=errors.E_GDA_GDC_DNF)
 
-def get_datasources_config(username):
-    if not args.is_valid_username(username):
+def get_datasources_config(uid):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GDA_GDSC_IU)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GDA_GDSC_UNF)
     else:
-        datasources=cassapidatasource.get_datasources(uid=user.uid)
+        datasources=cassapidatasource.get_datasources(uid=uid)
         data=[]
         if datasources:
             for datasource in datasources:
