@@ -26,7 +26,7 @@ from komlibs.gestaccount import exceptions, errors
 from komlibs.gestaccount.widget import api as gestwidget
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
-from komlibs.textman import variables
+from komlibs.textman import api as textmanapi
 
 def create_datasource(uid,aid,datasourcename):
     if not args.is_valid_uuid(uid):
@@ -198,15 +198,8 @@ def generate_datasource_map(did, date):
     varlist=[]
     dsdata=cassapidatasource.get_datasource_data_at(did=did, date=date)
     if dsdata:
-        varlist = variables.get_varlist(dsdata.content)
-        mapcontentlist=[]
-        mapvarcontentlist={}
-        for var in varlist:
-            content=var.__dict__
-            mapcontentlist.append(content)
-            mapvarcontentlist[content['s']]=content['l']
-        mapcontentjson=json.dumps(mapcontentlist)
-        dsmapobj=ormdatasource.DatasourceMap(did=did,date=date,content=mapcontentjson,variables=mapvarcontentlist)
+        variables=textmanapi.get_variables_from_text(text_content=dsdata.content)
+        dsmapobj=ormdatasource.DatasourceMap(did=did,date=date,content=variables.serialize(),variables=variables.get_index())
         datasource_stats=cassapidatasource.get_datasource_stats(did=did)
         try:
             if not cassapidatasource.insert_datasource_map(dsmapobj=dsmapobj):

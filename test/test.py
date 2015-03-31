@@ -3,6 +3,7 @@ from komfig import logger
 
 
 MODULES = [
+    'komlibs.textman.test.test_api.TextmanApiTest',
     'komlibs.general.validation.test.test_arguments.GeneralValidationArgumentsTest',
     'komlibs.graph.test.test_api.GraphApiTest',
     'komlibs.gestaccount.user.test.test_userapi.GestaccountUserApiTest',
