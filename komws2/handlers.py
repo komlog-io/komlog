@@ -542,8 +542,8 @@ class CircleMembersHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
-UUID4_REGEX='[0-9a-f]{32}'
-USERNAME_REGEX='[0-9a-z\-._]'
+UUID4_REGEX='[0-9a-fA-F]{32}'
+USERNAME_REGEX='[0-9a-z_]+'
 
 HANDLERS = [(r'/login/?', LoginHandler),
             (r'/logout/?', LogoutHandler),
@@ -557,7 +557,7 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/etc/dp/('+UUID4_REGEX+')/negatives/?', DatapointNegativesHandler),
             (r'/etc/wg/?', WidgetsHandler),
             (r'/etc/wg/('+UUID4_REGEX+')', WidgetConfigHandler),
-            (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/dp/(?<pid>'+UUID4_REGEX+')', WidgetDatapointsHandler),
+            (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/dp/(?P<pid>'+UUID4_REGEX+')', WidgetDatapointsHandler),
             (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/sn/?', WidgetSnapshotsHandler),
             (r'/etc/db/?', DashboardsHandler),
             (r'/etc/db/('+UUID4_REGEX+')', DashboardConfigHandler),
@@ -572,5 +572,5 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/var/dp/('+UUID4_REGEX+')', DatapointDataHandler),
             (r'/home/config', UserConfigHandler),
             (r'/home', UserHomeHandler),
-]
+            ]
 
