@@ -82,6 +82,9 @@ def get_datapoint_config(pid):
         data['color']=datapoint.color if datapoint.color else ''
         if datapoint_stats:
             data['decimalseparator']=datapoint_stats.decimal_separator if datapoint_stats.decimal_separator else ''
+        widget=cassapiwidget.get_widget_dp(pid=pid)
+        if widget:
+            data['wid']=widget.wid
     else:
         raise exceptions.DatapointNotFoundException(error=errors.E_GPA_GDC_DNF)
     return data

@@ -23,7 +23,6 @@ from komcass.model.orm import datasource as ormdatasource
 from komfs import api as fsapi
 from komlibs.gestaccount.datasource import states
 from komlibs.gestaccount import exceptions, errors
-from komlibs.gestaccount.widget import api as gestwidget
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.textman import api as textmanapi
@@ -151,6 +150,9 @@ def get_datasource_config(did, pids_flag=True):
         if pids_flag:
             pids=cassapidatapoint.get_datapoints_pids(did=did)
             data['pids']=[pid for pid in pids] if pids else []
+        widget=cassapiwidget.get_widget_ds(did=did)
+        if widget:
+            data['wid']=widget.wid
         return data
     else:
         raise exceptions.DatasourceNotFoundException(error=errors.E_GDA_GDC_DNF)

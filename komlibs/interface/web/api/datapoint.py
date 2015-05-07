@@ -79,6 +79,8 @@ def get_datapoint_config_request(username, pid):
     datapoint['datapointname']=data['datapointname']
     if 'decimalseparator' in data:
         datapoint['decimalseparator']=data['decimalseparator']
+    if 'wid' in data:
+        datapoint['wid']=data['wid'].hex
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datapoint)
 
 @exceptions.ExceptionHandler
