@@ -7,8 +7,9 @@ from komfig import logger
 def generate_decision_tree(training_set):
     keys=set()
     for row in training_set:
-        for key in list(row.keys()):
-            keys.add(key)
+        if 'result' in row and row['result']==True:
+            for key in list(row.keys()):
+                keys.add(key)
     keys.remove('result')
     tree_nodes=_learn_tree(rows=training_set, attributes=keys)
     return decisiontree.DecisionTree(nodes=tree_nodes)
