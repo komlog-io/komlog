@@ -359,6 +359,18 @@ class WidgetsHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
+    @auth.userauthenticated
+    def post(self):
+        try:
+            data=json_decode(self.request.body)
+        except Exception as e:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=widget.new_widget_request(username=self.user, data=data)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
+
 class WidgetConfigHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated

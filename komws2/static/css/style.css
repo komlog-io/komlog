@@ -1,342 +1,174 @@
-@charset "UTF-8"
+/*
+ * Base structure
+ */
 
-*{
-  padding: 0;
-  margin: 0;
-  list-style: none;
+/* Move down content because we have a fixed navbar that is 50px tall */
+html {
+      position: relative;
+      min-height: 100%;
 }
-
-html, body {
-  min-width: 1024px;
-}
-
 body {
-  font-family: verdana, arial, sans-serif;
-  font-size: 12px;
-}
-
-/* Arreglo para las nuevas secciones de html5 en navegadores antiguos */
-header, section, footer, aside, nav, article, figure { 
-  display: block; 
-}
-
-/* Estilos para la pantalla de login
- * esta pantalla es distinta del resto
- */
-
-header h1 {
-    text-align: center;
-}
-
-#c_login {
-  width: 350px;
-  margin: auto;
-  background-color: #ccc;
-}
-
-.cl_f_login {
-  width: 30%;
-}
-
-.ci_f_login {
-  width: 70%;
-}
-
-.cb_f_login {
-  width: 100%;
-  text-align: center;
-  margin-top: 10px;
-}
-
-.ce_f_login{
-  width: 100%;
-  margin-bottom: 10px;
-}
-
-/*
- * Estilos generales
- */
-
-.float_left {
-  float: left;
-}
-
-.float_right {
-  float: right;
+  padding-top: 50px;
+  margin-bottom: 60px;
 }
 
 
 /*
- * Estilos pagina base
+ * Global add-ons
  */
 
-#c_container {
-  width: 100%;
-  position:relative;
-  margin: auto;
-  background-color: #FFF;
-  min-width: 1000px;
+.sub-header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
 }
 
-#c_header {
-  width: 100%;
-  height: 30px;
-  border-bottom:2px solid #CCC;
+/*
+ * Top navigation
+ * Hide default border to remove 1px line.
+ */
+.navbar-fixed-top {
+  border: 0;
 }
 
-#c_sidebar_left {
-  width: 200px;
-  position: relative;
+/*
+ * Sidebar
+ */
+
+.sidebar {
+  position: fixed;
+  top: 51px;
   bottom: 0;
   left: 0;
-  border-right:2px solid #CCC;
-  overflow: auto;
-  padding-top: 10px;
-}
-
-.agent_list li {
-  margin-top: 15px;
-  color: #c36c00;
-  font-weight: bold;
-}
-
-.ds_list li {
-  margin-top: 0px;
-}
-
-
-#c_sidebar_left a {
-  color: #ff8d00;
-  font-weight: normal;
-}
-
-#c_content {
-  position: relative;
-  margin-left: 200px;
-  padding-left: 15px;
-  padding-top: 10px;
-}
-
-
-/*
- * Estilos del Header
- */
-
-#c_user_control {
-  height: inherit;
-  background-color: white;
-  text-align: right;
-}
-
-.row_button {
-  width: 24px;
-}
-
-.row_avatar {
-  width: 48px;
-}
-
-.row_username {
-  text-align: center;
-  font-weight: bold;
-  text-transform: lowercase;
-  padding-right: 15px;
-}
-
-/*
- * Estilo footer
- */
-
-footer {
-  width:99%;
-  position: fixed;
-  bottom: 0;
-  font-size: 10px;
-  text-align: right;
-}
-
-/*
- * Estilo botones
- */
-
-.big_button {
-  height: 24px;
-  width: 24px;
-  text-decoration: none;
+  z-index: 1000;
   display: block;
+  padding: 20px;
+  overflow-x: hidden;
+  overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+  background-color: #f5f5f5;
+  border-right: 1px solid #eee;
 }
-
-.button_logout {
-  background: url(../img/img_b_logout.png) no-repeat transparent;
+/* Sidebar navigation */
+.nav-sidebar {
+  margin-right: -21px; /* 20px padding + 1px border */
+  margin-bottom: 20px;
+  margin-left: -20px;
 }
-
-.button_settings {
-  background: url(../img/img_b_settings.png) no-repeat transparent;
-}
-
-/*
- * ventanas
- * */
-
-.c_window {
-  border: 2px solid #ccc;
-  border-radius: 5px;
-  display: inline-block;
-  overflow: auto;
-  //resize: both;
-  min-width: 218px;
-  padding: 0px;
-  margin: 5px;
-  font-size: 11px;
-  background-color: #fffaf2;
-  vertical-align: top;
-}
-
-.c_window .title_bar {
-    display: inline-block;
-    margin: 0px;
-    padding: 0px;
-    width: 90%;
-    height: 17px;
-    cursor: pointer;
-}
-
-.c_window h3 {
-    margin: 0px;
-    padding: 0px;
-    width: 100%;
-    height: 17px;
-    background-color: #ff8d00;
-    color: #fff;
-    text-align: center;
-}
-
-.c_window .button_bar {
-    display: inline-block;
-    float: right;
-    margin: 0px;
-    padding: 0px;
-    height: 17px;
-    width: 10%;
-    background-color: #ff8d00;
-    color: #fff;
-}
-
-.c_window pre {
-    padding: 0px 10px 0px 10px;
-}
-
-.button_bar .button_close {
-  color: #ff8d00;
+.nav-sidebar > li > a {
   padding-right: 20px;
-  padding-top: 10px;
-  margin: 0px;
-  width: auto;
-  float: right;
-  background: url(../img/img_b_close.png) no-repeat transparent;
+  padding-left: 20px;
+}
+.nav-sidebar > .active > a,
+.nav-sidebar > .active > a:hover,
+.nav-sidebar > .active > a:focus {
+  color: #fff;
+  background-color: #428bca;
 }
 
-.c_window .date_info {
-  color: #ff8d00;
-  padding-right: 10px;
-  margin: 0px;
-  width: auto;
-  text-align: right;
-}
-
-/*
- * ds widget 
- */
-
-.detected-var {
-  display: inline;
-  font-size: 90%;
-  font-weight: 500;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: .25em;
-  background-color: #ffecd7;
-}
-
-.detected-var[href]:hover,
-.detected-var[href]:focus {
-  color: #ffffff;
-  text-decoration: none;
-  background-color: #808080;
-}
-
-.monitored-var {
-  display: inline;
-  font-size: 90%;
-  font-weight: 500;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: .25em;
-  background-color: #f4b673;
+.sidebar-right {
+  position: fixed;
+  top: 51px;
+  bottom: 0;
+  right: 0;
+  z-index: 1000;
+  display: block;
+  padding: 20px;
+  padding-bottom: 60px;
+  overflow: auto; /* Scrollable contents if viewport is shorter than content. */
+  border-left: 1px solid #eee;
 }
 
 /*
- * dp widget 
+ * Main content
  */
 
-div[wdp-content] {
-  margin: 5px;
+.main {
+  position: fixed;
+  top: 51px;
+  bottom: 0;
+  z-index: 1000;
+  display: block;
+  padding: 20px;
+  margin-bottom: 70px;
+  overflow-x: hidden;
+  /*overflow-y: scroll; Scrollable contents if viewport is shorter than content. */
+  border-left: 1px solid #eee;
+  border-right: 1px solid #eee;
+}
+
+.main .page-header {
+  margin-top: 0;
+}
+
+
+/*
+ * Placeholder dashboard ideas
+ */
+
+.placeholders {
+  margin-bottom: 30px;
   text-align: center;
 }
-
-div[wdp-content] table {
-  border: 2px solid #ccc;
-  float: left;
-  border-radius: 5px;
-  background-color: #ffecd7;
-  text-align: right;
-  min-width: 610px;
+.placeholders h4 {
+  margin-bottom: 0;
+}
+.placeholder {
+  margin-bottom: 20px;
+}
+.placeholder img {
+  display: inline-block;
+  border-radius: 50%;
 }
 
-table th {
-  border: 2px solid #ffdaab;
-  background-color: #ffdaab;
-  border-collapse: collapse;
-  border-radius: 5px;
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 60px;
 }
 
-div[wdp-content] histogram {
-  //float: left;
+.footer .motto {
+  font-family: sans-serif;
+  font-size: 11px;
+  vertical-align: bottom;
 }
 
+.form-inline .form-group input {
+  width: 730px;
+}
+/*
+*  Slides related styles
+*/
 
-div[wdp-content] date-slider {
-  //float: left;
+.SlideBarIcons {
+    visibility: hidden;
 }
 
-div[wdp-content] timeline {
-  //float: left;
+.Slide:hover .SlideBarIcons {
+    visibility: visible;
 }
 
-.bar rect {
-  fill: #ffdaab;
-  shape-rendering: crispEdges;
+/*
+*  D3 related styles
+*/
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
 }
 
-.bar text {
-  fill: #ff9000;
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
 }
 
-.axis path, .axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
+.histogram text {
+    font-family: sans-serif;
+    font-size: 10px;
 }
 
-path { 
-  stroke: #ffdaab;
-  stroke-width: 2;
-  fill: none;
-}
+.wtb { table-layout: fixed; }
+.wtb th, .wtb td { overflow: hidden; }
 
-.brush .extent {
-  fill: #ffdaab;
-  shape-rendering: crispEdges;
-}
+

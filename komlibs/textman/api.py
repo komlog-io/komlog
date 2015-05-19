@@ -9,9 +9,9 @@ from decimal import Decimal
 from komlibs.textman.model import variables
 from komfig import logger
 
-VAR_PREFIX_SEPARATOR_REGEXP='(?<=[ \t/\|\(\[;:%$#"=])'
+VAR_PREFIX_SEPARATOR_REGEXP='(?<=[ \n\t/\|\(\[;:%$#"=])'
 VAR_SUFIX_SEPARATOR_REGEXP ='(?=[ \n\t/\|\)\];:%$#"])'
-VAR_PREFIX_SEPARATOR_WITH_COMMA_REGEXP='(?<=[, \t/\|\(\[;:%$#"=])'
+VAR_PREFIX_SEPARATOR_WITH_COMMA_REGEXP='(?<=[, \n\t/\|\(\[;:%$#"=])'
 VAR_SUFIX_SEPARATOR_WITH_COMMA_REGEXP='(?=[, \n\t/\|\(\];:%$#"])'
 
 SEPARATOR_REGEXP='([ ]+|[\n\t/\|\(\)\[\];:\.%\$\#"=])'

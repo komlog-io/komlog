@@ -50,7 +50,7 @@ def get_datapoint_data_request(username, pid, start_date, end_date, iseq=None, e
             start_date=ii
         if ie<end_date:
             end_date=ie
-    if start_date>end_date:
+    if start_date and end_date and timeuuid.get_unix_timestamp(start_date)>timeuuid.get_unix_timestamp(end_date):
         tmp_date=end_date
         end_date=start_date
         start_date=tmp_date

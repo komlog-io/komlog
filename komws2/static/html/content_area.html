@@ -1,7 +1,0 @@
-<span ng-repeat="dashboard in db_c| filter: {bid: currentDashboard}:true">
-    <span ng-repeat="wid in dashboard.wids">
-        <span ng-repeat="widget in wg_c | filter: {wid: wid}: true">
-            <ng-include src="'/static/html/widgets/w_'+widget.type+'.html'"></ng-include>
-        </span>
-    </span>
-</span>
