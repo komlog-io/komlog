@@ -304,29 +304,12 @@ var SlideDs = React.createClass({
         return {dsData: undefined,
                 datasourcename: '',
                 timestamp:0,
-                showMonitorDatapointBox:false}
+                }
     },
     subscriptionTokens: {},
-    onClickVar: function(seq,p,l,e) {
-        e.preventDefault();
-        this.monitorDatapointBoxInfo={p:p,l:l,seq:seq,did:this.props.did}
-        this.setState({showMonitorDatapointBox:true})
-    },
     onClickDatapoint: function(pid,e) {
         e.preventDefault();
         PubSub.publish('loadSlide',{pid:pid})
-    },
-    monitorVariable: function (e) {
-        e.preventDefault();
-        this.monitorDatapointBoxInfo.datapointname=React.findDOMNode(this.refs.datapointname).value
-        PubSub.publish('monitorDatapoint',this.monitorDatapointBoxInfo)
-        this.monitorDatapointBoxInfo={}
-        this.setState({showMonitorDatapointBox:false})
-    },
-    cancelMonitorVariable: function (e) {
-        e.preventDefault();
-        this.monitorDatapointBoxInfo={}
-        this.setState({showMonitorDatapointBox:false})
     },
     subscriptionHandler: function (msg,data) {
         switch (msg) {
@@ -358,9 +341,22 @@ var SlideDs = React.createClass({
             }.bind(this));
         delete this.subscriptionTokens[this.props.wid];
     },
+    componentDidUpdate: function () {
+        console.log('componentDidUpdate')
+        $('.datapoint-tooltip').tooltip()
+        $('.variable-popover').popover()
+    },
     refreshData: function () {
         if (datasourceStore._datasourceData.hasOwnProperty(this.props.did)) {
             datasourceData=datasourceStore._datasourceData[this.props.did]
+            if (datasourceData.hasOwnProperty('datapoints')) {
+                for (var i=0;i<datasourceData.datapoints.length;i++) {
+                    pid=datasourceData.datapoints[i].pid
+                    if (!datapointStore._datapointConfig.hasOwnProperty(pid)) {
+                        PubSub.publish('datapointConfigReq',{pid:pid})
+                    }
+                }
+            }
             if (!this.state.dsData) {
                 this.setState({dsData:datasourceData, timestamp:datasourceData.ts})
             } else if (this.state.timestamp < datasourceData.ts) {
@@ -371,6 +367,14 @@ var SlideDs = React.createClass({
     refreshConfig: function () {
         if (datasourceStore._datasourceConfig.hasOwnProperty(this.props.did)) {
             datasourceConfig=datasourceStore._datasourceConfig[this.props.did]
+            if (datasourceConfig.hasOwnProperty('pids')) {
+                for (var i=0;i<datasourceConfig.pids.length;i++) {
+                    pid=datasourceConfig.pids[i]
+                    if (!datapointStore._datapointConfig.hasOwnProperty(pid)) {
+                        PubSub.publish('datapointConfigReq',{pid:pid})
+                    }
+                }
+            }
             shouldUpdate=false
             if (this.state.datasourcename != datasourceConfig.datasourcename) {
                 shouldUpdate = true
@@ -399,6 +403,23 @@ var SlideDs = React.createClass({
         var numElement = 0
         var cursorPosition=0
         newLineRegex=/(?:\r\n|\r|\n)/g
+        datasourcePids=[]
+        if (datasourceStore._datasourceConfig.hasOwnProperty(this.props.did)) {
+            datasourceConfig=datasourceStore._datasourceConfig[this.props.did]
+            if (datasourceConfig.hasOwnProperty('pids')) {
+                for (var i=0;i<datasourceConfig.pids.length;i++) {
+                    if (datapointStore._datapointConfig.hasOwnProperty(datasourceConfig.pids[i])) {
+                        datapointname=datapointStore._datapointConfig[datasourceConfig.pids[i]].datapointname
+                        datasourcePids.push({pid:datasourceConfig.pids[i],datapointname:datapointname})
+                    }
+                }
+            }
+        }
+        datasourcePids.sort( function (a,b) {
+            nameA=a.datapointname.toLowerCase();
+            nameB=b.datapointname.toLowerCase();
+            return ((nameA < nameB) ? -1 : ((nameA > nameB) ? 1 : 0));
+        });
         for (var i=0;i<dsData.variables.length;i++) {
             position=dsData.variables[i][0]
             length=dsData.variables[i][1]
@@ -420,17 +441,45 @@ var SlideDs = React.createClass({
                     text=dsData.content.substr(position,length)
                     if (datapointStore._datapointConfig.hasOwnProperty(dsData.datapoints[j].pid)) {
                         color=datapointStore._datapointConfig[dsData.datapoints[j].pid].color
+                        datapointname=datapointStore._datapointConfig[dsData.datapoints[j].pid].datapointname
+                        classname='datapoint-tooltip'
                     } else {
                         color='black'
+                        datapointname=''
+                        classname=''
                     }
-                    elements.push({ne:numElement++,type:'datapoint',pid:dsData.datapoints[j].pid,p:position,l:length,style:{borderStyle:'dotted',borderWidth:'2px',borderColor:color},data:text,onclick:this.onClickDatapoint})
+                    elements.push({ne:numElement++,type:'datapoint',pid:dsData.datapoints[j].pid,p:position,l:length,style:{color:color},data:text,onclick:this.onClickDatapoint,datapointname:datapointname,classname:classname})
                     datapointFound=true
                     break;
                 }
             }
             if (datapointFound == false) {
                 text=dsData.content.substr(position,length)
-                elements.push({ne:numElement++, type:'variable',seq:dsData.seq,p:position,l:length,style:{backgroundColor:'#f0f0f0'},data:text,onclick:this.onClickVar})
+                classname='variable-popover'
+                title='Monitor variable'
+                popoverContent='<div>\
+                                <div class="input-group">\
+                                  <input type="text" class="form-control" placeholder="Datapoint name">\
+                                  <span class="input-group-btn">\
+                                    <button type="submit" class="btn btn-default" onclick="monitorVariable (event,'+position+','+length+',\''+dsData.seq+'\',\''+this.props.did+'\')">Ok</button>\
+                                  </span>\
+                                </div>'
+                if (datasourcePids.length>0) {
+                    datapointDropdown='<p/>\
+                                       <a href="#" class="dropdown-toggle h6" data-toggle="dropdown" aria-haspopup="true" role="button" aria-expanded="false">\
+                                       This variable is already been monitored\
+                                       <span class="caret"></span>\
+                                       </a>\
+                                       <ul id="menu1" class="dropdown-menu" role="menu" >'
+                    for (var k=0;k<datasourcePids.length;k++) {
+                        datapointDropdown=datapointDropdown+'<li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick=markPositiveVar(event,"'+datasourcePids[k].pid+'",'+position+','+length+',\''+dsData.seq+'\')>'+datasourcePids[k].datapointname+'</a></li>'
+                    }
+                    datapointDropdown=datapointDropdown+'</ul></div>'
+                } else {
+                    datapointDropdown=''
+                }
+                popoverContent=popoverContent+datapointDropdown
+                elements.push({ne:numElement++, type:'variable',data:text,title:title,classname:classname,popoverContent:popoverContent})
             } else {
                 datapointFound = false
             }
@@ -460,24 +509,11 @@ var SlideDs = React.createClass({
             }else if (element.type == 'nl') {
                 return (<br key={element.ne} />);
             }else if (element.type == 'datapoint') {
-                return (<span key={element.ne} style={element.style} onClick={element.onclick.bind(null,element.pid)}>{element.data}</span>);
-            }else {
-                return (<span key={element.ne} style={element.style} onClick={element.onclick.bind(null,element.seq,element.p,element.l)}>{element.data}</span>);
+                return (<span key={element.ne} style={element.style} className={element.classname} data-placement="top" title={element.datapointname} onClick={element.onclick.bind(null,element.pid)}>{element.data}</span>);
+            }else if (element.type == 'variable') {
+                return (<span key={element.ne} className={element.classname} data-placement="right" data-html="true" data-content={element.popoverContent} title={element.title}>{element.data}</span>);
             }
         });
-        if (this.state.showMonitorDatapointBox == true) {
-            monitorDatapointBox=(
-                                 <div>
-                                   <form>
-                                     <input type="text" ref='datapointname' className="form-control" placeholder="New Datapoint Name" />
-                                     <button type="cancel" className="btn btn-default" onClick={this.cancelMonitorVariable}>Cancel</button>
-                                     <button type="submit" className="btn btn-default" onClick={this.monitorVariable}>Submit</button>
-                                   </form>
-                                 </div>
-                                )
-        } else {
-            monitorDatapointBox=(<div />)
-        }
         if (typeof this.state.timestamp === 'number') {
             info_node=(
                 <div style={this.styles.infostyle}>
@@ -491,10 +527,9 @@ var SlideDs = React.createClass({
                 );
         }
         return (<div>
-                {info_node}
-                {monitorDatapointBox}
+                  {info_node}
                   <div>
-                  {element_nodes}
+                    {element_nodes}
                   </div>
                 </div>
                 );
@@ -539,6 +574,9 @@ var SlideDp = React.createClass({
     newIntervalCallback: function (interval) {
         now=new Date().getTime()/1000;
         if (interval.hasOwnProperty('its') && interval.hasOwnProperty('ets')) {
+            if (interval.its == interval.ets) {
+                interval.its=interval.ets-3600
+            }
             if (Math.abs(this.state.interval.ets-interval.ets)>1) {
                 if (interval.ets < now-30) {
                     this.state.live = false;
@@ -1258,3 +1296,23 @@ React.render(
     document.getElementById('workspace-content')
 );
 
+function monitorVariable (event,position,length,seq,did) {
+    event.preventDefault()
+    var theName = $(event.target).parent().parent().find('input').val()
+    var thePopover = $(event.target).parent().parent().parent().parent().parent()
+    thePopover.popover('disable').popover('hide')
+    thePopover.remove();
+    console.log('monitor var received',position,length,seq,did,theName)
+    data={p:position,l:length,seq:seq,did:did,datapointname:theName}
+    PubSub.publish('monitorDatapoint',data)
+}
+
+function markPositiveVar(event,pid,position,length,seq) {
+    event.preventDefault()
+    console.log('markPositiveVar',pid,position,length,seq)
+    var thePopover = $(event.target).parent().parent().parent().parent().parent()
+    thePopover.popover('disable').popover('hide')
+    thePopover.remove();
+    data={p:position,l:length,seq:seq,pid:pid}
+    PubSub.publish('markPositiveVar',data)
+}

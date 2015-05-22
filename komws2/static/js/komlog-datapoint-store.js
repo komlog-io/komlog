@@ -8,6 +8,7 @@ function DatapointStore () {
     this.subscriptionTokens.push({token:PubSub.subscribe('datapointDataReq', this.subscriptionHandler.bind(this)),msg:'datapointDataReq'});
     this.subscriptionTokens.push({token:PubSub.subscribe('datapointConfigReq', this.subscriptionHandler.bind(this)),msg:'datapointConfigReq'});
     this.subscriptionTokens.push({token:PubSub.subscribe('monitorDatapoint', this.subscriptionHandler.bind(this)),msg:'monitorDatapoint'});
+    this.subscriptionTokens.push({token:PubSub.subscribe('markPositiveVar', this.subscriptionHandler.bind(this)),msg:'markPositiveVar'});
     this.subscriptionTokens.push({token:PubSub.subscribe('loadDatapointSlide', this.subscriptionHandler.bind(this)),msg:'loadDatapointSlide'});
 
 }
@@ -23,6 +24,9 @@ DatapointStore.prototype = {
                 break;
             case 'monitorDatapoint':
                 processMsgMonitorDatapoint(data)
+                break;
+            case 'markPositiveVar':
+                processMsgMarkPositiveVar(data)
                 break;
             case 'loadDatapointSlide':
                 processMsgLoadDatapointSlide(data)
@@ -388,8 +392,24 @@ function processMsgMonitorDatapoint (data) {
             data: JSON.stringify(requestData),
         })
         .done(function (data) {
-            setTimeout(PubSub.publish('datasourceConfigReq',{did:requestData.did}),2000)
-            setTimeout(PubSub.publish('datasourceDataReq',{did:requestData.did}),2000)
+            setTimeout(PubSub.publish('datasourceConfigReq',{did:requestData.did}),5000)
+            setTimeout(PubSub.publish('datasourceDataReq',{did:requestData.did}),5000)
+        })
+    }
+}
+
+function processMsgMarkPositiveVar (data) {
+    if (data.hasOwnProperty('pid') && data.hasOwnProperty('seq') && data.hasOwnProperty('p') && data.hasOwnProperty('l')) {
+        requestData={seq:data.seq,p:data.p,l:data.l}
+        $.ajax({
+            url: '/etc/dp/'+data.pid+'/positives/',
+            dataType: 'json',
+            type: 'POST',
+            data: JSON.stringify(requestData),
+        })
+        .done(function (responseData) {
+            setTimeout(PubSub.publish('datapointConfigReq',{pid:data.pid}),5000)
+            setTimeout(PubSub.publish('datapointDataReq',{pid:data.pid}),5000)
         })
     }
 }

@@ -96,6 +96,8 @@ def get_datasource_config_request(username, did):
     datasource['did']=data['did'].hex
     datasource['aid']=data['aid'].hex
     datasource['datasourcename']=data['datasourcename']
+    if 'pids' in data:
+        datasource['pids']=[pid.hex for pid in data['pids']]
     if 'wid' in data:
         datasource['wid']=data['wid'].hex
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datasource)
