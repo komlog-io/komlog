@@ -467,7 +467,7 @@ var SlideDs = React.createClass({
                 if (datasourcePids.length>0) {
                     datapointDropdown='<p/>\
                                        <a href="#" class="dropdown-toggle h6" data-toggle="dropdown" aria-haspopup="true" role="button" aria-expanded="false">\
-                                       This variable is already been monitored\
+                                       This variable has already been monitored\
                                        <span class="caret"></span>\
                                        </a>\
                                        <ul id="menu1" class="dropdown-menu" role="menu" >'
