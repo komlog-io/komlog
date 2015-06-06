@@ -30,13 +30,13 @@ class GestaccountDatapointApiTest(unittest.TestCase):
             for agent in agents:
                 if agent['agentname']==agentname:
                     self.agent=agent
-        datasourcename='test_gestaccount.datapoint.api_datasource'
+        datasourcename='test_gestaccount.datapoint.api_datasource.'+uuid.uuid1().hex
         self.datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
 
     def test_create_datapoint_non_existent_datasource(self):
         ''' create_datapoint should fail if datasource is not found in system '''
         did=uuid.uuid4()
-        datapointname='Datapoint Name'
+        datapointname='datapoint_name'
         color='#FFDDAA'
         self.assertRaises(exceptions.DatasourceNotFoundException,api.create_datapoint,did=did,datapointname=datapointname, color=color)
 
@@ -231,7 +231,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
     def test_mark_positive_variable_success_no_other_datapoint_matched(self):
         ''' mark_positive_variable should succeed in this case, no other datapoint matched '''
         did=self.datasource['did']
-        datapointname='test_mark_positive_variable_success_no_other_datapoint_matched'
+        datapointname='test_mark_positive_variable_success_no_other_datapoint_matched_dp'
         color='#FFDDAA'
         datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
         date=timeuuid.uuid1()

@@ -110,8 +110,6 @@ def new_snapshot(uid, wid, interval_init, interval_end, shared_with_users=None,s
         raise exceptions.BadParametersException(error=errors.E_GSA_NS_III)
     if not args.is_valid_date(interval_end):
         raise exceptions.BadParametersException(error=errors.E_GSA_NS_IIE)
-    if interval_init>interval_end:
-        raise exceptions.BadParametersException(error=errors.E_GSA_NS_IIO)
     if shared_with_users and not args.is_valid_list(shared_with_users):
         raise exceptions.BadParametersException(error=errors.E_GSA_NS_ISWU)
     if shared_with_cids and not args.is_valid_list(shared_with_cids):
@@ -122,6 +120,10 @@ def new_snapshot(uid, wid, interval_init, interval_end, shared_with_users=None,s
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
         raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NS_WNF)
+    if interval_init>interval_end:
+        tmp_int=interval_end
+        interval_end=interval_init
+        interval_init=tmp_int
     snapshot=None
     uids=set()
     cids=set()

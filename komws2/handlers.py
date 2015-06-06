@@ -12,6 +12,7 @@ from komlibs.interface.web.api import datasource
 from komlibs.interface.web.api import datapoint
 from komlibs.interface.web.api import widget
 from komlibs.interface.web.api import login
+from komlibs.interface.web.api import uri
 from komlibs.interface.web import status
 from komlibs.general.time import timeuuid
 from komfig import logger
@@ -554,8 +555,23 @@ class CircleMembersHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
+class UriHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def get(self):
+        try:
+            uri=self.get_argument('uri',default=None) #uri
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=uri.get_uri_request(username=self.user, uri=uri)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
+
+
 UUID4_REGEX='[0-9a-fA-F]{32}'
-USERNAME_REGEX='[0-9a-z_]+'
+USERNAME_REGEX='[0-9a-z\-_]+'
 
 HANDLERS = [(r'/login/?', LoginHandler),
             (r'/logout/?', LogoutHandler),
@@ -582,6 +598,7 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/etc/usr/?', UsersHandler),
             (r'/var/ds/('+UUID4_REGEX+')', DatasourceDataHandler),
             (r'/var/dp/('+UUID4_REGEX+')', DatapointDataHandler),
+            (r'/var/uri/?', UriHandler),
             (r'/home/config', UserConfigHandler),
             (r'/home', UserHomeHandler),
             ]

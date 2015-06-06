@@ -26,13 +26,14 @@ from komlibs.gestaccount import exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.textman import api as textmanapi
+from komlibs.graph.api import uri as graphuri
 
 def create_datasource(uid,aid,datasourcename):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GDA_CRD_IU)
     if not args.is_valid_uuid(aid):
         raise exceptions.BadParametersException(error=errors.E_GDA_CRD_IA)
-    if not args.is_valid_datasourcename(datasourcename):
+    if not args.is_valid_uri(datasourcename):
         raise exceptions.BadParametersException(error=errors.E_GDA_CRD_IDN)
     now=timeuuid.uuid1()
     did=uuid.uuid4()
@@ -42,10 +43,13 @@ def create_datasource(uid,aid,datasourcename):
         raise exceptions.UserNotFoundException(error=errors.E_GDA_CRD_UNF)
     if not agent:
         raise exceptions.AgentNotFoundException(error=errors.E_GDA_CRD_ANF)
+    if not graphuri.new_datasource_uri(uid=uid, uri=datasourcename, did=did):
+        raise exceptions.DatasourceCreationException(error=errors.E_GDA_CRD_ADU)
     datasource=ormdatasource.Datasource(did=did,aid=aid,uid=uid,datasourcename=datasourcename,state=states.ACTIVE,creation_date=now)
     if cassapidatasource.new_datasource(datasource=datasource):
         return {'did':datasource.did, 'datasourcename':datasource.datasourcename, 'uid': datasource.uid, 'aid':datasource.aid, 'state':datasource.state}
     else:
+        graphuri.dissociate_vertex(ido=did)
         raise exceptions.DatasourceCreationException(error=errors.E_GDA_CRD_IDE)
 
 def get_last_processed_datasource_data(did):
@@ -239,13 +243,16 @@ def delete_datasource(did):
             cassapidashboard.delete_widget_from_dashboard(wid=wid, bid=bid)
     for wid in wids:
         cassapiwidget.delete_widget(wid=wid)
+        graphuri.dissociate_vertex(ido=wid)
     for pid in pids:
         cassapidatapoint.delete_datapoint(pid=pid)
         cassapidatapoint.delete_datapoint_stats(pid=pid)
         cassapidatapoint.delete_datapoint_data(pid=pid)
+        graphuri.dissociate_vertex(ido=pid)
     cassapidatasource.delete_datasource(did=datasource.did)
     cassapidatasource.delete_datasource_stats(did=datasource.did)
     cassapidatasource.delete_datasource_data(did=datasource.did)
     cassapidatasource.delete_datasource_maps(did=datasource.did)
+    graphuri.dissociate_vertex(ido=did)
     return True
 

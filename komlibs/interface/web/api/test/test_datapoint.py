@@ -376,7 +376,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         ''' update_datapoint_config_request should succeed, updating color only '''
         username=self.userinfo['username']
         did=self.userinfo['agents'][0]['dids'][0]
-        datapointname='test_update_datapoint_config_request_success_new_datapointname'
+        datapointname='test_update_datapoint_config_request_success_new_color'
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
@@ -429,7 +429,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         ''' update_datapoint_config_request should succeed, updating datapointname and color '''
         username=self.userinfo['username']
         did=self.userinfo['agents'][0]['dids'][0]
-        datapointname='test_update_datapoint_config_request_success_new_datapointname'
+        datapointname='test_update_datapoint_config_request_success_new_color_and_datapointname'
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']

@@ -12,7 +12,7 @@ This file implements functions to update authorization to shared elements
 from komcass.api import snapshot as cassapisnapshot
 from komcass.model.parametrization.widget import types as snapshottypes
 from komlibs.auth import operations, permissions
-from komlibs.graph import api as graphapi
+from komlibs.graph.api import base as graphbase
 from komlibs.graph.relations import vertex
 
 update_funcs = {
@@ -35,39 +35,39 @@ def new_snapshot(params):
             snapshot=cassapisnapshot.get_snapshot_ds(nid=nid)
             if not snapshot:
                 return False
-            graphapi.set_member_edge(ido=snapshot.did, idd=nid, vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION)
+            graphbase.set_member_edge(ido=snapshot.did, idd=nid, vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION)
         elif snapshot.type==snapshottypes.DATAPOINT:
             snapshot=cassapisnapshot.get_snapshot_dp(nid=nid)
             if not snapshot:
                 return False
-            graphapi.set_member_edge(ido=snapshot.pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
+            graphbase.set_member_edge(ido=snapshot.pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
         elif snapshot.type==snapshottypes.HISTOGRAM:
             snapshot=cassapisnapshot.get_snapshot_histogram(nid=nid)
             if not snapshot:
                 return False
             for pid in snapshot.datapoints:
-                graphapi.set_member_edge(ido=pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
+                graphbase.set_member_edge(ido=pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
         elif snapshot.type==snapshottypes.LINEGRAPH:
             snapshot=cassapisnapshot.get_snapshot_linegraph(nid=nid)
             if not snapshot:
                 return False
             for pid in snapshot.datapoints:
-                graphapi.set_member_edge(ido=pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
+                graphbase.set_member_edge(ido=pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
         elif snapshot.type==snapshottypes.TABLE:
             snapshot=cassapisnapshot.get_snapshot_table(nid=nid)
             if not snapshot:
                 return False
             for pid in snapshot.datapoints:
-                graphapi.set_member_edge(ido=pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
+                graphbase.set_member_edge(ido=pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
         else:
             return False
         ii=snapshot.interval_init
         ie=snapshot.interval_end
         perm=permissions.CAN_READ
         for uid in snapshot.shared_with_uids:
-            graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=perm, interval_init=ii, interval_end=ie)
+            graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=perm, interval_init=ii, interval_end=ie)
         for cid in snapshot.shared_with_cids:
-            graphapi.set_bounded_share_edge(ido=nid, idd=cid, vertex_type=vertex.SNAPSHOT_CIRCLE_RELATION, perm=perm, interval_init=ii, interval_end=ie)
+            graphbase.set_bounded_share_edge(ido=nid, idd=cid, vertex_type=vertex.SNAPSHOT_CIRCLE_RELATION, perm=perm, interval_init=ii, interval_end=ie)
         return True
     else:
         #nothing to do

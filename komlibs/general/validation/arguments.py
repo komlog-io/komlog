@@ -8,12 +8,14 @@ import re
 import uuid
 
 
-NOTKOMLOGIDCHAR=re.compile('[^a-z0-9\-._]')
-NOTKOMLOGDESCCHAR=re.compile('[^ a-zA-Z0-9\-._@#!\(\):/$%&+=]')
-NOTPASSWORD=re.compile('''[^a-zA-Z0-9!#$%&'*+/=?^_`{|}~":;,.<>\\-]''')
+KOMLOGID=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\n)$')
+KOMLOGDESC=re.compile('^[ a-zA-Z0-9\-\._@#!\(\):/$%&+=]+(?!\n)$')
+KOMLOGURI=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\n)$')
+KOMLOGRELURI=re.compile('^([a-z0-9\-_]+\.\.?)*[a-z0-9\-_]+(?!\n)$')
+PASSWORD=re.compile('''^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~":;,\.<>\\\-]{6,256}(?!\n)$''')
 NOTPUBKEY=re.compile('[^ a-zA-Z0-9\-\+/=\n]')
 NOTVERSION=re.compile('[^ a-zA-Z0-9\-\+/:\._]')
-NOTCODE=re.compile('[^a-zA-Z0-9]')
+CODE=re.compile('^[a-zA-Z0-9]+$')
 WHITESPACES=re.compile(' ')
 ASCII=re.compile('a-zA-Z')
 NUMBERS=re.compile('0-9')
@@ -23,51 +25,65 @@ SEQUENCE=re.compile('^[a-fA-F0-9]{20}$')
 def is_valid_username(argument):
     if not isinstance(argument,str):
         return False
-    if NOTKOMLOGIDCHAR.search(argument):
-        return False
-    return True
+    if KOMLOGID.search(argument):
+        return True
+    return False
 
 def is_valid_agentname(argument):
     if not isinstance(argument,str):
         return False
-    if NOTKOMLOGDESCCHAR.search(argument):
-        return False
-    return True
+    if KOMLOGDESC.search(argument):
+        return True
+    return False
 
 def is_valid_datasourcename(argument):
     if not isinstance(argument,str):
         return False
-    if NOTKOMLOGDESCCHAR.search(argument):
-        return False
-    return True
+    if KOMLOGDESC.search(argument):
+        return True
+    return False
 
 def is_valid_datapointname(argument):
     if not isinstance(argument,str):
         return False
-    if NOTKOMLOGDESCCHAR.search(argument):
-        return False
-    return True
-
-def is_valid_dashboardname(argument):
-    if not isinstance(argument,str):
-        return False
-    if NOTKOMLOGDESCCHAR.search(argument):
-        return False
-    return True
+    if KOMLOGDESC.search(argument):
+        return True
+    return False
 
 def is_valid_widgetname(argument):
     if not isinstance(argument,str):
         return False
-    if NOTKOMLOGDESCCHAR.search(argument):
+    if KOMLOGDESC.search(argument):
+        return True
+    return False
+
+def is_valid_dashboardname(argument):
+    if not isinstance(argument,str):
         return False
-    return True
+    if KOMLOGDESC.search(argument):
+        return True
+    return False
 
 def is_valid_circlename(argument):
     if not isinstance(argument,str):
         return False
-    if NOTKOMLOGDESCCHAR.search(argument):
+    if KOMLOGDESC.search(argument):
+        return True
+    return False
+
+def is_valid_uri(argument):
+    if not isinstance(argument,str):
         return False
-    return True
+    if KOMLOGURI.search(argument):
+        return True
+    return False
+
+def is_valid_relative_uri(argument):
+    if not isinstance(argument,str):
+        return False
+    if KOMLOGRELURI.search(argument):
+        return True
+    return False
 
 def is_valid_datasource_content(argument):
     if not isinstance(argument,str):
@@ -82,11 +98,9 @@ def is_valid_string(argument):
 def is_valid_password(argument):
     if not isinstance(argument,str):
         return False
-    if NOTPASSWORD.search(argument):
-        return False
-    if len(argument)<6:
-        return False
-    return True
+    if PASSWORD.search(argument):
+        return True
+    return False
 
 def is_valid_email(argument):
     if not isinstance(argument,str):
@@ -98,9 +112,9 @@ def is_valid_email(argument):
 def is_valid_code(argument):
     if not isinstance(argument,str):
         return False
-    if NOTCODE.search(argument):
-        return False
-    return True
+    if CODE.search(argument):
+        return True
+    return False
 
 def is_valid_pubkey(argument):
     if not isinstance(argument,str):

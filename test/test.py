@@ -5,7 +5,8 @@ from komfig import logger
 MODULES = [
     'komlibs.textman.test.test_api.TextmanApiTest',
     'komlibs.general.validation.test.test_arguments.GeneralValidationArgumentsTest',
-    'komlibs.graph.test.test_api.GraphApiTest',
+    'komlibs.graph.api.test.test_base.GraphApiBaseTest',
+    'komlibs.graph.api.test.test_uri.GraphApiUriTest',
     'komlibs.gestaccount.user.test.test_userapi.GestaccountUserApiTest',
     'komlibs.gestaccount.agent.test.test_agentapi.GestaccountAgentApiTest',
     'komlibs.gestaccount.datasource.test.test_datasourceapi.GestaccountDatasourceApiTest',
@@ -46,6 +47,7 @@ MODULES = [
     'komlibs.interface.web.api.test.test_dashboard.InterfaceWebApiDashboardTest',
     'komlibs.interface.web.api.test.test_snapshot.InterfaceWebApiSnapshotTest',
     'komlibs.interface.web.api.test.test_circle.InterfaceWebApiCircleTest',
+    'komlibs.interface.web.api.test.test_uri.InterfaceWebApiUriTest',
     'komlibs.interface.imc.model.test.test_messages.InterfaceImcModelMessagesTest',
     'komlibs.interface.imc.api.test.test_gestconsole.InterfaceImcApiGestconsoleTest',
     'komlibs.interface.imc.api.test.test_rescontrol.InterfaceImcApiRescontrolTest',

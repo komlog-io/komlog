@@ -3,7 +3,7 @@ import uuid
 from komlibs.auth import authorization, requests
 from komlibs.auth import exceptions, permissions
 from komlibs.gestaccount.user import api as gestuserapi
-from komlibs.graph import api as graphapi
+from komlibs.graph.api import base as graphbase
 from komlibs.graph.relations import vertex
 from komlibs.general.time import timeuuid
 
@@ -43,8 +43,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         params={'uid':uid, 'did':did}
         self.assertIsNone(authorization.authorize_get_datasource_config(params=params))
 
@@ -55,8 +55,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         uid=uuid.uuid4()
         params={'uid':uid, 'did':did}
         self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datasource_config, params=params)
@@ -68,8 +68,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         params={'uid':uid, 'pid':pid}
         self.assertIsNone(authorization.authorize_get_datapoint_config(params=params))
 
@@ -80,8 +80,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         uid=uuid.uuid4()
         params={'uid':uid, 'pid':pid}
         self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datapoint_config, params=params)
@@ -93,8 +93,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         params={'uid':uid, 'nid':nid}
         self.assertIsNone(authorization.authorize_get_snapshot_config(params=params))
 
@@ -105,8 +105,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         uid=uuid.uuid4()
         params={'uid':uid, 'nid':nid}
         self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_snapshot_config, params=params)
@@ -118,8 +118,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         params={'uid':uid, 'did':did, 'ii':ii, 'ie':ie}
         self.assertIsNone(authorization.authorize_get_datasource_data(params=params))
 
@@ -130,8 +130,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
         params={'uid':uid, 'did':did, 'ii':ii, 'ie':ie}
@@ -144,8 +144,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         uid=uuid.uuid4()
         params={'uid':uid, 'did':did, 'ii':ii, 'ie':ie}
         self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datasource_data, params=params)
@@ -157,8 +157,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         did=uuid.uuid4()
         params={'uid':uid, 'did':did, 'ii':ii, 'ie':ie}
         self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datasource_data, params=params)
@@ -170,8 +170,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         params={'uid':uid, 'pid':pid, 'ii':ii, 'ie':ie}
         self.assertIsNone(authorization.authorize_get_datapoint_data(params=params))
 
@@ -182,8 +182,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
         params={'uid':uid, 'pid':pid, 'ii':ii, 'ie':ie}
@@ -196,8 +196,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         uid=uuid.uuid4()
         params={'uid':uid, 'pid':pid, 'ii':ii, 'ie':ie}
         self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datapoint_data, params=params)
@@ -209,8 +209,8 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphapi.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphapi.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
+        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
+        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
         pid=uuid.uuid4()
         params={'uid':uid, 'pid':pid, 'ii':ii, 'ie':ie}
         self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datapoint_data, params=params)

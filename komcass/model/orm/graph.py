@@ -22,3 +22,11 @@ class BoundedShareRelation(object):
         self.interval_init=interval_init
         self.interval_end=interval_end
 
+class UriRelation(object):
+    def __init__(self, ido, idd, type, creation_date, uri):
+        self.ido=ido
+        self.idd=idd
+        self.type=type
+        self.creation_date=creation_date
+        self.uri=uri
+

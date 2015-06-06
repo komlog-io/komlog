@@ -6,7 +6,7 @@ from komcass.model.orm import circle as ormcircle
 from komlibs.auth import operations, permissions
 from komlibs.auth.membership import update
 from komlibs.general.time import timeuuid
-from komlibs.graph import api as graphapi
+from komlibs.graph.api import base as graphbase
 from komlibs.graph.relations import vertex,edge
 
 class AuthMembershipUpdateTest(unittest.TestCase):
@@ -50,7 +50,7 @@ class AuthMembershipUpdateTest(unittest.TestCase):
         cassapicircle.insert_circle(circle)
         params={'cid':cid}
         self.assertTrue(update.new_circle(params))
-        for relation in graphapi.gen_get_incoming_relations_at(idd=cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
+        for relation in graphbase.gen_get_incoming_relations_at(idd=cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
             self.assertTrue(relation.ido in members)
             self.assertEqual(relation.idd,cid)
             self.assertEqual(relation.type, vertex.USER_CIRCLE_RELATION)
@@ -81,7 +81,7 @@ class AuthMembershipUpdateTest(unittest.TestCase):
         params={'cid':cid}
         self.assertTrue(update.new_circle(params))
         member_num=0
-        for relation in graphapi.gen_get_incoming_relations_at(idd=cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
+        for relation in graphbase.gen_get_incoming_relations_at(idd=cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
             self.assertTrue(relation.ido in members)
             self.assertEqual(relation.idd,cid)
             self.assertEqual(relation.type, vertex.USER_CIRCLE_RELATION)
@@ -95,7 +95,7 @@ class AuthMembershipUpdateTest(unittest.TestCase):
         member_num=0
         cassapicircle.insert_circle(circle)
         self.assertTrue(update.update_circle_members(params=params))
-        for relation in graphapi.gen_get_incoming_relations_at(idd=cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
+        for relation in graphbase.gen_get_incoming_relations_at(idd=cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
             self.assertTrue(relation.ido in members)
             self.assertEqual(relation.idd,cid)
             self.assertEqual(relation.type, vertex.USER_CIRCLE_RELATION)
@@ -123,7 +123,7 @@ class AuthMembershipUpdateTest(unittest.TestCase):
         params={'cid':cid}
         self.assertTrue(update.new_circle(params))
         member_num=0
-        for relation in graphapi.gen_get_incoming_relations_at(idd=cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
+        for relation in graphbase.gen_get_incoming_relations_at(idd=cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
             self.assertTrue(relation.ido in members)
             self.assertEqual(relation.idd,cid)
             self.assertEqual(relation.type, vertex.USER_CIRCLE_RELATION)
@@ -136,7 +136,7 @@ class AuthMembershipUpdateTest(unittest.TestCase):
         member_num=0
         cassapicircle.insert_circle(circle)
         self.assertTrue(update.update_circle_members(params=params))
-        for relation in graphapi.gen_get_incoming_relations_at(idd=cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
+        for relation in graphbase.gen_get_incoming_relations_at(idd=cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
             self.assertTrue(relation.ido in members)
             self.assertEqual(relation.idd,cid)
             self.assertEqual(relation.type, vertex.USER_CIRCLE_RELATION)

@@ -12,7 +12,7 @@ This file implements functions to update authorization related to membership
 from komcass.api import circle as cassapicircle
 from komlibs.gestaccount.circle import types as circletypes
 from komlibs.auth import operations, permissions
-from komlibs.graph import api as graphapi
+from komlibs.graph.api import base as graphbase
 from komlibs.graph.relations import vertex, edge
 
 update_funcs = {
@@ -34,7 +34,7 @@ def new_circle(params):
     if circle:
         if circle.type==circletypes.USERS_CIRCLE:
             for member in circle.members:
-                graphapi.set_member_edge(ido=member, idd=cid, vertex_type=vertex.USER_CIRCLE_RELATION)
+                graphbase.set_member_edge(ido=member, idd=cid, vertex_type=vertex.USER_CIRCLE_RELATION)
         else:
             return False
         return True
@@ -53,14 +53,14 @@ def update_circle_members(params):
         else:
             return False
         existent_members=set()
-        for relation in graphapi.gen_get_incoming_relations_at(idd=circle.cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
+        for relation in graphbase.gen_get_incoming_relations_at(idd=circle.cid,edge_type_list=[edge.MEMBER_RELATION], depth_level=1):
             existent_members.add(relation.ido)
         members_to_add=circle.members-existent_members
         members_to_delete=existent_members-circle.members
         for member in members_to_add:
-            graphapi.set_member_edge(ido=member, idd=circle.cid, vertex_type=vertex_type)
+            graphbase.set_member_edge(ido=member, idd=circle.cid, vertex_type=vertex_type)
         for member in members_to_delete:
-            graphapi.delete_edge(ido=member, idd=circle.cid, edge_type=edge.MEMBER_RELATION)
+            graphbase.delete_edge(ido=member, idd=circle.cid, edge_type=edge.MEMBER_RELATION)
         return True
     else:
         #nothing to do

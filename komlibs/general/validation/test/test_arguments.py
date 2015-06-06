@@ -10,19 +10,36 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
 
     def test_is_valid_username_invalid(self):
         ''' is_valid_username should fail if username is not valid '''
-        params=[None, 234234,'with spaces','withspecialcharacterslike\t','or\ncharacter']
+        params=[None, 234234,'with spaces','withspecialcharacterslike\t','or\ncharacter',
+                ' spacesatbeggining',
+                'spacesatend ',
+                'Capitals',
+                'Two..consecutivepoints',
+                '.beginswithpoint',
+                'endswith.',
+                'containsspecialchar$',
+                'endswith\t',
+                '\nbeginwithnewline',
+                'endswith\n',
+                '',
+                ]
         for param in params:
             self.assertFalse(arguments.is_valid_username(param)) 
 
     def test_is_valid_username_valid(self):
         ''' is_valid_username should succeed if username is valid '''
-        usernames=['test_user']
+        usernames=['test_user','user.with.dots','user_with_underscores','user-with-dash',
+                   'userwithnumbers007']
         for username in usernames:
             self.assertTrue(arguments.is_valid_username(username)) 
 
     def test_is_valid_agentname_invalid(self):
         ''' is_valid_agentname should fail if agentname is not valid '''
-        params=[None, 234234, 'Agentname with \t is not Valid','Agentname with \n neither']
+        params=[None, 234234, 'Agentname with \t is not Valid','Agentname with \n neither',
+               'cant end in \n',
+               '\ncant begin with newline',
+               '',
+               ]
         for param in params:
             self.assertFalse(arguments.is_valid_agentname(param)) 
 
@@ -70,7 +87,10 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
 
     def test_is_valid_password_invalid(self):
         ''' is_valid_password should fail if password is not valid '''
-        params=[None, 234234, 'with spaces is not valid by now','onlyasciiÑ']
+        params=[None, 234234, 'with spaces is not valid by now','onlyasciiÑ',
+               'six',
+               'morethan256charsisnotvalid123456789101214161820222426283032343638404244464850525456586062646668707274767880828486889092949698100103106109112115118121124127130133136139142145148151154157160163166169172175178181184187190193196199202205208211214217220223226229232235238241244247250253256'
+               ]
         for param in params:
             self.assertFalse(arguments.is_valid_password(param)) 
 
@@ -94,7 +114,7 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
 
     def test_is_valid_code_invalid(self):
         ''' is_valid_code should fail if code is not valid '''
-        params=[None, 234234,'spaces not allowed','Only ASCII ÑÑ','notallowed\'#$%&/()@"!','\n','\t']
+        params=[None, 234234,'spaces not allowed','Only ASCII ÑÑ','notallowed\'#$%&/()@"!','\n','\t','']
         for param in params:
             self.assertFalse(arguments.is_valid_code(param)) 
 
@@ -103,6 +123,32 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
         params=['testcode']
         for param in params:
             self.assertTrue(arguments.is_valid_code(param)) 
+
+    def test_is_valid_uri_invalid(self):
+        ''' is_valid_code should fail if code is not valid '''
+        params=[None, 234234,'with spaces','withspecialcharacterslike\t','or\ncharacter',
+                ' spacesatbeggining',
+                'spacesatend ',
+                'Capitals',
+                'Two..consecutivepoints',
+                '.beginswithpoint',
+                'endswith.',
+                'containsspecialchar$',
+                'endswith\t',
+                '\nbeginwithnewline',
+                'endswith\n',
+                '',
+                ]
+        for param in params:
+            self.assertFalse(arguments.is_valid_uri(param)) 
+
+    def test_is_valid_uri_valid(self):
+        ''' is_valid_uri should succeed if uri is valid '''
+        params=['test_uri','uri.with.dots','uri_with_underscores','uri-with-dash',
+                   'uriwithnumbers007',
+                   'all.together.0.a-b_.99']
+        for param in params:
+            self.assertTrue(arguments.is_valid_uri(param)) 
 
     def test_is_valid_pubkey_invalid(self):
         ''' is_valid_pubkey should fail if pubkey is not valid '''

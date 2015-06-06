@@ -17,7 +17,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         date=timeuuid.uuid1()
         position=1
         length=1
-        datapointname='test_process_message_MONVAR_failure_invalid_uid_datapointname'
+        datapointname='test_process_message_monvar_failure_invalid_uid_datapointname'
         message=messages.MonitorVariableMessage(uid=uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
         response=gestconsole.process_message_MONVAR(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)

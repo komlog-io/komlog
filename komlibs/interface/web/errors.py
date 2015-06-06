@@ -224,3 +224,11 @@ E_IWACI_DUFCR_IU=101850
 E_IWACI_DUFCR_IC=101851
 E_IWACI_DUFCR_IM=101852
 
+
+# interface web api uri
+
+E_IWAUR_GUR_IU=103000  #get_uri_request invalid user
+E_IWAUR_GUR_IUR=103001  #get_uri_request invalid uri
+E_IWAUR_GUR_IID=103002  #get_uri_request invalid id
+
+

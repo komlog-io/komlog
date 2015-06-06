@@ -23,6 +23,7 @@ from komlibs.general import colors
 from komlibs.textman import api as textmanapi
 from komlibs.ai.decisiontree import api as dtreeapi
 from komfig import logger
+from komlibs.graph.api import uri as graphuri
 
 def get_datapoint_data(pid, fromdate=None, todate=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
@@ -53,7 +54,7 @@ def create_datapoint(did, datapointname, color):
     '''
     if not args.is_valid_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_GPA_CRD_ID)
-    if not args.is_valid_datapointname(datapointname):
+    if not args.is_valid_uri(datapointname):
         raise exceptions.BadParametersException(error=errors.E_GPA_CRD_IDN)
     if not args.is_valid_hexcolor(color):
         raise exceptions.BadParametersException(error=errors.E_GPA_CRD_IC)
@@ -61,10 +62,13 @@ def create_datapoint(did, datapointname, color):
     if not datasource:
         raise exceptions.DatasourceNotFoundException(error=errors.E_GPA_CRD_DNF)
     pid=uuid.uuid4()
+    if not graphuri.new_datapoint_uri(did=did, uri=datapointname, pid=pid):
+        raise exceptions.DatapointCreationException(error=errors.E_GPA_CRD_ADU)
     datapoint=ormdatapoint.Datapoint(pid=pid,did=did,datapointname=datapointname,color=color, creation_date=timeuuid.uuid1())
     if cassapidatapoint.new_datapoint(datapoint):
         return {'pid':datapoint.pid, 'did':datapoint.did, 'datapointname':datapoint.datapointname, 'color':datapoint.color}
     else:
+        graphuri.dissociate_vertex(ido=pid)
         raise exceptions.DatapointCreationException(error=errors.E_GPA_CRD_IDE)
 
 def get_datapoint_config(pid):
@@ -186,7 +190,6 @@ def mark_positive_variable(pid, date, position, length, replace=True):
     ''' en este punto hemos comprobado que la muestra y variable existen y dtp pertenece a did indicado.
     Comprobamos que no haya otros datapoints que validen esa variable, en caso contrario
     solicitaremos que esa variable se marque como negativa en ellos '''
-    #varlist=variables.get_varlist(jsoncontent=dsmap.content,onlyvar=str(position))
     variable=textmanapi.get_variable_from_serialized_list(serialization=dsmap.content, position=position)
     pids=cassapidatapoint.get_datapoints_pids(did=did)
     response={}
@@ -198,9 +201,7 @@ def mark_positive_variable(pid, date, position, length, replace=True):
             if datapoint_stats==None or datapoint_stats.dtree==None:
                 generate_decision_tree(pid=a_pid)
                 datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=a_pid)
-            #dtree=decisiontree.DecisionTree(jsontree=datapoint_stats.dtree)
             dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
-            #if dtree.evaluate_row(varlist[0].h):
             if dtree.evaluate_row(variable.hash_sequence):
                 if replace:
                     datapoints_to_update.append(a_pid)
@@ -299,8 +300,8 @@ def monitor_new_datapoint(did, date, position, length, datapointname):
     if not args.is_valid_datapointname(datapointname):
         raise exceptions.BadParametersException(error=errors.E_GPA_MND_IDN)
     try:
-        color=colors.get_random_color()
         datapoint={}
+        color=colors.get_random_color()
         datapoint=create_datapoint(did=did, datapointname=datapointname, color=color)
         datapoints_to_update=mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length, replace=False)
         if datapoints_to_update==None:
@@ -310,6 +311,7 @@ def monitor_new_datapoint(did, date, position, length, datapointname):
     except Exception as e:
         if 'pid' in datapoint:
             cassapidatapoint.delete_datapoint(pid=datapoint['pid'])
+            graphuri.dissociate_vertex(ido=datapoint['pid'])
         logger.logger.debug('Exception monitoring new datapoint: '+str(e))
         raise e
 
@@ -467,5 +469,6 @@ def delete_datapoint(pid):
     cassapidatapoint.delete_datapoint_dtree_positives(pid=pid)
     cassapidatapoint.delete_datapoint_dtree_negatives(pid=pid)
     cassapidatapoint.delete_datapoint_data(pid=pid)
+    graphuri.dissociate_vertex(ido=pid)
     return True
 

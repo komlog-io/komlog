@@ -10,7 +10,8 @@ def generate_decision_tree(training_set):
         if 'result' in row and row['result']==True:
             for key in list(row.keys()):
                 keys.add(key)
-    keys.remove('result')
+    if 'result' in keys:
+        keys.remove('result')
     tree_nodes=_learn_tree(rows=training_set, attributes=keys)
     return decisiontree.DecisionTree(nodes=tree_nodes)
 

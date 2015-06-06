@@ -34,7 +34,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         ''' create_datasource should fail if user is not found in system '''
         uid=uuid.uuid4()
         aid=uuid.uuid4()
-        datasourcename='Datasource Name'
+        datasourcename='datasource_name'
         self.assertRaises(exceptions.UserNotFoundException, api.create_datasource,uid=uid, aid=aid, datasourcename=datasourcename ) 
 
     def test_create_datasource_non_existent_agent(self):
@@ -164,7 +164,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         ''' generate_datasource_map should fail if did does not exist '''
         uid=self.user['uid']
         aid=self.agent['aid']
-        datasourcename='test_update_datasource_config_success'
+        datasourcename='test_generate_datasource_map_non_existent_data_at_given_time'
         datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename) 
         date=timeuuid.uuid1()
         self.assertRaises(exceptions.DatasourceDataNotFoundException, api.generate_datasource_map, did=datasource['did'], date=date)

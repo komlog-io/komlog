@@ -153,7 +153,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
-        datasourcename='test_get_snapshot_config_request_success_snapshot_linegraph'
+        datasourcename='test_get_snapshot_config_request_success_snapshot_linegraph_ds'
         response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -182,7 +182,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        datapointname='test_get_snapshot_config_request_success_snapshot_linegraph'
+        datapointname='test_get_snapshot_config_request_success_snapshot_linegraph_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
@@ -273,7 +273,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
-        datasourcename='test_get_snapshot_config_request_success_snapshot_histogram'
+        datasourcename='test_get_snapshot_config_request_success_snapshot_histogram_ds'
         response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -302,7 +302,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        datapointname='test_get_snapshot_config_request_success_snapshot_histogram'
+        datapointname='test_get_snapshot_config_request_success_snapshot_histogram_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
@@ -393,7 +393,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
-        datasourcename='test_get_snapshot_config_request_success_snapshot_table'
+        datasourcename='test_get_snapshot_config_request_success_snapshot_table_ds'
         response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -422,7 +422,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        datapointname='test_get_snapshot_config_request_success_snapshot_table'
+        datapointname='test_get_snapshot_config_request_success_snapshot_table_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
@@ -798,7 +798,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
-        datasourcename='test_delete_snapshot_request_success_snapshot_linegraph'
+        datasourcename='test_delete_snapshot_request_success_snapshot_linegraph_ds'
         response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -827,7 +827,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        datapointname='test_delete_snapshot_request_success_snapshot_linegraph'
+        datapointname='test_delete_snapshot_request_success_snapshot_linegraph_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
@@ -922,7 +922,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
-        datasourcename='test_delete_snapshot_request_success_snapshot_histogram'
+        datasourcename='test_delete_snapshot_request_success_snapshot_histogram_datasource'
         response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -951,7 +951,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        datapointname='test_delete_snapshot_request_success_snapshot_histogram'
+        datapointname='test_delete_snapshot_request_success_snapshot_histogram_datapoint'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
@@ -1046,7 +1046,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
-        datasourcename='test_delete_snapshot_request_success_snapshot_table'
+        datasourcename='test_delete_snapshot_request_success_snapshot_table_ds'
         response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -1075,7 +1075,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        datapointname='test_delete_snapshot_request_success_snapshot_table'
+        datapointname='test_delete_snapshot_request_success_snapshot_table_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
@@ -1220,7 +1220,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         ''' delete_snapshot_request should succeed '''
         username=self.userinfo['username']
         aid=self.userinfo['agents'][0]['aid']
-        datasourcename='test_delete_snapshot_request_success_snapshot_datapoint'
+        datasourcename='test_delete_snapshot_request_success_snapshot_datapoint_ds'
         response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -1249,7 +1249,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        datapointname='test_delete_snapshot_request_success_snapshot_datapoint'
+        datapointname='test_delete_snapshot_request_success_snapshot_datapoint_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
@@ -1426,7 +1426,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
-        datasourcename='test_new_snapshot_request_success_widget_linegraph'
+        datasourcename='test_new_snapshot_request_success_widget_linegraph_ds'
         response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -1455,7 +1455,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        datapointname='test_new_snapshot_request_success_widget_linegraph'
+        datapointname='test_new_snapshot_request_success_widget_linegraph_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
@@ -1594,7 +1594,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
-        datasourcename='test_new_snapshot_request_success_widget_histogram'
+        datasourcename='test_new_snapshot_request_success_widget_histogram_ds'
         response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -1623,7 +1623,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        datapointname='test_new_snapshot_request_success_widget_histogram'
+        datapointname='test_new_snapshot_request_success_widget_histogram_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
@@ -1762,7 +1762,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
-        datasourcename='test_new_snapshot_request_success_widget_table'
+        datasourcename='test_new_snapshot_request_success_widget_table_ds'
         response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -1791,7 +1791,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
         datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        datapointname='test_new_snapshot_request_success_widget_table'
+        datapointname='test_new_snapshot_request_success_widget_table_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
