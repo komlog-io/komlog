@@ -604,3 +604,277 @@ d3Table = {
     },
 }
 
+d3ResourceGraph_bis = {
+    update: function (el, data,onclick) {
+        width=d3.select(el).node().getBoundingClientRect().width
+        height=300
+        console.log('d3 update tenemos esto',data.nodes,data.links)
+        var paths = d3.select(el).select(".paths")
+        var circles = d3.select(el).select(".circles")
+        var texts = d3.select(el).select(".texts")
+        var uris = d3.select(el).select(".uris")
+        var force = d3.layout.force()
+            .size([width, height])
+            .nodes(data.nodes)
+            .links(data.links)
+            .linkDistance(width/5)
+            .charge(-300)
+            .on('tick',tick)
+            .start()
+        var path = paths.selectAll("path")
+            .data(force.links(), function (d) {return d.source.index+'-'+d.target.index})
+        path.exit().remove()
+        path.enter().append("path")
+            .attr("class", "link uri")
+            .attr("marker-end", "url(#uri)")
+            .attr("id", function (d) { return d.source.index+'-'+d.target.index})
+        var circle = circles.selectAll("circle")
+            .data(force.nodes(), function (d) {return d.id})
+        circle.exit().remove()
+        circle.enter().append("circle")
+            .attr("r", 6)
+            .on('dblclick',function (d) {
+                    d3.event.defaultPrevented
+                    onclick(d.uri)
+            })
+            .call(force.drag);
+        var text = texts.selectAll("text")
+            .data(force.nodes(), function (d) {return d.id})
+        text.exit().remove()
+        text.enter().append("text")
+            .attr("x", 10)
+            .attr("y", ".31em")
+            .text(function(d) { return d.uri; });
+        var uri = uris.selectAll("text")
+            .data(force.links(), function (d) {return d.source.index+'-'+d.target.index})
+        uri.exit().remove();
+        uri.enter().append("text")
+            .attr("x", 8)
+            .attr("y", ".31em")
+            .append('textPath')
+            .attr("xlink:href",function (d) {return '#'+d.source.index+'-'+d.target.index})
+            .attr("startOffset","10%")
+            .text(function(d) { return d.path; })
+        // Use elliptical arc path segments to doubly-encode directionality.
+        function tick() {
+          path.attr("d", linkArc);
+          circle.attr("transform", transform);
+          //text.attr("transform", transform);
+          //uri.attr("transform", transformLink);
+        }
+        function linkArc(d) {
+          var dx = d.target.x - d.source.x,
+              dy = d.target.y - d.source.y,
+              dr = 0
+          return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+        }
+        function transform(d) {
+          return "translate(" + d.x + "," + d.y + ")";
+        }
+        function transformLink(d) {
+          var x = d.source.x +(d.target.x - d.source.x)/1.5,
+              y = d.source.y +(d.target.y - d.source.y)/2
+          return "translate(" + x + "," + y + ")";
+        }
+
+    },
+    create: function(el, data,onclick) {
+        width=d3.select(el).node().getBoundingClientRect().width
+        height=300
+        console.log('d3 tenemos esto',data.nodes,data.links)
+        var svg = d3.select(el).append("svg")
+            .attr("width", width)
+            .attr("height", height)
+        var paths = svg.append('g').attr("class", "paths")
+        var circles = svg.append('g').attr("class", "circles")
+        var texts = svg.append('g').attr("class", "texts")
+        var uris = svg.append('g').attr("class", "uris")
+        var force = d3.layout.force()
+            .size([width, height])
+            .nodes(data.nodes)
+            .links(data.links)
+            .linkDistance(width/8)
+            .charge(-300)
+            .on('tick',tick)
+            .start()
+        svg.append("defs").selectAll("marker")
+            .data(["uri"])
+            .enter().append("marker")
+            .attr("id", function(d) { return d; })
+            .attr("viewBox", "0 -5 10 10")
+            .attr("refX", 15)
+            .attr("refY", -1.5)
+            .attr("markerWidth", 7)
+            .attr("markerHeight", 7)
+            .attr("orient", "auto")
+            .append("path")
+            .attr("d", "M0,-5L10,0L0,5")
+        var path = paths.selectAll("path")
+            .data(force.links(), function (d) {return d.source.index+'-'+d.target.index})
+            .enter().append("path")
+            .attr("class", "link uri")
+            .attr("marker-end", "url(#uri)")
+            .attr("id", function (d) { return d.source.index+'-'+d.target.index})
+        var circle = circles.selectAll("circle")
+            .data(force.nodes(), function (d) {return d.id})
+            .enter().append("circle")
+            .attr("r", 6)
+            .on('dblclick',function (d) {
+                    d3.event.defaultPrevented
+                    onclick(d.uri)
+            })
+            .call(force.drag);
+        var text = texts.selectAll("text")
+            .data(force.nodes(),function (d) {return d.id})
+          .enter().append("text")
+            .attr("x", 8)
+            .attr("y", ".31em")
+            .text(function(d) { return d.uri; });
+        var uri = uris.selectAll("uris")
+            .data(force.links(), function (d) {return d.source.index+'-'+d.target.index})
+          .enter().append("text")
+            .attr("x", 8)
+            .attr("y", ".31em")
+            .append('textPath')
+            .attr("xlink:href",function (d) {return '#'+d.source.index+'-'+d.target.index})
+            .text(function(d) { return d.path; })
+
+        // Use elliptical arc path segments to doubly-encode directionality.
+        function tick() {
+          path.attr("d", linkArc);
+          circle.attr("transform", transform);
+          //text.attr("transform", transform);
+          uri.attr("transform", transformLink);
+        }
+
+        function linkArc(d) {
+          var dx = d.target.x - d.source.x,
+              dy = d.target.y - d.source.y,
+              dr = Math.sqrt(dx * dx + dy * dy);
+          return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+        }
+
+        function transform(d) {
+          return "translate(" + d.x + "," + d.y + ")";
+        }
+
+        function transformLink(d) {
+          var x = d.target.x +(d.target.x - d.source.x),
+              y = d.target.y +(d.target.y - d.source.y)
+          return "translate(" + x + "," + y + ")";
+        }
+
+        console.log('empiezo a generar el force')
+    },
+}
+
+d3ResourceGraph = {
+    update: function(el, data,onclick) {
+        width=d3.select(el).node().getBoundingClientRect().width
+        height=width
+        diagonal=Math.sqrt(width*width+height*height)
+        margin = 25
+        pack = d3.layout.pack()
+            .padding(50)
+            .size([(width-margin),(height-margin)])
+            .value(function(d) { return (d.children.length+1) })
+            .sort(function (a,b) { return a.name - b.name});
+        root=data
+        parentUri=root.name.split('.').splice(0,root.name.split('.').length-1).join('.')
+        focus = root,
+        nodes = pack.nodes(root);
+        $.each(nodes, function (i,d) {
+            console.log('node: ',d.name,d.x,d.y,d.r)
+          if (d.hasOwnProperty('children')){
+              $.each(d.children, function (index,child) {
+                  child.r*=(1-child.depth/100)
+                  child.x*=(1+child.depth/100)
+                  child.y*=(1+child.depth/100)
+              });
+          }
+        });
+        svg = d3.select(el).selectAll("svg")
+            .attr("width",width)
+            .attr("height",height)
+
+        old_nodes = svg.selectAll('.node')
+        old_nodes.remove()
+        node = svg.selectAll('.node')
+            .data(nodes, function (d) { return d.id})
+        node_groups = node.enter().append('g')
+            .attr('class','node')
+            .attr("transform", function(d) { return "translate(" + (d.x-d.r) + "," + (d.y-d.r) + ")" })
+        node_groups.append("text")
+            .attr("class", "slide-title")
+            .attr("transform", function(d) { return "translate(-" + d.name.length + ",-" + 5 + ")";})
+            .text(function(d) {return d.name})
+        node_groups
+            .append("rect")
+            .attr('class','slide')
+            .attr("width", function(d) { return 2*d.r; })
+            .attr("height", function(d) { return 2*d.r; })
+            .attr("rx", 5)
+            .attr("ry", 5)
+            .style("filter", "url(#drop-shadow)")
+            .on("click", function(d) { onclick(d.name), d3.event.stopPropagation(); })
+        node_groups
+            .filter(function (d) { return d.type==='d'||d.type==='p'||d.type==='w'})
+            .append("image")
+            .attr("width", 20)
+            .attr("height", 20)
+            .attr("xlink:href",function (d) { 
+                if (d.type ==='d'){ 
+                    image='ds.png'
+                } else if (d.type=='p') {
+                    image='dp.png'
+                } else if (d.type=='w') {
+                    image='wg.png'
+                }
+                return 'static/img/'+image
+            })
+            .attr('class','slide-menu')
+            .attr("transform", function(d) { return "translate(-" + 20 + "," + 0 + ")";})
+            .on("click", function(d) { PubSub.publish('uriActionReq',{id:d.id}), d3.event.stopPropagation(); })
+        node_groups.append("text")
+            .attr("class", "slide-label")
+            .style("fill-opacity", function(d) { 
+                if (focus === d) {
+                    return 1
+                } else if (d.name.split('.')[d.name.split('.').length-1].length< d.r/2) {
+                    return 1
+                } else {
+                    return 0
+                }
+            })
+            .attr("transform", function(d) { return "translate(" + 5 + "," + 15 + ")";})
+            .text(function(d) { return focus === d ? d.name : d.name.split('.')[d.name.split('.').length-1]})
+    },
+    create: function (el,data,onclick) {
+        width=d3.select(el).node().getBoundingClientRect().width
+        height=width
+        var svg = d3.select(el).select("svg")
+            .attr("width",width)
+            .attr("height",height)
+            .append("g")
+            .attr("transform", "translate(0,0)");
+        var defs = svg.append("defs");
+        var filter = defs.append("filter")
+            .attr("id", "drop-shadow")
+            .attr("height", "115%");
+        filter.append("feGaussianBlur")
+            .attr("in", "SourceAlpha")
+            .attr("stdDeviation", 1.7)
+            .attr("result", "blur");
+        filter.append("feOffset")
+            .attr("in", "blur")
+            .attr("dx", 1)
+            .attr("dy", 1)
+            .attr("result", "offsetBlur");
+        var feMerge = filter.append("feMerge");
+        feMerge.append("feMergeNode")
+            .attr("in", "offsetBlur")
+        feMerge.append("feMergeNode")
+            .attr("in", "SourceGraphic");
+    }   
+}
+

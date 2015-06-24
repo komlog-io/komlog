@@ -560,12 +560,12 @@ class UriHandler(tornado.web.RequestHandler):
     @auth.userauthenticated
     def get(self):
         try:
-            uri=self.get_argument('uri',default=None) #uri
+            req_uri=self.get_argument('uri',default=None) #uri
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            response=uri.get_uri_request(username=self.user, uri=uri)
+            response=uri.get_uri_request(username=self.user, uri=req_uri)
             self.set_status(response.status)
             self.write(json_encode(response.data))
 

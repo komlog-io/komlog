@@ -10,6 +10,7 @@ html {
 body {
   padding-top: 50px;
   margin-bottom: 60px;
+  background-color: #eee;
 }
 
 
@@ -44,8 +45,8 @@ body {
   padding: 20px;
   overflow-x: hidden;
   overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
-  background-color: #f5f5f5;
-  border-right: 1px solid #eee;
+  /*background-color: #f5f5f5;*/
+  /*border-right: 1px solid #eee;*/
 }
 /* Sidebar navigation */
 .nav-sidebar {
@@ -74,7 +75,7 @@ body {
   padding: 20px;
   padding-bottom: 60px;
   overflow: auto; /* Scrollable contents if viewport is shorter than content. */
-  border-left: 1px solid #eee;
+  /*border-left: 1px solid #eee;*/
 }
 
 /*
@@ -91,7 +92,7 @@ body {
   margin-bottom: 70px;
   overflow-x: hidden;
   overflow-y: scroll; /*Scrollable contents if viewport is shorter than content.*/
-  border-left: 1px solid #eee;
+  /*border-left: 1px solid #eee;*/
   border-right: 1px solid #eee;
 }
 
@@ -135,6 +136,7 @@ body {
 .form-inline .form-group input {
   width: 730px;
 }
+
 /*
 *  Slides related styles
 */
@@ -171,4 +173,56 @@ body {
 .wtb { table-layout: fixed; }
 .wtb th, .wtb td { overflow: hidden; }
 
+.node {
+  border: solid 1px white;
+  font: 10px sans-serif;
+  line-height: 12px;
+  position: absolute;
+  text-indent: 2px;
+  margin: 5px;
+}
+
+.slide {
+  fill: white;
+  fill-opacity: 1;
+}
+
+.node:hover .slide{
+  stroke: #bbb;
+  stroke-width: 1px;
+}
+
+.slide-menu {
+  pointer-events: none;
+  opacity: 0;
+  transition: all 500ms ease;
+}
+
+.slide-title {
+  font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 500ms ease;
+}
+
+.slide-label {
+  font: 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 -1px 0 #fff;
+  pointer-events: none;
+  transition: all 500ms ease;
+}
+
+.node:hover .slide-menu{
+  pointer-events: inherit;
+  opacity: 1;
+}
+
+.node:hover .slide-title{
+  opacity: 1;
+}
+
+.node:hover .slide-label{
+  opacity: 0;
+}
 

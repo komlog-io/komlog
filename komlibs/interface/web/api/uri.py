@@ -13,6 +13,20 @@ from komlibs.graph.api import uri as graphuri
 from komlibs.interface.web import status, exceptions, errors
 from komlibs.interface.web.model import webmodel
 
+def get_node_info(ido,uri,counter):
+    logger.logger.debug('get_node_info:'+str(ido)+','+str(uri)+','+str(counter))
+    id_info=graphuri.get_id(ido=ido)
+    if not id_info:
+        return {}
+    else:
+        children_info=[]
+        if counter>0:
+            children=graphuri.get_id_adjacents(ido=ido, ascendants=False)
+            counter=counter-len(children)
+            for child in children:
+                child_uri=graphuri.get_joined_uri(uri,child['path'])
+                children_info.append(get_node_info(ido=child['id'],uri=child_uri,counter=counter))
+        return {'id':ido.hex,'name':uri,'type':id_info['type'],'children':children_info}
 
 @exceptions.ExceptionHandler
 def get_uri_request(username, uri=None):
@@ -32,37 +46,15 @@ def get_uri_request(username, uri=None):
     edges=set()
     max_ids_to_retrieve=10
     if uri is not None:
-        new_uri=graphuri.get_joined_uri(base=uri)
-        uri_id=graphuri.get_id(ido=uid, uri=new_uri)
+        base_uri=graphuri.get_joined_uri(base=uri)
+        uri_id=graphuri.get_id(ido=uid, uri=base_uri)
         if not uri_id:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND)
         else:
-            ids_retrieved.add(uri_id['id'])
-            vertices.add((uri_id['id'],uri_id['type'],new_uri))
-            adjacents_pending.add((uri_id['id'],new_uri))
+            root_id=uri_id['id']
     else:
-        adjacents_pending.add((uid,''))
-    while True:
-        if len(ids_retrieved)>max_ids_to_retrieve:
-            break
-        try:
-            next_id=adjacents_pending.pop()
-        except Exception:
-            break
-        else:
-            if next_id[0] not in adjacents_retrieved:
-                adjacents=graphuri.get_id_adjacents(ido=next_id[0])
-                adjacents_retrieved.add(next_id[0])
-                if adjacents:
-                    for adjacent in adjacents:
-                        adjacent_uri=graphuri.get_joined_uri(base=next_id[1],path=adjacent['path'])
-                        vertices.add((adjacent['id'],adjacent['type'],adjacent_uri))
-                        edges.add((next_id[0],adjacent['id'],adjacent['path'])) if adjacent['path'][0]!='.' else edges.add((adjacent['id'],next_id[0],adjacent['path'][1:]))
-                        adjacents_pending.add((adjacent['id'],adjacent_uri))
-                        ids_retrieved.add(adjacent['id'])
-    for vertex in vertices:
-        response_data['v'].append({'id':vertex[0].hex,'type':vertex[1],'uri':vertex[2]})
-    for edge in edges:
-        response_data['e'].append({'o':edge[0].hex,'d':edge[1].hex,'p':edge[2]})
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
+        root_id=uid
+        base_uri=''
+    node_info=get_node_info(ido=root_id,uri=base_uri,counter=5)
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=node_info)
 

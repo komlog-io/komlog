@@ -68,14 +68,15 @@ def get_id(ido, uri=None):
             return None
     return selected_id
 
-def get_id_adjacents(ido):
+def get_id_adjacents(ido, ascendants=True):
     adjacents=[]
     if not args.is_valid_uuid(ido):
         return None
     for rel in graphbase.gen_get_outgoing_relations_from(ido=ido, edge_type_list=[edge.URI_RELATION],path_edge_type_list=[edge.URI_RELATION], depth_level=1):
         adjacents.append({'id':rel.idd,'type':vertex.get_dest_vertex_type(rel.type),'path':rel.uri})
-    for rel in graphbase.gen_get_incoming_relations_at(idd=ido, edge_type_list=[edge.URI_RELATION],path_edge_type_list=[edge.URI_RELATION], depth_level=1):
-        adjacents.append({'id':rel.ido,'type':vertex.get_origin_vertex_type(rel.type),'path':'.'+rel.uri})
+    if ascendants:
+        for rel in graphbase.gen_get_incoming_relations_at(idd=ido, edge_type_list=[edge.URI_RELATION],path_edge_type_list=[edge.URI_RELATION], depth_level=1):
+            adjacents.append({'id':rel.ido,'type':vertex.get_origin_vertex_type(rel.type),'path':'.'+rel.uri})
     return adjacents
 
 def get_joined_uri(base,path=None):
