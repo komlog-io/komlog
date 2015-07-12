@@ -37,6 +37,7 @@ DELETE_DATASOURCE_MESSAGE='DELDS'
 DELETE_DATAPOINT_MESSAGE='DELDP'
 DELETE_WIDGET_MESSAGE='DELWIDGET'
 DELETE_DASHBOARD_MESSAGE='DELDASHB'
+USER_EVENT_MESSAGE='USEREV'
 
 
 #MESSAGE MAPPINGS
@@ -61,6 +62,7 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           DELETE_DATAPOINT_MESSAGE:'DeleteDatapointMessage',
                           DELETE_WIDGET_MESSAGE:'DeleteWidgetMessage',
                           DELETE_DASHBOARD_MESSAGE:'DeleteDashboardMessage',
+                          USER_EVENT_MESSAGE:'UserEventMessage',
                           }
 
 
@@ -466,4 +468,26 @@ class DeleteDashboardMessage:
             self.type=DELETE_DASHBOARD_MESSAGE
             self.bid=bid
             self.serialized_message='|'.join((self.type,self.bid.hex))
+
+class UserEventMessage:
+    def __init__(self, serialized_message=None, uid=None, event_type=None, parameters=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,uid,event_type,parameters = self.serialized_message.split('|')
+            self.type=mtype
+            self.uid=uuid.UUID(uid)
+            self.event_type=int(event_type)
+            self.parameters=json.loads(parameters)
+        else:
+            if not args.is_valid_uuid(uid):
+                raise exceptions.BadParametersException()
+            if not args.is_valid_int(event_type):
+                raise exceptions.BadParametersException()
+            if not args.is_valid_dict(parameters):
+                raise exceptions.BadParametersException()
+            self.type=USER_EVENT_MESSAGE
+            self.uid=uid
+            self.event_type=event_type
+            self.parameters=parameters
+            self.serialized_message='|'.join((self.type,self.uid.hex,str(self.event_type),json.dumps(self.parameters)))
 

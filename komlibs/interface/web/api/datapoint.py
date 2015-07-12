@@ -10,6 +10,7 @@ import time
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.datapoint import api as datapointapi

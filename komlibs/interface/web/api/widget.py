@@ -8,6 +8,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.widget import api as widgetapi
 from komlibs.gestaccount.widget import types
@@ -120,6 +121,8 @@ def new_widget_request(username, data):
         message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
         message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
+        msgapi.send_message(message)
+        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.NEW_WIDGET, parameters={'wid':widget['wid'].hex, 'widgetname':data['widgetname']})
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'wid':widget['wid'].hex})
     else:

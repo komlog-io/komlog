@@ -20,6 +20,7 @@ STORING='Storing'
 TEXTMINING='Textmining'
 GESTCONSOLE='Gestconsole'
 RESCONTROL='Rescontrol'
+EVENTS='Events'
 
 
 MESSAGE_TO_ADDRESS_MAPPING={messages.STORE_SAMPLE_MESSAGE:STORING+'.%h',
@@ -43,6 +44,7 @@ MESSAGE_TO_ADDRESS_MAPPING={messages.STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             messages.DELETE_DATAPOINT_MESSAGE:GESTCONSOLE,
                             messages.DELETE_WIDGET_MESSAGE:GESTCONSOLE,
                             messages.DELETE_DASHBOARD_MESSAGE:GESTCONSOLE,
+                            messages.USER_EVENT_MESSAGE:EVENTS,
                             }
 
 
@@ -51,7 +53,8 @@ MODULE_TO_ADDRESS_MAPPING={VALIDATION:['%m.%h','%i.%m.%h'],
                            STORING:['%m.%h','%i.%m.%h'],
                            TEXTMINING:['%m','%i.%m.%h'],
                            GESTCONSOLE:['%m','%i.%m.%h'],
-                           RESCONTROL:['%m','%i.%m.%h']
+                           RESCONTROL:['%m','%i.%m.%h'],
+                           EVENTS:['%m','%i.%m.%h'],
                            }
 
 

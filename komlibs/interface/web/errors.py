@@ -1,3 +1,23 @@
+'''
+In this file we define the different error codes that will be
+added to the exceptions in the interface web modules, to identify
+the point in the code where it raised
+
+The pattern used to name an error is:
+
+E_XXX_YYY_ZZZ
+
+where:
+
+- XXX is the code to identify the file
+- YYY is the code to identify the function
+- ZZZ is the code to identify the reason the exception was raised
+
+The range reserved for errors in this module is 100000 - 150000 
+
+'''
+
+
 #interface web api user
 
 E_IWAU_NUSR_IU=100000
@@ -230,5 +250,11 @@ E_IWACI_DUFCR_IM=101852
 E_IWAUR_GUR_IU=103000  #get_uri_request invalid user
 E_IWAUR_GUR_IUR=103001  #get_uri_request invalid uri
 E_IWAUR_GUR_IID=103002  #get_uri_request invalid id
+
+
+# interface web api events
+
+E_IWAEV_GEVR_IU=104000
+E_IWAEV_GEVR_IED=104001
 
 

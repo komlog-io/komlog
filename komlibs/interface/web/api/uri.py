@@ -5,7 +5,6 @@ This file defines the logic associated with uri web interface operations
 '''
 
 import uuid
-from komfig import logger
 from komlibs.auth import authorization
 from komlibs.gestaccount.user import api as userapi
 from komlibs.general.validation import arguments as args
@@ -14,7 +13,6 @@ from komlibs.interface.web import status, exceptions, errors
 from komlibs.interface.web.model import webmodel
 
 def get_node_info(ido,uri,counter):
-    logger.logger.debug('get_node_info:'+str(ido)+','+str(uri)+','+str(counter))
     id_info=graphuri.get_id(ido=ido)
     if not id_info:
         return {}

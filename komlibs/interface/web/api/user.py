@@ -8,6 +8,7 @@ This file defines the logic associated with web interface requests
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization
+from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
@@ -33,8 +34,9 @@ def new_user_request(username, password, email):
     if user:
         message=messages.NewUserNotificationMessage(email=user['email'], code=user['signup_code'])
         msgapi.send_message(message)
+        message=messages.UserEventMessage(uid=user['uid'],event_type=eventstypes.NEW_USER, parameters={'username':username})
+        msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'uid':user['uid'].hex})
-
 
 @exceptions.ExceptionHandler
 def confirm_user_request(email, code):

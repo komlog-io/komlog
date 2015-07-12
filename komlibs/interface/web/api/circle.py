@@ -8,6 +8,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.circle import api as circleapi
 from komlibs.interface.web import status, exceptions, errors
@@ -84,6 +85,8 @@ def new_users_circle_request(username, circlename, members_list=None):
         message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
         message=messages.MembershipAuthorizationUpdateMessage(operation=auth_op, params=params)
+        msgapi.send_message(message)
+        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.NEW_CIRCLE, parameters={'cid':circle['cid'].hex, 'circlename':circlename})
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'cid':circle['cid'].hex})
     else:

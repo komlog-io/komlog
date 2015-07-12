@@ -8,6 +8,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.datasource import api as datasourceapi
@@ -139,6 +140,8 @@ def new_datasource_request(username, aid, datasourcename):
         message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op,params=params)
         msgapi.send_message(message)
         message=messages.NewDSWidgetMessage(uid=uid, did=datasource['did'])
+        msgapi.send_message(message)
+        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.NEW_DATASOURCE, parameters={'aid':aid.hex, 'did':datasource['did'].hex, 'datasourcename':datasourcename})
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
 

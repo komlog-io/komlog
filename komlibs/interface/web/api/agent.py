@@ -2,6 +2,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.interface.web import status, exceptions, errors
@@ -31,6 +32,8 @@ def new_agent_request(username, agentname, pubkey, version):
         message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
         message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
+        msgapi.send_message(message)
+        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.NEW_AGENT, parameters={'aid':agent['aid'].hex, 'agentname':agentname})
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'aid':agent['aid'].hex})
 

@@ -179,13 +179,6 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uid=self.userinfo['uid']
         response=uriapi.get_uri_request(username=username)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(len(response.data['v']),6)
-        self.assertEqual(len(response.data['e']),5)
-        found=0
-        for reg in response.data['v']:
-            if reg['id']==uid:
-                found+=1
-        self.assertEqual(found,1)
 
     def test_get_uri_request_success_with_uri(self):
         ''' get_uri_request should succeed and return requested uri and adjacent nodes '''
@@ -193,8 +186,6 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='test_komlibs.interface.web'
         response=uriapi.get_uri_request(username=username,uri=uri)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(len(response.data['v']),6)
-        self.assertEqual(len(response.data['e']),5)
 
     def test_get_uri_request_success_with_relative_uri(self):
         ''' get_uri_request should succeed and return requested uri and adjacent nodes '''
@@ -202,6 +193,4 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='test_komlibs.interface.web..web..interface'
         response=uriapi.get_uri_request(username=username,uri=uri)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(len(response.data['v']),6)
-        self.assertEqual(len(response.data['e']),5)
 

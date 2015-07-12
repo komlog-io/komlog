@@ -569,6 +569,19 @@ class UriHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json_encode(response.data))
 
+class UserEventsHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def get(self):
+        try:
+            end_date=self.get_argument('ets',default=None) #end_date
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=events.get_user_events_request(username=self.user, end_date=end_date)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
 UUID4_REGEX='[0-9a-fA-F]{32}'
 USERNAME_REGEX='[0-9a-z\-_]+'
@@ -599,6 +612,7 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/var/ds/('+UUID4_REGEX+')', DatasourceDataHandler),
             (r'/var/dp/('+UUID4_REGEX+')', DatapointDataHandler),
             (r'/var/uri/?', UriHandler),
+            (r'/var/usr/ev/?', UserEventsHandler),
             (r'/home/config', UserConfigHandler),
             (r'/home', UserHomeHandler),
             ]

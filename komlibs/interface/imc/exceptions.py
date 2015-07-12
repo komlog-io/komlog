@@ -12,6 +12,8 @@ class ExceptionHandler(object):
         try:
             response=self.f(**kwargs)
             return response
+        except BadParametersException as e:
+            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_BAD_PARAMETERS,error=e.error)
         except authexcept.AuthException as e:
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_ACCESS_DENIED,error=e.error)
         except gestexcept.BadParametersException as e:
@@ -52,8 +54,8 @@ class ExceptionHandler(object):
 
 
 class BadParametersException(Exception):
-    def __init__(self):
-        pass
+    def __init__(self, error=None):
+        self.error=error
 
     def __str__(self):
         return str(self.__class__)
