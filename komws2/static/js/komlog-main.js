@@ -190,30 +190,16 @@ var SlideBar = React.createClass({
     },
     render: function() {
         return (
-            <div className="SlideBar panel-heading" style={this.styles.barstyle} >
-                <div className="SlideBarIcons" style={this.styles.iconstyle} >
-                    <table>
-                        <tr>
-                            <td>
-                                <img src='/static/img/share.png' alt="S" onClick={this.shareClick}/>
-                            </td>
-                            <td>
-                                <img src='/static/img/close.png' alt="X" onClick={this.closeClick}/>
-                            </td>
-                        </tr>
-                    </table>
+            <div className="SlideBar panel-heading" style={this.styles.barstyle}>
+                <div className="SlideBarIcons" style={this.styles.iconstyle}>
+                    <span className="glyphicon glyphicon-send" onClick={this.shareClick}></span> 
+                    <span> </span>
+                    <span className="glyphicon glyphicon-remove" onClick={this.closeClick}></span>
                 </div>
                 <div className="SlideBarName" style={this.styles.namestyle} >
-                    <table width="100%">
-                        <tr>
-                            <td width="50%">
-                               #{this.props.shortcut} {this.props.conf.widgetname}
-                            </td>
-                            <td style={this.styles.barseparatorstyle} onClick={this.moveClick}>
-                                :::
-                            </td>
-                        </tr>
-                    </table>
+                    <span className="glyphicon glyphicon-option-vertical" style={this.styles.barseparatorstyle} onClick={this.moveClick}></span>
+                    <span > </span>
+                    <span>#{this.props.shortcut} {this.props.conf.widgetname}</span>
                 </div>
             </div>
         );

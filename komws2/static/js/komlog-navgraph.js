@@ -61,7 +61,7 @@ var ResourceGraph = React.createClass({
         }.bind(this));
         return (<div>
                  <div>
-                    <span><a onClick={function (event) {event.preventDefault();this.focusUri('')}.bind(this)}>HOME</a></span>
+                    <span className="glyphicon glyphicon-home" onClick={function (event) {event.preventDefault();this.focusUri('')}.bind(this)}></span>
                      {navbar}
                  </div>
                  <svg/>
