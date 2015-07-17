@@ -13,6 +13,7 @@ from komlibs.interface.web.api import datapoint
 from komlibs.interface.web.api import widget
 from komlibs.interface.web.api import login
 from komlibs.interface.web.api import uri
+from komlibs.interface.web.api import events
 from komlibs.interface.web import status
 from komlibs.general.time import timeuuid
 from komfig import logger
@@ -574,12 +575,13 @@ class UserEventsHandler(tornado.web.RequestHandler):
     @auth.userauthenticated
     def get(self):
         try:
-            end_date=self.get_argument('ets',default=None) #end_date
+            ets=self.get_argument('ets',default=None) #end_date
+            its=self.get_argument('its',default=None) #end_date
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            response=events.get_user_events_request(username=self.user, end_date=end_date)
+            response=events.get_user_events_request(username=self.user, ets=ets, its=its)
             self.set_status(response.status)
             self.write(json_encode(response.data))
 

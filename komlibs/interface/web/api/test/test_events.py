@@ -55,12 +55,20 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
             response=eventsapi.get_user_events_request(username=username)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_get_user_events_request_failure_invalid_end_date(self):
-        ''' get_user_events_request should fail if end_date is invalid '''
-        end_dates=[32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
+    def test_get_user_events_request_failure_invalid_ets(self):
+        ''' get_user_events_request should fail if ets is invalid '''
+        etss=[32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
         username='test_get_user_events_request_failure_invalid_end_date'
-        for end_date in end_dates:
-            response=eventsapi.get_user_events_request(username=username, end_date=end_date)
+        for ets in etss:
+            response=eventsapi.get_user_events_request(username=username, ets=ets)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_get_user_events_request_failure_invalid_its(self):
+        ''' get_user_events_request should fail if its is invalid '''
+        itss=[32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
+        username='test_get_user_events_request_failure_invalid_end_date'
+        for its in itss:
+            response=eventsapi.get_user_events_request(username=username, its=its)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_user_events_request_failure_user_not_found(self):

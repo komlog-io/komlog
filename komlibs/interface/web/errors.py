@@ -255,6 +255,7 @@ E_IWAUR_GUR_IID=103002  #get_uri_request invalid id
 # interface web api events
 
 E_IWAEV_GEVR_IU=104000
-E_IWAEV_GEVR_IED=104001
+E_IWAEV_GEVR_IETS=104001
+E_IWAEV_GEVR_IITS=104002
 
 

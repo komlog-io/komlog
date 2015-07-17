@@ -9,41 +9,50 @@ from komfig import logger
 class EventsApiUserTest(unittest.TestCase):
     ''' komlibs.events.api.user tests '''
 
-    def test_get_last_events_failure_invalid_uid(self):
-        ''' get_last_events should fail if uid is invalid '''
+    def test_get_events_failure_invalid_uid(self):
+        ''' get_events should fail if uid is invalid '''
         uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.get_last_events(uid=uid)
+                user.get_events(uid=uid)
             self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_IU)
 
-    def test_get_last_events_failure_invalid_to_date(self):
-        ''' get_last_events should fail if to_date is invalid '''
+    def test_get_events_failure_invalid_to_date(self):
+        ''' get_events should fail if to_date is invalid '''
         dates=[234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex,  {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         uid=uuid.uuid4()
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.get_last_events(uid=uid, to_date=date )
+                user.get_events(uid=uid, to_date=date )
             self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_ITD)
 
-    def test_get_last_events_failure_invalid_count(self):
-        ''' get_last_events should fail if count is invalid '''
+    def test_get_events_failure_invalid_from_date(self):
+        ''' get_events should fail if from_date is invalid '''
+        dates=[234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex,  {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.get_events(uid=uid, from_date=date )
+            self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_IFD)
+
+    def test_get_events_failure_invalid_count(self):
+        ''' get_events should fail if count is invalid '''
         counts=[None, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         uid=uuid.uuid4()
         for count in counts:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.get_last_events(uid=uid, count=count)
+                user.get_events(uid=uid, count=count)
             self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_ICNT)
 
-    def test_get_last_events_success(self):
-        ''' get_last_events should return the event list '''
+    def test_get_events_success(self):
+        ''' get_events should return the event list '''
         uid=uuid.uuid4()
         aid=uuid.uuid4()
-        username='test_get_last_events_success_username'
-        agentname='test_get_last_events_success_agentname'
+        username='test_get_events_success_username'
+        agentname='test_get_events_success_agentname'
         self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
         self.assertTrue(user.insert_new_agent_event(uid=uid, aid=aid, agentname=username))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),2)
 
     def test_activate_event_failure_invalid_uid(self):
@@ -87,16 +96,16 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         username='test_activate_event_success_username'
         self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         event=events[0]
         self.assertTrue(user.deactivate_event(uid=uid, date=event['date']))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         event=events[0]
         self.assertEqual(event['active'],False)
         self.assertTrue(user.activate_event(uid=uid, date=event['date']))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         event=events[0]
         self.assertEqual(event['active'],True)
@@ -114,10 +123,10 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         username='test_delete_events_success_username'
         self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertTrue(user.delete_events(uid=uid))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),0)
 
     def test_insert_new_user_event_failure_invalid_uid(self):
@@ -143,7 +152,7 @@ class EventsApiUserTest(unittest.TestCase):
         username='test_insert_new_user_event_success'
         uid=uuid.uuid4()
         self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.NEW_USER)
         self.assertEqual(events[0]['priority'], priorities.NEW_USER)
@@ -184,7 +193,7 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         aid=uuid.uuid4()
         self.assertTrue(user.insert_new_agent_event(uid=uid, aid=aid, agentname=agentname))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.NEW_AGENT)
         self.assertEqual(events[0]['priority'], priorities.NEW_AGENT)
@@ -225,7 +234,7 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         wid=uuid.uuid4()
         self.assertTrue(user.insert_new_widget_event(uid=uid, wid=wid, widgetname=widgetname))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.NEW_WIDGET)
         self.assertEqual(events[0]['priority'], priorities.NEW_WIDGET)
@@ -266,7 +275,7 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         bid=uuid.uuid4()
         self.assertTrue(user.insert_new_dashboard_event(uid=uid, bid=bid, dashboardname=dashboardname))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.NEW_DASHBOARD)
         self.assertEqual(events[0]['priority'], priorities.NEW_DASHBOARD)
@@ -307,7 +316,7 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         cid=uuid.uuid4()
         self.assertTrue(user.insert_new_circle_event(uid=uid, cid=cid, circlename=circlename))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.NEW_CIRCLE)
         self.assertEqual(events[0]['priority'], priorities.NEW_CIRCLE)
@@ -363,7 +372,7 @@ class EventsApiUserTest(unittest.TestCase):
         aid=uuid.uuid4()
         did=uuid.uuid4()
         self.assertTrue(user.insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.NEW_DATASOURCE)
         self.assertEqual(events[0]['priority'], priorities.NEW_DATASOURCE)
@@ -436,7 +445,7 @@ class EventsApiUserTest(unittest.TestCase):
         pid=uuid.uuid4()
         did=uuid.uuid4()
         self.assertTrue(user.insert_new_datapoint_event(uid=uid, pid=pid, did=did, datasourcename=datasourcename, datapointname=datapointname))
-        events=user.get_last_events(uid=uid)
+        events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.NEW_DATAPOINT)
         self.assertEqual(events[0]['priority'], priorities.NEW_DATAPOINT)

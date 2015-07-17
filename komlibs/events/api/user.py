@@ -13,16 +13,24 @@ from komlibs.events.model import priorities
 from komcass.model.orm import events as ormevents
 from komcass.api import events as cassapievents
 
-def get_last_events(uid, to_date=None, count=30):
+def get_events(uid, to_date=None, from_date=None, count=30):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_EAU_GEVS_IU)
     if to_date and not args.is_valid_date(to_date):
         raise exceptions.BadParametersException(error=errors.E_EAU_GEVS_ITD)
+    if from_date and not args.is_valid_date(from_date):
+        raise exceptions.BadParametersException(error=errors.E_EAU_GEVS_IFD)
     if not args.is_valid_int(count):
         raise exceptions.BadParametersException(error=errors.E_EAU_GEVS_ICNT)
-    if not to_date:
+    if not to_date and not from_date:
         to_date=timeuuid.uuid1()
-    events=cassapievents.get_user_events(uid=uid, end_date=to_date, count=count)
+        events=cassapievents.get_user_events(uid=uid, end_date=to_date, count=count)
+    elif to_date and from_date:
+        events=cassapievents.get_user_events(uid=uid, to_date=to_date, from_date=from_date)
+    elif to_date:
+        events=cassapievents.get_user_events(uid=uid, end_date=to_date, count=count)
+    else:
+        events=cassapievents.get_user_events(uid=uid, from_date=from_date)
     data=[]
     for event in events:
         data.append({'uid':event.uid, 'date':event.date,'active':event.active, 'type':event.type, 'priority':event.priority, 'parameters':event.parameters})

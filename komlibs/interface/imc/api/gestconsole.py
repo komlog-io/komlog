@@ -7,6 +7,7 @@ Gestconsole message definitions
 
 from komfig import logger
 from komlibs.general.validation import arguments as args
+from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datapoint import api as datapointapi
@@ -46,6 +47,7 @@ def process_message_MONVAR(message):
             response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
             response.add_msg_originated(messages.FillDatapointMessage(pid=datapoint['pid'],date=date))
             response.add_msg_originated(messages.NewDPWidgetMessage(uid=uid,pid=datapoint['pid']))
+            response.add_msg_originated(messages.UserEventMessage(uid=uid,event_type=eventstypes.NEW_DATAPOINT, parameters={'did':did.hex, 'pid':datapoint['pid'].hex, 'datasourcename':datasource['datasourcename'], 'datapointname':datapointname}))
             response.status=status.IMC_STATUS_OK
         else:
             logger.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position)+' length: '+str(length))

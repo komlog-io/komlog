@@ -11,10 +11,12 @@
 <script type="text/jsx" src="{{ static_url("js/komlog-datapoint-store.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-slide-store.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-uri-store.js")}}"></script>
+<script type="text/jsx" src="{{ static_url("js/komlog-event-store.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-shell-store.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-d3.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-main.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-navgraph.js")}}"></script>
+<script type="text/jsx" src="{{ static_url("js/komlog-event.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-shell.js")}}"></script>
 {% end %}
 
@@ -39,26 +41,24 @@
     </nav>
     <div class="container-fluid">
       <div class="row">
-        <div class="col-md-4 sidebar">
+        <div class="col-md-3 sidebar">
+          <div id="navigation-graph-box">
+          </div>
           <div class="panel panel-default">
             <form>
               <input type="text" class="form-control" placeholder="Search...">
             </form>
-          </div>
-          <div id="navigation-graph-box">
           </div>
           <div class="panel panel-default" id="search-results-box">
             <div class="panel-heading">Search results</div>
             <ul class="list-group">
             </ul>
           </div>
-          <div class="panel panel-default" id="notifications-box">
-            <div class="panel-heading">Notifications</div>
-            <ul class="list-group">
-            </ul>
-          </div>
         </div>
-        <div class="col-md-8 col-md-offset-4 main" id="workspace-content">
+        <div class="col-md-6 col-md-offset-3 main" id="workspace-content">
+        </div>
+        <div class="col-md-3 col-md-offset-9">
+          <div id="events-sidebar" />
         </div>
       </div>
     </div>

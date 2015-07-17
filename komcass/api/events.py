@@ -14,9 +14,16 @@ def get_user_event(uid, date):
     else:
         return None
 
-def get_user_events(uid, end_date, count):
+def get_user_events(uid, end_date=None, from_date=None, count=None):
     events=[]
-    row=connection.session.execute(stmtevents.S_A_DATUSEREVENTS_B_UID_ENDDATE_COUNT,(uid,end_date,count))
+    if end_date and from_date:
+        row=connection.session.execute(stmtevents.S_A_DATUSEREVENTS_B_UID_ENDDATE_FROMDATE,(uid,end_date,from_date))
+    elif end_date:
+        row=connection.session.execute(stmtevents.S_A_DATUSEREVENTS_B_UID_ENDDATE_COUNT,(uid,end_date,count))
+    elif from_date:
+        row=connection.session.execute(stmtevents.S_A_DATUSEREVENTS_B_UID_FROMDATE,(uid,from_date))
+    else:
+        return events
     if row:
         for r in row:
             events.append(ormevents.UserEvent(**r))
