@@ -134,6 +134,9 @@ def new_widget_datapoint(uid,pid):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=errors.E_GWA_NWDP_DNF)
+    datasource=cassapidatasource.get_datasource(did=datapoint.did)
+    if not datasource:
+        raise exceptions.DatasourceNotFoundException(error=errors.E_GWA_NWDP_DSNF)
     widgets=cassapiwidget.get_widgets(uid=user.uid)
     for widget in widgets:
         if widget.type==types.DATAPOINT:
@@ -141,7 +144,8 @@ def new_widget_datapoint(uid,pid):
             if dpwidget and dpwidget.pid==pid:
                 raise exceptions.WidgetAlreadyExistsException(error=errors.E_GWA_NWDP_WAE)
     wid=uuid.uuid4()
-    widget=ormwidget.WidgetDp(wid=wid,widgetname=datapoint.datapointname, uid=user.uid,pid=datapoint.pid,creation_date=timeuuid.uuid1())
+    widgetname='.'.join((datasource.datasourcename,datapoint.datapointname))
+    widget=ormwidget.WidgetDp(wid=wid,widgetname=widgetname, uid=user.uid,pid=datapoint.pid,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type, 'pid': widget.pid}
     else:
