@@ -22,6 +22,7 @@ from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.general import colors
 from komlibs.graph.api import uri as graphuri
+from komlibs.graph.api import kin as graphkin
 
 def get_widget_config(wid):
     if not args.is_valid_uuid(wid):
@@ -147,6 +148,9 @@ def new_widget_datapoint(uid,pid):
     widgetname='.'.join((datasource.datasourcename,datapoint.datapointname))
     widget=ormwidget.WidgetDp(wid=wid,widgetname=widgetname, uid=user.uid,pid=datapoint.pid,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
+        dswidget=cassapiwidget.get_widget_ds(did=datapoint.did)
+        if dswidget:
+            graphkin.kin_widgets(ido=widget.wid, idd=dswidget.wid)
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type, 'pid': widget.pid}
     else:
         raise exceptions.WidgetCreationException(error=errors.E_GWA_NWDP_IWE)
@@ -218,22 +222,20 @@ def add_datapoint_to_widget(wid, pid):
         raise exceptions.DatapointNotFoundException(error=errors.E_GWA_ADTW_DNF)
     color=datapoint.color if datapoint.color else colors.get_random_color()
     if widget.type==types.HISTOGRAM:
-        if cassapiwidget.add_datapoint_to_histogram(wid=wid, pid=pid, color=color):
-            return True
-        else:
+        if not cassapiwidget.add_datapoint_to_histogram(wid=wid, pid=pid, color=color):
             raise exceptions.AddDatapointToWidgetException(error=errors.E_GWA_ADTW_IDHE)
     elif widget.type==types.LINEGRAPH:
-        if cassapiwidget.add_datapoint_to_linegraph(wid=wid, pid=pid, color=color):
-            return True
-        else:
+        if not cassapiwidget.add_datapoint_to_linegraph(wid=wid, pid=pid, color=color):
             raise exceptions.AddDatapointToWidgetException(error=errors.E_GWA_ADTW_IDLE)
     elif widget.type==types.TABLE:
-        if cassapiwidget.add_datapoint_to_table(wid=wid, pid=pid, color=color):
-            return True
-        else:
+        if not cassapiwidget.add_datapoint_to_table(wid=wid, pid=pid, color=color):
             raise exceptions.AddDatapointToWidgetException(error=errors.E_GWA_ADTW_IDTE)
     else:
         raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GWA_ADTW_WUO)
+    dpwidget=cassapiwidget.get_widget_dp(pid=pid)
+    if dpwidget:
+        graphkin.kin_widgets(ido=dpwidget.wid, idd=wid)
+    return True
 
 def delete_datapoint_from_widget(wid, pid):
     if not args.is_valid_uuid(wid):
@@ -247,22 +249,20 @@ def delete_datapoint_from_widget(wid, pid):
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=errors.E_GWA_DDFW_DNF)
     if widget.type==types.HISTOGRAM:
-        if cassapiwidget.delete_datapoint_from_histogram(wid=wid, pid=pid):
-            return True
-        else:
+        if not cassapiwidget.delete_datapoint_from_histogram(wid=wid, pid=pid):
             raise exceptions.DeleteDatapointFromWidgetException(error=errors.E_GWA_DDFW_IDHE)
     elif widget.type==types.LINEGRAPH:
-        if cassapiwidget.delete_datapoint_from_linegraph(wid=wid, pid=pid):
-            return True
-        else:
+        if not cassapiwidget.delete_datapoint_from_linegraph(wid=wid, pid=pid):
             raise exceptions.DeleteDatapointFromWidgetException(error=errors.E_GWA_DDFW_IDLE)
     elif widget.type==types.TABLE:
-        if cassapiwidget.delete_datapoint_from_table(wid=wid, pid=pid):
-            return True
-        else:
+        if not cassapiwidget.delete_datapoint_from_table(wid=wid, pid=pid):
             raise exceptions.DeleteDatapointFromWidgetException(error=errors.E_GWA_DDFW_IDTE)
     else:
         raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GWA_DDFW_WUO)
+    dpwidget=cassapiwidget.get_widget_dp(pid=pid)
+    if dpwidget:
+        graphkin.unkin_widgets(ido=dpwidget.wid, idd=wid)
+    return True
 
 def update_widget_config(wid, widgetname=None, colors=None):
     if not args.is_valid_uuid(wid):
@@ -393,4 +393,12 @@ def update_widget_table(wid, widgetname=None, colors=None):
             if not cassapiwidget.add_datapoint_to_table(wid=wid, pid=pid, color=colors[pid]):
                 return False
     return True
+
+def get_related_widgets(wid):
+    if not args.is_valid_uuid(wid):
+        raise exceptions.BadParametersException(error=errors.E_GWA_GRW_IW)
+    widgets=[]
+    for widget in graphkin.get_kin_widgets(ido=wid):
+        widgets.append(get_widget_config(wid=widget['wid']))
+    return widgets
 

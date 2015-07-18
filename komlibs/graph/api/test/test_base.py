@@ -85,6 +85,24 @@ class GraphApiBaseTest(unittest.TestCase):
         relations=[rel for rel in graphbase.gen_get_incoming_relations_at(idd=idd)]
         self.assertEqual(relations,[])
 
+    def test_delete_edge_success_kin_edge(self):
+        ''' delete_edge should succeed if parameters are valid '''
+        ido=uuid.uuid4()
+        idd=uuid.uuid4()
+        vertex_type=vertex.WIDGET_WIDGET_RELATION
+        edge_type=edge.KIN_RELATION
+        params={'test':'test_param'}
+        self.assertTrue(graphbase.set_kin_edge(ido=ido, idd=idd, vertex_type=vertex_type, params=params))
+        relations=[rel for rel in graphbase.gen_get_incoming_relations_at(idd=idd)]
+        self.assertEqual(len(relations),1)
+        relations=[rel for rel in graphbase.gen_get_outgoing_relations_from(ido=ido)]
+        self.assertEqual(len(relations),1)
+        self.assertTrue(graphbase.delete_edge(ido=ido, idd=idd, edge_type=edge_type))
+        relations=[rel for rel in graphbase.gen_get_outgoing_relations_from(ido=ido)]
+        self.assertEqual(relations,[])
+        relations=[rel for rel in graphbase.gen_get_incoming_relations_at(idd=idd)]
+        self.assertEqual(relations,[])
+
     def test_set_member_edge_failure_invalid_ido(self):
         ''' set_member_edge should fail if ido is invalid '''
         idos=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
@@ -279,6 +297,64 @@ class GraphApiBaseTest(unittest.TestCase):
             self.assertEqual(relation.idd,idd)
             self.assertEqual(relation.type,vertex.USER_AGENT_RELATION)
             self.assertEqual(relation.uri,uri)
+
+    def test_set_kin_edge_failure_invalid_ido(self):
+        ''' set_kin_edge should fail if ido is invalid '''
+        idos=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        idd=uuid.uuid4()
+        params=dict()
+        vertex_type=vertex.WIDGET_WIDGET_RELATION
+        for ido in idos:
+            self.assertFalse(graphbase.set_kin_edge(ido=ido, idd=idd, vertex_type=vertex_type, params=params))
+
+    def test_set_uri_edge_failure_invalid_idd(self):
+        ''' set_kin_edge should fail if idd is invalid '''
+        idds=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        ido=uuid.uuid4()
+        vertex_type=vertex.USER_AGENT_RELATION
+        params=dict()
+        for idd in idds:
+            self.assertFalse(graphbase.set_kin_edge(ido=ido, idd=idd, vertex_type=vertex_type, params=params))
+
+    def test_set_uri_edge_failure_invalid_vertex_type(self):
+        ''' set_kin_edge should fail if vertex_type is invalid '''
+        vertex=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        ido=uuid.uuid4()
+        idd=uuid.uuid4()
+        params=dict()
+        for vertex_type in vertex:
+            self.assertFalse(graphbase.set_kin_edge(ido=ido, idd=idd, vertex_type=vertex_type,params=params))
+
+    def test_set_uri_edge_failure_invalid_params(self):
+        ''' set_kin_edge should fail if params is invalid '''
+        paramss=[None, 234234.234234, uuid.uuid4(), uuid.uuid1(), ['a','list'],('a','tuple'),{'set'},'string with spaces','string_with_symbols_#$/%']
+        ido=uuid.uuid4()
+        idd=uuid.uuid4()
+        vertex_type=vertex.USER_AGENT_RELATION
+        for params in paramss:
+            self.assertFalse(graphbase.set_kin_edge(ido=ido, idd=idd, vertex_type=vertex_type,params=params))
+
+    def test_set_kin_edge_success(self):
+        ''' set_kin_edge should succeed '''
+        ido=uuid.uuid4()
+        idd=uuid.uuid4()
+        vertex_type=vertex.USER_AGENT_RELATION
+        params=dict()
+        self.assertTrue(graphbase.set_kin_edge(ido=ido, idd=idd, vertex_type=vertex_type, params=params))
+        relations=[rel for rel in graphbase.gen_get_incoming_relations_at(idd=idd)]
+        self.assertEqual(len(relations),1)
+        for relation in relations:
+            self.assertEqual(relation.ido,ido)
+            self.assertEqual(relation.idd,idd)
+            self.assertEqual(relation.type,vertex.USER_AGENT_RELATION)
+            self.assertEqual(relation.params,params)
+        relations=[rel for rel in graphbase.gen_get_incoming_relations_at(idd=idd)]
+        self.assertEqual(len(relations),1)
+        for relation in relations:
+            self.assertEqual(relation.ido,ido)
+            self.assertEqual(relation.idd,idd)
+            self.assertEqual(relation.type,vertex.USER_AGENT_RELATION)
+            self.assertEqual(relation.params,params)
 
     def test_gen_get_outgoing_relations_from_failure_invalid_ido(self):
         ''' gen_get_outgoing_relations_from should not return any element if ido is invalid '''

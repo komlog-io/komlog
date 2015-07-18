@@ -413,6 +413,14 @@ class WidgetDatapointsHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
+class WidgetRelatedHandler(tornado.web.RequestHandler):
+    
+    @auth.userauthenticated
+    def get(self, wid):
+        response=widget.get_related_widgets_request(username=self.user, wid=wid)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
 class WidgetSnapshotsHandler(tornado.web.RequestHandler):
     
     @auth.userauthenticated
@@ -601,6 +609,7 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/etc/wg/?', WidgetsHandler),
             (r'/etc/wg/('+UUID4_REGEX+')', WidgetConfigHandler),
             (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/dp/(?P<pid>'+UUID4_REGEX+')', WidgetDatapointsHandler),
+            (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/rel/?', WidgetRelatedHandler),
             (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/sn/?', WidgetSnapshotsHandler),
             (r'/etc/db/?', DashboardsHandler),
             (r'/etc/db/('+UUID4_REGEX+')', DashboardConfigHandler),

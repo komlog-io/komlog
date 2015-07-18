@@ -198,3 +198,20 @@ def update_widget_config_request(username, wid, data):
     if widgetapi.update_widget_config(wid=wid, widgetname=widgetname, colors=colors):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
+@exceptions.ExceptionHandler
+def get_related_widgets_request(username, wid):
+    if not args.is_valid_username(username):
+        raise exceptions.BadParametersException(error=errors.E_IWAW_GRWR_IU)
+    if not args.is_valid_hex_uuid(wid):
+        raise exceptions.BadParametersException(error=errors.E_IWAW_GRWR_IW)
+    wid=uuid.UUID(wid)
+    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=requests.GET_WIDGET_CONFIG,uid=uid,wid=wid)
+    data=widgetapi.get_related_widgets(wid=wid)
+    response_data=[]
+    for widget in data:
+        response_data.append({'type':widget['type'],\
+                              'wid':widget['wid'].hex,\
+                              'widgetname':widget['widgetname']})
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
+

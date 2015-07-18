@@ -8,6 +8,7 @@ MODULES = [
     'komlibs.general.validation.test.test_arguments.GeneralValidationArgumentsTest',
     'komlibs.graph.api.test.test_base.GraphApiBaseTest',
     'komlibs.graph.api.test.test_uri.GraphApiUriTest',
+    'komlibs.graph.api.test.test_kin.GraphApiKinTest',
     'komlibs.gestaccount.user.test.test_userapi.GestaccountUserApiTest',
     'komlibs.gestaccount.agent.test.test_agentapi.GestaccountAgentApiTest',
     'komlibs.gestaccount.datasource.test.test_datasourceapi.GestaccountDatasourceApiTest',

@@ -187,3 +187,66 @@ def insert_uri_out_relation(relation):
         return False
     connection.session.execute(stmtgraph.I_A_GRURIOUT,(relation.ido,relation.idd,relation.type,relation.creation_date,relation.uri))
     return True
+
+# KIN RELATIONS
+
+def get_kin_in_relations(idd):
+    relations=[]
+    row=connection.session.execute(stmtgraph.S_A_GRKININ_B_IDD,(idd,))
+    if row:
+        for r in row:
+            relations.append(ormgraph.KinRelation(**r))
+    return relations
+
+def get_kin_out_relations(ido):
+    relations=[]
+    row=connection.session.execute(stmtgraph.S_A_GRKINOUT_B_IDO,(ido,))
+    if row:
+        for r in row:
+            relations.append(ormgraph.KinRelation(**r))
+    return relations
+
+def get_kin_in_vertices(idd):
+    vertices=[]
+    row=connection.session.execute(stmtgraph.S_IDO_GRKININ_B_IDD,(idd,))
+    if row:
+        for r in row:
+            vertices.append(r['ido'])
+    return vertices
+
+def get_kin_out_vertices(ido):
+    vertices=[]
+    row=connection.session.execute(stmtgraph.S_IDD_GRKINOUT_B_IDO,(ido,))
+    if row:
+        for r in row:
+            vertices.append(r['idd'])
+    return vertices
+
+def get_kin_in_relation(idd, ido):
+    row=connection.session.execute(stmtgraph.S_A_GRKININ_B_IDD_IDO,(idd,ido))
+    return ormgraph.KinRelation(**row[0]) if row else None
+
+def get_kin_out_relation(ido, idd):
+    row=connection.session.execute(stmtgraph.S_A_GRKINOUT_B_IDO_IDD,(ido,idd))
+    return ormgraph.KinRelation(**row[0]) if row else None
+
+def insert_kin_in_relation(relation):
+    if not isinstance(relation, ormgraph.KinRelation):
+        return False
+    connection.session.execute(stmtgraph.I_A_GRKININ,(relation.idd,relation.ido,relation.type,relation.creation_date,relation.params))
+    return True
+
+def insert_kin_out_relation(relation):
+    if not isinstance(relation, ormgraph.KinRelation):
+        return False
+    connection.session.execute(stmtgraph.I_A_GRKINOUT,(relation.ido,relation.idd,relation.type,relation.creation_date,relation.params))
+    return True
+
+def delete_kin_in_relation(idd, ido):
+    row=connection.session.execute(stmtgraph.D_A_GRKININ_B_IDD_IDO,(idd,ido))
+    return True
+
+def delete_kin_out_relation(ido, idd):
+    row=connection.session.execute(stmtgraph.D_A_GRKINOUT_B_IDO_IDD,(ido,idd))
+    return True
+

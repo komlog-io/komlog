@@ -5,7 +5,7 @@ from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datasource import api as datasourceapi 
 from komlibs.gestaccount.datapoint import api as datapointapi
 from komlibs.gestaccount.widget import api, types
-from komlibs.gestaccount import exceptions
+from komlibs.gestaccount import exceptions, errors
 from komcass.model.orm import widget as ormwidget
 from komlibs.general import colors as libcolors
 
@@ -233,7 +233,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         self.assertEqual(widget['pid'], pid)
         self.assertEqual(widget['uid'], uid)
         self.assertEqual(widget['type'], types.DATAPOINT)
-        self.assertEqual(widget['widgetname'], datapointname)
+        self.assertEqual(widget['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(len(widget.keys()),5)
 
     def test_new_widget_linegraph_failure_invalid_username(self):
@@ -758,7 +758,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
         widget=api.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid']) 
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
-        self.assertEqual(widget['widgetname'], datapointname)
+        self.assertEqual(widget['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(widget['uid'],user['uid'])
         self.assertEqual(widget['pid'], datapoint['pid'])
         self.assertEqual(widget['type'], types.DATAPOINT)
@@ -1415,4 +1415,43 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for color in colors:
             new_colors={datapoint['pid']:color}
             self.assertRaises(exceptions.BadParametersException, api.update_widget_table, wid=widget['wid'], colors=new_colors)
+
+    def test_get_related_widgets_failure_invalid_wid(self):
+        ''' get_related_widgets should fail if wid is invalid '''
+        wids=[None, 123123, 12313.1231, {'a':'dict'},('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4().hex, uuid.uuid1()]
+        for wid in wids: 
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_related_widgets(wid=wid)
+            self.assertEqual(cm.exception.error, errors.E_GWA_GRW_IW)
+
+    def test_get_related_widgets_success(self):
+        ''' get_related_widgets should return an array with the related widgets '''
+        username='test_get_related_widgets_success_user'
+        agentname='test_get_related_widgets_success_agent'
+        datasourcename='test_get_related_widgets_success_datasource'
+        datapointname='test_get_related_widgets_success_datapoint'
+        email=username+'@komlog.org'
+        password='password'
+        pubkey='testgetrelatedwidgetsuccesspubkey'
+        version='Test Version'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        color=libcolors.get_random_color()
+        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        dswidget=api.new_widget_datasource(uid=user['uid'], did=datasource['did']) 
+        wdsdata=api.get_widget_config(wid=dswidget['wid'])
+        self.assertEqual(wdsdata['type'],types.DATASOURCE)
+        self.assertEqual(wdsdata['wid'],dswidget['wid'])
+        self.assertEqual(wdsdata['did'],dswidget['did'])
+        dpwidget=api.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid']) 
+        wdpdata=api.get_widget_config(wid=dpwidget['wid'])
+        self.assertEqual(wdpdata['type'],types.DATAPOINT)
+        self.assertEqual(wdpdata['wid'],dpwidget['wid'])
+        self.assertEqual(wdpdata['pid'],dpwidget['pid'])
+        related=api.get_related_widgets(wid=dpwidget['wid'])
+        self.assertEqual(len(related),1)
+        self.assertEqual(related[0]['wid'],wdsdata['wid'])
+        self.assertEqual(related[0]['type'],wdsdata['type'])
+        self.assertEqual(related[0]['widgetname'],wdsdata['widgetname'])
 

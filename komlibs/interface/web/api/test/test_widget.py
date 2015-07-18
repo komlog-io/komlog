@@ -877,7 +877,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         pid=None
         num_widgets=0
         for widget in response2.data:
-            if widget['type']==types.DATAPOINT:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertTrue(num_widgets>=1)
@@ -974,7 +974,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         pid=None
         num_widgets=0
         for widget in response2.data:
-            if widget['type']==types.DATAPOINT:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertTrue(num_widgets>=1)
@@ -1071,7 +1071,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         pid=None
         num_widgets=0
         for widget in response2.data:
-            if widget['type']==types.DATAPOINT:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertTrue(num_widgets>=1)
@@ -1203,7 +1203,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         pid=None
         num_widgets=0
         for widget in response2.data:
-            if widget['type']==types.DATAPOINT:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertTrue(num_widgets>=1)
@@ -1308,7 +1308,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         pid=None
         num_widgets=0
         for widget in response2.data:
-            if widget['type']==types.DATAPOINT:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertTrue(num_widgets>=1)
@@ -1413,7 +1413,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         pid=None
         num_widgets=0
         for widget in response2.data:
-            if widget['type']==types.DATAPOINT:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertTrue(num_widgets>=1)
@@ -1554,7 +1554,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         pid=None
         num_widgets=0
         for widget in response2.data:
-            if widget['type']==types.DATAPOINT:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertTrue(num_widgets>=1)
@@ -1578,4 +1578,247 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'],new_widgetname)
         self.assertEqual(response7.data['datapoints'],[{'pid':pid,'color':'#CCDDEE'}])
         self.assertEqual(response7.data['wid'],wid)
+
+    def test_get_related_widgets_request_failure_invalid_username(self):
+        ''' get_related_widgets_request should fail if username is invalid '''
+        usernames=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
+        wid=uuid.uuid4().hex
+        for username in usernames:
+            response=widgetapi.get_related_widgets_request(username=username, wid=wid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_get_related_widgets_request_failure_invalid_wid(self):
+        ''' get_related_widgets_request should fail if wid is invalid '''
+        wids=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
+        username='test_get_related_widgets_request_failure_invalid_username'
+        for wid in wids:
+            response=widgetapi.get_related_widgets_request(username=username, wid=wid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_get_related_widgets_request_failure_non_existent_username(self):
+        ''' get_related_widgets_request should fail if username does not exist '''
+        username='test_get_related_widgets_request_failure_non_existent_username'
+        wid=uuid.uuid4().hex
+        response=widgetapi.get_related_widgets_request(username=username, wid=wid)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+
+    def test_get_related_widgets_request_failure_non_existent_widget(self):
+        ''' get_related_widgets_request should fail if widget does not exist '''
+        username=self.userinfo['username']
+        wid=uuid.uuid4().hex
+        response=widgetapi.get_related_widgets_request(username=username, wid=wid)
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+
+    def test_get_related_widgets_request_failure_no_permission_over_this_widget(self):
+        '''get_related_widgets_request should fail if user does not have permission over widget '''
+        username=self.userinfo['username']
+        aid=self.userinfo['agents'][0]['aid']
+        datasourcename='test_get_related_widgets_request_failure_no_permission_over_this_widget_datasource'
+        response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.NEW_DS_WIDGET_MESSAGE or msg.did.hex!=response.data['did']:
+                msgapi.send_message(msg)
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertFalse(count>=1000)
+        msg_result=gestconsole.process_message_NEWDSW(message=msg)
+        msgapi.process_msg_result(msg_result)
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])):
+                msgapi.send_message(msg)
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertFalse(count>=1000)
+        rescontrol.process_message_UPDQUO(msg)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])): 
+                msgapi.send_message(msg)
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertFalse(count>=1000)
+        rescontrol.process_message_RESAUTH(msg)
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if not msg:
+                break
+            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==uuid.UUID(self.userinfo['uid']):
+                rescontrol.process_message_UPDQUO(message=msg)
+            else:
+                msgapi.send_message(msg)
+                count+=1
+                if count>=100:
+                    break
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if not msg:
+                break
+            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==uuid.UUID(self.userinfo['uid']): 
+                rescontrol.process_message_RESAUTH(message=msg)
+            else:
+                msgapi.send_message(msg)
+                count+=1
+                if count>=100:
+                    break
+        response2 = widgetapi.get_widgets_config_request(username=username)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        wid=None
+        num_widgets=0
+        for widget in response2.data:
+            if widget['type']==types.DATASOURCE and widget['did']==response.data['did']:
+                num_widgets+=1
+                wid=widget['wid']
+        self.assertEqual(num_widgets,1)
+        self.assertIsNotNone(wid)
+        response3 = widgetapi.get_widget_config_request(username=username, wid=wid)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['type'],types.DATASOURCE)
+        self.assertEqual(response3.data['did'],response.data['did'])
+        self.assertEqual(response3.data['wid'],wid)
+        new_username = 'test_get_related_widgets_request_failure_no_permission_over_widget_user'
+        password = 'password'
+        new_email = new_username+'@komlog.org'
+        response = userapi.new_user_request(username=new_username, password=password, email=new_email)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        widgetrelated = widgetapi.get_related_widgets_request(username=new_username, wid=wid)
+        self.assertEqual(widgetrelated.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(widgetrelated.data, None)
+
+    def test_get_related_widgets_request_success(self):
+        ''' get_releated_widgets_request should succeed '''
+        username=self.userinfo['username']
+        aid=self.userinfo['agents'][0]['aid']
+        widgetname='test_get_related_widgets_request_success_widget_linegraph'
+        data={'type':types.LINEGRAPH, 'widgetname':widgetname}
+        response = widgetapi.new_widget_request(username=username, data=data)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        wid=response.data['wid']
+        response3 = widgetapi.get_widget_config_request(username=username, wid=wid)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['type'],types.LINEGRAPH)
+        self.assertEqual(response3.data['widgetname'],widgetname)
+        self.assertEqual(response3.data['datapoints'],[])
+        self.assertEqual(response3.data['wid'],wid)
+        datasourcename='test_get_related_widgets_requests_success_datasource'
+        response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        datasourcecontent='DATASOURCE CONTENT 1 2 3'
+        date=timeuuid.uuid1()
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
+        self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
+        datapointname='test_get_related_widgets_request_success_datapoint'
+        sequence=datasourcedata.data['seq']
+        variable=datasourcedata.data['variables'][0]
+        response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.NEW_DP_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        response2 = widgetapi.get_widgets_config_request(username=username)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        pid=None
+        wid_dp=None
+        num_widgets=0
+        for widget in response2.data:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
+                num_widgets+=1
+                pid=widget['pid']
+                wid_dp=widget['wid']
+        self.assertTrue(num_widgets==1)
+        response4=widgetapi.add_datapoint_request(username=username, wid=wid, pid=pid)
+        self.assertEqual(response4.status, status.WEB_STATUS_OK)
+        response5=widgetapi.get_widget_config_request(username=username, wid=wid)
+        self.assertEqual(response5.status, status.WEB_STATUS_OK)
+        self.assertEqual(response5.data['type'],types.LINEGRAPH)
+        self.assertEqual(response5.data['widgetname'],widgetname)
+        self.assertEqual(len(response5.data['datapoints']),1)
+        self.assertEqual(response5.data['datapoints'][0]['pid'],pid)
+        self.assertEqual(response5.data['wid'],wid)
+        response6=widgetapi.get_related_widgets_request(username=username, wid=wid_dp)
+        self.assertEqual(response6.status, status.WEB_STATUS_OK)
+        self.assertEqual(len(response6.data),2)
+
 

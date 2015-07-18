@@ -124,7 +124,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertEqual(widget['pid'], datapoint['pid'])
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.DATAPOINT)
-        self.assertEqual(widget['widgetname'],datapointname)
+        self.assertEqual(widget['widgetname'], '.'.join((datasourcename,datapointname)))
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
         snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
@@ -372,7 +372,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertEqual(widget['pid'], datapoint['pid'])
         self.assertEqual(widget['uid'], user['uid'])
         self.assertEqual(widget['type'], types.DATAPOINT)
-        self.assertEqual(widget['widgetname'],datapointname)
+        self.assertEqual(widget['widgetname'], '.'.join((datasourcename,datapointname)))
         interval_init=timeuuid.uuid1()
         interval_end=timeuuid.uuid1()
         snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
@@ -388,7 +388,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertEqual(snapshot['interval_init'],snapshot_config['interval_init'])
         self.assertEqual(snapshot['interval_end'],snapshot_config['interval_end'])
         self.assertEqual(datapoint['pid'],snapshot_config['pid'])
-        self.assertEqual(datapointname,snapshot_config['widgetname'])
+        self.assertEqual('.'.join((datasourcename,datapointname)),snapshot_config['widgetname'])
         self.assertEqual(types.DATAPOINT,snapshot_config['type'])
 
     def test_get_snapshot_config_success_snapshot_histogram(self):

@@ -715,7 +715,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response5=widgetapi.get_widget_config_request(username=username, wid=wid)
         self.assertEqual(response5.status, status.WEB_STATUS_OK)
         self.assertEqual(response5.data['type'],types.DATAPOINT)
-        self.assertEqual(response5.data['widgetname'],datapointname)
+        self.assertEqual(response5.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response5.data['pid'],pid)
         self.assertEqual(response5.data['wid'],wid)
         its=1
@@ -737,7 +737,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.DATAPOINT)
-        self.assertEqual(response7.data['widgetname'],datapointname)
+        self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['pid'],pid)
@@ -1286,7 +1286,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response5=widgetapi.get_widget_config_request(username=username, wid=wid)
         self.assertEqual(response5.status, status.WEB_STATUS_OK)
         self.assertEqual(response5.data['type'],types.DATAPOINT)
-        self.assertEqual(response5.data['widgetname'],datapointname)
+        self.assertEqual(response5.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response5.data['pid'],pid)
         self.assertEqual(response5.data['wid'],wid)
         its=1
@@ -1308,7 +1308,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.DATAPOINT)
-        self.assertEqual(response7.data['widgetname'],datapointname)
+        self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['pid'],pid)
@@ -1483,7 +1483,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         pid=None
         num_widgets=0
         for widget in response2.data:
-            if widget['type']==types.DATAPOINT and widget['widgetname']==datapointname:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertEqual(num_widgets,1)
@@ -1651,7 +1651,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         pid=None
         num_widgets=0
         for widget in response2.data:
-            if widget['type']==types.DATAPOINT and widget['widgetname']==datapointname:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertEqual(num_widgets,1)
@@ -1819,7 +1819,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         pid=None
         num_widgets=0
         for widget in response2.data:
-            if widget['type']==types.DATAPOINT and widget['widgetname']==datapointname:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertEqual(num_widgets,1)
@@ -2027,7 +2027,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response5=widgetapi.get_widget_config_request(username=username, wid=wid)
         self.assertEqual(response5.status, status.WEB_STATUS_OK)
         self.assertEqual(response5.data['type'],types.DATAPOINT)
-        self.assertEqual(response5.data['widgetname'],datapointname)
+        self.assertEqual(response5.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response5.data['pid'],pid)
         self.assertEqual(response5.data['wid'],wid)
         its=1
@@ -2050,7 +2050,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.DATAPOINT)
-        self.assertEqual(response7.data['widgetname'],datapointname)
+        self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['pid'],pid)

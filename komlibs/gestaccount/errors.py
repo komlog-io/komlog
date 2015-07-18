@@ -304,6 +304,8 @@ E_GWA_UWT_WNF=1073
 E_GWA_UWT_DNF=1074
 E_GWA_UWT_IC=1075
 
+E_GWA_GRW_IW=1090
+
 # gestaccount dashboard api
 
 E_GBA_GDSC_IU=1300
