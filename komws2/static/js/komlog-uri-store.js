@@ -10,11 +10,9 @@ UriStore.prototype = {
     subscriptionHandler: function (msg, data) {
         switch (msg) {
             case 'uriReq':
-                console.log('uriReq recibido')
                 processMsgUriReq(data)
                 break;
             case 'uriActionReq':
-                console.log('uriActionReq recibido')
                 processMsgUriActionReq(data)
                 break;
         }
@@ -29,7 +27,6 @@ function processMsgUriReq (data) {
 }
 
 function requestUri (uri) {
-    console.log('requesting uri: ',uri)
     parameters={'uri':uri}
     $.ajax({
         url: '/var/uri/',
@@ -37,14 +34,12 @@ function requestUri (uri) {
         data: parameters,
     })
     .done(function (data) {
-        console.log('data received',data)
         storeUriData(data)
         sendUriUpdate(uri)
     })
 }
 
 function storeUriData (data) {
-    console.log('datos recibidos',data)
     UriStore._data=data
     storeExpandedInfo(data)
 }
@@ -70,14 +65,11 @@ function getUriGraph (rootUri, numVertices) {
 }
 
 function processMsgUriActionReq (data) {
-    console.log('processMsgUriActionReq',data,UriStore._vertices)
     if (UriStore._vertices.hasOwnProperty(data.id)) {
         vertex=UriStore._vertices[data.id]
-        console.log('objecto uri seleccionado',vertex)
         if (vertex.type=='p') {
             PubSub.publish('loadSlide',{pid:vertex.id})
         } else if (vertex.type=='d') {
-            console.log('loadSlide del datasource')
             PubSub.publish('loadSlide',{did:vertex.id})
         } else if (vertex.type=='w') {
             PubSub.publish('loadSlide',{wid:vertex.id})

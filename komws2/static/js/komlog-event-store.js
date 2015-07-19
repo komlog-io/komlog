@@ -34,49 +34,39 @@ eventStore.requestLoop()
 function requestEvents () {
     parameters={}
     if (eventStore._events.length>0) {
-        console.log('events length > 0 ',eventStore._events)
         parameters.its=eventStore._events[eventStore._events.length-1].ts
     }
-    console.log('requesting events to server ')
     $.ajax({
         url: '/var/usr/ev/',
         dataType: 'json',
         data: parameters,
     })
     .done(function (response) {
-        console.log('data received ',response)
         storeEvents(response)
     })
 }
 
 function storeEvents (data) {
-    console.log('storing data received ',data)
     newEvents=false;
     for (var i=data.length;i>0;i--) {
         if (eventStore._events.length==0) {
-            console.log('adding first event to array ',data[i-1])
             eventStore._events.push(data[i-1])
             newEvents=true;
         } else {
             for (var j=eventStore._events.length;j>0;j--) {
-                console.log('checking event',j)
                 if (eventStore._events[j-1].ts<=data[i-1].ts && eventStore._events[j-1].seq!=data[i-1].seq && (j==eventStore._events.length || eventStore._events[j].ts>data[i-1].ts)) {
-                    console.log('adding event to array ',data[i-1],j)
                     eventStore._events.splice(j,0,data[i-1])
                     newEvents=true
                 }
             }
         }
     }
-    console.log('eventStore is this ', eventStore._events)
     if (newEvents == true) {
-        console.log('sending newEventsMessage ')
         sendNewEventsMessage()
     }
 }
 
 function sendNewEventsMessage () {
-    console.log('sending newEvents')
     PubSub.publish('newEvents',{})
 }
 
@@ -101,11 +91,7 @@ function getEventList (numElem, lastSeq) {
         firstIndex=0;
     }
     for (var j=lastIndex;j>=firstIndex;j--) {
-        if (j<=numElem) {
-            events.push(eventStore._events[j])
-        } else {
-            break;
-        }
+        events.push(eventStore._events[j])
     }
     return events
 }

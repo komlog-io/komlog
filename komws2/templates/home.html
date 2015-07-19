@@ -17,6 +17,7 @@
 <script type="text/jsx" src="{{ static_url("js/komlog-main.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-navgraph.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-event.js")}}"></script>
+<script type="text/jsx" src="{{ static_url("js/komlog-related.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-shell.js")}}"></script>
 {% end %}
 
@@ -49,15 +50,12 @@
               <input type="text" class="form-control" placeholder="Search...">
             </form>
           </div>
-          <div class="panel panel-default" id="search-results-box">
-            <div class="panel-heading">Search results</div>
-            <ul class="list-group">
-            </ul>
+          <div id="related-slides">
           </div>
         </div>
         <div class="col-md-6 col-md-offset-3 main" id="workspace-content">
         </div>
-        <div class="col-md-3 col-md-offset-9">
+        <div class="col-md-3 col-md-offset-9 sidebar-right">
           <div id="events-sidebar" />
         </div>
       </div>

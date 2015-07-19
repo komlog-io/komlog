@@ -13,13 +13,11 @@ var ResourceGraph = React.createClass({
         this.subscriptionTokens.push({token:PubSub.subscribe('uriUpdate', this.subscriptionHandler),msg:'uriUpdate'});
     },
     focusUri: function (uri) {
-        console.log('focus on',uri)
         this.state.selectedUri=uri
         PubSub.publish('uriReq',{uri:uri})
     },
     segmentClicked: function (num) {
         uri=this.state.selectedUri.split('.').slice(0,num+1).join('.')
-        console.log('segmentUriClicked ',num,uri)
         this.focusUri(uri)
     },
     componentDidMount: function () {
@@ -32,9 +30,7 @@ var ResourceGraph = React.createClass({
         d3ResourceGraph.update(el, this.state.graphData, this.focusUri)
     },
     componentWillUnmount: function () {
-        console.log('me desmonto',this.subscriptionTokens)
         $.map(this.subscriptionTokens, function (d) {
-            console.log('me desmonto',d.msg,d.token)
             PubSub.unsubscribe(d.token)
             }.bind(this));
     },
@@ -49,7 +45,6 @@ var ResourceGraph = React.createClass({
     },
     refreshGraph: function () {
         data=getUriGraph(this.state.selectedUri,50)
-        console.log('refreshGraph: ',data)
         this.setState({graphData:data})
     },
     render: function () {

@@ -608,7 +608,6 @@ d3ResourceGraph_bis = {
     update: function (el, data,onclick) {
         width=d3.select(el).node().getBoundingClientRect().width
         height=300
-        console.log('d3 update tenemos esto',data.nodes,data.links)
         var paths = d3.select(el).select(".paths")
         var circles = d3.select(el).select(".circles")
         var texts = d3.select(el).select(".texts")
@@ -681,7 +680,6 @@ d3ResourceGraph_bis = {
     create: function(el, data,onclick) {
         width=d3.select(el).node().getBoundingClientRect().width
         height=300
-        console.log('d3 tenemos esto',data.nodes,data.links)
         var svg = d3.select(el).append("svg")
             .attr("width", width)
             .attr("height", height)
@@ -764,7 +762,6 @@ d3ResourceGraph_bis = {
           return "translate(" + x + "," + y + ")";
         }
 
-        console.log('empiezo a generar el force')
     },
 }
 
@@ -784,7 +781,6 @@ d3ResourceGraph = {
         focus = root,
         nodes = pack.nodes(root);
         $.each(nodes, function (i,d) {
-            console.log('node: ',d.name,d.x,d.y,d.r)
           if (d.hasOwnProperty('children')){
               $.each(d.children, function (index,child) {
                   child.r*=(1-child.depth/100)

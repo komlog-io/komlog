@@ -68,12 +68,10 @@ body {
 .sidebar-right {
   position: fixed;
   top: 51px;
-  bottom: 0;
+  bottom: 70px;
   right: 0;
   z-index: 1000;
   display: block;
-  padding: 20px;
-  padding-bottom: 60px;
   overflow-y: scroll;
   /*border-left: 1px solid #eee;*/
 }
@@ -121,7 +119,7 @@ body {
 }
 
 .footer {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   width: 100%;
   height: 60px;
@@ -264,7 +262,7 @@ body {
   width: calc( 100% - 75px );
   float: left;
   border: 1px solid #d4d4d4;
-  border-radius: 2px;
+  border-radius: 5px;
   padding: 20px;
   position: relative;
   -webkit-box-shadow: 0 1px 6px rgba(0, 0, 0, 0.175);
@@ -294,21 +292,21 @@ body {
 }
 .userevents > li > .userevents-badge {
   color: #fff;
-  width: 50px;
-  height: 50px;
-  line-height: 50px;
+  width: 40px;
+  height: 40px;
+  line-height: 40px;
   font-size: 1.4em;
   text-align: center;
   position: absolute;
-  top: 16px;
-  left: 0px;
+  top: 23px;
+  left: 5px;
   margin-left: 0px;
   background-color: #999999;
   z-index: 100;
-  border-top-right-radius: 50%;
-  border-top-left-radius: 50%;
-  border-bottom-right-radius: 50%;
-  border-bottom-left-radius: 50%;
+  border-top-right-radius: 10%;
+  border-top-left-radius: 10%;
+  border-bottom-right-radius: 10%;
+  border-bottom-left-radius: 10%;
 }
 .userevents > li.userevents-inverted > .userevents-panel {
   float: right;
@@ -351,3 +349,52 @@ body {
 .userevents-body > p + p {
   margin-top: 5px;
 }
+
+/* 
+  Related Slides
+*/
+
+.sliderelated {
+  list-style: none;
+  padding: 10px 0 10px;
+  position: relative;
+}
+
+.sliderelated > li {
+  margin-bottom: 5px;
+  position: relative;
+}
+
+.sliderelated > li > .sliderelated-panel {
+  background-color: #fff;
+  width: 100%;
+  height: 40px;
+  border: 1px solid #d4d4d4;
+  border-radius: 5px;
+  padding: 10px;
+  padding-left: 60px;
+  position: relative;
+  text-align: left;
+  -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.175);
+}
+
+.sliderelated > li > .sliderelated-badge {
+  color: #fff;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  font-size: 1.4em;
+  text-align: center;
+  position: absolute;
+  top: 5px;
+  left: 0px;
+  margin-left: 5px;
+  background-color: #ccc;
+  z-index: 100;
+  border-top-right-radius: 10%;
+  border-top-left-radius: 10%;
+  border-bottom-right-radius: 10%;
+  border-bottom-left-radius: 10%;
+}
+

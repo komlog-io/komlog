@@ -66,7 +66,6 @@ var Workspace = React.createClass({
         this.lastScrollHeight = $('#workspace-content')[0].scrollHeight;
     },
     render: function () {
-        console.log('en el slide del workspace')
         slides = this.state.slides.map( function (slide) {
             return (<Slide key={slide.shortcut} lid={slide.lid} shortcut={slide.shortcut} type={slide.type}/>)
         });
@@ -103,14 +102,9 @@ var Slide = React.createClass({
     },
     componentDidMount: function () {
         PubSub.publish('slideConfigReq',{lid:this.props.lid, type:this.props.type})
-        $.map(this.subscriptionTokens[this.props.lid], function (d) {
-            console.log('me monte',this.props.lid,d.msg)
-        }.bind(this))
     },
     componentWillUnmount: function () {
-        console.log('me desmonto',this.subscriptionTokens)
         $.map(this.subscriptionTokens[this.props.lid], function (d) {
-            console.log('me desmonto',this.props.lid,d.msg)
             PubSub.unsubscribe(d.token)
             }.bind(this));
         delete this.subscriptionTokens[this.props.lid];
@@ -315,20 +309,14 @@ var SlideDs = React.createClass({
     componentDidMount: function () {
         PubSub.publish('datasourceDataReq',{did:this.props.did})
         PubSub.publish('datasourceConfigReq',{did:this.props.did})
-        $.map(this.subscriptionTokens[this.props.wid], function (d) {
-            console.log('me monte',this.props.wid,d.msg,d.token)
-        }.bind(this))
     },
     componentWillUnmount: function () {
-        console.log('me desmonto',this.subscriptionTokens)
         $.map(this.subscriptionTokens[this.props.wid], function (d) {
-            console.log('me desmonto',this.props.wid,d.msg,d.token)
             PubSub.unsubscribe(d.token)
             }.bind(this));
         delete this.subscriptionTokens[this.props.wid];
     },
     componentDidUpdate: function () {
-        console.log('componentDidUpdate')
         $('.datapoint-tooltip').tooltip()
         $('.variable-popover').popover()
     },
@@ -545,14 +533,9 @@ var SlideDp = React.createClass({
     componentDidMount: function () {
         PubSub.publish('datapointConfigReq',{pid:this.props.pid})
         PubSub.publish('datapointDataReq',{pid:this.props.pid})
-        $.map(this.subscriptionTokens[this.props.wid], function (d) {
-            console.log('me monte',this.props.wid,d.msg,d.token)
-        }.bind(this))
     },
     componentWillUnmount: function () {
-        console.log('me desmonto',this.subscriptionTokens)
         $.map(this.subscriptionTokens[this.props.wid], function (d) {
-            console.log('me desmonto',this.props.wid,d.msg,d.token)
             PubSub.unsubscribe(d.token)
             }.bind(this));
         delete this.subscriptionTokens[this.props.wid];
@@ -573,9 +556,7 @@ var SlideDp = React.createClass({
             if (interval.ets > now) {
                 interval.ets = now
             }
-            console.log('datapointDataReq',interval)
             PubSub.publish('datapointDataReq',{pid:this.props.pid,interval:interval})
-            console.log('refreshdata',interval)
             this.refreshData(interval);
         }
     },
@@ -597,7 +578,6 @@ var SlideDp = React.createClass({
                 this.refreshConfig()
                 break;
             case 'intervalUpdate-'+this.props.wid:
-                console.log('intervalUpdate recibido',this.props.wid,data)
                 this.newIntervalCallback(data.interval)
                 break;
         }
@@ -620,7 +600,6 @@ var SlideDp = React.createClass({
     refreshData: function (interval) {
         newData=getIntervalData(this.props.pid, interval)
         newSummary=this.getDataSummary(newData)
-        console.log('refreshing data',newData,newSummary)
         this.setState({interval: interval, data: newData, summary:newSummary});
     },
     getDataSummary: function(data) {
@@ -677,7 +656,6 @@ var SlideDp = React.createClass({
                         );
         }
         var data=[{pid:this.props.pid,color:this.state.color,datapointname:this.state.datapointname,data:this.state.data}]
-        console.log('en el return del render')
         return (<div>
                   <div className="row">
                     <div className="col-md-6">
@@ -729,9 +707,7 @@ var SlideLg = React.createClass({
         }
     },
     componentWillUnmount: function () {
-        console.log('me desmonto',this.subscriptionTokens)
         $.map(this.subscriptionTokens[this.props.wid], function (d) {
-            console.log('me desmonto',this.props.wid,d.msg,d.token)
             PubSub.unsubscribe(d.token)
             }.bind(this));
         delete this.subscriptionTokens[this.props.wid];
@@ -896,9 +872,7 @@ var SlideHg = React.createClass({
         }
     },
     componentWillUnmount: function () {
-        console.log('me desmonto',this.subscriptionTokens)
         $.map(this.subscriptionTokens[this.props.wid], function (d) {
-            console.log('me desmonto',this.props.wid,d.msg,d.token)
             PubSub.unsubscribe(d.token)
             }.bind(this));
         delete this.subscriptionTokens[this.props.wid];
@@ -1063,9 +1037,7 @@ var SlideTb = React.createClass({
         }
     },
     componentWillUnmount: function () {
-        console.log('me desmonto',this.subscriptionTokens)
         $.map(this.subscriptionTokens[this.props.wid], function (d) {
-            console.log('me desmonto',this.props.wid,d.msg,d.token)
             PubSub.unsubscribe(d.token)
             }.bind(this));
         delete this.subscriptionTokens[this.props.wid];
@@ -1288,14 +1260,12 @@ function monitorVariable (event,position,length,seq,did) {
     var thePopover = $(event.target).parent().parent().parent().parent().parent()
     thePopover.popover('disable').popover('hide')
     thePopover.remove();
-    console.log('monitor var received',position,length,seq,did,theName)
     data={p:position,l:length,seq:seq,did:did,datapointname:theName}
     PubSub.publish('monitorDatapoint',data)
 }
 
 function markPositiveVar(event,pid,position,length,seq) {
     event.preventDefault()
-    console.log('markPositiveVar',pid,position,length,seq)
     var thePopover = $(event.target).parent().parent().parent().parent().parent()
     thePopover.popover('disable').popover('hide')
     thePopover.remove();
