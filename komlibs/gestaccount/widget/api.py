@@ -21,7 +21,6 @@ from komlibs.gestaccount import exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.general import colors
-from komlibs.graph.api import uri as graphuri
 from komlibs.graph.api import kin as graphkin
 
 def get_widget_config(wid):
@@ -158,55 +157,46 @@ def new_widget_datapoint(uid,pid):
 def new_widget_histogram(uid, widgetname):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWH_IU)
-    if not args.is_valid_uri(widgetname):
+    if not args.is_valid_widgetname(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWH_IWN)
     user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GWA_NWH_UNF)
     wid=uuid.uuid4()
-    if not graphuri.new_widget_uri(uid=uid, uri=widgetname, wid=wid):
-        raise exceptions.WidgetCreationException(error=errors.E_GWA_NWH_NWU)
     widget=ormwidget.WidgetHistogram(wid=wid,uid=user.uid,widgetname=widgetname,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type}
     else:
-        graphuri.dissociate_uri(ido=uid, uri=widgetname)
         raise exceptions.WidgetCreationException(error=errors.E_GWA_NWH_IWE)
 
 def new_widget_linegraph(uid, widgetname):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWL_IU)
-    if not args.is_valid_uri(widgetname):
+    if not args.is_valid_widgetname(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWL_IWN)
     user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GWA_NWL_UNF)
     wid=uuid.uuid4()
-    if not graphuri.new_widget_uri(uid=uid, uri=widgetname, wid=wid):
-        raise exceptions.WidgetCreationException(error=errors.E_GWA_NWL_NWU)
     widget=ormwidget.WidgetLinegraph(wid=wid,uid=user.uid,widgetname=widgetname,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type}
     else:
-        graphuri.dissociate_uri(ido=uid, uri=widgetname)
         raise exceptions.WidgetCreationException(error=errors.E_GWA_NWL_IWE)
 
 def new_widget_table(uid, widgetname):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWT_IU)
-    if not args.is_valid_uri(widgetname):
+    if not args.is_valid_widgetname(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWT_IWN)
     user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GWA_NWT_UNF)
     wid=uuid.uuid4()
-    if not graphuri.new_widget_uri(uid=uid, uri=widgetname, wid=wid):
-        raise exceptions.WidgetCreationException(error=errors.E_GWA_NWT_NWU)
     widget=ormwidget.WidgetTable(wid=wid,uid=user.uid,widgetname=widgetname,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type}
     else:
-        graphuri.dissociate_uri(ido=uid, uri=widgetname)
         raise exceptions.WidgetCreationException(error=errors.E_GWA_NWT_IWE)
 
 def add_datapoint_to_widget(wid, pid):
