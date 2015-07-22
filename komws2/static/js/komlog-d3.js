@@ -1,3 +1,4 @@
+jQuery.event.props.push('dataTransfer');
 var d3TimeSlider = {
    brushstart: function () {
       svg.classed("selecting", true);

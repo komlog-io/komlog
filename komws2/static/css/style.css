@@ -35,6 +35,10 @@ body {
  * Sidebar
  */
 
+.toolbar {
+    margin-bottom: 10px;
+}
+
 .sidebar {
   position: fixed;
   top: 51px;

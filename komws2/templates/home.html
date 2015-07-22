@@ -15,10 +15,12 @@
 <script type="text/jsx" src="{{ static_url("js/komlog-shell-store.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-d3.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-main.js")}}"></script>
+<script type="text/jsx" src="{{ static_url("js/komlog-toolbar.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-navgraph.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-event.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-related.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-shell.js")}}"></script>
+
 {% end %}
 
 {% block body %}
@@ -43,12 +45,16 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-md-3 sidebar">
-          <div id="navigation-graph-box">
+          <div class="dropdown toolbar">
+            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+              <i class="glyphicon glyphicon-plus"></i>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+              <li><a class="pop" data-toggle="popover" data-trigger="hover" data-html="true" data-content='<form class="input-group"><input style="width: 150px;" type="text" class="form-control" placeholder="Chart name"><span class="input-group-btn"><button type="submit" onclick="mepinchas(event)" class="btn btn-default" id="newMultivarBtn" >Ok</button></span></form>'><span class="glyphicon glyphicon-equalizer"></span> Multivariate Chart</a></li>
+              <li><a class="pop" data-toggle="popover" data-trigger="hover" data-html="true" data-content='<form class="input-group"><input style="width: 150px;" type="text" class="form-control" placeholder="Dashboard name"><span class="input-group-btn"><button type="submit" class="btn btn-default" id="newDashboardBtn" >OK</button></span></form>'><span class="glyphicon glyphicon-th"></span> Dashboard</a></li>
+           </ul>
           </div>
-          <div class="panel panel-default">
-            <form>
-              <input type="text" class="form-control" placeholder="Search...">
-            </form>
+          <div id="navigation-graph-box">
           </div>
           <div id="related-slides">
           </div>

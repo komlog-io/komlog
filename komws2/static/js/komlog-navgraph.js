@@ -6,7 +6,9 @@ var NavigationGraph = React.createClass({
 
 var ResourceGraph = React.createClass({
     getInitialState: function () {
-        return {selectedUri:'',graphData:{}}
+        return {selectedUri:'',graphData:{},
+                dp: {name:'',style:{},draggable:'false'}
+        }
     },
     subscriptionTokens: [],
     componentWillMount: function () {
@@ -15,6 +17,13 @@ var ResourceGraph = React.createClass({
     focusUri: function (uri) {
         this.state.selectedUri=uri
         PubSub.publish('uriReq',{uri:uri})
+    },
+    onDragStartNavbar: function (event) {
+        console.log('dragstartnavbar')
+        event.stopPropagation()
+        if (this.state.navDraggable=='true') {
+            event.dataTransfer.setData('id',this.state.selectedId)
+        }
     },
     segmentClicked: function (num) {
         uri=this.state.selectedUri.split('.').slice(0,num+1).join('.')
@@ -45,7 +54,9 @@ var ResourceGraph = React.createClass({
     },
     refreshGraph: function () {
         data=getUriGraph(this.state.selectedUri,50)
-        this.setState({graphData:data})
+        console.log(data)
+        draggable=(data.type=='p'? 'true':'false')
+        this.setState({graphData:data,navDraggable:draggable,selectedId:data.id})
     },
     render: function () {
         navbar = $.map(this.state.selectedUri.split('.'), function (d,i) {
@@ -57,7 +68,7 @@ var ResourceGraph = React.createClass({
         return (<div>
                  <div>
                     <span className="glyphicon glyphicon-home" onClick={function (event) {event.preventDefault();this.focusUri('')}.bind(this)}></span>
-                     {navbar}
+                    <span draggable={this.state.navDraggable} onDragStart={this.onDragStartNavbar}>{navbar}</span>
                  </div>
                  <svg/>
                 </div>);

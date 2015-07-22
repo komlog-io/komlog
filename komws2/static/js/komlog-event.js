@@ -32,7 +32,7 @@ var EventsSideBar = React.createClass({
     },
     render: function () {
         eventList = $.map(this.state.events, function (d,i) {
-            return <li className="userevents-inverted" key={d.seq} dangerouslySetInnerHTML={{__html: d.html}} />
+            return <li draggable='true' className="userevents-inverted" key={d.seq} dangerouslySetInnerHTML={{__html: d.html}} />
         }.bind(this));
         return (<ul className="userevents">
                  {eventList}

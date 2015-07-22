@@ -291,6 +291,11 @@ var SlideDs = React.createClass({
         e.preventDefault();
         PubSub.publish('loadSlide',{pid:pid})
     },
+    onDragStartDatapoint: function (pid,e) {
+        console.log('dragstartnavbar')
+        e.stopPropagation()
+        e.dataTransfer.setData('id',pid)
+    },
     subscriptionHandler: function (msg,data) {
         switch (msg) {
             case 'datasourceDataUpdate-'+this.props.did:
@@ -422,7 +427,7 @@ var SlideDs = React.createClass({
                         datapointname=''
                         classname=''
                     }
-                    elements.push({ne:numElement++,type:'datapoint',pid:dsData.datapoints[j].pid,p:position,l:length,style:{color:color},data:text,onclick:this.onClickDatapoint,datapointname:datapointname,classname:classname})
+                    elements.push({ne:numElement++,type:'datapoint',pid:dsData.datapoints[j].pid,p:position,l:length,style:{color:color},data:text,onclick:this.onClickDatapoint,ondragstart:this.onDragStartDatapoint,datapointname:datapointname,classname:classname})
                     datapointFound=true
                     break;
                 }
@@ -483,11 +488,11 @@ var SlideDs = React.createClass({
             }else if (element.type == 'nl') {
                 return (<br key={element.ne} />);
             }else if (element.type == 'datapoint') {
-                return (<span key={element.ne} style={element.style} className={element.classname} data-placement="top" title={element.datapointname} onClick={element.onclick.bind(null,element.pid)}>{element.data}</span>);
+                return (<span key={element.ne} style={element.style} draggable='true' className={element.classname} data-placement="top" title={element.datapointname} onClick={element.onclick.bind(null,element.pid)} onDragStart={element.ondragstart.bind(null,element.pid)}>{element.data}</span>);
             }else if (element.type == 'variable') {
                 return (<span key={element.ne} className={element.classname} data-placement="right" data-html="true" data-content={element.popoverContent} title={element.title}>{element.data}</span>);
             }
-        });
+        }.bind(this));
         if (typeof this.state.timestamp === 'number') {
             info_node=(
                 <div style={this.styles.infostyle}>
@@ -801,7 +806,24 @@ var SlideLg = React.createClass({
         }
         this.setState({interval:interval,data:data})
     },
+    onDrop: function (e) {
+        console.log('onDrop ha llegado',e)
+        console.log('id',e.dataTransfer.getData('id'))
+        id=e.dataTransfer.getData('id')
+        if (id.length==32){
+            data={lid:this.props.wid, 'new_datapoints':[id]}
+            PubSub.publish('modifySlide',data)
+        }
+    },
+    onDragEnter: function (e) {
+        console.log('onDragEnter ha llegado',e)
+        e.preventDefault();
+    },
+    onDragOver: function (e) {
+        e.preventDefault();
+    },
     render: function () {
+        console.log('en el render del lg')
         var summary=$.map(this.state.data, function (element, key) {
                     if (this.state.config.hasOwnProperty(key)) {
                         summary=getDataSummary(element)
@@ -820,8 +842,8 @@ var SlideLg = React.createClass({
                 return {pid:key,color:this.state.config[key].color,datapointname:this.state.config[key].datapointname,data:element}
             }
         }.bind(this));
-        return (<div>
-                  <div className="row">
+        return (<div onDrop={this.onDrop} onDragEnter={this.onDragEnter} onDragOver={this.onDragOver}>
+                  <div className="row" >
                     <div className="col-md-8">
                       <ContentLinegraph interval={this.state.interval} data={data} />
                     </div>
