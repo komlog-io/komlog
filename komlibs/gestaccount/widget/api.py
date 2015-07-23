@@ -157,7 +157,7 @@ def new_widget_datapoint(uid,pid):
 def new_widget_histogram(uid, widgetname):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWH_IU)
-    if not args.is_valid_widgetname(widgetname):
+    if not args.is_valid_uri(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWH_IWN)
     user=cassapiuser.get_user(uid=uid)
     if not user:
@@ -172,7 +172,7 @@ def new_widget_histogram(uid, widgetname):
 def new_widget_linegraph(uid, widgetname):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWL_IU)
-    if not args.is_valid_widgetname(widgetname):
+    if not args.is_valid_uri(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWL_IWN)
     user=cassapiuser.get_user(uid=uid)
     if not user:
@@ -187,7 +187,7 @@ def new_widget_linegraph(uid, widgetname):
 def new_widget_table(uid, widgetname):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWT_IU)
-    if not args.is_valid_widgetname(widgetname):
+    if not args.is_valid_uri(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWT_IWN)
     user=cassapiuser.get_user(uid=uid)
     if not user:
@@ -257,7 +257,7 @@ def delete_datapoint_from_widget(wid, pid):
 def update_widget_config(wid, widgetname=None, colors=None):
     if not args.is_valid_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWC_IW)
-    if widgetname and not args.is_valid_widgetname(widgetname):
+    if widgetname and not args.is_valid_uri(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWC_IWN)
     if colors and not args.is_valid_dict(colors):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWC_IC)
@@ -280,7 +280,7 @@ def update_widget_config(wid, widgetname=None, colors=None):
 def update_widget_datasource(wid, widgetname):
     if not args.is_valid_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWDS_IW)
-    if not args.is_valid_widgetname(widgetname):
+    if not args.is_valid_uri(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWDS_IWN)
     widget=cassapiwidget.get_widget_ds(wid=wid)
     if not widget:
@@ -293,7 +293,7 @@ def update_widget_datasource(wid, widgetname):
 def update_widget_datapoint(wid, widgetname):
     if not args.is_valid_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWDP_IW)
-    if not args.is_valid_widgetname(widgetname):
+    if not args.is_valid_uri(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWDP_IWN)
     widget=cassapiwidget.get_widget_dp(wid=wid)
     if not widget:
@@ -306,7 +306,7 @@ def update_widget_datapoint(wid, widgetname):
 def update_widget_histogram(wid, widgetname=None, colors=None):
     if not args.is_valid_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWH_IW)
-    if widgetname and not args.is_valid_widgetname(widgetname):
+    if widgetname and not args.is_valid_uri(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWH_IWN)
     if colors and not args.is_valid_dict(colors):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWH_ICD)
@@ -333,7 +333,7 @@ def update_widget_histogram(wid, widgetname=None, colors=None):
 def update_widget_linegraph(wid, widgetname=None, colors=None):
     if not args.is_valid_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWL_IW)
-    if widgetname and not args.is_valid_widgetname(widgetname):
+    if widgetname and not args.is_valid_uri(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWL_IWN)
     if colors and not args.is_valid_dict(colors):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWL_ICD)
@@ -360,7 +360,7 @@ def update_widget_linegraph(wid, widgetname=None, colors=None):
 def update_widget_table(wid, widgetname=None, colors=None):
     if not args.is_valid_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWT_IW)
-    if widgetname and not args.is_valid_widgetname(widgetname):
+    if widgetname and not args.is_valid_uri(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWT_IWN)
     if colors and not args.is_valid_dict(colors):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWT_ICD)
