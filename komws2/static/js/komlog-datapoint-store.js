@@ -392,6 +392,7 @@ function processMsgMonitorDatapoint (data) {
             data: JSON.stringify(requestData),
         })
         .done(function (data) {
+            setTimeout(PubSub.publish('datapointConfigReq',{pid:data.pid}),5000)
             setTimeout(PubSub.publish('datasourceConfigReq',{did:requestData.did}),5000)
             setTimeout(PubSub.publish('datasourceDataReq',{did:requestData.did}),5000)
         })

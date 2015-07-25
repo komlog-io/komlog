@@ -9,7 +9,7 @@ EventStore.prototype = {
         if (typeof this.lastRequest === "undefined"){
             return true;
         } else {
-            nextRequest=new Date(this.lastRequest.getTime()+180)
+            nextRequest=new Date(this.lastRequest.getTime()+60)
             if (nextRequest < now ) {
                 return true;
             } else {
