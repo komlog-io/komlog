@@ -14,9 +14,10 @@ class Datapoint:
         self.creation_date=creation_date
 
 class DatapointStats:
-    def __init__(self, pid, dtree=None, decimal_separator=None, last_received=None):
+    def __init__(self, pid, dtree=None, dtree_inv=None, decimal_separator=None, last_received=None):
         self.pid=pid
         self.dtree=dtree
+        self.dtree_inv=dtree_inv
         self.decimal_separator=decimal_separator
         self.last_received=last_received
 

@@ -11,6 +11,8 @@ nohup komlogs/bin/komrc.py &
 echo $! > /tmp/komrc.pid
 nohup komlogs/bin/komev.py &
 echo $! > /tmp/komev.pid
+nohup komlogs/bin/komanom.py &
+echo $! > /tmp/komanom.pid
 nohup komlogs/bin/komweb.py &
 echo $! > /tmp/komweb.pid
 

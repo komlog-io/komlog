@@ -21,6 +21,7 @@ TEXTMINING='Textmining'
 GESTCONSOLE='Gestconsole'
 RESCONTROL='Rescontrol'
 EVENTS='Events'
+ANOMALIES='Anomalies'
 
 
 MESSAGE_TO_ADDRESS_MAPPING={messages.STORE_SAMPLE_MESSAGE:STORING+'.%h',
@@ -29,6 +30,7 @@ MESSAGE_TO_ADDRESS_MAPPING={messages.STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             messages.GDTREE_MESSAGE:TEXTMINING,
                             messages.FILL_DATAPOINT_MESSAGE:TEXTMINING,
                             messages.FILL_DATASOURCE_MESSAGE:TEXTMINING,
+                            messages.GENERATE_TEXT_SUMMARY_MESSAGE:TEXTMINING,
                             messages.NEG_VAR_MESSAGE:GESTCONSOLE,
                             messages.POS_VAR_MESSAGE:GESTCONSOLE,
                             messages.NEW_USR_NOTIF_MESSAGE:GESTCONSOLE,
@@ -45,6 +47,7 @@ MESSAGE_TO_ADDRESS_MAPPING={messages.STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             messages.DELETE_WIDGET_MESSAGE:GESTCONSOLE,
                             messages.DELETE_DASHBOARD_MESSAGE:GESTCONSOLE,
                             messages.USER_EVENT_MESSAGE:EVENTS,
+                            messages.MISSING_DATAPOINT_MESSAGE:ANOMALIES,
                             }
 
 
@@ -55,6 +58,7 @@ MODULE_TO_ADDRESS_MAPPING={VALIDATION:['%m.%h','%i.%m.%h'],
                            GESTCONSOLE:['%m','%i.%m.%h'],
                            RESCONTROL:['%m','%i.%m.%h'],
                            EVENTS:['%m','%i.%m.%h'],
+                           ANOMALIES:['%m','%i.%m.%h'],
                            }
 
 

@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 This file contains the statements to operate with datasource tables
 Statements range (20000-29999)
@@ -25,11 +24,17 @@ STATEMENTS={20000:'select * from mst_datasource where did=?',
             20011:'select * from dat_datasource_map where did=? and date>=? and date<=? order by date desc',
             20012:'select * from dat_datasource where did=? and date>=? and date<=? order by date desc',
             20013:'select date from dat_datasource_map where did=? and date>=? and date<=? order by date desc',
+            20014:'select * from dat_datasource_text_summary where did=? and date=?',
+            20015:'select * from dat_datasource_text_summary where did=? and date>=? and date<=? order by date desc',
+            20016:'select * from dat_datasource_novelty_detector_datapoint where did=? and pid=? order by date desc limit 1',
+            20017:'select * from dat_datasource_novelty_detector_datapoint where did=? and pid=?',
             21000:'insert into mst_datasource (did,aid,uid,datasourcename,state,creation_date) values (?,?,?,?,?,?)',
             21001:'insert into mst_datasource_stats (did,last_received) values (?,?)',
             21002:'insert into mst_datasource_stats (did,last_mapped) values (?,?)',
             21003:'insert into dat_datasource (did,date,content) values (?,?,?)',
             21004:'insert into dat_datasource_map (did,date,content,variables,datapoints) values (?,?,?,?,?)',
+            21005:'insert into dat_datasource_text_summary (did,date,content_length,num_lines, num_words, word_frecuency) values (?,?,?,?,?,?)',
+            21006:'insert into dat_datasource_novelty_detector_datapoint (did,pid,date,nd,features) values (?,?,?,?,?)',
             22000:'delete from mst_datasource where did=?',
             22001:'delete from mst_datasource_stats where did=?',
             22002:'delete from dat_datasource where did=?',
@@ -37,6 +42,11 @@ STATEMENTS={20000:'select * from mst_datasource where did=?',
             22004:'delete from dat_datasource where did=? and date=?',
             22005:'delete from dat_datasource_map where did=? and date=?',
             22006:'delete datapoints[?] from dat_datasource_map where did=? and date=?',
+            22007:'delete from dat_datasource_text_summary where did=?',
+            22008:'delete from dat_datasource_text_summary where did=? and date=?',
+            22009:'delete from dat_datasource_novelty_detector_datapoint where did=?',
+            22010:'delete from dat_datasource_novelty_detector_datapoint where did=? and pid=?',
+            22011:'delete from dat_datasource_novelty_detector_datapoint where did=? and pid=? and date=?',
             23000:'update dat_datasource_map set variables[?]=? where did=? and date=?',
             23001:'update dat_datasource_map set datapoints[?]=? where did=? and date=?'
            }
@@ -57,6 +67,10 @@ S_A_DATDATASOURCEMAP_B_DID_DATE=20010
 S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20011
 S_A_DATDATASOURCE_B_DID_INITDATE_ENDDATE=20012
 S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20013
+S_A_DATDATASOURCETEXTSUMMARY_B_DID_DATE=20014
+S_A_DATDATASOURCETEXTSUMMARY_B_DID_INITDATE_ENDDATE=20015
+S_LAST_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID=20016
+S_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID=20017
 
 # Inserts
 
@@ -65,6 +79,8 @@ I_LASTRECEIVED_MSTDATASOURCESTATS_B_DID=21001
 I_LASTMAPPED_MSTDATASOURCESTATS_B_DID=21002
 I_A_DATDATASOURCE_B_DID_DATE=21003
 I_A_DATDATASOURCEMAP_B_DID_DATE=21004
+I_A_DATDATASOURCETEXTSUMMARY=21005
+I_A_DATDATASOURCENOVELTYDETECTORDATAPOINT=21006
 
 # Deletes
 
@@ -75,6 +91,11 @@ D_A_DATDATASOURCEMAP_B_DID=22003
 D_A_DATDATASOURCE_B_DID_DATE=22004
 D_A_DATDATASOURCEMAP_B_DID_DATE=22005
 D_DATAPOINT_DATDATASOURCEMAP_B_PID_DID_DATE=22006
+D_A_DATDATASOURCETEXTSUMMARY_B_DID=22007
+D_A_DATDATASOURCETEXTSUMMARY_B_DID_DATE=22008
+D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID=22009
+D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID=22010
+D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID_DATE=22011
 
 # Updates
 

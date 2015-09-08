@@ -41,3 +41,11 @@ class InterfaceImcApiTextminingTest(unittest.TestCase):
         response=textmining.process_message_FILLDS(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
 
+    def test_process_message_GENTEXTSUMMARY_failure_non_existent_pid(self):
+        ''' process_message_GENTEXTSUMMARY should fail if did does not exist '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        message=messages.GenerateTextSummaryMessage(did=did,date=date)
+        response=textmining.process_message_GENTEXTSUMMARY(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+

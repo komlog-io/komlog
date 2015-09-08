@@ -1,12 +1,16 @@
 import unittest
 import uuid
+from komcass.api import datasource as cassapidatasource
+from komcass.api import datapoint as cassapidatapoint
+from komlibs.textman.api import variables as textmanvar
+from komlibs.ai.decisiontree import api as dtreeapi
 from komlibs.general.time import timeuuid
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datasource import api as datasourceapi
 from komlibs.gestaccount.widget import api as widgetapi
 from komlibs.gestaccount.datapoint import api
-from komlibs.gestaccount import exceptions
+from komlibs.gestaccount import exceptions, errors
 from komfig import logger
 
 class GestaccountDatapointApiTest(unittest.TestCase):
@@ -300,6 +304,14 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(dsdatapoints[0]['pid'],datapoint2['pid'])
         self.assertEqual(dsdatapoints[0]['position'],position)
 
+    def test_generate_decision_tree_failure_invalid_pid(self):
+        ''' generate_tree should fail if pid does not exists '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.generate_decision_tree(pid=pid)
+            self.assertEqual(cm.exception.error, errors.E_GPA_GDT_IP)
+
     def test_generate_decision_tree_failure_non_existent_datapoint(self):
         ''' generate_decision_tree should fail if pid does not exists '''
         pid=uuid.uuid4()
@@ -334,6 +346,69 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         length=2
         self.assertEqual(api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length), [pid,])
         self.assertTrue(api.generate_decision_tree(pid=pid))
+        datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
+        dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
+        dsmaps=cassapidatasource.get_datasource_maps(did=did,fromdate=date,todate=date)
+        self.assertEqual(len(dsmaps),1)
+        for dsmap in dsmaps:
+            variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
+            for var in variable_list:
+                self.assertFalse(dtree.evaluate_row(var.hash_sequence)) if var.position!=position else self.assertTrue(dtree.evaluate_row(var.hash_sequence))
+
+    def test_generate_inverse_decision_tree_failure_invalid_pid(self):
+        ''' generate_decision_tree should fail if pid does not exists '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.generate_inverse_decision_tree(pid=pid)
+            self.assertEqual(cm.exception.error, errors.E_GPA_GIDT_IP)
+
+    def test_generate_inverse_decision_tree_failure_non_existent_datapoint(self):
+        ''' generate_decision_tree should fail if pid does not exists '''
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            api.generate_inverse_decision_tree(pid=pid)
+        self.assertEqual(cm.exception.error, errors.E_GPA_GIDT_DNF)
+
+    def test_generate_inverse_decision_tree_failure_no_training_set_found(self):
+        ''' generate_inverse_decision_tree should fail if pid does not have a training set of positive and/or negative samples '''
+        datasourcename='test_generate_inverse_decision_tree_failure_no_training_set_found_datasource'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        datapointname='test_generate_inverse_decision_tree_failure_no_training_set_found_datapoint'
+        color='#FFDDAA'
+        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        pid=datapoint['pid']
+        with self.assertRaises(exceptions.DatapointDTreeTrainingSetEmptyException) as cm:
+            api.generate_inverse_decision_tree(pid=pid)
+        self.assertEqual(cm.exception.error, errors.E_GPA_GIDT_ETS)
+
+    def test_generate_inverse_decision_tree_success(self):
+        ''' generate_decision_tree should succeed if pid exists and has training set '''
+        datasourcename='test_generate_inverse_decision_tree_success_datasource'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        datapointname='test_generate_inverse_decision_tree_success_datapoint'
+        color='#FFDDAA'
+        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        pid=datapoint['pid']
+        date=timeuuid.uuid1()
+        content='generate_decision_tree content with ññ€#@hrññ and 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 50 and length 2
+        position=50
+        length=2
+        self.assertEqual(api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length), [pid,])
+        self.assertTrue(api.generate_inverse_decision_tree(pid=pid))
+        datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
+        dtree_inv=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree_inv)
+        dsmaps=cassapidatasource.get_datasource_maps(did=did,fromdate=date,todate=date)
+        self.assertEqual(len(dsmaps),1)
+        for dsmap in dsmaps:
+            variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
+            for var in variable_list:
+                self.assertFalse(dtree_inv.evaluate_row(var.hash_sequence)) if var.position==position else self.assertTrue(dtree_inv.evaluate_row(var.hash_sequence))
 
     def test_monitor_new_datapoint_failure_other_datapoint_matched_variable(self):
         ''' monitor_new_datapoint should fail if there is other datapoint that matches the selected variable '''
@@ -554,4 +629,154 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertRaises(exceptions.DatapointNotFoundException, api.get_datapoint_config, pid=datapoint['pid'])
         self.assertRaises(exceptions.DatapointDataNotFoundException, api.get_datapoint_data, pid=datapoint['pid'], fromdate=date, todate=date)
         self.assertRaises(exceptions.WidgetNotFoundException, widgetapi.get_widget_config, wid=widget['wid'])
+
+    def test_should_datapoint_match_any_sample_variable_failure_invalid_pid(self):
+        ''' should datapoint_match_any_sample_variable should fail if pid is invalid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        date=timeuuid.uuid1()
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.should_datapoint_match_any_sample_variable(pid=pid, date=date)
+            self.assertEqual(cm.exception.error, errors.E_GPA_SDMSV_IP)
+
+    def test_should_datapoint_match_any_sample_variable_failure_invalid_date(self):
+        ''' should datapoint_match_any_sample_variable should fail if date is invalid '''
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        pid=uuid.uuid4()
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.should_datapoint_match_any_sample_variable(pid=pid, date=date)
+            self.assertEqual(cm.exception.error, errors.E_GPA_SDMSV_IDT)
+
+    def test_should_datapoint_match_any_sample_variable_failure_non_existent_pid(self):
+        ''' should datapoint_match_any_sample_variable should fail if pid does not exist '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            api.should_datapoint_match_any_sample_variable(pid=pid, date=date)
+        self.assertEqual(cm.exception.error, errors.E_GPA_SDMSV_DNF)
+
+    def test_should_datapoint_match_any_sample_variable_failure_no_datapoint_data(self):
+        ''' should_datapoint_match_any_sample_variable should fail if datapoint has no data '''
+        did=self.datasource['did']
+        datapointname='test_should_datapoint_match_any_sample_variable_failure_no_datapoint_data_datapoint'
+        color='#FFDDAA'
+        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        date=timeuuid.uuid1()
+        self.assertIsInstance(datapoint, dict)
+        self.assertEqual(datapoint['did'],did)
+        self.assertEqual(datapoint['datapointname'],datapointname)
+        with self.assertRaises(exceptions.DatapointDTreeTrainingSetEmptyException) as cm:
+            api.should_datapoint_match_any_sample_variable(pid=datapoint['pid'], date=date)
+        self.assertEqual(cm.exception.error, errors.E_GPA_GDT_ETS)
+
+    def test_should_datapoint_match_any_sample_variable_failure_datasource_map_not_found(self):
+        ''' should_datapoint_match_any_sample_variable should fail if datasource map does not exist '''
+        datasourcename='test_should_datapoint_match_any_sample_variable_failure_datasource_map_not_found_datasource'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 8 and length 2
+        position=8
+        length=2
+        datapointname='test_should_datapoint_match_any_sample_variable_failure_datasource_map_not_found_datapoint'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(api.store_datasource_values(did=did, date=date))
+        data=api.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        new_date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatasourceMapNotFoundException) as cm:
+            api.should_datapoint_match_any_sample_variable(pid=datapoint['pid'], date=new_date)
+        self.assertEqual(cm.exception.error, errors.E_GPA_SDMSV_DSMNF)
+
+    def test_should_datapoint_match_any_sample_variable_success_already_detected_pid(self):
+        ''' should_datapoint_match_any_sample_variable should succeed if pid already was detected in sample '''
+        datasourcename='test_should_datapoint_match_any_sample_variable_success_already_detected_pid_datasource'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 8 and length 2
+        position=8
+        length=2
+        datapointname='test_should_datapoint_match_any_sample_variable_success_already_detected_pid_datapoint'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(api.store_datasource_values(did=did, date=date))
+        data=api.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        self.assertTrue(api.should_datapoint_match_any_sample_variable(pid=datapoint['pid'], date=date))
+
+    def test_should_datapoint_match_any_sample_variable_success_pid_is_on_sample(self):
+        ''' should_datapoint_match_any_sample_variable should succeed if pid is on sample '''
+        datasourcename='test_should_datapoint_match_any_sample_variable_success_pid_is_on_sample_datasource'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 8 and length 2
+        position=8
+        length=2
+        datapointname='test_should_datapoint_match_any_sample_variable_success_pid_is_on_sample_datapoint'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(api.store_datasource_values(did=did, date=date))
+        data=api.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        new_date=timeuuid.uuid1()
+        content='content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=new_date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=new_date))
+        self.assertTrue(api.should_datapoint_match_any_sample_variable(pid=datapoint['pid'], date=new_date))
+
+    def test_should_datapoint_match_any_sample_variable_success_pid_maybe_is_on_sample(self):
+        ''' should_datapoint_match_any_sample_variable should succeed if pid maybe is on sample '''
+        datasourcename='test_should_datapoint_match_any_sample_variable_success_pid_maybe_is_on_sample_datasource'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 8 and length 2
+        position=8
+        length=2
+        datapointname='test_should_datapoint_match_any_sample_variable_success_pid_maybe_is_on_sample_datapoint'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(api.store_datasource_values(did=did, date=date))
+        data=api.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        new_date=timeuuid.uuid1()
+        content='content not related *23*, with the previous sample 231-(23).'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=new_date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=new_date))
+        self.assertTrue(api.should_datapoint_match_any_sample_variable(pid=datapoint['pid'], date=new_date))
+
+    def test_should_datapoint_match_any_sample_variable_success_pid_is_not_on_sample(self):
+        ''' should_datapoint_match_any_sample_variable should succeed if pid is not on sample '''
+        datasourcename='test_should_datapoint_match_any_sample_variable_success_pid_is_not_on_sample_datasource'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='content a: 23, b: 32, c: 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 8 and length 2
+        position=11
+        length=2
+        datapointname='test_should_datapoint_match_any_sample_variable_success_pid_is_not_on_sample_datapoint'
+        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(api.store_datasource_values(did=did, date=date))
+        data=api.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        new_date=timeuuid.uuid1()
+        content='content b: 32, c: 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=new_date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=new_date))
+        self.assertFalse(api.should_datapoint_match_any_sample_variable(pid=datapoint['pid'], date=new_date))
 

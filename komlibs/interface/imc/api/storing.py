@@ -78,8 +78,8 @@ def process_message_STOSMP(message):
                 os.rename(filename,fo)
             except Exception as e:
                 logger.logger.debug('Error moving processed file to stored path: '+str(e))
-            newmsg=messages.MapVarsMessage(did=did,date=date)
-            response.add_msg_originated(newmsg)
+            response.add_msg_originated(messages.GenerateTextSummaryMessage(did=did,date=date))
+            response.add_msg_originated(messages.MapVarsMessage(did=did,date=date))
             response.status=status.IMC_STATUS_OK
         else:
             logger.logger.debug('Error storing sample. did: '+did.hex+' date:'+ds_date.hex)

@@ -3,7 +3,9 @@ from komfig import logger
 
 
 MODULES = [
-    'komlibs.textman.test.test_api.TextmanApiTest',
+    'komlibs.textman.api.test.test_variables.TextmanApiVariablesTest',
+    'komlibs.textman.api.test.test_summary.TextmanApiSummaryTest',
+    'komlibs.textman.model.test.test_patterns.TextmanModelPatternsTest',
     'komlibs.events.api.test.test_user.EventsApiUserTest',
     'komlibs.general.validation.test.test_arguments.GeneralValidationArgumentsTest',
     'komlibs.graph.api.test.test_base.GraphApiBaseTest',
@@ -58,6 +60,7 @@ MODULES = [
     'komlibs.interface.imc.api.test.test_storing.InterfaceImcApiStoringTest',
     'komlibs.interface.imc.api.test.test_textmining.InterfaceImcApiTextminingTest',
     'komlibs.interface.imc.api.test.test_events.InterfaceImcApiEventsTest',
+    'komlibs.interface.imc.api.test.test_anomalies.InterfaceImcApiAnomaliesTest',
     ]
 
 def run_tests():

@@ -185,3 +185,66 @@ def delete_datasource_maps(did):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMAP_B_DID,(did,))
     return True
 
+def get_datasource_text_summary(did, date):
+    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCETEXTSUMMARY_B_DID_DATE,(did,date))
+    if row:
+        return ormdatasource.DatasourceTextSummary(**row[0])
+    else:
+        return None
+
+def get_datasource_text_summaries(did, fromdate, todate):
+    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCETEXTSUMMARY_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
+    data=[]
+    if row:
+        for m in row:
+            data.append(ormdatasource.DatasourceTextSummary(**m))
+    return data
+
+def insert_datasource_text_summary(dstextsummaryobj):
+    if not isinstance(dstextsummaryobj, ormdatasource.DatasourceTextSummary):
+        return False
+    else:
+        connection.session.execute(stmtdatasource.I_A_DATDATASOURCETEXTSUMMARY,(dstextsummaryobj.did,dstextsummaryobj.date,dstextsummaryobj.content_length,dstextsummaryobj.num_lines,dstextsummaryobj.num_words, dstextsummaryobj.word_frecuency))
+        return True
+
+def delete_datasource_text_summary(did, date):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCETEXTSUMMARY_B_DID_DATE,(did,date))
+    return True
+
+def delete_datasource_text_summaries(did):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCETEXTSUMMARY_B_DID,(did,))
+    return True
+
+def get_datasource_novelty_detectors_for_datapoint(did,pid):
+    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID,(did,pid))
+    data=[]
+    if row:
+        for d in row:
+            data.append(ormdatasource.DatasourceNoveltyDetector(**d))
+    return data
+
+def get_last_datasource_novelty_detector_for_datapoint(did,pid):
+    row=connection.session.execute(stmtdatasource.S_LAST_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID,(did,pid))
+    if row:
+        return ormdatasource.DatasourceNoveltyDetector(**row[0])
+    else:
+        return None
+
+def insert_datasource_novelty_detector_for_datapoint(obj):
+    if not isinstance(obj, ormdatasource.DatasourceNoveltyDetector):
+        return False
+    connection.session.execute(stmtdatasource.I_A_DATDATASOURCENOVELTYDETECTORDATAPOINT,(obj.did,obj.pid,obj.date,obj.nd,obj.features))
+    return True
+
+def delete_datasource_novelty_detector_for_datapoint(did, pid=None, date=None):
+    if did and pid and date:
+        connection.session.execute(stmtdatasource.D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID_DATE,(did,pid,date))
+        return True
+    elif did and pid:
+        connection.session.execute(stmtdatasource.D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID,(did,pid))
+        return True
+    elif did:
+        connection.session.execute(stmtdatasource.D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID,(did,))
+        return True
+    return False
+

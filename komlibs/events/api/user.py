@@ -5,6 +5,7 @@ Methods for manipulating User Events
 '''
 
 from komfig import logger
+import uuid, json
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.events import errors, exceptions
@@ -54,6 +55,94 @@ def delete_events(uid):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_EAU_DEV_IU)
     return cassapievents.delete_user_events(uid=uid)
+
+def new_event(uid, event_type, parameters):
+    if not event_type or not args.is_valid_int(event_type):
+        raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_IEVT)
+    if event_type==types.NEW_USER:
+        if not 'username' in parameters or not args.is_valid_username(parameters['username']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NUIU)
+        username=parameters['username']
+        return insert_new_user_event(uid=uid, username=username)
+    elif event_type==types.NEW_AGENT:
+        if not 'aid' in parameters or not args.is_valid_hex_uuid(parameters['aid']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NAID)
+        if not 'agentname' in parameters or not args.is_valid_agentname(parameters['agentname']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NAIA)
+        aid=uuid.UUID(parameters['aid'])
+        agentname=parameters['agentname']
+        return insert_new_agent_event(uid=uid, aid=aid, agentname=agentname)
+    elif event_type==types.NEW_DATASOURCE:
+        if not 'aid' in parameters or not args.is_valid_hex_uuid(parameters['aid']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NDIA)
+        if not 'did' in parameters or not args.is_valid_hex_uuid(parameters['did']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NDID)
+        if not 'datasourcename' in parameters or not args.is_valid_datasourcename(parameters['datasourcename']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NDIN)
+        aid=uuid.UUID(parameters['aid'])
+        did=uuid.UUID(parameters['did'])
+        datasourcename=parameters['datasourcename']
+        return insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename)
+    elif event_type==types.NEW_DATAPOINT:
+        if not 'did' in parameters or not args.is_valid_hex_uuid(parameters['did']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NPID)
+        if not 'pid' in parameters or not args.is_valid_hex_uuid(parameters['pid']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NPIP)
+        if not 'datasourcename' in parameters or not args.is_valid_datasourcename(parameters['datasourcename']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NPIN)
+        if not 'datapointname' in parameters or not args.is_valid_datapointname(parameters['datapointname']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NPIM)
+        did=uuid.UUID(parameters['did'])
+        pid=uuid.UUID(parameters['pid'])
+        datasourcename=parameters['datasourcename']
+        datapointname=parameters['datapointname']
+        return insert_new_datapoint_event(uid=uid, did=did, pid=pid, datasourcename=datasourcename, datapointname=datapointname)
+    elif event_type==types.NEW_WIDGET:
+        if not 'wid' in parameters or not args.is_valid_hex_uuid(parameters['wid']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NWIW)
+        if not 'widgetname' in parameters or not args.is_valid_widgetname(parameters['widgetname']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NWIN)
+        wid=uuid.UUID(parameters['wid'])
+        widgetname=parameters['widgetname']
+        return insert_new_widget_event(uid=uid, wid=wid, widgetname=widgetname)
+    elif event_type==types.NEW_DASHBOARD:
+        if not 'bid' in parameters or not args.is_valid_hex_uuid(parameters['bid']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NBIB)
+        if not 'dashboardname' in parameters or not args.is_valid_dashboardname(parameters['dashboardname']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NBIN)
+        bid=uuid.UUID(parameters['bid'])
+        dashboardname=parameters['dashboardname']
+        return insert_new_dashboard_event(uid=uid, bid=bid, dashboardname=dashboardname)
+    elif event_type==types.NEW_CIRCLE:
+        if not 'cid' in parameters or not args.is_valid_hex_uuid(parameters['cid']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NCIC)
+        if not 'circlename' in parameters or not args.is_valid_circlename(parameters['circlename']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_NCIN)
+        cid=uuid.UUID(parameters['cid'])
+        circlename=parameters['circlename']
+        return insert_new_circle_event(uid=uid, cid=cid, circlename=circlename)
+    elif event_type==types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION:
+        if not 'did' in parameters or not args.is_valid_hex_uuid(parameters['did']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_UIDIID)
+        if not 'date' in parameters or not args.is_valid_hex_date(parameters['date']):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_UIDIIDT)
+        if not 'doubts' in parameters or not isinstance(parameters['doubts'],list):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_UIDIIDO)
+        if not 'discarded' in parameters or not isinstance(parameters['discarded'],list):
+            raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_UIDIIDI)
+        for pid in parameters['doubts']:
+            if not args.is_valid_hex_uuid(pid):
+                raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_UIDIIDOP)
+        for pid in parameters['discarded']:
+            if not args.is_valid_hex_uuid(pid):
+                raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_UIDIIDIP)
+        did=uuid.UUID(parameters['did'])
+        date=uuid.UUID(parameters['date'])
+        doubts=[uuid.UUID(pid) for pid in parameters['doubts']]
+        discarded=[uuid.UUID(pid) for pid in parameters['discarded']]
+        return insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+    else:
+        raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_EVTNF)
 
 def insert_new_user_event(uid, username):
     if not args.is_valid_uuid(uid):
@@ -141,5 +230,29 @@ def insert_new_circle_event(uid, cid, circlename):
     now=timeuuid.uuid1()
     parameters={'cid':cid.hex, 'circlename':circlename}
     event=ormevents.UserEvent(uid=uid, date=now, type=types.NEW_CIRCLE, active=True, priority=priorities.NEW_CIRCLE, parameters=parameters)
+    return cassapievents.insert_user_event(event)
+
+def insert_event_user_intervention_datapoint_identification(uid, did, date, doubts, discarded):
+    if not args.is_valid_uuid(uid):
+        raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IUID)
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IDID)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IDT)
+    if not isinstance(doubts,list):
+        raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IDOU)
+    if not isinstance(discarded,list):
+        raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IDIS)
+    for pid in doubts:
+        if not args.is_valid_uuid(pid):
+            raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IDOUP)
+    for pid in discarded:
+        if not args.is_valid_uuid(pid):
+            raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IDISP)
+    now=timeuuid.uuid1()
+    hex_doubts=json.dumps([pid.hex for pid in doubts])
+    hex_discarded=json.dumps([pid.hex for pid in discarded])
+    parameters={'did':did.hex, 'date':date.hex, 'doubts':hex_doubts, 'discarded':hex_discarded}
+    event=ormevents.UserEvent(uid=uid, date=now, type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION, active=True, priority=priorities.USER_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters=parameters)
     return cassapievents.insert_user_event(event)
 

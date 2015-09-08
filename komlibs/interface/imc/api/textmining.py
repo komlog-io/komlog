@@ -54,13 +54,29 @@ def process_message_FILLDP(message):
 
 @exceptions.ExceptionHandler
 def process_message_FILLDS(message):
-    #este mensaje hay que dividirlo en 2: uno para guardar el contenido de todas las variables de un datasource y otro para guardar el contenido de un datapoint de multiples datasources
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
     did=message.did
     date=message.date
     if not args.is_valid_uuid(did) or not args.is_valid_date(date):
         raise exceptions.BadParametersException()
-    if datapointapi.store_datasource_values(did=did, date=date):
+    store_info=datapointapi.store_datasource_values(did=did, date=date)
+    if store_info:
+        response.status=status.IMC_STATUS_OK
+        if 'dp_not_found' in store_info and len(store_info['dp_not_found'])>0:
+            response.add_msg_originated(messages.MissingDatapointMessage(did=did,date=date))
+    else:
+        response.status=status.IMC_STATUS_INTERNAL_ERROR
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_GENTEXTSUMMARY(message):
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    did=message.did
+    date=message.date
+    if not args.is_valid_uuid(did) or not args.is_valid_date(date):
+        raise exceptions.BadParametersException()
+    if datasourceapi.generate_datasource_text_summary(did=did, date=date):
+        logger.logger.debug('GENTEXTSUMMARY Success'+str(message.__dict__))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_INTERNAL_ERROR

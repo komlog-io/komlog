@@ -38,6 +38,8 @@ DELETE_DATAPOINT_MESSAGE='DELDP'
 DELETE_WIDGET_MESSAGE='DELWIDGET'
 DELETE_DASHBOARD_MESSAGE='DELDASHB'
 USER_EVENT_MESSAGE='USEREV'
+GENERATE_TEXT_SUMMARY_MESSAGE='GENTEXTSUMMARY'
+MISSING_DATAPOINT_MESSAGE='MISSINGDP'
 
 
 #MESSAGE MAPPINGS
@@ -63,6 +65,8 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           DELETE_WIDGET_MESSAGE:'DeleteWidgetMessage',
                           DELETE_DASHBOARD_MESSAGE:'DeleteDashboardMessage',
                           USER_EVENT_MESSAGE:'UserEventMessage',
+                          GENERATE_TEXT_SUMMARY_MESSAGE:'GenerateTextSummaryMessage',
+                          MISSING_DATAPOINT_MESSAGE:'MissingDatapointMessage',
                           }
 
 
@@ -490,4 +494,36 @@ class UserEventMessage:
             self.event_type=event_type
             self.parameters=parameters
             self.serialized_message='|'.join((self.type,self.uid.hex,str(self.event_type),json.dumps(self.parameters)))
+
+class GenerateTextSummaryMessage:
+    def __init__(self, serialized_message=None, did=None,date=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,did,date=self.serialized_message.split('|')
+            self.type=mtype
+            self.did=uuid.UUID(did)
+            self.date=uuid.UUID(date)
+        else:
+            if not args.is_valid_uuid(did) or not args.is_valid_date(date):
+                raise exceptions.BadParametersException()
+            self.type=GENERATE_TEXT_SUMMARY_MESSAGE
+            self.did=did
+            self.date=date
+            self.serialized_message='|'.join((self.type,self.did.hex,self.date.hex))
+
+class MissingDatapointMessage:
+    def __init__(self, serialized_message=None, did=None,date=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,did,date=self.serialized_message.split('|')
+            self.type=mtype
+            self.did=uuid.UUID(did)
+            self.date=uuid.UUID(date)
+        else:
+            if not args.is_valid_uuid(did) or not args.is_valid_date(date):
+                raise exceptions.BadParametersException()
+            self.type=MISSING_DATAPOINT_MESSAGE
+            self.did=did
+            self.date=date
+            self.serialized_message='|'.join((self.type,self.did.hex,self.date.hex))
 

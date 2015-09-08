@@ -1,8 +1,48 @@
 from komfig import logger
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.auth import exceptions as authexcept
+from komlibs.events import exceptions as eventexcept
 from komlibs.interface.imc import status
 from komlibs.interface.imc.model import responses
+
+class BadParametersException(Exception):
+    def __init__(self, error=None):
+        self.error=error
+
+    def __str__(self):
+        return str(self.__class__)
+
+
+BAD_PARAMETERS_STATUS_EXCEPTION_LIST=(
+    BadParametersException,
+    gestexcept.BadParametersException,
+    eventexcept.BadParametersException,
+)
+
+ACCESS_DENIED_STATUS_EXCEPTION_LIST=(
+    authexcept.AuthException,
+    gestexcept.UserAlreadyExistsException,
+    gestexcept.AgentAlreadyExistsException,
+    gestexcept.InvalidPasswordException,
+)
+
+NOT_FOUND_STATUS_EXCEPTION_LIST=(
+    gestexcept.UserNotFoundException,
+    gestexcept.AgentNotFoundException,
+    gestexcept.WidgetNotFoundException,
+    gestexcept.DashboardNotFoundException,
+    gestexcept.DatasourceNotFoundException,
+    gestexcept.DatasourceDataNotFoundException,
+    gestexcept.DatasourceMapNotFoundException,
+    gestexcept.DatapointDataNotFoundException,
+    gestexcept.DatapointNotFoundException,
+)
+
+INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
+    gestexcept.AgentCreationException,
+    gestexcept.UserConfirmationException,
+    gestexcept.DatasourceUploadContentException,
+)
 
 class ExceptionHandler(object):
     def __init__(self, f):
@@ -12,51 +52,15 @@ class ExceptionHandler(object):
         try:
             response=self.f(**kwargs)
             return response
-        except BadParametersException as e:
+        except BAD_PARAMETERS_STATUS_EXCEPTION_LIST as e:
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_BAD_PARAMETERS,error=e.error)
-        except authexcept.AuthException as e:
+        except ACCESS_DENIED_STATUS_EXCEPTION_LIST as e:
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_ACCESS_DENIED,error=e.error)
-        except gestexcept.BadParametersException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_BAD_PARAMETERS,error=e.error)
-        except gestexcept.UserNotFoundException as e:
+        except NOT_FOUND_STATUS_EXCEPTION_LIST as e:
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
-        except gestexcept.AgentNotFoundException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
-        except gestexcept.WidgetNotFoundException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
-        except gestexcept.DashboardNotFoundException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
-        except gestexcept.AgentCreationException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR,error=e.error)
-        except gestexcept.UserConfirmationException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR,error=e.error)
-        except gestexcept.DatasourceNotFoundException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
-        except gestexcept.DatasourceDataNotFoundException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
-        except gestexcept.DatasourceMapNotFoundException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
-        except gestexcept.DatapointDataNotFoundException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
-        except gestexcept.DatapointNotFoundException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
-        except gestexcept.UserAlreadyExistsException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_ACCESS_DENIED,error=e.error)
-        except gestexcept.AgentAlreadyExistsException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_ACCESS_DENIED,error=e.error)
-        except gestexcept.InvalidPasswordException as e:
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_ACCESS_DENIED,error=e.error)
-        except gestexcept.DatasourceUploadContentException as e:
+        except INTERNAL_ERROR_STATUS_EXCEPTION_LIST as e:
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR,error=e.error)
         except Exception as e:
             logger.logger.debug('IMC Response Exception: '+str(e))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR)
-
-
-class BadParametersException(Exception):
-    def __init__(self, error=None):
-        self.error=error
-
-    def __str__(self):
-        return str(self.__class__)
 

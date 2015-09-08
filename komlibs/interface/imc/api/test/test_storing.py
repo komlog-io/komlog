@@ -22,9 +22,13 @@ class InterfaceImcApiStoringTest(unittest.TestCase):
         message=messages.StoreSampleMessage(sample_file=filename)
         response=storing.process_message_STOSMP(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
-        self.assertEqual(len(response.get_msg_originated()),1)
-        self.assertEqual(response.get_msg_originated()[0].type,messages.MAP_VARS_MESSAGE)
+        self.assertEqual(len(response.get_msg_originated()),2)
+        message_types=[messages.MAP_VARS_MESSAGE,messages.GENERATE_TEXT_SUMMARY_MESSAGE]
+        self.assertTrue(response.get_msg_originated()[0].type in message_types)
         self.assertEqual(response.get_msg_originated()[0].did,did)
+        message_types.remove(response.get_msg_originated()[0].type)
+        self.assertTrue(response.get_msg_originated()[1].type in message_types)
+        self.assertEqual(response.get_msg_originated()[1].did,did)
         os.remove(filename[:-5]+'.sspl')
 
     def test_process_message_STOSMP_failure_invalid_filename(self):

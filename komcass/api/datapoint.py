@@ -141,6 +141,10 @@ def set_datapoint_dtree(pid, dtree):
     connection.session.execute(stmtdatapoint.U_DTREE_MSTDATAPOINTSTATS,(dtree,pid))
     return True
 
+def set_datapoint_dtree_inv(pid, dtree):
+    connection.session.execute(stmtdatapoint.U_DTREEINV_MSTDATAPOINTSTATS,(dtree,pid))
+    return True
+
 def set_datapoint_decimal_separator(pid, decimal_separator):
     if not decimal_separator in (',','.'):
         return None

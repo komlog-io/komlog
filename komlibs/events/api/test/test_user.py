@@ -129,6 +129,527 @@ class EventsApiUserTest(unittest.TestCase):
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),0)
 
+    def test_new_event_failure_invalid_event_type(self):
+        ''' new_event should fail if type is invalid  '''
+        event_types=[None, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        parameters={}
+        for event_type in event_types:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_IEVT)
+
+    def test_new_event_failure_non_existent_event_type(self):
+        ''' new_event should fail if type is invalid  '''
+        event_type=234234
+        uid=uuid.uuid4()
+        parameters={}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_EVTNF)
+
+    def test_new_event_new_user_failure_non_username_parameter_passed(self):
+        ''' new_event should fail if type is NEW_USER and no username parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_USER
+        parameters={}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NUIU)
+
+    def test_new_event_new_user_failure_invalid_username_passed(self):
+        ''' new_event should fail if type is NEW_USER and username parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_USER
+        usernames=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for username in usernames:
+            parameters={'username':username}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NUIU)
+
+    def test_new_event_new_user_success(self):
+        ''' new_event should succeed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_USER
+        username='a_valid_username'
+        parameters={'username':username}
+        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+
+    def test_new_event_new_agent_failure_non_aid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_AGENT and no aid parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_AGENT
+        parameters={}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NAID)
+
+    def test_new_event_new_agent_failure_invalid_aid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_AGENT and aid parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_AGENT
+        aids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for aid in aids:
+            parameters={'aid':aid}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NAID)
+
+    def test_new_event_new_agent_failure_non_agentname_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_AGENT and no agentname parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_AGENT
+        parameters={'aid':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NAIA)
+
+    def test_new_event_new_agent_failure_invalid_agentname_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_AGENT and aid parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_AGENT
+        agentnames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for agentname in agentnames:
+            parameters={'aid':uuid.uuid4().hex, 'agentname':agentname}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NAIA)
+
+    def test_new_event_new_agent_success(self):
+        ''' new_event should succeed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_AGENT
+        agentname='test_new_event_new_agent_success'
+        parameters={'aid':uuid.uuid4().hex, 'agentname':agentname}
+        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+
+    def test_new_event_new_datasource_failure_non_aid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATASOURCE and no aid parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATASOURCE
+        parameters={}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDIA)
+
+    def test_new_event_new_datasource_failure_invalid_aid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATASOURCE and aid parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATASOURCE
+        aids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for aid in aids:
+            parameters={'aid':aid}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDIA)
+
+    def test_new_event_new_datasource_failure_non_did_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATASOURCE and no aid parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATASOURCE
+        parameters={'aid':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDID)
+
+    def test_new_event_new_datasource_failure_invalid_did_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATASOURCE and aid parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATASOURCE
+        dids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for did in dids:
+            parameters={'aid':uuid.uuid4().hex, 'did':did}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDID)
+
+    def test_new_event_new_datasource_failure_non_datasourcename_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATASOURCE and no datasourcename parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATASOURCE
+        parameters={'aid':uuid.uuid4().hex,'did':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDIN)
+
+    def test_new_event_new_datasource_failure_invalid_datasourcename_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATASOURCE and aid parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATASOURCE
+        datasourcenames=[None,234234, 234234.234234, 'astring_ññññ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for datasourcename in datasourcenames:
+            parameters={'aid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDIN)
+
+    def test_new_event_new_datasource_success(self):
+        ''' new_event should succeed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATASOURCE
+        datasourcename='test_new_event_new_datasource_success'
+        parameters={'aid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename}
+        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+
+    def test_new_event_new_datapoint_failure_non_did_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and no did parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATAPOINT
+        parameters={}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPID)
+
+    def test_new_event_new_datapoint_failure_invalid_did_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and did parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATAPOINT
+        dids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for did in dids:
+            parameters={'did':did}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPID)
+
+    def test_new_event_new_datapoint_failure_non_pid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and no pid parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATAPOINT
+        parameters={'did':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIP)
+
+    def test_new_event_new_datapoint_failure_invalid_pid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and pid parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATAPOINT
+        pids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for pid in pids:
+            parameters={'did':uuid.uuid4().hex, 'pid':pid}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIP)
+
+    def test_new_event_new_datapoint_failure_non_datasourcename_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and no datasourcename parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATAPOINT
+        parameters={'pid':uuid.uuid4().hex,'did':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIN)
+
+    def test_new_event_new_datapoint_failure_invalid_datasourcename_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and datasourcename parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATAPOINT
+        datasourcenames=[None,234234, 234234.234234, 'astring_ñññ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for datasourcename in datasourcenames:
+            parameters={'pid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIN)
+
+    def test_new_event_new_datapoint_failure_non_datapointname_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and no datapointname parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATAPOINT
+        datasourcename='test_new_event_new_datapoint_failure_non_datapointname_parameter_passed'
+        parameters={'pid':uuid.uuid4().hex,'did':uuid.uuid4().hex,'datasourcename':datasourcename}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIM)
+
+    def test_new_event_new_datapoint_failure_invalid_datapointname_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and datapointname parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATAPOINT
+        datasourcename='test_new_event_new_datapoint_failure_invalid_datapointname_parameter_passed'
+        datapointnames=[None,234234, 234234.234234, 'astring_ññññ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for datapointname in datapointnames:
+            parameters={'pid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename, 'datapointname':datapointname}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIM)
+
+    def test_new_event_new_datapoint_success(self):
+        ''' new_event should succeed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DATAPOINT
+        datasourcename='test_new_event_new_datapoint_success'
+        datapointname='test_new_event_new_datapoint_success'
+        parameters={'pid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename, 'datapointname':datapointname}
+        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+
+    def test_new_event_new_widget_failure_non_wid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_WIDGET and no wid parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_WIDGET
+        parameters={}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NWIW)
+
+    def test_new_event_new_widget_failure_invalid_wid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_WIDGET and wid parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_WIDGET
+        wids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for wid in wids:
+            parameters={'wid':wid}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NWIW)
+
+    def test_new_event_new_widget_failure_non_widgetname_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_WIDGET and no widgetname parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_WIDGET
+        parameters={'wid':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NWIN)
+
+    def test_new_event_new_widget_failure_invalid_widgetname_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_WIDGET and widgetname parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_WIDGET
+        widgetnames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for widgetname in widgetnames:
+            parameters={'wid':uuid.uuid4().hex, 'widgetname':widgetname}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NWIN)
+
+    def test_new_event_new_widget_success(self):
+        ''' new_event should succeed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_WIDGET
+        widgetname='test_new_event_new_agent_success'
+        parameters={'wid':uuid.uuid4().hex, 'widgetname':widgetname}
+        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+
+    def test_new_event_new_dashboard_failure_non_bid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DASHBOARD and no bid parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DASHBOARD
+        parameters={}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NBIB)
+
+    def test_new_event_new_dashboard_failure_invalid_bid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DASHBOARD and bid parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DASHBOARD
+        bids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for bid in bids:
+            parameters={'bid':bid}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NBIB)
+
+    def test_new_event_new_dashboard_failure_non_dashboardname_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DASHBOARD and no dashboardname parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DASHBOARD
+        parameters={'bid':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NBIN)
+
+    def test_new_event_new_dashboard_failure_invalid_dashboardname_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DASHBOARD and dashboardname parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DASHBOARD
+        dashboardnames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for dashboardname in dashboardnames:
+            parameters={'bid':uuid.uuid4().hex, 'dashboardname':dashboardname}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NBIN)
+
+    def test_new_event_new_dashboard_success(self):
+        ''' new_event should succeed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_DASHBOARD
+        dashboardname='test_new_event_new_dashboard_success'
+        parameters={'bid':uuid.uuid4().hex, 'dashboardname':dashboardname}
+        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+
+    def test_new_event_new_circle_failure_non_cid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_CIRCLE and no cid parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_CIRCLE
+        parameters={}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NCIC)
+
+    def test_new_event_new_circle_failure_invalid_cid_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_CIRCLE and cid parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_CIRCLE
+        cids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for cid in cids:
+            parameters={'cid':cid}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NCIC)
+
+    def test_new_event_new_circle_failure_non_circlename_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_CIRCLE and no circlename parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_CIRCLE
+        parameters={'cid':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NCIN)
+
+    def test_new_event_new_circle_failure_invalid_circlename_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_CIRCLE and circlename parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_CIRCLE
+        circlenames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for circlename in circlenames:
+            parameters={'cid':uuid.uuid4().hex, 'circlename':circlename}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NCIN)
+
+    def test_new_event_new_circle_success(self):
+        ''' new_event should succeed '''
+        uid=uuid.uuid4()
+        event_type=types.NEW_CIRCLE
+        circlename='test_new_event_new_circle_success'
+        parameters={'cid':uuid.uuid4().hex, 'circlename':circlename}
+        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+
+    def test_new_event_user_intervention_datapoint_identification_failure_non_did_parameter_passed(self):
+        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no did parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIID)
+
+    def test_new_event_user_intervention_datapoint_identification_failure_invalid_did_parameter_passed(self):
+        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and did parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        dids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for did in dids:
+            parameters={'did':did}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIID)
+
+    def test_new_event_user_intervention_datapoint_identification_failure_non_date_parameter_passed(self):
+        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no date parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDT)
+
+    def test_new_event_user_intervention_datapoint_identification_failure_invalid_date_parameter_passed(self):
+        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and date parameter is invalid '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4().hex
+        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        dates=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid4().hex, {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for date in dates:
+            parameters={'did':did, 'date':date}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDT)
+
+    def test_new_event_user_intervention_datapoint_identification_failure_non_doubts_parameter_passed(self):
+        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no doubts parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':uuid.uuid4().hex, 'date':uuid.uuid1().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDO)
+
+    def test_new_event_user_intervention_datapoint_identification_failure_invalid_doubts_parameter_passed(self):
+        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and doubts parameter is invalid '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4().hex
+        date=uuid.uuid1().hex
+        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        doubts_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid4().hex, {'a':'dict'},('a','tuple'),{'set'}]
+        for doubts in doubts_a:
+            parameters={'did':did, 'date':date, 'doubts':doubts}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDO)
+
+    def test_new_event_user_intervention_datapoint_identification_failure_non_discarded_parameter_passed(self):
+        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no discarded parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':uuid.uuid4().hex, 'date':uuid.uuid1().hex, 'doubts':[]}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDI)
+
+    def test_new_event_user_intervention_datapoint_identification_failure_invalid_discarded_parameter_passed(self):
+        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and discarded parameter is invalid '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4().hex
+        date=uuid.uuid1().hex
+        doubts=[]
+        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        discarded_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid4().hex, {'a':'dict'},('a','tuple'),{'set'}]
+        for discarded in discarded_a:
+            parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDI)
+
+    def test_new_event_user_intervention_datapoint_identification_failure_invalid_doubts_items_passed(self):
+        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and doubts item is invalid '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4().hex
+        date=uuid.uuid1().hex
+        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        items_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid1().hex, {'a':'dict'},('a','tuple'),{'set'}]
+        for item in items_a:
+            parameters={'did':did, 'date':date, 'doubts':[item], 'discarded':[]}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDOP)
+
+    def test_new_event_user_intervention_datapoint_identification_failure_invalid_discarded_items_passed(self):
+        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and discarded item is invalid '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4().hex
+        date=uuid.uuid1().hex
+        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        items_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid1().hex, {'a':'dict'},('a','tuple'),{'set'}]
+        for item in items_a:
+            parameters={'did':did, 'date':date, 'doubts':[uuid.uuid4().hex, uuid.uuid4().hex], 'discarded':[item]}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDIP)
+
+    def test_new_event_user_intervention_datapoint_identification_success(self):
+        ''' new_event should succeed '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4().hex
+        date=uuid.uuid1().hex
+        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
+        discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
+        parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
+        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+
     def test_insert_new_user_event_failure_invalid_uid(self):
         ''' insert_new_user_event should fail if uid is invalid '''
         uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
@@ -449,4 +970,95 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.NEW_DATAPOINT)
         self.assertEqual(events[0]['priority'], priorities.NEW_DATAPOINT)
+
+    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_uid(self):
+        ''' insert_event_user_intervention_datapoint_identification should fail if uid is invalid '''
+        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        doubts=[]
+        discarded=[]
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+            self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IUID)
+
+    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_did(self):
+        ''' insert_event_user_intervention_datapoint_identification should fail if did is invalid '''
+        dids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        doubts=[]
+        discarded=[]
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+            self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDID)
+
+    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_date(self):
+        ''' insert_event_user_intervention_datapoint_identification should fail if date is invalid '''
+        dates=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid4(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        doubts=[]
+        discarded=[]
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+            self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDT)
+
+    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_doubts_list(self):
+        ''' insert_event_user_intervention_datapoint_identification should fail if doubts is not a list '''
+        doubts_s=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid4(), {'a':'dict'},('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        discarded=[]
+        for doubts in doubts_s:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+            self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDOU)
+
+    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_discarded_list(self):
+        ''' insert_event_user_intervention_datapoint_identification should fail if discarded is not a list '''
+        discarded_s=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid4(), {'a':'dict'},('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        doubts=[]
+        for discarded in discarded_s:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+            self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDIS)
+
+    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_doubts_item(self):
+        ''' insert_event_user_intervention_datapoint_identification should fail if doubts item is not a pid '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        discarded=[]
+        doubts=[32,23]
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+        self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDOUP)
+
+    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_discarded_item(self):
+        ''' insert_event_user_intervention_datapoint_identification should fail if discarded item is not a pid '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        doubts=[]
+        discarded=[32,23]
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+        self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDISP)
+
+    def test_insert_event_user_intervention_datapoint_identification_success(self):
+        ''' insert_event_user_intervention_datapoint_identification should succeed '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        doubts=[uuid.uuid4(), uuid.uuid4()]
+        discarded=[uuid.uuid4(), uuid.uuid4()]
+        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded))
 

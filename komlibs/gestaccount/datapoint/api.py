@@ -20,7 +20,7 @@ from komlibs.gestaccount import exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.general import colors
-from komlibs.textman import api as textmanapi
+from komlibs.textman.api import variables as textmanvar
 from komlibs.ai.decisiontree import api as dtreeapi
 from komfig import logger
 from komlibs.graph.api import uri as graphuri
@@ -154,6 +154,7 @@ def mark_negative_variable(pid, date, position, length):
     if not cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid):
         logger.logger.error('Error deleting datapoint from datasource map')
     generate_decision_tree(pid=pid)
+    generate_inverse_decision_tree(pid=pid)
     datapoints_to_update=[]
     datapoints_to_update.append(pid)
     return datapoints_to_update
@@ -190,7 +191,7 @@ def mark_positive_variable(pid, date, position, length, replace=True):
     ''' en este punto hemos comprobado que la muestra y variable existen y dtp pertenece a did indicado.
     Comprobamos que no haya otros datapoints que validen esa variable, en caso contrario
     solicitaremos que esa variable se marque como negativa en ellos '''
-    variable=textmanapi.get_variable_from_serialized_list(serialization=dsmap.content, position=position)
+    variable=textmanvar.get_variable_from_serialized_list(serialization=dsmap.content, position=position)
     pids=cassapidatapoint.get_datapoints_pids(did=did)
     response={}
     datapoints_to_update=[]
@@ -218,6 +219,7 @@ def mark_positive_variable(pid, date, position, length, replace=True):
     if not cassapidatasource.add_datapoint_to_datasource_map(did=did, date=date, pid=pid, position=position):
         logger.logger.error('Error updating datasource map ')
     generate_decision_tree(pid=pid)
+    generate_inverse_decision_tree(pid=pid)
     return datapoints_to_update
 
 def generate_decision_tree(pid):
@@ -253,33 +255,22 @@ def generate_decision_tree(pid):
     dsmaps=[]
     for date in dates_to_get:
         dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
-        #varlist=variables.get_varlist(jsoncontent=dsmap.content)
-        variable_list=textmanapi.get_variables_from_serialized_list(serialization=dsmap.content)
+        variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
         if date in positive_samples:
             position,length=positive_samples[date]
-            #for var in varlist:
             for var in variable_list:
-                #if var.s==position:
                 if var.position==position:
-                    #var.h['result']=True
                     var.hash_sequence['result']=True
                 else:
-                    #var.h['result']=False
                     var.hash_sequence['result']=False
-                #dtree_training_set.append(var.h)
                 dtree_training_set.append(var.hash_sequence)
         if date in negative_samples and date not in positive_samples:
             negative_coordinates=negative_samples[date]
-            #for var in varlist:
             for var in variable_list:
-                #if var.s in iter(negative_coordinates.keys()):
                 if var.position in iter(negative_coordinates.keys()):
-                    #var.h['result']=False
                     var.hash_sequence['result']=False
-                    #dtree_training_set.append(var.h)
                     dtree_training_set.append(var.hash_sequence)
     if len(dtree_training_set)>0:
-        #dtree=decisiontree.DecisionTree(rawdata=dtree_training_set)
         dtree=dtreeapi.generate_decision_tree(training_set=dtree_training_set)
         if cassapidatapoint.set_datapoint_dtree(pid=pid, dtree=dtree.serialize()):
             return True
@@ -287,6 +278,60 @@ def generate_decision_tree(pid):
             return False
     else:
         raise exceptions.DatapointDTreeTrainingSetEmptyException(error=errors.E_GPA_GDT_ETS)
+
+def generate_inverse_decision_tree(pid):
+    '''
+    Los pasos son los siguientes:
+    - Obtenemos la informacion del datapoint
+    - creamos un listado con las muestras que contienen variables positivas o negativas (confirmadas o descartadas por el usuario), pero a diferencia con generate_decision_tree() las positivas las marcamos como negativas y las negativas como positivas
+    - por cada una de las muestras, obtenemos las variables y las clasificamos segun la info obtenida del datapoint
+    - En base a la clasificacion obtenida, creamos el arbol de decision
+    - lo almacenamos en bbdd
+    '''
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=errors.E_GPA_GIDT_IP)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    if not datapoint:
+        raise exceptions.DatapointNotFoundException(error=errors.E_GPA_GIDT_DNF)
+    did=datapoint.did
+    dates_to_get=[]
+    positive_samples={}
+    negative_samples={}
+    dtp_positives=cassapidatapoint.get_datapoint_dtree_positives(pid=pid)
+    dtp_negatives=cassapidatapoint.get_datapoint_dtree_negatives(pid=pid)
+    dtree_training_set=[]
+    if dtp_positives:
+        for dtp_positive in dtp_positives:
+            positive_samples[dtp_positive.date]=(dtp_positive.position,dtp_positive.length)
+            dates_to_get.append(dtp_positive.date)
+    if dtp_negatives:
+        for dtp_negative in dtp_negatives:
+            negative_samples[dtp_negative.date]=dtp_negative.coordinates
+            dates_to_get.append(dtp_negative.date)
+    dates_to_get=sorted(set(dates_to_get))
+    dsmaps=[]
+    for date in dates_to_get:
+        dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
+        variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
+        if date in positive_samples:
+            position,length=positive_samples[date]
+            for var in variable_list:
+                if var.position==position:
+                    var.hash_sequence['result']=False
+                else:
+                    var.hash_sequence['result']=True
+                dtree_training_set.append(var.hash_sequence)
+        if date in negative_samples and date not in positive_samples:
+            negative_coordinates=negative_samples[date]
+            for var in variable_list:
+                if var.position in iter(negative_coordinates.keys()):
+                    var.hash_sequence['result']=True
+                    dtree_training_set.append(var.hash_sequence)
+    if len(dtree_training_set)>0:
+        dtree=dtreeapi.generate_decision_tree(training_set=dtree_training_set)
+        return cassapidatapoint.set_datapoint_dtree_inv(pid=pid, dtree=dtree.serialize())
+    else:
+        raise exceptions.DatapointDTreeTrainingSetEmptyException(error=errors.E_GPA_GIDT_ETS)
 
 def monitor_new_datapoint(did, date, position, length, datapointname):
     if not args.is_valid_uuid(did):
@@ -355,14 +400,14 @@ def store_datapoint_values(pid, date, store_newer=True):
         cassapidatasource.delete_datapoint_from_datasource_map(did=did, date=dsmap.date, pid=datapoint.pid)
         cassapidatapoint.delete_datapoint_data_at(pid=datapoint.pid, date=dsmap.date)
         #varlist=variables.get_varlist(jsoncontent=dsmap.content)
-        variable_list=textmanapi.get_variables_from_serialized_list(serialization=dsmap.content)
+        variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
         #for var in varlist:
         for var in variable_list:
             #if dtree.evaluate_row(var.h):
             if dtree.evaluate_row(var.hash_sequence):
                 #falta la linea de abajo
                 #value,separator=variables.get_numericvalueandseparator(datapoint_stats.decimal_separator,varlist,var)
-                value=textmanapi.get_numeric_value(var)
+                value=textmanvar.get_numeric_value(var)
                 if cassapidatapoint.insert_datapoint_data(pid=datapoint.pid, date=dsmap.date, value=value):
                     #cassapidatasource.add_datapoint_to_datasource_map(did=did,date=dsmap.date,pid=datapoint.pid,position=var.s)
                     cassapidatasource.add_datapoint_to_datasource_map(did=did,date=dsmap.date,pid=datapoint.pid,position=var.position)
@@ -420,7 +465,7 @@ def store_datasource_values(did, date):
                                           'decimal_separator':datapoint_stats.decimal_separator,
                                           'last_received':datapoint_stats.last_received}
     #varlist=variables.get_varlist(jsoncontent=dsmap.content)
-    variable_list=textmanapi.get_variables_from_serialized_list(serialization=dsmap.content)
+    variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
     loop_pids=list(datapoints_info.keys())
     #for var in varlist:
     for var in variable_list:
@@ -431,7 +476,7 @@ def store_datasource_values(did, date):
             #if dtree.evaluate_row(var.h):
             if dtree.evaluate_row(var.hash_sequence):
                 #value,separator=variables.get_numericvalueandseparator(decimal_separator,varlist,var)
-                value=textmanapi.get_numeric_value(variable=var)
+                value=textmanvar.get_numeric_value(variable=var)
                 if cassapidatapoint.insert_datapoint_data(pid=pid, date=dsmap.date, value=value):
                     #cassapidatasource.add_datapoint_to_datasource_map(did=dsmap.did,date=dsmap.date,pid=pid,position=var.s)
                     cassapidatasource.add_datapoint_to_datasource_map(did=dsmap.did,date=dsmap.date,pid=pid,position=var.position)
@@ -444,7 +489,7 @@ def store_datasource_values(did, date):
                 else:
                     logger.logger.error('Error inserting datapoint data. pid: %s, dsmap.date: %s.' %(pid.hex,date.hex))
                     break
-    return True
+    return {'dp_not_found':loop_pids}
 
 def delete_datapoint(pid):
     ''' Delete all datapoint info. '''
@@ -471,4 +516,38 @@ def delete_datapoint(pid):
     cassapidatapoint.delete_datapoint_data(pid=pid)
     graphuri.dissociate_vertex(ido=pid)
     return True
+
+def should_datapoint_match_any_sample_variable(pid, date):
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=errors.E_GPA_SDMSV_IP)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=errors.E_GPA_SDMSV_IDT)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    if not datapoint:
+        raise exceptions.DatapointNotFoundException(error=errors.E_GPA_SDMSV_DNF)
+    datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
+    if not datapoint_stats or not datapoint_stats.dtree:
+        generate_decision_tree(pid=pid)
+        datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
+    if not datapoint_stats or not datapoint_stats.dtree_inv:
+        generate_inverse_decision_tree(pid=pid)
+        datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
+    if not datapoint_stats or not datapoint_stats.dtree or not datapoint_stats.dtree_inv:
+        raise exceptions.DatapointDTreeNotFoundException(error=errors.E_GPA_SDMSV_DPDTNF)
+    #obtenemos el map de la muestra, con las variables y datapoints detectados en ella
+    dsmap=cassapidatasource.get_datasource_map(did=datapoint.did, date=date)
+    if not dsmap:
+        raise exceptions.DatasourceMapNotFoundException(error=errors.E_GPA_SDMSV_DSMNF)
+    #si el datapoint ya esta detectado devolvemos true
+    if pid in dsmap.datapoints.keys():
+        return True
+    #evaluamos el DTREE sobre las variables (en teoria todas evaluaran a false, pero si alguna evalua a true devolvemos true). Después evaluamos el DTREE INVERSO sobre ellas (si hay alguna que no da FALSE entonces devolvemos un TRUE, indicando que hay candidatas a que sean matchs)
+    dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
+    dtree_inv=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree_inv)
+    variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
+
+    for var in variable_list:
+        if not var.position in dsmap.datapoints.values() and (dtree.evaluate_row(var.hash_sequence) or not dtree_inv.evaluate_row(var.hash_sequence)):
+            return True
+    return False
 

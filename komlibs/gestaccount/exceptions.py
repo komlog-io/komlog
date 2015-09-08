@@ -69,6 +69,14 @@ class DatasourceUpdateException(GestaccountException):
     def __init__(self, error):
         super(DatasourceUpdateException,self).__init__(error=error)
 
+class DatasourceNoveltyDetectorException(GestaccountException):
+    def __init__(self, error):
+        super(DatasourceNoveltyDetectorException,self).__init__(error=error)
+
+class DatasourceTextSummaryException(GestaccountException):
+    def __init__(self, error):
+        super(DatasourceTextSummaryException,self).__init__(error=error)
+
 class DatapointDataNotFoundException(GestaccountException):
     def __init__(self, error, last_date=None):
         self.last_date=last_date

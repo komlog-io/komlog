@@ -37,7 +37,8 @@ STATEMENTS={30000:'select * from mst_datapoint where pid=?',
             33001:'update mst_datapoint_stats set dtree=? where pid=?',
             33002:'update mst_datapoint_stats set decimal_separator=? where pid=?',
             33003:'update mst_datapoint_stats set last_received=? where pid=?',
-            33004:'update dat_datapoint_dtree_positives set position=?,length=? where pid=? and date=?'
+            33004:'update dat_datapoint_dtree_positives set position=?,length=? where pid=? and date=?',
+            33005:'update mst_datapoint_stats set dtree_inv=? where pid=?',
            }
 
 # selects
@@ -78,5 +79,6 @@ U_DTREE_MSTDATAPOINTSTATS=33001
 U_DECIMALSEPARATOR_MSTDATAPOINTSTATS=33002
 U_LASTRECEIVED_MSTDATAPOINTSTATS=33003
 U_POSITIONLENGTH_DATDATAPOINTDTREEPOSITIVES_B_PID_DATE=33004
+U_DTREEINV_MSTDATAPOINTSTATS=33005
 
 

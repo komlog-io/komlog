@@ -34,6 +34,23 @@ class DatasourceMap:
         self.did=did
         self.date=date
         self.content=content
-        self.variables=variables
-        self.datapoints=datapoints
+        self.variables=variables if variables else dict()
+        self.datapoints=datapoints if datapoints else dict()
+
+class DatasourceTextSummary:
+    def __init__(self, did, date, content_length, num_lines, num_words, word_frecuency):
+        self.did=did
+        self.date=date
+        self.content_length=content_length
+        self.num_lines=num_lines
+        self.num_words=num_words
+        self.word_frecuency=word_frecuency
+
+class DatasourceNoveltyDetector:
+    def __init__(self, did, pid, date, nd, features):
+        self.did=did
+        self.pid=pid
+        self.date=date
+        self.nd=nd
+        self.features=features
 

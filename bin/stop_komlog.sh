@@ -5,6 +5,11 @@ then
     kill $(cat /tmp/komweb.pid)
 fi
 
+if [ -f /tmp/komanom.pid ]
+then
+    kill $(cat /tmp/komanom.pid)
+fi
+
 if [ -f /tmp/komev.pid ]
 then
     kill $(cat /tmp/komev.pid)

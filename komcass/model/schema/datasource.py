@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 This file defines the cassandra statements for the creation of datasource related tables
 
@@ -10,7 +9,9 @@ OBJECTS=['MST_DATASOURCE',
          'MST_DATASOURCE_INDEX_02',
          'MST_DATASOURCE_STATS',
          'DAT_DATASOURCE',
-         'DAT_DATASOURCE_MAP'
+         'DAT_DATASOURCE_MAP',
+         'DAT_DATASOURCE_TEXT_SUMMARY',
+         'DAT_DATASOURCE_NOVELTY_DETECTOR_DATAPOINT',
         ]
 
 MST_DATASOURCE='''
@@ -59,6 +60,29 @@ DAT_DATASOURCE_MAP='''
             variables map<int,int>,
             datapoints map<uuid,int>,
             PRIMARY KEY (did,date)
+        );
+    '''
+
+DAT_DATASOURCE_TEXT_SUMMARY='''
+        CREATE TABLE dat_datasource_text_summary (
+            did uuid,
+            date timeuuid,
+            content_length int,
+            num_lines int,
+            num_words int,
+            word_frecuency map<text,int>,
+            PRIMARY KEY (did,date)
+        );
+    '''
+
+DAT_DATASOURCE_NOVELTY_DETECTOR_DATAPOINT='''
+        CREATE TABLE dat_datasource_novelty_detector_datapoint (
+            did uuid,
+            pid uuid,
+            date timeuuid,
+            nd blob,
+            features set<text>,
+            PRIMARY KEY ((did,pid),date)
         );
     '''
 

@@ -112,7 +112,7 @@ class InterfaceImcApiEventsTest(unittest.TestCase):
         self.assertEqual(user_events[0]['parameters'],parameters)
 
     def test_process_message_USEREV_failure_invalid_username(self):
-        ''' process_message_USEREV should fail if did does not exists '''
+        ''' process_message_USEREV should fail if did does not exist '''
         uid=uuid.uuid4()
         event_type=eventstypes.NEW_USER
         parameters={'username':'test_process_message_USEREV_failure'}
