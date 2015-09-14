@@ -141,7 +141,7 @@ def new_datasource_request(username, aid, datasourcename):
         msgapi.send_message(message)
         message=messages.NewDSWidgetMessage(uid=uid, did=datasource['did'])
         msgapi.send_message(message)
-        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.NEW_DATASOURCE, parameters={'aid':aid.hex, 'did':datasource['did'].hex, 'datasourcename':datasourcename})
+        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'aid':aid.hex, 'did':datasource['did'].hex, 'datasourcename':datasourcename})
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
 

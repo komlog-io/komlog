@@ -1,6 +1,6 @@
 '''
 
-This file declares the different user events available
+This file declares the different events defined
 
 '''
 

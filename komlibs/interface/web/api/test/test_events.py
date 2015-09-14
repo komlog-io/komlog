@@ -82,4 +82,11 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         username=self.userinfo['username']
         response=eventsapi.get_user_events_request(username=username)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertEqual(len(response.data),1)
+        self.assertTrue('ts' in response.data[0])
+        self.assertTrue('type' in response.data[0])
+        self.assertTrue('priority' in response.data[0])
+        self.assertTrue('seq' in response.data[0])
+        self.assertTrue('params' in response.data[0])
+        self.assertTrue('html' in response.data[0])
 

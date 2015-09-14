@@ -48,67 +48,78 @@ class EventsApiUserTest(unittest.TestCase):
         ''' get_events should return the event list '''
         uid=uuid.uuid4()
         aid=uuid.uuid4()
+        did=uuid.uuid4()
+        pid=uuid.uuid4()
+        wid=uuid.uuid4()
+        bid=uuid.uuid4()
+        cid=uuid.uuid4()
         username='test_get_events_success_username'
         agentname='test_get_events_success_agentname'
+        datasourcename='test_get_events_success_datasourcename'
+        datapointname='test_get_events_success_datapointname'
+        widgetname='test_get_events_success_widgetname'
+        dashboardname='test_get_events_success_dashboardname'
+        circlename='test_get_events_success_circlename'
         self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
         self.assertTrue(user.insert_new_agent_event(uid=uid, aid=aid, agentname=username))
+        self.assertTrue(user.insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename))
+        self.assertTrue(user.insert_new_datapoint_event(uid=uid, did=did, pid=pid, datasourcename=datasourcename, datapointname=datapointname))
+        self.assertTrue(user.insert_new_widget_event(uid=uid, wid=wid, widgetname=widgetname))
+        self.assertTrue(user.insert_new_dashboard_event(uid=uid, bid=bid, dashboardname=dashboardname))
+        self.assertTrue(user.insert_new_circle_event(uid=uid, cid=cid, circlename=circlename))
         events=user.get_events(uid=uid)
-        self.assertEqual(len(events),2)
+        self.assertEqual(len(events),7)
 
-    def test_activate_event_failure_invalid_uid(self):
-        ''' activate_event should fail if uid is invalid '''
+    def test_enable_event_failure_invalid_uid(self):
+        ''' enable_event should fail if uid is invalid '''
         uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         date=uuid.uuid1()
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.activate_event(uid=uid, date=date)
+                user.enable_event(uid=uid, date=date)
             self.assertEqual(cm.exception.error, errors.E_EAU_ACE_IU)
 
-    def test_activate_event_failure_invalid_date(self):
-        ''' activate_event should fail if date is invalid '''
+    def test_enable_event_failure_invalid_date(self):
+        ''' enable_event should fail if date is invalid '''
         dates=[234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex,  {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         uid=uuid.uuid4()
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.activate_event(uid=uid, date=date)
+                user.enable_event(uid=uid, date=date)
             self.assertEqual(cm.exception.error, errors.E_EAU_ACE_ID)
 
-    def test_deactivate_event_failure_invalid_uid(self):
-        ''' deactivate_event should fail if uid is invalid '''
+    def test_disable_event_failure_invalid_uid(self):
+        ''' disable_event should fail if uid is invalid '''
         uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         date=uuid.uuid1()
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.deactivate_event(uid=uid, date=date)
+                user.disable_event(uid=uid, date=date)
             self.assertEqual(cm.exception.error, errors.E_EAU_DACE_IU)
 
-    def test_deactivate_event_failure_invalid_date(self):
-        ''' deactivate_event should fail if date is invalid '''
+    def test_disable_event_failure_invalid_date(self):
+        ''' disable_event should fail if date is invalid '''
         dates=[234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex,  {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         uid=uuid.uuid4()
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.deactivate_event(uid=uid, date=date)
+                user.disable_event(uid=uid, date=date)
             self.assertEqual(cm.exception.error, errors.E_EAU_DACE_ID)
 
-    def test_activate_deactivate_event_success(self):
-        ''' activate_event and deactivate_event should succeed, for simplicity even if the event does not exist '''
+    def test_enable_disable_event_success(self):
+        ''' enable_event and disable_event should succeed, for simplicity even if the event does not exist '''
         uid=uuid.uuid4()
-        username='test_activate_event_success_username'
+        username='test_enable_event_success_username'
         self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         event=events[0]
-        self.assertTrue(user.deactivate_event(uid=uid, date=event['date']))
+        self.assertTrue(user.disable_event(uid=uid, date=event['date']))
+        events=user.get_events(uid=uid)
+        self.assertEqual(len(events),0)
+        self.assertTrue(user.enable_event(uid=uid, date=event['date']))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
-        event=events[0]
-        self.assertEqual(event['active'],False)
-        self.assertTrue(user.activate_event(uid=uid, date=event['date']))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        event=events[0]
-        self.assertEqual(event['active'],True)
 
     def test_delete_events_failure_invalid_uid(self):
         ''' delete_events should fail if uid is invalid '''
@@ -151,7 +162,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_user_failure_non_username_parameter_passed(self):
         ''' new_event should fail if type is NEW_USER and no username parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_USER
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_USER
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -160,7 +171,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_user_failure_invalid_username_passed(self):
         ''' new_event should fail if type is NEW_USER and username parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_USER
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_USER
         usernames=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for username in usernames:
             parameters={'username':username}
@@ -171,7 +182,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_user_success(self):
         ''' new_event should succeed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_USER
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_USER
         username='a_valid_username'
         parameters={'username':username}
         self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
@@ -179,7 +190,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_agent_failure_non_aid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_AGENT and no aid parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_AGENT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -188,7 +199,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_agent_failure_invalid_aid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_AGENT and aid parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_AGENT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
         aids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for aid in aids:
             parameters={'aid':aid}
@@ -199,7 +210,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_agent_failure_non_agentname_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_AGENT and no agentname parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_AGENT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
         parameters={'aid':uuid.uuid4().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -208,7 +219,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_agent_failure_invalid_agentname_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_AGENT and aid parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_AGENT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
         agentnames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for agentname in agentnames:
             parameters={'aid':uuid.uuid4().hex, 'agentname':agentname}
@@ -219,7 +230,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_agent_success(self):
         ''' new_event should succeed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_AGENT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
         agentname='test_new_event_new_agent_success'
         parameters={'aid':uuid.uuid4().hex, 'agentname':agentname}
         self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
@@ -227,7 +238,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datasource_failure_non_aid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and no aid parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATASOURCE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -236,7 +247,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datasource_failure_invalid_aid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and aid parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATASOURCE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
         aids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for aid in aids:
             parameters={'aid':aid}
@@ -247,7 +258,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datasource_failure_non_did_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and no aid parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATASOURCE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
         parameters={'aid':uuid.uuid4().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -256,7 +267,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datasource_failure_invalid_did_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and aid parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATASOURCE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
         dids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for did in dids:
             parameters={'aid':uuid.uuid4().hex, 'did':did}
@@ -267,7 +278,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datasource_failure_non_datasourcename_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and no datasourcename parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATASOURCE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
         parameters={'aid':uuid.uuid4().hex,'did':uuid.uuid4().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -276,7 +287,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datasource_failure_invalid_datasourcename_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and aid parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATASOURCE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
         datasourcenames=[None,234234, 234234.234234, 'astring_ññññ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for datasourcename in datasourcenames:
             parameters={'aid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename}
@@ -287,7 +298,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datasource_success(self):
         ''' new_event should succeed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATASOURCE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
         datasourcename='test_new_event_new_datasource_success'
         parameters={'aid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename}
         self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
@@ -295,7 +306,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datapoint_failure_non_did_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and no did parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATAPOINT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -304,7 +315,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datapoint_failure_invalid_did_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and did parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATAPOINT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
         dids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for did in dids:
             parameters={'did':did}
@@ -315,7 +326,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datapoint_failure_non_pid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and no pid parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATAPOINT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
         parameters={'did':uuid.uuid4().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -324,7 +335,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datapoint_failure_invalid_pid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and pid parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATAPOINT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
         pids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for pid in pids:
             parameters={'did':uuid.uuid4().hex, 'pid':pid}
@@ -335,7 +346,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datapoint_failure_non_datasourcename_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and no datasourcename parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATAPOINT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
         parameters={'pid':uuid.uuid4().hex,'did':uuid.uuid4().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -344,7 +355,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datapoint_failure_invalid_datasourcename_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and datasourcename parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATAPOINT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
         datasourcenames=[None,234234, 234234.234234, 'astring_ñññ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for datasourcename in datasourcenames:
             parameters={'pid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename}
@@ -355,7 +366,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datapoint_failure_non_datapointname_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and no datapointname parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATAPOINT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
         datasourcename='test_new_event_new_datapoint_failure_non_datapointname_parameter_passed'
         parameters={'pid':uuid.uuid4().hex,'did':uuid.uuid4().hex,'datasourcename':datasourcename}
         with self.assertRaises(exceptions.BadParametersException) as cm:
@@ -365,7 +376,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datapoint_failure_invalid_datapointname_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and datapointname parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATAPOINT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
         datasourcename='test_new_event_new_datapoint_failure_invalid_datapointname_parameter_passed'
         datapointnames=[None,234234, 234234.234234, 'astring_ññññ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for datapointname in datapointnames:
@@ -377,7 +388,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_datapoint_success(self):
         ''' new_event should succeed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DATAPOINT
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
         datasourcename='test_new_event_new_datapoint_success'
         datapointname='test_new_event_new_datapoint_success'
         parameters={'pid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename, 'datapointname':datapointname}
@@ -386,7 +397,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_widget_failure_non_wid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_WIDGET and no wid parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_WIDGET
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -395,7 +406,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_widget_failure_invalid_wid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_WIDGET and wid parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_WIDGET
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
         wids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for wid in wids:
             parameters={'wid':wid}
@@ -406,7 +417,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_widget_failure_non_widgetname_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_WIDGET and no widgetname parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_WIDGET
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
         parameters={'wid':uuid.uuid4().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -415,7 +426,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_widget_failure_invalid_widgetname_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_WIDGET and widgetname parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_WIDGET
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
         widgetnames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for widgetname in widgetnames:
             parameters={'wid':uuid.uuid4().hex, 'widgetname':widgetname}
@@ -426,7 +437,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_widget_success(self):
         ''' new_event should succeed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_WIDGET
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
         widgetname='test_new_event_new_agent_success'
         parameters={'wid':uuid.uuid4().hex, 'widgetname':widgetname}
         self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
@@ -434,7 +445,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_dashboard_failure_non_bid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and no bid parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DASHBOARD
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -443,7 +454,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_dashboard_failure_invalid_bid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and bid parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DASHBOARD
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
         bids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for bid in bids:
             parameters={'bid':bid}
@@ -454,7 +465,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_dashboard_failure_non_dashboardname_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and no dashboardname parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DASHBOARD
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
         parameters={'bid':uuid.uuid4().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -463,7 +474,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_dashboard_failure_invalid_dashboardname_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and dashboardname parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DASHBOARD
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
         dashboardnames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for dashboardname in dashboardnames:
             parameters={'bid':uuid.uuid4().hex, 'dashboardname':dashboardname}
@@ -474,7 +485,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_dashboard_success(self):
         ''' new_event should succeed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_DASHBOARD
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
         dashboardname='test_new_event_new_dashboard_success'
         parameters={'bid':uuid.uuid4().hex, 'dashboardname':dashboardname}
         self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
@@ -482,7 +493,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_circle_failure_non_cid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_CIRCLE and no cid parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_CIRCLE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -491,7 +502,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_circle_failure_invalid_cid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_CIRCLE and cid parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_CIRCLE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
         cids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for cid in cids:
             parameters={'cid':cid}
@@ -502,7 +513,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_circle_failure_non_circlename_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_CIRCLE and no circlename parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_CIRCLE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
         parameters={'cid':uuid.uuid4().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -511,7 +522,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_circle_failure_invalid_circlename_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_CIRCLE and circlename parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.NEW_CIRCLE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
         circlenames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for circlename in circlenames:
             parameters={'cid':uuid.uuid4().hex, 'circlename':circlename}
@@ -522,7 +533,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_new_circle_success(self):
         ''' new_event should succeed '''
         uid=uuid.uuid4()
-        event_type=types.NEW_CIRCLE
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
         circlename='test_new_event_new_circle_success'
         parameters={'cid':uuid.uuid4().hex, 'circlename':circlename}
         self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
@@ -530,7 +541,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_user_intervention_datapoint_identification_failure_non_did_parameter_passed(self):
         ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no did parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -539,7 +550,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_user_intervention_datapoint_identification_failure_invalid_did_parameter_passed(self):
         ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and did parameter is invalid '''
         uid=uuid.uuid4()
-        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         dids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for did in dids:
             parameters={'did':did}
@@ -550,7 +561,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_user_intervention_datapoint_identification_failure_non_date_parameter_passed(self):
         ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no date parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         parameters={'did':uuid.uuid4().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -560,7 +571,7 @@ class EventsApiUserTest(unittest.TestCase):
         ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and date parameter is invalid '''
         uid=uuid.uuid4()
         did=uuid.uuid4().hex
-        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         dates=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid4().hex, {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for date in dates:
             parameters={'did':did, 'date':date}
@@ -571,7 +582,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_user_intervention_datapoint_identification_failure_non_doubts_parameter_passed(self):
         ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no doubts parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         parameters={'did':uuid.uuid4().hex, 'date':uuid.uuid1().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -582,7 +593,7 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         did=uuid.uuid4().hex
         date=uuid.uuid1().hex
-        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         doubts_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid4().hex, {'a':'dict'},('a','tuple'),{'set'}]
         for doubts in doubts_a:
             parameters={'did':did, 'date':date, 'doubts':doubts}
@@ -593,7 +604,7 @@ class EventsApiUserTest(unittest.TestCase):
     def test_new_event_user_intervention_datapoint_identification_failure_non_discarded_parameter_passed(self):
         ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no discarded parameter is passed '''
         uid=uuid.uuid4()
-        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         parameters={'did':uuid.uuid4().hex, 'date':uuid.uuid1().hex, 'doubts':[]}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             user.new_event(uid=uid, event_type=event_type, parameters=parameters)
@@ -605,7 +616,7 @@ class EventsApiUserTest(unittest.TestCase):
         did=uuid.uuid4().hex
         date=uuid.uuid1().hex
         doubts=[]
-        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         discarded_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid4().hex, {'a':'dict'},('a','tuple'),{'set'}]
         for discarded in discarded_a:
             parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
@@ -618,7 +629,7 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         did=uuid.uuid4().hex
         date=uuid.uuid1().hex
-        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         items_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid1().hex, {'a':'dict'},('a','tuple'),{'set'}]
         for item in items_a:
             parameters={'did':did, 'date':date, 'doubts':[item], 'discarded':[]}
@@ -631,7 +642,7 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         did=uuid.uuid4().hex
         date=uuid.uuid1().hex
-        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         items_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid1().hex, {'a':'dict'},('a','tuple'),{'set'}]
         for item in items_a:
             parameters={'did':did, 'date':date, 'doubts':[uuid.uuid4().hex, uuid.uuid4().hex], 'discarded':[item]}
@@ -644,7 +655,7 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         did=uuid.uuid4().hex
         date=uuid.uuid1().hex
-        event_type=types.USER_INTERVENTION_DATAPOINT_IDENTIFICATION
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
         discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
         parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
@@ -675,8 +686,8 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.NEW_USER)
-        self.assertEqual(events[0]['priority'], priorities.NEW_USER)
+        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_USER)
 
     def test_insert_new_agent_event_failure_invalid_uid(self):
         ''' insert_new_agent_event should fail if uid is invalid '''
@@ -716,8 +727,8 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertTrue(user.insert_new_agent_event(uid=uid, aid=aid, agentname=agentname))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.NEW_AGENT)
-        self.assertEqual(events[0]['priority'], priorities.NEW_AGENT)
+        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_AGENT)
+        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_AGENT)
 
     def test_insert_new_widget_event_failure_invalid_uid(self):
         ''' insert_new_widget_event should fail if uid is invalid '''
@@ -757,8 +768,8 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertTrue(user.insert_new_widget_event(uid=uid, wid=wid, widgetname=widgetname))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.NEW_WIDGET)
-        self.assertEqual(events[0]['priority'], priorities.NEW_WIDGET)
+        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_WIDGET)
+        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_WIDGET)
 
     def test_insert_new_dashboard_event_failure_invalid_uid(self):
         ''' insert_new_dashboard_event should fail if uid is invalid '''
@@ -798,8 +809,8 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertTrue(user.insert_new_dashboard_event(uid=uid, bid=bid, dashboardname=dashboardname))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.NEW_DASHBOARD)
-        self.assertEqual(events[0]['priority'], priorities.NEW_DASHBOARD)
+        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD)
+        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_DASHBOARD)
 
     def test_insert_new_circle_event_failure_invalid_uid(self):
         ''' insert_new_circle_event should fail if uid is invalid '''
@@ -839,8 +850,8 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertTrue(user.insert_new_circle_event(uid=uid, cid=cid, circlename=circlename))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.NEW_CIRCLE)
-        self.assertEqual(events[0]['priority'], priorities.NEW_CIRCLE)
+        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_CIRCLE)
+        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_CIRCLE)
 
     def test_insert_new_datasource_event_failure_invalid_uid(self):
         ''' insert_new_datasource_event should fail if uid is invalid '''
@@ -895,8 +906,8 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertTrue(user.insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.NEW_DATASOURCE)
-        self.assertEqual(events[0]['priority'], priorities.NEW_DATASOURCE)
+        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE)
+        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_DATASOURCE)
 
     def test_insert_new_datapoint_event_failure_invalid_uid(self):
         ''' insert_new_datapoint_event should fail if uid is invalid '''
@@ -968,8 +979,8 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertTrue(user.insert_new_datapoint_event(uid=uid, pid=pid, did=did, datasourcename=datasourcename, datapointname=datapointname))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.NEW_DATAPOINT)
-        self.assertEqual(events[0]['priority'], priorities.NEW_DATAPOINT)
+        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT)
+        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_DATAPOINT)
 
     def test_insert_event_user_intervention_datapoint_identification_failure_invalid_uid(self):
         ''' insert_event_user_intervention_datapoint_identification should fail if uid is invalid '''

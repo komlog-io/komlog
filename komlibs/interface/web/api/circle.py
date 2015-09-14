@@ -86,7 +86,7 @@ def new_users_circle_request(username, circlename, members_list=None):
         msgapi.send_message(message)
         message=messages.MembershipAuthorizationUpdateMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
-        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.NEW_CIRCLE, parameters={'cid':circle['cid'].hex, 'circlename':circlename})
+        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_CIRCLE, parameters={'cid':circle['cid'].hex, 'circlename':circlename})
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'cid':circle['cid'].hex})
     else:

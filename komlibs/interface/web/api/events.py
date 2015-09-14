@@ -7,7 +7,6 @@ This file defines the logic associated with web interface operations
 import uuid
 from komfig import logger
 from komlibs.events.api import user as userevents
-from komlibs.events.api import templates as eventstemplates
 from komlibs.gestaccount.user import api as userapi
 from komlibs.interface.web import status, exceptions, errors
 from komlibs.interface.web.model import webmodel
@@ -27,7 +26,7 @@ def get_user_events_request(username, ets=None, its=None):
     end_date=timeuuid.uuid1(seconds=float(ets)) if ets else None
     init_date=timeuuid.uuid1(seconds=float(its)) if its else None
     logger.logger.debug('vamos a obtener eventos')
-    events=userevents.get_events(uid=uid, to_date=end_date, from_date=init_date)
+    events=userevents.get_events(uid=uid, to_date=end_date, from_date=init_date, params_serializable=True, html_literal=True)
     response_data=[]
     for event in events:
         reg={}
@@ -35,11 +34,8 @@ def get_user_events_request(username, ets=None, its=None):
         reg['type']=event['type']
         reg['priority']=event['priority']
         reg['seq']=timeuuid.get_custom_sequence(event['date'])
-        reg['params']={}
-        for key,value in event['parameters'].items():
-            reg['params'][key]=value
-        reg['html']=eventstemplates.get_html_template(event_type=event['type'], parameters=event['parameters'])
+        reg['params']=event['parameters']
+        reg['html']=event['html']
         response_data.append(reg)
-    logger.logger.debug('devolvemos '+str(response_data))
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
