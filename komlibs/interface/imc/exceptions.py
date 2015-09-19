@@ -31,17 +31,30 @@ NOT_FOUND_STATUS_EXCEPTION_LIST=(
     gestexcept.AgentNotFoundException,
     gestexcept.WidgetNotFoundException,
     gestexcept.DashboardNotFoundException,
+    gestexcept.SnapshotNotFoundException,
+    gestexcept.CircleNotFoundException,
     gestexcept.DatasourceNotFoundException,
     gestexcept.DatasourceDataNotFoundException,
     gestexcept.DatasourceMapNotFoundException,
     gestexcept.DatapointDataNotFoundException,
     gestexcept.DatapointNotFoundException,
+    eventexcept.EventNotFoundException,
 )
 
 INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
     gestexcept.AgentCreationException,
+    gestexcept.WidgetCreationException,
     gestexcept.UserConfirmationException,
+    gestexcept.DashboardCreationException,
+    gestexcept.SnapshotCreationException,
+    gestexcept.CircleCreationException,
+    gestexcept.DashboardUpdateException,
+    gestexcept.CircleUpdateException,
+    gestexcept.AddDatapointToWidgetException,
+    gestexcept.DeleteDatapointFromWidgetException,
     gestexcept.DatasourceUploadContentException,
+    gestexcept.CircleAddMemberException,
+    gestexcept.CircleDeleteMemberException,
 )
 
 class ExceptionHandler(object):

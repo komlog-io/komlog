@@ -13,6 +13,17 @@ from komlibs.events.model import types, priorities, templates
 from komcass.model.orm import events as ormevents
 from komcass.api import events as cassapievents
 
+def get_event(uid, date):
+    if not args.is_valid_uuid(uid):
+        raise exceptions.BadParametersException(error=errors.E_EAU_GEV_IU)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=errors.E_EAU_GEV_IDT)
+    event=cassapievents.get_user_event(uid=uid, date=date)
+    if not event:
+        raise exceptions.EventNotFoundException(error=errors.E_EAU_GEV_EVNF)
+    else:
+        return _get_event_data(event)
+
 def get_events(uid, to_date=None, from_date=None, count=30, params_serializable=False, html_literal=False):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_EAU_GEVS_IU)
@@ -92,7 +103,11 @@ def enable_event(uid, date):
     if event:
         return cassapievents.enable_user_event(event=event)
     else:
-        return False
+        event=cassapievents.get_user_event(uid=uid, date=date)
+        if event:
+            return True
+        else:
+            raise exceptions.EventNotFoundException(error=errors.E_EAU_ACE_EVNF)
 
 def disable_event(uid, date):
     if not args.is_valid_uuid(uid):
@@ -103,7 +118,11 @@ def disable_event(uid, date):
     if event:
         return cassapievents.disable_user_event(event=event)
     else:
-        return False
+        event=cassapievents.get_disabled_user_event(uid=uid, date=date)
+        if event:
+            return True
+        else:
+            raise exceptions.EventNotFoundException(error=errors.E_EAU_DACE_EVNF)
 
 def delete_events(uid):
     if not args.is_valid_uuid(uid):
@@ -191,10 +210,10 @@ def new_event(uid, event_type, parameters):
             if not args.is_valid_hex_uuid(pid):
                 raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_UIDIIDIP)
         did=uuid.UUID(parameters['did'])
-        date=uuid.UUID(parameters['date'])
+        ds_date=uuid.UUID(parameters['date'])
         doubts=[uuid.UUID(pid) for pid in parameters['doubts']]
         discarded=[uuid.UUID(pid) for pid in parameters['discarded']]
-        return insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+        return insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
     else:
         raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_EVTNF)
 
@@ -205,7 +224,10 @@ def insert_new_user_event(uid, username):
         raise exceptions.BadParametersException(error=errors.E_EAU_INUE_IUS)
     now=timeuuid.uuid1()
     event=ormevents.UserEventNotificationNewUser(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_USER, username=username)
-    return cassapievents.insert_user_event(event)
+    if cassapievents.insert_user_event(event):
+        return {'uid':uid, 'date':now}
+    else:
+        return None
 
 def insert_new_agent_event(uid, aid, agentname):
     if not args.is_valid_uuid(uid):
@@ -216,7 +238,10 @@ def insert_new_agent_event(uid, aid, agentname):
         raise exceptions.BadParametersException(error=errors.E_EAU_INAE_IAN)
     now=timeuuid.uuid1()
     event=ormevents.UserEventNotificationNewAgent(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_AGENT, aid=aid, agentname=agentname)
-    return cassapievents.insert_user_event(event)
+    if cassapievents.insert_user_event(event):
+        return {'uid':uid, 'date':now}
+    else:
+        return None
 
 def insert_new_datasource_event(uid, aid, did, datasourcename):
     if not args.is_valid_uuid(uid):
@@ -229,7 +254,10 @@ def insert_new_datasource_event(uid, aid, did, datasourcename):
         raise exceptions.BadParametersException(error=errors.E_EAU_INDSE_IDSN)
     now=timeuuid.uuid1()
     event=ormevents.UserEventNotificationNewDatasource(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, aid=aid, did=did, datasourcename=datasourcename)
-    return cassapievents.insert_user_event(event)
+    if cassapievents.insert_user_event(event):
+        return {'uid':uid, 'date':now}
+    else:
+        return None
 
 def insert_new_datapoint_event(uid, did, pid, datasourcename, datapointname):
     if not args.is_valid_uuid(uid):
@@ -244,7 +272,10 @@ def insert_new_datapoint_event(uid, did, pid, datasourcename, datapointname):
         raise exceptions.BadParametersException(error=errors.E_EAU_INDPE_IDPN)
     now=timeuuid.uuid1()
     event=ormevents.UserEventNotificationNewDatapoint(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, did=did, pid=pid, datasourcename=datasourcename, datapointname=datapointname)
-    return cassapievents.insert_user_event(event)
+    if cassapievents.insert_user_event(event):
+        return {'uid':uid, 'date':now}
+    else:
+        return None
 
 def insert_new_widget_event(uid, wid, widgetname):
     if not args.is_valid_uuid(uid):
@@ -255,7 +286,10 @@ def insert_new_widget_event(uid, wid, widgetname):
         raise exceptions.BadParametersException(error=errors.E_EAU_INWGE_IWN)
     now=timeuuid.uuid1()
     event=ormevents.UserEventNotificationNewWidget(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_WIDGET, wid=wid, widgetname=widgetname)
-    return cassapievents.insert_user_event(event)
+    if cassapievents.insert_user_event(event):
+        return {'uid':uid, 'date':now}
+    else:
+        return None
 
 def insert_new_dashboard_event(uid, bid, dashboardname):
     if not args.is_valid_uuid(uid):
@@ -266,7 +300,10 @@ def insert_new_dashboard_event(uid, bid, dashboardname):
         raise exceptions.BadParametersException(error=errors.E_EAU_INDBE_IDBN)
     now=timeuuid.uuid1()
     event=ormevents.UserEventNotificationNewDashboard(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, bid=bid, dashboardname=dashboardname)
-    return cassapievents.insert_user_event(event)
+    if cassapievents.insert_user_event(event):
+        return {'uid':uid, 'date':now}
+    else:
+        return None
 
 def insert_new_circle_event(uid, cid, circlename):
     if not args.is_valid_uuid(uid):
@@ -277,14 +314,17 @@ def insert_new_circle_event(uid, cid, circlename):
         raise exceptions.BadParametersException(error=errors.E_EAU_INCE_ICN)
     now=timeuuid.uuid1()
     event=ormevents.UserEventNotificationNewCircle(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_CIRCLE, cid=cid, circlename=circlename)
-    return cassapievents.insert_user_event(event)
+    if cassapievents.insert_user_event(event):
+        return {'uid':uid, 'date':now}
+    else:
+        return None
 
-def insert_event_user_intervention_datapoint_identification(uid, did, date, doubts, discarded):
+def insert_event_user_intervention_datapoint_identification(uid, did, ds_date, doubts, discarded):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IUID)
     if not args.is_valid_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IDID)
-    if not args.is_valid_date(date):
+    if not args.is_valid_date(ds_date):
         raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IDT)
     if not isinstance(doubts,list):
         raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IDOU)
@@ -297,6 +337,9 @@ def insert_event_user_intervention_datapoint_identification(uid, did, date, doub
         if not args.is_valid_uuid(pid):
             raise exceptions.BadParametersException(error=errors.E_EAU_INEUIDI_IDISP)
     now=timeuuid.uuid1()
-    event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, did=did, ds_date=date, doubts=doubts, discarded=discarded)
-    return cassapievents.insert_user_event(event)
+    event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
+    if cassapievents.insert_user_event(event):
+        return {'uid':uid, 'date':now}
+    else:
+        return None
 

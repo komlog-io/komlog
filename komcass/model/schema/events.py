@@ -14,7 +14,9 @@ OBJECTS=[
          'DAT_UE_NOTIF_NWWG',
          'DAT_UE_NOTIF_NWDB',
          'DAT_UE_NOTIF_NWCI',
-         'DAT_UE_INTERV_DPID'
+         'DAT_UE_INTERV_DPID', 
+         'DAT_UER_INTERV_DPID',
+         'DAT_UER_INTERV_DPID_INDEX_01',
         ]
 
 DAT_USER_EVENTS='''
@@ -119,5 +121,23 @@ DAT_UE_INTERV_DPID='''
             discarded set<uuid>,
             PRIMARY KEY (uid,date)
         );
+    '''
+
+DAT_UER_INTERV_DPID='''
+        CREATE TABLE dat_uer_interv_dp_identification (
+            uid uuid,
+            date timeuuid,
+            response_date timeuuid,
+            missing set<uuid>,
+            identified map<uuid,int>,
+            not_belonging set<uuid>,
+            to_update set<uuid>,
+            update_failed set<uuid>,
+            update_success set<uuid>,
+            PRIMARY KEY ((uid,date),response_date)
+        );
+    '''
+DAT_UER_INTERV_DPID_INDEX_01='''
+        CREATE INDEX ON dat_uer_interv_dp_identification (uid);
     '''
 

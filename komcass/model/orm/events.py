@@ -64,3 +64,24 @@ class UserEventInterventionDatapointIdentification(UserEvent):
         self.discarded=discarded
         super(UserEventInterventionDatapointIdentification, self).__init__(uid=uid, date=date, priority=priority, type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
 
+
+##### RESPONSES 
+
+
+class UserEventResponse:
+    def __init__(self, uid, date, response_date, type):
+        self.uid=uid
+        self.date=date
+        self.response_date=response_date
+        self.type=type
+
+class UserEventResponseInterventionDatapointIdentification(UserEventResponse):
+    def __init__(self, uid, date, response_date, missing=None, identified=None, not_belonging=None, to_update=None, update_failed=None, update_success=None):
+        self.missing=missing if missing else set()
+        self.identified=identified if identified else dict()
+        self.not_belonging=not_belonging if not_belonging else set()
+        self.to_update=to_update if to_update else set()
+        self.update_failed=update_failed if update_failed else set()
+        self.update_success=update_success if update_success else set()
+        super(UserEventResponseInterventionDatapointIdentification, self).__init__(uid=uid, date=date, response_date=response_date, type=types.USER_EVENT_RESPONSE_INTERVENTION_DATAPOINT_IDENTIFICATION)
+

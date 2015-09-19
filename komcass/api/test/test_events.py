@@ -768,3 +768,127 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(types.USER_EVENT_NOTIFICATION_NEW_USER, db_user_event.type)
         self.assertEqual(event.username, db_user_event.username)
 
+    def test_get_user_event_responses_failure_non_event_instance(self):
+        ''' get_user_event_responses should return an empty array if no event instance is passed '''
+        events=[None,23, '23423',uuid.uuid4(),{'dict':'dict'},{'set'},['list'],('tuple','tuple2')]
+        for event in events:
+            self.assertEqual(eventsapi.get_user_event_responses(event),[])
+
+    def test_get_user_event_responses_failure_non_supported_event(self):
+        ''' get_user_event_responses should return an empty array if event type is not supported '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        username='test_get_user_event_responses_failure'
+        event=ormevents.UserEventNotificationNewUser(uid=uid,date=date,priority=1,username=username)
+        self.assertEqual(eventsapi.get_user_event_responses(event),[])
+
+    def test_get_user_event_responses_success_some_responses_found(self):
+        ''' get_user_event_responses should return an array with the responses '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        did=uuid.uuid4()
+        ds_date=timeuuid.uuid1()
+        discarded=[uuid.uuid4(), uuid.uuid4()]
+        doubts=[uuid.uuid4(), uuid.uuid4()]
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response1))
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response2))
+        responses=eventsapi.get_user_event_responses(event=event)
+        self.assertEqual(len(responses),2)
+        for response in responses:
+            self.assertTrue(isinstance(response, ormevents.UserEventResponseInterventionDatapointIdentification))
+
+    def test__get_user_event_responses_intervention_datapoint_identification_success_some_responses_found(self):
+        ''' _get_user_event_responses_intervention_datapoint_identification should return an array with the responses '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        did=uuid.uuid4()
+        ds_date=timeuuid.uuid1()
+        discarded=[uuid.uuid4(), uuid.uuid4()]
+        doubts=[uuid.uuid4(), uuid.uuid4()]
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response1))
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response2))
+        responses=eventsapi._get_user_event_responses_intervention_datapoint_identification(uid=uid, date=date)
+        self.assertEqual(len(responses),2)
+        for response in responses:
+            self.assertTrue(isinstance(response, ormevents.UserEventResponseInterventionDatapointIdentification))
+
+    def test_get_user_events_responses_intervention_datapoint_identification_success_some_responses_found(self):
+        ''' get_user_events_responses_intervention_datapoint_identification should return an array with the responses '''
+        uid=uuid.uuid4()
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response1))
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response2))
+        responses=eventsapi.get_user_events_responses_intervention_datapoint_identification(uid=uid)
+        self.assertEqual(len(responses),2)
+        for response in responses:
+            self.assertTrue(isinstance(response, ormevents.UserEventResponseInterventionDatapointIdentification))
+
+    def test_insert_user_event_response_failure_non_response_instance(self):
+        ''' insert_user_event_responses should return an empty array if no response instance is passed '''
+        responses=[None,23, '23423',uuid.uuid4(),{'dict':'dict'},{'set'},['list'],('tuple','tuple2'),ormevents.UserEvent(uid=uuid.uuid4(), date=timeuuid.uuid1(),priority=1,type=0)]
+        for response in responses:
+            self.assertFalse(eventsapi.insert_user_event_response(response))
+
+    def test_insert_user_event_response_failure_non_supported_response(self):
+        ''' insert_user_event_response should return an empty array if response type is not supported '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        response_date=timeuuid.uuid1()
+        type=11000000
+        response=ormevents.UserEventResponse(uid=uid,date=date,response_date=response_date, type=type)
+        self.assertFalse(eventsapi.insert_user_event_response(response))
+
+    def test_insert_user_event_response_success(self):
+        ''' insert_user_event_response should succeed '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        response=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response))
+
+    def test__insert_user_event_response_intervention_datapoint_identification_failure_non_response_instance(self):
+        ''' insert_user_event_response should return false if no response instance is passed '''
+        responses=[None,23, '23423',uuid.uuid4(),{'dict':'dict'},{'set'},['list'],('tuple','tuple2'),ormevents.UserEvent(uid=uuid.uuid4(), date=timeuuid.uuid1(),priority=1,type=0)]
+        for response in responses:
+            self.assertFalse(eventsapi._insert_user_event_response_intervention_datapoint_identification(response))
+
+    def test__insert_user_event_response_intervention_datapoint_identification_failure_non_supported_response(self):
+        ''' insert_user_event_response should return an empty array if event type is not supported '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        response_date=timeuuid.uuid1()
+        type=11000000
+        response=ormevents.UserEventResponse(uid=uid,date=date,response_date=response_date, type=type)
+        self.assertFalse(eventsapi._insert_user_event_response_intervention_datapoint_identification(response))
+
+    def test__insert_user_event_response_intervention_datapoint_identification_success(self):
+        ''' _insert_user_event_response should succeed '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        response=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi._insert_user_event_response_intervention_datapoint_identification(response))
+
+    def test_delete_user_events_responses_intervention_datapoint_identification_success_some_responses_found(self):
+        ''' get_user_events_responses_intervention_datapoint_identification should return an array with the responses '''
+        uid=uuid.uuid4()
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response1))
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response2))
+        responses=eventsapi.get_user_events_responses_intervention_datapoint_identification(uid=uid)
+        self.assertEqual(len(responses),2)
+        for response in responses:
+            self.assertTrue(isinstance(response, ormevents.UserEventResponseInterventionDatapointIdentification))
+        self.assertTrue(eventsapi.delete_user_events_responses_intervention_datapoint_identification(uid=uid))
+        responses=eventsapi.get_user_events_responses_intervention_datapoint_identification(uid=uid)
+        self.assertEqual(len(responses),0)
+
+

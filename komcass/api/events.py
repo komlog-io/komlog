@@ -209,6 +209,7 @@ def delete_user_events(uid):
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWDASHBOARD_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWCIRCLE_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUEINTERVDPIDENTIFICATION_B_UID,(uid,))
+    delete_user_events_responses_intervention_datapoint_identification(uid=uid)
     return True
 
 def enable_user_event(event):
@@ -232,4 +233,53 @@ def disable_user_event(event):
             connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(event.uid,event.date))
             return True
         return False
+
+# User Event Responses
+
+def get_user_event_responses(event):
+    if not isinstance(event, ormevents.UserEvent):
+        return []
+    else:
+        if event.type==types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:
+            return _get_user_event_responses_intervention_datapoint_identification(uid=event.uid, date=event.date)
+        else:
+            return []
+
+def _get_user_event_responses_intervention_datapoint_identification(uid, date):
+    responses=[]
+    row=connection.session.execute(stmtevents.S_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE,(uid,date))
+    if row:
+        for r in row:
+            responses.append(ormevents.UserEventResponseInterventionDatapointIdentification(uid=r['uid'],date=r['date'],response_date=r['response_date'],missing=r['missing'],identified=r['identified'],not_belonging=r['not_belonging'],to_update=r['to_update'],update_failed=r['update_failed'],update_success=r['update_success']))
+    return responses
+
+def get_user_events_responses_intervention_datapoint_identification(uid):
+    responses=[]
+    row=connection.session.execute(stmtevents.S_A_DATUERINTERVDPIDENTIFICATION_B_UID,(uid,))
+    if row:
+        for r in row:
+            responses.append(ormevents.UserEventResponseInterventionDatapointIdentification(uid=r['uid'],date=r['date'],response_date=r['response_date'],missing=r['missing'],identified=r['identified'],not_belonging=r['not_belonging'],to_update=r['to_update'],update_failed=r['update_failed'],update_success=r['update_success']))
+    return responses
+
+def insert_user_event_response(response):
+    if not isinstance(response, ormevents.UserEventResponse):
+        return False
+    else:
+        if response.type==types.USER_EVENT_RESPONSE_INTERVENTION_DATAPOINT_IDENTIFICATION:
+            return _insert_user_event_response_intervention_datapoint_identification(response)
+        else:
+            return False
+
+def _insert_user_event_response_intervention_datapoint_identification(response):
+    if not isinstance(response, ormevents.UserEventResponseInterventionDatapointIdentification):
+        return False
+    else:
+        connection.session.execute(stmtevents.I_A_DATUERINTERVDPIDENTIFICATION, (response.uid,response.date,response.response_date, response.missing, response.identified, response.not_belonging, response.to_update, response.update_failed, response.update_success))
+        return True
+
+def delete_user_events_responses_intervention_datapoint_identification(uid):
+    responses=get_user_events_responses_intervention_datapoint_identification(uid=uid)
+    for resp in responses:
+        connection.session.execute(stmtevents.D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE,(resp.uid,resp.date))
+    return True
 

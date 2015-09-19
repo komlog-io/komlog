@@ -593,7 +593,28 @@ class UserEventsHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json_encode(response.data))
 
+class UserEventsResponsesHandler(tornado.web.RequestHandler):
+
+    @auth.userauthenticated
+    def post(self, seq):
+        try:
+            req_data=json_decode(self.request.body)
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=events.event_response_request(username=self.user, seq=seq, data=req_data)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
+
+    @auth.userauthenticated
+    def delete(self, seq):
+        response=events.disable_event_request(username=self.user, seq=seq)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
 UUID4_REGEX='[0-9a-fA-F]{32}'
+SEQ_REGEX='[0-9a-fA-F]{20}'
 USERNAME_REGEX='[0-9a-z\-_]+'
 
 HANDLERS = [(r'/login/?', LoginHandler),
@@ -624,6 +645,7 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/var/dp/('+UUID4_REGEX+')', DatapointDataHandler),
             (r'/var/uri/?', UriHandler),
             (r'/var/usr/ev/?', UserEventsHandler),
+            (r'/var/usr/ev/('+SEQ_REGEX+')', UserEventsResponsesHandler),
             (r'/home/config', UserConfigHandler),
             (r'/home', UserHomeHandler),
             ]

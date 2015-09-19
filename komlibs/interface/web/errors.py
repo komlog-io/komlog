@@ -260,4 +260,15 @@ E_IWAEV_GEVR_IU=104000
 E_IWAEV_GEVR_IETS=104001
 E_IWAEV_GEVR_IITS=104002
 
+E_IWAEV_DEVR_IU=104100 #disable_event_request invalid username
+E_IWAEV_DEVR_ISEQ=104101 #disable_event_request invalid sequence
+
+E_IWAEV_EVRPR_IU=104200 #event_response_request invalid username
+E_IWAEV_EVRPR_ISEQ=104201 #event_response_request invalid sequence
+E_IWAEV_EVRPR_IDAT=104202 #event_response_request invalid data
+E_IWAEV_EVRPR_IMSF=104203 #event_response_request invalid missing parameter
+E_IWAEV_EVRPR_IIDF=104204 #event_response_request invalid identified parameter
+E_IWAEV_EVRPR_IMSIT=104205 #event_response_request invalid missing item
+E_IWAEV_EVRPR_IIDIT=104206 #event_response_request invalid identified item
+E_IWAEV_EVRPR_IEVT=104207 #event_response_request non supported event type
 

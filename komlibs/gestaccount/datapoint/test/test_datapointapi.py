@@ -304,6 +304,29 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(dsdatapoints[0]['pid'],datapoint2['pid'])
         self.assertEqual(dsdatapoints[0]['position'],position)
 
+    def test_mark_missing_datapoint_failure_non_existent_datapoint(self):
+        ''' mark_missing_datapoint should fail if datapoint does not exist '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        position=1
+        length=1
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            api.mark_missing_datapoint(pid=pid, date=date)
+        self.assertEqual(cm.exception.error, errors.E_GPA_MMDP_DNF)
+
+    def test_mark_missing_datapoint_failure_no_variables_in_datasource_map(self):
+        ''' mark_missing_datapoint should fail if datasource map has no variables '''
+        did=self.datasource['did']
+        datapointname='test_mark_missing_datapoint_failure_no_variables_in_datasource_map'
+        color='#FFDDAA'
+        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        date=timeuuid.uuid1()
+        position=1
+        length=1
+        with self.assertRaises(exceptions.DatasourceMapNotFoundException) as cm:
+            api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
+        self.assertEqual(cm.exception.error, errors.E_GPA_MMDP_DMNF)
+
     def test_generate_decision_tree_failure_invalid_pid(self):
         ''' generate_tree should fail if pid does not exists '''
         pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]

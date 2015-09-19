@@ -9,3 +9,7 @@ class BadParametersException(EventsException):
     def __init__(self, error):
         super(BadParametersException,self).__init__(error=error)
 
+class EventNotFoundException(EventsException):
+    def __init__(self, error):
+        super(EventNotFoundException,self).__init__(error=error)
+

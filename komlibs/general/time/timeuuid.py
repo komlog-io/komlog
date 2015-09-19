@@ -12,7 +12,13 @@ def get_custom_sequence(u):
     return u.hex[0:20]
 
 def get_uuid1_from_custom_sequence(sequence):
-    return uuid.UUID(sequence+str_node)
+    try:
+        value=uuid.UUID(sequence+str_node)
+    except ValueError:
+        return None
+    else:
+        return value
+
 
 def uuid1(clock_seq=None, seconds=None):
     global node

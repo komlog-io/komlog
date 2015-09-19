@@ -146,10 +146,12 @@ def mark_negative_variable(pid, date, position, length):
     if not cassapidatapoint.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length):
         logger.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
         return None
-    #y eliminarla de los positivos si estuviese
-    if not cassapidatapoint.delete_datapoint_dtree_positive_at(pid=pid, date=date):
-        logger.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
-        return None
+    #y eliminarla de los positivos si coincidiese con la que marcamos como negativo
+    positive=cassapidatapoint.get_datapoint_dtree_positives_at(pid=pid, date=date)
+    if positive and positive.position==position and positive.length==length:
+        if not cassapidatapoint.delete_datapoint_dtree_positive_at(pid=pid, date=date):
+            logger.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
+            return None
     #y eliminarla de los datapoints del datasourcemap si estuviese
     if not cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid):
         logger.logger.error('Error deleting datapoint from datasource map')
@@ -220,6 +222,39 @@ def mark_positive_variable(pid, date, position, length, replace=True):
         logger.logger.error('Error updating datasource map ')
     generate_decision_tree(pid=pid)
     generate_inverse_decision_tree(pid=pid)
+    return datapoints_to_update
+
+def mark_missing_datapoint(pid, date):
+    ''' Se utiliza para indicar que un dp no aparece en una muestra. Los pasos son:
+    - Seleccionamos todas las variables de la muestra
+    - Añadimos las variables a la lista de negativos del datapoint, eliminando cualquier positivo de esa muestra si lo hubiera.
+    - Solicitamos la generacion nuevamente de los Dtree
+    '''
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MMDP_IP)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=errors.E_GPA_MMDP_IDT)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    if not datapoint:
+        raise exceptions.DatapointNotFoundException(error=errors.E_GPA_MMDP_DNF)
+    dsmapvars = cassapidatasource.get_datasource_map_variables(did=datapoint.did, date=date)
+    if not dsmapvars: 
+        raise exceptions.DatasourceMapNotFoundException(error=errors.E_GPA_MMDP_DMNF)
+    for position,length in dsmapvars.items():
+        if not cassapidatapoint.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length):
+            logger.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
+            return None
+    #y eliminarla de los positivos si estuviese
+    if not cassapidatapoint.delete_datapoint_dtree_positive_at(pid=pid, date=date):
+        logger.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
+        return None
+    #y eliminarla de los datapoints del datasourcemap si estuviese
+    if not cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid):
+        logger.logger.error('Error deleting datapoint from datasource map')
+    generate_decision_tree(pid=pid)
+    generate_inverse_decision_tree(pid=pid)
+    datapoints_to_update=[]
+    datapoints_to_update.append(pid)
     return datapoints_to_update
 
 def generate_decision_tree(pid):
@@ -384,7 +419,6 @@ def store_datapoint_values(pid, date, store_newer=True):
     if datapoint_stats==None or datapoint_stats.dtree==None:
         raise exceptions.DatapointDTreeNotFoundException(error=errors.E_GPA_SDPV_DTNF)
     did=datapoint.did
-    #dtree=decisiontree.DecisionTree(jsontree=datapoint_stats.dtree)
     dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
     datasource_stats=cassapidatasource.get_datasource_stats(did=did)
     if store_newer:
@@ -399,20 +433,12 @@ def store_datapoint_values(pid, date, store_newer=True):
     for dsmap in dsmaps:
         cassapidatasource.delete_datapoint_from_datasource_map(did=did, date=dsmap.date, pid=datapoint.pid)
         cassapidatapoint.delete_datapoint_data_at(pid=datapoint.pid, date=dsmap.date)
-        #varlist=variables.get_varlist(jsoncontent=dsmap.content)
         variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
-        #for var in varlist:
         for var in variable_list:
-            #if dtree.evaluate_row(var.h):
             if dtree.evaluate_row(var.hash_sequence):
-                #falta la linea de abajo
-                #value,separator=variables.get_numericvalueandseparator(datapoint_stats.decimal_separator,varlist,var)
                 value=textmanvar.get_numeric_value(var)
                 if cassapidatapoint.insert_datapoint_data(pid=datapoint.pid, date=dsmap.date, value=value):
-                    #cassapidatasource.add_datapoint_to_datasource_map(did=did,date=dsmap.date,pid=datapoint.pid,position=var.s)
                     cassapidatasource.add_datapoint_to_datasource_map(did=did,date=dsmap.date,pid=datapoint.pid,position=var.position)
-                    #if datapoint_stats.decimal_separator!=separator:
-                    #    cassapidatapoint.set_datapoint_decimal_separator(pid=datapoint.pid, decimal_separator=separator)
                     if datapoint_stats.decimal_separator!=var.decimal_separator:
                         cassapidatapoint.set_datapoint_decimal_separator(pid=datapoint.pid, decimal_separator=var.decimal_separator)
                     if datapoint_stats.last_received==None or timeuuid.get_unix_timestamp(datapoint_stats.last_received) < timeuuid.get_unix_timestamp(dsmap.date):

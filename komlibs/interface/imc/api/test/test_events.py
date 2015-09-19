@@ -3,6 +3,7 @@ import uuid
 import json
 from komlibs.events.api import user as usereventsapi
 from komlibs.events.model import types as eventstypes
+from komlibs.events import errors as eventserrors
 from komlibs.interface.imc.api import events
 from komlibs.interface.imc.model import messages
 from komlibs.interface.imc import status
@@ -128,4 +129,14 @@ class InterfaceImcApiEventsTest(unittest.TestCase):
         message=messages.UserEventMessage(uid=uid, event_type=event_type, parameters=parameters)
         response=events.process_message_USEREV(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_BAD_PARAMETERS)
+
+    def test_process_message_USEREVRESP_failure_event_not_found(self):
+        ''' process_message_USEREVRESP should fail if event does not exist '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        parameters={}
+        message=messages.UserEventResponseMessage(uid=uid, date=date, parameters=parameters)
+        response=events.process_message_USEREVRESP(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, eventserrors.E_EAUR_PEVRP_EVNF)
 

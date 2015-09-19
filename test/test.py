@@ -7,6 +7,7 @@ MODULES = [
     'komlibs.textman.api.test.test_summary.TextmanApiSummaryTest',
     'komlibs.textman.model.test.test_patterns.TextmanModelPatternsTest',
     'komlibs.events.api.test.test_user.EventsApiUserTest',
+    'komlibs.events.api.test.test_user_responses.EventsApiUserResponsesTest',
     'komlibs.general.validation.test.test_arguments.GeneralValidationArgumentsTest',
     'komlibs.graph.api.test.test_base.GraphApiBaseTest',
     'komlibs.graph.api.test.test_uri.GraphApiUriTest',

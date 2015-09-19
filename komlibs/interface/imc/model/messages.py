@@ -38,6 +38,7 @@ DELETE_DATAPOINT_MESSAGE='DELDP'
 DELETE_WIDGET_MESSAGE='DELWIDGET'
 DELETE_DASHBOARD_MESSAGE='DELDASHB'
 USER_EVENT_MESSAGE='USEREV'
+USER_EVENT_RESPONSE_MESSAGE='USEREVRESP'
 GENERATE_TEXT_SUMMARY_MESSAGE='GENTEXTSUMMARY'
 MISSING_DATAPOINT_MESSAGE='MISSINGDP'
 
@@ -65,6 +66,7 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           DELETE_WIDGET_MESSAGE:'DeleteWidgetMessage',
                           DELETE_DASHBOARD_MESSAGE:'DeleteDashboardMessage',
                           USER_EVENT_MESSAGE:'UserEventMessage',
+                          USER_EVENT_RESPONSE_MESSAGE:'UserEventResponseMessage',
                           GENERATE_TEXT_SUMMARY_MESSAGE:'GenerateTextSummaryMessage',
                           MISSING_DATAPOINT_MESSAGE:'MissingDatapointMessage',
                           }
@@ -494,6 +496,28 @@ class UserEventMessage:
             self.event_type=event_type
             self.parameters=parameters
             self.serialized_message='|'.join((self.type,self.uid.hex,str(self.event_type),json.dumps(self.parameters)))
+
+class UserEventResponseMessage:
+    def __init__(self, serialized_message=None, uid=None, date=None, parameters=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,uid,date,parameters = self.serialized_message.split('|')
+            self.type=mtype
+            self.uid=uuid.UUID(uid)
+            self.date=uuid.UUID(date)
+            self.parameters=json.loads(parameters)
+        else:
+            if not args.is_valid_uuid(uid):
+                raise exceptions.BadParametersException()
+            if not args.is_valid_date(date):
+                raise exceptions.BadParametersException()
+            if not args.is_valid_dict(parameters):
+                raise exceptions.BadParametersException()
+            self.type=USER_EVENT_RESPONSE_MESSAGE
+            self.uid=uid
+            self.date=date
+            self.parameters=parameters
+            self.serialized_message='|'.join((self.type,self.uid.hex,self.date.hex,json.dumps(self.parameters)))
 
 class GenerateTextSummaryMessage:
     def __init__(self, serialized_message=None, did=None,date=None):

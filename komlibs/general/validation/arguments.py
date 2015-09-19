@@ -164,7 +164,12 @@ def is_valid_timestamp(argument):
 
 def is_valid_sequence(argument):
     if isinstance(argument,str) and SEQUENCE.search(argument):
-        return True
+        try:
+            value=uuid.UUID(argument+'010000000000')
+        except ValueError:
+            return False
+        else:
+            return True
     else:
         return False
 

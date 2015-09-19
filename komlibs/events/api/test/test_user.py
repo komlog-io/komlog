@@ -9,6 +9,61 @@ from komfig import logger
 class EventsApiUserTest(unittest.TestCase):
     ''' komlibs.events.api.user tests '''
 
+    def test_get_event_failure_invalid_uid(self):
+        ''' get_event should fail if uid is invalid '''
+        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        date=timeuuid.uuid1()
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.get_event(uid=uid, date=date)
+            self.assertEqual(cm.exception.error, errors.E_EAU_GEV_IU)
+
+    def test_get_event_failure_invalid_date(self):
+        ''' get_event should fail if date is invalid '''
+        dates=[234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex,  {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                user.get_event(uid=uid, date=date )
+            self.assertEqual(cm.exception.error, errors.E_EAU_GEV_IDT)
+
+    def test_get_event_failure_non_existent_event(self):
+        ''' get_event should fail event does not exist '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.EventNotFoundException) as cm:
+            user.get_event(uid=uid, date=date )
+        self.assertEqual(cm.exception.error, errors.E_EAU_GEV_EVNF)
+
+    def test_get_event_success(self):
+        ''' get_event should succeed returning the event '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        pid=uuid.uuid4()
+        wid=uuid.uuid4()
+        bid=uuid.uuid4()
+        cid=uuid.uuid4()
+        username='test_get_event_success_username'
+        agentname='test_get_event_success_agentname'
+        datasourcename='test_get_event_success_datasourcename'
+        datapointname='test_get_event_success_datapointname'
+        widgetname='test_get_event_success_widgetname'
+        dashboardname='test_get_event_success_dashboardname'
+        circlename='test_get_event_success_circlename'
+        self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
+        self.assertTrue(user.insert_new_agent_event(uid=uid, aid=aid, agentname=username))
+        self.assertTrue(user.insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename))
+        self.assertTrue(user.insert_new_datapoint_event(uid=uid, did=did, pid=pid, datasourcename=datasourcename, datapointname=datapointname))
+        self.assertTrue(user.insert_new_widget_event(uid=uid, wid=wid, widgetname=widgetname))
+        self.assertTrue(user.insert_new_dashboard_event(uid=uid, bid=bid, dashboardname=dashboardname))
+        self.assertTrue(user.insert_new_circle_event(uid=uid, cid=cid, circlename=circlename))
+        events=user.get_events(uid=uid)
+        self.assertEqual(len(events),7)
+        for event in events:
+            db_event=user.get_event(uid=uid, date=event['date'])
+            self.assertEqual(event, db_event)
+
     def test_get_events_failure_invalid_uid(self):
         ''' get_events should fail if uid is invalid '''
         uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
@@ -88,6 +143,26 @@ class EventsApiUserTest(unittest.TestCase):
                 user.enable_event(uid=uid, date=date)
             self.assertEqual(cm.exception.error, errors.E_EAU_ACE_ID)
 
+    def test_enable_event_failure_non_existent_event(self):
+        ''' enable_event should fail if event does not exist '''
+        uid=uuid.uuid4()
+        date=uuid.uuid1()
+        with self.assertRaises(exceptions.EventNotFoundException) as cm:
+            user.enable_event(uid=uid, date=date)
+        self.assertEqual(cm.exception.error, errors.E_EAU_ACE_EVNF)
+
+    def test_enable_event_success_event_enabled_previously(self):
+        ''' enable_event should succeed if event is enabled previously '''
+        uid=uuid.uuid4()
+        username='test_enable_event_success_username'
+        self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
+        events=user.get_events(uid=uid)
+        self.assertEqual(len(events),1)
+        event=events[0]
+        self.assertTrue(user.enable_event(uid=uid, date=event['date']))
+        events=user.get_events(uid=uid)
+        self.assertEqual(len(events),1)
+
     def test_disable_event_failure_invalid_uid(self):
         ''' disable_event should fail if uid is invalid '''
         uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
@@ -105,6 +180,29 @@ class EventsApiUserTest(unittest.TestCase):
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user.disable_event(uid=uid, date=date)
             self.assertEqual(cm.exception.error, errors.E_EAU_DACE_ID)
+
+    def test_disable_event_failure_non_existent_event(self):
+        ''' disable_event should fail if event does not exist '''
+        uid=uuid.uuid4()
+        date=uuid.uuid1()
+        with self.assertRaises(exceptions.EventNotFoundException) as cm:
+            user.disable_event(uid=uid, date=date)
+        self.assertEqual(cm.exception.error, errors.E_EAU_DACE_EVNF)
+
+    def test_disable_event_success_event_disabled_previously(self):
+        ''' enable_event should succeed if event is enabled previously '''
+        uid=uuid.uuid4()
+        username='test_enable_event_success_username'
+        self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
+        events=user.get_events(uid=uid)
+        self.assertEqual(len(events),1)
+        event=events[0]
+        self.assertTrue(user.disable_event(uid=uid, date=event['date']))
+        events=user.get_events(uid=uid)
+        self.assertEqual(len(events),0)
+        self.assertTrue(user.disable_event(uid=uid, date=event['date']))
+        events=user.get_events(uid=uid)
+        self.assertEqual(len(events),0)
 
     def test_enable_disable_event_success(self):
         ''' enable_event and disable_event should succeed, for simplicity even if the event does not exist '''
@@ -986,24 +1084,24 @@ class EventsApiUserTest(unittest.TestCase):
         ''' insert_event_user_intervention_datapoint_identification should fail if uid is invalid '''
         uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         did=uuid.uuid4()
-        date=timeuuid.uuid1()
+        ds_date=timeuuid.uuid1()
         doubts=[]
         discarded=[]
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
             self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IUID)
 
     def test_insert_event_user_intervention_datapoint_identification_failure_invalid_did(self):
         ''' insert_event_user_intervention_datapoint_identification should fail if did is invalid '''
         dids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         uid=uuid.uuid4()
-        date=timeuuid.uuid1()
+        ds_date=timeuuid.uuid1()
         doubts=[]
         discarded=[]
         for did in dids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
             self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDID)
 
     def test_insert_event_user_intervention_datapoint_identification_failure_invalid_date(self):
@@ -1013,9 +1111,9 @@ class EventsApiUserTest(unittest.TestCase):
         did=uuid.uuid4()
         doubts=[]
         discarded=[]
-        for date in dates:
+        for ds_date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
             self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDT)
 
     def test_insert_event_user_intervention_datapoint_identification_failure_invalid_doubts_list(self):
@@ -1023,11 +1121,11 @@ class EventsApiUserTest(unittest.TestCase):
         doubts_s=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid4(), {'a':'dict'},('a','tuple'),{'set'}]
         uid=uuid.uuid4()
         did=uuid.uuid4()
-        date=timeuuid.uuid1()
+        ds_date=timeuuid.uuid1()
         discarded=[]
         for doubts in doubts_s:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
             self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDOU)
 
     def test_insert_event_user_intervention_datapoint_identification_failure_invalid_discarded_list(self):
@@ -1035,41 +1133,41 @@ class EventsApiUserTest(unittest.TestCase):
         discarded_s=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid4(), {'a':'dict'},('a','tuple'),{'set'}]
         uid=uuid.uuid4()
         did=uuid.uuid4()
-        date=timeuuid.uuid1()
+        ds_date=timeuuid.uuid1()
         doubts=[]
         for discarded in discarded_s:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
             self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDIS)
 
     def test_insert_event_user_intervention_datapoint_identification_failure_invalid_doubts_item(self):
         ''' insert_event_user_intervention_datapoint_identification should fail if doubts item is not a pid '''
         uid=uuid.uuid4()
         did=uuid.uuid4()
-        date=timeuuid.uuid1()
+        ds_date=timeuuid.uuid1()
         discarded=[]
         doubts=[32,23]
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+            user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
         self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDOUP)
 
     def test_insert_event_user_intervention_datapoint_identification_failure_invalid_discarded_item(self):
         ''' insert_event_user_intervention_datapoint_identification should fail if discarded item is not a pid '''
         uid=uuid.uuid4()
         did=uuid.uuid4()
-        date=timeuuid.uuid1()
+        ds_date=timeuuid.uuid1()
         doubts=[]
         discarded=[32,23]
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded)
+            user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
         self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDISP)
 
     def test_insert_event_user_intervention_datapoint_identification_success(self):
         ''' insert_event_user_intervention_datapoint_identification should succeed '''
         uid=uuid.uuid4()
         did=uuid.uuid4()
-        date=timeuuid.uuid1()
+        ds_date=timeuuid.uuid1()
         doubts=[uuid.uuid4(), uuid.uuid4()]
         discarded=[uuid.uuid4(), uuid.uuid4()]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, date=date, doubts=doubts, discarded=discarded))
+        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
 

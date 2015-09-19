@@ -47,6 +47,7 @@ MESSAGE_TO_ADDRESS_MAPPING={messages.STORE_SAMPLE_MESSAGE:STORING+'.%h',
                             messages.DELETE_WIDGET_MESSAGE:GESTCONSOLE,
                             messages.DELETE_DASHBOARD_MESSAGE:GESTCONSOLE,
                             messages.USER_EVENT_MESSAGE:EVENTS,
+                            messages.USER_EVENT_RESPONSE_MESSAGE:EVENTS,
                             messages.MISSING_DATAPOINT_MESSAGE:ANOMALIES,
                             }
 
