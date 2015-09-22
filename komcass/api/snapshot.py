@@ -74,6 +74,14 @@ def get_snapshots_table_nids(wid):
             data.append(r['nid'])
     return data
 
+def get_snapshots_multidp_nids(wid):
+    data=[]
+    row=connection.session.execute(stmtsnapshot.S_NID_MSTSNAPSHOTMULTIDP_B_WID,(wid,))
+    if row:
+        for r in row:
+            data.append(r['nid'])
+    return data
+
 def delete_snapshot(nid):
     row=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOT_B_NID,(nid,))
     if row:
@@ -82,6 +90,8 @@ def delete_snapshot(nid):
             _delete_snapshot_ds(nid)
         elif snapshot.type == prmwidget.types.DATAPOINT:
             _delete_snapshot_dp(nid)
+        elif snapshot.type == prmwidget.types.MULTIDP:
+            _delete_snapshot_multidp(nid)
         elif snapshot.type == prmwidget.types.HISTOGRAM:
             _delete_snapshot_histogram(nid)
         elif snapshot.type == prmwidget.types.LINEGRAPH:
@@ -107,6 +117,8 @@ def insert_snapshot(snapshot):
         _insert_snapshot_ds(snapshot)
     elif snapshot.type==prmwidget.types.DATAPOINT:
         _insert_snapshot_dp(snapshot)
+    elif snapshot.type==prmwidget.types.MULTIDP:
+        _insert_snapshot_multidp(snapshot)
     elif snapshot.type==prmwidget.types.HISTOGRAM:
         _insert_snapshot_histogram(snapshot)
     elif snapshot.type==prmwidget.types.LINEGRAPH:
@@ -135,6 +147,10 @@ def get_snapshot_linegraph(nid):
 def get_snapshot_table(nid):
     row=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTTABLE_B_NID,(nid,))
     return ormsnapshot.SnapshotTable(**row[0]) if row else None
+
+def get_snapshot_multidp(nid):
+    row=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTMULTIDP_B_NID,(nid,))
+    return ormsnapshot.SnapshotMultidp(**row[0]) if row else None
 
 def _delete_snapshot_ds(nid):
     connection.session.execute(stmtsnapshot.D_A_MSTSNAPSHOTDS_B_NID,(nid,))
@@ -174,5 +190,13 @@ def _delete_snapshot_table(nid):
 
 def _insert_snapshot_table(snapshot):
     connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTTABLE,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.datapoints,snapshot.colors,snapshot.shared_with_uids,snapshot.shared_with_cids))
+    return True
+
+def _delete_snapshot_multidp(nid):
+    connection.session.execute(stmtsnapshot.D_A_MSTSNAPSHOTMULTIDP_B_NID,(nid,))
+    return True
+
+def _insert_snapshot_multidp(snapshot):
+    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTMULTIDP,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.active_visualization, snapshot.datapoints,snapshot.shared_with_uids,snapshot.shared_with_cids))
     return True
 

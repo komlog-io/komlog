@@ -51,3 +51,11 @@ class WidgetTable(Widget):
         self.colors=colors if colors else dict()
         super(WidgetTable,self).__init__(wid,uid,types.TABLE)
 
+class WidgetMultidp(Widget):
+    def __init__(self,wid,uid,widgetname,creation_date,active_visualization,datapoints=None):
+        self.widgetname=widgetname
+        self.creation_date=creation_date
+        self.datapoints=datapoints if datapoints else set()
+        self.active_visualization=active_visualization
+        super(WidgetMultidp,self).__init__(wid,uid,types.MULTIDP)
+

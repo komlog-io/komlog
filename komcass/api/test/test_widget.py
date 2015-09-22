@@ -143,6 +143,24 @@ class KomcassApiWidgetTest(unittest.TestCase):
         self.assertTrue(widgetapi.delete_widget(wid))
         self.assertIsNone(widgetapi.get_widget(wid))
 
+    def test_delete_widget_existent_widget_multidp(self):
+        ''' delete_widget should return True when a widget multidp is deleted successfully '''
+        wid=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        pids={uuid.uuid4(),uuid.uuid4()}
+        widget=ormwidget.WidgetMultidp(wid=wid, widgetname='widget multidp', uid=uid,datapoints=pids, creation_date=creation_date, active_visualization=0)
+        widgetapi.new_widget(widget)
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid,wid)
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.datapoints,pids)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.widgetname, 'widget multidp')
+        self.assertEqual(widget.active_visualization,0)
+        self.assertTrue(widgetapi.delete_widget(wid))
+        self.assertIsNone(widgetapi.get_widget(wid))
+
     def test_new_widget_no_widget_obj(self):
         ''' new_widget should fail if we pass no widget object as argument '''
         widgets=[None, 'qrqerqwerqw234234', 234234234, {'a':'dict'}, ['a','list']]
@@ -217,6 +235,22 @@ class KomcassApiWidgetTest(unittest.TestCase):
         self.assertEqual(widget.datapoints, datapoints)
         self.assertEqual(widget.colors, colors)
         self.assertEqual(widget.creation_date, creation_date)
+
+    def test_new_widget_widget_multidp(self):
+        ''' new_widget should return True when a widget multidp is created successfully '''
+        wid=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        pids={uuid.uuid4(),uuid.uuid4()}
+        widget=ormwidget.WidgetMultidp(wid=wid, widgetname='widget multidp', uid=uid,datapoints=pids, creation_date=creation_date, active_visualization=0)
+        self.assertTrue(widgetapi.new_widget(widget))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid,wid)
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.datapoints,pids)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.widgetname, 'widget multidp')
+        self.assertEqual(widget.active_visualization,0)
 
     def test_insert_widget_no_widget_obj(self):
         ''' insert_widget should fail if we pass no widget object as argument '''
@@ -324,6 +358,34 @@ class KomcassApiWidgetTest(unittest.TestCase):
         self.assertEqual(widget.datapoints, datapoints2)
         self.assertEqual(widget.colors, colors)
         self.assertEqual(widget.creation_date, creation_date)
+
+    def test_insert_widget_widget_multidp(self):
+        ''' new_widget should return True when a widget multidp is created successfully '''
+        wid=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        pids={uuid.uuid4(),uuid.uuid4()}
+        widget=ormwidget.WidgetMultidp(wid=wid, widgetname='widget multidp', uid=uid,datapoints=pids, creation_date=creation_date, active_visualization=0)
+        self.assertTrue(widgetapi.new_widget(widget))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid,wid)
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.datapoints,pids)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.widgetname, 'widget multidp')
+        self.assertEqual(widget.active_visualization,0)
+        new_pids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
+        widget.datapoints=new_pids
+        widget.active_visualization=1
+        self.assertTrue(widgetapi.insert_widget(widget))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid,wid)
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(len(widget.datapoints),len(new_pids))
+        self.assertEqual(widget.datapoints,set(sorted(new_pids)))
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.widgetname, 'widget multidp')
+        self.assertEqual(widget.active_visualization,1)
 
     def test_insert_widget_widgetname_non_existent_widget(self):
         ''' insert_widget_widgetname should return False if widget does not exist '''
@@ -441,6 +503,60 @@ class KomcassApiWidgetTest(unittest.TestCase):
         self.assertEqual(widget.wid, wid)
         self.assertEqual(widget.creation_date, creation_date)
         self.assertEqual(widget.widgetname, new_widgetname)
+
+    def test_insert_widget_widgetname_success_widget_multidp(self):
+        ''' insert_widget_widgetname should return True and update the widgetname field '''
+        wid=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        widgetname='test_insert_widget_widgetname_success_widget_multidp'
+        active_visualization=0
+        widget=ormwidget.WidgetMultidp(wid=wid, widgetname=widgetname, uid=uid, creation_date=creation_date, active_visualization=active_visualization)
+        self.assertTrue(widgetapi.new_widget(widget))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.wid, wid)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.widgetname, widgetname)
+        new_widgetname='test_insert_widget_widgetname_success_widget_multidp_2'
+        self.assertTrue(widgetapi.insert_widget_widgetname(wid=wid, widgetname=new_widgetname))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.wid, wid)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.widgetname, new_widgetname)
+
+    def test_insert_widget_multidp_active_visualization_non_existent_widget(self):
+        ''' insert_widget_multidp_active_visualization should return False if widget does not exist '''
+        wid=uuid.uuid4()
+        active_visualization=12
+        self.assertFalse(widgetapi.insert_widget_multidp_active_visualization(wid=wid,active_visualization=active_visualization))
+
+    def test_insert_widget_multidp_active_visualization_success(self):
+        ''' insert_widget_multidp_active_visualization should return True '''
+        wid=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        widgetname='test_insert_widget_multidp_active_visualization_success'
+        pids={uuid.uuid4()}
+        active_visualization=0
+        widget=ormwidget.WidgetMultidp(wid=wid, widgetname=widgetname, uid=uid, creation_date=creation_date, active_visualization=active_visualization,datapoints=pids)
+        self.assertTrue(widgetapi.new_widget(widget))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.wid, wid)
+        self.assertEqual(widget.datapoints,pids)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.widgetname, widgetname)
+        self.assertEqual(widget.active_visualization, active_visualization)
+        self.assertTrue(widgetapi.insert_widget_multidp_active_visualization(wid=wid, active_visualization=99 ))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.wid, wid)
+        self.assertEqual(widget.datapoints,pids)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.widgetname, widgetname)
+        self.assertEqual(widget.active_visualization,99)
 
     def test_get_widget_ds_inexistent_widget(self):
         ''' get_widget_ds should return None if wid does not exist '''
@@ -1054,4 +1170,186 @@ class KomcassApiWidgetTest(unittest.TestCase):
         self.assertEqual(widget.creation_date, creation_date)
         self.assertEqual(widget.datapoints, {pid2})
         self.assertEqual(widget.colors, {pid2:color2})
+
+    def test_get_widget_multidp_different_type_widget(self):
+        ''' get_widget_table should return None if wid does not exist (because is of different type) '''
+        wid=self.widgetdp.wid
+        self.assertIsNone(widgetapi.get_widget_multidp(wid=wid))
+        
+    def test_get_widget_multidp_success_by_wid(self):
+        ''' get_widget_multidp should return the widget multidp object '''
+        wid=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        pids={uuid.uuid4(),uuid.uuid4()}
+        active_visualization=0
+        widget=ormwidget.WidgetMultidp(wid=wid, uid=uid, widgetname='widget multidp',datapoints=pids, active_visualization=active_visualization, creation_date=creation_date)
+        self.assertTrue(widgetapi.new_widget(widget))
+        self.assertTrue(isinstance(widgetapi.get_widget_multidp(wid=wid), ormwidget.WidgetMultidp))
+
+    def test_get_widget_multidp_inexistent_widget(self):
+        ''' get_widget_multidp should return None if wid does not exist '''
+        wid=uuid.uuid4()
+        self.assertIsNone(widgetapi.get_widget_multidp(wid=wid))
+
+    def test_get_wids_multidp_with_pid_success_no_pid(self):
+        ''' get_wids_multidp_with_pid should return None if the wid does not has the pid '''
+        wid=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        pids={uuid.uuid4(),uuid.uuid4()}
+        active_visualization=0
+        widget=ormwidget.WidgetMultidp(wid=wid, uid=uid, widgetname='widget multidp',datapoints=pids,active_visualization=active_visualization, creation_date=creation_date)
+        self.assertTrue(widgetapi.new_widget(widget))
+        wids=widgetapi.get_wids_multidp_with_pid(pid=uuid.uuid4())
+        self.assertEqual(wids,None)
+
+    def test_get_wids_multidp_with_pid_success_by_pid(self):
+        ''' get_wids_multidp_with_pid should return the wid list of multidp that have the pid '''
+        wid1=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        pid1=uuid.uuid4()
+        pids={uuid.uuid4(),pid1}
+        widget=ormwidget.WidgetMultidp(wid=wid1, uid=uid, widgetname='widget multidp',datapoints=pids,active_visualization=0, creation_date=creation_date)
+        self.assertTrue(widgetapi.new_widget(widget))
+        wid2=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        pid2=uuid.uuid4()
+        pids={uuid.uuid4(),pid2,pid1}
+        widget=ormwidget.WidgetMultidp(wid=wid2, uid=uid, widgetname='widget multidp',datapoints=pids,active_visualization=1, creation_date=creation_date)
+        self.assertTrue(widgetapi.new_widget(widget))
+        wids=widgetapi.get_wids_multidp_with_pid(pid=pid1)
+        self.assertEqual(sorted(wids),sorted([wid1,wid2]))
+        wids=widgetapi.get_wids_multidp_with_pid(pid=pid2)
+        self.assertEqual(wids,[wid2])
+
+    def test_add_datapoint_to_multidp_non_existent_widget(self):
+        ''' add_datapoint_to_multidp should return False if widget does not exist '''
+        wid=uuid.uuid4()
+        pid=uuid.uuid4()
+        self.assertFalse(widgetapi.add_datapoint_to_multidp(wid=wid, pid=pid))
+        self.assertIsNone(widgetapi.get_widget_multidp(wid=wid))
+
+    def test_add_datapoint_to_multidp_success_one_datapoint(self):
+        ''' add_datapoint_to_multidp should succeed if datapoint is the first one '''
+        wid=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        widget=ormwidget.WidgetMultidp(wid=wid, uid=uid, widgetname='widget multidp', creation_date=creation_date, active_visualization=0)
+        self.assertTrue(widgetapi.new_widget(widget))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid,wid)
+        self.assertEqual(widget.widgetname,'widget multidp')
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.active_visualization,0)
+        pid=uuid.uuid4()
+        self.assertTrue(widgetapi.add_datapoint_to_multidp(wid=wid, pid=pid))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid, wid)
+        self.assertEqual(widget.widgetname,'widget multidp')
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.datapoints, {pid})
+        self.assertEqual(widget.active_visualization,0)
+
+    def test_add_datapoint_to_multidp_success_some_datapoints(self):
+        ''' add_datapoint_to_multidp should succeed if datapoint is not the first one '''
+        wid=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        pid=uuid.uuid4()
+        pids={pid}
+        widget=ormwidget.WidgetMultidp(wid=wid, uid=uid, widgetname='widget multidp', creation_date=creation_date,datapoints=pids,active_visualization=0)
+        self.assertTrue(widgetapi.new_widget(widget))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid,wid)
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.widgetname,'widget multidp')
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.datapoints, {pid})
+        self.assertEqual(widget.active_visualization,0)
+        pid2=uuid.uuid4()
+        self.assertTrue(widgetapi.add_datapoint_to_multidp(wid=wid, pid=pid2))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid, wid)
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.widgetname,'widget multidp')
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.active_visualization,0)
+        self.assertEqual(widget.datapoints, {pid,pid2})
+
+    def test_delete_datapoint_from_multidp_non_existent_widget(self):
+        ''' delete_datapoint_from_multidp should return True even if widget does not exist '''
+        wid=uuid.uuid4()
+        pid=uuid.uuid4()
+        self.assertTrue(widgetapi.delete_datapoint_from_multidp(wid=wid, pid=pid))
+        self.assertIsNone(widgetapi.get_widget_multidp(wid=wid))
+
+    def test_delete_datapoint_from_multidp_success_no_datapoint_left(self):
+        ''' delete_datapoint_from_multidp should succeed and return an empty set if no more datapoints exist '''
+        wid=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        widget=ormwidget.WidgetMultidp(wid=wid, uid=uid, widgetname='widget multidp', creation_date=creation_date, active_visualization=0)
+        self.assertTrue(widgetapi.new_widget(widget))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid,wid)
+        self.assertEqual(widget.widgetname,'widget multidp')
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.active_visualization,0)
+        pid=uuid.uuid4()
+        self.assertTrue(widgetapi.add_datapoint_to_multidp(wid=wid, pid=pid))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid, wid)
+        self.assertEqual(widget.widgetname,'widget multidp')
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.datapoints, {pid})
+        self.assertEqual(widget.active_visualization,0)
+        self.assertTrue(widgetapi.delete_datapoint_from_multidp(wid=wid, pid=pid))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid, wid)
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.widgetname,'widget multidp')
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.datapoints, set())
+        self.assertEqual(widget.active_visualization,0)
+
+    def test_delete_datapoint_from_multidp_success_some_datapoints_left(self):
+        ''' delete_datapoint_to_multidp should succeed and remove from the datapoints set '''
+        wid=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        pid=uuid.uuid4()
+        pids={pid}
+        widget=ormwidget.WidgetMultidp(wid=wid, uid=uid, widgetname='widget multidp', creation_date=creation_date,datapoints=pids,active_visualization=0)
+        self.assertTrue(widgetapi.new_widget(widget))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid,wid)
+        self.assertEqual(widget.widgetname,'widget multidp')
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.datapoints, {pid})
+        self.assertEqual(widget.active_visualization,0)
+        pid2=uuid.uuid4()
+        self.assertTrue(widgetapi.add_datapoint_to_multidp(wid=wid, pid=pid2))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid, wid)
+        self.assertEqual(widget.widgetname,'widget multidp')
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.datapoints, {pid,pid2})
+        self.assertEqual(widget.active_visualization,0)
+        self.assertTrue(widgetapi.delete_datapoint_from_multidp(wid=wid, pid=pid))
+        widget=widgetapi.get_widget_multidp(wid=wid)
+        self.assertEqual(widget.wid, wid)
+        self.assertEqual(widget.widgetname,'widget multidp')
+        self.assertEqual(widget.uid, uid)
+        self.assertEqual(widget.creation_date, creation_date)
+        self.assertEqual(widget.datapoints, {pid2})
+        self.assertEqual(widget.active_visualization,0)
 

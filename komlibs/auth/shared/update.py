@@ -41,6 +41,12 @@ def new_snapshot(params):
             if not snapshot:
                 return False
             graphbase.set_member_edge(ido=snapshot.pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
+        elif snapshot.type==snapshottypes.MULTIDP:
+            snapshot=cassapisnapshot.get_snapshot_multidp(nid=nid)
+            if not snapshot:
+                return False
+            for pid in snapshot.datapoints:
+                graphbase.set_member_edge(ido=pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
         elif snapshot.type==snapshottypes.HISTOGRAM:
             snapshot=cassapisnapshot.get_snapshot_histogram(nid=nid)
             if not snapshot:

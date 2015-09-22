@@ -38,6 +38,12 @@ def get_widgets_config_request(username):
             reg['wid']=widget['wid'].hex
             reg['widgetname']=widget['widgetname']
             reg['pid']=widget['pid'].hex
+        elif widget['type']==types.MULTIDP:
+            reg['type']=types.MULTIDP
+            reg['wid']=widget['wid'].hex
+            reg['widgetname']=widget['widgetname']
+            reg['datapoints']=[pid.hex for pid in widget['datapoints']]
+            reg['view']=widget['active_visualization']
         elif widget['type'] in [types.HISTOGRAM, types.LINEGRAPH, types.TABLE]:
             reg['type']=widget['type']
             reg['wid']=widget['wid'].hex
@@ -70,9 +76,12 @@ def get_widget_config_request(username, wid):
     elif data['type']==types.DATAPOINT:
         widget['type']=types.DATAPOINT
         widget['pid']=data['pid'].hex
+    elif data['type']==types.MULTIDP:
+        widget['type']=types.MULTIDP
+        widget['datapoints']=[pid.hex for pid in data['datapoints']]
+        widget['view']=data['active_visualization']
     elif data['type'] in [types.HISTOGRAM, types.LINEGRAPH, types.TABLE]:
         widget['type']=data['type']
-        widget['wid']=data['wid'].hex
         widget['datapoints']=[]
         for pid in data['datapoints']:
             if pid in data['colors'].keys():
@@ -103,11 +112,13 @@ def new_widget_request(username, data):
         raise exceptions.BadParametersException(error=errors.E_IWAW_NWR_ID)
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.NEW_WIDGET, uid=uid)
-    if not 'type' in data or not data['type'] in [types.LINEGRAPH, types.TABLE, types.HISTOGRAM]:
+    if not 'type' in data or not data['type'] in [types.MULTIDP, types.LINEGRAPH, types.TABLE, types.HISTOGRAM]:
         raise exceptions.BadParametersException(error=errors.E_IWAW_NWR_IT)
     if not 'widgetname' in data or not args.is_valid_widgetname(data['widgetname']):
         raise exceptions.BadParametersException(error=errors.E_IWAW_NWR_IWN)
     widget=None
+    if data['type']==types.MULTIDP:
+        widget=widgetapi.new_widget_multidp(uid=uid, widgetname=data['widgetname'])
     if data['type']==types.LINEGRAPH:
         widget=widgetapi.new_widget_linegraph(uid=uid, widgetname=data['widgetname'])
     elif data['type']==types.TABLE:
@@ -166,7 +177,7 @@ def update_widget_config_request(username, wid, data):
         raise exceptions.BadParametersException(error=errors.E_IWAW_UWCR_IW)
     if not args.is_valid_dict(data):
         raise exceptions.BadParametersException(error=errors.E_IWAW_UWCR_ID)
-    if not 'widgetname' in data and not 'datapoints' in data:
+    if not 'widgetname' in data and not 'datapoints' in data and not 'view' in data:
         raise exceptions.BadParametersException(error=errors.E_IWAW_UWCR_EMP)
     if 'widgetname' in data and not args.is_valid_widgetname(data['widgetname']):
         raise exceptions.BadParametersException(error=errors.E_IWAW_UWCR_IWN)
@@ -186,16 +197,18 @@ def update_widget_config_request(username, wid, data):
                 raise exceptions.BadParametersException(error=errors.E_IWAW_UWCR_IEP)
             if not args.is_valid_hexcolor(element['color']):
                 raise exceptions.BadParametersException(error=errors.E_IWAW_UWCR_IEC)
+    if 'view' in data and not args.is_valid_int(data['view']):
+        raise exceptions.BadParametersException(error=errors.E_IWAW_UWCR_IVW)
     wid=uuid.UUID(wid)
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.UPDATE_WIDGET_CONFIG, uid=uid, wid=wid)
     widgetname=data['widgetname'] if 'widgetname' in data else None
-    datapoints=None
+    colors=dict()
     if 'datapoints' in data:
-        colors=dict()
         for element in data['datapoints']:
             colors[uuid.UUID(element['pid'])]=element['color']
-    if widgetapi.update_widget_config(wid=wid, widgetname=widgetname, colors=colors):
+    view=data['view'] if 'view' in data else None
+    if widgetapi.update_widget_config(wid=wid, widgetname=widgetname, colors=colors, active_visualization=view):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler

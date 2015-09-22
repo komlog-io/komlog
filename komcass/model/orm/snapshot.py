@@ -75,3 +75,16 @@ class SnapshotTable(Snapshot):
         self.shared_with_cids=shared_with_cids if shared_with_cids else set()
         super(SnapshotTable,self).__init__(nid,uid,types.TABLE)
 
+class SnapshotMultidp(Snapshot):
+    def __init__(self,nid,uid,wid,interval_init, interval_end, widgetname,creation_date,active_visualization,datapoints,shared_with_uids,shared_with_cids):
+        self.wid=wid
+        self.interval_init=interval_init
+        self.interval_end=interval_end
+        self.widgetname=widgetname
+        self.creation_date=creation_date
+        self.active_visualization=active_visualization
+        self.datapoints=datapoints
+        self.shared_with_uids=shared_with_uids if shared_with_uids else set()
+        self.shared_with_cids=shared_with_cids if shared_with_cids else set()
+        super(SnapshotMultidp,self).__init__(nid,uid,types.MULTIDP)
+

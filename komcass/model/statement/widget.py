@@ -24,12 +24,15 @@ STATEMENTS={90000:'select * from mst_widget where wid=?',
             90011:'select wid from mst_widget_linegraph where datapoints contains ?',
             90012:'select * from mst_widget_table where wid=?',
             90013:'select wid from mst_widget_table where datapoints contains ?',
+            90014:'select * from mst_widget_multidp where wid=?',
+            90015:'select wid from mst_widget_multidp where datapoints contains ?',
             91000:'insert into mst_widget (wid,uid,type) values (?,?,?)',
             91001:'insert into mst_widget_ds (wid,uid,widgetname,creation_date,did) values (?,?,?,?,?)',
             91002:'insert into mst_widget_dp (wid,uid,widgetname,creation_date,pid) values (?,?,?,?,?)',
             91003:'insert into mst_widget_histogram (wid,uid,widgetname,creation_date,datapoints,colors) values (?,?,?,?,?,?)',
             91004:'insert into mst_widget_linegraph (wid,uid,widgetname,creation_date,datapoints,colors) values (?,?,?,?,?,?)',
             91005:'insert into mst_widget_table (wid,uid,widgetname,creation_date,datapoints,colors) values (?,?,?,?,?,?)',
+            91006:'insert into mst_widget_multidp (wid,uid,widgetname,creation_date,active_visualization,datapoints) values (?,?,?,?,?,?)',
             92000:'delete from mst_widget where wid=?',
             92001:'delete from mst_widget where uid=?',
             92002:'delete from mst_widget_ds where wid=?',
@@ -45,6 +48,8 @@ STATEMENTS={90000:'select * from mst_widget where wid=?',
             92012:'delete from mst_widget_table where wid=?',
             92013:'delete datapoints[?] from mst_widget_table where wid=?',
             92014:'delete colors[?] from mst_widget_table where wid=?',
+            92015:'delete from mst_widget_multidp where wid=?',
+            92016:'delete datapoints[?] from mst_widget_multidp where wid=?',
             93001:'update mst_widget_histogram set datapoints=? where wid=?',
             93002:'update mst_widget_histogram set colors[?]=? where wid=?',
             93003:'update mst_widget_linegraph set datapoints=? where wid=?',
@@ -56,6 +61,9 @@ STATEMENTS={90000:'select * from mst_widget where wid=?',
             93009:'update mst_widget_histogram set widgetname=? where wid=?',
             93010:'update mst_widget_linegraph set widgetname=? where wid=?',
             93011:'update mst_widget_table set widgetname=? where wid=?',
+            93012:'update mst_widget_multidp set datapoints=? where wid=?',
+            93013:'update mst_widget_multidp set widgetname=? where wid=?',
+            93014:'update mst_widget_multidp set active_visualization=? where wid=?',
            }
 
 # selects
@@ -74,6 +82,8 @@ S_A_MSTWIDGETLINEGRAPH_B_WID=90010
 S_WID_MSTWIDGETLINEGRAPH_B_PID=90011
 S_A_MSTWIDGETTABLE_B_WID=90012
 S_WID_MSTWIDGETTABLE_B_PID=90013
+S_A_MSTWIDGETMULTIDP_B_WID=90014
+S_WID_MSTWIDGETMULTIDP_B_PID=90015
 
 # Inserts
 
@@ -83,6 +93,7 @@ I_A_MSTWIDGETDP=91002
 I_A_MSTWIDGETHISTOGRAM=91003
 I_A_MSTWIDGETLINEGRAPH=91004
 I_A_MSTWIDGETTABLE=91005
+I_A_MSTWIDGETMULTIDP=91006
 
 # Deletes
 
@@ -101,6 +112,8 @@ D_COLOR_MSTWIDGETLINEGRAPH_B_PID_WID=92011
 D_A_MSTWIDGETTABLE_B_WID=92012
 D_DATAPOINT_MSTWIDGETTABLE_B_PID_WID=92013
 D_COLOR_MSTWIDGETTABLE_B_PID_WID=92014
+D_A_MSTWIDGETMULTIDP_B_WID=92015
+D_PID_MSTWIDGETMULTIDP_B_PID_WID=92016
 
 # Updates
 
@@ -115,5 +128,8 @@ U_WIDGETNAME_MSTWIDGETDATAPOINT_B_WID=93008
 U_WIDGETNAME_MSTWIDGETHISTOGRAM_B_WID=93009
 U_WIDGETNAME_MSTWIDGETLINEGRAPH_B_WID=93010
 U_WIDGETNAME_MSTWIDGETTABLE_B_WID=93011
+U_PIDS_MSTWIDGETMULTIDP_B_WID=93012
+U_WIDGETNAME_MSTWIDGETMULTIDP_B_WID=93013
+U_ACTIVEVISUALIZATION_MSTWIDGETMULTIDP_B_WID=93014
 
 

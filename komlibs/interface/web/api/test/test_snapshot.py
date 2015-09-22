@@ -487,6 +487,126 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['datapoints'],[{'pid':pid,'color':response5.data['datapoints'][0]['color']}])
 
+    def test_get_snapshot_config_request_success_snapshot_multidp(self):
+        ''' get_snapshot_config_request should succeed '''
+        username=self.userinfo['username']
+        aid=self.userinfo['agents'][0]['aid']
+        widgetname='test_get_snapshot_config_request_success_snapshot_multidp'
+        data={'type':types.MULTIDP, 'widgetname':widgetname}
+        response = widgetapi.new_widget_request(username=username, data=data)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        wid=response.data['wid']
+        response3 = widgetapi.get_widget_config_request(username=username, wid=wid)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['type'],types.MULTIDP)
+        self.assertEqual(response3.data['widgetname'],widgetname)
+        self.assertEqual(response3.data['datapoints'],[])
+        self.assertEqual(response3.data['wid'],wid)
+        datasourcename='test_get_snapshot_config_request_success_snapshot_multidp_ds'
+        response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        datasourcecontent='DATASOURCE CONTENT 1 2 3'
+        date=timeuuid.uuid1()
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
+        self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
+        datapointname='test_get_snapshot_config_request_success_snapshot_multidp_dp'
+        sequence=datasourcedata.data['seq']
+        variable=datasourcedata.data['variables'][0]
+        response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        response2 = widgetapi.get_widgets_config_request(username=username)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        pid=None
+        num_widgets=0
+        for widget in response2.data:
+            if widget['type']==types.DATAPOINT:
+                num_widgets+=1
+                pid=widget['pid']
+        self.assertTrue(num_widgets>=1)
+        response4=widgetapi.add_datapoint_request(username=username, wid=wid, pid=pid)
+        self.assertEqual(response4.status, status.WEB_STATUS_OK)
+        response5=widgetapi.get_widget_config_request(username=username, wid=wid)
+        self.assertEqual(response5.status, status.WEB_STATUS_OK)
+        self.assertEqual(response5.data['type'],types.MULTIDP)
+        self.assertEqual(response5.data['widgetname'],widgetname)
+        self.assertEqual(len(response5.data['datapoints']),1)
+        self.assertEqual(response5.data['datapoints'],[pid])
+        self.assertEqual(response5.data['wid'],wid)
+        its=1
+        ets=2
+        username_to_share=self.userinfo_to_share['username']
+        response6 = snapshotapi.new_snapshot_request(username=username,wid=wid,user_list=[username_to_share],its=its,ets=ets)
+        self.assertEqual(response6.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        response7 = snapshotapi.get_snapshot_config_request(username=username, nid=response6.data['nid'])
+        self.assertEqual(response7.status, status.WEB_STATUS_OK)
+        self.assertEqual(response7.data['nid'],response6.data['nid'])
+        self.assertEqual(response7.data['type'],types.MULTIDP)
+        self.assertEqual(response7.data['widgetname'],widgetname)
+        self.assertEqual(response7.data['its'],1)
+        self.assertEqual(response7.data['ets'],2)
+        self.assertEqual(response7.data['datapoints'],[{'pid':pid}])
+
     def test_get_snapshot_config_request_success_snapshot_datasource(self):
         ''' get_snapshot_config_request should succeed '''
         username=self.userinfo['username']
@@ -1139,6 +1259,130 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['datapoints'],[{'pid':pid,'color':response5.data['datapoints'][0]['color']}])
+        response8 = snapshotapi.delete_snapshot_request(username=username, nid=response6.data['nid'])
+        self.assertEqual(response8.status, status.WEB_STATUS_OK)
+        response9 = snapshotapi.get_snapshot_config_request(username=username, nid=response6.data['nid'])
+        self.assertEqual(response9.status, status.WEB_STATUS_NOT_FOUND)
+
+    def test_delete_snapshot_request_success_snapshot_multidp(self):
+        ''' delete_snapshot_request should succeed '''
+        username=self.userinfo['username']
+        aid=self.userinfo['agents'][0]['aid']
+        widgetname='test_delete_snapshot_request_success_snapshot_multidp'
+        data={'type':types.MULTIDP, 'widgetname':widgetname}
+        response = widgetapi.new_widget_request(username=username, data=data)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        wid=response.data['wid']
+        response3 = widgetapi.get_widget_config_request(username=username, wid=wid)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['type'],types.MULTIDP)
+        self.assertEqual(response3.data['widgetname'],widgetname)
+        self.assertEqual(response3.data['datapoints'],[])
+        self.assertEqual(response3.data['wid'],wid)
+        datasourcename='test_delete_snapshot_request_success_snapshot_multidp_ds'
+        response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        datasourcecontent='DATASOURCE CONTENT 1 2 3'
+        date=timeuuid.uuid1()
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
+        self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
+        datapointname='test_delete_snapshot_request_success_snapshot_multidp_dp'
+        sequence=datasourcedata.data['seq']
+        variable=datasourcedata.data['variables'][0]
+        response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        response2 = widgetapi.get_widgets_config_request(username=username)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        pid=None
+        num_widgets=0
+        for widget in response2.data:
+            if widget['type']==types.DATAPOINT:
+                num_widgets+=1
+                pid=widget['pid']
+        self.assertTrue(num_widgets>=1)
+        response4=widgetapi.add_datapoint_request(username=username, wid=wid, pid=pid)
+        self.assertEqual(response4.status, status.WEB_STATUS_OK)
+        response5=widgetapi.get_widget_config_request(username=username, wid=wid)
+        self.assertEqual(response5.status, status.WEB_STATUS_OK)
+        self.assertEqual(response5.data['type'],types.MULTIDP)
+        self.assertEqual(response5.data['widgetname'],widgetname)
+        self.assertEqual(len(response5.data['datapoints']),1)
+        self.assertEqual(response5.data['datapoints'],[pid])
+        self.assertEqual(response5.data['wid'],wid)
+        its=1
+        ets=2
+        username_to_share=self.userinfo_to_share['username']
+        response6 = snapshotapi.new_snapshot_request(username=username,its=its,user_list=[username_to_share],ets=ets,wid=wid)
+        self.assertEqual(response6.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        response7 = snapshotapi.get_snapshot_config_request(username=username, nid=response6.data['nid'])
+        self.assertEqual(response7.status, status.WEB_STATUS_OK)
+        self.assertEqual(response7.data['nid'],response6.data['nid'])
+        self.assertEqual(response7.data['type'],types.MULTIDP)
+        self.assertEqual(response7.data['widgetname'],widgetname)
+        self.assertEqual(response7.data['its'],1)
+        self.assertEqual(response7.data['ets'],2)
+        self.assertEqual(response7.data['datapoints'],[{'pid':pid}])
         response8 = snapshotapi.delete_snapshot_request(username=username, nid=response6.data['nid'])
         self.assertEqual(response8.status, status.WEB_STATUS_OK)
         response9 = snapshotapi.get_snapshot_config_request(username=username, nid=response6.data['nid'])
@@ -1860,6 +2104,174 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response8.status, status.WEB_STATUS_OK)
         self.assertEqual(response8.data['pid'],pid)
         self.assertEqual(response8.data['color'],response5.data['datapoints'][0]['color'])
+        self.assertEqual(response8.data['datapointname'],datapointname)
+        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',iseq=response7.data['iseq'],eseq=response7.data['eseq'])
+        self.assertEqual(response9.status, status.WEB_STATUS_NOT_FOUND)
+        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2')
+        self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
+        #request from other users should be denied
+        username_to_deny='username_to_deny'
+        response10=snapshotapi.get_snapshot_config_request(username=username_to_deny, nid=response6.data['nid'])
+        self.assertEqual(response10.status, status.WEB_STATUS_NOT_FOUND)
+        response11=datapointapi.get_datapoint_config_request(username=username_to_deny, pid=pid)
+        self.assertEqual(response11.status, status.WEB_STATUS_NOT_FOUND)
+
+    def test_new_snapshot_request_failure_widget_multidp_has_no_datapoints(self):
+        ''' new_snapshot_request should fail if the multidp widget has no datapoints '''
+        username=self.userinfo['username']
+        aid=self.userinfo['agents'][0]['aid']
+        widgetname='test_new_snapshot_request_failure_widget_multidp_has_no_datapoints'
+        data={'type':types.MULTIDP, 'widgetname':widgetname}
+        response = widgetapi.new_widget_request(username=username, data=data)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        wid=response.data['wid']
+        response3 = widgetapi.get_widget_config_request(username=username, wid=wid)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['type'],types.MULTIDP)
+        self.assertEqual(response3.data['widgetname'],widgetname)
+        self.assertEqual(response3.data['datapoints'],[])
+        self.assertEqual(response3.data['wid'],wid)
+        its=1
+        ets=2
+        username_to_share=self.userinfo_to_share['username']
+        new_snapshot_resp = snapshotapi.new_snapshot_request(username=username,wid=wid,user_list=[username_to_share],its=its,ets=ets)
+        self.assertEqual(new_snapshot_resp.status, status.WEB_STATUS_NOT_ALLOWED)
+
+    def test_new_snapshot_request_success_widget_multidp(self):
+        ''' new_snapshot_request should succeed '''
+        username=self.userinfo['username']
+        aid=self.userinfo['agents'][0]['aid']
+        widgetname='test_new_snapshot_request_success_widget_multidp'
+        data={'type':types.MULTIDP, 'widgetname':widgetname}
+        response = widgetapi.new_widget_request(username=username, data=data)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        wid=response.data['wid']
+        response3 = widgetapi.get_widget_config_request(username=username, wid=wid)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['type'],types.MULTIDP)
+        self.assertEqual(response3.data['widgetname'],widgetname)
+        self.assertEqual(response3.data['datapoints'],[])
+        self.assertEqual(response3.data['wid'],wid)
+        datasourcename='test_new_snapshot_request_success_widget_multidp_ds'
+        response = datasourceapi.new_datasource_request(username=username, aid=aid, datasourcename=datasourcename)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        datasourcecontent='DATASOURCE CONTENT 1 2 3'
+        date=timeuuid.uuid1()
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        datasourcedata=datasourceapi.get_datasource_data_request(username=username, did=response.data['did'])
+        self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
+        datapointname='test_new_snapshot_request_success_widget_multidp_dp'
+        sequence=datasourcedata.data['seq']
+        variable=datasourcedata.data['variables'][0]
+        response=datapointapi.new_datapoint_request(username=username, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        response2 = widgetapi.get_widgets_config_request(username=username)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        pid=None
+        num_widgets=0
+        for widget in response2.data:
+            if widget['type']==types.DATAPOINT and widget['widgetname']=='.'.join((datasourcename,datapointname)):
+                num_widgets+=1
+                pid=widget['pid']
+        self.assertEqual(num_widgets,1)
+        response4=widgetapi.add_datapoint_request(username=username, wid=wid, pid=pid)
+        self.assertEqual(response4.status, status.WEB_STATUS_OK)
+        response5=widgetapi.get_widget_config_request(username=username, wid=wid)
+        self.assertEqual(response5.status, status.WEB_STATUS_OK)
+        self.assertEqual(response5.data['type'],types.MULTIDP)
+        self.assertEqual(response5.data['widgetname'],widgetname)
+        self.assertEqual(len(response5.data['datapoints']),1)
+        self.assertEqual(response5.data['datapoints'],[pid])
+        self.assertEqual(response5.data['wid'],wid)
+        its=1
+        ets=2
+        username_to_share=self.userinfo_to_share['username']
+        response6 = snapshotapi.new_snapshot_request(username=username,wid=wid,user_list=[username_to_share],ets=ets,its=its)
+        self.assertEqual(response6.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgapi.process_msg_result(msg_result)
+            else:
+                break
+        #username_to_share should have access to the snapshot and datapoints
+        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'])
+        self.assertEqual(response7.status, status.WEB_STATUS_OK)
+        self.assertEqual(response7.data['nid'],response6.data['nid'])
+        self.assertEqual(response7.data['type'],types.MULTIDP)
+        self.assertEqual(response7.data['widgetname'],widgetname)
+        self.assertEqual(response7.data['its'],1)
+        self.assertEqual(response7.data['ets'],2)
+        self.assertEqual(response7.data['datapoints'],[{'pid':pid}])
+        response8=datapointapi.get_datapoint_config_request(username=username_to_share, pid=pid)
+        self.assertEqual(response8.status, status.WEB_STATUS_OK)
+        self.assertEqual(response8.data['pid'],pid)
+        self.assertTrue(isinstance(response8.data['color'],str))
         self.assertEqual(response8.data['datapointname'],datapointname)
         response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',iseq=response7.data['iseq'],eseq=response7.data['eseq'])
         self.assertEqual(response9.status, status.WEB_STATUS_NOT_FOUND)

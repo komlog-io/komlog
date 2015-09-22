@@ -283,6 +283,11 @@ E_GWA_NWT_IWN=971
 E_GWA_NWT_UNF=972
 E_GWA_NWT_IWE=973
 
+E_GWA_NWMP_IU=975 #new_widget_multidp invalid uid
+E_GWA_NWMP_IWN=976 #new_widget_multidp invalid widgetname
+E_GWA_NWMP_UNF=977 #new_widget_multidp user not found
+E_GWA_NWMP_IWE=978 #new_widget_multidp error inserting widget in db
+
 E_GWA_ADTW_IW=980
 E_GWA_ADTW_IP=981
 E_GWA_ADTW_WNF=982
@@ -291,6 +296,7 @@ E_GWA_ADTW_IDHE=984
 E_GWA_ADTW_IDLE=985
 E_GWA_ADTW_IDTE=986
 E_GWA_ADTW_WUO=987
+E_GWA_ADTW_IDMPE=988 #add_datapoint_to_widget error in db adding to widget multidp
 
 E_GWA_DDFW_IW=1000
 E_GWA_DDFW_IP=1001
@@ -300,12 +306,14 @@ E_GWA_DDFW_IDHE=1004
 E_GWA_DDFW_IDLE=1005
 E_GWA_DDFW_IDTE=1006
 E_GWA_DDFW_WUO=1007
+E_GWA_DDFW_IDMPE=1008 #delete_datapoint_from_widget error in db deleting dp from multidp
 
 E_GWA_UWC_IW=1020
 E_GWA_UWC_IWN=1021
 E_GWA_UWC_IC=1022
 E_GWA_UWC_WNF=1023
 E_GWA_UWC_WUO=1024
+E_GWA_UWC_IAV=1025 #update_widget_config error in active_visualization parameter validation
 
 E_GWA_UWDS_IW=1030
 E_GWA_UWDS_IWN=1031
@@ -335,6 +343,12 @@ E_GWA_UWT_ICD=1072
 E_GWA_UWT_WNF=1073
 E_GWA_UWT_DNF=1074
 E_GWA_UWT_IC=1075
+
+E_GWA_UWMP_IW=1080 #update_widget_multidp invalid wid parameter
+E_GWA_UWMP_IWN=1081 #update_widget_multidp invalid widgetname parameter
+E_GWA_UWMP_IAV=1082 #update_widget_multidp invalid active_visualization parameter
+E_GWA_UWMP_WNF=1083 #update_widget_multidp widget not found
+E_GWA_UWMP_IAVT=1084 #update_widget_multidp non available visualization type for widget
 
 E_GWA_GRW_IW=1090
 
@@ -409,6 +423,10 @@ E_GSA_NSL_SCE=1592
 E_GSA_NST_WNF=1600
 E_GSA_NST_ZDP=1601
 E_GSA_NST_SCE=1602
+
+E_GSA_NSMP_WNF=1610
+E_GSA_NSMP_ZDP=1611
+E_GSA_NSMP_SCE=1612
 
 # gestaccount circle api
 

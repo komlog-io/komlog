@@ -19,6 +19,8 @@ OBJECTS=['MST_WIDGET',
          'MST_WIDGET_TABLE',
          'MST_WIDGET_TABLE_INDEX_01',
          'MST_WIDGET_TABLE_INDEX_02',
+         'MST_WIDGET_MULTIDP',
+         'MST_WIDGET_MULTIDP_INDEX_01',
         ]
 
 MST_WIDGET='''
@@ -122,5 +124,21 @@ MST_WIDGET_TABLE_INDEX_01='''
 
 MST_WIDGET_TABLE_INDEX_02='''
         CREATE INDEX ON mst_widget_table (colors);
+    '''
+
+MST_WIDGET_MULTIDP='''
+        CREATE TABLE mst_widget_multidp (
+            wid uuid,
+            uid uuid,
+            widgetname text,
+            creation_date timeuuid,
+            active_visualization int,
+            datapoints set<uuid>,
+            PRIMARY KEY (wid)
+        );
+    '''
+
+MST_WIDGET_MULTIDP_INDEX_01='''
+        CREATE INDEX ON mst_widget_multidp (datapoints);
     '''
 

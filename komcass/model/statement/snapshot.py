@@ -24,18 +24,22 @@ STATEMENTS={120000:'select * from mst_snapshot where nid=?',
             120011:'select * from mst_snapshot_table where nid=?',
             120012:'select nid from mst_snapshot_table where wid=?',
             120013:'select count(*) from mst_snapshot where uid=?',
+            120014:'select * from mst_snapshot_multidp where nid=?',
+            120015:'select nid from mst_snapshot_multidp where wid=?',
             121000:'insert into mst_snapshot (nid,uid,type) values (?,?,?)',
             121001:'insert into mst_snapshot_ds (nid,uid,wid,interval_init,interval_end,widgetname,creation_date,did,shared_with_uids,shared_with_cids) values (?,?,?,?,?,?,?,?,?,?)',
             121002:'insert into mst_snapshot_dp (nid,uid,wid,interval_init,interval_end,widgetname,creation_date,pid,shared_with_uids,shared_with_cids) values (?,?,?,?,?,?,?,?,?,?)',
             121003:'insert into mst_snapshot_histogram (nid,uid,wid,interval_init,interval_end,widgetname,creation_date,datapoints,colors,shared_with_uids,shared_with_cids) values (?,?,?,?,?,?,?,?,?,?,?)',
             121004:'insert into mst_snapshot_linegraph (nid,uid,wid,interval_init,interval_end,widgetname,creation_date,datapoints,colors,shared_with_uids,shared_with_cids) values (?,?,?,?,?,?,?,?,?,?,?)',
             121005:'insert into mst_snapshot_table (nid,uid,wid,interval_init,interval_end,widgetname,creation_date,datapoints,colors,shared_with_uids,shared_with_cids) values (?,?,?,?,?,?,?,?,?,?,?)',
+            121006:'insert into mst_snapshot_multidp (nid,uid,wid,interval_init,interval_end,widgetname,creation_date,active_visualization,datapoints,shared_with_uids,shared_with_cids) values (?,?,?,?,?,?,?,?,?,?,?)',
             122000:'delete from mst_snapshot where nid=?',
             122001:'delete from mst_snapshot_ds where nid=?',
             122002:'delete from mst_snapshot_dp where nid=?',
             122003:'delete from mst_snapshot_histogram where nid=?',
             122004:'delete from mst_snapshot_linegraph where nid=?',
             122005:'delete from mst_snapshot_table where nid=?',
+            122006:'delete from mst_snapshot_multidp where nid=?',
            }
 
 # selects
@@ -54,6 +58,8 @@ S_NID_MSTSNAPSHOTLINEGRAPH_B_WID=120010
 S_A_MSTSNAPSHOTTABLE_B_NID=120011
 S_NID_MSTSNAPSHOTTABLE_B_WID=120012
 S_COUNT_MSTSNAPSHOT_B_UID=120013
+S_A_MSTSNAPSHOTMULTIDP_B_NID=120014
+S_NID_MSTSNAPSHOTMULTIDP_B_WID=120015
 
 # Inserts
 
@@ -63,6 +69,7 @@ I_A_MSTSNAPSHOTDP=121002
 I_A_MSTSNAPSHOTHISTOGRAM=121003
 I_A_MSTSNAPSHOTLINEGRAPH=121004
 I_A_MSTSNAPSHOTTABLE=121005
+I_A_MSTSNAPSHOTMULTIDP=121006
 
 # Deletes
 
@@ -72,4 +79,5 @@ D_A_MSTSNAPSHOTDP_B_NID=122002
 D_A_MSTSNAPSHOTHISTOGRAM_B_NID=122003
 D_A_MSTSNAPSHOTLINEGRAPH_B_NID=122004
 D_A_MSTSNAPSHOTTABLE_B_NID=122005
+D_A_MSTSNAPSHOTMULTIDP_B_NID=122006
 

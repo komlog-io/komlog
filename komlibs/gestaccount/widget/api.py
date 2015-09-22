@@ -17,6 +17,7 @@ from komcass.api import dashboard as cassapidashboard
 from komcass.api import snapshot as cassapisnapshot
 from komcass.model.orm import widget as ormwidget
 from komlibs.gestaccount.widget import types
+from komlibs.gestaccount.widget import visualization_types as vistypes
 from komlibs.gestaccount import exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
@@ -38,6 +39,10 @@ def get_widget_config(wid):
         widget=cassapiwidget.get_widget_dp(wid=wid)
         if widget:
             data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.DATAPOINT,'pid':widget.pid}
+    elif widget.type==types.MULTIDP:
+        widget=cassapiwidget.get_widget_multidp(wid=wid)
+        if widget:
+            data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.MULTIDP,'datapoints':widget.datapoints, 'active_visualization':widget.active_visualization}
     elif widget.type==types.HISTOGRAM:
         widget=cassapiwidget.get_widget_histogram(wid=wid)
         if widget:
@@ -69,6 +74,10 @@ def get_widgets_config(uid):
             dpwidget=cassapiwidget.get_widget_dp(wid=widget.wid)
             if dpwidget:
                 data.append({'uid':dpwidget.uid, 'widgetname': dpwidget.widgetname, 'wid':dpwidget.wid,'type':types.DATAPOINT,'pid':dpwidget.pid})
+        elif widget.type==types.MULTIDP:
+            mpwidget=cassapiwidget.get_widget_multidp(wid=widget.wid)
+            if mpwidget:
+                data.append({'uid':mpwidget.uid, 'widgetname': mpwidget.widgetname, 'wid':mpwidget.wid,'type':types.MULTIDP,'datapoints':mpwidget.datapoints, 'active_visualization':mpwidget.active_visualization})
         elif widget.type==types.HISTOGRAM:
             hgwidget=cassapiwidget.get_widget_histogram(wid=widget.wid)
             if hgwidget:
@@ -199,6 +208,21 @@ def new_widget_table(uid, widgetname):
     else:
         raise exceptions.WidgetCreationException(error=errors.E_GWA_NWT_IWE)
 
+def new_widget_multidp(uid, widgetname):
+    if not args.is_valid_uuid(uid):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWMP_IU)
+    if not args.is_valid_uri(widgetname):
+        raise exceptions.BadParametersException(error=errors.E_GWA_NWMP_IWN)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=errors.E_GWA_NWMP_UNF)
+    wid=uuid.uuid4()
+    widget=ormwidget.WidgetMultidp(wid=wid,uid=user.uid,widgetname=widgetname,creation_date=timeuuid.uuid1(), active_visualization=vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
+    if cassapiwidget.new_widget(widget=widget):
+        return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type}
+    else:
+        raise exceptions.WidgetCreationException(error=errors.E_GWA_NWMP_IWE)
+
 def add_datapoint_to_widget(wid, pid):
     if not args.is_valid_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_GWA_ADTW_IW)
@@ -211,7 +235,10 @@ def add_datapoint_to_widget(wid, pid):
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=errors.E_GWA_ADTW_DNF)
     color=datapoint.color if datapoint.color else colors.get_random_color()
-    if widget.type==types.HISTOGRAM:
+    if widget.type==types.MULTIDP:
+        if not cassapiwidget.add_datapoint_to_multidp(wid=wid, pid=pid):
+            raise exceptions.AddDatapointToWidgetException(error=errors.E_GWA_ADTW_IDMPE)
+    elif widget.type==types.HISTOGRAM:
         if not cassapiwidget.add_datapoint_to_histogram(wid=wid, pid=pid, color=color):
             raise exceptions.AddDatapointToWidgetException(error=errors.E_GWA_ADTW_IDHE)
     elif widget.type==types.LINEGRAPH:
@@ -238,7 +265,10 @@ def delete_datapoint_from_widget(wid, pid):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=errors.E_GWA_DDFW_DNF)
-    if widget.type==types.HISTOGRAM:
+    if widget.type==types.MULTIDP:
+        if not cassapiwidget.delete_datapoint_from_multidp(wid=wid, pid=pid):
+            raise exceptions.DeleteDatapointFromWidgetException(error=errors.E_GWA_DDFW_IDMPE)
+    elif widget.type==types.HISTOGRAM:
         if not cassapiwidget.delete_datapoint_from_histogram(wid=wid, pid=pid):
             raise exceptions.DeleteDatapointFromWidgetException(error=errors.E_GWA_DDFW_IDHE)
     elif widget.type==types.LINEGRAPH:
@@ -254,20 +284,24 @@ def delete_datapoint_from_widget(wid, pid):
         graphkin.unkin_widgets(ido=dpwidget.wid, idd=wid)
     return True
 
-def update_widget_config(wid, widgetname=None, colors=None):
+def update_widget_config(wid, widgetname=None, colors=None, active_visualization=None):
     if not args.is_valid_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWC_IW)
     if widgetname and not args.is_valid_uri(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWC_IWN)
     if colors and not args.is_valid_dict(colors):
         raise exceptions.BadParametersException(error=errors.E_GWA_UWC_IC)
+    if active_visualization and not args.is_valid_int(active_visualization):
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWC_IAV)
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
-        raise exceptions.WdigetNotFoundException(error=errors.E_GWA_UWC_WNF)
+        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_UWC_WNF)
     if widget.type==types.DATASOURCE:
         return update_widget_datasource(wid=wid, widgetname=widgetname)
     elif widget.type==types.DATAPOINT:
         return update_widget_datapoint(wid=wid, widgetname=widgetname)
+    elif widget.type==types.MULTIDP:
+        return update_widget_multidp(wid=wid, widgetname=widgetname, active_visualization=active_visualization)
     elif widget.type==types.HISTOGRAM:
         return update_widget_histogram(wid=wid, widgetname=widgetname, colors=colors)
     elif widget.type==types.LINEGRAPH:
@@ -382,6 +416,26 @@ def update_widget_table(wid, widgetname=None, colors=None):
         for pid in pids:
             if not cassapiwidget.add_datapoint_to_table(wid=wid, pid=pid, color=colors[pid]):
                 return False
+    return True
+
+def update_widget_multidp(wid, widgetname=None, active_visualization=None):
+    if not args.is_valid_uuid(wid):
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWMP_IW)
+    if widgetname and not args.is_valid_uri(widgetname):
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWMP_IWN)
+    if active_visualization and not args.is_valid_int(active_visualization):
+        raise exceptions.BadParametersException(error=errors.E_GWA_UWMP_IAV)
+    widget=cassapiwidget.get_widget_multidp(wid=wid)
+    if not widget:
+        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_UWMP_WNF)
+    if active_visualization:
+        if not active_visualization in vistypes.WIDGET_MULTIDP_AVAILABLE_VISUALIZATIONS:
+            raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GWA_UWMP_IAVT)
+        elif not active_visualization==widget.active_visualization and not cassapiwidget.insert_widget_multidp_active_visualization(wid=wid, active_visualization=active_visualization):
+            return False
+    if widgetname:
+        if not cassapiwidget.insert_widget_widgetname(wid,widgetname):
+            return False
     return True
 
 def get_related_widgets(wid):

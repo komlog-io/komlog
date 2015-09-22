@@ -3,4 +3,5 @@ DATAPOINT='dp'
 HISTOGRAM='hg'
 LINEGRAPH='lg'
 TABLE='tb'
+MULTIDP='mp'
 

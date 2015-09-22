@@ -37,6 +37,10 @@ def get_snapshot_config(nid):
         snapshot=cassapisnapshot.get_snapshot_dp(nid=nid)
         if snapshot:
             data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid,'type':types.DATAPOINT,'pid':snapshot.pid, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
+    elif snapshot.type==types.MULTIDP:
+        snapshot=cassapisnapshot.get_snapshot_multidp(nid=nid)
+        if snapshot:
+            data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.MULTIDP,'datapoints':snapshot.datapoints, 'active_visualization':snapshot.active_visualization, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
     elif snapshot.type==types.HISTOGRAM:
         snapshot=cassapisnapshot.get_snapshot_histogram(nid=nid)
         if snapshot:
@@ -84,7 +88,7 @@ def get_snapshot_data(nid):
         datapoint_datas=cassapidatapoint.get_datapoint_data(pid=snapshot_config['pid'],fromdate=snapshot_config['interval_init'],todate=snapshot_config['interval_end'])
         for datapoint_data in datapoint_datas:
             data[snapshot_config['pid']].append({'date':datapoint_data.date,'value':datapoint_data.value})
-    elif snapshot_config['type'] in [types.HISTOGRAM,types.LINEGRAPH,types.TABLE]:
+    elif snapshot_config['type'] in [types.MULTIDP,types.HISTOGRAM,types.LINEGRAPH,types.TABLE]:
         for pid in snapshot_config['datapoints']:
             data[pid]=[]
             datapoint_datas=cassapidatapoint.get_datapoint_data(pid=pid,fromdate=snapshot_config['interval_init'],todate=snapshot_config['interval_end'])
@@ -143,6 +147,8 @@ def new_snapshot(uid, wid, interval_init, interval_end, shared_with_users=None,s
         snapshot=_new_snapshot_datasource(uid=user.uid,wid=wid,interval_init=interval_init, interval_end=interval_end,shared_with_uids=uids,shared_with_cids=cids)
     elif widget.type==types.DATAPOINT:
         snapshot=_new_snapshot_datapoint(uid=user.uid,wid=wid,interval_init=interval_init, interval_end=interval_end,shared_with_uids=uids,shared_with_cids=cids)
+    elif widget.type==types.MULTIDP:
+        snapshot=_new_snapshot_multidp(uid=user.uid,wid=wid,interval_init=interval_init, interval_end=interval_end,shared_with_uids=uids,shared_with_cids=cids)
     elif widget.type==types.HISTOGRAM:
         snapshot=_new_snapshot_histogram(uid=user.uid,wid=wid,interval_init=interval_init, interval_end=interval_end,shared_with_uids=uids,shared_with_cids=cids)
     elif widget.type==types.LINEGRAPH:
@@ -219,4 +225,18 @@ def _new_snapshot_table(uid,wid,interval_init, interval_end, shared_with_uids,sh
         return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
         raise exceptions.SnapshotCreationException(error=errors.E_GSA_NST_SCE)
+
+def _new_snapshot_multidp(uid,wid,interval_init, interval_end, shared_with_uids,shared_with_cids):
+    widget=cassapiwidget.get_widget_multidp(wid=wid)
+    if not widget:
+        raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NSMP_WNF)
+    if len(widget.datapoints)==0:
+        raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GSA_NSMP_ZDP)
+    nid=uuid.uuid4()
+    creation_date=timeuuid.uuid1()
+    snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, active_visualization=widget.active_visualization, datapoints=widget.datapoints, shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
+    if cassapisnapshot.new_snapshot(snapshot):
+        return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
+    else:
+        raise exceptions.SnapshotCreationException(error=errors.E_GSA_NSMP_SCE)
 

@@ -5,6 +5,7 @@ from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datasource import api as datasourceapi 
 from komlibs.gestaccount.datapoint import api as datapointapi
 from komlibs.gestaccount.widget import api, types
+from komlibs.gestaccount.widget import visualization_types as vistypes
 from komlibs.gestaccount import exceptions, errors
 from komcass.model.orm import widget as ormwidget
 from komlibs.general import colors as libcolors
@@ -58,6 +59,25 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         self.assertEqual(data['type'],types.DATAPOINT)
         self.assertEqual(data['wid'],widget['wid'])
         self.assertEqual(data['pid'],widget['pid'])
+
+    def test_get_widget_config_success_MULTIDP(self):
+        ''' get_widget_config should succeed if wid exists and is MULTIDP type '''
+        username='test_get_widget_config_success_multidp_user'
+        agentname='test_get_widget_config_success_multidp_agent'
+        widgetname='test_get_widget_config_success_multidp_widget'
+        email=username+'@komlog.org'
+        password='password'
+        pubkey='testgetwidgetconfigsuccessWIDGETMPpubkey'
+        version='Test Version'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname) 
+        data=api.get_widget_config(wid=widget['wid'])
+        self.assertEqual(data['type'],types.MULTIDP)
+        self.assertEqual(data['wid'],widget['wid'])
+        self.assertEqual(data['widgetname'],widgetname)
+        self.assertEqual(data['datapoints'],set())
+        self.assertEqual(data['active_visualization'],vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
 
     def test_get_widgets_config_non_existent_uid(self):
         ''' get_widgets_config should fail if uid is not in system '''
@@ -517,6 +537,57 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         self.assertEqual(data['datapoints'],set())
         self.assertEqual(data['colors'],{})
 
+    def test_new_widget_multidp_failure_invalid_username(self):
+        ''' new_widget_multidp should fail if username is invalid '''
+        uids=[None, 123123, 12313.1231, {'a':'dict'},('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4().hex, uuid.uuid1()]
+        widgetname='test_new_widget_multidp_failure_invalid_username'
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.new_widget_multidp(uid=uid, widgetname=widgetname)
+            self.assertEqual(cm.exception.error, errors.E_GWA_NWMP_IU)
+
+    def test_new_widget_multidp_failure_invalid_widgetname(self):
+        ''' new_widget_multidp should fail if widgetname is invalid '''
+        widgetnames=[None, 123123, 12313.1231, {'a':'dict'},('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4(), uuid.uuid1()]
+        uid=uuid.uuid4()
+        for widgetname in widgetnames:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.new_widget_multidp(uid=uid, widgetname=widgetname)
+            self.assertEqual(cm.exception.error, errors.E_GWA_NWMP_IWN)
+
+    def test_new_widget_multidp_failure_non_existent_user(self):
+        ''' new_widget_multidp should fail if user does not exist '''
+        uid=uuid.uuid4()
+        widgetname='test_new_widget_failure_non_existent_user'
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            api.new_widget_multidp( uid=uid, widgetname=widgetname)
+        self.assertEqual(cm.exception.error, errors.E_GWA_NWMP_UNF)
+
+    def test_new_widget_multidp_success(self):
+        ''' new_widget_multidp should succeed if user exists '''
+        username='test_new_widget_multidp_success'
+        widgetname='test_new_widget_multidp_success'
+        email=username+'@komlog.org'
+        password='password'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname='test_new_widget_multidp_success_agent'
+        pubkey='testnewwidgethistogramsuccessMULTIDPpubkey'
+        version='Test Version'
+        datasourcename='test_new_widget_multidp_success_datasource'
+        datapointname='test_new_widget_multidp_success_datapoint'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        color=libcolors.get_random_color()
+        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
+        data=api.get_widget_config(wid=widget['wid'])
+        self.assertEqual(data['type'],types.MULTIDP)
+        self.assertEqual(data['wid'],widget['wid'])
+        self.assertEqual(data['widgetname'],widget['widgetname'])
+        self.assertEqual(data['uid'],widget['uid'])
+        self.assertEqual(data['datapoints'],set())
+        self.assertEqual(data['active_visualization'],vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
+
     def test_add_datapoint_to_widget_failure_invalid_wid(self):
         ''' add_datapoint_to_widget should fail if wid is invalid '''
         wids=[None, 123123, 12313.1231, {'a':'dict'},('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4().hex, uuid.uuid1()]
@@ -570,6 +641,40 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         self.assertEqual(data['uid'],widget['uid'])
         self.assertEqual(data['datapoints'],{pid})
         self.assertEqual(list(data['colors'].keys()),[pid])
+
+    def test_add_datapoint_to_widget_success_widget_multidp(self):
+        ''' add_datapoint_to_widget should succeed if widget is of type multidp '''
+        username='test_add_datapoint_to_widget_success_widget_multidp'
+        widgetname='test_add_datapoint_to_widget_success_widget_multidp'
+        email=username+'@komlog.org'
+        password='password'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname='test_add_datapoint_to_widget_multidp_success_agent'
+        pubkey='testnewwidgethistogramsuccessMULTIDPpubkey'
+        version='Test Version'
+        datasourcename='test_add_datapoint_to_widget_multidp_success_datasource'
+        datapointname='test_add_datapoint_to_widget_multidp_success_datapoint'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        color=libcolors.get_random_color()
+        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
+        data=api.get_widget_config(wid=widget['wid'])
+        self.assertEqual(data['type'],types.MULTIDP)
+        self.assertEqual(data['wid'],widget['wid'])
+        self.assertEqual(data['widgetname'],widget['widgetname'])
+        self.assertEqual(data['uid'],widget['uid'])
+        self.assertEqual(data['datapoints'],set())
+        self.assertEqual(data['active_visualization'],vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
+        pid=datapoint['pid']
+        self.assertTrue(api.add_datapoint_to_widget(wid=widget['wid'],pid=pid))
+        data=api.get_widget_config(wid=widget['wid'])
+        self.assertEqual(data['type'],types.MULTIDP)
+        self.assertEqual(data['wid'],widget['wid'])
+        self.assertEqual(data['widgetname'],widget['widgetname'])
+        self.assertEqual(data['uid'],widget['uid'])
+        self.assertEqual(data['datapoints'],{pid})
+        self.assertEqual(data['active_visualization'],vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
 
     def test_add_datapoint_to_widget_failure_unsupported_operation(self):
         ''' add_datapoint_to_widget should fail if widget type does not support the operation '''
@@ -652,6 +757,48 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         self.assertEqual(data['datapoints'],set())
         self.assertEqual(data['colors'],{})
 
+    def test_delete_datapoint_from_widget_success_widget_multidp(self):
+        ''' delete_datapoint_from_widget should succeed if widget is of type multidp '''
+        username='test_delete_datapoint_from_widget_success_widget_multidp'
+        widgetname='test_delete_datapoint_from_widget_success_widget_multidp'
+        email=username+'@komlog.org'
+        password='password'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname='test_delete_datapoint_from_widget_multidp_success_agent'
+        pubkey='testdeletedpfromwidgetmultidpsuccessMULTIDPpubkey'
+        version='Test Version'
+        datasourcename='test_delete_datapoint_from_widget_multidp_success_datasource'
+        datapointname='test_delete_datapoint_from_widget_multidp_success_datapoint'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        color=libcolors.get_random_color()
+        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
+        data=api.get_widget_config(wid=widget['wid'])
+        self.assertEqual(data['type'],types.MULTIDP)
+        self.assertEqual(data['wid'],widget['wid'])
+        self.assertEqual(data['widgetname'],widget['widgetname'])
+        self.assertEqual(data['uid'],widget['uid'])
+        self.assertEqual(data['datapoints'],set())
+        self.assertEqual(data['active_visualization'],vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
+        pid=datapoint['pid']
+        self.assertTrue(api.add_datapoint_to_widget(wid=widget['wid'],pid=pid))
+        data=api.get_widget_config(wid=widget['wid'])
+        self.assertEqual(data['type'],types.MULTIDP)
+        self.assertEqual(data['wid'],widget['wid'])
+        self.assertEqual(data['widgetname'],widget['widgetname'])
+        self.assertEqual(data['uid'],widget['uid'])
+        self.assertEqual(data['datapoints'],{pid})
+        self.assertEqual(data['active_visualization'],vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
+        self.assertTrue(api.delete_datapoint_from_widget(wid=widget['wid'],pid=pid))
+        data=api.get_widget_config(wid=widget['wid'])
+        self.assertEqual(data['type'],types.MULTIDP)
+        self.assertEqual(data['wid'],widget['wid'])
+        self.assertEqual(data['widgetname'],widget['widgetname'])
+        self.assertEqual(data['uid'],widget['uid'])
+        self.assertEqual(data['datapoints'],set())
+        self.assertEqual(data['active_visualization'],vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
+
     def test_delete_datapoint_from_widget_failure_unsupported_operation(self):
         ''' delete_datapoint_from_widget should fail if widget type does not support the operation '''
         username='test_delete_datapoint_from_widget_user'
@@ -673,6 +820,50 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         self.assertEqual(data['wid'],widget['wid'])
         self.assertEqual(data['did'],widget['did'])
         self.assertRaises(exceptions.WidgetUnsupportedOperationException, api.delete_datapoint_from_widget, wid=widget['wid'], pid=datapoint['pid'])
+
+    def test_update_widget_config_failure_invalid_wid(self):
+        ''' update_widget_config_should fail if wid is invalid '''
+        wids=[None, 123123, 12313.1231, {'a':'dict'},('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4().hex, uuid.uuid1()]
+        widgetname='test_update_widget_datasource_failure_invalid_wid'
+        for wid in wids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_widget_config(wid=wid, widgetname=widgetname)
+            self.assertEqual(cm.exception.error, errors.E_GWA_UWC_IW)
+
+    def test_update_widget_config_failure_invalid_widgetname(self):
+        ''' update_widget_config_should fail if widgetname is invalid '''
+        widgetnames=[123123, 12313.1231, {'a':'dict'},('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4(), uuid.uuid1()]
+        wid=uuid.uuid4()
+        for widgetname in widgetnames:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_widget_config(wid=wid, widgetname=widgetname)
+            self.assertEqual(cm.exception.error, errors.E_GWA_UWC_IWN)
+
+    def test_update_widget_config_failure_invalid_colors(self):
+        ''' update_widget_config_should fail if colors is invalid '''
+        colores=[123123, 12313.1231, ('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4(), uuid.uuid1()]
+        wid=uuid.uuid4()
+        for colors in colores:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_widget_config(wid=wid,colors=colors)
+            self.assertEqual(cm.exception.error, errors.E_GWA_UWC_IC)
+
+    def test_update_widget_config_failure_invalid_active_visualization(self):
+        ''' update_widget_config_should fail if active_visualization is invalid '''
+        actives=[12313.1231, {'a':'dict'},('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4(), uuid.uuid1()]
+        wid=uuid.uuid4()
+        for active in actives:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_widget_config(wid=wid,active_visualization=active)
+            self.assertEqual(cm.exception.error, errors.E_GWA_UWC_IAV)
+
+    def test_update_widget_config_failure_widget_not_found(self):
+        ''' update_widget_config_should fail if active_visualization is invalid '''
+        wid=uuid.uuid4()
+        widgetname='test_update_widget_config_failure_widget_not_found'
+        with self.assertRaises(exceptions.WidgetNotFoundException) as cm:
+            api.update_widget_config(wid=wid, widgetname=widgetname)
+        self.assertEqual(cm.exception.error, errors.E_GWA_UWC_WNF)
 
     def test_update_widget_datasource_failure_invalid_wid(self):
         ''' update_widget_datasource should fail if wid is invalid '''
@@ -1415,6 +1606,194 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for color in colors:
             new_colors={datapoint['pid']:color}
             self.assertRaises(exceptions.BadParametersException, api.update_widget_table, wid=widget['wid'], colors=new_colors)
+
+    def test_update_widget_multidp_failure_invalid_wid(self):
+        ''' update_widget_multidp should fail if wid is invalid '''
+        wids=[None, 123123, 12313.1231, {'a':'dict'},('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4().hex, uuid.uuid1()]
+        widgetname='test_update_widget_multidp_failure_invalid_wid'
+        for wid in wids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_widget_multidp(wid=wid, widgetname=widgetname)
+            self.assertEqual(cm.exception.error, errors.E_GWA_UWMP_IW)
+
+    def test_update_widget_multidp_failure_invalid_widgetname(self):
+        ''' update_widget_multidp should fail if widgetname is invalid '''
+        widgetnames=[123123, 12313.1231, {'a':'dict'},('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4(), uuid.uuid1()]
+        wid=uuid.uuid4()
+        for widgetname in widgetnames:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_widget_multidp(wid=wid, widgetname=widgetname)
+            self.assertEqual(cm.exception.error, errors.E_GWA_UWMP_IWN)
+
+    def test_update_widget_multidp_failure_invalid_colors(self):
+        ''' update_widget_multidp should fail if colors is invalid '''
+        actives=[12313.1231, ('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4(), uuid.uuid1()]
+        wid=uuid.uuid4()
+        widgetname='test_update_widget_multidp_failure_invalid_visualization'
+        for visualization in actives:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_widget_multidp(wid=wid, widgetname=widgetname, active_visualization=visualization)
+            self.assertEqual(cm.exception.error, errors.E_GWA_UWMP_IAV)
+
+    def test_update_widget_multidp_failure_non_existent_wid(self):
+        ''' update_widget_multidp should fail if wid does not exist '''
+        wid=uuid.uuid4()
+        widgetname='test_update_widget_multidp_failure_non_existent_wid'
+        with self.assertRaises(exceptions.WidgetNotFoundException) as cm:
+            api.update_widget_multidp(wid=wid, widgetname=widgetname)
+        self.assertEqual(cm.exception.error, errors.E_GWA_UWMP_WNF)
+
+    def test_update_widget_multidp_success(self):
+        ''' update_widget_multidp should succeed if wid exists and data is correct '''
+        username='test_update_widget_multidp_success'
+        agentname='test_update_widget_multidp_success'
+        datasourcename='test_update_widget_multidp_success_datasource'
+        datapointname='test_update_widget_multidp_success_datapoint'
+        email=username+'@komlog.org'
+        password='password'
+        pubkey='testupdatewidgetmultidpsuccesspubkey'
+        version='Test Version'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        color=libcolors.get_random_color()
+        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        widgetname='test_update_widget_multidp_success'
+        widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
+        self.assertTrue(isinstance(widget['wid'],uuid.UUID))
+        self.assertEqual(widget['widgetname'], widgetname)
+        self.assertEqual(widget['uid'],user['uid'])
+        self.assertEqual(widget['type'], types.MULTIDP)
+        self.assertTrue(api.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint['pid']))
+        widget=api.get_widget_config(wid=widget['wid'])
+        self.assertTrue(isinstance(widget['wid'],uuid.UUID))
+        self.assertEqual(widget['widgetname'], widgetname)
+        self.assertEqual(widget['uid'],user['uid'])
+        self.assertEqual(sorted(widget['datapoints']),sorted([datapoint['pid']]))
+        self.assertEqual(widget['type'], types.MULTIDP)
+        self.assertEqual(widget['active_visualization'], vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
+        self.assertNotEqual(widget['active_visualization'], vistypes.VISUALIZATION_TABLE)
+        new_widgetname='test_update_widget_multidp_success_2'
+        new_visualization=vistypes.VISUALIZATION_TABLE
+        self.assertTrue(api.update_widget_multidp(wid=widget['wid'], widgetname=new_widgetname,active_visualization=new_visualization))
+        widget_config=api.get_widget_config(wid=widget['wid'])
+        self.assertEqual(widget['uid'],widget_config['uid'])
+        self.assertEqual(widget['wid'],widget_config['wid'])
+        self.assertEqual(widget['datapoints'],widget_config['datapoints'])
+        self.assertEqual(widget['type'],widget_config['type'])
+        self.assertEqual(new_widgetname,widget_config['widgetname'])
+        self.assertEqual(new_visualization,widget_config['active_visualization'])
+
+    def test_update_widget_multidp_failure_not_available_visualization_type(self):
+        ''' update_widget_multidp should fail if we try to set a visualization type not supported '''
+        username='test_update_widget_multidp_failure_vis_not_supp'
+        agentname='test_update_widget_multidp_failure_vis_not_supp'
+        datasourcename='test_update_widget_multidp_failure_vis_not_supp_datasource'
+        datapointname='test_update_widget_multidp_failure_vis_not_supp_datapoint'
+        email=username+'@komlog.org'
+        password='password'
+        pubkey='testupdatewidgetmultidpfailurevisnotsupppubkey'
+        version='Test Version'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        color=libcolors.get_random_color()
+        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        widgetname='test_update_widget_multidp_failure_vis_not_supp'
+        widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
+        self.assertTrue(isinstance(widget['wid'],uuid.UUID))
+        self.assertEqual(widget['widgetname'], widgetname)
+        self.assertEqual(widget['uid'],user['uid'])
+        self.assertEqual(widget['type'], types.MULTIDP)
+        self.assertTrue(api.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint['pid']))
+        widget=api.get_widget_config(wid=widget['wid'])
+        self.assertTrue(isinstance(widget['wid'],uuid.UUID))
+        self.assertEqual(widget['widgetname'], widgetname)
+        self.assertEqual(widget['uid'],user['uid'])
+        self.assertEqual(sorted(widget['datapoints']),sorted([datapoint['pid']]))
+        self.assertEqual(widget['type'], types.MULTIDP)
+        self.assertEqual(widget['active_visualization'], vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
+        new_visualization=11000000
+        with self.assertRaises(exceptions.WidgetUnsupportedOperationException) as cm:
+            api.update_widget_multidp(wid=widget['wid'], active_visualization=new_visualization)
+        self.assertEqual(cm.exception.error, errors.E_GWA_UWMP_IAVT)
+
+    def test_update_widget_multidp_success_only_widgetname(self):
+        ''' update_widget_multidp should succeed if wid exists and data is correct '''
+        username='test_update_widget_multidp_success_only_widgetname'
+        agentname='test_update_widget_multidp_success_only_widgetname'
+        datasourcename='test_update_widget_multidp_success_only_widgetname_datasource'
+        datapointname='test_update_widget_multidp_success_only_widgetname_datapoint'
+        email=username+'@komlog.org'
+        password='password'
+        pubkey='testupdatewidgetmultidpsuccesspubkey'
+        version='Test Version'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        color=libcolors.get_random_color()
+        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        widgetname='test_update_widget_multidp_succes_only_widgetnames'
+        widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
+        self.assertTrue(isinstance(widget['wid'],uuid.UUID))
+        self.assertEqual(widget['widgetname'], widgetname)
+        self.assertEqual(widget['uid'],user['uid'])
+        self.assertEqual(widget['type'], types.MULTIDP)
+        self.assertTrue(api.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint['pid']))
+        widget=api.get_widget_config(wid=widget['wid'])
+        self.assertTrue(isinstance(widget['wid'],uuid.UUID))
+        self.assertEqual(widget['widgetname'], widgetname)
+        self.assertEqual(widget['uid'],user['uid'])
+        self.assertEqual(sorted(widget['datapoints']),sorted([datapoint['pid']]))
+        self.assertEqual(widget['type'], types.MULTIDP)
+        self.assertEqual(widget['active_visualization'], vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
+        new_widgetname='test_update_widget_multidp_success_2'
+        self.assertTrue(api.update_widget_multidp(wid=widget['wid'], widgetname=new_widgetname))
+        widget_config=api.get_widget_config(wid=widget['wid'])
+        self.assertEqual(widget['uid'],widget_config['uid'])
+        self.assertEqual(widget['wid'],widget_config['wid'])
+        self.assertEqual(widget['datapoints'],widget_config['datapoints'])
+        self.assertEqual(widget['type'],widget_config['type'])
+        self.assertEqual(new_widgetname,widget_config['widgetname'])
+
+    def test_update_widget_multidp_success_only_active_visualization(self):
+        ''' update_widget_multidp should succeed if wid exists and data is correct '''
+        username='test_update_widget_multidp_success_only_active_visualization'
+        agentname='test_update_widget_multidp_success_only_active_visualization'
+        datasourcename='test_update_widget_multidp_success_only_active_visualization_datasource'
+        datapointname='test_update_widget_multidp_success_only_active_visualization_datapoint'
+        email=username+'@komlog.org'
+        password='password'
+        pubkey='testupdatewidgetmultidpsuccesspubkey'
+        version='Test Version'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        color=libcolors.get_random_color()
+        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        widgetname='test_update_widget_multidp_success_only_active_visualization'
+        widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
+        self.assertTrue(isinstance(widget['wid'],uuid.UUID))
+        self.assertEqual(widget['widgetname'], widgetname)
+        self.assertEqual(widget['uid'],user['uid'])
+        self.assertEqual(widget['type'], types.MULTIDP)
+        self.assertTrue(api.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint['pid']))
+        widget=api.get_widget_config(wid=widget['wid'])
+        self.assertTrue(isinstance(widget['wid'],uuid.UUID))
+        self.assertEqual(widget['widgetname'], widgetname)
+        self.assertEqual(widget['uid'],user['uid'])
+        self.assertEqual(sorted(widget['datapoints']),sorted([datapoint['pid']]))
+        self.assertEqual(widget['type'], types.MULTIDP)
+        self.assertEqual(widget['active_visualization'], vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
+        self.assertNotEqual(widget['active_visualization'], vistypes.VISUALIZATION_TABLE)
+        new_visualization=vistypes.VISUALIZATION_TABLE
+        self.assertTrue(api.update_widget_multidp(wid=widget['wid'], active_visualization=new_visualization))
+        widget_config=api.get_widget_config(wid=widget['wid'])
+        self.assertEqual(widget['uid'],widget_config['uid'])
+        self.assertEqual(widget['wid'],widget_config['wid'])
+        self.assertEqual(widget['datapoints'],widget_config['datapoints'])
+        self.assertEqual(widget['type'],widget_config['type'])
+        self.assertEqual(new_visualization,widget_config['active_visualization'])
 
     def test_get_related_widgets_failure_invalid_wid(self):
         ''' get_related_widgets should fail if wid is invalid '''

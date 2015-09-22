@@ -39,6 +39,11 @@ def get_snapshots_config_request(username):
             reg['did']=snapshot['did'].hex
         elif snapshot['type']==types.DATAPOINT:
             reg['pid']=snapshot['pid'].hex
+        elif snapshot['type']==types.MULTIDP:
+            reg['view']=snapshot['active_visualization']
+            reg['datapoints']=[]
+            for pid in snapshot['datapoints']:
+                reg['datapoints'].append({'pid':pid.hex})
         elif snapshot['type'] in [types.HISTOGRAM, types.LINEGRAPH, types.TABLE]:
             reg['datapoints']=[]
             for pid in snapshot['datapoints']:
@@ -71,6 +76,11 @@ def get_snapshot_config_request(username, nid):
         snapshot['did']=data['did'].hex
     elif data['type']==types.DATAPOINT:
         snapshot['pid']=data['pid'].hex
+    elif data['type']==types.MULTIDP:
+        snapshot['view']=data['active_visualization']
+        snapshot['datapoints']=[]
+        for pid in data['datapoints']:
+            snapshot['datapoints'].append({'pid':pid.hex})
     elif data['type'] in [types.HISTOGRAM, types.LINEGRAPH, types.TABLE]:
         snapshot['datapoints']=[]
         for pid in data['datapoints']:
