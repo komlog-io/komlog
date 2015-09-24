@@ -32,29 +32,17 @@ def get_widget_config(wid):
         raise exceptions.WidgetNotFoundException(error=errors.E_GWA_GWC_WNF)
     data={}
     if widget.type==types.DATASOURCE:
-        widget=cassapiwidget.get_widget_ds(wid=wid)
-        if widget:
-            data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.DATASOURCE,'did':widget.did}
+        data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.DATASOURCE,'did':widget.did}
     elif widget.type==types.DATAPOINT:
-        widget=cassapiwidget.get_widget_dp(wid=wid)
-        if widget:
-            data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.DATAPOINT,'pid':widget.pid}
+        data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.DATAPOINT,'pid':widget.pid}
     elif widget.type==types.MULTIDP:
-        widget=cassapiwidget.get_widget_multidp(wid=wid)
-        if widget:
-            data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.MULTIDP,'datapoints':widget.datapoints, 'active_visualization':widget.active_visualization}
+        data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.MULTIDP,'datapoints':widget.datapoints, 'active_visualization':widget.active_visualization}
     elif widget.type==types.HISTOGRAM:
-        widget=cassapiwidget.get_widget_histogram(wid=wid)
-        if widget:
-            data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.HISTOGRAM,'datapoints':widget.datapoints, 'colors':widget.colors}
+        data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.HISTOGRAM,'datapoints':widget.datapoints, 'colors':widget.colors}
     elif widget.type==types.LINEGRAPH:
-        widget=cassapiwidget.get_widget_linegraph(wid=wid)
-        if widget:
-            data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.LINEGRAPH,'datapoints':widget.datapoints, 'colors':widget.colors}
+        data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.LINEGRAPH,'datapoints':widget.datapoints, 'colors':widget.colors}
     elif widget.type==types.TABLE:
-        widget=cassapiwidget.get_widget_table(wid=wid)
-        if widget:
-            data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.TABLE,'datapoints':widget.datapoints, 'colors':widget.colors}
+        data={'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.TABLE,'datapoints':widget.datapoints, 'colors':widget.colors}
     return data
 
 def get_widgets_config(uid):
@@ -67,29 +55,17 @@ def get_widgets_config(uid):
     widgets=cassapiwidget.get_widgets(uid=user.uid)
     for widget in widgets:
         if widget.type==types.DATASOURCE:
-            dswidget=cassapiwidget.get_widget_ds(wid=widget.wid)
-            if dswidget:
-                data.append({'uid':dswidget.uid, 'widgetname': dswidget.widgetname, 'wid':dswidget.wid,'type':types.DATASOURCE,'did':dswidget.did})
+            data.append({'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.DATASOURCE,'did':widget.did})
         elif widget.type==types.DATAPOINT:
-            dpwidget=cassapiwidget.get_widget_dp(wid=widget.wid)
-            if dpwidget:
-                data.append({'uid':dpwidget.uid, 'widgetname': dpwidget.widgetname, 'wid':dpwidget.wid,'type':types.DATAPOINT,'pid':dpwidget.pid})
+            data.append({'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.DATAPOINT,'pid':widget.pid})
         elif widget.type==types.MULTIDP:
-            mpwidget=cassapiwidget.get_widget_multidp(wid=widget.wid)
-            if mpwidget:
-                data.append({'uid':mpwidget.uid, 'widgetname': mpwidget.widgetname, 'wid':mpwidget.wid,'type':types.MULTIDP,'datapoints':mpwidget.datapoints, 'active_visualization':mpwidget.active_visualization})
+            data.append({'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.MULTIDP,'datapoints':widget.datapoints, 'active_visualization':widget.active_visualization})
         elif widget.type==types.HISTOGRAM:
-            hgwidget=cassapiwidget.get_widget_histogram(wid=widget.wid)
-            if hgwidget:
-                data.append({'uid':hgwidget.uid, 'widgetname': hgwidget.widgetname, 'wid':hgwidget.wid,'type':types.HISTOGRAM,'datapoints':hgwidget.datapoints, 'colors':hgwidget.colors})
+            data.append({'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.HISTOGRAM,'datapoints':widget.datapoints, 'colors':widget.colors})
         elif widget.type==types.LINEGRAPH:
-            lgwidget=cassapiwidget.get_widget_linegraph(wid=widget.wid)
-            if lgwidget:
-                data.append({'uid':lgwidget.uid, 'widgetname': lgwidget.widgetname, 'wid':lgwidget.wid,'type':types.LINEGRAPH,'datapoints':lgwidget.datapoints, 'colors':lgwidget.colors})
+            data.append({'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.LINEGRAPH,'datapoints':widget.datapoints, 'colors':widget.colors})
         elif widget.type==types.TABLE:
-            tbwidget=cassapiwidget.get_widget_table(wid=widget.wid)
-            if tbwidget:
-                data.append({'uid':tbwidget.uid, 'widgetname': tbwidget.widgetname, 'wid':tbwidget.wid,'type':types.TABLE,'datapoints':tbwidget.datapoints, 'colors':tbwidget.colors})
+            data.append({'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.TABLE,'datapoints':widget.datapoints, 'colors':widget.colors})
     return data
 
 def delete_widget(wid):
@@ -118,13 +94,9 @@ def new_widget_datasource(uid,did):
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
         raise exceptions.DatasourceNotFoundException(error=errors.E_GWA_NWDS_DNF)
-    userwidgets=cassapiwidget.get_widgets(uid=user.uid)
-    if userwidgets:
-        for widget in userwidgets:
-            if widget.type==types.DATASOURCE:
-                widget_ds=cassapiwidget.get_widget_ds(wid=widget.wid)
-                if widget_ds and widget_ds.did==did:
-                    raise exceptions.WidgetAlreadyExistsException(error=errors.E_GWA_NWDS_WAE)
+    widget_ds=cassapiwidget.get_widget_ds(did=did)
+    if widget_ds:
+        raise exceptions.WidgetAlreadyExistsException(error=errors.E_GWA_NWDS_WAE)
     wid=uuid.uuid4()
     widget=ormwidget.WidgetDs(wid=wid,widgetname=datasource.datasourcename, uid=user.uid,did=datasource.did,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
@@ -146,12 +118,9 @@ def new_widget_datapoint(uid,pid):
     datasource=cassapidatasource.get_datasource(did=datapoint.did)
     if not datasource:
         raise exceptions.DatasourceNotFoundException(error=errors.E_GWA_NWDP_DSNF)
-    widgets=cassapiwidget.get_widgets(uid=user.uid)
-    for widget in widgets:
-        if widget.type==types.DATAPOINT:
-            dpwidget=cassapiwidget.get_widget_dp(wid=widget.wid)
-            if dpwidget and dpwidget.pid==pid:
-                raise exceptions.WidgetAlreadyExistsException(error=errors.E_GWA_NWDP_WAE)
+    widget_dp=cassapiwidget.get_widget_dp(pid=pid)
+    if widget_dp:
+        raise exceptions.WidgetAlreadyExistsException(error=errors.E_GWA_NWDP_WAE)
     wid=uuid.uuid4()
     widgetname='.'.join((datasource.datasourcename,datapoint.datapointname))
     widget=ormwidget.WidgetDp(wid=wid,widgetname=widgetname, uid=user.uid,pid=datapoint.pid,creation_date=timeuuid.uuid1())

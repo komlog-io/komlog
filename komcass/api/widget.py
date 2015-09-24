@@ -12,21 +12,60 @@ from komcass import connection
 
 def get_widget(wid):
     row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_WID,(wid,))
-    if not row:
-        return None
-    elif len(row)==1:
-        return ormwidget.Widget(**row[0])
-    else:
-        raise excpwidget.DataConsistencyException(function='get_widget',field='wid',value=wid)
+    return _get_widget(ormwidget.Widget(**row[0])) if row else None
 
 def get_widgets(uid):
-    row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_UID,(uid,))
     widgets=[]
+    row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_UID,(uid,))
     if row:
         for w in row:
-            widget=ormwidget.Widget(**w)
-            widgets.append(widget)
+            widget=_get_widget(ormwidget.Widget(**w))
+            if widget:
+                widgets.append(widget)
     return widgets
+
+def _get_widget(widget):
+    if not isinstance(widget, ormwidget.Widget):
+        return None
+    else:
+        if widget.type==prmwidget.types.DATASOURCE:
+            widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETDS_B_WID,(widget.wid,))
+            if widget_config:
+                return ormwidget.WidgetDs(wid=widget.wid, uid=widget.uid, widgetname=widget.widgetname, creation_date=widget.creation_date, did=widget_config[0]['did'])
+            else:
+                return None
+        elif widget.type==prmwidget.types.DATAPOINT:
+            widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETDP_B_WID,(widget.wid,))
+            if widget_config:
+                return ormwidget.WidgetDp(wid=widget.wid, uid=widget.uid, widgetname=widget.widgetname, creation_date=widget.creation_date, pid=widget_config[0]['pid'])
+            else:
+                return None
+        elif widget.type==prmwidget.types.MULTIDP:
+            widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETMULTIDP_B_WID,(widget.wid,))
+            if widget_config:
+                return ormwidget.WidgetMultidp(wid=widget.wid, uid=widget.uid, widgetname=widget.widgetname, creation_date=widget.creation_date, datapoints=widget_config[0]['datapoints'],active_visualization=widget_config[0]['active_visualization'])
+            else:
+                return None
+        elif widget.type==prmwidget.types.HISTOGRAM:
+            widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETHISTOGRAM_B_WID,(widget.wid,))
+            if widget_config:
+                return ormwidget.WidgetHistogram(wid=widget.wid, uid=widget.uid, widgetname=widget.widgetname, creation_date=widget.creation_date, datapoints=widget_config[0]['datapoints'],colors=widget_config[0]['colors'])
+            else:
+                return None
+        elif widget.type==prmwidget.types.LINEGRAPH:
+            widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETLINEGRAPH_B_WID,(widget.wid,))
+            if widget_config:
+                return ormwidget.WidgetLinegraph(wid=widget.wid, uid=widget.uid, widgetname=widget.widgetname, creation_date=widget.creation_date, datapoints=widget_config[0]['datapoints'],colors=widget_config[0]['colors'])
+            else:
+                return None
+        elif widget.type==prmwidget.types.TABLE:
+            widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETTABLE_B_WID,(widget.wid,))
+            if widget_config:
+                return ormwidget.WidgetTable(wid=widget.wid, uid=widget.uid, widgetname=widget.widgetname, creation_date=widget.creation_date, datapoints=widget_config[0]['datapoints'],colors=widget_config[0]['colors'])
+            else:
+                return None
+        else:
+            return None
 
 def get_widgets_wids(uid):
     row=connection.session.execute(stmtwidget.S_WID_MSTWIDGET_B_UID,(uid,))
@@ -44,8 +83,6 @@ def delete_widget(wid):
     row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_WID,(wid,))
     if not row:
         return True
-    elif len(row)>1:
-        raise excpwidget.DataConsistencyException(function='delete_widget',field='wid',value=wid)
     else:
         widget=ormwidget.Widget(**row[0])
         if widget.type == prmwidget.types.DATASOURCE:
@@ -69,25 +106,13 @@ def new_widget(widget):
     existingwidget=get_widget(widget.wid)
     if existingwidget:
         return False
-    connection.session.execute(stmtwidget.I_A_MSTWIDGET,(widget.wid,widget.uid,widget.type))
-    if widget.type==prmwidget.types.DATASOURCE:
-        _insert_widget_ds(widget)
-    elif widget.type==prmwidget.types.DATAPOINT:
-        _insert_widget_dp(widget)
-    elif widget.type==prmwidget.types.HISTOGRAM:
-        _insert_widget_histogram(widget)
-    elif widget.type==prmwidget.types.LINEGRAPH:
-        _insert_widget_linegraph(widget)
-    elif widget.type==prmwidget.types.TABLE:
-        _insert_widget_table(widget)
-    elif widget.type==prmwidget.types.MULTIDP:
-        _insert_widget_multidp(widget)
-    return True
+    else:
+        return insert_widget(widget)
 
 def insert_widget(widget):
     if not isinstance(widget, ormwidget.Widget):
         return False
-    connection.session.execute(stmtwidget.I_A_MSTWIDGET,(widget.wid,widget.uid,widget.type))
+    connection.session.execute(stmtwidget.I_A_MSTWIDGET,(widget.wid,widget.uid,widget.type,widget.creation_date, widget.widgetname))
     if widget.type==prmwidget.types.DATASOURCE:
         _insert_widget_ds(widget)
     elif widget.type==prmwidget.types.DATAPOINT:
@@ -106,20 +131,7 @@ def insert_widget_widgetname(wid, widgetname):
     widget=get_widget(wid=wid)
     if not widget:
         return False
-    if widget.type==prmwidget.types.DATASOURCE:
-        connection.session.execute(stmtwidget.U_WIDGETNAME_MSTWIDGETDATASOURCE_B_WID,(widgetname,wid))
-    elif widget.type==prmwidget.types.DATAPOINT:
-        connection.session.execute(stmtwidget.U_WIDGETNAME_MSTWIDGETDATAPOINT_B_WID,(widgetname,wid))
-    elif widget.type==prmwidget.types.HISTOGRAM:
-        connection.session.execute(stmtwidget.U_WIDGETNAME_MSTWIDGETHISTOGRAM_B_WID,(widgetname,wid))
-    elif widget.type==prmwidget.types.LINEGRAPH:
-        connection.session.execute(stmtwidget.U_WIDGETNAME_MSTWIDGETLINEGRAPH_B_WID,(widgetname,wid))
-    elif widget.type==prmwidget.types.TABLE:
-        connection.session.execute(stmtwidget.U_WIDGETNAME_MSTWIDGETTABLE_B_WID,(widgetname,wid))
-    elif widget.type==prmwidget.types.MULTIDP:
-        connection.session.execute(stmtwidget.U_WIDGETNAME_MSTWIDGETMULTIDP_B_WID,(widgetname,wid))
-    else:
-        return False
+    connection.session.execute(stmtwidget.U_WIDGETNAME_MSTWIDGET_B_WID,(widgetname,wid))
     return True
 
 def insert_widget_multidp_active_visualization(wid, active_visualization):
@@ -132,40 +144,37 @@ def insert_widget_multidp_active_visualization(wid, active_visualization):
 
 def get_widget_ds(wid=None, did=None):
     if wid:
-        row=connection.session.execute(stmtwidget.S_A_MSTWIDGETDS_B_WID,(wid,))
+        widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETDS_B_WID,(wid,))
     elif did:
-        row=connection.session.execute(stmtwidget.S_A_MSTWIDGETDS_B_DID,(did,))
+        widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETDS_B_DID,(did,))
     else:
         return None
-    if not row:
-        return None
-    elif len(row)==1:
-        return ormwidget.WidgetDs(**row[0])
-    else:
-        raise excpwidget.DataConsistencyException(function='_get_widget_ds',field='wid',value=wid)
+    if widget_config:
+        row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_WID,(widget_config[0]['wid'],))
+        if row:
+            return ormwidget.WidgetDs(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], did=widget_config[0]['did'])
+    return None
 
 def get_widget_dp(wid=None, pid=None):
     if wid:
-        row=connection.session.execute(stmtwidget.S_A_MSTWIDGETDP_B_WID,(wid,))
+        widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETDP_B_WID,(wid,))
     elif pid:
-        row=connection.session.execute(stmtwidget.S_A_MSTWIDGETDP_B_PID,(pid,))
+        widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETDP_B_PID,(pid,))
     else:
         return None
-    if not row:
-        return None
-    elif len(row)==1:
-        return ormwidget.WidgetDp(**row[0])
-    else:
-        raise excpwidget.DataConsistencyException(function='_get_widget_dp',field='wid',value=wid)
+    if widget_config:
+        row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_WID,(widget_config[0]['wid'],))
+        if row:
+            return ormwidget.WidgetDp(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], pid=widget_config[0]['pid'])
+    return None
 
 def get_widget_histogram(wid):
-    row=connection.session.execute(stmtwidget.S_A_MSTWIDGETHISTOGRAM_B_WID,(wid,))
-    if not row:
-        return None
-    elif len(row)==1:
-        return ormwidget.WidgetHistogram(**row[0])
-    else:
-        raise excpwidget.DataConsistencyException(function='get_widget_histogram',field='wid',value=wid)
+    widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETHISTOGRAM_B_WID,(wid,))
+    if widget_config:
+        row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_WID,(widget_config[0]['wid'],))
+        if row:
+            return ormwidget.WidgetHistogram(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], datapoints=widget_config[0]['datapoints'], colors=widget_config[0]['colors'])
+    return None
 
 def get_wids_histograms_with_pid(pid):
     row=connection.session.execute(stmtwidget.S_WID_MSTWIDGETHISTOGRAM_B_PID,(pid,))
@@ -175,13 +184,12 @@ def get_wids_histograms_with_pid(pid):
         return [wid['wid'] for wid in row]
 
 def get_widget_linegraph(wid):
-    row=connection.session.execute(stmtwidget.S_A_MSTWIDGETLINEGRAPH_B_WID,(wid,))
-    if not row:
-        return None
-    elif len(row)==1:
-        return ormwidget.WidgetLinegraph(**row[0])
-    else:
-        raise excpwidget.DataConsistencyException(function='get_widget_linegraph',field='wid',value=wid)
+    widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETLINEGRAPH_B_WID,(wid,))
+    if widget_config:
+        row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_WID,(widget_config[0]['wid'],))
+        if row:
+            return ormwidget.WidgetLinegraph(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], datapoints=widget_config[0]['datapoints'], colors=widget_config[0]['colors'])
+    return None
 
 def get_wids_linegraphs_with_pid(pid):
     row=connection.session.execute(stmtwidget.S_WID_MSTWIDGETLINEGRAPH_B_PID,(pid,))
@@ -191,13 +199,12 @@ def get_wids_linegraphs_with_pid(pid):
         return [wid['wid'] for wid in row]
 
 def get_widget_table(wid):
-    row=connection.session.execute(stmtwidget.S_A_MSTWIDGETTABLE_B_WID,(wid,))
-    if not row:
-        return None
-    elif len(row)==1:
-        return ormwidget.WidgetTable(**row[0])
-    else:
-        raise excpwidget.DataConsistencyException(function='get_widget_table',field='wid',value=wid)
+    widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETTABLE_B_WID,(wid,))
+    if widget_config:
+        row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_WID,(widget_config[0]['wid'],))
+        if row:
+            return ormwidget.WidgetTable(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], datapoints=widget_config[0]['datapoints'], colors=widget_config[0]['colors'])
+    return None
 
 def get_wids_tables_with_pid(pid):
     row=connection.session.execute(stmtwidget.S_WID_MSTWIDGETTABLE_B_PID,(pid,))
@@ -207,13 +214,12 @@ def get_wids_tables_with_pid(pid):
         return [wid['wid'] for wid in row]
 
 def get_widget_multidp(wid):
-    row=connection.session.execute(stmtwidget.S_A_MSTWIDGETMULTIDP_B_WID,(wid,))
-    if not row:
-        return None
-    elif len(row)==1:
-        return ormwidget.WidgetMultidp(**row[0])
-    else:
-        raise excpwidget.DataConsistencyException(function='get_widget_multidp',field='wid',value=wid)
+    widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETMULTIDP_B_WID,(wid,))
+    if widget_config:
+        row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_WID,(widget_config[0]['wid'],))
+        if row:
+            return ormwidget.WidgetMultidp(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], datapoints=widget_config[0]['datapoints'],active_visualization=widget_config[0]['active_visualization'])
+    return None
 
 def get_wids_multidp_with_pid(pid):
     row=connection.session.execute(stmtwidget.S_WID_MSTWIDGETMULTIDP_B_PID,(pid,))
@@ -227,7 +233,7 @@ def _delete_widget_ds(wid):
     return True
 
 def _insert_widget_ds(widget):
-    connection.session.execute(stmtwidget.I_A_MSTWIDGETDS,(widget.wid,widget.uid,widget.widgetname,widget.creation_date,widget.did))
+    connection.session.execute(stmtwidget.I_A_MSTWIDGETDS,(widget.wid,widget.did))
     return True
 
 def _delete_widget_dp(wid):
@@ -235,11 +241,11 @@ def _delete_widget_dp(wid):
     return True
 
 def _insert_widget_dp(widget):
-    connection.session.execute(stmtwidget.I_A_MSTWIDGETDP,(widget.wid,widget.uid,widget.widgetname,widget.creation_date,widget.pid))
+    connection.session.execute(stmtwidget.I_A_MSTWIDGETDP,(widget.wid,widget.pid))
     return True
 
 def _insert_widget_histogram(widget):
-    connection.session.execute(stmtwidget.I_A_MSTWIDGETHISTOGRAM,(widget.wid,widget.uid,widget.widgetname,widget.creation_date, widget.datapoints, widget.colors))
+    connection.session.execute(stmtwidget.I_A_MSTWIDGETHISTOGRAM,(widget.wid,widget.datapoints, widget.colors))
     return True
 
 def _delete_widget_histogram(wid):
@@ -247,7 +253,7 @@ def _delete_widget_histogram(wid):
     return True
 
 def _insert_widget_linegraph(widget):
-    connection.session.execute(stmtwidget.I_A_MSTWIDGETLINEGRAPH,(widget.wid,widget.uid,widget.widgetname,widget.creation_date, widget.datapoints, widget.colors))
+    connection.session.execute(stmtwidget.I_A_MSTWIDGETLINEGRAPH,(widget.wid, widget.datapoints, widget.colors))
     return True
 
 def _delete_widget_linegraph(wid):
@@ -255,7 +261,7 @@ def _delete_widget_linegraph(wid):
     return True
 
 def _insert_widget_table(widget):
-    connection.session.execute(stmtwidget.I_A_MSTWIDGETTABLE,(widget.wid,widget.uid,widget.widgetname,widget.creation_date, widget.datapoints, widget.colors))
+    connection.session.execute(stmtwidget.I_A_MSTWIDGETTABLE,(widget.wid, widget.datapoints, widget.colors))
     return True
 
 def _delete_widget_table(wid):
@@ -263,7 +269,7 @@ def _delete_widget_table(wid):
     return True
 
 def _insert_widget_multidp(widget):
-    connection.session.execute(stmtwidget.I_A_MSTWIDGETMULTIDP,(widget.wid,widget.uid,widget.widgetname,widget.creation_date, widget.active_visualization, widget.datapoints))
+    connection.session.execute(stmtwidget.I_A_MSTWIDGETMULTIDP,(widget.wid, widget.active_visualization, widget.datapoints))
     return True
 
 def _delete_widget_multidp(wid):

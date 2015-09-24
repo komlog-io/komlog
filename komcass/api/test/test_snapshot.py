@@ -80,14 +80,8 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         self.assertTrue(isinstance(nids,list))
         self.assertEqual(len(nids),0)
 
-    def test_get_number_of_snapshots_by_uid_no_snapshots(self):
-        ''' get_number_of_snapshots_by_uid should return the number of snapshots belonging to a uid '''
-        uid=uuid.uuid4()
-        num=snapshotapi.get_number_of_snapshots_by_uid(uid)
-        self.assertEqual(num, 0)
-
-    def test_get_snapshots_ds_nids_existing_nids(self):
-        ''' get_snapshots_ds_nids should return a list with the snapshots nids '''
+    def test_get_snapshots_nids_existing_nids_ds(self):
+        ''' get_snapshots_nids should return a list with the snapshots nids '''
         uid=uuid.uuid4()
         wid=uuid.uuid4()
         nid=uuid.uuid4()
@@ -98,11 +92,11 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         did=uuid.uuid4()
         snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did,shared_with_uids={},shared_with_cids={})
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
-        nids=snapshotapi.get_snapshots_ds_nids(wid=wid)
+        nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
 
-    def test_get_snapshots_dp_nids_existing_nids(self):
-        ''' get_snapshots_dp_nids should return a list with the snapshots nids '''
+    def test_get_snapshots_nids_existing_nids_dp(self):
+        ''' get_snapshots_nids should return a list with the snapshots nids '''
         uid=uuid.uuid4()
         wid=uuid.uuid4()
         nid=uuid.uuid4()
@@ -113,11 +107,11 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         pid=uuid.uuid4()
         snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid,shared_with_uids={},shared_with_cids={})
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
-        nids=snapshotapi.get_snapshots_dp_nids(wid=wid)
+        nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
 
-    def test_get_snapshots_histogram_nids_existing_nids(self):
-        ''' get_snapshots_histogram_nids should return a list with the snapshots nids '''
+    def test_get_snapshots_nids_existing_nids_histogram(self):
+        ''' get_snapshots_nids should return a list with the snapshots nids '''
         uid=uuid.uuid4()
         wid=uuid.uuid4()
         nid=uuid.uuid4()
@@ -129,11 +123,11 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         colors={uuid.uuid4():'#AABBDD',uuid.uuid4():'#BBDDCC'}
         snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
-        nids=snapshotapi.get_snapshots_histogram_nids(wid=wid)
+        nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
 
-    def test_get_snapshots_linegraph_nids_existing_nids(self):
-        ''' get_snapshots_linegraph_nids should return a list with the snapshots nids '''
+    def test_get_snapshots_nids_existing_nids_linegraph(self):
+        ''' get_snapshots_nids should return a list with the snapshots nids '''
         uid=uuid.uuid4()
         wid=uuid.uuid4()
         nid=uuid.uuid4()
@@ -145,11 +139,11 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         colors={uuid.uuid4():'#AABBDD',uuid.uuid4():'#BBDDCC'}
         snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
-        nids=snapshotapi.get_snapshots_linegraph_nids(wid=wid)
+        nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
 
-    def test_get_snapshots_table_nids_existing_nids(self):
-        ''' get_snapshots_table_nids should return a list with the snapshots nids '''
+    def test_get_snapshots_nids_existing_nids_table(self):
+        ''' get_snapshots_nids should return a list with the snapshots nids '''
         uid=uuid.uuid4()
         wid=uuid.uuid4()
         nid=uuid.uuid4()
@@ -161,11 +155,11 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         colors={uuid.uuid4():'#AABBDD',uuid.uuid4():'#BBDDCC'}
         snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
-        nids=snapshotapi.get_snapshots_table_nids(wid=wid)
+        nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
 
-    def test_get_snapshots_multidp_nids_existing_nids(self):
-        ''' get_snapshots_multidp_nids should return a list with the snapshots nids '''
+    def test_get_snapshots_nids_existing_nids_multidp(self):
+        ''' get_snapshots_nids should return a list with the snapshots nids '''
         uid=uuid.uuid4()
         wid=uuid.uuid4()
         nid=uuid.uuid4()
@@ -177,8 +171,20 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         active_visualization=0
         snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, active_visualization=active_visualization, shared_with_uids={},shared_with_cids={})
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
-        nids=snapshotapi.get_snapshots_multidp_nids(wid=wid)
+        nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
+
+    def test_get_number_of_snapshots_by_uid_no_snapshots(self):
+        ''' get_number_of_snapshots_by_uid should return the number of snapshots belonging to a uid '''
+        uid=uuid.uuid4()
+        num=snapshotapi.get_number_of_snapshots(uid=uid)
+        self.assertEqual(num, 0)
+
+    def test_get_number_of_snapshots_by_wid_no_snapshots(self):
+        ''' get_number_of_snapshots_by_wid should return the number of snapshots of a wid '''
+        wid=uuid.uuid4()
+        num=snapshotapi.get_number_of_snapshots(wid=wid)
+        self.assertEqual(num, 0)
 
     def test_delete_snapshot_non_existing_nid(self):
         ''' delete_snapshot should return True even if nid does not exist '''

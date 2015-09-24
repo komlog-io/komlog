@@ -30,29 +30,17 @@ def get_snapshot_config(nid):
         raise exceptions.SnapshotNotFoundException(error=errors.E_GSA_GSC_SNF)
     data={}
     if snapshot.type==types.DATASOURCE:
-        snapshot=cassapisnapshot.get_snapshot_ds(nid=nid)
-        if snapshot:
-            data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid,'type':types.DATASOURCE,'did':snapshot.did,'interval_init':snapshot.interval_init,'interval_end':snapshot.interval_end}
+        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid,'type':types.DATASOURCE,'did':snapshot.did,'interval_init':snapshot.interval_init,'interval_end':snapshot.interval_end}
     elif snapshot.type==types.DATAPOINT:
-        snapshot=cassapisnapshot.get_snapshot_dp(nid=nid)
-        if snapshot:
-            data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid,'type':types.DATAPOINT,'pid':snapshot.pid, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
+        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid,'type':types.DATAPOINT,'pid':snapshot.pid, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
     elif snapshot.type==types.MULTIDP:
-        snapshot=cassapisnapshot.get_snapshot_multidp(nid=nid)
-        if snapshot:
-            data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.MULTIDP,'datapoints':snapshot.datapoints, 'active_visualization':snapshot.active_visualization, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
+        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.MULTIDP,'datapoints':snapshot.datapoints, 'active_visualization':snapshot.active_visualization, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
     elif snapshot.type==types.HISTOGRAM:
-        snapshot=cassapisnapshot.get_snapshot_histogram(nid=nid)
-        if snapshot:
-            data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.HISTOGRAM,'datapoints':snapshot.datapoints, 'colors':snapshot.colors, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
+        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.HISTOGRAM,'datapoints':snapshot.datapoints, 'colors':snapshot.colors, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
     elif snapshot.type==types.LINEGRAPH:
-        snapshot=cassapisnapshot.get_snapshot_linegraph(nid=nid)
-        if snapshot:
-            data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.LINEGRAPH,'datapoints':snapshot.datapoints, 'colors':snapshot.colors, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
+        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.LINEGRAPH,'datapoints':snapshot.datapoints, 'colors':snapshot.colors, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
     elif snapshot.type==types.TABLE:
-        snapshot=cassapisnapshot.get_snapshot_table(nid=nid)
-        if snapshot:
-            data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.TABLE,'datapoints':snapshot.datapoints, 'colors':snapshot.colors, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
+        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.TABLE,'datapoints':snapshot.datapoints, 'colors':snapshot.colors, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
     return data
 
 def get_snapshots_config(uid):
@@ -125,9 +113,7 @@ def new_snapshot(uid, wid, interval_init, interval_end, shared_with_users=None,s
     if not widget:
         raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NS_WNF)
     if interval_init>interval_end:
-        tmp_int=interval_end
-        interval_end=interval_init
-        interval_init=tmp_int
+        interval_init,interval_end=interval_end,interval_init
     snapshot=None
     uids=set()
     cids=set()

@@ -32,37 +32,19 @@ def new_snapshot(params):
     snapshot=cassapisnapshot.get_snapshot(nid=nid)
     if snapshot:
         if snapshot.type==snapshottypes.DATASOURCE:
-            snapshot=cassapisnapshot.get_snapshot_ds(nid=nid)
-            if not snapshot:
-                return False
             graphbase.set_member_edge(ido=snapshot.did, idd=nid, vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION)
         elif snapshot.type==snapshottypes.DATAPOINT:
-            snapshot=cassapisnapshot.get_snapshot_dp(nid=nid)
-            if not snapshot:
-                return False
             graphbase.set_member_edge(ido=snapshot.pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
         elif snapshot.type==snapshottypes.MULTIDP:
-            snapshot=cassapisnapshot.get_snapshot_multidp(nid=nid)
-            if not snapshot:
-                return False
             for pid in snapshot.datapoints:
                 graphbase.set_member_edge(ido=pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
         elif snapshot.type==snapshottypes.HISTOGRAM:
-            snapshot=cassapisnapshot.get_snapshot_histogram(nid=nid)
-            if not snapshot:
-                return False
             for pid in snapshot.datapoints:
                 graphbase.set_member_edge(ido=pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
         elif snapshot.type==snapshottypes.LINEGRAPH:
-            snapshot=cassapisnapshot.get_snapshot_linegraph(nid=nid)
-            if not snapshot:
-                return False
             for pid in snapshot.datapoints:
                 graphbase.set_member_edge(ido=pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
         elif snapshot.type==snapshottypes.TABLE:
-            snapshot=cassapisnapshot.get_snapshot_table(nid=nid)
-            if not snapshot:
-                return False
             for pid in snapshot.datapoints:
                 graphbase.set_member_edge(ido=pid, idd=nid, vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION)
         else:

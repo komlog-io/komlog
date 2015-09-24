@@ -127,7 +127,7 @@ def quo_static_user_total_snapshots(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
-    num_snapshots=cassapisnapshot.get_number_of_snapshots_by_uid(uid=uid)
+    num_snapshots=cassapisnapshot.get_number_of_snapshots(uid=uid)
     if cassapiquote.set_user_quote(uid=uid, quote='quo_static_user_total_snapshots', value=str(num_snapshots)):
         return str(num_snapshots)
     return None

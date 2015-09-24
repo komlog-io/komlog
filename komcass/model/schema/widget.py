@@ -28,6 +28,8 @@ MST_WIDGET='''
             wid uuid,
             uid uuid,
             type text,
+            creation_date timeuuid,
+            widgetname text,
             PRIMARY KEY (wid)
         );
     '''
@@ -39,9 +41,6 @@ MST_WIDGET_INDEX_01='''
 MST_WIDGETDS='''
         CREATE TABLE mst_widget_ds (
             wid uuid,
-            uid uuid,
-            widgetname text,
-            creation_date timeuuid,
             did uuid,
             PRIMARY KEY (wid)
         );
@@ -54,9 +53,6 @@ MST_WIDGETDS_INDEX_01='''
 MST_WIDGETDP='''
         CREATE TABLE mst_widget_dp (
             wid uuid,
-            uid uuid,
-            widgetname text,
-            creation_date timeuuid,
             pid uuid,
             PRIMARY KEY (wid)
         );
@@ -69,9 +65,6 @@ MST_WIDGETDP_INDEX_01='''
 MST_WIDGET_HISTOGRAM='''
         CREATE TABLE mst_widget_histogram (
             wid uuid,
-            uid uuid,
-            widgetname text,
-            creation_date timeuuid,
             datapoints set<uuid>,
             colors map <uuid,text>,
             PRIMARY KEY (wid)
@@ -89,9 +82,6 @@ MST_WIDGET_HISTOGRAM_INDEX_02='''
 MST_WIDGET_LINEGRAPH='''
         CREATE TABLE mst_widget_linegraph (
             wid uuid,
-            uid uuid,
-            widgetname text,
-            creation_date timeuuid,
             datapoints set<uuid>,
             colors map <uuid,text>,
             PRIMARY KEY (wid)
@@ -109,9 +99,6 @@ MST_WIDGET_LINEGRAPH_INDEX_02='''
 MST_WIDGET_TABLE='''
         CREATE TABLE mst_widget_table (
             wid uuid,
-            uid uuid,
-            widgetname text,
-            creation_date timeuuid,
             datapoints set<uuid>,
             colors map <uuid,text>,
             PRIMARY KEY (wid)
@@ -129,9 +116,6 @@ MST_WIDGET_TABLE_INDEX_02='''
 MST_WIDGET_MULTIDP='''
         CREATE TABLE mst_widget_multidp (
             wid uuid,
-            uid uuid,
-            widgetname text,
-            creation_date timeuuid,
             active_visualization int,
             datapoints set<uuid>,
             PRIMARY KEY (wid)
