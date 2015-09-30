@@ -17,6 +17,10 @@ class AuthorizationException(AuthException):
     def __init__(self, error):
         super(AuthorizationException,self).__init__(error=error)
 
+class BadParametersException(AuthException):
+    def __init__(self, error):
+        super(BadParametersException, self).__init__(error=error)
+
 class RequestNotFoundException(AuthException):
     def __init__(self, error):
         super(RequestNotFoundException,self).__init__(error=error)
@@ -28,4 +32,8 @@ class UserNotFoundException(AuthException):
 class DatasourceNotFoundException(AuthException):
     def __init__(self, error):
         super(DatasourceNotFoundException,self).__init__(error=error)
+
+class TicketCreationException(AuthException):
+    def __init__(self, error):
+        super(TicketCreationException, self).__init__(error=error)
 

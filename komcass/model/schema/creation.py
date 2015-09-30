@@ -15,6 +15,7 @@ from komcass.model.schema import snapshot
 from komcass.model.schema import graph
 from komcass.model.schema import circle
 from komcass.model.schema import events
+from komcass.model.schema import ticket
 
 from komcass import connection
 
@@ -75,6 +76,9 @@ def create_schema(session):
             session.execute(query)
         for obj in events.OBJECTS:
             query=getattr(events,obj)
+            session.execute(query)
+        for obj in ticket.OBJECTS:
+            query=getattr(ticket,obj)
             session.execute(query)
     except Exception as e:
         logger.logger.debug('Error creating schema '+str(e))

@@ -22,13 +22,15 @@ from komlibs.general.time import timeuuid
 
 
 @exceptions.ExceptionHandler
-def get_datasource_data_request(username, did, seq=None):
+def get_datasource_data_request(username, did, seq=None, tid=None):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWADS_GDSDR_IU)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_IWADS_GDSDR_ID)
     if seq and not args.is_valid_sequence(seq):
         raise exceptions.BadParametersException(error=errors.E_IWADS_GDSDR_IS)
+    if tid and not args.is_valid_hex_uuid(tid):
+        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSDR_IT)
     did=uuid.UUID(did)
     if seq:
         ii=timeuuid.get_uuid1_from_custom_sequence(seq)
@@ -36,8 +38,9 @@ def get_datasource_data_request(username, did, seq=None):
     else:
         ii=None
         ie=None
+    tid=uuid.UUID(tid) if tid else None
     uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.GET_DATASOURCE_DATA,uid=uid,did=did,ii=ii,ie=ie)
+    authorization.authorize_request(request=requests.GET_DATASOURCE_DATA,uid=uid,did=did,ii=ii,ie=ie, tid=tid)
     if ii:
         data=datasourceapi.get_datasource_data(did,date=ii)
     else:

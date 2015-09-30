@@ -3,8 +3,6 @@ import uuid
 from komlibs.auth import authorization, requests
 from komlibs.auth import exceptions, permissions
 from komlibs.gestaccount.user import api as gestuserapi
-from komlibs.graph.api import base as graphbase
-from komlibs.graph.relations import vertex
 from komlibs.general.time import timeuuid
 
 class AuthAuthorizationTest(unittest.TestCase):
@@ -36,67 +34,19 @@ class AuthAuthorizationTest(unittest.TestCase):
         request=requests.NEW_AGENT
         self.assertIsNone(authorization.authorize_request(request=request, uid=user['uid']))
 
-    def test_authorize_get_datasource_config_success_shared_auth_success(self):
-        ''' authorize_get_datasource_config should succeed if the datasource is shared to the user '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        params={'uid':uid, 'did':did}
-        self.assertIsNone(authorization.authorize_get_datasource_config(params=params))
-
     def test_authorize_get_datasource_config_failure(self):
         ''' authorize_get_datasource_config should fail if the datasource is not shared to the user '''
         uid=uuid.uuid4()
         did=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        uid=uuid.uuid4()
         params={'uid':uid, 'did':did}
         self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datasource_config, params=params)
-
-    def test_authorize_get_datapoint_config_success_shared_auth_success(self):
-        ''' authorize_get_datapoint_config should succeed if the datapoint is shared to the user '''
-        uid=uuid.uuid4()
-        pid=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        params={'uid':uid, 'pid':pid}
-        self.assertIsNone(authorization.authorize_get_datapoint_config(params=params))
 
     def test_authorize_get_datapoint_config_failure(self):
         ''' authorize_get_datapoint_config should fail if the datapoint is not shared to the user '''
         uid=uuid.uuid4()
         pid=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        uid=uuid.uuid4()
         params={'uid':uid, 'pid':pid}
         self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datapoint_config, params=params)
-
-    def test_authorize_get_snapshot_config_success_shared_auth_success(self):
-        ''' authorize_get_snapshot_config should succeed if the snapshot is shared to the user '''
-        uid=uuid.uuid4()
-        pid=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        params={'uid':uid, 'nid':nid}
-        self.assertIsNone(authorization.authorize_get_snapshot_config(params=params))
 
     def test_authorize_get_snapshot_config_failure(self):
         ''' authorize_get_snapshot_config should fail if the snapshot is not shared to the user '''
@@ -105,50 +55,9 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        uid=uuid.uuid4()
-        params={'uid':uid, 'nid':nid}
+        tid=uuid.uuid4()
+        params={'uid':uid, 'nid':nid,'tid':tid,'ii':ii,'ie':ie}
         self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_snapshot_config, params=params)
-
-    def test_authorize_get_datasource_data_success_shared_auth_success(self):
-        ''' authorize_get_datasource_data should succeed if the datasource is shared to the user and interval parameters match '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        params={'uid':uid, 'did':did, 'ii':ii, 'ie':ie}
-        self.assertIsNone(authorization.authorize_get_datasource_data(params=params))
-
-    def test_authorize_get_datasource_data_failure_interval_parameters_dont_match(self):
-        ''' authorize_get_datasource_data should fail if the datasource is shared to the user but interval parameters dont match '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        params={'uid':uid, 'did':did, 'ii':ii, 'ie':ie}
-        self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datasource_data, params=params)
-
-    def test_authorize_get_datasource_data_failure_uid_doesnt_match(self):
-        ''' authorize_get_datasource_data should fail if the datasource is shared to a different user '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        uid=uuid.uuid4()
-        params={'uid':uid, 'did':did, 'ii':ii, 'ie':ie}
-        self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datasource_data, params=params)
 
     def test_authorize_get_datasource_data_failure_did_doesnt_match(self):
         ''' authorize_get_datasource_data should fail if the datasource is not shared '''
@@ -157,61 +66,7 @@ class AuthAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=did,idd=nid,vertex_type=vertex.DATASOURCE_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        did=uuid.uuid4()
-        params={'uid':uid, 'did':did, 'ii':ii, 'ie':ie}
+        tid=uuid.uuid4()
+        params={'uid':uid, 'did':did, 'ii':ii, 'ie':ie,'tid':tid}
         self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datasource_data, params=params)
-
-    def test_authorize_get_datapoint_data_success_shared_auth_success(self):
-        ''' authorize_get_datapoint_data should succeed if the datasource is shared to the user and interval parameters match '''
-        uid=uuid.uuid4()
-        pid=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        params={'uid':uid, 'pid':pid, 'ii':ii, 'ie':ie}
-        self.assertIsNone(authorization.authorize_get_datapoint_data(params=params))
-
-    def test_authorize_get_datapoint_data_failure_interval_parameters_dont_match(self):
-        ''' authorize_get_datapoint_data should fail if the datasource is shared to the user but interval parameters dont match '''
-        uid=uuid.uuid4()
-        pid=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        params={'uid':uid, 'pid':pid, 'ii':ii, 'ie':ie}
-        self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datapoint_data, params=params)
-
-    def test_authorize_get_datapoint_data_failure_uid_doesnt_match(self):
-        ''' authorize_get_datapoint_data should fail if the datasource is shared to a different user '''
-        uid=uuid.uuid4()
-        pid=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        uid=uuid.uuid4()
-        params={'uid':uid, 'pid':pid, 'ii':ii, 'ie':ie}
-        self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datapoint_data, params=params)
-
-    def test_authorize_get_datapoint_data_failure_pid_doesnt_match(self):
-        ''' authorize_get_datapoint_data should fail if the datasource is not shared '''
-        uid=uuid.uuid4()
-        pid=uuid.uuid4()
-        nid=uuid.uuid4()
-        ii=timeuuid.uuid1()
-        ie=timeuuid.uuid1()
-        self.assertTrue(graphbase.set_member_edge(ido=pid,idd=nid,vertex_type=vertex.DATAPOINT_SNAPSHOT_RELATION))
-        self.assertTrue(graphbase.set_bounded_share_edge(ido=nid, idd=uid, vertex_type=vertex.SNAPSHOT_USER_RELATION, perm=permissions.CAN_READ, interval_init=ii, interval_end=ie))
-        pid=uuid.uuid4()
-        params={'uid':uid, 'pid':pid, 'ii':ii, 'ie':ie}
-        self.assertRaises(exceptions.AuthorizationException, authorization.authorize_get_datapoint_data, params=params)
 

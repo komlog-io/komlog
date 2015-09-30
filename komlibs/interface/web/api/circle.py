@@ -84,8 +84,6 @@ def new_users_circle_request(username, circlename, members_list=None):
         msgapi.send_message(message)
         message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
-        message=messages.MembershipAuthorizationUpdateMessage(operation=auth_op, params=params)
-        msgapi.send_message(message)
         message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_CIRCLE, parameters={'cid':circle['cid'].hex, 'circlename':circlename})
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'cid':circle['cid'].hex})
@@ -125,8 +123,6 @@ def add_user_to_circle_request(username, cid, member):
         params=operation.get_params()
         message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
-        message=messages.MembershipAuthorizationUpdateMessage(operation=auth_op, params=params)
-        msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     else:
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
@@ -147,8 +143,6 @@ def delete_user_from_circle_request(username, cid, member):
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
         message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
-        msgapi.send_message(message)
-        message=messages.MembershipAuthorizationUpdateMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     else:

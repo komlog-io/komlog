@@ -80,11 +80,12 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
     def get(self,did):
         try:
             seq=self.get_argument('seq',default=None)
+            tid=self.get_argument('t',default=None)
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            response=datasource.get_datasource_data_request(username=self.user, did=did, seq=seq)
+            response=datasource.get_datasource_data_request(username=self.user, did=did, seq=seq, tid=tid)
             self.set_status(response.status)
             self.write(json_encode(response.data))
 
@@ -192,13 +193,12 @@ class DatapointDataHandler(tornado.web.RequestHandler):
         try:
             start_date=self.get_argument('its',default=None) #sd : start date
             end_date=self.get_argument('ets',default=None) #ed : end date
-            iseq=self.get_argument('iseq',default=None)
-            eseq=self.get_argument('eseq',default=None)
+            tid=self.get_argument('t',default=None) #ticket id
         except Exception:
             self.set_status(400)
             self.write(json_encode({'message':'Bad parameters'}))
         else:
-            response=datapoint.get_datapoint_data_request(username=self.user, pid=pid, start_date=start_date, end_date=end_date,iseq=iseq,eseq=eseq)
+            response=datapoint.get_datapoint_data_request(username=self.user, pid=pid, start_date=start_date, end_date=end_date,tid=tid)
             self.set_status(response.status)
             self.write(json_encode(response.data))
 
@@ -492,9 +492,15 @@ class SnapshotConfigHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def get(self, nid):
-        response=snapshot.get_snapshot_config_request(username=self.user, nid=nid)
-        self.set_status(response.status)
-        self.write(json_encode(response.data))
+        try:
+            tid=self.get_argument('t',default=None) #ticket id
+        except Exception:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=snapshot.get_snapshot_config_request(username=self.user, nid=nid, tid=tid)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
 
     @auth.userauthenticated
     def delete(self, nid):

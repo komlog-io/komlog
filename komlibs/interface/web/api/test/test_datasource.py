@@ -7,7 +7,7 @@ from komlibs.interface.web.api import user as userapi
 from komlibs.interface.web.api import agent as agentapi 
 from komlibs.interface.web.api import datasource as datasourceapi 
 from komlibs.interface.web.model import webmodel
-from komlibs.interface.web import status, exceptions
+from komlibs.interface.web import status, exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.interface.imc.api import rescontrol
@@ -621,6 +621,16 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         for did in dids:
             response=datasourceapi.get_datasource_data_request(username=username, did=did)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_get_datasource_data_request_failure_invalid_tid(self):
+        ''' get_datasource_data_request should fail if tid is invalid '''
+        tids=[234234, 23423.02342, 'UserName', {'a':'dict'},['a','list'],('a','tuple'),'a\ninvalid\tusername',uuid.uuid4()]
+        username=self.userinfo['username']
+        did=uuid.uuid4().hex
+        for tid in tids:
+            response=datasourceapi.get_datasource_data_request(username=username, did=did, tid=tid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWADS_GDSDR_IT)
 
     def test_get_datasource_data_request_failure_non_existent_datasource(self):
         ''' get_datasource_data_request should fail if datasource does not exist '''

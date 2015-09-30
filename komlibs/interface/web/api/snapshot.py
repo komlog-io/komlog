@@ -8,6 +8,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.auth.tickets import provision as ticketprov
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.snapshot import api as snapshotapi
 from komlibs.gestaccount.widget import types
@@ -33,10 +34,9 @@ def get_snapshots_config_request(username):
         reg['widgetname']=snapshot['widgetname']
         reg['its']=timeuuid.get_unix_timestamp(snapshot['interval_init'])
         reg['ets']=timeuuid.get_unix_timestamp(snapshot['interval_end'])
-        reg['iseq']=timeuuid.get_custom_sequence(snapshot['interval_init'])
-        reg['eseq']=timeuuid.get_custom_sequence(snapshot['interval_end'])
         if snapshot['type']==types.DATASOURCE:
             reg['did']=snapshot['did'].hex
+            reg['seq']=timeuuid.get_custom_sequence(snapshot['interval_init'])
         elif snapshot['type']==types.DATAPOINT:
             reg['pid']=snapshot['pid'].hex
         elif snapshot['type']==types.MULTIDP:
@@ -56,24 +56,26 @@ def get_snapshots_config_request(username):
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
-def get_snapshot_config_request(username, nid):
+def get_snapshot_config_request(username, nid, tid=None):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWASN_GSNCR_IU)
     if not args.is_valid_hex_uuid(nid):
         raise exceptions.BadParametersException(error=errors.E_IWASN_GSNCR_IN)
+    if tid and not args.is_valid_hex_uuid(tid):
+        raise exceptions.BadParametersException(error=errors.E_IWASN_GSNCR_IT)
     nid=uuid.UUID(nid)
     uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.GET_SNAPSHOT_CONFIG,uid=uid,nid=nid)
+    tid=uuid.UUID(tid) if tid else None
+    authorization.authorize_request(request=requests.GET_SNAPSHOT_CONFIG,uid=uid,nid=nid, tid=tid)
     data=snapshotapi.get_snapshot_config(nid=nid)
     snapshot={'nid':nid.hex}
     snapshot['type']=data['type']
     snapshot['widgetname']=data['widgetname']
     snapshot['its']=timeuuid.get_unix_timestamp(data['interval_init'])
     snapshot['ets']=timeuuid.get_unix_timestamp(data['interval_end'])
-    snapshot['iseq']=timeuuid.get_custom_sequence(data['interval_init'])
-    snapshot['eseq']=timeuuid.get_custom_sequence(data['interval_end'])
     if data['type']==types.DATASOURCE:
         snapshot['did']=data['did'].hex
+        snapshot['seq']=timeuuid.get_custom_sequence(data['interval_init'])
     elif data['type']==types.DATAPOINT:
         snapshot['pid']=data['pid'].hex
     elif data['type']==types.MULTIDP:
@@ -139,18 +141,19 @@ def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None,
     authorization.authorize_request(request=requests.NEW_SNAPSHOT, uid=uid, wid=wid)
     snapshot=snapshotapi.new_snapshot(uid=uid,wid=wid,interval_init=interval_init,interval_end=interval_end,shared_with_users=user_list,shared_with_cids=cid_uuid_list)
     if snapshot:
-        operation=weboperations.NewSnapshotOperation(uid=snapshot['uid'], nid=snapshot['nid'],wid=snapshot['wid'])
-        auth_op=operation.get_auth_operation()
-        params=operation.get_params()
-        message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
-        msgapi.send_message(message)
-        message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
-        msgapi.send_message(message)
-        message=messages.SharedAuthorizationUpdateMessage(operation=auth_op, params=params)
-        msgapi.send_message(message)
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex})
-    else:
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
+        ticket=ticketprov.new_snapshot_ticket(uid=uid,nid=snapshot['nid'])
+        if ticket:
+            operation=weboperations.NewSnapshotOperation(uid=snapshot['uid'], nid=snapshot['nid'],wid=snapshot['wid'])
+            auth_op=operation.get_auth_operation()
+            params=operation.get_params()
+            message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
+            msgapi.send_message(message)
+            message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
+            msgapi.send_message(message)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
+        else:
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
 
 @exceptions.ExceptionHandler
 def get_snapshot_data_request(username, nid):

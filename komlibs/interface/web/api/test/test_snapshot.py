@@ -12,13 +12,14 @@ from komlibs.interface.web.api import widget as widgetapi
 from komlibs.interface.web.api import snapshot as snapshotapi
 from komlibs.interface.web.api import circle as circleapi
 from komlibs.interface.web.model import webmodel
-from komlibs.interface.web import status, exceptions
+from komlibs.interface.web import status, exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.interface.imc.model import messages
 from komlibs.interface.imc.api import rescontrol, gestconsole
 from komimc import bus, routing
 from komimc import api as msgapi
+from komfig import logger
 
 
 class InterfaceWebApiSnapshotTest(unittest.TestCase):
@@ -111,6 +112,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         for username in usernames:
             response=snapshotapi.get_snapshot_config_request(username=username,nid=nid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWASN_GSNCR_IU)
 
     def test_get_snapshot_config_request_failure_invalid_nid(self):
         ''' get_snapshot_config_request should fail if nid is invalid '''
@@ -119,6 +121,17 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         for nid in nids:
             response=snapshotapi.get_snapshot_config_request(username=username,nid=nid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWASN_GSNCR_IN)
+
+    def test_get_snapshot_config_request_failure_invalid_ticket(self):
+        ''' get_snapshot_config_request should fail if username is invalid '''
+        tickets=[32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame',uuid.uuid4(), uuid.uuid1().hex,uuid.uuid1()]
+        nid=uuid.uuid4().hex
+        username='test_get_snapshot_config_request_failure_invalid_ticket'
+        for ticket in tickets:
+            response=snapshotapi.get_snapshot_config_request(username=username,nid=nid, tid=ticket)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWASN_GSNCR_IT)
 
     def test_get_snapshot_config_request_failure_non_existent_nid(self):
         ''' get_snapshot_config_request should fail if nid does not exist '''
@@ -229,6 +242,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response6 = snapshotapi.new_snapshot_request(username=username,wid=wid,user_list=[username_to_share],its=its,ets=ets)
         self.assertEqual(response6.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        self.assertTrue(isinstance(uuid.UUID(response6.data['tid']),uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
@@ -349,6 +363,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response6 = snapshotapi.new_snapshot_request(username=username,wid=wid,user_list=[username_to_share],its=its,ets=ets)
         self.assertEqual(response6.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        self.assertTrue(isinstance(uuid.UUID(response6.data['tid']),uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
@@ -469,6 +484,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response6 = snapshotapi.new_snapshot_request(username=username,wid=wid,user_list=[username_to_share],its=its,ets=ets)
         self.assertEqual(response6.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        self.assertTrue(isinstance(uuid.UUID(response6.data['tid']),uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
@@ -589,6 +605,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response6 = snapshotapi.new_snapshot_request(username=username,wid=wid,user_list=[username_to_share],its=its,ets=ets)
         self.assertEqual(response6.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        self.assertTrue(isinstance(uuid.UUID(response6.data['tid']),uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
@@ -671,8 +688,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.DATASOURCE)
         self.assertEqual(response7.data['widgetname'],datasourcename)
-        self.assertEqual(response7.data['iseq'],sequence)
-        self.assertEqual(response7.data['eseq'],sequence)
+        self.assertEqual(response7.data['seq'],sequence)
         self.assertEqual(response7.data['did'],did)
 
     def test_get_snapshot_config_request_success_snapshot_datasource_shared_to_circle(self):
@@ -730,6 +746,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response6 = snapshotapi.new_snapshot_request(username=username,wid=wid,cid_list=[cid],seq=sequence)
         self.assertEqual(response6.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        self.assertTrue(isinstance(uuid.UUID(response6.data['tid']),uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
@@ -740,7 +757,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             else:
                 break
         #username_to_share should have access to the snapshot and datapoints
-        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'])
+        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.DATASOURCE)
@@ -749,13 +766,15 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['ets'],timeuuid.get_unix_timestamp(date))
         self.assertEqual(response7.data['did'],did)
         response8=datasourceapi.get_datasource_config_request(username=username_to_share, did=did)
-        self.assertEqual(response8.status, status.WEB_STATUS_OK)
-        self.assertEqual(response8.data['did'],did)
-        self.assertEqual(response8.data['datasourcename'],datasourcename)
-        response9=datasourceapi.get_datasource_data_request(username=username_to_share, did=did, seq=response7.data['iseq'])
+        self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
+        response9=datasourceapi.get_datasource_data_request(username=username_to_share, did=did, seq=response7.data['seq'],tid=response6.data['tid'])
         self.assertEqual(response9.status, status.WEB_STATUS_OK)
         self.assertEqual(response9.data['content'],datasourcecontent)
         self.assertEqual(response9.data['did'],did)
+        response9=datasourceapi.get_datasource_data_request(username=username_to_share, did=did, seq=response7.data['seq'])
+        self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
+        response9=datasourceapi.get_datasource_data_request(username=username_to_share, did=did,tid=response6.data['tid'])
+        self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         response9=datasourceapi.get_datasource_data_request(username=username_to_share, did=did)
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
@@ -844,6 +863,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response6 = snapshotapi.new_snapshot_request(username=username,wid=wid,user_list=[username_to_share],its=its,ets=ets)
         self.assertEqual(response6.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        self.assertTrue(isinstance(uuid.UUID(response6.data['tid']),uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
@@ -861,6 +881,16 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['pid'],pid)
+        response7 = snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
+        self.assertEqual(response7.status, status.WEB_STATUS_OK)
+        self.assertEqual(response7.data['nid'],response6.data['nid'])
+        self.assertEqual(response7.data['type'],types.DATAPOINT)
+        self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
+        self.assertEqual(response7.data['its'],1)
+        self.assertEqual(response7.data['ets'],2)
+        self.assertEqual(response7.data['pid'],pid)
+        response7 = snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'])
+        self.assertEqual(response7.status, status.WEB_STATUS_ACCESS_DENIED)
 
     def test_delete_snapshot_request_failure_invalid_username(self):
         ''' delete_snapshot_request should fail if username is invalid '''
@@ -1375,7 +1405,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
                     msgapi.process_msg_result(msg_result)
             else:
                 break
-        response7 = snapshotapi.get_snapshot_config_request(username=username, nid=response6.data['nid'])
+        response7 = snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.MULTIDP)
@@ -1383,8 +1413,12 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['datapoints'],[{'pid':pid}])
+        response8 = snapshotapi.delete_snapshot_request(username=username_to_share, nid=response6.data['nid'])
+        self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
         response8 = snapshotapi.delete_snapshot_request(username=username, nid=response6.data['nid'])
         self.assertEqual(response8.status, status.WEB_STATUS_OK)
+        response9 = snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
+        self.assertEqual(response9.status, status.WEB_STATUS_NOT_FOUND)
         response9 = snapshotapi.get_snapshot_config_request(username=username, nid=response6.data['nid'])
         self.assertEqual(response9.status, status.WEB_STATUS_NOT_FOUND)
 
@@ -1452,8 +1486,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.DATASOURCE)
         self.assertEqual(response7.data['widgetname'],datasourcename)
-        self.assertEqual(response7.data['iseq'],sequence)
-        self.assertEqual(response7.data['eseq'],sequence)
+        self.assertEqual(response7.data['seq'],sequence)
         self.assertEqual(response7.data['did'],did)
         response8 = snapshotapi.delete_snapshot_request(username=username, nid=response6.data['nid'])
         self.assertEqual(response8.status, status.WEB_STATUS_OK)
@@ -1746,6 +1779,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response6 = snapshotapi.new_snapshot_request(username=username,wid=wid,user_list=[username_to_share],its=its,ets=ets)
         self.assertEqual(response6.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        self.assertTrue(isinstance(uuid.UUID(response6.data['tid']),uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
@@ -1756,7 +1790,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             else:
                 break
         #username_to_share should have access to the snapshot and datapoints
-        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'])
+        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.LINEGRAPH)
@@ -1765,11 +1799,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['datapoints'],[{'pid':pid,'color':response5.data['datapoints'][0]['color']}])
         response8=datapointapi.get_datapoint_config_request(username=username_to_share, pid=pid)
-        self.assertEqual(response8.status, status.WEB_STATUS_OK)
-        self.assertEqual(response8.data['pid'],pid)
-        self.assertEqual(response8.data['color'],response5.data['datapoints'][0]['color'])
-        self.assertEqual(response8.data['datapointname'],datapointname)
-        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',iseq=response7.data['iseq'],eseq=response7.data['eseq'])
+        self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
+        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',tid=response6.data['tid'])
         self.assertEqual(response9.status, status.WEB_STATUS_NOT_FOUND)
         response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -1924,7 +1955,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             else:
                 break
         #username_to_share should have access to the snapshot and datapoints
-        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'])
+        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.HISTOGRAM)
@@ -1933,11 +1964,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['datapoints'],[{'pid':pid,'color':response5.data['datapoints'][0]['color']}])
         response8=datapointapi.get_datapoint_config_request(username=username_to_share, pid=pid)
-        self.assertEqual(response8.status, status.WEB_STATUS_OK)
-        self.assertEqual(response8.data['pid'],pid)
-        self.assertEqual(response8.data['color'],response5.data['datapoints'][0]['color'])
-        self.assertEqual(response8.data['datapointname'],datapointname)
-        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',iseq=response7.data['iseq'],eseq=response7.data['eseq'])
+        self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
+        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',tid=response6.data['tid'])
         self.assertEqual(response9.status, status.WEB_STATUS_NOT_FOUND)
         response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -2082,6 +2110,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response6 = snapshotapi.new_snapshot_request(username=username,wid=wid,user_list=[username_to_share],ets=ets,its=its)
         self.assertEqual(response6.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response6.data['nid']),uuid.UUID))
+        self.assertTrue(isinstance(uuid.UUID(response6.data['tid']),uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
@@ -2092,7 +2121,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             else:
                 break
         #username_to_share should have access to the snapshot and datapoints
-        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'])
+        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.TABLE)
@@ -2101,11 +2130,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['datapoints'],[{'pid':pid,'color':response5.data['datapoints'][0]['color']}])
         response8=datapointapi.get_datapoint_config_request(username=username_to_share, pid=pid)
-        self.assertEqual(response8.status, status.WEB_STATUS_OK)
-        self.assertEqual(response8.data['pid'],pid)
-        self.assertEqual(response8.data['color'],response5.data['datapoints'][0]['color'])
-        self.assertEqual(response8.data['datapointname'],datapointname)
-        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',iseq=response7.data['iseq'],eseq=response7.data['eseq'])
+        self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
+        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',tid=response6.data['tid'])
         self.assertEqual(response9.status, status.WEB_STATUS_NOT_FOUND)
         response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -2260,7 +2286,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             else:
                 break
         #username_to_share should have access to the snapshot and datapoints
-        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'])
+        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.MULTIDP)
@@ -2269,11 +2295,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['datapoints'],[{'pid':pid}])
         response8=datapointapi.get_datapoint_config_request(username=username_to_share, pid=pid)
-        self.assertEqual(response8.status, status.WEB_STATUS_OK)
-        self.assertEqual(response8.data['pid'],pid)
-        self.assertTrue(isinstance(response8.data['color'],str))
-        self.assertEqual(response8.data['datapointname'],datapointname)
-        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',iseq=response7.data['iseq'],eseq=response7.data['eseq'])
+        self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
+        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',tid=response6.data['tid'])
         self.assertEqual(response9.status, status.WEB_STATUS_NOT_FOUND)
         response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -2344,7 +2367,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             else:
                 break
         #username_to_share should have access to the snapshot and datapoints
-        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'])
+        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.DATASOURCE)
@@ -2353,10 +2376,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['ets'],timeuuid.get_unix_timestamp(date))
         self.assertEqual(response7.data['did'],did)
         response8=datasourceapi.get_datasource_config_request(username=username_to_share, did=did)
-        self.assertEqual(response8.status, status.WEB_STATUS_OK)
-        self.assertEqual(response8.data['did'],did)
-        self.assertEqual(response8.data['datasourcename'],datasourcename)
-        response9=datasourceapi.get_datasource_data_request(username=username_to_share, did=did, seq=response7.data['iseq'])
+        self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
+        response9=datasourceapi.get_datasource_data_request(username=username_to_share, did=did, seq=response7.data['seq'],tid=response6.data['tid'])
         self.assertEqual(response9.status, status.WEB_STATUS_OK)
         self.assertEqual(response9.data['content'],datasourcecontent)
         self.assertEqual(response9.data['did'],did)
@@ -2458,7 +2479,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             else:
                 break
         #username_to_share should have access to the snapshot and datapoints
-        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'])
+        response7=snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
         self.assertEqual(response7.data['type'],types.DATAPOINT)
@@ -2467,10 +2488,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['ets'],2)
         self.assertEqual(response7.data['pid'],pid)
         response8=datapointapi.get_datapoint_config_request(username=username_to_share, pid=pid)
-        self.assertEqual(response8.status, status.WEB_STATUS_OK)
-        self.assertEqual(response8.data['pid'],pid)
-        self.assertEqual(response8.data['datapointname'],datapointname)
-        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',iseq=response7.data['iseq'],eseq=response7.data['eseq'])
+        self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
+        response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',tid=response6.data['tid'])
         self.assertEqual(response9.status, status.WEB_STATUS_NOT_FOUND)
         response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1', end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)

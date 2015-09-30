@@ -10,7 +10,7 @@ This file is the entry point of authorization mechanisms
 import sys
 from komlibs.auth.quotes import authorization as quoauth
 from komlibs.auth.resources import authorization as resauth
-from komlibs.auth.shared import authorization as sharedauth
+from komlibs.auth.tickets import authorization as ticketsauth
 from komlibs.auth import exceptions as authexcept
 from komlibs.auth import requests, errors
 from komcass.api import user as cassapiuser
@@ -58,11 +58,11 @@ func_requests={
                requests.DELETE_MEMBER_FROM_CIRCLE:'authorize_delete_member_from_circle',
                }
 
-def authorize_request(request,uid,aid=None,did=None,pid=None,gid=None,wid=None,bid=None,nid=None,cid=None,ii=None,ie=None):
+def authorize_request(request,uid,aid=None,did=None,pid=None,gid=None,wid=None,bid=None,nid=None,cid=None,ii=None,ie=None, tid=None):
     user=cassapiuser.get_user(uid=uid)
     if not user:
         raise authexcept.UserNotFoundException(error=errors.E_AA_AR_UNF)
-    params={'aid':aid,'did':did,'uid':uid,'pid':pid,'wid':wid,'bid':bid,'nid':nid,'cid':cid,'ii':ii,'ie':ie}
+    params={'aid':aid,'did':did,'uid':uid,'pid':pid,'wid':wid,'bid':bid,'nid':nid,'cid':cid,'ii':ii,'ie':ie,'tid':tid}
     try:
         getattr(sys.modules[__name__],func_requests[request])(params)
     except KeyError as e:
@@ -90,12 +90,13 @@ def authorize_get_datasource_data(params):
     did=params['did']
     ii=params['ii']
     ie=params['ie']
+    tid=params['tid']
     if not quoauth.authorize_get_datasource_data(uid=uid,did=did):
         raise authexcept.AuthorizationException(error=errors.E_AA_AGDSD_QE)
     if not resauth.authorize_get_datasource_data(uid=uid,did=did):
-        if ii and ie:
-            if not sharedauth.authorize_get_datasource_data(uid=uid, did=did, ii=ii, ie=ie):
-                raise authexcept.AuthorizationException(error=errors.E_AA_AGDSD_SE)
+        if ii and ie and tid:
+            if not ticketsauth.authorize_get_datasource_data(uid=uid, did=did, ii=ii, ie=ie, tid=tid):
+                raise authexcept.AuthorizationException(error=errors.E_AA_AGDSD_TE)
         else:
             raise authexcept.AuthorizationException(error=errors.E_AA_AGDSD_RE)
 
@@ -113,8 +114,7 @@ def authorize_get_datasource_config(params):
     did=params['did']
     if not quoauth.authorize_get_datasource_config(uid=uid,did=did):
         raise authexcept.AuthorizationException(error=errors.E_AA_AGDSC_QE)
-    if not (resauth.authorize_get_datasource_config(uid=uid,did=did)\
-        or sharedauth.authorize_get_datasource_config(uid=uid, did=did)):
+    if not resauth.authorize_get_datasource_config(uid=uid,did=did):
         raise authexcept.AuthorizationException(error=errors.E_AA_AGDSC_RE)
 
 def authorize_datasource_update_configuration(params):
@@ -136,12 +136,13 @@ def authorize_get_datapoint_data(params):
     pid=params['pid']
     ii=params['ii']
     ie=params['ie']
+    tid=params['tid']
     if not quoauth.authorize_get_datapoint_data(uid,pid=pid):
         raise authexcept.AuthorizationException(error=errors.E_AA_AGDPD_QE)
     if not resauth.authorize_get_datapoint_data(uid,pid=pid):
-        if ii and ie:
-            if not sharedauth.authorize_get_datapoint_data(uid=uid, pid=pid, ii=ii, ie=ie):
-                raise authexcept.AuthorizationException(error=errors.E_AA_AGDPD_SE)
+        if ii and ie and tid:
+            if not ticketsauth.authorize_get_datapoint_data(uid=uid, pid=pid, ii=ii, ie=ie, tid=tid):
+                raise authexcept.AuthorizationException(error=errors.E_AA_AGDPD_TE)
         else:
             raise authexcept.AuthorizationException(error=errors.E_AA_AGDPD_RE)
 
@@ -150,8 +151,7 @@ def authorize_get_datapoint_config(params):
     pid=params['pid']
     if not quoauth.authorize_get_datapoint_config(uid=uid,pid=pid):
         raise authexcept.AuthorizationException(error=errors.E_AA_AGDPC_QE)
-    if not (resauth.authorize_get_datapoint_config(uid=uid,pid=pid)\
-        or sharedauth.authorize_get_datapoint_config(uid=uid, pid=pid)):
+    if not resauth.authorize_get_datapoint_config(uid=uid,pid=pid):
         raise authexcept.AuthorizationException(error=errors.E_AA_AGDPC_RE)
 
 def authorize_new_datapoint_creation(params):
@@ -323,11 +323,14 @@ def authorize_get_snapshot_data(params):
 def authorize_get_snapshot_config(params):
     uid=params['uid']
     nid=params['nid']
+    tid=params['tid']
     if not quoauth.authorize_get_snapshot_config(uid=uid,nid=nid):
         raise authexcept.AuthorizationException(error=errors.E_AA_AGSC_QE)
-    if not (resauth.authorize_get_snapshot_config(uid=uid,nid=nid)\
-        or sharedauth.authorize_get_snapshot_config(uid=uid, nid=nid)):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGSC_RE)
+    if not resauth.authorize_get_snapshot_config(uid=uid,nid=nid):
+        if not tid:
+            raise authexcept.AuthorizationException(error=errors.E_AA_AGSC_RE)
+        elif not ticketsauth.authorize_get_snapshot_config(uid=uid, nid=nid, tid=tid):
+            raise authexcept.AuthorizationException(error=errors.E_AA_AGSC_TE)
 
 def authorize_delete_snapshot(params):
     uid=params['uid']

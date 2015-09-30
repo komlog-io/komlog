@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 
 This file defines the logic associated with web interface operations
@@ -6,7 +5,6 @@ This file defines the logic associated with web interface operations
 '''
 
 import uuid
-import time
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
@@ -24,7 +22,7 @@ from komlibs.general.time import timeuuid
 
 
 @exceptions.ExceptionHandler
-def get_datapoint_data_request(username, pid, start_date, end_date, iseq=None, eseq=None):
+def get_datapoint_data_request(username, pid, start_date, end_date, tid=None):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWADP_GDPDR_IU)
     if not args.is_valid_hex_uuid(pid):
@@ -33,29 +31,19 @@ def get_datapoint_data_request(username, pid, start_date, end_date, iseq=None, e
         raise exceptions.BadParametersException(error=errors.E_IWADP_GDPDR_ISD)
     if end_date and not args.is_valid_string_float(end_date):
         raise exceptions.BadParametersException(error=errors.E_IWADP_GDPDR_IED)
-    if iseq and not args.is_valid_sequence(iseq):
-        raise exceptions.BadParametersException(error=errors.E_IWADP_GDPDR_IIS)
-    if eseq and not args.is_valid_sequence(eseq):
-        raise exceptions.BadParametersException(error=errors.E_IWADP_GDPDR_IES)
-    if bool(iseq) ^ bool(eseq):
-        raise exceptions.BadParametersException(error=errors.E_IWADP_GDPDR_OOS)
+    if tid and not args.is_valid_hex_uuid(tid):
+        raise exceptions.BadParametersException(error=errors.E_IWADP_GDPDR_IT)
     pid=uuid.UUID(pid)
-    ii=timeuuid.get_uuid1_from_custom_sequence(iseq) if iseq else None
-    ie=timeuuid.get_uuid1_from_custom_sequence(eseq) if eseq else None
+    if start_date and end_date and start_date>end_date:
+        start_date,end_date=end_date,start_date
+    ii=timeuuid.max_uuid_from_time(timestamp=float(start_date)) if tid and start_date else None
+    ie=timeuuid.min_uuid_from_time(timestamp=float(end_date)) if tid and end_date else None
+    tid=uuid.UUID(tid) if tid else None
     uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.GET_DATAPOINT_DATA,uid=uid,pid=pid,ii=ii,ie=ie)
-    end_date=timeuuid.uuid1(seconds=float(end_date)) if end_date else None
-    start_date=timeuuid.uuid1(seconds=float(start_date)) if start_date else None
-    if ii or ie:
-        if ii>start_date:
-            start_date=ii
-        if ie<end_date:
-            end_date=ie
-    if start_date and end_date and timeuuid.get_unix_timestamp(start_date)>timeuuid.get_unix_timestamp(end_date):
-        tmp_date=end_date
-        end_date=start_date
-        start_date=tmp_date
-    data=datapointapi.get_datapoint_data(pid, fromdate=start_date, todate=end_date)
+    authorization.authorize_request(request=requests.GET_DATAPOINT_DATA,uid=uid,pid=pid,ii=ii,ie=ie,tid=tid)
+    ii=timeuuid.min_uuid_from_time(timestamp=float(start_date)) if start_date else None
+    ie=timeuuid.max_uuid_from_time(timestamp=float(end_date)) if end_date else None
+    data=datapointapi.get_datapoint_data(pid, fromdate=ii, todate=ie)
     response_data=[]
     for point in data:
         response_data.append({'ts':timeuuid.get_unix_timestamp(point['date']),

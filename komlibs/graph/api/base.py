@@ -25,11 +25,7 @@ def gen_get_outgoing_relations_from(ido, edge_type_list=edge.ALL, path_edge_type
             for vertex in current_level_vertices:
                 for edge_type in edge_type_list:
                     current_level_relations=[]
-                    if edge_type==edge.MEMBER_RELATION:
-                        current_level_relations=cassapigraph.get_member_out_relations(ido=vertex)
-                    elif edge_type==edge.BOUNDED_SHARE_RELATION:
-                        current_level_relations=cassapigraph.get_bounded_share_out_relations(ido=vertex)
-                    elif edge_type==edge.URI_RELATION:
+                    if edge_type==edge.URI_RELATION:
                         current_level_relations=cassapigraph.get_uri_out_relations(ido=vertex)
                     elif edge_type==edge.KIN_RELATION:
                         current_level_relations=cassapigraph.get_kin_out_relations(ido=vertex)
@@ -40,11 +36,7 @@ def gen_get_outgoing_relations_from(ido, edge_type_list=edge.ALL, path_edge_type
                 if depth_level!=1:
                     for edge_type in path_edge_type_list:
                         connected_vertices=[]
-                        if edge_type==edge.MEMBER_RELATION:
-                            connected_vertices=cassapigraph.get_member_out_vertices(ido=vertex)
-                        elif edge_type==edge.BOUNDED_SHARE_RELATION:
-                            connected_vertices=cassapigraph.get_bounded_share_out_vertices(ido=vertex)
-                        elif edge_type==edge.URI_RELATION:
+                        if edge_type==edge.URI_RELATION:
                             connected_vertices=cassapigraph.get_uri_out_vertices(ido=vertex)
                         elif edge_type==edge.KIN_RELATION:
                             connected_vertices=cassapigraph.get_kin_out_vertices(ido=vertex)
@@ -70,11 +62,7 @@ def gen_get_incoming_relations_at(idd, edge_type_list=edge.ALL, path_edge_type_l
             for vertex in current_level_vertices:
                 for edge_type in edge_type_list:
                     current_level_relations=[]
-                    if edge_type==edge.MEMBER_RELATION:
-                        current_level_relations=cassapigraph.get_member_in_relations(idd=vertex)
-                    elif edge_type==edge.BOUNDED_SHARE_RELATION:
-                        current_level_relations=cassapigraph.get_bounded_share_in_relations(idd=vertex)
-                    elif edge_type==edge.URI_RELATION:
+                    if edge_type==edge.URI_RELATION:
                         current_level_relations=cassapigraph.get_uri_in_relations(idd=vertex)
                     elif edge_type==edge.KIN_RELATION:
                         current_level_relations=cassapigraph.get_kin_in_relations(idd=vertex)
@@ -85,11 +73,7 @@ def gen_get_incoming_relations_at(idd, edge_type_list=edge.ALL, path_edge_type_l
                 if depth_level!=1:
                     for edge_type in path_edge_type_list:
                         connected_vertices=[]
-                        if edge_type==edge.MEMBER_RELATION:
-                            connected_vertices=cassapigraph.get_member_in_vertices(idd=vertex)
-                        elif edge_type==edge.BOUNDED_SHARE_RELATION:
-                            connected_vertices=cassapigraph.get_bounded_share_in_vertices(idd=vertex)
-                        elif edge_type==edge.URI_RELATION:
+                        if edge_type==edge.URI_RELATION:
                             connected_vertices=cassapigraph.get_uri_in_vertices(idd=vertex)
                         elif edge_type==edge.KIN_RELATION:
                             connected_vertices=cassapigraph.get_kin_in_vertices(idd=vertex)
@@ -106,15 +90,7 @@ def gen_get_incoming_relations_at(idd, edge_type_list=edge.ALL, path_edge_type_l
 
 def delete_edge(ido, idd, edge_type):
     if args.is_valid_uuid(ido) and args.is_valid_uuid(idd) and args.is_valid_int(edge_type):
-        if edge_type==edge.MEMBER_RELATION:
-            cassapigraph.delete_member_out_relation(ido=ido,idd=idd)
-            cassapigraph.delete_member_in_relation(ido=ido,idd=idd)
-            return True
-        elif edge_type==edge.BOUNDED_SHARE_RELATION:
-            cassapigraph.delete_bounded_share_out_relation(ido=ido,idd=idd)
-            cassapigraph.delete_bounded_share_in_relation(ido=ido,idd=idd)
-            return True
-        elif edge_type==edge.URI_RELATION:
+        if edge_type==edge.URI_RELATION:
             cassapigraph.delete_uri_out_relation(ido=ido,idd=idd)
             cassapigraph.delete_uri_in_relation(ido=ido,idd=idd)
             return True
@@ -123,30 +99,6 @@ def delete_edge(ido, idd, edge_type):
             cassapigraph.delete_kin_in_relation(ido=ido,idd=idd)
             return True
         else:
-            return False
-    else:
-        return False
-
-def set_member_edge(ido, idd, vertex_type):
-    if args.is_valid_uuid(ido) and args.is_valid_uuid(idd) and args.is_valid_string(vertex_type):
-        now=timeuuid.uuid1()
-        relation=ormgraph.MemberRelation(ido=ido, idd=idd, type=vertex_type, creation_date=now)
-        if cassapigraph.insert_member_out_relation(relation) and cassapigraph.insert_member_in_relation(relation):
-            return True
-        else:
-            delete_edge(ido=ido, idd=idd, edge_type=edge.MEMBER_RELATION)
-            return False
-    else:
-        return False
-
-def set_bounded_share_edge(ido, idd, vertex_type, perm, interval_init, interval_end):
-    if args.is_valid_uuid(ido) and args.is_valid_uuid(idd) and args.is_valid_string(vertex_type) and args.is_valid_int(perm) and args.is_valid_date(interval_init) and args.is_valid_date(interval_end):
-        now=timeuuid.uuid1()
-        relation=ormgraph.BoundedShareRelation(ido=ido, idd=idd, type=vertex_type, creation_date=now, perm=perm, interval_init=interval_init, interval_end=interval_end)
-        if cassapigraph.insert_bounded_share_out_relation(relation) and cassapigraph.insert_bounded_share_in_relation(relation):
-            return True
-        else:
-            delete_edge(ido=ido, idd=idd, edge_type=edge.BOUNDED_SHARE_RELATION)
             return False
     else:
         return False
@@ -205,14 +157,6 @@ def replace_vertex(actual_vertex, new_vertex, new_vertex_type, edge_type_list):
             vertex_type=vertex.get_relation_type(origin=vertex.get_origin_vertex_type(rel.type),dest=new_vertex_type)
             edge_type=edge.URI_RELATION
             set_uri_edge(ido=rel.ido,idd=new_vertex,vertex_type=vertex_type, uri=rel.uri)
-        elif isinstance(rel, ormgraph.BoundedShareRelation):
-            vertex_type=vertex.get_relation_type(origin=vertex.get_origin_vertex_type(rel.type),dest=new_vertex_type)
-            edge_type=edge.BOUNDED_SHARE_RELATION
-            set_bounded_share_edge(ido=rel.ido, idd=new_id, vertex_type=vertex_type, perm=rel.perm, interval_init=rel.interval_init, interval_end=rel.interval_end)
-        elif isinstance(rel, ormgraph.MemberRelation):
-            vertex_type=vertex.get_relation_type(origin=vertex.get_origin_vertex_type(rel.type),dest=new_vertex_type)
-            edge_type=edge.MEMBER_RELATION
-            set_member_edge(ido=rel.ido, idd=new_vertex, vertex_type=vertex_type)
         elif isinstance(rel, ormgraph.KinRelation):
             vertex_type=vertex.get_relation_type(origin=vertex.get_origin_vertex_type(rel.type),dest=new_vertex_type)
             edge_type=edge.KIN_RELATION
@@ -223,14 +167,6 @@ def replace_vertex(actual_vertex, new_vertex, new_vertex_type, edge_type_list):
             vertex_type=vertex.get_relation_type(origin=new_vertex_type,dest=vertex.get_dest_vertex_type(rel.type))
             edge_type=edge.URI_RELATION
             set_uri_edge(ido=new_vertex, idd=rel.idd, vertex_type=vertex_type, uri=rel.uri)
-        elif isinstance(rel, ormgraph.BoundedShareRelation):
-            vertex_type=vertex.get_relation_type(origin=new_vertex_type,dest=vertex.get_dest_vertex_type(rel.type))
-            edge_type=edge.BOUNDED_SHARE_RELATION
-            set_bounded_share_edge(ido=new_vertex, idd=rel.idd, vertex_type=vertex_type, perm=rel.perm, interval_init=rel.interval_init, interval_end=rel.interval_end)
-        elif isinstance(rel, ormgraph.MemberRelation):
-            vertex_type=vertex.get_relation_type(origin=new_vertex_type,dest=vertex.get_dest_vertex_type(rel.type))
-            edge_type=edge.MEMBER_RELATION
-            set_member_edge(ido=new_vertex, idd=rel.idd, vertex_type=vertex_type)
         elif isinstance(rel, ormgraph.KinRelation):
             vertex_type=vertex.get_relation_type(origin=new_vertex_type,dest=vertex.get_dest_vertex_type(rel.type))
             edge_type=edge.KIN_RELATION

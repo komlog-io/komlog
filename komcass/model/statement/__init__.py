@@ -1,4 +1,4 @@
-STATEMENT_MODULES = ['user','agent','datasource','datapoint','widget','dashboard','interface','permission','quote','segment','snapshot','graph','circle','events']
+STATEMENT_MODULES = ['user','agent','datasource','datapoint','widget','dashboard','interface','permission','quote','segment','snapshot','graph','circle','events','ticket']
 
 import sys
 
