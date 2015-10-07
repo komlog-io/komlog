@@ -133,7 +133,7 @@ def new_widget_request(username, data):
         msgapi.send_message(message)
         message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
-        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_WIDGET, parameters={'wid':widget['wid'].hex, 'widgetname':data['widgetname']})
+        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_WIDGET, parameters={'wid':widget['wid'].hex})
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'wid':widget['wid'].hex})
     else:

@@ -55,6 +55,7 @@ INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
     gestexcept.DatasourceUploadContentException,
     gestexcept.CircleAddMemberException,
     gestexcept.CircleDeleteMemberException,
+    eventexcept.UserEventCreationException,
 )
 
 class ExceptionHandler(object):

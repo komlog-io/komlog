@@ -1,7 +1,17 @@
 import unittest
 import uuid
+from komcass.api import datasource as cassapidatasource
+from komlibs.auth.tickets import provision as ticketapi
 from komlibs.general.time import timeuuid
-from komlibs.events.api import user
+from komlibs.gestaccount.user import api as userapi
+from komlibs.gestaccount.agent import api as agentapi
+from komlibs.gestaccount.datasource import api as datasourceapi
+from komlibs.gestaccount.datapoint import api as datapointapi
+from komlibs.gestaccount.widget import api as widgetapi
+from komlibs.gestaccount.dashboard import api as dashboardapi
+from komlibs.gestaccount.circle import api as circleapi
+from komlibs.gestaccount.snapshot import api as snapshotapi
+from komlibs.events.api import user as eventsuser
 from komlibs.events.model import types, priorities
 from komlibs.events import exceptions, errors
 from komfig import logger
@@ -15,7 +25,7 @@ class EventsApiUserTest(unittest.TestCase):
         date=timeuuid.uuid1()
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.get_event(uid=uid, date=date)
+                eventsuser.get_event(uid=uid, date=date)
             self.assertEqual(cm.exception.error, errors.E_EAU_GEV_IU)
 
     def test_get_event_failure_invalid_date(self):
@@ -24,7 +34,7 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.get_event(uid=uid, date=date )
+                eventsuser.get_event(uid=uid, date=date )
             self.assertEqual(cm.exception.error, errors.E_EAU_GEV_IDT)
 
     def test_get_event_failure_non_existent_event(self):
@@ -32,44 +42,314 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
         with self.assertRaises(exceptions.EventNotFoundException) as cm:
-            user.get_event(uid=uid, date=date )
+            eventsuser.get_event(uid=uid, date=date )
         self.assertEqual(cm.exception.error, errors.E_EAU_GEV_EVNF)
 
-    def test_get_event_success(self):
+    def test_get_event_success_new_user(self):
         ''' get_event should succeed returning the event '''
-        uid=uuid.uuid4()
-        aid=uuid.uuid4()
-        did=uuid.uuid4()
-        pid=uuid.uuid4()
-        wid=uuid.uuid4()
-        bid=uuid.uuid4()
-        cid=uuid.uuid4()
-        username='test_get_event_success_username'
-        agentname='test_get_event_success_agentname'
-        datasourcename='test_get_event_success_datasourcename'
-        datapointname='test_get_event_success_datapointname'
-        widgetname='test_get_event_success_widgetname'
-        dashboardname='test_get_event_success_dashboardname'
-        circlename='test_get_event_success_circlename'
-        self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
-        self.assertTrue(user.insert_new_agent_event(uid=uid, aid=aid, agentname=username))
-        self.assertTrue(user.insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename))
-        self.assertTrue(user.insert_new_datapoint_event(uid=uid, did=did, pid=pid, datasourcename=datasourcename, datapointname=datapointname))
-        self.assertTrue(user.insert_new_widget_event(uid=uid, wid=wid, widgetname=widgetname))
-        self.assertTrue(user.insert_new_dashboard_event(uid=uid, bid=bid, dashboardname=dashboardname))
-        self.assertTrue(user.insert_new_circle_event(uid=uid, cid=cid, circlename=circlename))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),7)
-        for event in events:
-            db_event=user.get_event(uid=uid, date=event['date'])
-            self.assertEqual(event, db_event)
+        username='test_get_event_success_new_user'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        event=eventsuser.new_event(uid=user['uid'],parameters={},event_type=types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertEqual(db_event['parameters'],{'username':username})
+
+    def test_get_event_success_notification_new_agent(self):
+        ''' get_event should return the event '''
+        username='test_get_event_new_agent_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        agentname='test_get_event_agent'
+        pubkey='pubkey'
+        version='version'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname,pubkey=pubkey,version=version)
+        self.assertIsNotNone(agent)
+        parameters={'aid':agent['aid'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_NOTIFICATION_NEW_AGENT)
+        self.assertEqual(db_event['parameters'],{'aid':agent['aid'],'agentname':agentname})
+
+    def test_get_event_success_new_datasource(self):
+        ''' get_event should return the event '''
+        username='test_get_event_new_datasource_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        agentname='test_get_event_new_datasource_success_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_get_event_new_datasource_success_datasource'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],pubkey=pubkey,agentname=agentname,version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        parameters={'did':datasource['did'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE)
+        self.assertEqual(db_event['parameters'],{'did':datasource['did'],'aid':agent['aid'],'datasourcename':datasourcename})
+
+    def test_get_event_success_new_datapoint(self):
+        ''' get_event should return the event '''
+        username='test_get_event_new_datapoint_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        agentname='test_get_event_new_datapoint_success_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_get_event_new_datapoint_success_datasource'
+        datapointname='test_get_event_new_datapoint_success_datapoint'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],pubkey=pubkey,agentname=agentname,version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname,color='#AAAAAA')
+        self.assertIsNotNone(datapoint)
+        parameters={'pid':datapoint['pid'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT)
+        self.assertEqual(db_event['parameters'],{'did':datasource['did'],'pid':datapoint['pid'],'datasourcename':datasourcename,'datapointname':datapointname})
+
+    def test_get_event_success_new_widget(self):
+        ''' get_event should return the event '''
+        username='test_get_event_new_widget_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
+        agentname='test_get_event_new_widget_success_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_get_event_new_widget_success_datasource'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        widget=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did'])
+        self.assertIsNotNone(widget)
+        parameters={'wid':widget['wid'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_NOTIFICATION_NEW_WIDGET)
+        self.assertEqual(db_event['parameters'],{'wid':widget['wid'],'widgetname':datasourcename})
+
+    def test_get_event_success_new_dashboard(self):
+        ''' get_event should return the event '''
+        username='test_get_event_new_dashboard_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        dashboardname='test_get_event_new_dashboard_success'
+        dashboard=dashboardapi.create_dashboard(uid=user['uid'],dashboardname=dashboardname)
+        self.assertIsNotNone(dashboard)
+        parameters={'bid':dashboard['bid'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD)
+        self.assertEqual(db_event['parameters'],{'bid':dashboard['bid'],'dashboardname':dashboardname})
+
+    def test_get_event_success_new_circle(self):
+        ''' get_event should return the event '''
+        username='test_get_event_new_circle_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        circlename='test_get_event_new_circle_success'
+        circle=circleapi.new_users_circle(uid=user['uid'],circlename=circlename)
+        self.assertIsNotNone(circle)
+        parameters={'cid':circle['cid'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_NOTIFICATION_NEW_CIRCLE)
+        self.assertEqual(db_event['parameters'],{'cid':circle['cid'],'circlename':circlename})
+
+    def test_get_event_success_new_intervention_datapoint_identification(self):
+        ''' get_event should return the event '''
+        username='test_get_event_intervention_datapoint_identirication'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        date=uuid.uuid1()
+        doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
+        discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
+        agentname='test_get_event_intervention_datapoint_identification_success_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_get_event_intervention_datapoint_identification_success_datasource'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='datasource content'
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        parameters={'did':datasource['did'].hex,'date':date.hex,'doubts':doubts,'discarded':discarded}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
+        self.assertTrue(isinstance(db_event, dict))
+        self.assertEqual(db_event['parameters']['did'],datasource['did'])
+        self.assertEqual(db_event['parameters']['ds_seq'],timeuuid.get_custom_sequence(date))
+        self.assertEqual(sorted(db_event['parameters']['doubts']),sorted([uuid.UUID(pid) for pid in doubts]))
+        self.assertEqual(sorted(db_event['parameters']['discarded']),sorted([uuid.UUID(pid) for pid in discarded]))
+
+    def test_get_event_success_notification_new_snapshot_shared(self):
+        ''' get_event should return the event '''
+        username='test_get_event_notification_new_snapshot_shared_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agentname='test_get_event_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_get_event_datasource'
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        widget=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did'])
+        self.assertIsNotNone(widget)
+        snapshot=snapshotapi.new_snapshot(wid=widget['wid'],uid=user['uid'],interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1())
+        self.assertIsNotNone(snapshot)
+        ticket=ticketapi.new_snapshot_ticket(uid=user['uid'],nid=snapshot['nid'])
+        self.assertIsNotNone(ticket)
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        nid=snapshot['nid']
+        tid=ticket['tid']
+        parameters={'tid':tid.hex,'nid':nid.hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_events=eventsuser.get_events(uid=user['uid'])
+        self.assertEqual(len(db_events),1)
+        self.assertEqual(db_events[0]['uid'],user['uid'])
+        self.assertEqual(db_events[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED)
+        self.assertEqual(db_events[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename})
+
+    def test_get_event_success_new_notification_new_snapshot_shared_with_me(self):
+        ''' get_event should return the event '''
+        username='test_get_event_notification_new_snapshot_shared_success_with_sharing_users'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        user1=userapi.create_user(username=username+'1', password=password, email='1'+email)
+        user2=userapi.create_user(username=username+'2', password=password, email='2'+email)
+        user3=userapi.create_user(username=username+'3', password=password, email='3'+email)
+        user4=userapi.create_user(username=username+'4', password=password, email='4'+email)
+        user5=userapi.create_user(username=username+'5', password=password, email='5'+email)
+        self.assertIsNotNone(user1)
+        self.assertIsNotNone(user2)
+        self.assertIsNotNone(user3)
+        self.assertIsNotNone(user4)
+        self.assertIsNotNone(user5)
+        circle_members=[username+'2',username+'3',username+'4']
+        circle=circleapi.new_users_circle(uid=user['uid'],circlename='circle',members_list=circle_members)
+        self.assertIsNotNone(circle)
+        agentname='test_get_event_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_get_event_datasource'
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        widget=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did'])
+        self.assertIsNotNone(widget)
+        snapshot=snapshotapi.new_snapshot(wid=widget['wid'],uid=user['uid'],interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1(), shared_with_users=[username+'1'], shared_with_cids=[circle['cid']])
+        self.assertIsNotNone(snapshot)
+        ticket=ticketapi.new_snapshot_ticket(uid=user['uid'],nid=snapshot['nid'])
+        self.assertIsNotNone(ticket)
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        nid=snapshot['nid']
+        tid=ticket['tid']
+        parameters={'tid':tid.hex,'nid':nid.hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_events=eventsuser.get_events(uid=user['uid'])
+        self.assertEqual(len(db_events),1)
+        self.assertEqual(db_events[0]['uid'],user['uid'])
+        self.assertEqual(db_events[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED)
+        self.assertEqual(db_events[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename})
+        user1_event=eventsuser.get_events(uid=user1['uid'])
+        self.assertEqual(len(user1_event),1)
+        self.assertEqual(user1_event[0]['uid'],user1['uid'])
+        self.assertEqual(user1_event[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(user1_event[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename,'username':username})
+        user2_event=eventsuser.get_events(uid=user2['uid'])
+        self.assertEqual(len(user2_event),1)
+        self.assertEqual(user2_event[0]['uid'],user2['uid'])
+        self.assertEqual(user2_event[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(user2_event[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename,'username':username})
+        user3_event=eventsuser.get_events(uid=user3['uid'])
+        self.assertEqual(len(user3_event),1)
+        self.assertEqual(user3_event[0]['uid'],user3['uid'])
+        self.assertEqual(user3_event[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(user3_event[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename,'username':username})
+        user4_event=eventsuser.get_events(uid=user4['uid'])
+        self.assertEqual(len(user4_event),1)
+        self.assertEqual(user4_event[0]['uid'],user4['uid'])
+        self.assertEqual(user4_event[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(user4_event[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename,'username':username})
 
     def test_get_events_failure_invalid_uid(self):
         ''' get_events should fail if uid is invalid '''
         uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.get_events(uid=uid)
+                eventsuser.get_events(uid=uid)
             self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_IU)
 
     def test_get_events_failure_invalid_to_date(self):
@@ -78,7 +358,7 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.get_events(uid=uid, to_date=date )
+                eventsuser.get_events(uid=uid, to_date=date )
             self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_ITD)
 
     def test_get_events_failure_invalid_from_date(self):
@@ -87,7 +367,7 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.get_events(uid=uid, from_date=date )
+                eventsuser.get_events(uid=uid, from_date=date )
             self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_IFD)
 
     def test_get_events_failure_invalid_count(self):
@@ -96,34 +376,25 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         for count in counts:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.get_events(uid=uid, count=count)
+                eventsuser.get_events(uid=uid, count=count)
             self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_ICNT)
 
     def test_get_events_success(self):
         ''' get_events should return the event list '''
-        uid=uuid.uuid4()
-        aid=uuid.uuid4()
-        did=uuid.uuid4()
-        pid=uuid.uuid4()
-        wid=uuid.uuid4()
-        bid=uuid.uuid4()
-        cid=uuid.uuid4()
-        username='test_get_events_success_username'
-        agentname='test_get_events_success_agentname'
-        datasourcename='test_get_events_success_datasourcename'
-        datapointname='test_get_events_success_datapointname'
-        widgetname='test_get_events_success_widgetname'
-        dashboardname='test_get_events_success_dashboardname'
-        circlename='test_get_events_success_circlename'
-        self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
-        self.assertTrue(user.insert_new_agent_event(uid=uid, aid=aid, agentname=username))
-        self.assertTrue(user.insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename))
-        self.assertTrue(user.insert_new_datapoint_event(uid=uid, did=did, pid=pid, datasourcename=datasourcename, datapointname=datapointname))
-        self.assertTrue(user.insert_new_widget_event(uid=uid, wid=wid, widgetname=widgetname))
-        self.assertTrue(user.insert_new_dashboard_event(uid=uid, bid=bid, dashboardname=dashboardname))
-        self.assertTrue(user.insert_new_circle_event(uid=uid, cid=cid, circlename=circlename))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),7)
+        username='test_get_events_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        event=eventsuser.new_event(uid=user['uid'],parameters={},event_type=types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertIsNotNone(event)
+        db_events=eventsuser.get_events(uid=user['uid'])
+        self.assertIsNotNone(db_events)
+        self.assertEqual(len(db_events),1)
+        self.assertEqual(db_events[0]['uid'],user['uid'])
+        self.assertEqual(db_events[0]['date'],event['date'])
+        self.assertEqual(db_events[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertEqual(db_events[0]['parameters'],{'username':username})
 
     def test_enable_event_failure_invalid_uid(self):
         ''' enable_event should fail if uid is invalid '''
@@ -131,8 +402,8 @@ class EventsApiUserTest(unittest.TestCase):
         date=uuid.uuid1()
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.enable_event(uid=uid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_EAU_ACE_IU)
+                eventsuser.enable_event(uid=uid, date=date)
+            self.assertEqual(cm.exception.error, errors.E_EAU_ENE_IU)
 
     def test_enable_event_failure_invalid_date(self):
         ''' enable_event should fail if date is invalid '''
@@ -140,28 +411,33 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.enable_event(uid=uid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_EAU_ACE_ID)
+                eventsuser.enable_event(uid=uid, date=date)
+            self.assertEqual(cm.exception.error, errors.E_EAU_ENE_ID)
 
     def test_enable_event_failure_non_existent_event(self):
         ''' enable_event should fail if event does not exist '''
         uid=uuid.uuid4()
         date=uuid.uuid1()
         with self.assertRaises(exceptions.EventNotFoundException) as cm:
-            user.enable_event(uid=uid, date=date)
-        self.assertEqual(cm.exception.error, errors.E_EAU_ACE_EVNF)
+            eventsuser.enable_event(uid=uid, date=date)
+        self.assertEqual(cm.exception.error, errors.E_EAU_ENE_EVNF)
 
     def test_enable_event_success_event_enabled_previously(self):
         ''' enable_event should succeed if event is enabled previously '''
-        uid=uuid.uuid4()
-        username='test_enable_event_success_username'
-        self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        event=events[0]
-        self.assertTrue(user.enable_event(uid=uid, date=event['date']))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
+        username='test_enable_event_success_event_enabled_previously'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        event=eventsuser.new_event(uid=user['uid'],parameters={},event_type=types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertEqual(db_event['parameters'],{'username':username})
+        self.assertTrue(eventsuser.enable_event(uid=user['uid'],date=event['date']))
 
     def test_disable_event_failure_invalid_uid(self):
         ''' disable_event should fail if uid is invalid '''
@@ -169,8 +445,8 @@ class EventsApiUserTest(unittest.TestCase):
         date=uuid.uuid1()
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.disable_event(uid=uid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_EAU_DACE_IU)
+                eventsuser.disable_event(uid=uid, date=date)
+            self.assertEqual(cm.exception.error, errors.E_EAU_DISE_IU)
 
     def test_disable_event_failure_invalid_date(self):
         ''' disable_event should fail if date is invalid '''
@@ -178,65 +454,77 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.disable_event(uid=uid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_EAU_DACE_ID)
+                eventsuser.disable_event(uid=uid, date=date)
+            self.assertEqual(cm.exception.error, errors.E_EAU_DISE_ID)
 
     def test_disable_event_failure_non_existent_event(self):
         ''' disable_event should fail if event does not exist '''
         uid=uuid.uuid4()
         date=uuid.uuid1()
         with self.assertRaises(exceptions.EventNotFoundException) as cm:
-            user.disable_event(uid=uid, date=date)
-        self.assertEqual(cm.exception.error, errors.E_EAU_DACE_EVNF)
+            eventsuser.disable_event(uid=uid, date=date)
+        self.assertEqual(cm.exception.error, errors.E_EAU_DISE_EVNF)
 
     def test_disable_event_success_event_disabled_previously(self):
         ''' enable_event should succeed if event is enabled previously '''
-        uid=uuid.uuid4()
-        username='test_enable_event_success_username'
-        self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        event=events[0]
-        self.assertTrue(user.disable_event(uid=uid, date=event['date']))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),0)
-        self.assertTrue(user.disable_event(uid=uid, date=event['date']))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),0)
+        username='test_disable_event_success_event_disabled_previously'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        event=eventsuser.new_event(uid=user['uid'],parameters={},event_type=types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertEqual(db_event['parameters'],{'username':username})
+        self.assertTrue(eventsuser.disable_event(uid=user['uid'],date=event['date']))
+        self.assertTrue(eventsuser.disable_event(uid=user['uid'],date=event['date']))
 
     def test_enable_disable_event_success(self):
-        ''' enable_event and disable_event should succeed, for simplicity even if the event does not exist '''
-        uid=uuid.uuid4()
-        username='test_enable_event_success_username'
-        self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        event=events[0]
-        self.assertTrue(user.disable_event(uid=uid, date=event['date']))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),0)
-        self.assertTrue(user.enable_event(uid=uid, date=event['date']))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
+        ''' enable_event and disable_event should succeed '''
+        username='test_enable_disable_event_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        event=eventsuser.new_event(uid=user['uid'],parameters={},event_type=types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertEqual(db_event['parameters'],{'username':username})
+        self.assertTrue(eventsuser.disable_event(uid=user['uid'],date=event['date']))
+        self.assertTrue(eventsuser.disable_event(uid=user['uid'],date=event['date']))
 
     def test_delete_events_failure_invalid_uid(self):
         ''' delete_events should fail if uid is invalid '''
         uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.delete_events(uid=uid)
+                eventsuser.delete_events(uid=uid)
             self.assertEqual(cm.exception.error, errors.E_EAU_DEV_IU)
 
     def test_delete_events_success(self):
         ''' delete_events should succeed '''
-        uid=uuid.uuid4()
-        username='test_delete_events_success_username'
-        self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        self.assertTrue(user.delete_events(uid=uid))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),0)
+        username='test_delete_events_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        event=eventsuser.new_event(uid=user['uid'],parameters={},event_type=types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertIsNotNone(event)
+        db_events=eventsuser.get_events(uid=user['uid'])
+        self.assertIsNotNone(db_events)
+        self.assertEqual(len(db_events),1)
+        self.assertTrue(eventsuser.delete_events(uid=user['uid']))
+        db_events=eventsuser.get_events(uid=user['uid'])
+        self.assertIsNotNone(db_events)
+        self.assertEqual(len(db_events),0)
 
     def test_new_event_failure_invalid_event_type(self):
         ''' new_event should fail if type is invalid  '''
@@ -245,7 +533,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={}
         for event_type in event_types:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
             self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_IEVT)
 
     def test_new_event_failure_non_existent_event_type(self):
@@ -254,45 +542,66 @@ class EventsApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
         self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_EVTNF)
 
-    def test_new_event_new_user_failure_non_username_parameter_passed(self):
-        ''' new_event should fail if type is NEW_USER and no username parameter is passed '''
+    def test_new_event_new_user_failure_invalid_uid(self):
+        ''' new_event should fail if type is invalid  '''
+        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_USER
+        parameters={}
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNU_IU)
+
+    def test_new_event_new_user_failure_non_existent_user(self):
+        ''' new_event should fail if type is NEW_USER and no user does not exist '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_NOTIFICATION_NEW_USER
         parameters={}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NUIU)
-
-    def test_new_event_new_user_failure_invalid_username_passed(self):
-        ''' new_event should fail if type is NEW_USER and username parameter is invalid '''
-        uid=uuid.uuid4()
-        event_type=types.USER_EVENT_NOTIFICATION_NEW_USER
-        usernames=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        for username in usernames:
-            parameters={'username':username}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NUIU)
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNU_UNF)
 
     def test_new_event_new_user_success(self):
         ''' new_event should succeed '''
-        uid=uuid.uuid4()
-        event_type=types.USER_EVENT_NOTIFICATION_NEW_USER
-        username='a_valid_username'
-        parameters={'username':username}
-        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+        username='test_new_event_new_user_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        event=eventsuser.new_event(uid=user['uid'],parameters={},event_type=types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertIsNotNone(event)
 
-    def test_new_event_new_agent_failure_non_aid_parameter_passed(self):
+    def test_new_event_new_agent_failure_invalid_uid(self):
+        ''' new_event should fail if type is invalid  '''
+        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
+        parameters={}
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_IU)
+
+    def test_new_event_new_agent_failure_invalid_parameters_passed(self):
+        ''' new_event should fail if event_type is NEW_AGENT and parameters is not a dict '''
+        parameterss=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), ['a','list'],('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
+        for parameters in parameterss:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_IP)
+
+    def test_new_event_new_agent_failure_no_aid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_AGENT and no aid parameter is passed '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NAID)
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_IPAID)
 
     def test_new_event_new_agent_failure_invalid_aid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_AGENT and aid parameter is invalid '''
@@ -302,47 +611,78 @@ class EventsApiUserTest(unittest.TestCase):
         for aid in aids:
             parameters={'aid':aid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NAID)
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_IPAID)
 
-    def test_new_event_new_agent_failure_non_agentname_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_AGENT and no agentname parameter is passed '''
+    def test_new_event_new_agent_failure_non_existent_user(self):
+        ''' new_event should fail if event_type is NEW_AGENT and user does not exist '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
         parameters={'aid':uuid.uuid4().hex}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NAIA)
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_UNF)
 
-    def test_new_event_new_agent_failure_invalid_agentname_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_AGENT and aid parameter is invalid '''
-        uid=uuid.uuid4()
+    def test_new_event_new_agent_failure_non_existent_agent(self):
+        ''' new_event should fail if event_type is NEW_AGENT and agent does not exist '''
+        username='test_new_event_new_agent_failure_non_existent_agent'
+        password='temporal'
+        email=username+'@komlog.org'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
-        agentnames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        for agentname in agentnames:
-            parameters={'aid':uuid.uuid4().hex, 'agentname':agentname}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NAIA)
+        parameters={'aid':uuid.uuid4().hex}
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_ANF)
 
     def test_new_event_new_agent_success(self):
         ''' new_event should succeed '''
-        uid=uuid.uuid4()
-        event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
+        username='test_new_event_new_agent_success'
+        password='temporal'
+        email=username+'@komlog.org'
         agentname='test_new_event_new_agent_success'
-        parameters={'aid':uuid.uuid4().hex, 'agentname':agentname}
-        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+        pubkey='pubkey'
+        version='version'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname,pubkey=pubkey,version=version)
+        self.assertIsNotNone(agent)
+        parameters={'aid':agent['aid'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
 
-    def test_new_event_new_datasource_failure_non_aid_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DATASOURCE and no aid parameter is passed '''
+    def test_new_event_new_datasource_failure_invalid_uid(self):
+        ''' new_event should fail if type is invalid  '''
+        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
+        parameters={}
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_IU)
+
+    def test_new_event_new_datasource_failure_invalid_parameters_passed(self):
+        ''' new_event should fail if event_type is NEW_DATASOURCE and parameters is not a dict '''
+        parameterss=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), ['a','list'],('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
+        for parameters in parameterss:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_IP)
+
+    def test_new_event_new_datasource_failure_non_did_parameter_passed(self):
+        ''' new_event should fail if event_type is NEW_DATASOURCE and no did parameter is passed '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDIA)
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_IPDID)
 
-    def test_new_event_new_datasource_failure_invalid_aid_parameter_passed(self):
+    def test_new_event_new_datasource_failure_invalid_did_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and aid parameter is invalid '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
@@ -350,85 +690,79 @@ class EventsApiUserTest(unittest.TestCase):
         for aid in aids:
             parameters={'aid':aid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDIA)
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_IPDID)
 
-    def test_new_event_new_datasource_failure_non_did_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DATASOURCE and no aid parameter is passed '''
+    def test_new_event_new_datasource_failure_non_existent_user(self):
+        ''' new_event should fail if event_type is NEW_DATASOURCE and user does not exist '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
-        parameters={'aid':uuid.uuid4().hex}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDID)
+        parameters={'did':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_UNF)
 
-    def test_new_event_new_datasource_failure_invalid_did_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DATASOURCE and aid parameter is invalid '''
-        uid=uuid.uuid4()
+    def test_new_event_new_datasource_failure_non_existent_datasource(self):
+        ''' new_event should fail if event_type is NEW_DATASOURCE and datasource does not exist '''
+        username='test_new_event_new_datasource_failure_non_existent_datasource'
+        password='temporal'
+        email=username+'@komlog.org'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
-        dids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        for did in dids:
-            parameters={'aid':uuid.uuid4().hex, 'did':did}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDID)
-
-    def test_new_event_new_datasource_failure_non_datasourcename_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DATASOURCE and no datasourcename parameter is passed '''
-        uid=uuid.uuid4()
-        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
-        parameters={'aid':uuid.uuid4().hex,'did':uuid.uuid4().hex}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDIN)
-
-    def test_new_event_new_datasource_failure_invalid_datasourcename_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DATASOURCE and aid parameter is invalid '''
-        uid=uuid.uuid4()
-        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
-        datasourcenames=[None,234234, 234234.234234, 'astring_ññññ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        for datasourcename in datasourcenames:
-            parameters={'aid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NDIN)
+        parameters={'did':uuid.uuid4().hex}
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_DNF)
 
     def test_new_event_new_datasource_success(self):
         ''' new_event should succeed '''
-        uid=uuid.uuid4()
+        username='test_new_event_new_datasource_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        agentname='test_new_event_new_datasource_success_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_new_event_new_datasource_success_datasource'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
-        datasourcename='test_new_event_new_datasource_success'
-        parameters={'aid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename}
-        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],pubkey=pubkey,agentname=agentname,version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        parameters={'did':datasource['did'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
 
-    def test_new_event_new_datapoint_failure_non_did_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DATAPOINT and no did parameter is passed '''
-        uid=uuid.uuid4()
+    def test_new_event_new_datapoint_failure_invalid_uid(self):
+        ''' new_event should fail if type is invalid  '''
+        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
         parameters={}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPID)
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_IU)
 
-    def test_new_event_new_datapoint_failure_invalid_did_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DATAPOINT and did parameter is invalid '''
+    def test_new_event_new_datapoint_failure_invalid_parameters_passed(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and parameters is not a dict '''
+        parameterss=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), ['a','list'],('a','tuple'),{'set'}]
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
-        dids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        for did in dids:
-            parameters={'did':did}
+        for parameters in parameterss:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPID)
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_IP)
 
     def test_new_event_new_datapoint_failure_non_pid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and no pid parameter is passed '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
-        parameters={'did':uuid.uuid4().hex}
+        parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIP)
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_IPPID)
 
     def test_new_event_new_datapoint_failure_invalid_pid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and pid parameter is invalid '''
@@ -436,61 +770,100 @@ class EventsApiUserTest(unittest.TestCase):
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
         pids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for pid in pids:
-            parameters={'did':uuid.uuid4().hex, 'pid':pid}
+            parameters={'pid':pid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIP)
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_IPPID)
 
-    def test_new_event_new_datapoint_failure_non_datasourcename_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DATAPOINT and no datasourcename parameter is passed '''
+    def test_new_event_new_datapoint_failure_non_existent_user(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and user does not exist '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
-        parameters={'pid':uuid.uuid4().hex,'did':uuid.uuid4().hex}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIN)
+        parameters={'pid':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_UNF)
 
-    def test_new_event_new_datapoint_failure_invalid_datasourcename_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DATAPOINT and datasourcename parameter is invalid '''
-        uid=uuid.uuid4()
+    def test_new_event_new_datapoint_failure_non_existent_datapoint(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and datasource does not exist '''
+        username='test_new_event_new_datapoint_failure_non_existent_datapoint'
+        password='temporal'
+        email=username+'@komlog.org'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
-        datasourcenames=[None,234234, 234234.234234, 'astring_ñññ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        for datasourcename in datasourcenames:
-            parameters={'pid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIN)
+        parameters={'pid':uuid.uuid4().hex}
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_PNF)
 
-    def test_new_event_new_datapoint_failure_non_datapointname_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DATAPOINT and no datapointname parameter is passed '''
-        uid=uuid.uuid4()
+    def test_new_event_new_datapoint_failure_non_existent_datasource(self):
+        ''' new_event should fail if event_type is NEW_DATAPOINT and datapoint does not exist '''
+        username='test_new_event_new_datapoint_failure_non_existent_datasource'
+        password='temporal'
+        email=username+'@komlog.org'
+        agentname='test_new_event_new_datapoint_failure_non_existent_datasource_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_new_event_new_datapoint_failure_non_existent_datasource'
+        datapointname='test_new_event_new_datapoint_failure_non_existent_datasource'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
-        datasourcename='test_new_event_new_datapoint_failure_non_datapointname_parameter_passed'
-        parameters={'pid':uuid.uuid4().hex,'did':uuid.uuid4().hex,'datasourcename':datasourcename}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIM)
-
-    def test_new_event_new_datapoint_failure_invalid_datapointname_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DATAPOINT and datapointname parameter is invalid '''
-        uid=uuid.uuid4()
-        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
-        datasourcename='test_new_event_new_datapoint_failure_invalid_datapointname_parameter_passed'
-        datapointnames=[None,234234, 234234.234234, 'astring_ññññ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        for datapointname in datapointnames:
-            parameters={'pid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename, 'datapointname':datapointname}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NPIM)
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],pubkey=pubkey,agentname=agentname,version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname,color='#AAAAAA')
+        self.assertIsNotNone(datapoint)
+        parameters={'pid':datapoint['pid'].hex}
+        self.assertTrue(cassapidatasource.delete_datasource(did=datasource['did']))
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_DNF)
 
     def test_new_event_new_datapoint_success(self):
         ''' new_event should succeed '''
-        uid=uuid.uuid4()
+        username='test_new_event_new_datapoint_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        agentname='test_new_event_new_datapoint_success_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_new_event_new_datapoint_success_datasource'
+        datapointname='test_new_event_new_datapoint_success_datapoint'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
-        datasourcename='test_new_event_new_datapoint_success'
-        datapointname='test_new_event_new_datapoint_success'
-        parameters={'pid':uuid.uuid4().hex, 'did':uuid.uuid4().hex, 'datasourcename':datasourcename, 'datapointname':datapointname}
-        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],pubkey=pubkey,agentname=agentname,version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname,color='#AAAAAA')
+        self.assertIsNotNone(datapoint)
+        parameters={'pid':datapoint['pid'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+
+    def test_new_event_new_widget_failure_invalid_uid(self):
+        ''' new_event should fail if type is invalid  '''
+        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
+        parameters={}
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_IU)
+
+    def test_new_event_new_widget_failure_invalid_parameters_passed(self):
+        ''' new_event should fail if event_type is NEW_WIDGET and parameters is not a dict '''
+        parameterss=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), ['a','list'],('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
+        for parameters in parameterss:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_IP)
 
     def test_new_event_new_widget_failure_non_wid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_WIDGET and no wid parameter is passed '''
@@ -498,8 +871,8 @@ class EventsApiUserTest(unittest.TestCase):
         event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NWIW)
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_IPWID)
 
     def test_new_event_new_widget_failure_invalid_wid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_WIDGET and wid parameter is invalid '''
@@ -509,36 +882,73 @@ class EventsApiUserTest(unittest.TestCase):
         for wid in wids:
             parameters={'wid':wid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NWIW)
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_IPWID)
 
-    def test_new_event_new_widget_failure_non_widgetname_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_WIDGET and no widgetname parameter is passed '''
+    def test_new_event_new_widget_failure_non_existent_user(self):
+        ''' new_event should fail if event_type is NEW_WIDGET and widget does not exist '''
         uid=uuid.uuid4()
+        wid=uuid.uuid4()
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
+        parameters={'wid':wid.hex}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_UNF)
+
+    def test_new_event_new_widget_failure_non_existent_widget(self):
+        ''' new_event should fail if event_type is NEW_WIDGET and widget does not exist '''
+        username='test_new_event_new_widget_failure_non_existent_widget'
+        password='temporal'
+        email=username+'@komlog.org'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
         parameters={'wid':uuid.uuid4().hex}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NWIN)
-
-    def test_new_event_new_widget_failure_invalid_widgetname_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_WIDGET and widgetname parameter is invalid '''
-        uid=uuid.uuid4()
-        event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
-        widgetnames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        for widgetname in widgetnames:
-            parameters={'wid':uuid.uuid4().hex, 'widgetname':widgetname}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NWIN)
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_WNF)
 
     def test_new_event_new_widget_success(self):
         ''' new_event should succeed '''
-        uid=uuid.uuid4()
+        username='test_new_event_new_widget_success'
+        password='temporal'
+        email=username+'@komlog.org'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
-        widgetname='test_new_event_new_agent_success'
-        parameters={'wid':uuid.uuid4().hex, 'widgetname':widgetname}
-        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+        agentname='test_new_event_new_widget_success_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_new_event_new_widget_success_datasource'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        widget=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did'])
+        self.assertIsNotNone(widget)
+        parameters={'wid':widget['wid'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+
+    def test_new_event_new_dashboard_failure_invalid_uid(self):
+        ''' new_event should fail if type is invalid  '''
+        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
+        parameters={}
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_IU)
+
+    def test_new_event_new_dashboard_failure_invalid_parameters_passed(self):
+        ''' new_event should fail if event_type is NEW_DASHBOARD and parameters is not a dict '''
+        parameterss=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), ['a','list'],('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
+        for parameters in parameterss:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_IP)
 
     def test_new_event_new_dashboard_failure_non_bid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and no bid parameter is passed '''
@@ -546,8 +956,8 @@ class EventsApiUserTest(unittest.TestCase):
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NBIB)
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_IPBID)
 
     def test_new_event_new_dashboard_failure_invalid_bid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and bid parameter is invalid '''
@@ -557,36 +967,66 @@ class EventsApiUserTest(unittest.TestCase):
         for bid in bids:
             parameters={'bid':bid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NBIB)
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_IPBID)
 
-    def test_new_event_new_dashboard_failure_non_dashboardname_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DASHBOARD and no dashboardname parameter is passed '''
+    def test_new_event_new_dashboard_failure_non_existent_user(self):
+        ''' new_event should fail if event_type is NEW_DASHBOARD and user does not exist '''
         uid=uuid.uuid4()
+        bid=uuid.uuid4()
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
+        parameters={'bid':bid.hex}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_UNF)
+
+    def test_new_event_new_dashboard_failure_non_existent_dashboard(self):
+        ''' new_event should fail if event_type is NEW_DASHBOARD and dashboard does not exist '''
+        username='test_new_event_new_dashboard_failure_non_existent_dashboard'
+        password='temporal'
+        email=username+'@komlog.org'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
         parameters={'bid':uuid.uuid4().hex}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NBIN)
-
-    def test_new_event_new_dashboard_failure_invalid_dashboardname_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_DASHBOARD and dashboardname parameter is invalid '''
-        uid=uuid.uuid4()
-        event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
-        dashboardnames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        for dashboardname in dashboardnames:
-            parameters={'bid':uuid.uuid4().hex, 'dashboardname':dashboardname}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NBIN)
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_BNF)
 
     def test_new_event_new_dashboard_success(self):
         ''' new_event should succeed '''
-        uid=uuid.uuid4()
+        username='test_new_event_new_dashboard_success'
+        password='temporal'
+        email=username+'@komlog.org'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
         dashboardname='test_new_event_new_dashboard_success'
-        parameters={'bid':uuid.uuid4().hex, 'dashboardname':dashboardname}
-        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+        dashboard=dashboardapi.create_dashboard(uid=user['uid'],dashboardname=dashboardname)
+        self.assertIsNotNone(dashboard)
+        parameters={'bid':dashboard['bid'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+
+    def test_new_event_new_circle_failure_invalid_uid(self):
+        ''' new_event should fail if type is invalid  '''
+        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
+        parameters={}
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_IU)
+
+    def test_new_event_new_circle_failure_invalid_parameters_passed(self):
+        ''' new_event should fail if event_type is NEW_CIRCLE and parameters is not a dict '''
+        parameterss=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), ['a','list'],('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
+        for parameters in parameterss:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_IP)
 
     def test_new_event_new_circle_failure_non_cid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_CIRCLE and no cid parameter is passed '''
@@ -594,580 +1034,364 @@ class EventsApiUserTest(unittest.TestCase):
         event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NCIC)
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_IPCID)
 
     def test_new_event_new_circle_failure_invalid_cid_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_CIRCLE and cid parameter is invalid '''
+        ''' new_event should fail if event_type is NEW_DASHBOARD and cid parameter is invalid '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
         cids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for cid in cids:
             parameters={'cid':cid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NCIC)
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_IPCID)
 
-    def test_new_event_new_circle_failure_non_circlename_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_CIRCLE and no circlename parameter is passed '''
+    def test_new_event_new_circle_failure_non_existent_user(self):
+        ''' new_event should fail if event_type is NEW_CIRCLE and user does not exist '''
         uid=uuid.uuid4()
+        cid=uuid.uuid4()
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
+        parameters={'cid':cid.hex}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_UNF)
+
+    def test_new_event_new_circle_failure_non_existent_circle(self):
+        ''' new_event should fail if event_type is NEW_CIRCLE and circle does not exist '''
+        username='test_new_event_new_circle_failure_non_existent_circle'
+        password='temporal'
+        email=username+'@komlog.org'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
         parameters={'cid':uuid.uuid4().hex}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NCIN)
-
-    def test_new_event_new_circle_failure_invalid_circlename_parameter_passed(self):
-        ''' new_event should fail if event_type is NEW_CIRCLE and circlename parameter is invalid '''
-        uid=uuid.uuid4()
-        event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
-        circlenames=[None,234234, 234234.234234, 'astring_WITH_ÑÑ',uuid.uuid4(), uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        for circlename in circlenames:
-            parameters={'cid':uuid.uuid4().hex, 'circlename':circlename}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_NCIN)
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_CNF)
 
     def test_new_event_new_circle_success(self):
         ''' new_event should succeed '''
-        uid=uuid.uuid4()
+        username='test_new_event_new_circle_success'
+        password='temporal'
+        email=username+'@komlog.org'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
         circlename='test_new_event_new_circle_success'
-        parameters={'cid':uuid.uuid4().hex, 'circlename':circlename}
-        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+        circle=circleapi.new_users_circle(uid=user['uid'],circlename=circlename)
+        self.assertIsNotNone(circle)
+        parameters={'cid':circle['cid'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
 
-    def test_new_event_user_intervention_datapoint_identification_failure_non_did_parameter_passed(self):
-        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no did parameter is passed '''
+    def test_new_event_intervention_datapoint_identification_failure_invalid_uid(self):
+        ''' new_event should fail if uid is invalid  '''
+        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={}
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_IUID)
+
+    def test_new_event_intervention_datapoint_identification_failure_invalid_parameters_passed(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and parameters is not a dict '''
+        parameterss=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), ['a','list'],('a','tuple'),{'set'}]
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        for parameters in parameterss:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_IP)
+
+    def test_new_event_intervention_datapoint_identification_failure_no_did_parameter_passed(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and no did parameter is passed '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIID)
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_IPDID)
 
-    def test_new_event_user_intervention_datapoint_identification_failure_invalid_did_parameter_passed(self):
-        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and did parameter is invalid '''
+    def test_new_event_intervention_datapoint_identification_failure_invalid_did_parameter_passed(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and did parameter is invalid '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         dids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for did in dids:
             parameters={'did':did}
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIID)
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_IPDID)
 
-    def test_new_event_user_intervention_datapoint_identification_failure_non_date_parameter_passed(self):
-        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no date parameter is passed '''
+    def test_new_event_intervention_datapoint_identification_failure_non_existent_user(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and user does not exist '''
         uid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=uuid.uuid1()
+        doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
+        discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        parameters={'did':uuid.uuid4().hex}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDT)
+        parameters={'did':did.hex,'date':date.hex,'doubts':doubts,'discarded':discarded}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_UNF)
 
-    def test_new_event_user_intervention_datapoint_identification_failure_invalid_date_parameter_passed(self):
-        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and date parameter is invalid '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4().hex
+    def test_new_event_intervention_datapoint_identification_failure_non_existent_datasource(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and circle does not exist '''
+        username='test_new_event_intervention_datapoint_identirication_failure_non_existent_datasource'
+        password='temporal'
+        email=username+'@komlog.org'
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        dates=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid4().hex, {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        for date in dates:
-            parameters={'did':did, 'date':date}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDT)
+        did=uuid.uuid4()
+        date=uuid.uuid1()
+        doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
+        discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
+        parameters={'did':did.hex,'date':date.hex,'doubts':doubts,'discarded':discarded}
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_DNF)
 
-    def test_new_event_user_intervention_datapoint_identification_failure_non_doubts_parameter_passed(self):
-        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no doubts parameter is passed '''
-        uid=uuid.uuid4()
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        parameters={'did':uuid.uuid4().hex, 'date':uuid.uuid1().hex}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDO)
-
-    def test_new_event_user_intervention_datapoint_identification_failure_invalid_doubts_parameter_passed(self):
-        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and doubts parameter is invalid '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        doubts_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid4().hex, {'a':'dict'},('a','tuple'),{'set'}]
-        for doubts in doubts_a:
-            parameters={'did':did, 'date':date, 'doubts':doubts}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDO)
-
-    def test_new_event_user_intervention_datapoint_identification_failure_non_discarded_parameter_passed(self):
-        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and no discarded parameter is passed '''
-        uid=uuid.uuid4()
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        parameters={'did':uuid.uuid4().hex, 'date':uuid.uuid1().hex, 'doubts':[]}
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDI)
-
-    def test_new_event_user_intervention_datapoint_identification_failure_invalid_discarded_parameter_passed(self):
-        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and discarded parameter is invalid '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
-        doubts=[]
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        discarded_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid4().hex, {'a':'dict'},('a','tuple'),{'set'}]
-        for discarded in discarded_a:
-            parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDI)
-
-    def test_new_event_user_intervention_datapoint_identification_failure_invalid_doubts_items_passed(self):
-        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and doubts item is invalid '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        items_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid1().hex, {'a':'dict'},('a','tuple'),{'set'}]
-        for item in items_a:
-            parameters={'did':did, 'date':date, 'doubts':[item], 'discarded':[]}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDOP)
-
-    def test_new_event_user_intervention_datapoint_identification_failure_invalid_discarded_items_passed(self):
-        ''' new_event should fail if event_type is USER_INTERVENTION_DATAPOINT_IDENTIFICATION and discarded item is invalid '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        items_a=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1(), uuid.uuid1().hex, {'a':'dict'},('a','tuple'),{'set'}]
-        for item in items_a:
-            parameters={'did':did, 'date':date, 'doubts':[uuid.uuid4().hex, uuid.uuid4().hex], 'discarded':[item]}
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_UIDIIDIP)
-
-    def test_new_event_user_intervention_datapoint_identification_success(self):
+    def test_new_event_intervention_datapoint_identification_success(self):
         ''' new_event should succeed '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
+        username='test_new_event_intervention_datapoint_identirication'
+        password='temporal'
+        email=username+'@komlog.org'
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
-        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
+        date=uuid.uuid1()
+        doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
+        discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
+        agentname='test_new_event_intervention_datapoint_identification_success_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_new_event_intervention_datapoint_identification_success_datasource'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='datasource content'
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        parameters={'did':datasource['did'].hex,'date':date.hex,'doubts':doubts,'discarded':discarded}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
 
-    def test_insert_new_user_event_failure_invalid_uid(self):
-        ''' insert_new_user_event should fail if uid is invalid '''
+    def test_new_event_notification_new_snapshot_shared_failure_invalid_uid(self):
+        ''' new_event should fail if uid is invalid  '''
         uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        username='test_insert_new_user_event_failure'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        parameters={}
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_user_event(uid=uid, username=username)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INUE_IU)
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IU)
 
-    def test_insert_new_user_event_failure_invalid_username(self):
-        ''' insert_new_user_event should fail if uid is invalid '''
-        usernames=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+    def test_new_event_notification_new_snapshot_shared_failure_invalid_parameters_passed(self):
+        ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and parameters is not a dict '''
+        parameterss=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), ['a','list'],('a','tuple'),{'set'}]
         uid=uuid.uuid4()
-        for username in usernames:
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        for parameters in parameterss:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_user_event(uid=uid, username=username)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INUE_IUS)
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IP)
 
-    def test_insert_new_user_event_success(self):
-        ''' insert_new_user_event should succeed if parameters as valid '''
-        username='test_insert_new_user_event_success'
+    def test_new_event_notification_new_snapshot_shared_failure_no_nid_parameter_passed(self):
+        ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and no nid parameter is passed '''
         uid=uuid.uuid4()
-        self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_USER)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_USER)
-
-    def test_insert_new_agent_event_failure_invalid_uid(self):
-        ''' insert_new_agent_event should fail if uid is invalid '''
-        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        aid=uuid.uuid4()
-        agentname='test_insert_new_agent_event_failure'
-        for uid in uids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_agent_event(uid=uid, aid=aid, agentname=agentname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INAE_IU)
-
-    def test_insert_new_agent_event_failure_invalid_aid(self):
-        ''' insert_new_agent_event should fail if aid is invalid '''
-        aids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        agentname='test_insert_new_agent_event_failure'
-        for aid in aids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_agent_event(uid=uid, aid=aid, agentname=agentname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INAE_IA)
-
-    def test_insert_new_agent_event_failure_invalid_agentname(self):
-        ''' insert_new_agent_event should fail if uid is invalid '''
-        agentnames=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        aid=uuid.uuid4()
-        for agentname in agentnames:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_agent_event(uid=uid, aid=aid, agentname=agentname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INAE_IAN)
-
-    def test_insert_new_agent_event_success(self):
-        ''' insert_new_agent_event should succeed if parameters as valid '''
-        agentname='test_insert_new_agent_event_success'
-        uid=uuid.uuid4()
-        aid=uuid.uuid4()
-        self.assertTrue(user.insert_new_agent_event(uid=uid, aid=aid, agentname=agentname))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_AGENT)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_AGENT)
-
-    def test_insert_new_widget_event_failure_invalid_uid(self):
-        ''' insert_new_widget_event should fail if uid is invalid '''
-        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        wid=uuid.uuid4()
-        widgetname='test_insert_new_widget_event_failure'
-        for uid in uids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_widget_event(uid=uid, wid=wid, widgetname=widgetname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INWGE_IU)
-
-    def test_insert_new_widget_event_failure_invalid_wid(self):
-        ''' insert_new_widget_event should fail if wid is invalid '''
-        wids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        widgetname='test_insert_new_widget_event_failure'
-        for wid in wids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_widget_event(uid=uid, wid=wid, widgetname=widgetname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INWGE_IWID)
-
-    def test_insert_new_widget_event_failure_invalid_widgetname(self):
-        ''' insert_new_widget_event should fail if uid is invalid '''
-        widgetnames=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        wid=uuid.uuid4()
-        for widgetname in widgetnames:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_widget_event(uid=uid, wid=wid, widgetname=widgetname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INWGE_IWN)
-
-    def test_insert_new_widget_event_success(self):
-        ''' insert_new_widget_event should succeed if parameters as valid '''
-        widgetname='test_insert_new_widget_event_success'
-        uid=uuid.uuid4()
-        wid=uuid.uuid4()
-        self.assertTrue(user.insert_new_widget_event(uid=uid, wid=wid, widgetname=widgetname))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_WIDGET)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_WIDGET)
-
-    def test_insert_new_dashboard_event_failure_invalid_uid(self):
-        ''' insert_new_dashboard_event should fail if uid is invalid '''
-        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        bid=uuid.uuid4()
-        dashboardname='test_insert_new_dashboard_event_failure'
-        for uid in uids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_dashboard_event(uid=uid, bid=bid, dashboardname=dashboardname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDBE_IU)
-
-    def test_insert_new_dashboard_event_failure_invalid_bid(self):
-        ''' insert_new_dashboard_event should fail if bid is invalid '''
-        bids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        dashboardname='test_insert_new_dashboard_event_failure'
-        for bid in bids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_dashboard_event(uid=uid, bid=bid, dashboardname=dashboardname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDBE_IBID)
-
-    def test_insert_new_dashboard_event_failure_invalid_dashboardname(self):
-        ''' insert_new_dashboard_event should fail if uid is invalid '''
-        dashboardnames=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        bid=uuid.uuid4()
-        for dashboardname in dashboardnames:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_dashboard_event(uid=uid, bid=bid, dashboardname=dashboardname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDBE_IDBN)
-
-    def test_insert_new_dashboard_event_success(self):
-        ''' insert_new_dashboard_event should succeed if parameters as valid '''
-        dashboardname='test_insert_new_dashboard_event_success'
-        uid=uuid.uuid4()
-        bid=uuid.uuid4()
-        self.assertTrue(user.insert_new_dashboard_event(uid=uid, bid=bid, dashboardname=dashboardname))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_DASHBOARD)
-
-    def test_insert_new_circle_event_failure_invalid_uid(self):
-        ''' insert_new_circle_event should fail if uid is invalid '''
-        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        cid=uuid.uuid4()
-        circlename='test_insert_new_circle_event_failure'
-        for uid in uids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_circle_event(uid=uid, cid=cid, circlename=circlename)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INCE_IU)
-
-    def test_insert_new_circle_event_failure_invalid_cid(self):
-        ''' insert_new_circle_event should fail if cid is invalid '''
-        cids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        circlename='test_insert_new_circle_event_failure'
-        for cid in cids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_circle_event(uid=uid, cid=cid, circlename=circlename)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INCE_ICID)
-
-    def test_insert_new_circle_event_failure_invalid_circlename(self):
-        ''' insert_new_circle_event should fail if uid is invalid '''
-        circlenames=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        cid=uuid.uuid4()
-        for circlename in circlenames:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_circle_event(uid=uid, cid=cid, circlename=circlename)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INCE_ICN)
-
-    def test_insert_new_circle_event_success(self):
-        ''' insert_new_circle_event should succeed if parameters as valid '''
-        circlename='test_insert_new_circle_event_success'
-        uid=uuid.uuid4()
-        cid=uuid.uuid4()
-        self.assertTrue(user.insert_new_circle_event(uid=uid, cid=cid, circlename=circlename))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_CIRCLE)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_CIRCLE)
-
-    def test_insert_new_datasource_event_failure_invalid_uid(self):
-        ''' insert_new_datasource_event should fail if uid is invalid '''
-        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        did=uuid.uuid4()
-        aid=uuid.uuid4()
-        datasourcename='test_insert_new_datasource_event_failure'
-        for uid in uids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDSE_IU)
-
-    def test_insert_new_datasource_event_failure_invalid_aid(self):
-        ''' insert_new_datasource_event should fail if aid is invalid '''
-        aids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        did=uuid.uuid4()
-        uid=uuid.uuid4()
-        datasourcename='test_insert_new_datasource_event_failure'
-        for aid in aids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDSE_IA)
-
-    def test_insert_new_datasource_event_failure_invalid_did(self):
-        ''' insert_new_datasource_event should fail if did is invalid '''
-        dids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        aid=uuid.uuid4()
-        uid=uuid.uuid4()
-        datasourcename='test_insert_new_datasource_event_failure'
-        for did in dids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDSE_IDID)
-
-    def test_insert_new_datasource_event_failure_invalid_datasourcename(self):
-        ''' insert_new_datasource_event should fail if datasourcename is invalid '''
-        datasourcenames=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        aid=uuid.uuid4()
-        did=uuid.uuid4()
-        for datasourcename in datasourcenames:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDSE_IDSN)
-
-    def test_insert_new_datasource_event_success(self):
-        ''' insert_new_datasource_event should succeed if parameters as valid '''
-        datasourcename='test_insert_new_datasource_event_success'
-        uid=uuid.uuid4()
-        aid=uuid.uuid4()
-        did=uuid.uuid4()
-        self.assertTrue(user.insert_new_datasource_event(uid=uid, aid=aid, did=did, datasourcename=datasourcename))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_DATASOURCE)
-
-    def test_insert_new_datapoint_event_failure_invalid_uid(self):
-        ''' insert_new_datapoint_event should fail if uid is invalid '''
-        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        did=uuid.uuid4()
-        pid=uuid.uuid4()
-        datapointname='test_insert_new_datapoint_event_failure'
-        datasourcename='test_insert_new_datapoint_event_failure'
-        for uid in uids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_datapoint_event(uid=uid, pid=pid, did=did, datasourcename=datasourcename, datapointname=datapointname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDPE_IU)
-
-    def test_insert_new_datapoint_event_failure_invalid_pid(self):
-        ''' insert_new_datapoint_event should fail if pid is invalid '''
-        pids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        did=uuid.uuid4()
-        uid=uuid.uuid4()
-        datapointname='test_insert_new_datapoint_event_failure'
-        datasourcename='test_insert_new_datapoint_event_failure'
-        for pid in pids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_datapoint_event(uid=uid, pid=pid, did=did, datasourcename=datasourcename, datapointname=datapointname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDPE_IPID)
-
-    def test_insert_new_datapoint_event_failure_invalid_did(self):
-        ''' insert_new_datapoint_event should fail if did is invalid '''
-        dids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        pid=uuid.uuid4()
-        datapointname='test_insert_new_datapoint_event_failure'
-        datasourcename='test_insert_new_datapoint_event_failure'
-        for did in dids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_datapoint_event(uid=uid, pid=pid, did=did, datasourcename=datasourcename, datapointname=datapointname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDPE_IDID)
-
-    def test_insert_new_datapoint_event_failure_invalid_datapointname(self):
-        ''' insert_new_datapoint_event should fail if datapointname is invalid '''
-        datapointnames=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        datasourcename='test_insert_new_datapoint_event_failure'
-        uid=uuid.uuid4()
-        pid=uuid.uuid4()
-        did=uuid.uuid4()
-        for datapointname in datapointnames:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_datapoint_event(uid=uid, pid=pid, did=did, datasourcename=datasourcename, datapointname=datapointname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDPE_IDPN)
-
-    def test_insert_new_datapoint_event_failure_invalid_datasourcename(self):
-        ''' insert_new_datapoint_event should fail if datasourcename is invalid '''
-        datasourcenames=[None,234234, 234234.234234, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        datapointname='test_insert_new_datapoint_event_failure'
-        uid=uuid.uuid4()
-        pid=uuid.uuid4()
-        did=uuid.uuid4()
-        for datasourcename in datasourcenames:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_new_datapoint_event(uid=uid, pid=pid, did=did, datasourcename=datasourcename, datapointname=datapointname)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INDPE_IDSN)
-
-    def test_insert_new_datapoint_event_success(self):
-        ''' insert_new_datapoint_event should succeed if parameters as valid '''
-        datapointname='test_insert_new_datapoint_event_success'
-        datasourcename='test_insert_new_datapoint_event_success'
-        uid=uuid.uuid4()
-        pid=uuid.uuid4()
-        did=uuid.uuid4()
-        self.assertTrue(user.insert_new_datapoint_event(uid=uid, pid=pid, did=did, datasourcename=datasourcename, datapointname=datapointname))
-        events=user.get_events(uid=uid)
-        self.assertEqual(len(events),1)
-        self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_DATAPOINT)
-
-    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_uid(self):
-        ''' insert_event_user_intervention_datapoint_identification should fail if uid is invalid '''
-        uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        doubts=[]
-        discarded=[]
-        for uid in uids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IUID)
-
-    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_did(self):
-        ''' insert_event_user_intervention_datapoint_identification should fail if did is invalid '''
-        dids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        doubts=[]
-        discarded=[]
-        for did in dids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDID)
-
-    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_date(self):
-        ''' insert_event_user_intervention_datapoint_identification should fail if date is invalid '''
-        dates=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid4(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        did=uuid.uuid4()
-        doubts=[]
-        discarded=[]
-        for ds_date in dates:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDT)
-
-    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_doubts_list(self):
-        ''' insert_event_user_intervention_datapoint_identification should fail if doubts is not a list '''
-        doubts_s=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid4(), {'a':'dict'},('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[]
-        for doubts in doubts_s:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDOU)
-
-    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_discarded_list(self):
-        ''' insert_event_user_intervention_datapoint_identification should fail if discarded is not a list '''
-        discarded_s=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid4(), {'a':'dict'},('a','tuple'),{'set'}]
-        uid=uuid.uuid4()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        doubts=[]
-        for discarded in discarded_s:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
-            self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDIS)
-
-    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_doubts_item(self):
-        ''' insert_event_user_intervention_datapoint_identification should fail if doubts item is not a pid '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[]
-        doubts=[32,23]
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
-        self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDOUP)
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IPNID)
 
-    def test_insert_event_user_intervention_datapoint_identification_failure_invalid_discarded_item(self):
-        ''' insert_event_user_intervention_datapoint_identification should fail if discarded item is not a pid '''
+    def test_new_event_notification_new_snapshot_shared_failure_invalid_nid_parameter_passed(self):
+        ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and nid parameter is invalid '''
         uid=uuid.uuid4()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        doubts=[]
-        discarded=[32,23]
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        nids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for nid in nids:
+            parameters={'nid':nid}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IPNID)
+
+    def test_new_event_notification_new_snapshot_shared_failure_no_tid_parameter_passed(self):
+        ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and no tid parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        parameters={'nid':uuid.uuid4().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
-            user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
-        self.assertEqual(cm.exception.error, errors.E_EAU_INEUIDI_IDISP)
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IPTID)
 
-    def test_insert_event_user_intervention_datapoint_identification_success(self):
-        ''' insert_event_user_intervention_datapoint_identification should succeed '''
+    def test_new_event_notification_new_snapshot_shared_failure_invalid_tid_parameter_passed(self):
+        ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and tid parameter is invalid '''
         uid=uuid.uuid4()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        doubts=[uuid.uuid4(), uuid.uuid4()]
-        discarded=[uuid.uuid4(), uuid.uuid4()]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        tids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        nid=uuid.uuid4()
+        for tid in tids:
+            parameters={'tid':tid,'nid':nid.hex}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IPTID)
+
+    def test_new_event_notification_new_snapshot_shared_failure_user_not_found(self):
+        ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and user does not exist '''
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        nid=uuid.uuid4()
+        tid=uuid.uuid4()
+        parameters={'tid':tid.hex,'nid':nid.hex}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_UNF)
+
+    def test_new_event_notification_new_snapshot_shared_failure_snapshot_not_found(self):
+        ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and user does not exist '''
+        username='test_new_event_notification_new_snapshot_shared_failure_snapshot_not_found'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        nid=uuid.uuid4()
+        tid=uuid.uuid4()
+        parameters={'tid':tid.hex,'nid':nid.hex}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_NNF)
+
+    def test_new_event_notification_new_snapshot_shared_failure_ticket_not_found(self):
+        ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and user does not exist '''
+        username='test_new_event_notification_new_snapshot_shared_failure_ticket_not_found'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agentname='test_new_event_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_new_event_datasource'
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        widget=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did'])
+        self.assertIsNotNone(widget)
+        snapshot=snapshotapi.new_snapshot(wid=widget['wid'],uid=user['uid'],interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1())
+        self.assertIsNotNone(snapshot)
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        nid=snapshot['nid']
+        tid=uuid.uuid4()
+        parameters={'tid':tid.hex,'nid':nid.hex}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_TNF)
+
+    def test_new_event_notification_new_snapshot_shared_success_only_insert_the_sharing_user(self):
+        ''' new_event should succeed if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and insert the event in the sharing user only, because snapshot is not shared with anyone '''
+        username='test_new_event_notification_new_snapshot_shared_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agentname='test_new_event_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_new_event_datasource'
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        widget=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did'])
+        self.assertIsNotNone(widget)
+        snapshot=snapshotapi.new_snapshot(wid=widget['wid'],uid=user['uid'],interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1())
+        self.assertIsNotNone(snapshot)
+        ticket=ticketapi.new_snapshot_ticket(uid=user['uid'],nid=snapshot['nid'])
+        self.assertIsNotNone(ticket)
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        nid=snapshot['nid']
+        tid=ticket['tid']
+        parameters={'tid':tid.hex,'nid':nid.hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_events=eventsuser.get_events(uid=user['uid'])
+        self.assertEqual(len(db_events),1)
+        self.assertEqual(db_events[0]['uid'],user['uid'])
+        self.assertEqual(db_events[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED)
+        self.assertEqual(db_events[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename})
+
+    def test_new_event_notification_new_snapshot_shared_success_insert_to_the_sharing_user_and_circles(self):
+        ''' new_event should succeed if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and insert the event in the sharing user only, because snapshot is not shared with anyone '''
+        username='test_new_event_notification_new_snapshot_shared_success_with_sharing_users'
+        password='temporal'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        user1=userapi.create_user(username=username+'1', password=password, email='1'+email)
+        user2=userapi.create_user(username=username+'2', password=password, email='2'+email)
+        user3=userapi.create_user(username=username+'3', password=password, email='3'+email)
+        user4=userapi.create_user(username=username+'4', password=password, email='4'+email)
+        user5=userapi.create_user(username=username+'5', password=password, email='5'+email)
+        self.assertIsNotNone(user1)
+        self.assertIsNotNone(user2)
+        self.assertIsNotNone(user3)
+        self.assertIsNotNone(user4)
+        self.assertIsNotNone(user5)
+        circle_members=[username+'2',username+'3',username+'4']
+        circle=circleapi.new_users_circle(uid=user['uid'],circlename='circle',members_list=circle_members)
+        self.assertIsNotNone(circle)
+        agentname='test_new_event_agent'
+        pubkey='pubkey'
+        version='version'
+        datasourcename='test_new_event_datasource'
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        widget=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did'])
+        self.assertIsNotNone(widget)
+        snapshot=snapshotapi.new_snapshot(wid=widget['wid'],uid=user['uid'],interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1(), shared_with_users=[username+'1'], shared_with_cids=[circle['cid']])
+        self.assertIsNotNone(snapshot)
+        ticket=ticketapi.new_snapshot_ticket(uid=user['uid'],nid=snapshot['nid'])
+        self.assertIsNotNone(ticket)
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
+        nid=snapshot['nid']
+        tid=ticket['tid']
+        parameters={'tid':tid.hex,'nid':nid.hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_events=eventsuser.get_events(uid=user['uid'])
+        self.assertEqual(len(db_events),1)
+        self.assertEqual(db_events[0]['uid'],user['uid'])
+        self.assertEqual(db_events[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED)
+        self.assertEqual(db_events[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename})
+        user1_event=eventsuser.get_events(uid=user1['uid'])
+        self.assertEqual(len(user1_event),1)
+        self.assertEqual(user1_event[0]['uid'],user1['uid'])
+        self.assertEqual(user1_event[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(user1_event[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename,'username':username})
+        user2_event=eventsuser.get_events(uid=user2['uid'])
+        self.assertEqual(len(user2_event),1)
+        self.assertEqual(user2_event[0]['uid'],user2['uid'])
+        self.assertEqual(user2_event[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(user2_event[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename,'username':username})
+        user3_event=eventsuser.get_events(uid=user3['uid'])
+        self.assertEqual(len(user3_event),1)
+        self.assertEqual(user3_event[0]['uid'],user3['uid'])
+        self.assertEqual(user3_event[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(user3_event[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename,'username':username})
+        user4_event=eventsuser.get_events(uid=user4['uid'])
+        self.assertEqual(len(user4_event),1)
+        self.assertEqual(user4_event[0]['uid'],user4['uid'])
+        self.assertEqual(user4_event[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(user4_event[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename,'username':username})
 

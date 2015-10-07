@@ -13,3 +13,7 @@ class EventNotFoundException(EventsException):
     def __init__(self, error):
         super(EventNotFoundException,self).__init__(error=error)
 
+class UserEventCreationException(EventsException):
+    def __init__(self, error):
+        super(UserEventCreationException,self).__init__(error=error)
+

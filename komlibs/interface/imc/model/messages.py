@@ -419,12 +419,12 @@ class UserEventMessage:
                 raise exceptions.BadParametersException()
             if not args.is_valid_int(event_type):
                 raise exceptions.BadParametersException()
-            if not args.is_valid_dict(parameters):
+            if parameters and not args.is_valid_dict(parameters):
                 raise exceptions.BadParametersException()
             self.type=USER_EVENT_MESSAGE
             self.uid=uid
             self.event_type=event_type
-            self.parameters=parameters
+            self.parameters=parameters if parameters else {}
             self.serialized_message='|'.join((self.type,self.uid.hex,str(self.event_type),json.dumps(self.parameters)))
 
 class UserEventResponseMessage:
@@ -441,12 +441,12 @@ class UserEventResponseMessage:
                 raise exceptions.BadParametersException()
             if not args.is_valid_date(date):
                 raise exceptions.BadParametersException()
-            if not args.is_valid_dict(parameters):
+            if parameters and not args.is_valid_dict(parameters):
                 raise exceptions.BadParametersException()
             self.type=USER_EVENT_RESPONSE_MESSAGE
             self.uid=uid
             self.date=date
-            self.parameters=parameters
+            self.parameters=parameters if parameters else {}
             self.serialized_message='|'.join((self.type,self.uid.hex,self.date.hex,json.dumps(self.parameters)))
 
 class GenerateTextSummaryMessage:

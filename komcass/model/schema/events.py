@@ -14,6 +14,8 @@ OBJECTS=[
          'DAT_UE_NOTIF_NWWG',
          'DAT_UE_NOTIF_NWDB',
          'DAT_UE_NOTIF_NWCI',
+         'DAT_UE_NOTIF_NWSNS',
+         'DAT_UE_NOTIF_NWSNSWM',
          'DAT_UE_INTERV_DPID', 
          'DAT_UER_INTERV_DPID',
          'DAT_UER_INTERV_DPID_INDEX_01',
@@ -107,6 +109,31 @@ DAT_UE_NOTIF_NWCI='''
             date timeuuid,
             cid uuid,
             circlename text,
+            PRIMARY KEY (uid,date)
+        );
+    '''
+
+DAT_UE_NOTIF_NWSNS='''
+        CREATE TABLE dat_ue_notif_new_snapshot_shared (
+            uid uuid,
+            date timeuuid,
+            nid uuid,
+            tid uuid,
+            widgetname text,
+            shared_with_users map<uuid,text>,
+            shared_with_circles map<uuid,text>,
+            PRIMARY KEY (uid,date)
+        );
+    '''
+
+DAT_UE_NOTIF_NWSNSWM='''
+        CREATE TABLE dat_ue_notif_new_snapshot_shared_with_me (
+            uid uuid,
+            date timeuuid,
+            nid uuid,
+            tid uuid,
+            username text,
+            widgetname text,
             PRIMARY KEY (uid,date)
         );
     '''

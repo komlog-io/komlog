@@ -60,79 +60,89 @@ def _get_user_event(event):
     if not isinstance(event, ormevents.UserEvent):
         return None
     else:
-        if event.type==types.USER_EVENT_NOTIFICATION_NEW_USER:
-            event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWUSER_B_UID_DATE,(event.uid, event.date))
-            if event_info:
-                return ormevents.UserEventNotificationNewUser(uid=event.uid, date=event.date, priority=event.priority, username=event_info[0]['username'])
-            else:
-                return None
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_AGENT:
-            event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWAGENT_B_UID_DATE,(event.uid, event.date))
-            if event_info:
-                return ormevents.UserEventNotificationNewAgent(uid=event.uid, date=event.date, priority=event.priority, aid=event_info[0]['aid'], agentname=event_info[0]['agentname'])
-            else:
-                return None
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE:
-            event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWDATASOURCE_B_UID_DATE,(event.uid, event.date))
-            if event_info:
-                return ormevents.UserEventNotificationNewDatasource(uid=event.uid, date=event.date, priority=event.priority, aid=event_info[0]['aid'], did=event_info[0]['did'], datasourcename=event_info[0]['datasourcename'])
-            else:
-                return None
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT:
-            event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWDATAPOINT_B_UID_DATE,(event.uid, event.date))
-            if event_info:
-                return ormevents.UserEventNotificationNewDatapoint(uid=event.uid, date=event.date, priority=event.priority, did=event_info[0]['did'], pid=event_info[0]['pid'], datasourcename=event_info[0]['datasourcename'], datapointname=event_info[0]['datapointname'])
-            else:
-                return None
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_WIDGET:
-            event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWWIDGET_B_UID_DATE,(event.uid, event.date))
-            if event_info:
-                return ormevents.UserEventNotificationNewWidget(uid=event.uid, date=event.date, priority=event.priority, wid=event_info[0]['wid'], widgetname=event_info[0]['widgetname'])
-            else:
-                return None
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD:
-            event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWDASHBOARD_B_UID_DATE,(event.uid, event.date))
-            if event_info:
-                return ormevents.UserEventNotificationNewDashboard(uid=event.uid, date=event.date, priority=event.priority, bid=event_info[0]['bid'], dashboardname=event_info[0]['dashboardname'])
-            else:
-                return None
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_CIRCLE:
-            event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWCIRCLE_B_UID_DATE,(event.uid, event.date))
-            if event_info:
-                return ormevents.UserEventNotificationNewCircle(uid=event.uid, date=event.date, priority=event.priority, cid=event_info[0]['cid'], circlename=event_info[0]['circlename'])
-            else:
-                return None
-        elif event.type==types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:
-            event_info=connection.session.execute(stmtevents.S_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE,(event.uid, event.date))
-            if event_info:
-                return ormevents.UserEventInterventionDatapointIdentification(uid=event.uid, date=event.date, priority=event.priority, did=event_info[0]['did'], ds_date=event_info[0]['ds_date'], doubts=event_info[0]['doubts'], discarded=event_info[0]['discarded'])
-            else:
-                return None
-        else:
+        try:
+            return get_user_event_funcs[event.type](event)
+        except KeyError:
             return None
+
+def _get_user_event_notification_new_user(event):
+    event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWUSER_B_UID_DATE,(event.uid, event.date))
+    if event_info:
+        return ormevents.UserEventNotificationNewUser(uid=event.uid, date=event.date, priority=event.priority, username=event_info[0]['username'])
+    else:
+        return None
+
+def _get_user_event_notification_new_agent(event):
+    event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWAGENT_B_UID_DATE,(event.uid, event.date))
+    if event_info:
+        return ormevents.UserEventNotificationNewAgent(uid=event.uid, date=event.date, priority=event.priority, aid=event_info[0]['aid'], agentname=event_info[0]['agentname'])
+    else:
+        return None
+
+def _get_user_event_notification_new_datasource(event):
+    event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWDATASOURCE_B_UID_DATE,(event.uid, event.date))
+    if event_info:
+        return ormevents.UserEventNotificationNewDatasource(uid=event.uid, date=event.date, priority=event.priority, aid=event_info[0]['aid'], did=event_info[0]['did'], datasourcename=event_info[0]['datasourcename'])
+    else:
+        return None
+
+def _get_user_event_notification_new_datapoint(event):
+    event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWDATAPOINT_B_UID_DATE,(event.uid, event.date))
+    if event_info:
+        return ormevents.UserEventNotificationNewDatapoint(uid=event.uid, date=event.date, priority=event.priority, did=event_info[0]['did'], pid=event_info[0]['pid'], datasourcename=event_info[0]['datasourcename'], datapointname=event_info[0]['datapointname'])
+    else:
+        return None
+
+def _get_user_event_notification_new_widget(event):
+    event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWWIDGET_B_UID_DATE,(event.uid, event.date))
+    if event_info:
+        return ormevents.UserEventNotificationNewWidget(uid=event.uid, date=event.date, priority=event.priority, wid=event_info[0]['wid'], widgetname=event_info[0]['widgetname'])
+    else:
+        return None
+
+def _get_user_event_notification_new_dashboard(event):
+    event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWDASHBOARD_B_UID_DATE,(event.uid, event.date))
+    if event_info:
+        return ormevents.UserEventNotificationNewDashboard(uid=event.uid, date=event.date, priority=event.priority, bid=event_info[0]['bid'], dashboardname=event_info[0]['dashboardname'])
+    else:
+        return None
+
+def _get_user_event_notification_new_circle(event):
+    event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWCIRCLE_B_UID_DATE,(event.uid, event.date))
+    if event_info:
+        return ormevents.UserEventNotificationNewCircle(uid=event.uid, date=event.date, priority=event.priority, cid=event_info[0]['cid'], circlename=event_info[0]['circlename'])
+    else:
+        return None
+
+def _get_user_event_notification_new_snapshot_shared(event):
+    event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWSNAPSHOTSHARED_B_UID_DATE,(event.uid, event.date))
+    if event_info:
+        return ormevents.UserEventNotificationNewSnapshotShared(uid=event.uid, date=event.date, priority=event.priority, nid=event_info[0]['nid'],tid=event_info[0]['tid'], widgetname=event_info[0]['widgetname'],shared_with_users=event_info[0]['shared_with_users'],shared_with_circles=event_info[0]['shared_with_circles'])
+    else:
+        return None
+
+def _get_user_event_notification_new_snapshot_shared_with_me(event):
+    event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWSNAPSHOTSHAREDWITHME_B_UID_DATE,(event.uid, event.date))
+    if event_info:
+        return ormevents.UserEventNotificationNewSnapshotSharedWithMe(uid=event.uid, date=event.date, priority=event.priority, nid=event_info[0]['nid'],tid=event_info[0]['tid'], widgetname=event_info[0]['widgetname'],username=event_info[0]['username'])
+    else:
+        return None
+
+def _get_user_event_intervention_datapoint_identification(event):
+    event_info=connection.session.execute(stmtevents.S_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE,(event.uid, event.date))
+    if event_info:
+        return ormevents.UserEventInterventionDatapointIdentification(uid=event.uid, date=event.date, priority=event.priority, did=event_info[0]['did'], ds_date=event_info[0]['ds_date'], doubts=event_info[0]['doubts'], discarded=event_info[0]['discarded'])
+    else:
+        return None
 
 def insert_user_event(event):
     if not isinstance(event, ormevents.UserEvent):
         return False
     else:
-        if event.type==types.USER_EVENT_NOTIFICATION_NEW_USER:
-            return _insert_user_event_notification_new_user(event)
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_AGENT:
-            return _insert_user_event_notification_new_agent(event)
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE:
-            return _insert_user_event_notification_new_datasource(event)
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT:
-            return _insert_user_event_notification_new_datapoint(event)
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_WIDGET:
-            return _insert_user_event_notification_new_widget(event)
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD:
-            return _insert_user_event_notification_new_dashboard(event)
-        elif event.type==types.USER_EVENT_NOTIFICATION_NEW_CIRCLE:
-            return _insert_user_event_notification_new_circle(event)
-        elif event.type==types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:
-            return _insert_user_event_intervention_datapoint_identification(event)
-        else:
-            return False
+        try:
+            return insert_user_event_funcs[event.type](event)
+        except KeyError:
+            return None
 
 def _insert_user_event_notification_new_user(event):
     if not isinstance(event, ormevents.UserEventNotificationNewUser):
@@ -198,6 +208,22 @@ def _insert_user_event_intervention_datapoint_identification(event):
         connection.session.execute(stmtevents.I_A_DATUEINTERVDPIDENTIFICATION, (event.uid, event.date, event.did, event.ds_date, event.doubts, event.discarded))
         return True
 
+def _insert_user_event_notification_new_snapshot_shared(event):
+    if not isinstance(event, ormevents.UserEventNotificationNewSnapshotShared):
+        return False
+    else:
+        connection.session.execute(stmtevents.I_A_DATUSEREVENTS,(event.uid,event.date,event.priority,types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED))
+        connection.session.execute(stmtevents.I_A_DATUENOTIFNEWSNAPSHOTSHARED, (event.uid, event.date, event.nid, event.tid, event.widgetname, event.shared_with_users, event.shared_with_circles))
+        return True
+
+def _insert_user_event_notification_new_snapshot_shared_with_me(event):
+    if not isinstance(event, ormevents.UserEventNotificationNewSnapshotSharedWithMe):
+        return False
+    else:
+        connection.session.execute(stmtevents.I_A_DATUSEREVENTS,(event.uid,event.date,event.priority,types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME))
+        connection.session.execute(stmtevents.I_A_DATUENOTIFNEWSNAPSHOTSHAREDWITHME, (event.uid, event.date, event.nid, event.tid, event.username, event.widgetname))
+        return True
+
 def delete_user_events(uid):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUSEREVENTSDISABLED_B_UID,(uid,))
@@ -209,6 +235,8 @@ def delete_user_events(uid):
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWDASHBOARD_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWCIRCLE_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUEINTERVDPIDENTIFICATION_B_UID,(uid,))
+    connection.session.execute(stmtevents.D_A_DATUENOTIFNEWSNAPSHOTSHARED_B_UID,(uid,))
+    connection.session.execute(stmtevents.D_A_DATUENOTIFNEWSNAPSHOTSHAREDWITHME_B_UID,(uid,))
     delete_user_events_responses_intervention_datapoint_identification(uid=uid)
     return True
 
@@ -240,14 +268,14 @@ def get_user_event_responses(event):
     if not isinstance(event, ormevents.UserEvent):
         return []
     else:
-        if event.type==types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:
-            return _get_user_event_responses_intervention_datapoint_identification(uid=event.uid, date=event.date)
-        else:
+        try:
+            return get_user_event_responses_funcs[event.type](event)
+        except KeyError:
             return []
 
-def _get_user_event_responses_intervention_datapoint_identification(uid, date):
+def _get_user_event_responses_intervention_datapoint_identification(event):
     responses=[]
-    row=connection.session.execute(stmtevents.S_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE,(uid,date))
+    row=connection.session.execute(stmtevents.S_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE,(event.uid,event.date))
     if row:
         for r in row:
             responses.append(ormevents.UserEventResponseInterventionDatapointIdentification(uid=r['uid'],date=r['date'],response_date=r['response_date'],missing=r['missing'],identified=r['identified'],not_belonging=r['not_belonging'],to_update=r['to_update'],update_failed=r['update_failed'],update_success=r['update_success']))
@@ -265,21 +293,56 @@ def insert_user_event_response(response):
     if not isinstance(response, ormevents.UserEventResponse):
         return False
     else:
-        if response.type==types.USER_EVENT_RESPONSE_INTERVENTION_DATAPOINT_IDENTIFICATION:
-            return _insert_user_event_response_intervention_datapoint_identification(response)
-        else:
+        try:
+            return insert_user_event_response_funcs[response.type](response)
+        except KeyError:
             return False
 
 def _insert_user_event_response_intervention_datapoint_identification(response):
-    if not isinstance(response, ormevents.UserEventResponseInterventionDatapointIdentification):
-        return False
-    else:
-        connection.session.execute(stmtevents.I_A_DATUERINTERVDPIDENTIFICATION, (response.uid,response.date,response.response_date, response.missing, response.identified, response.not_belonging, response.to_update, response.update_failed, response.update_success))
-        return True
+    connection.session.execute(stmtevents.I_A_DATUERINTERVDPIDENTIFICATION, (response.uid,response.date,response.response_date, response.missing, response.identified, response.not_belonging, response.to_update, response.update_failed, response.update_success))
+    return True
 
 def delete_user_events_responses_intervention_datapoint_identification(uid):
     responses=get_user_events_responses_intervention_datapoint_identification(uid=uid)
     for resp in responses:
         connection.session.execute(stmtevents.D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE,(resp.uid,resp.date))
     return True
+
+
+#### Type Funcs associations
+
+
+get_user_event_funcs = {
+    types.USER_EVENT_NOTIFICATION_NEW_USER:_get_user_event_notification_new_user,
+    types.USER_EVENT_NOTIFICATION_NEW_AGENT:_get_user_event_notification_new_agent,
+    types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE:_get_user_event_notification_new_datasource,
+    types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT:_get_user_event_notification_new_datapoint,
+    types.USER_EVENT_NOTIFICATION_NEW_WIDGET:_get_user_event_notification_new_widget,
+    types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD:_get_user_event_notification_new_dashboard,
+    types.USER_EVENT_NOTIFICATION_NEW_CIRCLE:_get_user_event_notification_new_circle,
+    types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED:_get_user_event_notification_new_snapshot_shared,
+    types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME:_get_user_event_notification_new_snapshot_shared_with_me,
+    types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:_get_user_event_intervention_datapoint_identification,
+}
+
+insert_user_event_funcs = {
+    types.USER_EVENT_NOTIFICATION_NEW_USER:_insert_user_event_notification_new_user,
+    types.USER_EVENT_NOTIFICATION_NEW_AGENT:_insert_user_event_notification_new_agent,
+    types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE:_insert_user_event_notification_new_datasource,
+    types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT:_insert_user_event_notification_new_datapoint,
+    types.USER_EVENT_NOTIFICATION_NEW_WIDGET:_insert_user_event_notification_new_widget,
+    types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD:_insert_user_event_notification_new_dashboard,
+    types.USER_EVENT_NOTIFICATION_NEW_CIRCLE:_insert_user_event_notification_new_circle,
+    types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED:_insert_user_event_notification_new_snapshot_shared,
+    types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME:_insert_user_event_notification_new_snapshot_shared_with_me,
+    types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:_insert_user_event_intervention_datapoint_identification,
+}
+
+get_user_event_responses_funcs = {
+    types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:_get_user_event_responses_intervention_datapoint_identification,
+}
+
+insert_user_event_response_funcs = {
+    types.USER_EVENT_RESPONSE_INTERVENTION_DATAPOINT_IDENTIFICATION:_insert_user_event_response_intervention_datapoint_identification,
+}
 

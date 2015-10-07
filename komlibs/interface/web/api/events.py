@@ -29,7 +29,6 @@ def get_user_events_request(username, ets=None, its=None):
     uid=userapi.get_uid(username=username)
     end_date=timeuuid.uuid1(seconds=float(ets)) if ets else None
     init_date=timeuuid.uuid1(seconds=float(its)) if its else None
-    logger.logger.debug('vamos a obtener eventos')
     events=userevents.get_events(uid=uid, to_date=end_date, from_date=init_date, params_serializable=True, html_literal=True)
     response_data=[]
     for event in events:

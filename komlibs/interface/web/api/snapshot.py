@@ -9,6 +9,7 @@ from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
 from komlibs.auth.tickets import provision as ticketprov
+from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.snapshot import api as snapshotapi
 from komlibs.gestaccount.widget import types
@@ -149,6 +150,8 @@ def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None,
             message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
             msgapi.send_message(message)
             message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
+            msgapi.send_message(message)
+            message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
             msgapi.send_message(message)
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
         else:

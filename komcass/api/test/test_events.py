@@ -163,6 +163,52 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(event.cid,db_user_event.cid)
         self.assertEqual(event.circlename,db_user_event.circlename)
 
+    def test_get_user_event_success_user_event_notification_new_snapshot_shared(self):
+        ''' get_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        tid=uuid.uuid4()
+        widgetname='test_get_user_event_success_user_event_notification_new_snapshot_shared'
+        shared_with_users={uuid.uuid4():'username1',uuid.uuid4():'username3'}
+        shared_with_circles={uuid.uuid4():'circlename1',uuid.uuid4():'circlename5'}
+        date=timeuuid.uuid1()
+        event=ormevents.UserEventNotificationNewSnapshotShared(uid=uid,date=date, priority=1,nid=nid,tid=tid,widgetname=widgetname,shared_with_users=shared_with_users,shared_with_circles=shared_with_circles)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.nid,db_user_event.nid)
+        self.assertEqual(event.tid,db_user_event.tid)
+        self.assertEqual(event.widgetname,db_user_event.widgetname)
+        self.assertEqual(event.shared_with_users,db_user_event.shared_with_users)
+        self.assertEqual(event.shared_with_circles,db_user_event.shared_with_circles)
+
+    def test_get_user_event_success_user_event_notification_new_snapshot_shared_with_me(self):
+        ''' get_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        tid=uuid.uuid4()
+        widgetname='test_get_user_event_success_user_event_notification_new_snapshot_shared'
+        username='test_get_user_event_success_user_event_notification_new_snapshot_shared_username'
+        date=timeuuid.uuid1()
+        event=ormevents.UserEventNotificationNewSnapshotSharedWithMe(uid=uid,date=date, priority=1,nid=nid,tid=tid,widgetname=widgetname,username=username)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.nid,db_user_event.nid)
+        self.assertEqual(event.tid,db_user_event.tid)
+        self.assertEqual(event.widgetname,db_user_event.widgetname)
+        self.assertEqual(event.username,db_user_event.username)
+
     def test_get_user_event_success_user_event_intervention_datapoint_identification(self):
         ''' get_user_event should succeed if event exists '''
         uid=uuid.uuid4()
@@ -290,7 +336,7 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(event.datasourcename,db_user_event.datasourcename)
         self.assertEqual(event.datapointname,db_user_event.datapointname)
 
-    def test_disabled_get_user_event_success_user_event_notification_new_widget(self):
+    def test_get_disabled_user_event_success_user_event_notification_new_widget(self):
         ''' get_disabled_user_event should succeed if event exists '''
         uid=uuid.uuid4()
         wid=uuid.uuid4()
@@ -309,7 +355,7 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(event.wid,db_user_event.wid)
         self.assertEqual(event.widgetname,db_user_event.widgetname)
 
-    def test_get_user_event_success_user_event_notification_new_dashboard(self):
+    def test_get_disabled_user_event_success_user_event_notification_new_dashboard(self):
         ''' get_user_event should succeed if event exists '''
         uid=uuid.uuid4()
         bid=uuid.uuid4()
@@ -346,6 +392,54 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(event.type,db_user_event.type)
         self.assertEqual(event.cid,db_user_event.cid)
         self.assertEqual(event.circlename,db_user_event.circlename)
+
+    def test_get_disabled_user_event_success_user_event_notification_new_snapshot_shared(self):
+        ''' get_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        tid=uuid.uuid4()
+        widgetname='test_get_user_event_success_user_event_notification_new_snapshot_shared'
+        shared_with_users={uuid.uuid4():'username1',uuid.uuid4():'username3'}
+        shared_with_circles={uuid.uuid4():'circlename1',uuid.uuid4():'circlename5'}
+        date=timeuuid.uuid1()
+        event=ormevents.UserEventNotificationNewSnapshotShared(uid=uid,date=date, priority=1,nid=nid,tid=tid,widgetname=widgetname,shared_with_users=shared_with_users,shared_with_circles=shared_with_circles)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        self.assertTrue(eventsapi.disable_user_event(event))
+        db_user_event=eventsapi.get_disabled_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.nid,db_user_event.nid)
+        self.assertEqual(event.tid,db_user_event.tid)
+        self.assertEqual(event.widgetname,db_user_event.widgetname)
+        self.assertEqual(event.shared_with_users,db_user_event.shared_with_users)
+        self.assertEqual(event.shared_with_circles,db_user_event.shared_with_circles)
+
+    def test_get_disabled_user_event_success_user_event_notification_new_snapshot_shared_with_me(self):
+        ''' get_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        tid=uuid.uuid4()
+        widgetname='test_get_user_event_success_user_event_notification_new_snapshot_shared'
+        username='test_get_user_event_success_user_event_notification_new_snapshot_shared_username'
+        date=timeuuid.uuid1()
+        event=ormevents.UserEventNotificationNewSnapshotSharedWithMe(uid=uid,date=date, priority=1,nid=nid,tid=tid,widgetname=widgetname,username=username)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        self.assertTrue(eventsapi.disable_user_event(event))
+        db_user_event=eventsapi.get_disabled_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.nid,db_user_event.nid)
+        self.assertEqual(event.tid,db_user_event.tid)
+        self.assertEqual(event.widgetname,db_user_event.widgetname)
+        self.assertEqual(event.username,db_user_event.username)
 
     def test_get_disabled_user_event_success_user_event_intervention_datapoint_identification(self):
         ''' get_disabled_user_event should succeed if event exists '''
@@ -642,6 +736,52 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(event.cid,db_user_event.cid)
         self.assertEqual(event.circlename,db_user_event.circlename)
 
+    def test_insert_user_event_success_user_event_notification_new_snapshot_shared(self):
+        ''' insert_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        tid=uuid.uuid4()
+        widgetname='test_get_user_event_success_user_event_notification_new_snapshot_shared'
+        shared_with_users={uuid.uuid4():'username1',uuid.uuid4():'username3'}
+        shared_with_circles={uuid.uuid4():'circlename1',uuid.uuid4():'circlename5'}
+        date=timeuuid.uuid1()
+        event=ormevents.UserEventNotificationNewSnapshotShared(uid=uid,date=date, priority=1,nid=nid,tid=tid,widgetname=widgetname,shared_with_users=shared_with_users,shared_with_circles=shared_with_circles)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.nid,db_user_event.nid)
+        self.assertEqual(event.tid,db_user_event.tid)
+        self.assertEqual(event.widgetname,db_user_event.widgetname)
+        self.assertEqual(event.shared_with_users,db_user_event.shared_with_users)
+        self.assertEqual(event.shared_with_circles,db_user_event.shared_with_circles)
+
+    def test_insert_user_event_success_user_event_notification_new_snapshot_shared_with_me(self):
+        ''' insert_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        tid=uuid.uuid4()
+        widgetname='test_get_user_event_success_user_event_notification_new_snapshot_shared'
+        username='test_get_user_event_success_user_event_notification_new_snapshot_shared_username'
+        date=timeuuid.uuid1()
+        event=ormevents.UserEventNotificationNewSnapshotSharedWithMe(uid=uid,date=date, priority=1,nid=nid,tid=tid,widgetname=widgetname,username=username)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.nid,db_user_event.nid)
+        self.assertEqual(event.tid,db_user_event.tid)
+        self.assertEqual(event.widgetname,db_user_event.widgetname)
+        self.assertEqual(event.username,db_user_event.username)
+
     def test_insert_user_event_success_user_event_intervention_datapoint_identification(self):
         ''' insert_user_event should succeed if event exists '''
         uid=uuid.uuid4()
@@ -671,7 +811,7 @@ class KomcassApiEventsTest(unittest.TestCase):
         name='name'
         num_events=0
         for i in range(1,50):
-            for j in [types.USER_EVENT_NOTIFICATION_NEW_USER, types.USER_EVENT_NOTIFICATION_NEW_AGENT, types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, types.USER_EVENT_NOTIFICATION_NEW_WIDGET, types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, types.USER_EVENT_NOTIFICATION_NEW_CIRCLE, types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION]:
+            for j in [types.USER_EVENT_NOTIFICATION_NEW_USER, types.USER_EVENT_NOTIFICATION_NEW_AGENT, types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, types.USER_EVENT_NOTIFICATION_NEW_WIDGET, types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, types.USER_EVENT_NOTIFICATION_NEW_CIRCLE, types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME]:
                 date=timeuuid.uuid1()
                 if j==types.USER_EVENT_NOTIFICATION_NEW_USER:
                     event=ormevents.UserEventNotificationNewUser(uid=uid,date=date, priority=1,username=name)
@@ -689,6 +829,10 @@ class KomcassApiEventsTest(unittest.TestCase):
                     event=ormevents.UserEventNotificationNewDashboard(uid=uid,date=date, priority=1,bid=uuid.uuid4(), dashboardname=name)
                 elif j==types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:
                     event=ormevents.UserEventNotificationNewDashboard(uid=uid,date=date, priority=1,bid=uuid.uuid4(), dashboardname=name)
+                elif j==types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED:
+                    event=ormevents.UserEventNotificationNewSnapshotShared(uid=uid,date=date, priority=1,nid=uuid.uuid4(), tid=uuid.uuid4(), widgetname=name, shared_with_users={}, shared_with_circles={})
+                elif j==types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME:
+                    event=ormevents.UserEventNotificationNewSnapshotSharedWithMe(uid=uid,date=date, priority=1,nid=uuid.uuid4(), tid=uuid.uuid4(), widgetname=name, username=name)
                 self.assertTrue(eventsapi.insert_user_event(event))
                 dates.append(date)
                 num_events+=1
@@ -714,6 +858,8 @@ class KomcassApiEventsTest(unittest.TestCase):
             self.assertEqual(connection.session.execute(stmtevents.S_A_DATUENOTIFNEWWIDGET_B_UID_DATE,(uid,date)),[])
             self.assertEqual(connection.session.execute(stmtevents.S_A_DATUENOTIFNEWDASHBOARD_B_UID_DATE,(uid,date)),[])
             self.assertEqual(connection.session.execute(stmtevents.S_A_DATUENOTIFNEWCIRCLE_B_UID_DATE,(uid,date)),[])
+            self.assertEqual(connection.session.execute(stmtevents.S_A_DATUENOTIFNEWSNAPSHOTSHARED_B_UID_DATE,(uid,date)),[])
+            self.assertEqual(connection.session.execute(stmtevents.S_A_DATUENOTIFNEWSNAPSHOTSHAREDWITHME_B_UID_DATE,(uid,date)),[])
             self.assertEqual(connection.session.execute(stmtevents.S_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE,(uid,date)),[])
 
     def test_enable_user_event_failure_non_UserEvent_instance(self):
@@ -815,7 +961,7 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertTrue(eventsapi.insert_user_event_response(response1))
         response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
         self.assertTrue(eventsapi.insert_user_event_response(response2))
-        responses=eventsapi._get_user_event_responses_intervention_datapoint_identification(uid=uid, date=date)
+        responses=eventsapi._get_user_event_responses_intervention_datapoint_identification(event=event)
         self.assertEqual(len(responses),2)
         for response in responses:
             self.assertTrue(isinstance(response, ormevents.UserEventResponseInterventionDatapointIdentification))
@@ -853,21 +999,6 @@ class KomcassApiEventsTest(unittest.TestCase):
         date=timeuuid.uuid1()
         response=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
         self.assertTrue(eventsapi.insert_user_event_response(response))
-
-    def test__insert_user_event_response_intervention_datapoint_identification_failure_non_response_instance(self):
-        ''' insert_user_event_response should return false if no response instance is passed '''
-        responses=[None,23, '23423',uuid.uuid4(),{'dict':'dict'},{'set'},['list'],('tuple','tuple2'),ormevents.UserEvent(uid=uuid.uuid4(), date=timeuuid.uuid1(),priority=1,type=0)]
-        for response in responses:
-            self.assertFalse(eventsapi._insert_user_event_response_intervention_datapoint_identification(response))
-
-    def test__insert_user_event_response_intervention_datapoint_identification_failure_non_supported_response(self):
-        ''' insert_user_event_response should return an empty array if event type is not supported '''
-        uid=uuid.uuid4()
-        date=timeuuid.uuid1()
-        response_date=timeuuid.uuid1()
-        type=11000000
-        response=ormevents.UserEventResponse(uid=uid,date=date,response_date=response_date, type=type)
-        self.assertFalse(eventsapi._insert_user_event_response_intervention_datapoint_identification(response))
 
     def test__insert_user_event_response_intervention_datapoint_identification_success(self):
         ''' _insert_user_event_response should succeed '''

@@ -56,12 +56,29 @@ class UserEventNotificationNewCircle(UserEvent):
         self.circlename=circlename
         super(UserEventNotificationNewCircle, self).__init__(uid=uid, date=date, priority=priority, type=types.USER_EVENT_NOTIFICATION_NEW_CIRCLE)
 
+class UserEventNotificationNewSnapshotShared(UserEvent):
+    def __init__(self, uid, date, priority, nid, tid, widgetname, shared_with_users, shared_with_circles):
+        self.nid=nid
+        self.tid=tid
+        self.widgetname=widgetname
+        self.shared_with_users=shared_with_users
+        self.shared_with_circles=shared_with_circles
+        super(UserEventNotificationNewSnapshotShared, self).__init__(uid=uid, date=date, priority=priority, type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED)
+
+class UserEventNotificationNewSnapshotSharedWithMe(UserEvent):
+    def __init__(self, uid, date, priority, nid, tid, username, widgetname):
+        self.nid=nid
+        self.tid=tid
+        self.username=username
+        self.widgetname=widgetname
+        super(UserEventNotificationNewSnapshotSharedWithMe, self).__init__(uid=uid, date=date, priority=priority, type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+
 class UserEventInterventionDatapointIdentification(UserEvent):
     def __init__(self, uid, date, priority, did, ds_date, doubts, discarded):
         self.did=did
         self.ds_date=ds_date
-        self.doubts=doubts
-        self.discarded=discarded
+        self.doubts=doubts if doubts else set()
+        self.discarded=discarded if discarded else set()
         super(UserEventInterventionDatapointIdentification, self).__init__(uid=uid, date=date, priority=priority, type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
 
 

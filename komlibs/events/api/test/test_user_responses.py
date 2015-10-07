@@ -61,15 +61,19 @@ class EventsApiUserResponsesTest(unittest.TestCase):
     def test_process_event_response_failure_non_supported_event(self):
         ''' process_event_response should fail if event type is not supported '''
         username='test_process_event_response_failure_non_supported_event'
-        uid=uuid.uuid4()
-        self.assertTrue(user.insert_new_user_event(uid=uid, username=username))
-        events=user.get_events(uid=uid)
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_USER
+        new_user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(new_user)
+        self.assertTrue(user.new_event(uid=new_user['uid'],event_type=event_type,parameters={}))
+        events=user.get_events(uid=new_user['uid'])
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.USER_EVENT_NOTIFICATION_NEW_USER)
         self.assertEqual(events[0]['priority'], priorities.USER_EVENT_NOTIFICATION_NEW_USER)
         date=events[0]['date']
         response_data={}
-        self.assertFalse(user_responses.process_event_response(uid=uid, date=date, response_data=response_data))
+        self.assertFalse(user_responses.process_event_response(uid=new_user['uid'], date=date, response_data=response_data))
 
     def test__process_event_response_user_event_intervention_datapoint_identification_failure_no_UserEventInterventionDatapointIdentification_instance(self):
         ''' _process_event_response_user_event_intervention_datapoint_identification should fail if event is not UserEventItervDatapointIdentification '''
@@ -85,12 +89,12 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         ds_date=timeuuid.uuid1()
         doubts=[uuid.uuid4(), uuid.uuid4()]
         discarded=[uuid.uuid4(), uuid.uuid4()]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
+        now=timeuuid.uuid1()
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=1,did=did,ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(cassapievents.insert_user_event(event))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        )
         event=cassapievents.get_user_event(uid=uid, date=events[0]['date'])
         responses=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid4(), uuid.uuid1(), ['a','list'],('a','tuple'),{'set'}]
         for response in responses:
@@ -105,12 +109,12 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         ds_date=timeuuid.uuid1()
         doubts=[uuid.uuid4(), uuid.uuid4()]
         discarded=[uuid.uuid4(), uuid.uuid4()]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
+        now=timeuuid.uuid1()
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=1,did=did,ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(cassapievents.insert_user_event(event))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        )
         event=cassapievents.get_user_event(uid=uid, date=events[0]['date'])
         response_datas=[{}, {'missing':[]},{'identified':23}]
         for response_data in response_datas:
@@ -125,12 +129,12 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         ds_date=timeuuid.uuid1()
         doubts=[uuid.uuid4(), uuid.uuid4()]
         discarded=[uuid.uuid4(), uuid.uuid4()]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
+        now=timeuuid.uuid1()
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=1,did=did,ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(cassapievents.insert_user_event(event))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        )
         event=cassapievents.get_user_event(uid=uid, date=events[0]['date'])
         response_datas=[{'identified':[],'missing':23423},{'identified':[]}]
         for response_data in response_datas:
@@ -145,12 +149,12 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         ds_date=timeuuid.uuid1()
         doubts=[uuid.uuid4(), uuid.uuid4()]
         discarded=[uuid.uuid4(), uuid.uuid4()]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
+        now=timeuuid.uuid1()
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=1,did=did,ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(cassapievents.insert_user_event(event))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        )
         event=cassapievents.get_user_event(uid=uid, date=events[0]['date'])
         response_datas=[{'identified':[1,2,3,4,5],'missing':[]}]
         for response_data in response_datas:
@@ -165,12 +169,12 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         ds_date=timeuuid.uuid1()
         doubts=[uuid.uuid4(), uuid.uuid4()]
         discarded=[uuid.uuid4(), uuid.uuid4()]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
+        now=timeuuid.uuid1()
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=1,did=did,ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(cassapievents.insert_user_event(event))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        )
         event=cassapievents.get_user_event(uid=uid, date=events[0]['date'])
         response_datas=[{'identified':[{'hola':'que tal'}],'missing':[]}]
         for response_data in response_datas:
@@ -185,12 +189,12 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         ds_date=timeuuid.uuid1()
         doubts=[uuid.uuid4(), uuid.uuid4()]
         discarded=[uuid.uuid4(), uuid.uuid4()]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
+        now=timeuuid.uuid1()
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=1,did=did,ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(cassapievents.insert_user_event(event))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        )
         event=cassapievents.get_user_event(uid=uid, date=events[0]['date'])
         response_datas=[{'identified':[{'pid':uuid.uuid4().hex,'p':'34'}],'missing':[]}]
         for response_data in response_datas:
@@ -205,12 +209,12 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         ds_date=timeuuid.uuid1()
         doubts=[uuid.uuid4(), uuid.uuid4()]
         discarded=[uuid.uuid4(), uuid.uuid4()]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
+        now=timeuuid.uuid1()
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=1,did=did,ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(cassapievents.insert_user_event(event))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        )
         event=cassapievents.get_user_event(uid=uid, date=events[0]['date'])
         response_datas=[{'identified':[{'pid':uuid.uuid4().hex,'p':34,'l':[232]}],'missing':[]}]
         for response_data in response_datas:
@@ -225,12 +229,12 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         ds_date=timeuuid.uuid1()
         doubts=[uuid.uuid4(), uuid.uuid4()]
         discarded=[uuid.uuid4(), uuid.uuid4()]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
+        now=timeuuid.uuid1()
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=1,did=did,ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(cassapievents.insert_user_event(event))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        )
         event=cassapievents.get_user_event(uid=uid, date=events[0]['date'])
         response_datas=[{'identified':[{'pid':uuid.uuid4().hex,'p':34,'l':232}],'missing':['string']}]
         for response_data in response_datas:
@@ -243,14 +247,14 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         uid=uuid.uuid4()
         did=uuid.uuid4()
         ds_date=timeuuid.uuid1()
+        now=timeuuid.uuid1()
         doubts=[uuid.uuid4(), uuid.uuid4()]
         discarded=[uuid.uuid4(), uuid.uuid4()]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=1,did=did,ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(cassapievents.insert_user_event(event))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
-        self.assertEqual(events[0]['priority'], priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        )
         event=cassapievents.get_user_event(uid=uid, date=events[0]['date'])
         response_data={'identified':[{'pid':uuid.uuid4().hex,'p':34,'l':232}],'missing':[uuid.uuid4().hex]}
         with self.assertRaises(gestexcept.DatasourceNotFoundException) as cm:
@@ -303,7 +307,9 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         ds_date=init_date3
         doubts=[datapoint1['pid'], datapoint2['pid'], datapoint3['pid']]
         discarded=[]
-        self.assertTrue(user.insert_event_user_intervention_datapoint_identification(uid=uid, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded))
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':did.hex,'date':ds_date.hex,'doubts':[pid.hex for pid in doubts],'discarded':[]}
+        self.assertTrue(user.new_event(uid=uid, event_type=event_type, parameters=parameters))
         events=user.get_events(uid=uid)
         self.assertEqual(len(events),1)
         self.assertEqual(events[0]['type'], types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)

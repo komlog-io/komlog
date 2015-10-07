@@ -66,7 +66,7 @@ def new_dashboard_request(username, dashboardname):
         msgapi.send_message(message)
         message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
         msgapi.send_message(message)
-        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, parameters={'bid':dashboard['bid'].hex, 'dashboardname':dashboardname})
+        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, parameters={'bid':dashboard['bid'].hex})
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'bid':dashboard['bid'].hex})
 

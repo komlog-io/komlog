@@ -40,7 +40,7 @@ def process_message(message):
 
 def process_msg_result(msg_result):
     if msg_result.status==status.IMC_STATUS_INTERNAL_ERROR:
-        logger.logger.error('Error processing message: '+str(msg_result.message_params))
+        logger.logger.error('Error processing message '+str(msg_result.message_type)+': '+str(msg_result.error))
     for msg in msg_result.get_msg_originated():
         send_message(msg)
     return True

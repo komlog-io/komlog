@@ -12,6 +12,8 @@ from komlibs.events.api import user as usereventsapi
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.gestaccount import errors as gesterrors
+from komlibs.gestaccount.agent import api as agentapi
+from komlibs.gestaccount.datasource import api as datasourceapi
 from komlibs.interface.imc.model import messages
 from komimc import bus, routing
 from komimc import api as msgapi
@@ -127,7 +129,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         seq=timeuuid.get_custom_sequence(uuid.uuid1())
         response=eventsapi.disable_event_request(username=username, seq=seq)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, eventerrors.E_EAU_DACE_EVNF)
+        self.assertEqual(response.error, eventerrors.E_EAU_DISE_EVNF)
 
     def test_event_response_request_failure_invalid_username(self):
         ''' event_response_request should fail if username is invalid '''
@@ -181,12 +183,23 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         ''' event_response_request should fail if no missing parameter is found '''
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
+        agentname='test_event_response_request_failure_no_missing_parameter_found'
+        pubkey='pubkeytesteventresponserequestfailurenomissingparameterfound'
+        version='version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=uid, aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='content'
+        date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        did=datasource['did']
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
         discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
+        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
         new_event=usereventsapi.new_event(uid=uid, event_type=event_type, parameters=parameters)
         self.assertIsNotNone(new_event)
         seq=timeuuid.get_custom_sequence(new_event['date'])
@@ -199,12 +212,23 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         ''' event_response_request should fail if no missing parameter is found '''
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
+        agentname='test_event_response_request_failure_invalid_missing_parameter_type'
+        pubkey='pubkeytesteventresponserequestfailureinvalidmissingparametertype'
+        version='version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=uid, aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='content'
+        date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        did=datasource['did']
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
         discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
+        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
         new_event=usereventsapi.new_event(uid=uid, event_type=event_type, parameters=parameters)
         self.assertIsNotNone(new_event)
         seq=timeuuid.get_custom_sequence(new_event['date'])
@@ -217,12 +241,23 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         ''' event_response_request should fail if no missing parameter is found '''
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
+        agentname='test_event_response_request_failure_noidentified_parameter_found'
+        pubkey='pubkeytesteventresponserequestfailurenoidentifiedparameterfound'
+        version='version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=uid, aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='content'
+        date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        did=datasource['did']
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
         discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
+        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
         new_event=usereventsapi.new_event(uid=uid, event_type=event_type, parameters=parameters)
         self.assertIsNotNone(new_event)
         seq=timeuuid.get_custom_sequence(new_event['date'])
@@ -235,12 +270,23 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         ''' event_response_request should fail if no identified parameter is found '''
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
+        agentname='test_event_response_request_failure_invalid_identified_parameter_type'
+        pubkey='pubkeytesteventresponserequestfailureinvalididentifiedparametertype'
+        version='version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=uid, aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='content'
+        date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        did=datasource['did']
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
         discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
+        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
         new_event=usereventsapi.new_event(uid=uid, event_type=event_type, parameters=parameters)
         self.assertIsNotNone(new_event)
         seq=timeuuid.get_custom_sequence(new_event['date'])
@@ -253,12 +299,23 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         ''' event_response_request should fail if missing items are invalid '''
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
+        agentname='test_event_response_request_failure_invalid_missing_item'
+        pubkey='pubkeytesteventresponserequestfailureinvalidmissingitem'
+        version='version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=uid, aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='content'
+        date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        did=datasource['did']
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
         discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
+        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
         new_event=usereventsapi.new_event(uid=uid, event_type=event_type, parameters=parameters)
         self.assertIsNotNone(new_event)
         seq=timeuuid.get_custom_sequence(new_event['date'])
@@ -271,12 +328,23 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         ''' event_response_request should fail if identified items are invalid '''
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
+        agentname='test_event_response_request_failure_invalid_identified_item'
+        pubkey='pubkey'
+        version='version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename='test_event_response_request_failure_invalid_identified_item'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='content'
+        date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        did=datasource['did']
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
         discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
+        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
         new_event=usereventsapi.new_event(uid=uid, event_type=event_type, parameters=parameters)
         self.assertIsNotNone(new_event)
         seq=timeuuid.get_custom_sequence(new_event['date'])
@@ -289,10 +357,13 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         ''' event_response_request should succeed and send message '''
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
+        agentname='test_event_response_request_failure_non_supported_event_type'
+        pubkey='pubkeytesteventresponserequestfailurenonsupportedeventtype'
+        version='version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
         event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
-        parameters={'aid':uuid.uuid4().hex, 'agentname':'test_event_response_agentname'}
+        parameters={'aid':agent['aid'].hex}
         new_event=usereventsapi.new_event(uid=uid, event_type=event_type, parameters=parameters)
         self.assertIsNotNone(new_event)
         seq=timeuuid.get_custom_sequence(new_event['date'])
@@ -305,12 +376,23 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         ''' event_response_request should succeed and send message '''
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
-        did=uuid.uuid4().hex
-        date=uuid.uuid1().hex
+        agentname='test_event_response_request_success_message_sent'
+        pubkey='pubkeytesteventresponserequestsuccessmessagesent'
+        version='version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=uid, aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='content'
+        date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        did=datasource['did']
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
         discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did, 'date':date, 'doubts':doubts, 'discarded':discarded}
+        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
         new_event=usereventsapi.new_event(uid=uid, event_type=event_type, parameters=parameters)
         self.assertIsNotNone(new_event)
         seq=timeuuid.get_custom_sequence(new_event['date'])

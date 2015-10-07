@@ -34,7 +34,7 @@ def new_user_request(username, password, email):
     if user:
         message=messages.NewUserNotificationMessage(email=user['email'], code=user['signup_code'])
         msgapi.send_message(message)
-        message=messages.UserEventMessage(uid=user['uid'],event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_USER, parameters={'username':username})
+        message=messages.UserEventMessage(uid=user['uid'],event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_USER)
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'uid':user['uid'].hex})
 
