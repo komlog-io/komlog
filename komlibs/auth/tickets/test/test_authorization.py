@@ -104,7 +104,9 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         expires=timeuuid.uuid1(seconds=1)
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, expires=expires)
@@ -128,7 +130,9 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids=set()
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
@@ -148,7 +152,9 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         did2=uuid.uuid4()
@@ -172,7 +178,9 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids=set()
         shared_with_cids={cid}
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         did2=uuid.uuid4()
@@ -193,7 +201,9 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         new_interval_init=timeuuid.uuid1(seconds=999)
@@ -214,7 +224,9 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         new_interval_init=timeuuid.uuid1(seconds=2001)
@@ -235,7 +247,9 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         new_interval_end=timeuuid.uuid1(seconds=999)
@@ -256,7 +270,9 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         new_interval_end=timeuuid.uuid1(seconds=2001)
@@ -277,7 +293,9 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         ticket=ticketapi.get_ticket(tid=tid['tid'])
@@ -301,7 +319,9 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         self.assertTrue(authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did, ii=interval_init, ie=interval_end))
@@ -390,7 +410,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         expires=timeuuid.uuid1(seconds=1)
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, expires=expires)
@@ -414,7 +435,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids=set()
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
@@ -434,7 +456,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         pid2=uuid.uuid4()
@@ -458,7 +481,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids=set()
         shared_with_cids={cid}
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         pid2=uuid.uuid4()
@@ -479,7 +503,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         new_interval_init=timeuuid.uuid1(seconds=999)
@@ -500,7 +525,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         new_interval_init=timeuuid.uuid1(seconds=2001)
@@ -521,7 +547,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         new_interval_end=timeuuid.uuid1(seconds=999)
@@ -542,7 +569,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         new_interval_end=timeuuid.uuid1(seconds=2001)
@@ -563,7 +591,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         ticket=ticketapi.get_ticket(tid=tid['tid'])
@@ -587,7 +616,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         self.assertTrue(authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid, ii=interval_init, ie=interval_end))
@@ -644,7 +674,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         expires=timeuuid.uuid1(seconds=1)
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, expires=expires)
@@ -668,7 +699,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids=set()
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
@@ -688,7 +720,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         nid2=uuid.uuid4()
@@ -712,7 +745,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids=set()
         shared_with_cids={cid}
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         nid2=uuid.uuid4()
@@ -733,7 +767,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         ticket=ticketapi.get_ticket(tid=tid['tid'])
@@ -757,7 +792,8 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uid2}
         shared_with_cids=set()
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid)
         self.assertTrue(authorization.authorize_get_snapshot_config(uid=uid2, tid=tid['tid'], nid=nid))

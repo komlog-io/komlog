@@ -590,6 +590,10 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertTrue(num_widgets>=1)
+        response4=datapointapi.get_datapoint_config_request(username=username, pid=pid)
+        self.assertEqual(response4.status, status.WEB_STATUS_OK)
+        datapoint_color=response4.data['color']
+        datapoint_name=response4.data['datapointname']
         response4=widgetapi.add_datapoint_request(username=username, wid=wid, pid=pid)
         self.assertEqual(response4.status, status.WEB_STATUS_OK)
         response5=widgetapi.get_widget_config_request(username=username, wid=wid)
@@ -622,7 +626,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'],widgetname)
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
-        self.assertEqual(response7.data['datapoints'],[{'pid':pid}])
+        self.assertEqual(response7.data['datapoints'],[{'pid':pid,'datapointname':datapoint_name,'color':datapoint_color}])
 
     def test_get_snapshot_config_request_success_snapshot_datasource(self):
         ''' get_snapshot_config_request should succeed '''
@@ -689,7 +693,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['type'],types.DATASOURCE)
         self.assertEqual(response7.data['widgetname'],datasourcename)
         self.assertEqual(response7.data['seq'],sequence)
-        self.assertEqual(response7.data['did'],did)
+        self.assertEqual(response7.data['datasource'],{'did':did,'datasourcename':datasourcename})
+        self.assertEqual(response7.data['datapoints'],[])
 
     def test_get_snapshot_config_request_success_snapshot_datasource_shared_to_circle(self):
         ''' new_snapshot_request should succeed and accesses from circle members granted '''
@@ -764,7 +769,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'],datasourcename)
         self.assertEqual(response7.data['its'],timeuuid.get_unix_timestamp(date))
         self.assertEqual(response7.data['ets'],timeuuid.get_unix_timestamp(date))
-        self.assertEqual(response7.data['did'],did)
+        self.assertEqual(response7.data['datasource'],{'did':did,'datasourcename':datasourcename})
+        self.assertEqual(response7.data['datapoints'],[])
         response8=datasourceapi.get_datasource_config_request(username=username_to_share, did=did)
         self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
         response9=datasourceapi.get_datasource_data_request(username=username_to_share, did=did, seq=response7.data['seq'],tid=response6.data['tid'])
@@ -844,6 +850,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
         pid=None
+        color=None
         for widget in response2.data:
             if widget['type']==types.DATAPOINT:
                 datapointconfig=datapointapi.get_datapoint_config_request(username=username,pid=widget['pid'])
@@ -851,6 +858,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
                 if datapointconfig.data['datapointname']==datapointname:
                     wid=widget['wid']
                     pid=widget['pid']
+                    color=datapointconfig.data['color']
         response5=widgetapi.get_widget_config_request(username=username, wid=wid)
         self.assertEqual(response5.status, status.WEB_STATUS_OK)
         self.assertEqual(response5.data['type'],types.DATAPOINT)
@@ -880,7 +888,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
-        self.assertEqual(response7.data['pid'],pid)
+        self.assertEqual(response7.data['datapoint'],{'pid':pid,'datapointname':datapointname, 'color':color})
         response7 = snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
         self.assertEqual(response7.data['nid'],response6.data['nid'])
@@ -888,7 +896,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
-        self.assertEqual(response7.data['pid'],pid)
+        self.assertEqual(response7.data['datapoint'],{'pid':pid,'datapointname':datapointname, 'color':color})
         response7 = snapshotapi.get_snapshot_config_request(username=username_to_share, nid=response6.data['nid'])
         self.assertEqual(response7.status, status.WEB_STATUS_ACCESS_DENIED)
 
@@ -1381,6 +1389,10 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertTrue(num_widgets>=1)
+        response4=datapointapi.get_datapoint_config_request(username=username, pid=pid)
+        self.assertEqual(response4.status, status.WEB_STATUS_OK)
+        datapoint_color=response4.data['color']
+        datapoint_name=response4.data['datapointname']
         response4=widgetapi.add_datapoint_request(username=username, wid=wid, pid=pid)
         self.assertEqual(response4.status, status.WEB_STATUS_OK)
         response5=widgetapi.get_widget_config_request(username=username, wid=wid)
@@ -1412,7 +1424,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'],widgetname)
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
-        self.assertEqual(response7.data['datapoints'],[{'pid':pid}])
+        self.assertEqual(response7.data['datapoints'],[{'pid':pid,'datapointname':datapoint_name,'color':datapoint_color}])
         response8 = snapshotapi.delete_snapshot_request(username=username_to_share, nid=response6.data['nid'])
         self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
         response8 = snapshotapi.delete_snapshot_request(username=username, nid=response6.data['nid'])
@@ -1487,7 +1499,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['type'],types.DATASOURCE)
         self.assertEqual(response7.data['widgetname'],datasourcename)
         self.assertEqual(response7.data['seq'],sequence)
-        self.assertEqual(response7.data['did'],did)
+        self.assertEqual(response7.data['datasource'],{'did':did, 'datasourcename':datasourcename})
+        self.assertEqual(response7.data['datapoints'],[])
         response8 = snapshotapi.delete_snapshot_request(username=username, nid=response6.data['nid'])
         self.assertEqual(response8.status, status.WEB_STATUS_OK)
         response9 = snapshotapi.get_snapshot_config_request(username=username, nid=response6.data['nid'])
@@ -1553,6 +1566,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
         pid=None
+        color=None
         for widget in response2.data:
             if widget['type']==types.DATAPOINT:
                 datapointconfig=datapointapi.get_datapoint_config_request(username=username,pid=widget['pid'])
@@ -1560,6 +1574,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
                 if datapointconfig.data['datapointname']==datapointname:
                     wid=widget['wid']
                     pid=widget['pid']
+                    color=datapointconfig.data['color']
         response5=widgetapi.get_widget_config_request(username=username, wid=wid)
         self.assertEqual(response5.status, status.WEB_STATUS_OK)
         self.assertEqual(response5.data['type'],types.DATAPOINT)
@@ -1588,7 +1603,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
-        self.assertEqual(response7.data['pid'],pid)
+        self.assertEqual(response7.data['datapoint'],{'pid':pid, 'datapointname':datapointname,'color':color})
         response8 = snapshotapi.delete_snapshot_request(username=username, nid=response6.data['nid'])
         self.assertEqual(response8.status, status.WEB_STATUS_OK)
         response9 = snapshotapi.get_snapshot_config_request(username=username, nid=response6.data['nid'])
@@ -2261,6 +2276,10 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
                 num_widgets+=1
                 pid=widget['pid']
         self.assertEqual(num_widgets,1)
+        response4=datapointapi.get_datapoint_config_request(username=username, pid=pid)
+        self.assertEqual(response4.status, status.WEB_STATUS_OK)
+        datapoint_color=response4.data['color']
+        datapoint_name=response4.data['datapointname']
         response4=widgetapi.add_datapoint_request(username=username, wid=wid, pid=pid)
         self.assertEqual(response4.status, status.WEB_STATUS_OK)
         response5=widgetapi.get_widget_config_request(username=username, wid=wid)
@@ -2293,7 +2312,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'],widgetname)
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
-        self.assertEqual(response7.data['datapoints'],[{'pid':pid}])
+        self.assertEqual(response7.data['datapoints'],[{'pid':pid,'datapointname':datapoint_name,'color':datapoint_color}])
         response8=datapointapi.get_datapoint_config_request(username=username_to_share, pid=pid)
         self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
         response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',tid=response6.data['tid'])
@@ -2374,7 +2393,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'],datasourcename)
         self.assertEqual(response7.data['its'],timeuuid.get_unix_timestamp(date))
         self.assertEqual(response7.data['ets'],timeuuid.get_unix_timestamp(date))
-        self.assertEqual(response7.data['did'],did)
+        self.assertEqual(response7.data['datasource'],{'did':did,'datasourcename':datasourcename})
+        self.assertEqual(response7.data['datapoints'],[])
         response8=datasourceapi.get_datasource_config_request(username=username_to_share, did=did)
         self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
         response9=datasourceapi.get_datasource_data_request(username=username_to_share, did=did, seq=response7.data['seq'],tid=response6.data['tid'])
@@ -2450,6 +2470,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
         pid=None
+        color=None
         for widget in response2.data:
             if widget['type']==types.DATAPOINT:
                 datapointconfig=datapointapi.get_datapoint_config_request(username=username,pid=widget['pid'])
@@ -2457,6 +2478,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
                 if datapointconfig.data['datapointname']==datapointname:
                     wid=widget['wid']
                     pid=widget['pid']
+                    color=datapointconfig.data['color']
         response5=widgetapi.get_widget_config_request(username=username, wid=wid)
         self.assertEqual(response5.status, status.WEB_STATUS_OK)
         self.assertEqual(response5.data['type'],types.DATAPOINT)
@@ -2486,7 +2508,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
-        self.assertEqual(response7.data['pid'],pid)
+        self.assertEqual(response7.data['datapoint'],{'pid':pid,'datapointname':datapointname,'color':color})
         response8=datapointapi.get_datapoint_config_request(username=username_to_share, pid=pid)
         self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
         response9=datapointapi.get_datapoint_data_request(username=username_to_share, pid=pid, start_date='1',end_date='2',tid=response6.data['tid'])

@@ -30,11 +30,19 @@ def get_snapshot_config(nid):
         raise exceptions.SnapshotNotFoundException(error=errors.E_GSA_GSC_SNF)
     data={}
     if snapshot.type==types.DATASOURCE:
-        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid,'type':types.DATASOURCE,'did':snapshot.did,'interval_init':snapshot.interval_init,'interval_end':snapshot.interval_end}
+        datapoints_config=[]
+        for datapoint in snapshot.datapoints_config:
+            datapoints_config.append({'pid':datapoint.pid,'datapointname':datapoint.datapointname,'color':datapoint.color})
+        datasource_config={'did':snapshot.datasource_config.did, 'datasourcename':snapshot.datasource_config.datasourcename}
+        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid,'type':types.DATASOURCE, 'datasource_config':datasource_config, 'datapoints_config':datapoints_config, 'interval_init':snapshot.interval_init,'interval_end':snapshot.interval_end}
     elif snapshot.type==types.DATAPOINT:
-        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid,'type':types.DATAPOINT,'pid':snapshot.pid, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
+        datapoint_config={'pid':snapshot.datapoint_config.pid, 'datapointname':snapshot.datapoint_config.datapointname,'color':snapshot.datapoint_config.color}
+        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid,'type':types.DATAPOINT,'datapoint_config':datapoint_config, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
     elif snapshot.type==types.MULTIDP:
-        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.MULTIDP,'datapoints':snapshot.datapoints, 'active_visualization':snapshot.active_visualization, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
+        datapoints_config=[]
+        for datapoint in snapshot.datapoints_config:
+            datapoints_config.append({'pid':datapoint.pid,'datapointname':datapoint.datapointname,'color':datapoint.color})
+        data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.MULTIDP,'datapoints':snapshot.datapoints, 'datapoints_config':datapoints_config, 'active_visualization':snapshot.active_visualization, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
     elif snapshot.type==types.HISTOGRAM:
         data={'uid':snapshot.uid, 'widgetname':snapshot.widgetname, 'wid':snapshot.wid, 'nid':snapshot.nid, 'type':types.HISTOGRAM,'datapoints':snapshot.datapoints, 'colors':snapshot.colors, 'interval_init':snapshot.interval_init, 'interval_end':snapshot.interval_end}
     elif snapshot.type==types.LINEGRAPH:
@@ -54,34 +62,6 @@ def get_snapshots_config(uid):
     for nid in nids:
         snapshot=get_snapshot_config(nid=nid)
         data.append(snapshot)
-    return data
-
-def get_snapshot_data(nid):
-    if not args.is_valid_uuid(nid):
-        raise exceptions.BadParametersException(error=errors.E_GSA_GSD_IN)
-    snapshot_config=get_snapshot_config(nid=nid)
-    data={}
-    if snapshot_config['type']==types.DATASOURCE:
-        data[snapshot_config['did']]=[]
-        datasources_data=cassapidatasource.get_datasource_data(did=snapshot_config['did'],fromdate=snapshot_config['interval_init'],todate=snapshot_config['interval_end'])
-        for datasource_data in datasources_data:
-            reg={}
-            datapoints=cassapidatasource.get_datasource_map_datapoints(did=snapshot_config['did'], date=datasource_data.date)
-            reg['date']=datasource_data.date
-            reg['content']=datasource_data.content
-            reg['datapoints']=datapoints if datapoints else {}
-            data[snapshot_config['did']].append(reg)
-    elif snapshot_config['type']==types.DATAPOINT:
-        data[snapshot_config['pid']]=[]
-        datapoint_datas=cassapidatapoint.get_datapoint_data(pid=snapshot_config['pid'],fromdate=snapshot_config['interval_init'],todate=snapshot_config['interval_end'])
-        for datapoint_data in datapoint_datas:
-            data[snapshot_config['pid']].append({'date':datapoint_data.date,'value':datapoint_data.value})
-    elif snapshot_config['type'] in [types.MULTIDP,types.HISTOGRAM,types.LINEGRAPH,types.TABLE]:
-        for pid in snapshot_config['datapoints']:
-            data[pid]=[]
-            datapoint_datas=cassapidatapoint.get_datapoint_data(pid=pid,fromdate=snapshot_config['interval_init'],todate=snapshot_config['interval_end'])
-            for datapoint_data in datapoint_datas:
-                data[pid].append({'date':datapoint_data.date,'value':datapoint_data.value})
     return data
 
 def delete_snapshot(nid):
@@ -150,9 +130,26 @@ def _new_snapshot_datasource(uid,wid,interval_init, interval_end,shared_with_uid
     widget=cassapiwidget.get_widget_ds(wid=wid)
     if not widget:
         raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NSDS_WNF)
+    datasource=cassapidatasource.get_datasource(did=widget.did)
+    if not datasource:
+        raise exceptions.SnapshotCreationException(error=errors.E_GSA_NSDS_DNF)
+    datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=widget.did, datasourcename=datasource.datasourcename)
+    datapoints=set()
+    map_dates=cassapidatasource.get_datasource_map_dates(did=widget.did, fromdate=interval_init, todate=interval_end)
+    for date in map_dates:
+        map_datapoints=cassapidatasource.get_datasource_map_datapoints(did=widget.did, date=date)
+        if map_datapoints:
+            for pid in map_datapoints.keys():
+                datapoints.add(pid)
+    datapoints_config=[]
+    for pid in datapoints:
+        datapoint_info=cassapidatapoint.get_datapoint(pid=pid)
+        if datapoint_info:
+            datapoint=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=datapoint_info.datapointname, color=datapoint_info.color)
+            datapoints_config.append(datapoint)
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
-    snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, did=widget.did, shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
+    snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, did=widget.did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
@@ -162,9 +159,13 @@ def _new_snapshot_datapoint(uid,wid,interval_init, interval_end,shared_with_uids
     widget=cassapiwidget.get_widget_dp(wid=wid)
     if not widget:
         raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NSDP_WNF)
+    datapoint=cassapidatapoint.get_datapoint(pid=widget.pid)
+    if not datapoint:
+        raise exceptions.SnapshotCreationException(error=errors.E_GSA_NSDP_PNF)
+    datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=widget.pid, datapointname=datapoint.datapointname, color=datapoint.color)
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
-    snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, pid=widget.pid,shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
+    snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, pid=widget.pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:
@@ -218,9 +219,19 @@ def _new_snapshot_multidp(uid,wid,interval_init, interval_end, shared_with_uids,
         raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NSMP_WNF)
     if len(widget.datapoints)==0:
         raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GSA_NSMP_ZDP)
+    datapoints_config=[]
+    datapoints=set()
+    for pid in widget.datapoints:
+        datapoint=cassapidatapoint.get_datapoint(pid=pid)
+        if datapoint:
+            datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=datapoint.pid, datapointname=datapoint.datapointname, color=datapoint.color)
+            datapoints_config.append(datapoint_config)
+            datapoints.add(pid)
+    if len(datapoints)==0:
+        raise exceptions.WidgetUnsupportedOperationException(error=errors.E_GSA_NSMP_ZDPF)
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
-    snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, active_visualization=widget.active_visualization, datapoints=widget.datapoints, shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
+    snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, active_visualization=widget.active_visualization, datapoints=datapoints, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids,shared_with_cids=shared_with_cids)
     if cassapisnapshot.new_snapshot(snapshot):
         return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
     else:

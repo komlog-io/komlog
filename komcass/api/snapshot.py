@@ -29,13 +29,33 @@ def _get_snapshot(snapshot):
     else:
         if snapshot.type==prmwidget.types.DATASOURCE:
             snap_conf=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTDS_B_NID,(snapshot.nid,))
-            return ormsnapshot.SnapshotDs(nid=snapshot.nid, uid=snapshot.uid,wid=snapshot.wid,interval_init=snapshot.interval_init, interval_end=snapshot.interval_end, widgetname=snapshot.widgetname, creation_date=snapshot.creation_date, did=snap_conf[0]['did'], shared_with_uids=snapshot.shared_with_uids, shared_with_cids=snapshot.shared_with_cids) if snap_conf else None
+            if snap_conf:
+                datapoints_config=[]
+                if snap_conf[0]['datapoints_config']:
+                    for datapoint in snap_conf[0]['datapoints_config']:
+                        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=datapoint.pid,datapointname=datapoint.datapointname,color=datapoint.color)
+                        datapoints_config.append(datapoint_config)
+                datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=snap_conf[0]['datasource_config'].did, datasourcename=snap_conf[0]['datasource_config'].datasourcename)
+                return ormsnapshot.SnapshotDs(nid=snapshot.nid, uid=snapshot.uid,wid=snapshot.wid,interval_init=snapshot.interval_init, interval_end=snapshot.interval_end, widgetname=snapshot.widgetname, creation_date=snapshot.creation_date, did=snap_conf[0]['did'], datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=snapshot.shared_with_uids, shared_with_cids=snapshot.shared_with_cids)
+            else:
+                return None
         elif snapshot.type==prmwidget.types.DATAPOINT:
             snap_conf=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTDP_B_NID,(snapshot.nid,))
-            return ormsnapshot.SnapshotDp(nid=snapshot.nid, uid=snapshot.uid,wid=snapshot.wid,interval_init=snapshot.interval_init, interval_end=snapshot.interval_end, widgetname=snapshot.widgetname, creation_date=snapshot.creation_date, pid=snap_conf[0]['pid'], shared_with_uids=snapshot.shared_with_uids, shared_with_cids=snapshot.shared_with_cids) if snap_conf else None
+            if snap_conf:
+                datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=snap_conf[0]['datapoint_config'].pid, datapointname=snap_conf[0]['datapoint_config'].datapointname, color=snap_conf[0]['datapoint_config'].color)
+                return ormsnapshot.SnapshotDp(nid=snapshot.nid, uid=snapshot.uid,wid=snapshot.wid,interval_init=snapshot.interval_init, interval_end=snapshot.interval_end, widgetname=snapshot.widgetname, creation_date=snapshot.creation_date, pid=snap_conf[0]['pid'], datapoint_config=datapoint_config, shared_with_uids=snapshot.shared_with_uids, shared_with_cids=snapshot.shared_with_cids)
+            else:
+                return None
         elif snapshot.type==prmwidget.types.MULTIDP:
             snap_conf=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTMULTIDP_B_NID,(snapshot.nid,))
-            return ormsnapshot.SnapshotMultidp(nid=snapshot.nid, uid=snapshot.uid,wid=snapshot.wid,interval_init=snapshot.interval_init, interval_end=snapshot.interval_end, widgetname=snapshot.widgetname, creation_date=snapshot.creation_date, active_visualization=snap_conf[0]['active_visualization'], datapoints=snap_conf[0]['datapoints'], shared_with_uids=snapshot.shared_with_uids, shared_with_cids=snapshot.shared_with_cids) if snap_conf else None
+            if snap_conf:
+                datapoints_config=[]
+                for datapoint in snap_conf[0]['datapoints_config']:
+                    datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=datapoint.pid,datapointname=datapoint.datapointname,color=datapoint.color)
+                    datapoints_config.append(datapoint_config)
+                return ormsnapshot.SnapshotMultidp(nid=snapshot.nid, uid=snapshot.uid,wid=snapshot.wid,interval_init=snapshot.interval_init, interval_end=snapshot.interval_end, widgetname=snapshot.widgetname, creation_date=snapshot.creation_date, active_visualization=snap_conf[0]['active_visualization'], datapoints=snap_conf[0]['datapoints'], datapoints_config=datapoints_config, shared_with_uids=snapshot.shared_with_uids, shared_with_cids=snapshot.shared_with_cids)
+            else:
+                return None
         elif snapshot.type==prmwidget.types.HISTOGRAM:
             snap_conf=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTHISTOGRAM_B_NID,(snapshot.nid,))
             return ormsnapshot.SnapshotHistogram(nid=snapshot.nid, uid=snapshot.uid,wid=snapshot.wid,interval_init=snapshot.interval_init, interval_end=snapshot.interval_end, widgetname=snapshot.widgetname, creation_date=snapshot.creation_date, datapoints=snap_conf[0]['datapoints'], colors=snap_conf[0]['colors'], shared_with_uids=snapshot.shared_with_uids, shared_with_cids=snapshot.shared_with_cids) if snap_conf else None
@@ -100,7 +120,13 @@ def get_snapshot_ds(nid):
     if snap_conf:
         row=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOT_B_NID,(nid,))
         if row:
-            return ormsnapshot.SnapshotDs(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],did=snap_conf[0]['did'],shared_with_uids=row[0]['shared_with_uids'],shared_with_cids=row[0]['shared_with_cids'])
+            datapoints_config=[]
+            if snap_conf[0]['datapoints_config']:
+                for datapoint in snap_conf[0]['datapoints_config']:
+                    datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=datapoint.pid,datapointname=datapoint.datapointname,color=datapoint.color)
+                    datapoints_config.append(datapoint_config)
+            datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=snap_conf[0]['datasource_config'].did,datasourcename=snap_conf[0]['datasource_config'].datasourcename)
+            return ormsnapshot.SnapshotDs(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],did=snap_conf[0]['did'], datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=row[0]['shared_with_uids'],shared_with_cids=row[0]['shared_with_cids'])
     return None
 
 def get_snapshot_dp(nid):
@@ -108,7 +134,8 @@ def get_snapshot_dp(nid):
     if snap_conf:
         row=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOT_B_NID,(nid,))
         if row:
-            return ormsnapshot.SnapshotDp(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],pid=snap_conf[0]['pid'],shared_with_uids=row[0]['shared_with_uids'],shared_with_cids=row[0]['shared_with_cids'])
+            datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=snap_conf[0]['datapoint_config'].pid,datapointname=snap_conf[0]['datapoint_config'].datapointname, color=snap_conf[0]['datapoint_config'].color)
+            return ormsnapshot.SnapshotDp(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],pid=snap_conf[0]['pid'], datapoint_config=datapoint_config, shared_with_uids=row[0]['shared_with_uids'],shared_with_cids=row[0]['shared_with_cids'])
     return None
 
 def get_snapshot_histogram(nid):
@@ -140,7 +167,11 @@ def get_snapshot_multidp(nid):
     if snap_conf:
         row=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOT_B_NID,(nid,))
         if row:
-            return ormsnapshot.SnapshotMultidp(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],datapoints=snap_conf[0]['datapoints'],active_visualization=snap_conf[0]['active_visualization'],shared_with_uids=row[0]['shared_with_uids'],shared_with_cids=row[0]['shared_with_cids'])
+            datapoints_config=[]
+            for datapoint in snap_conf[0]['datapoints_config']:
+                datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=datapoint.pid,datapointname=datapoint.datapointname,color=datapoint.color)
+                datapoints_config.append(datapoint_config)
+            return ormsnapshot.SnapshotMultidp(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],datapoints=snap_conf[0]['datapoints'],datapoints_config=datapoints_config, active_visualization=snap_conf[0]['active_visualization'],shared_with_uids=row[0]['shared_with_uids'],shared_with_cids=row[0]['shared_with_cids'])
     return None
 
 def delete_snapshot(nid):
@@ -167,7 +198,7 @@ def _delete_snapshot_ds(nid):
     return True
 
 def _insert_snapshot_ds(snapshot):
-    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTDS,(snapshot.nid,snapshot.did))
+    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTDS,(snapshot.nid, snapshot.did, snapshot.datasource_config, snapshot.datapoints_config))
     return True
 
 def _delete_snapshot_dp(nid):
@@ -175,7 +206,7 @@ def _delete_snapshot_dp(nid):
     return True
 
 def _insert_snapshot_dp(snapshot):
-    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTDP,(snapshot.nid,snapshot.pid))
+    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTDP,(snapshot.nid, snapshot.pid, snapshot.datapoint_config))
     return True
 
 def _delete_snapshot_histogram(nid):
@@ -207,6 +238,6 @@ def _delete_snapshot_multidp(nid):
     return True
 
 def _insert_snapshot_multidp(snapshot):
-    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTMULTIDP,(snapshot.nid,snapshot.active_visualization, snapshot.datapoints))
+    connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTMULTIDP,(snapshot.nid,snapshot.active_visualization, snapshot.datapoints,snapshot.datapoints_config))
     return True
 

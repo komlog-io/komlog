@@ -404,7 +404,9 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertEqual(snapshot['uid'],snapshot_config['uid'])
         self.assertEqual(snapshot['interval_init'],snapshot_config['interval_init'])
         self.assertEqual(snapshot['interval_end'],snapshot_config['interval_end'])
-        self.assertEqual(datasource['did'],snapshot_config['did'])
+        self.assertEqual(datasource['did'],snapshot_config['datasource_config']['did'])
+        self.assertEqual(datasourcename,snapshot_config['datasource_config']['datasourcename'])
+        self.assertEqual([],snapshot_config['datapoints_config'])
         self.assertEqual(datasourcename,snapshot_config['widgetname'])
         self.assertEqual(types.DATASOURCE,snapshot_config['type'])
 
@@ -443,7 +445,9 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertEqual(snapshot['uid'],snapshot_config['uid'])
         self.assertEqual(snapshot['interval_init'],snapshot_config['interval_init'])
         self.assertEqual(snapshot['interval_end'],snapshot_config['interval_end'])
-        self.assertEqual(datapoint['pid'],snapshot_config['pid'])
+        self.assertEqual(datapoint['pid'],snapshot_config['datapoint_config']['pid'])
+        self.assertEqual(datapointname,snapshot_config['datapoint_config']['datapointname'])
+        self.assertEqual(color,snapshot_config['datapoint_config']['color'])
         self.assertEqual('.'.join((datasourcename,datapointname)),snapshot_config['widgetname'])
         self.assertEqual(types.DATAPOINT,snapshot_config['type'])
 
@@ -610,6 +614,10 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertEqual(0,snapshot_config['active_visualization'])
         self.assertEqual(widgetname,snapshot_config['widgetname'])
         self.assertEqual(types.MULTIDP,snapshot_config['type'])
+        self.assertEqual(len(snapshot_config['datapoints_config']),1)
+        self.assertEqual(snapshot_config['datapoints_config'][0]['pid'],datapoint['pid'])
+        self.assertEqual(snapshot_config['datapoints_config'][0]['datapointname'],datapointname)
+        self.assertEqual(snapshot_config['datapoints_config'][0]['color'],color)
 
     def test_get_snapshots_config_failure_invalid_username(self):
         ''' get_snapshots_config should fail if username is not valid '''
@@ -674,7 +682,8 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
                 self.assertEqual(snapshot['uid'],snapshot_ds['uid'])
                 self.assertEqual(snapshot['interval_init'],interval_init)
                 self.assertEqual(snapshot['interval_end'],interval_end)
-                self.assertEqual(datasource['did'],snapshot['did'])
+                self.assertEqual(datasource['did'],snapshot['datasource_config']['did'])
+                self.assertEqual(datasourcename,snapshot['datasource_config']['datasourcename'])
         self.assertEqual(counter,2)
 
     def test_delete_snapshot_failure_invalid_nid(self):
@@ -730,260 +739,4 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         self.assertEqual(types.TABLE,snapshot_config['type'])
         self.assertTrue(snapshotapi.delete_snapshot(nid=snapshot_config['nid']))
         self.assertRaises(exceptions.SnapshotNotFoundException, snapshotapi.get_snapshot_config, nid=snapshot_config['nid'])
-
-    def test_get_snapshot_data_failure_invalid_nid(self):
-        ''' get_snapshot_data should fail if nid is invalid '''
-        nids=[None, 2342, 23422.2342, {'a':'dict'}, ['a','list'], ('a','tuple'), {'set'},'username',uuid.uuid4().hex, uuid.uuid1(), timeuuid.uuid1()]
-        for nid in nids:
-            self.assertRaises(exceptions.BadParametersException, snapshotapi.get_snapshot_data, nid=nid)
-
-    def test_get_snapshot_data_failure_non_existent_nid(self):
-        ''' get_snapshot_data should fail if nid does not exist '''
-        nid=uuid.uuid4()
-        self.assertRaises(exceptions.SnapshotNotFoundException, snapshotapi.get_snapshot_data, nid=nid)
-    
-    def test_get_snapshot_data_success_datasource(self):
-        ''' get_snapshot_data should succeed and return the datasource content '''
-        username='test_get_snapshot_data_success_datasource_user'
-        agentname='test_get_snapshot_data_success_datasource_agent'
-        datasourcename='test_get_snapshot_data_success_datasource_datasource'
-        email=username+'@komlog.org'
-        password='password'
-        pubkey='testgetsnapshotdatasuccesspubkey'
-        version='Test Version'
-        user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        uid=user['uid']
-        did=datasource['did']
-        widget=widgetapi.new_widget_datasource(uid=user['uid'], did=did)
-        content='DATASOURCE CONTENT'
-        date=timeuuid.uuid1()
-        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
-        date2=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-2)
-        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date2,content=content))
-        interval_init=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-1)
-        interval_end=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)+1)
-        snapshot=snapshotapi.new_snapshot(uid=uid, wid=widget['wid'],interval_init=interval_init, interval_end=interval_end)
-        snapshot_config=snapshotapi.get_snapshot_config(nid=snapshot['nid'])
-        snapshot_data=snapshotapi.get_snapshot_data(nid=snapshot_config['nid'])
-        self.assertEqual(list(snapshot_data.keys()),[datasource['did']])
-        self.assertEqual(len(snapshot_data[datasource['did']]),1)
-        self.assertEqual(snapshot_data[datasource['did']][0]['date'],date)
-        self.assertEqual(snapshot_data[datasource['did']][0]['content'],content)
-        self.assertEqual(snapshot_data[datasource['did']][0]['datapoints'],{})
-
-    def test_get_snapshot_data_success_datapoint(self):
-        ''' get_snapshot_data should succeed and return the datapoint content '''
-        username='test_get_snapshot_data_success_datapoint_user'
-        agentname='test_get_snapshot_data_success_datapoint_agent'
-        datasourcename='test_get_snapshot_data_success_datapoint_datasource'
-        datapointname='test_get_snapshot_data_success_datapoint_datapoint'
-        email=username+'@komlog.org'
-        password='password'
-        pubkey='testgetsnapshotdatasuccesspubkey'
-        version='Test Version'
-        user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        for i in range(1,100):
-            date=timeuuid.uuid1(seconds=i)
-            value=i
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value),pid=datapoint['pid'])
-        widget=widgetapi.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid'])
-        interval_init=timeuuid.uuid1(seconds=10.5)
-        interval_end=timeuuid.uuid1(seconds=30.5)
-        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
-        snapshot_config=snapshotapi.get_snapshot_config(nid=snapshot['nid'])
-        snapshot_data=snapshotapi.get_snapshot_data(nid=snapshot_config['nid'])
-        self.assertEqual(list(snapshot_data.keys()),[datapoint['pid']])
-        self.assertEqual(len(snapshot_data[datapoint['pid']]),20)
-        for i in range(20,0):
-            self.assertEqual(snapshot_data[datapoint['pid']][i]['value'],Decimal(10+i))
-
-    def test_get_snapshot_data_success_histogram(self):
-        ''' get_snapshot_data should succeed and return the histogram content '''
-        username='test_get_snapshot_data_success_histogram_user'
-        agentname='test_get_snapshot_data_success_histogram_agent'
-        datasourcename='test_get_snapshot_data_success_histogram_datasource'
-        widgetname='test_get_snapshot_data_success_histogram_widget'
-        datapointname1='test_get_snapshot_data_success_histogram_datapoint_1'
-        datapointname2='test_get_snapshot_data_success_histogram_datapoint_2'
-        datapointname3='test_get_snapshot_data_success_histogram_datapoint_3'
-        email=username+'@komlog.org'
-        password='password'
-        pubkey='testgetsnapshotdatasuccesspubkey'
-        version='Test Version'
-        user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint1=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname1, color=color)
-        color=libcolors.get_random_color()
-        datapoint2=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname2, color=color)
-        color=libcolors.get_random_color()
-        datapoint3=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname3, color=color)
-        for i in range(1,100):
-            date=timeuuid.uuid1(seconds=i)
-            value=i
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+1000),pid=datapoint1['pid'])
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+2000),pid=datapoint2['pid'])
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+3000),pid=datapoint3['pid'])
-        widget=widgetapi.new_widget_histogram(uid=user['uid'], widgetname=widgetname)
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint1['pid']))
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint2['pid']))
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint3['pid']))
-        interval_init=timeuuid.uuid1(seconds=10.5)
-        interval_end=timeuuid.uuid1(seconds=30.5)
-        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
-        snapshot_config=snapshotapi.get_snapshot_config(nid=snapshot['nid'])
-        snapshot_data=snapshotapi.get_snapshot_data(nid=snapshot_config['nid'])
-        self.assertEqual(sorted(list(snapshot_data.keys())),sorted([datapoint1['pid'],datapoint2['pid'],datapoint3['pid']]))
-        self.assertEqual(len(snapshot_data[datapoint1['pid']]),20)
-        self.assertEqual(len(snapshot_data[datapoint2['pid']]),20)
-        self.assertEqual(len(snapshot_data[datapoint3['pid']]),20)
-        for i in range(20,0):
-            self.assertEqual(snapshot_data[datapoint1['pid']][i]['value'],Decimal(1010+i))
-            self.assertEqual(snapshot_data[datapoint2['pid']][i]['value'],Decimal(2010+i))
-            self.assertEqual(snapshot_data[datapoint3['pid']][i]['value'],Decimal(3010+i))
-
-    def test_get_snapshot_data_success_linegraph(self):
-        ''' get_snapshot_data should succeed and return the linegraph content '''
-        username='test_get_snapshot_data_success_linegraph_user'
-        agentname='test_get_snapshot_data_success_linegraph_agent'
-        datasourcename='test_get_snapshot_data_success_linegraph_datasource'
-        widgetname='test_get_snapshot_data_success_linegraph_widget'
-        datapointname1='test_get_snapshot_data_success_linegraph_datapoint_1'
-        datapointname2='test_get_snapshot_data_success_linegraph_datapoint_2'
-        datapointname3='test_get_snapshot_data_success_linegraph_datapoint_3'
-        email=username+'@komlog.org'
-        password='password'
-        pubkey='testgetsnapshotdatasuccesspubkey'
-        version='Test Version'
-        user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint1=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname1, color=color)
-        color=libcolors.get_random_color()
-        datapoint2=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname2, color=color)
-        color=libcolors.get_random_color()
-        datapoint3=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname3, color=color)
-        for i in range(1,100):
-            date=timeuuid.uuid1(seconds=i)
-            value=i
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+1000),pid=datapoint1['pid'])
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+2000),pid=datapoint2['pid'])
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+3000),pid=datapoint3['pid'])
-        widget=widgetapi.new_widget_linegraph(uid=user['uid'], widgetname=widgetname)
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint1['pid']))
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint2['pid']))
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint3['pid']))
-        interval_init=timeuuid.uuid1(seconds=10.5)
-        interval_end=timeuuid.uuid1(seconds=30.5)
-        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
-        snapshot_config=snapshotapi.get_snapshot_config(nid=snapshot['nid'])
-        snapshot_data=snapshotapi.get_snapshot_data(nid=snapshot_config['nid'])
-        self.assertEqual(sorted(list(snapshot_data.keys())),sorted([datapoint1['pid'],datapoint2['pid'],datapoint3['pid']]))
-        self.assertEqual(len(snapshot_data[datapoint1['pid']]),20)
-        self.assertEqual(len(snapshot_data[datapoint2['pid']]),20)
-        self.assertEqual(len(snapshot_data[datapoint3['pid']]),20)
-        for i in range(20,0):
-            self.assertEqual(snapshot_data[datapoint1['pid']][i]['value'],Decimal(1010+i))
-            self.assertEqual(snapshot_data[datapoint2['pid']][i]['value'],Decimal(2010+i))
-            self.assertEqual(snapshot_data[datapoint3['pid']][i]['value'],Decimal(3010+i))
-
-    def test_get_snapshot_data_success_table(self):
-        ''' get_snapshot_data should succeed and return the table content '''
-        username='test_get_snapshot_data_success_table_user'
-        agentname='test_get_snapshot_data_success_table_agent'
-        datasourcename='test_get_snapshot_data_success_table_datasource'
-        widgetname='test_get_snapshot_data_success_table_widget'
-        datapointname1='test_get_snapshot_data_success_table_datapoint_1'
-        datapointname2='test_get_snapshot_data_success_table_datapoint_2'
-        datapointname3='test_get_snapshot_data_success_table_datapoint_3'
-        email=username+'@komlog.org'
-        password='password'
-        pubkey='testgetsnapshotdatasuccesspubkey'
-        version='Test Version'
-        user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint1=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname1, color=color)
-        color=libcolors.get_random_color()
-        datapoint2=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname2, color=color)
-        color=libcolors.get_random_color()
-        datapoint3=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname3, color=color)
-        for i in range(1,100):
-            date=timeuuid.uuid1(seconds=i)
-            value=i
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+1000),pid=datapoint1['pid'])
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+2000),pid=datapoint2['pid'])
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+3000),pid=datapoint3['pid'])
-        widget=widgetapi.new_widget_table(uid=user['uid'], widgetname=widgetname)
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint1['pid']))
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint2['pid']))
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint3['pid']))
-        interval_init=timeuuid.uuid1(seconds=10.5)
-        interval_end=timeuuid.uuid1(seconds=30.5)
-        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
-        snapshot_config=snapshotapi.get_snapshot_config(nid=snapshot['nid'])
-        snapshot_data=snapshotapi.get_snapshot_data(nid=snapshot_config['nid'])
-        self.assertEqual(sorted(list(snapshot_data.keys())),sorted([datapoint1['pid'],datapoint2['pid'],datapoint3['pid']]))
-        self.assertEqual(len(snapshot_data[datapoint1['pid']]),20)
-        self.assertEqual(len(snapshot_data[datapoint2['pid']]),20)
-        self.assertEqual(len(snapshot_data[datapoint3['pid']]),20)
-        for i in range(20,0):
-            self.assertEqual(snapshot_data[datapoint1['pid']][i]['value'],Decimal(1010+i))
-            self.assertEqual(snapshot_data[datapoint2['pid']][i]['value'],Decimal(2010+i))
-            self.assertEqual(snapshot_data[datapoint3['pid']][i]['value'],Decimal(3010+i))
-
-    def test_get_snapshot_data_success_multidp(self):
-        ''' get_snapshot_data should succeed and return the multidp content '''
-        username='test_get_snapshot_data_success_multidp_user'
-        agentname='test_get_snapshot_data_success_multidp_agent'
-        datasourcename='test_get_snapshot_data_success_multidp_datasource'
-        widgetname='test_get_snapshot_data_success_multidp_widget'
-        datapointname1='test_get_snapshot_data_success_multidp_datapoint_1'
-        datapointname2='test_get_snapshot_data_success_multidp_datapoint_2'
-        datapointname3='test_get_snapshot_data_success_multidp_datapoint_3'
-        email=username+'@komlog.org'
-        password='password'
-        pubkey='testgetsnapshotdatasuccesspubkey'
-        version='Test Version'
-        user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint1=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname1, color=color)
-        color=libcolors.get_random_color()
-        datapoint2=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname2, color=color)
-        color=libcolors.get_random_color()
-        datapoint3=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname3, color=color)
-        for i in range(1,100):
-            date=timeuuid.uuid1(seconds=i)
-            value=i
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+1000),pid=datapoint1['pid'])
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+2000),pid=datapoint2['pid'])
-            cassapidatapoint.insert_datapoint_data(date=date,value=Decimal(value+3000),pid=datapoint3['pid'])
-        widget=widgetapi.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint1['pid']))
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint2['pid']))
-        self.assertTrue(widgetapi.add_datapoint_to_widget(wid=widget['wid'],pid=datapoint3['pid']))
-        interval_init=timeuuid.uuid1(seconds=10.5)
-        interval_end=timeuuid.uuid1(seconds=30.5)
-        snapshot=snapshotapi.new_snapshot(uid=user['uid'], wid=widget['wid'], interval_init=interval_init, interval_end=interval_end)
-        snapshot_config=snapshotapi.get_snapshot_config(nid=snapshot['nid'])
-        snapshot_data=snapshotapi.get_snapshot_data(nid=snapshot_config['nid'])
-        self.assertEqual(sorted(list(snapshot_data.keys())),sorted([datapoint1['pid'],datapoint2['pid'],datapoint3['pid']]))
-        self.assertEqual(len(snapshot_data[datapoint1['pid']]),20)
-        self.assertEqual(len(snapshot_data[datapoint2['pid']]),20)
-        self.assertEqual(len(snapshot_data[datapoint3['pid']]),20)
-        for i in range(20,0):
-            self.assertEqual(snapshot_data[datapoint1['pid']][i]['value'],Decimal(1010+i))
-            self.assertEqual(snapshot_data[datapoint2['pid']][i]['value'],Decimal(2010+i))
-            self.assertEqual(snapshot_data[datapoint3['pid']][i]['value'],Decimal(3010+i))
 

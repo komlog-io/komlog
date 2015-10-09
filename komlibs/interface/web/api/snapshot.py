@@ -36,15 +36,31 @@ def get_snapshots_config_request(username):
         reg['its']=timeuuid.get_unix_timestamp(snapshot['interval_init'])
         reg['ets']=timeuuid.get_unix_timestamp(snapshot['interval_end'])
         if snapshot['type']==types.DATASOURCE:
-            reg['did']=snapshot['did'].hex
             reg['seq']=timeuuid.get_custom_sequence(snapshot['interval_init'])
+            reg['datasource']={
+                               'did':snapshot['datasource_config']['did'].hex,
+                               'datasourcename':snapshot['datasource_config']['datasourcename']
+                              }
+            reg['datapoints']=[]
+            for datapoint in snapshot['datapoints_config']:
+                reg['datapoints'].append({'pid':datapoint['pid'].hex,
+                                          'datapointname':datapoint['datapointname'],
+                                          'color':datapoint['color']
+                                         })
         elif snapshot['type']==types.DATAPOINT:
-            reg['pid']=snapshot['pid'].hex
+            reg['datapoint']={
+                              'pid':snapshot['datapoint_config']['pid'].hex,
+                              'datapointname':snapshot['datapoint_config']['datapointname'],
+                              'color':snapshot['datapoint_config']['color'],
+                             }
         elif snapshot['type']==types.MULTIDP:
             reg['view']=snapshot['active_visualization']
             reg['datapoints']=[]
-            for pid in snapshot['datapoints']:
-                reg['datapoints'].append({'pid':pid.hex})
+            for datapoint in snapshot['datapoints_config']:
+                reg['datapoints'].append({'pid':datapoint['pid'].hex,
+                                          'datapointname':datapoint['datapointname'],
+                                          'color':datapoint['color']
+                                          })
         elif snapshot['type'] in [types.HISTOGRAM, types.LINEGRAPH, types.TABLE]:
             reg['datapoints']=[]
             for pid in snapshot['datapoints']:
@@ -75,15 +91,31 @@ def get_snapshot_config_request(username, nid, tid=None):
     snapshot['its']=timeuuid.get_unix_timestamp(data['interval_init'])
     snapshot['ets']=timeuuid.get_unix_timestamp(data['interval_end'])
     if data['type']==types.DATASOURCE:
-        snapshot['did']=data['did'].hex
         snapshot['seq']=timeuuid.get_custom_sequence(data['interval_init'])
+        snapshot['datasource']={
+                                'did':data['datasource_config']['did'].hex,
+                                'datasourcename':data['datasource_config']['datasourcename']
+                               }
+        snapshot['datapoints']=[]
+        for datapoint in data['datapoints_config']:
+            snapshot['datapoints'].append({'pid':datapoint['pid'].hex,
+                                           'datapointname':datapoint['datapointname'],
+                                           'color':datapoint['color']
+                                          })
     elif data['type']==types.DATAPOINT:
-        snapshot['pid']=data['pid'].hex
+        snapshot['datapoint']={
+                               'pid':data['datapoint_config']['pid'].hex,
+                               'datapointname':data['datapoint_config']['datapointname'],
+                               'color':data['datapoint_config']['color'],
+                              }
     elif data['type']==types.MULTIDP:
         snapshot['view']=data['active_visualization']
         snapshot['datapoints']=[]
-        for pid in data['datapoints']:
-            snapshot['datapoints'].append({'pid':pid.hex})
+        for datapoint in data['datapoints_config']:
+            snapshot['datapoints'].append({'pid':datapoint['pid'].hex,
+                                           'datapointname':datapoint['datapointname'],
+                                           'color':datapoint['color']
+                                           })
     elif data['type'] in [types.HISTOGRAM, types.LINEGRAPH, types.TABLE]:
         snapshot['datapoints']=[]
         for pid in data['datapoints']:
@@ -157,32 +189,4 @@ def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None,
         else:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
-
-@exceptions.ExceptionHandler
-def get_snapshot_data_request(username, nid):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_GSNDR_IU)
-    if not args.is_valid_hex_uuid(nid):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_GSNDR_IN)
-    nid=uuid.UUID(nid)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.GET_SNAPSHOT_DATA, uid=uid, nid=nid)
-    data=snapshotapi.get_snapshot_data(nid=nid)
-    response_data=[]
-    for item in data.keys():
-        data_object={}
-        data_object['id']=item.hex
-        data_object['data']=[]
-        for entry in data[reg]:
-            entry_data={}
-            if 'date' in entry:
-                entry_data['date']=timeuuid.get_unix_timestamp(entry['date'])
-            if 'content' in entry:
-                entry_data['content']=entry['content']
-                entry_data['datapoints']=[{pid.hex:pos} for pid,pos in entry['datapoints'].items()]
-            else:
-                entry_data['value']=int(entry['value']) if entry['value']%1==0 else float(entry['value'])
-            data_object['data'].append(entry_data)
-        response_data.append(data_object)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data=response_data)
 

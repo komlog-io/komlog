@@ -399,7 +399,7 @@ E_GSA_NS_IU=1540
 E_GSA_NS_IW=1541
 E_GSA_NS_III=1542
 E_GSA_NS_IIE=1543
-E_GSA_NS_IIO=1544                                #  new_snapshot invalid interval order. interval_init > interval_end
+E_GSA_NS_IIO=1544 #  new_snapshot invalid interval order. interval_init > interval_end
 E_GSA_NS_ISWU=1545
 E_GSA_NS_ISWC=1546
 E_GSA_NS_UNF=1547
@@ -408,9 +408,11 @@ E_GSA_NS_SCE=1549
 
 E_GSA_NSDS_WNF=1560
 E_GSA_NSDS_SCE=1561
+E_GSA_NSDS_DNF=1562 #new_snapshot_datasource datasource info not found
 
 E_GSA_NSDP_WNF=1570
 E_GSA_NSDP_SCE=1571
+E_GSA_NSDP_PNF=1572 #new_snapshot_datapoint datapoint info not found
 
 E_GSA_NSH_WNF=1580
 E_GSA_NSH_ZDP=1581
@@ -427,6 +429,7 @@ E_GSA_NST_SCE=1602
 E_GSA_NSMP_WNF=1610
 E_GSA_NSMP_ZDP=1611
 E_GSA_NSMP_SCE=1612
+E_GSA_NSMP_ZDPF=1613
 
 # gestaccount circle api
 

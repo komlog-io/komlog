@@ -76,7 +76,9 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid, nid=nid)
         self.assertTrue(isinstance(tid['tid'],uuid.UUID))
@@ -87,7 +89,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         self.assertEqual(ticket.allowed_uids, set(sorted(shared_with_uids)))
         self.assertEqual(ticket.allowed_cids, set(sorted(shared_with_cids)))
         self.assertEqual(ticket.resources, set(sorted([did,nid])))
-        self.assertEqual(ticket.permissions, {did:permissions.CAN_READ_DATA|permissions.CAN_READ_CONFIG,nid:permissions.CAN_READ_CONFIG})
+        self.assertEqual(ticket.permissions, {did:permissions.CAN_READ_DATA,nid:permissions.CAN_READ_CONFIG})
         self.assertEqual(ticket.interval_init, interval_init)
         self.assertEqual(ticket.interval_end, interval_end)
 
@@ -103,7 +105,8 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid,datapointname=pid.hex,color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid, nid=nid)
         self.assertTrue(isinstance(tid['tid'],uuid.UUID))
@@ -114,7 +117,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         self.assertEqual(ticket.allowed_uids, set(sorted(shared_with_uids)))
         self.assertEqual(ticket.allowed_cids, set(sorted(shared_with_cids)))
         self.assertEqual(ticket.resources, set(sorted([pid,nid])))
-        self.assertEqual(ticket.permissions, {pid:permissions.CAN_READ_DATA|permissions.CAN_READ_CONFIG,nid:permissions.CAN_READ_CONFIG})
+        self.assertEqual(ticket.permissions, {pid:permissions.CAN_READ_DATA,nid:permissions.CAN_READ_CONFIG})
         self.assertEqual(ticket.interval_init, interval_init)
         self.assertEqual(ticket.interval_end, interval_end)
 
@@ -127,10 +130,17 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         interval_end=timeuuid.uuid1()
         widgetname='test_new_snapshot_ticket_success_snapshotmultidp'
         creation_date=timeuuid.uuid1()
-        datapoints=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        pid1=uuid.uuid4()
+        pid2=uuid.uuid4()
+        pid3=uuid.uuid4()
+        datapoints=[pid1,pid2,pid3]
+        datapoint1=ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=str(pid1))
+        datapoint2=ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=str(pid3))
+        datapoint3=ormsnapshot.SnapshotDatapointConfig(pid=pid3,datapointname=pid3.hex,color=str(pid3))
+        datapoints_config=[datapoint1,datapoint2,datapoint3]
         shared_with_uids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
-        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids, active_visualization=0)
+        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids, active_visualization=0)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid, nid=nid)
         self.assertTrue(isinstance(tid['tid'],uuid.UUID))
@@ -143,7 +153,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         resources=set(datapoints)
         resources.add(nid)
         self.assertEqual(ticket.resources, set(sorted(resources)))
-        self.assertEqual(ticket.permissions, {datapoints[0]:permissions.CAN_READ_DATA|permissions.CAN_READ_CONFIG,datapoints[1]:permissions.CAN_READ_DATA|permissions.CAN_READ_CONFIG,datapoints[2]:permissions.CAN_READ_DATA|permissions.CAN_READ_CONFIG,nid:permissions.CAN_READ_CONFIG})
+        self.assertEqual(ticket.permissions, {pid1:permissions.CAN_READ_DATA,pid2:permissions.CAN_READ_DATA,pid3:permissions.CAN_READ_DATA,nid:permissions.CAN_READ_CONFIG})
         self.assertEqual(ticket.interval_init, interval_init)
         self.assertEqual(ticket.interval_end, interval_end)
 
@@ -159,7 +169,9 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         did=uuid.uuid4()
         shared_with_uids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
+        datapoints_config=[]
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         expires=timeuuid.uuid1()
         tid=provision.new_snapshot_ticket(uid=uid, nid=nid, expires=expires, share_type=share.NEW_SNAPSHOT_SHARE_READ_AND_SHARE)
@@ -171,7 +183,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         self.assertEqual(ticket.allowed_uids, set(sorted(shared_with_uids)))
         self.assertEqual(ticket.allowed_cids, set(sorted(shared_with_cids)))
         self.assertEqual(ticket.resources, set(sorted([did,nid])))
-        self.assertEqual(ticket.permissions, {did:permissions.CAN_READ_DATA|permissions.CAN_READ_CONFIG,nid:permissions.CAN_READ_CONFIG|permissions.CAN_SNAPSHOT})
+        self.assertEqual(ticket.permissions, {did:permissions.CAN_READ_DATA,nid:permissions.CAN_READ_CONFIG|permissions.CAN_SNAPSHOT})
         self.assertEqual(ticket.interval_init, interval_init)
         self.assertEqual(ticket.interval_end, interval_end)
 
@@ -187,7 +199,8 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         pid=uuid.uuid4()
         shared_with_uids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid,datapointname=pid.hex,color=str(pid))
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         expires=timeuuid.uuid1()
         tid=provision.new_snapshot_ticket(uid=uid, nid=nid, expires=expires, share_type=share.NEW_SNAPSHOT_SHARE_READ_AND_SHARE)
@@ -199,7 +212,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         self.assertEqual(ticket.allowed_uids, set(sorted(shared_with_uids)))
         self.assertEqual(ticket.allowed_cids, set(sorted(shared_with_cids)))
         self.assertEqual(ticket.resources, set(sorted([pid,nid])))
-        self.assertEqual(ticket.permissions, {pid:permissions.CAN_READ_DATA|permissions.CAN_READ_CONFIG,nid:permissions.CAN_READ_CONFIG|permissions.CAN_SNAPSHOT})
+        self.assertEqual(ticket.permissions, {pid:permissions.CAN_READ_DATA,nid:permissions.CAN_READ_CONFIG|permissions.CAN_SNAPSHOT})
         self.assertEqual(ticket.interval_init, interval_init)
         self.assertEqual(ticket.interval_end, interval_end)
 
@@ -212,10 +225,17 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         interval_end=timeuuid.uuid1()
         widgetname='test_new_snapshot_ticket_success_snapshotmultidp'
         creation_date=timeuuid.uuid1()
-        datapoints=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        pid1=uuid.uuid4()
+        pid2=uuid.uuid4()
+        pid3=uuid.uuid4()
+        datapoints=[pid1,pid2,pid3]
+        datapoint1=ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=str(pid1))
+        datapoint2=ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=str(pid3))
+        datapoint3=ormsnapshot.SnapshotDatapointConfig(pid=pid3,datapointname=pid3.hex,color=str(pid3))
+        datapoints_config=[datapoint1,datapoint2,datapoint3]
         shared_with_uids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
-        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids, active_visualization=0)
+        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids, active_visualization=0)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         expires=timeuuid.uuid1()
         tid=provision.new_snapshot_ticket(uid=uid, nid=nid, expires=expires, share_type=share.NEW_SNAPSHOT_SHARE_READ_AND_SHARE)
@@ -229,7 +249,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         resources=set(datapoints)
         resources.add(nid)
         self.assertEqual(ticket.resources, set(sorted(resources)))
-        self.assertEqual(ticket.permissions, {datapoints[0]:permissions.CAN_READ_DATA|permissions.CAN_READ_CONFIG,datapoints[1]:permissions.CAN_READ_DATA|permissions.CAN_READ_CONFIG,datapoints[2]:permissions.CAN_READ_DATA|permissions.CAN_READ_CONFIG,nid:permissions.CAN_READ_CONFIG|permissions.CAN_SNAPSHOT})
+        self.assertEqual(ticket.permissions, {pid1:permissions.CAN_READ_DATA,pid2:permissions.CAN_READ_DATA,pid3:permissions.CAN_READ_DATA,nid:permissions.CAN_READ_CONFIG|permissions.CAN_SNAPSHOT})
         self.assertEqual(ticket.interval_init, interval_init)
         self.assertEqual(ticket.interval_end, interval_end)
 

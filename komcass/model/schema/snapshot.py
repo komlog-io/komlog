@@ -5,7 +5,10 @@ A snapshot is a widget in a specific time interval.
 '''
 from komcass.model.schema import keyspace
 
-OBJECTS=['MST_SNAPSHOT',
+OBJECTS=[
+         'TYPE_SNAPSHOT_DATAPOINT_CONFIG',
+         'TYPE_SNAPSHOT_DATASOURCE_CONFIG',
+         'MST_SNAPSHOT',
          'MST_SNAPSHOT_INDEX_01',
          'MST_SNAPSHOT_INDEX_02',
          'MST_SNAPSHOTDS',
@@ -15,6 +18,21 @@ OBJECTS=['MST_SNAPSHOT',
          'MST_SNAPSHOT_LINEGRAPH',
          'MST_SNAPSHOT_TABLE',
         ]
+
+TYPE_SNAPSHOT_DATAPOINT_CONFIG='''
+        CREATE TYPE snapshot_datapoint_config (
+            pid uuid,
+            datapointname text,
+            color text
+        );
+    '''
+
+TYPE_SNAPSHOT_DATASOURCE_CONFIG='''
+        CREATE TYPE snapshot_datasource_config (
+            did uuid,
+            datasourcename text,
+        );
+    '''
 
 MST_SNAPSHOT='''
         CREATE TABLE mst_snapshot (
@@ -44,6 +62,8 @@ MST_SNAPSHOTDS='''
         CREATE TABLE mst_snapshot_ds (
             nid uuid,
             did uuid,
+            datasource_config FROZEN<snapshot_datasource_config>,
+            datapoints_config list<FROZEN<snapshot_datapoint_config>>,
             PRIMARY KEY (nid)
         );
     '''
@@ -52,6 +72,7 @@ MST_SNAPSHOTDP='''
         CREATE TABLE mst_snapshot_dp (
             nid uuid,
             pid uuid,
+            datapoint_config FROZEN<snapshot_datapoint_config>,
             PRIMARY KEY (nid)
         );
     '''
@@ -88,7 +109,7 @@ MST_SNAPSHOT_MULTIDP='''
             nid uuid,
             active_visualization int,
             datapoints set<uuid>,
+            datapoints_config list<FROZEN<snapshot_datapoint_config>>,
             PRIMARY KEY (nid)
         );
     '''
-
