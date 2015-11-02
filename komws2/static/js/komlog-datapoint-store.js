@@ -10,6 +10,7 @@ function DatapointStore () {
     this.subscriptionTokens.push({token:PubSub.subscribe('monitorDatapoint', this.subscriptionHandler.bind(this)),msg:'monitorDatapoint'});
     this.subscriptionTokens.push({token:PubSub.subscribe('markPositiveVar', this.subscriptionHandler.bind(this)),msg:'markPositiveVar'});
     this.subscriptionTokens.push({token:PubSub.subscribe('loadDatapointSlide', this.subscriptionHandler.bind(this)),msg:'loadDatapointSlide'});
+    this.subscriptionTokens.push({token:PubSub.subscribe('deleteDatapoint', this.subscriptionHandler.bind(this)),msg:'deleteDatapoint'});
 
 }
 
@@ -30,6 +31,9 @@ DatapointStore.prototype = {
                 break;
             case 'loadDatapointSlide':
                 processMsgLoadDatapointSlide(data)
+                break;
+            case 'deleteDatapoint':
+                processMsgDeleteDatapoint(data)
                 break;
         }
     },
@@ -75,6 +79,123 @@ DatapointStore.prototype = {
             setTimeout(this.requestLoop.bind(this),15000)
         }
     },
+    addLoopRequest: function (id,type,interval) {
+        reqArray=$.grep(this.registeredRequests, function (e) {return e.pid == id && e.requestType == type})
+        if (reqArray.length == 0) {
+            if (type == 'requestDatapointData') {
+                this.registeredRequests.push({requestType:type,pid:id,interval:interval,intervalsRequested:[]})
+            } else {
+                this.registeredRequests.push({requestType:type,pid:id,interval:interval})
+            }
+        }
+    },
+    deleteLoopRequest: function (id,type) {
+        this.registeredRequests=this.registeredRequests.filter(function (el) {
+            if (el.pid==id && el.requestType==type) {
+                return false
+            } else {
+                return true
+            }
+        });
+    },
+    slowDownRequest: function (id, type) {
+        reqArray=$.grep(this.registeredRequests, function (e) {return e.pid == id && e.requestType == type})
+        if (reqArray.length == 1 && reqArray[0].interval<1800000) {
+            reqArray[0].interval=parseInt(reqArray[0].interval*1.2)
+            reqArray[0].lastRequest=new Date();
+        }
+    },
+    speedUpRequest: function (id, type) {
+        reqArray=$.grep(this.registeredRequests, function (e) {return e.pid == id && e.requestType == type})
+        if (reqArray.length == 1 && reqArray[0].interval>300000) {
+            reqArray[0].interval=parseInt(reqArray[0].interval*0.8)
+            reqArray[0].lastRequest=new Date();
+        }
+    },
+    storeDatapointData: function (pid, data) {
+        if (!this._datapointData.hasOwnProperty(pid)) {
+            this._datapointData[pid]={}
+            $.each(data, function (index,object) {
+                this._datapointData[pid][object.ts]=object.value
+            }.bind(this));
+        }
+        else {
+            $.each(data, function (index,object) {
+                this._datapointData[pid][object.ts]=object.value
+            }.bind(this));
+        }
+    },
+    updateIntervalsRequested: function (pid, interval) {
+        reqArray=$.grep(this.registeredRequests, function (e) {return e.pid == pid && e.requestType == 'requestDatapointData'})
+        if (reqArray.length==1) {
+            this.speedUpRequest(pid,'requestDatapointData')
+            reqArray[0].lastRequest=new Date();
+            reqArray[0].intervalsRequested.push($.extend({},interval));
+            intervals=reqArray[0].intervalsRequested
+            for (var i=0;i<intervals.length;i++) {
+                for (var j=0;j<intervals.length;j++) {
+                    if (i!=j && intervals[i].ets == intervals[j].its) {
+                        intervals.push({its:intervals[i].its,ets:intervals[j].ets})
+                        if (j>i) {
+                            intervals.splice(j,1);
+                            intervals.splice(i,1);
+                        } else {
+                            intervals.splice(i,1);
+                            intervals.splice(j,1);
+                        }
+                        j--;
+                        i--;
+                    } else if (i!=j && intervals[i].its <= intervals[j].its && intervals[i].ets > intervals[j].its && intervals[i].ets <= intervals[j].ets) {
+                        intervals.push({its:intervals[i].its,ets:intervals[j].ets})
+                        if (j>i) {
+                            intervals.splice(j,1);
+                            intervals.splice(i,1);
+                        } else {
+                            intervals.splice(i,1);
+                            intervals.splice(j,1);
+                        }
+                        j--;
+                        i--;
+                    } else if (i!=j && intervals[i].its <= intervals[j].its && intervals[i].ets >= intervals[j].ets) {
+                        if (j>i) {
+                            intervals.splice(j,1);
+                            j--;
+                        } else {
+                            intervals.splice(i,1);
+                            i--;
+                        }
+                    }
+                }
+            }
+            reqArray[0].intervalsRequested=intervals
+        }
+    },
+    storeDatapointConfig: function (pid, data) {
+        doStore=false
+        if (!this._datapointConfig.hasOwnProperty(pid)) {
+            this._datapointConfig[pid]={}
+            $.each(data, function (key,value) {
+                this._datapointConfig[pid][key]=value
+            }.bind(this));
+            doStore=true
+        }
+        else {
+            $.each(data, function (key,value) {
+                if (!(this._datapointConfig[pid].hasOwnProperty(key) && this._datapointConfig[pid][key]==value)) {
+                    doStore=true
+                }
+            }.bind(this));
+            if (doStore) {
+                this._datapointConfig[pid]=data
+            }
+        }
+        if (doStore == false) {
+            this.slowDownRequest(pid,'requestDatapointConfig')
+        } else if (doStore == true) {
+            this.speedUpRequest(pid,'requestDatapointConfig')
+        }
+        return doStore;
+    },
 };
 
 var datapointStore = new DatapointStore();
@@ -82,20 +203,20 @@ datapointStore.requestLoop()
 
 function processMsgDatapointDataReq (data) {
     if (data.hasOwnProperty('pid')) {
-        reqArray=$.grep(datapointStore.registeredRequests, function (e) {return e.pid == data.pid && e.requestType == 'requestDatapointData'})
-        if (reqArray.length == 0) {
-            datapointStore.registeredRequests.push({requestType:'requestDatapointData',pid:data.pid,interval:60000,intervalsRequested:[]})
+        if (!data.hasOwnProperty('tid')) {
+            datapointStore.addLoopRequest(data.pid,'requestDatapointData',60000)
         }
-        if (data.hasOwnProperty('interval')) {
-            requestDatapointData(data.pid, data.interval)
-        } else {
-            requestDatapointData(data.pid)
-        }
+        requestDatapointData(data.pid, data.interval, undefined, data.tid)
     }
 }
 
-function requestDatapointData (pid, interval, originalInterval) {
-    if (!interval) {
+function requestDatapointData (pid, interval, originalInterval, tid) {
+    if (tid && interval) {
+        doRequest=true
+        parameters=getMissingSubInterval(pid, interval)
+        parameters.t=tid
+    }
+    else if (!interval) {
         doRequest=true
         parameters={}
     } else {
@@ -119,7 +240,7 @@ function requestDatapointData (pid, interval, originalInterval) {
             data: parameters,
         })
         .done(function (response) {
-            storeDatapointData(pid,response)
+            datapointStore.storeDatapointData(pid,response)
             receivedTs=$.map(response, function (e) {
                 return e.ts
             });
@@ -130,27 +251,27 @@ function requestDatapointData (pid, interval, originalInterval) {
             }
             if (0 < response.length && response.length < 100) {
                 if (originalInterval) {
-                    updateIntervalsRequested(pid,interval);
+                    datapointStore.updateIntervalsRequested(pid,interval);
                     sendDatapointDataUpdate(pid,originalInterval)
                 } else if (interval) {
-                    updateIntervalsRequested(pid,interval);
+                    datapointStore.updateIntervalsRequested(pid,interval);
                     sendDatapointDataUpdate(pid,interval)
                 } else {
-                    updateIntervalsRequested(pid,notifInterval);
+                    datapointStore.updateIntervalsRequested(pid,notifInterval);
                     sendDatapointDataUpdate(pid,notifInterval)
                 }
             } else if (response.length == 100) {
                 if (!interval && !originalInterval) {
-                    updateIntervalsRequested(pid,notifInterval)
+                    datapointStore.updateIntervalsRequested(pid,notifInterval)
                     sendDatapointDataUpdate(pid,notifInterval)
                 } else if (interval && !originalInterval) {
-                    updateIntervalsRequested(pid,{its:notifInterval.its,ets:interval.ets});
+                    datapointStore.updateIntervalsRequested(pid,{its:notifInterval.its,ets:interval.ets});
                     newInterval={its:interval.its,ets:notifInterval.its}
-                    requestDatapointData(pid, newInterval, interval)
+                    requestDatapointData(pid, newInterval, interval, tid)
                 } else if (interval && originalInterval) {
-                    updateIntervalsRequested(pid,{its:notifInterval.its,ets:interval.ets});
+                    datapointStore.updateIntervalsRequested(pid,{its:notifInterval.its,ets:interval.ets});
                     newInterval={its:interval.its,ets:notifInterval.its}
-                    requestDatapointData(pid, newInterval, originalInterval)
+                    requestDatapointData(pid, newInterval, originalInterval, tid)
                 }
             }
         })
@@ -159,6 +280,9 @@ function requestDatapointData (pid, interval, originalInterval) {
 
 function getMissingSubInterval (pid, interval) {
     reqArray=$.grep(datapointStore.registeredRequests, function (e) {return e.pid == pid && e.requestType == 'requestDatapointData'})
+    if (reqArray.length==0) {
+        return interval
+    }
     var its=interval.its
     var ets=interval.ets
     for (var i=0; i<reqArray[0].intervalsRequested.length; i++) {
@@ -173,20 +297,6 @@ function getMissingSubInterval (pid, interval) {
         return {}
     } else {
         return {its:its,ets:ets}
-    }
-}
-
-function storeDatapointData (pid, data) {
-    if (!datapointStore._datapointData.hasOwnProperty(pid)) {
-        datapointStore._datapointData[pid]={}
-        $.each(data, function (index,object) {
-            datapointStore._datapointData[pid][object.ts]=object.value
-        });
-    }
-    else {
-        $.each(data, function (index,object) {
-            datapointStore._datapointData[pid][object.ts]=object.value
-        });
     }
 }
 
@@ -251,58 +361,9 @@ function getDataSummary (data) {
     return summary
 }
 
-function updateIntervalsRequested (pid, interval) {
-    reqArray=$.grep(datapointStore.registeredRequests, function (e) {return e.pid == pid && e.requestType == 'requestDatapointData'})
-    reqArray[0].lastRequest=new Date();
-    reqArray[0].intervalsRequested.push($.extend({},interval));
-    if (reqArray[0].interval>30000) {
-        reqArray[0].interval=parseInt(reqArray[0].interval*0.8)
-    }
-    intervals=reqArray[0].intervalsRequested
-    for (var i=0;i<intervals.length;i++) {
-        for (var j=0;j<intervals.length;j++) {
-            if (i!=j && intervals[i].ets == intervals[j].its) {
-                intervals.push({its:intervals[i].its,ets:intervals[j].ets})
-                if (j>i) {
-                    intervals.splice(j,1);
-                    intervals.splice(i,1);
-                } else {
-                    intervals.splice(i,1);
-                    intervals.splice(j,1);
-                }
-                j--;
-                i--;
-            } else if (i!=j && intervals[i].its <= intervals[j].its && intervals[i].ets > intervals[j].its && intervals[i].ets <= intervals[j].ets) {
-                intervals.push({its:intervals[i].its,ets:intervals[j].ets})
-                if (j>i) {
-                    intervals.splice(j,1);
-                    intervals.splice(i,1);
-                } else {
-                    intervals.splice(i,1);
-                    intervals.splice(j,1);
-                }
-                j--;
-                i--;
-            } else if (i!=j && intervals[i].its <= intervals[j].its && intervals[i].ets >= intervals[j].ets) {
-                if (j>i) {
-                    intervals.splice(j,1);
-                    j--;
-                } else {
-                    intervals.splice(i,1);
-                    i--;
-                }
-            }
-        }
-    }
-    reqArray[0].intervalsRequested=intervals
-}
-
 function processMsgDatapointConfigReq (data) {
     if (data.hasOwnProperty('pid')) {
-        reqArray=$.grep(datapointStore.registeredRequests, function (e) {return e.pid == data.pid && e.requestType == 'requestDatapointConfig'})
-        if (reqArray.length == 0) {
-            datapointStore.registeredRequests.push({requestType:'requestDatapointConfig',pid:data.pid,interval:120000})
-        }
+        datapointStore.addLoopRequest(data.pid,'requestDatapointConfig',120000)
         if (datapointStore._datapointConfig.hasOwnProperty(data.pid)) {
             sendDatapointConfigUpdate(data.pid)
         }
@@ -316,42 +377,11 @@ function requestDatapointConfig (pid) {
         dataType: 'json',
     })
     .done(function (data) {
-        changed=storeDatapointConfig(pid, data);
+        changed=datapointStore.storeDatapointConfig(pid, data);
         if (changed == true) {
             sendDatapointConfigUpdate(pid);
         }
     })
-}
-
-function storeDatapointConfig (pid, data) {
-    doStore=false
-    if (!datapointStore._datapointConfig.hasOwnProperty(pid)) {
-        datapointStore._datapointConfig[pid]={}
-        $.each(data, function (key,value) {
-            datapointStore._datapointConfig[pid][key]=value
-        });
-        doStore=true
-    }
-    else {
-        $.each(data, function (key,value) {
-            if (!(datapointStore._datapointConfig[pid].hasOwnProperty(key) && datapointStore._datapointConfig[pid][key]==value)) {
-                doStore=true
-            }
-        });
-        if (doStore) {
-            datapointStore._datapointConfig[pid]=data
-        }
-    }
-    reqArray=$.grep(datapointStore.registeredRequests, function (e) {return e.pid == pid && e.requestType == 'requestDatapointConfig'})
-    if (reqArray.length == 1) {
-        reqArray[0].lastRequest=new Date();
-        if (doStore == false && reqArray[0].interval<1800000) {
-            reqArray[0].interval=parseInt(reqArray[0].interval*1.2)
-        } else if (doStore == true && reqArray[0].interval>300000) {
-            reqArray[0].interval=parseInt(reqArray[0].interval*0.8)
-        }
-    }
-    return doStore;
 }
 
 function sendDatapointConfigUpdate (pid) {
@@ -373,7 +403,7 @@ function processMsgLoadDatapointSlide (data) {
                 dataType: 'json',
             })
             .done(function (data) {
-                storeDatapointConfig(pid, data);
+                datapointStore.storeDatapointConfig(pid, data);
                 if (data.hasOwnProperty('wid')) {
                     PubSub.publish('loadSlide',{wid:data.wid})
                 }
@@ -414,3 +444,19 @@ function processMsgMarkPositiveVar (data) {
         })
     }
 }
+
+function processMsgDeleteDatapoint(msgData) {
+    if (msgData.hasOwnProperty('pid')) {
+        $.ajax({
+                url: '/etc/dp/'+msgData.pid,
+                dataType: 'json',
+                type: 'DELETE',
+            })
+            .then(function(data){
+                datapointStore.deleteLoopRequest(msgData.pid,'requestDatapointConfig')
+                datapointStore.deleteLoopRequest(msgData.pid,'requestDatapointData')
+            }, function(data){
+            });
+    }
+}
+

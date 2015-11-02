@@ -62,13 +62,15 @@ var ResourceGraph = React.createClass({
         navbar = $.map(this.state.selectedUri.split('.'), function (d,i) {
             if (d.length>0) {
                 uri=d
-                return <span key={i}><a onClick={function (event){event.preventDefault();this.segmentClicked(i)}.bind(this)}>{'.'+d}</a></span>
+                return <ReactBootstrap.BreadcrumbItem key={i} onClick={function (event){event.preventDefault();this.segmentClicked(i)}.bind(this)}>{d}</ReactBootstrap.BreadcrumbItem>
             }
         }.bind(this));
         return (<div>
                  <div>
-                    <span className="glyphicon glyphicon-home" onClick={function (event) {event.preventDefault();this.focusUri('')}.bind(this)}></span>
-                    <span draggable={this.state.navDraggable} onDragStart={this.onDragStartNavbar}>{navbar}</span>
+                    <ReactBootstrap.Glyphicon glyph="home" onClick={function (event){event.preventDefault();this.focusUri('')}.bind(this)} />
+                    <ReactBootstrap.Breadcrumb draggable={this.state.navDraggable} onDragStart={this.onDragStartNavbar}>
+                      {navbar}
+                    </ReactBootstrap.Breadcrumb>
                  </div>
                  <svg/>
                 </div>);

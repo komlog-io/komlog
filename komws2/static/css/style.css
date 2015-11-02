@@ -72,7 +72,7 @@ body {
 .sidebar-right {
   position: fixed;
   top: 51px;
-  bottom: 70px;
+  bottom: 30px;
   right: 0;
   z-index: 1000;
   display: block;
@@ -91,7 +91,7 @@ body {
   z-index: 1000;
   display: block;
   padding: 20px;
-  margin-bottom: 70px;
+  margin-bottom: 30px;
   overflow-x: hidden;
   overflow-y: scroll; /*Scrollable contents if viewport is shorter than content.*/
   /*border-left: 1px solid #eee;*/
@@ -126,28 +126,23 @@ body {
   position: fixed;
   bottom: 0;
   width: 100%;
-  height: 60px;
+  height: 20px;
 }
 
 .footer .motto {
   font-family: sans-serif;
   font-size: 11px;
-  vertical-align: bottom;
-}
-
-.form-inline .form-group input {
-  width: 700px;
 }
 
 /*
 *  Slides related styles
 */
 
-.SlideBarIcons {
+.SlideBarIcon {
     visibility: hidden;
 }
 
-.Slide:hover .SlideBarIcons {
+.Slide:hover .SlideBarIcon {
     visibility: visible;
 }
 
@@ -234,23 +229,20 @@ body {
 
 .userevents {
   list-style: none;
-  padding: 20px 0 20px;
+  padding: 10px 0 10px;
   position: relative;
 }
 
-.userevents:before {
-  top: 0;
-  bottom: 0;
+.update-panel {
   position: absolute;
-  content: " ";
-  width: 2px;
-  background-color: #ccc;
-  left: 25px;
-  margin-left: -1.5px;
+  padding: 0px 10px 0px 10px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
 }
 
 .userevents > li {
-  margin-bottom: 20px;
   position: relative;
 }
 .userevents > li:before,
@@ -261,39 +253,17 @@ body {
 .userevents > li:after {
   clear: both;
 }
-.userevents > li > .userevents-panel {
+.userevents > .userevents-panel {
   background-color: #fff;
-  width: calc( 100% - 75px );
+  width: calc( 100% - 15px );
   float: left;
   border: 1px solid #d4d4d4;
   border-radius: 5px;
-  padding: 20px;
   position: relative;
   -webkit-box-shadow: 0 1px 6px rgba(0, 0, 0, 0.175);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.175);
 }
-.userevents > li > .userevents-panel:before {
-  position: absolute;
-  top: 26px;
-  right: -15px;
-  display: inline-block;
-  border-top: 15px solid transparent;
-  border-left: 15px solid #ccc;
-  border-right: 0 solid #ccc;
-  border-bottom: 15px solid transparent;
-  content: " ";
-}
-.userevents > li > .userevents-panel:after {
-  position: absolute;
-  top: 27px;
-  right: -14px;
-  display: inline-block;
-  border-top: 14px solid transparent;
-  border-left: 14px solid #fff;
-  border-right: 0 solid #fff;
-  border-bottom: 14px solid transparent;
-  content: " ";
-}
+
 .userevents > li > .userevents-badge {
   color: #fff;
   width: 40px;
@@ -312,21 +282,6 @@ body {
   border-bottom-right-radius: 10%;
   border-bottom-left-radius: 10%;
 }
-.userevents > li.userevents-inverted > .userevents-panel {
-  float: right;
-}
-.userevents > li.userevents-inverted > .userevents-panel:before {
-  border-left-width: 0;
-  border-right-width: 15px;
-  left: -15px;
-  right: auto;
-}
-.userevents > li.userevents-inverted > .userevents-panel:after {
-  border-left-width: 0;
-  border-right-width: 14px;
-  left: -14px;
-  right: auto;
-}
 .userevents-badge.primary {
   background-color: #2e6da4 !important;
 }
@@ -342,16 +297,23 @@ body {
 .userevents-badge.info {
   background-color: #5bc0de !important;
 }
+
+.userevents-bar {
+  margin-top: 0;
+  color: inherit;
+  padding: 1px 10px 0px 10px;
+  color: #aaa;
+}
+
 .userevents-title {
   margin-top: 0;
   color: inherit;
+  padding: 10px 20px 10px 20px;
 }
-.userevents-body > p,
-.userevents-body > ul {
+
+.userevents-body {
   margin-bottom: 0;
-}
-.userevents-body > p + p {
-  margin-top: 5px;
+  padding: 0px 20px 10px 20px;
 }
 
 /* 
@@ -402,3 +364,19 @@ body {
   border-bottom-left-radius: 10%;
 }
 
+/* Modal Styling */
+
+.modal-container {
+  position: relative;
+  border-radius: 5px;
+}
+.modal-container .modal, .modal-container .modal-backdrop {
+  position: absolute;
+  border-radius: 5px;
+}
+
+.breadcrumb > li + li:before {
+  color: #000;
+  content: ".";
+  padding: 0px;
+}

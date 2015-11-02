@@ -157,7 +157,10 @@ def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None,
             if not args.is_valid_hex_uuid(cid):
                 raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_ICLE)
     wid=uuid.UUID(wid)
-    cid_uuid_list=[uuid.UUID(cid) for cid in cid_list] if cid_list else None
+    cid_uuid_list=[uuid.UUID(cid) for cid in cid_list] if cid_list else []
+    users_list=[user for user in user_list] if user_list else []
+    if len(cid_uuid_list+users_list)==0:
+        raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_ESL)
     if seq and args.is_valid_sequence(seq):
         interval_init=timeuuid.get_uuid1_from_custom_sequence(seq)
         interval_end=interval_init

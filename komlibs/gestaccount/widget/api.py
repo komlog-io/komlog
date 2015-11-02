@@ -180,7 +180,7 @@ def new_widget_table(uid, widgetname):
 def new_widget_multidp(uid, widgetname):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWMP_IU)
-    if not args.is_valid_uri(widgetname):
+    if not args.is_valid_widgetname(widgetname):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWMP_IWN)
     user=cassapiuser.get_user(uid=uid)
     if not user:

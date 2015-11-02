@@ -1,0 +1,1341 @@
+var Widget = React.createClass({
+    getInitialState: function () {
+        return {
+                conf:{},
+                shareCounter: 0,
+                showConfig: false, 
+                }
+    },
+    subscriptionTokens: {},
+    subscriptionHandler: function (msg,data) {
+        switch (msg) {
+            case 'widgetConfigUpdate-'+this.props.wid:
+                this.refreshConfig()
+                break;
+        }
+    },
+    componentWillMount: function () {
+        this.subscriptionTokens[this.props.wid]=[]
+        this.subscriptionTokens[this.props.wid].push({token:PubSub.subscribe('widgetConfigUpdate-'+this.props.wid, this.subscriptionHandler),msg:'widgetConfigUpdate-'+this.props.wid});
+    },
+    componentDidMount: function () {
+        PubSub.publish('widgetConfigReq',{wid:this.props.wid})
+    },
+    componentWillUnmount: function () {
+        $.map(this.subscriptionTokens[this.props.wid], function (d) {
+            PubSub.unsubscribe(d.token)
+            }.bind(this));
+        delete this.subscriptionTokens[this.props.wid];
+    },
+    configCallback: function() {
+        this.setState({showConfig:!this.state.showConfig})
+    },
+    shareCallback: function() {
+        this.setState({shareCounter:this.state.shareCounter+1})
+    },
+    closeCallback: function() {
+        this.props.closeCallback();
+    },
+    refreshConfig: function () {
+        if (widgetStore._widgetConfig.hasOwnProperty(this.props.wid)) {
+            widgetConfig=widgetStore._widgetConfig[this.props.wid]
+            shouldUpdate=false
+            $.each(widgetConfig, function (key,value) {
+                if (!(this.state.conf.hasOwnProperty(key) && this.state.conf[key]==value)) {
+                    shouldUpdate=true
+                }
+            }.bind(this));
+            if (shouldUpdate) {
+                this.setState({conf:widgetConfig})
+            }
+        }
+    },
+    getWidgetContentEl: function () {
+        if ($.isEmptyObject(this.state.conf)) {
+            return null
+        } else {
+            switch (this.state.conf.type) {
+                case 'ds':
+                    return (
+                      <WidgetDs wid={this.props.wid} did={this.state.conf.did} shareCounter={this.state.shareCounter}/>
+                      );
+                    break;
+                case 'dp':
+                    return (
+                      <WidgetDp wid={this.props.wid} pid={this.state.conf.pid} shareCounter={this.state.shareCounter}/>
+                      );
+                    break;
+                case 'mp':
+                    return (
+                      <WidgetMp wid={this.props.wid} datapoints={this.state.conf.datapoints} view={this.state.conf.view} shareCounter={this.state.shareCounter}/>
+                      );
+                    break;
+                default:
+                    return null;
+                    break;
+            }
+        }
+    },
+    getWidgetConfigEl: function () {
+        if ($.isEmptyObject(this.state.conf)) {
+            return null
+        } else {
+            switch (this.state.conf.type) {
+                case 'ds':
+                    return (
+                          <WidgetConfigDs showConfig={this.state.showConfig} closeCallback={this.closeCallback} configCallback={this.configCallback} wid={this.props.wid} did={this.state.conf.did} />
+                      );
+                    break;
+                case 'dp':
+                    return (
+                          <WidgetConfigDp showConfig={this.state.showConfig} closeCallback={this.closeCallback} configCallback={this.configCallback} wid={this.props.wid} pid={this.state.conf.pid} />
+                      );
+                    break;
+                case 'mp':
+                    return (
+                          <WidgetConfigMp showConfig={this.state.showConfig} closeCallback={this.closeCallback} configCallback={this.configCallback} wid={this.props.wid} datapoints={this.state.conf.datapoints} widgetname={this.state.conf.widgetname} />
+                      );
+                    break;
+                default:
+                    return null;
+                    break;
+            }
+        }
+    },
+    render: function() {
+        widget_content=this.getWidgetContentEl();
+        widget_config=this.getWidgetConfigEl();
+        if ($.isEmptyObject(this.state.conf)) {
+            conf={widgetname: "Loading..."}
+            widget=(
+            <div className="panel panel-default">
+              <WidgetBar conf={conf} closeCallback={this.closeCallback}/>
+            </div>
+            );
+        } else {
+            widget=(
+            <div className="panel panel-default">
+                <WidgetBar conf={this.state.conf} shareCallback={this.shareCallback} closeCallback={this.closeCallback} configCallback={this.configCallback}/>
+                {widget_config}
+                {widget_content}
+            </div>
+            );
+        }
+        return widget
+    },
+});
+
+var WidgetBar = React.createClass({
+    getInitialState: function () {
+        return {config_menu:false,
+                }
+    },
+    configClick: function() {
+        this.props.configCallback()
+    },
+    shareClick: function () {
+        this.props.shareCallback()
+    },
+    closeClick: function () {
+        this.props.closeCallback()
+    },
+    styles: {
+        barstyle: {
+        },
+        namestyle: {
+            textAlign: 'left',
+            width: '100%',
+            fontWeight: 'bold',
+        },
+        righticonstyle: {
+            textShadow: '1px 1px 5px 1px #ccc',
+            align: 'right',
+            float: 'right',
+            height: '20px',
+            padding: '5px',
+            color: '#aaa',
+        },
+        lefticonstyle: {
+            textShadow: '1px 1px 5px 1px #ccc',
+            align: 'left',
+            float: 'left',
+            height: '20px',
+            padding: '5px',
+            color: '#aaa',
+        },
+    },
+    getInitialState: function() {
+        return {};
+    },
+    render: function() {
+        return (
+            <div className="SlideBar panel-heading" style={this.styles.barstyle}>
+              <span className="SlideBarIcon glyphicon glyphicon-remove" style={this.styles.righticonstyle} onClick={this.closeClick}></span>
+              <span className="SlideBarIcon glyphicon glyphicon-send" style={this.styles.righticonstyle} onClick={this.shareClick}></span>
+              <span className="SlideBarIcon glyphicon glyphicon-cog" style={this.styles.lefticonstyle} onClick={this.configClick}></span>
+              <div className="SlideBarName" style={this.styles.namestyle} >
+                <span>{this.props.conf.widgetname}</span>
+              </div>
+            </div>
+        );
+    }
+});
+
+var WidgetConfigDs = React.createClass({
+    getInitialState: function () {
+        return {
+                datasourcename: '',
+                deleteModal: false,
+                }
+    },
+    subscriptionTokens: {},
+    subscriptionHandler: function (msg,data) {
+        switch (msg) {
+            case 'datasourceConfigUpdate-'+this.props.did:
+                this.refreshConfig();
+                break;
+        }
+    },
+    componentWillMount: function () {
+        this.subscriptionTokens['cfg-'+this.props.wid]=[]
+        this.subscriptionTokens['cfg-'+this.props.wid].push({token:PubSub.subscribe('datasourceConfigUpdate-'+this.props.did, this.subscriptionHandler),msg:'datasourceConfigUpdate-'+this.props.did});
+    },
+    componentDidMount: function () {
+        PubSub.publish('datasourceConfigReq',{did:this.props.did})
+    },
+    componentWillUnmount: function () {
+        $.map(this.subscriptionTokens['cfg-'+this.props.wid], function (d) {
+            PubSub.unsubscribe(d.token)
+            }.bind(this));
+        delete this.subscriptionTokens['cfg-'+this.props.wid];
+    },
+    refreshConfig: function () {
+        datasourceConfig=datasourceStore._datasourceConfig[this.props.did]
+        if (this.state.datasourcename != datasourceConfig.datasourcename) {
+            this.setState({datasourcename:datasourceConfig.datasourcename})
+        }
+    },
+    deleteWidget: function () {
+        this.setState({deleteModal: true})
+    },
+    cancelDelete: function () {
+        this.setState({deleteModal: false})
+    },
+    confirmDelete: function () {
+        PubSub.publish('deleteDatasource',{did:this.props.did})
+        this.setState({deleteModal: false})
+        this.props.closeCallback()
+    },
+    render: function () {
+        delete_modal=(
+            <ReactBootstrap.Modal show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
+              <ReactBootstrap.Modal.Header closeButton>
+                <ReactBootstrap.Modal.Title id="contained-modal-title">Delete Datasource</ReactBootstrap.Modal.Title>
+              </ReactBootstrap.Modal.Header>
+              <ReactBootstrap.Modal.Body>
+                Datasource {this.state.datasourcename} will be deleted, with all its datapoints.
+                <strong> Are You sure? </strong>
+              </ReactBootstrap.Modal.Body>
+              <ReactBootstrap.Modal.Footer>
+                <ReactBootstrap.Button bsStyle="default" onClick={this.cancelDelete}>Cancel</ReactBootstrap.Button>
+                <ReactBootstrap.Button bsStyle="primary" onClick={this.confirmDelete}>Delete</ReactBootstrap.Button>
+              </ReactBootstrap.Modal.Footer>
+            </ReactBootstrap.Modal>
+        );
+        return (
+              <ReactBootstrap.Collapse in={this.props.showConfig}>
+                <div>
+                  <ReactBootstrap.Well>
+                    <ReactBootstrap.Button className="pull-right" bsSize="small" bsStyle="danger" onClick={this.deleteWidget}>Delete</ReactBootstrap.Button>
+                    <strong>Delete Datasource</strong>
+                  </ReactBootstrap.Well>
+                  {delete_modal}
+                </div>
+              </ReactBootstrap.Collapse>
+              );
+    }
+});
+
+var WidgetConfigDp = React.createClass({
+    getInitialState: function () {
+        return {
+                datapointname: '',
+                deleteModal: false,
+                }
+    },
+    subscriptionTokens: {},
+    subscriptionHandler: function (msg,data) {
+        switch (msg) {
+            case 'datapointConfigUpdate-'+this.props.pid:
+                this.refreshConfig();
+                break;
+        }
+    },
+    componentWillMount: function () {
+        this.subscriptionTokens['cfg-'+this.props.wid]=[]
+        this.subscriptionTokens['cfg-'+this.props.wid].push({token:PubSub.subscribe('datapointConfigUpdate-'+this.props.pid, this.subscriptionHandler),msg:'datapointConfigUpdate-'+this.props.pid});
+    },
+    componentDidMount: function () {
+        PubSub.publish('datapointConfigReq',{pid:this.props.pid})
+    },
+    componentWillUnmount: function () {
+        $.map(this.subscriptionTokens['cfg-'+this.props.wid], function (d) {
+            PubSub.unsubscribe(d.token)
+            }.bind(this));
+        delete this.subscriptionTokens['cfg-'+this.props.wid];
+    },
+    refreshConfig: function () {
+        datapointConfig=datapointStore._datapointConfig[this.props.pid]
+        if (this.state.datapointname != datapointConfig.datapointname) {
+            this.setState({datapointname:datapointConfig.datapointname})
+        }
+    },
+    deleteWidget: function () {
+        this.setState({deleteModal: true})
+    },
+    cancelDelete: function () {
+        this.setState({deleteModal: false})
+    },
+    confirmDelete: function () {
+        PubSub.publish('deleteDatapoint',{pid:this.props.pid})
+        this.setState({deleteModal: false})
+        this.props.closeCallback()
+    },
+    render: function () {
+        delete_modal=(
+            <ReactBootstrap.Modal show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
+              <ReactBootstrap.Modal.Header closeButton>
+                <ReactBootstrap.Modal.Title id="contained-modal-title">Delete Datapoint</ReactBootstrap.Modal.Title>
+              </ReactBootstrap.Modal.Header>
+              <ReactBootstrap.Modal.Body>
+                Datapoint {this.state.datapointname} will be deleted.
+                <strong> Are You sure? </strong>
+              </ReactBootstrap.Modal.Body>
+              <ReactBootstrap.Modal.Footer>
+                <ReactBootstrap.Button bsStyle="default" onClick={this.cancelDelete}>Cancel</ReactBootstrap.Button>
+                <ReactBootstrap.Button bsStyle="primary" onClick={this.confirmDelete}>Delete</ReactBootstrap.Button>
+              </ReactBootstrap.Modal.Footer>
+            </ReactBootstrap.Modal>
+        );
+        return (
+              <ReactBootstrap.Collapse in={this.props.showConfig}>
+                <div>
+                  <ReactBootstrap.Well>
+                    <ReactBootstrap.Button className="pull-right" bsSize="small" bsStyle="danger" onClick={this.deleteWidget}>Delete</ReactBootstrap.Button>
+                    <strong>Delete Datapoint</strong>
+                  </ReactBootstrap.Well>
+                  {delete_modal}
+                </div>
+              </ReactBootstrap.Collapse>
+              );
+    }
+});
+
+var WidgetConfigMp = React.createClass({
+    getInitialState: function () {
+        return {
+                deleteModal: false,
+                }
+    },
+    subscriptionTokens: {},
+    subscriptionHandler: function (msg,data) {
+        switch (msg) {
+            case 'datapointConfigUpdate-'+this.props.pid:
+                this.refreshConfig();
+                break;
+        }
+    },
+    componentWillMount: function () {
+        this.subscriptionTokens['cfg-'+this.props.wid]=[]
+        this.subscriptionTokens['cfg-'+this.props.wid].push({token:PubSub.subscribe('intervalUpdate-'+this.props.wid, this.subscriptionHandler),msg:'intervalUpdate-'+this.props.wid});
+        for (var i=0;i<this.props.datapoints.length;i++) {
+            this.subscriptionTokens['cfg-'+this.props.wid].push({token:PubSub.subscribe('datapointDataUpdate-'+this.props.datapoints[i], this.subscriptionHandler),msg:'datapointDataUpdate-'+this.props.datapoints[i]});
+            this.subscriptionTokens['cfg-'+this.props.wid].push({token:PubSub.subscribe('datapointConfigUpdate-'+this.props.datapoints[i], this.subscriptionHandler),msg:'datapointConfigUpdate-'+this.props.datapoints[i]});
+        }
+    },
+    componentWillUnmount: function () {
+        $.map(this.subscriptionTokens['cfg-'+this.props.wid], function (d) {
+            PubSub.unsubscribe(d.token)
+            });
+        delete this.subscriptionTokens['cfg-'+this.props.wid];
+    },
+    componentDidMount: function () {
+        for (var i=0;i<this.props.datapoints.length;i++) {
+            PubSub.publish('datapointConfigReq',{pid:this.props.datapoints[i]})
+        }
+    },
+    refreshConfig: function () {
+            datasourceConfig=datasourceStore._datasourceConfig[this.props.did]
+            if (datasourceConfig.hasOwnProperty('pids')) {
+                for (var i=0;i<datasourceConfig.pids.length;i++) {
+                    pid=datasourceConfig.pids[i]
+                    if (!datapointStore._datapointConfig.hasOwnProperty(pid)) {
+                        PubSub.publish('datapointConfigReq',{pid:pid})
+                    }
+                }
+            }
+            shouldUpdate=false
+            if (this.state.datasourcename != datasourceConfig.datasourcename) {
+                shouldUpdate = true
+            }
+            if (shouldUpdate) {
+                this.setState({datasourcename:datasourceConfig.datasourcename})
+            }
+    },
+    updateConfig: function () {
+        new_widgetname=this.refs.widgetname.getValue();
+        if (new_widgetname.length>0 && new_widgetname!=this.props.widgetname) {
+            PubSub.publish('modifyWidget',{wid:this.props.wid, new_widgetname:new_widgetname})
+            this.props.configCallback()
+        }
+    },
+    deleteWidget: function () {
+        this.setState({deleteModal: true})
+    },
+    cancelDelete: function () {
+        this.setState({deleteModal: false})
+    },
+    confirmDelete: function () {
+        PubSub.publish('deleteWidget',{wid:this.props.wid})
+        this.setState({deleteModal: false})
+        this.props.closeCallback()
+    },
+    render: function () {
+        delete_modal=(
+            <ReactBootstrap.Modal show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
+              <ReactBootstrap.Modal.Header closeButton>
+                <ReactBootstrap.Modal.Title id="contained-modal-title">Delete Graph</ReactBootstrap.Modal.Title>
+              </ReactBootstrap.Modal.Header>
+              <ReactBootstrap.Modal.Body>
+                Graph {this.props.widgetname} will be deleted,<strong> are You sure?</strong>
+              </ReactBootstrap.Modal.Body>
+              <ReactBootstrap.Modal.Footer>
+                <ReactBootstrap.Button bsStyle="default" onClick={this.cancelDelete}>Cancel</ReactBootstrap.Button>
+                <ReactBootstrap.Button bsStyle="primary" onClick={this.confirmDelete}>Delete</ReactBootstrap.Button>
+              </ReactBootstrap.Modal.Footer>
+            </ReactBootstrap.Modal>
+        );
+        return (
+              <ReactBootstrap.Collapse in={this.props.showConfig}>
+                <div>
+                  <ReactBootstrap.Well>
+                    <ReactBootstrap.ListGroup >
+                    <ReactBootstrap.ListGroupItem bsSize="small" >
+                    <form className="form-horizontal">
+                      <ReactBootstrap.Input ref="widgetname" placeholder={this.props.widgetname} bsSize="small" type="text" label="Graph Name" labelClassName="col-xs-3" wrapperClassName="col-xs-6" />
+                      <div className="text-right">
+                        <ReactBootstrap.Button bsSize="small" bsStyle="primary" onClick={this.updateConfig}>Update</ReactBootstrap.Button>
+                      </div>
+                    </form>
+                    </ReactBootstrap.ListGroupItem>
+                    <ReactBootstrap.ListGroupItem bsSize="xsmall" >
+                    <strong>Delete Graph</strong>
+                    <div className="text-right">
+                      <ReactBootstrap.Button bsSize="small" bsStyle="danger" onClick={this.deleteWidget}>Delete</ReactBootstrap.Button>
+                    </div>
+                    </ReactBootstrap.ListGroupItem>
+                    </ReactBootstrap.ListGroup>
+                  </ReactBootstrap.Well>
+                  {delete_modal}
+                </div>
+              </ReactBootstrap.Collapse>
+              );
+    }
+});
+
+var WidgetDs = React.createClass({
+    styles: {
+        infostyle: {
+            float: 'right',
+        },
+        timestyle: {
+            color: 'green',
+        }
+    },
+    getInitialState: function () {
+        return {dsData: undefined,
+                datasourcename: '',
+                timestamp:0,
+                seq:undefined,
+                snapshotTimestamp:0,
+                snapshotSeq:undefined,
+                shareModal:false,
+                shareCounter:this.props.shareCounter,
+                }
+    },
+    subscriptionTokens: {},
+    onClickDatapoint: function(pid,e) {
+        e.preventDefault();
+        PubSub.publish('loadSlide',{pid:pid})
+    },
+    onDragStartDatapoint: function (pid,e) {
+        console.log('dragstartnavbar')
+        e.stopPropagation()
+        e.dataTransfer.setData('id',pid)
+    },
+    subscriptionHandler: function (msg,data) {
+        switch (msg) {
+            case 'datasourceDataUpdate-'+this.props.did:
+                this.refreshData()
+                break;
+            case 'datasourceConfigUpdate-'+this.props.did:
+                this.refreshConfig()
+                break;
+        }
+    },
+    componentWillMount: function () {
+        this.subscriptionTokens[this.props.wid]=[]
+        this.subscriptionTokens[this.props.wid].push({token:PubSub.subscribe('datasourceDataUpdate-'+this.props.did, this.subscriptionHandler),msg:'datasourceDataUpdate-'+this.props.did});
+        this.subscriptionTokens[this.props.wid].push({token:PubSub.subscribe('datasourceConfigUpdate-'+this.props.did, this.subscriptionHandler),msg:'datasourceConfigUpdate-'+this.props.did});
+    },
+    componentDidMount: function () {
+        PubSub.publish('datasourceDataReq',{did:this.props.did})
+        PubSub.publish('datasourceConfigReq',{did:this.props.did})
+    },
+    componentWillUnmount: function () {
+        $.map(this.subscriptionTokens[this.props.wid], function (d) {
+            PubSub.unsubscribe(d.token)
+            }.bind(this));
+        delete this.subscriptionTokens[this.props.wid];
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.shareCounter>this.state.shareCounter) {
+            this.setState({shareModal:true,shareCounter:nextProps.shareCounter,snapshotTimestamp:this.state.timestamp,snapshotSeq:this.state.seq});
+        }
+    },
+    refreshData: function () {
+        if (datasourceStore._datasourceData.hasOwnProperty(this.props.did)) {
+            datasourceData=datasourceStore._datasourceData[this.props.did]
+            if (datasourceData.hasOwnProperty('datapoints')) {
+                for (var i=0;i<datasourceData.datapoints.length;i++) {
+                    pid=datasourceData.datapoints[i].pid
+                    if (!datapointStore._datapointConfig.hasOwnProperty(pid)) {
+                        PubSub.publish('datapointConfigReq',{pid:pid})
+                    }
+                }
+            }
+            if (!this.state.dsData) {
+                this.setState({dsData:datasourceData, timestamp:datasourceData.ts,seq:datasourceData.seq})
+            } else if (this.state.timestamp < datasourceData.ts) {
+                this.setState({dsData:datasourceData, timestamp:datasourceData.ts,seq:datasourceData.seq})
+            }
+        }
+    },
+    refreshConfig: function () {
+        if (datasourceStore._datasourceConfig.hasOwnProperty(this.props.did)) {
+            datasourceConfig=datasourceStore._datasourceConfig[this.props.did]
+            if (datasourceConfig.hasOwnProperty('pids')) {
+                for (var i=0;i<datasourceConfig.pids.length;i++) {
+                    pid=datasourceConfig.pids[i]
+                    if (!datapointStore._datapointConfig.hasOwnProperty(pid)) {
+                        PubSub.publish('datapointConfigReq',{pid:pid})
+                    }
+                }
+            }
+            shouldUpdate=false
+            if (this.state.datasourcename != datasourceConfig.datasourcename) {
+                shouldUpdate = true
+            }
+            if (shouldUpdate) {
+                this.setState({datasourcename:datasourceConfig.datasourcename})
+            }
+        }
+    },
+    generateDateString: function (timestamp) {
+        if (typeof timestamp === 'number') {
+            var date = new Date(timestamp*1000);
+            var hours = date.getHours();
+            var minutes = "0" + date.getMinutes();
+            var seconds = "0" + date.getSeconds();
+            return hours + ':' + minutes.substr(minutes.length-2) + ':' + seconds.substr(seconds.length-2);
+        } else {
+            return ''
+        }
+    },
+    generateHtmlContent: function (dsData) {
+        var elements=[]
+        if (!dsData) {
+            return elements
+        }
+        var numElement = 0
+        var cursorPosition=0
+        newLineRegex=/(?:\r\n|\r|\n)/g
+        datasourcePids=[]
+        if (datasourceStore._datasourceConfig.hasOwnProperty(this.props.did)) {
+            datasourceConfig=datasourceStore._datasourceConfig[this.props.did]
+            if (datasourceConfig.hasOwnProperty('pids')) {
+                for (var i=0;i<datasourceConfig.pids.length;i++) {
+                    if (datapointStore._datapointConfig.hasOwnProperty(datasourceConfig.pids[i])) {
+                        datapointname=datapointStore._datapointConfig[datasourceConfig.pids[i]].datapointname
+                        datasourcePids.push({pid:datasourceConfig.pids[i],datapointname:datapointname})
+                    }
+                }
+            }
+        }
+        datasourcePids.sort( function (a,b) {
+            nameA=a.datapointname.toLowerCase();
+            nameB=b.datapointname.toLowerCase();
+            return ((nameA < nameB) ? -1 : ((nameA > nameB) ? 1 : 0));
+        });
+        for (var i=0;i<dsData.variables.length;i++) {
+            position=dsData.variables[i][0]
+            length=dsData.variables[i][1]
+            dsSubContent=dsData.content.substr(cursorPosition,position-cursorPosition)
+            start=0
+            while((match=newLineRegex.exec(dsSubContent)) != null) {
+                text=dsSubContent.substr(start,match.index-start).replace(/ /g, '\u00a0');
+                elements.push({ne:numElement++,type:'text',data:text});
+                elements.push({ne:numElement++,type:'nl'});
+                start=match.index+match.length-1
+            }
+            if (start<position) {
+                text=dsSubContent.substr(start,position-start).replace(/ /g, '\u00a0');
+                elements.push({ne:numElement++,type:'text',data:text});
+            }
+            datapointFound=false;
+            for (var j=0;j<dsData.datapoints.length;j++) {
+                if (dsData.datapoints[j].index == dsData.variables[i][0]) {
+                    text=dsData.content.substr(position,length)
+                    if (datapointStore._datapointConfig.hasOwnProperty(dsData.datapoints[j].pid)) {
+                        color=datapointStore._datapointConfig[dsData.datapoints[j].pid].color
+                        datapointname=datapointStore._datapointConfig[dsData.datapoints[j].pid].datapointname
+                        classname='datapoint'
+                    } else {
+                        color='black'
+                        datapointname=''
+                        classname=''
+                    }
+                    elements.push({ne:numElement++,type:'datapoint',pid:dsData.datapoints[j].pid,p:position,l:length,style:{color:color},data:text,datapointname:datapointname,classname:classname})
+                    datapointFound=true
+                    break;
+                }
+            }
+            if (datapointFound == false) {
+                text=dsData.content.substr(position,length)
+                elements.push({ne:numElement++, type:'variable',data:text,position:position,length:length,datapoints:datasourcePids})
+            } else {
+                datapointFound = false
+            }
+            cursorPosition=position+length
+        }
+        if (cursorPosition<dsData.content.length) {
+            dsSubContent=dsData.content.substr(cursorPosition,dsData.content.length-cursorPosition)
+            start=0
+            while((match=newLineRegex.exec(dsSubContent)) != null) {
+                text=dsSubContent.substr(start,match.index-start).replace(/ /g, '\u00a0');
+                elements.push({ne:numElement++,type:'text',data:text});
+                elements.push({ne:numElement++,type:'nl'});
+                start=match.index+match.length-1
+            }
+            if (start<dsSubContent.length-1) {
+                text=dsSubContent.substr(start,dsSubContent.length-1-start).replace(/ /g, '\u00a0');
+                elements.push({ne:numElement++,type:'text',data:text});
+            }
+        }
+        return elements
+    },
+    cancelSnapshot: function () {
+        this.setState({shareModal:false})
+    },
+    shareSnapshot: function () {
+        user_list=this.refs.users.getValue().split(/[\s,]+/);
+        console.log('seq to share',this.state.snapshotSeq);
+        console.log('user list',user_list);
+        PubSub.publish('newWidgetDsSnapshot',{seq:this.state.snapshotSeq,user_list:user_list,wid:this.props.wid})
+        this.setState({shareModal:false})
+    },
+    identifyVariable: function (position, length, datapointname) {
+        console.log('quieren monitorizar ',position,length,datapointname)
+        data={p:position,l:length,seq:this.state.seq,did:this.props.did,datapointname:datapointname}
+        PubSub.publish('monitorDatapoint',data)
+    },
+    associateExistingDatapoint: function (position, length, pid) {
+        data={p:position,l:length,seq:this.state.seq,pid:pid}
+        PubSub.publish('markPositiveVar',data)
+    },
+    render: function () {
+        elements=this.generateHtmlContent(this.state.dsData)
+        var element_nodes=$.map(elements, function (element) {
+            if (element.type == 'text') {
+                return (<span key={element.ne}>{element.data}</span>);
+            }else if (element.type == 'nl') {
+                return (<br key={element.ne} />);
+            }else if (element.type == 'datapoint') {
+                if (element.classname=='datapoint') { 
+                    tooltip=(
+                      <ReactBootstrap.Tooltip>{element.datapointname}</ReactBootstrap.Tooltip>
+                      );
+                    return (
+                        <ReactBootstrap.OverlayTrigger placement="top" overlay={tooltip}>
+                          <span key={element.ne} style={element.style} draggable='true' onClick={this.onClickDatapoint.bind(null,element.pid)} onDragStart={this.onDragStartDatapoint.bind(null,element.pid)}>{element.data}</span>
+                        </ReactBootstrap.OverlayTrigger>
+                      );
+                } else {
+                    return (<span key={element.ne} style={element.style} draggable='true' onClick={this.onClickDatapoint.bind(null,element.pid)} onDragStart={this.onDragStartDatapoint.bind(null,element.pid)}>{element.data}</span>);
+                }
+            }else if (element.type == 'variable') {
+                return (<WidgetDsVariable key={element.ne} content={element.data} position={element.position} length={element.length} identifyVariableCallback={this.identifyVariable} datapoints={element.datapoints} associateExistingDatapointCallback={this.associateExistingDatapoint}/>
+                    );
+            }
+        }.bind(this));
+        if (typeof this.state.timestamp === 'number') {
+            info_node=(
+                <div style={this.styles.infostyle}>
+                <ReactBootstrap.Glyphicon glyph="time" />
+                <span style={this.styles.timestyle}> {this.generateDateString(this.state.timestamp)}</span>
+                </div>
+                );
+        } else {
+            info_node=(
+                <div style={this.styles.infostyle} />
+                );
+        }
+        share_modal=(
+            <ReactBootstrap.Modal show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
+              <ReactBootstrap.Modal.Header closeButton>
+                <ReactBootstrap.Modal.Title id="contained-modal-title">Share datasource status at {this.generateDateString(this.state.snapshotTimestamp)}</ReactBootstrap.Modal.Title>
+              </ReactBootstrap.Modal.Header>
+              <ReactBootstrap.Modal.Body>
+                <ReactBootstrap.Input ref="users" type="textarea" label="Select Users" placeholder="type users separated by comma" />
+              </ReactBootstrap.Modal.Body>
+              <ReactBootstrap.Modal.Footer>
+                <ReactBootstrap.Button bsStyle="default" onClick={this.cancelSnapshot}>Cancel</ReactBootstrap.Button>
+                <ReactBootstrap.Button bsStyle="primary" onClick={this.shareSnapshot}>Share</ReactBootstrap.Button>
+              </ReactBootstrap.Modal.Footer>
+            </ReactBootstrap.Modal>
+        );
+        return (<div>
+                  {info_node}
+                  <div>
+                    {element_nodes}
+                  </div>
+                  <div>
+                    {share_modal}
+                  </div>
+                </div>
+                );
+    }
+});
+
+var WidgetDp = React.createClass({
+    styles: {
+    },
+    getInitialState: function () {
+        return {
+                interval: {its:undefined,ets:undefined},
+                color: '',
+                datapointname: '',
+                data: [],
+                summary: {},
+                live: true,
+                shareModal:false,
+                shareCounter:this.props.shareCounter,
+                snapshotInterval: undefined,
+                livePrevious: true,
+        }
+    },
+    subscriptionTokens: {},
+    componentWillMount: function () {
+        this.subscriptionTokens[this.props.wid]=[]
+        this.subscriptionTokens[this.props.wid].push({token:PubSub.subscribe('intervalUpdate-'+this.props.wid, this.subscriptionHandler),msg:'intervalUpdate-'+this.props.wid});
+        this.subscriptionTokens[this.props.wid].push({token:PubSub.subscribe('datapointDataUpdate-'+this.props.pid, this.subscriptionHandler),msg:'datapointDataUpdate-'+this.props.pid});
+        this.subscriptionTokens[this.props.wid].push({token:PubSub.subscribe('datapointConfigUpdate-'+this.props.pid, this.subscriptionHandler),msg:'datapointConfigUpdate-'+this.props.pid});
+    },
+    componentDidMount: function () {
+        PubSub.publish('datapointConfigReq',{pid:this.props.pid})
+        PubSub.publish('datapointDataReq',{pid:this.props.pid})
+    },
+    componentWillUnmount: function () {
+        $.map(this.subscriptionTokens[this.props.wid], function (d) {
+            PubSub.unsubscribe(d.token)
+            }.bind(this));
+        delete this.subscriptionTokens[this.props.wid];
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.shareCounter>this.state.shareCounter) {
+            this.setState({shareModal:true,shareCounter:nextProps.shareCounter, snapshotInterval:this.state.interval, livePrevious:this.state.live, live: false});
+        }
+    },
+    newIntervalCallback: function (interval) {
+        now=new Date().getTime()/1000;
+        if (interval.hasOwnProperty('its') && interval.hasOwnProperty('ets')) {
+            if (interval.its == interval.ets) {
+                interval.its=interval.ets-3600
+            }
+            if (Math.abs(this.state.interval.ets-interval.ets)>1) {
+                if (interval.ets < now-30) {
+                    this.state.live = false;
+                } else {
+                    this.state.live = true;
+                }
+            }
+            if (interval.ets > now) {
+                interval.ets = now
+            }
+            PubSub.publish('datapointDataReq',{pid:this.props.pid,interval:interval})
+            this.refreshData(interval);
+        }
+    },
+    snapshotIntervalCallback: function (interval) {
+        now=new Date().getTime()/1000;
+        if (interval.hasOwnProperty('its') && interval.hasOwnProperty('ets')) {
+            if (interval.its == interval.ets) {
+                interval.its=interval.ets-3600
+            }
+            if (interval.ets > now) {
+                interval.ets = now
+            }
+            this.setState({snapshotInterval:interval})
+        }
+    },
+    subscriptionHandler: function (msg,data) {
+        switch (msg) {
+            case 'datapointDataUpdate-'+this.props.pid:
+                if (this.state.interval.its == undefined || this.state.interval.ets == undefined) {
+                    this.refreshData(data.interval);
+                } else if (this.state.live == true && data.interval.ets > this.state.interval.ets) {
+                        elapsedTs=data.interval.ets-this.state.interval.ets
+                        newInterval={its:this.state.interval.its+elapsedTs, ets: data.interval.ets}
+                        this.refreshData(newInterval)
+                } else if ((this.state.interval.its <= data.interval.its && data.interval.its <= this.state.interval.ets) ||
+                           (this.state.interval.its <= data.interval.ets && data.interval.ets <= this.state.interval.ets)) {
+                    this.refreshData(this.state.interval)
+                }
+                break;
+            case 'datapointConfigUpdate-'+this.props.pid:
+                this.refreshConfig()
+                break;
+            case 'intervalUpdate-'+this.props.wid:
+                this.newIntervalCallback(data.interval)
+                break;
+        }
+    },
+    refreshConfig: function () {
+        if (datapointStore._datapointConfig.hasOwnProperty(this.props.pid)) {
+            datapointConfig=datapointStore._datapointConfig[this.props.pid]
+            shouldUpdate=false
+            if (this.state.datapointname != datapointConfig.datapointname) {
+                shouldUpdate = true
+            }
+            if (this.state.color != datapointConfig.color) {
+                shouldUpdate = true
+            }
+            if (shouldUpdate) {
+                this.setState({datapointname:datapointConfig.datapointname,color:datapointConfig.color})
+            }
+        }
+    },
+    refreshData: function (interval) {
+        newData=getIntervalData(this.props.pid, interval)
+        newSummary=this.getDataSummary(newData)
+        this.setState({interval: interval, data: newData, summary:newSummary});
+    },
+    getDataSummary: function(data) {
+        totalSamples=data.length;
+        if (totalSamples>0) {
+            maxValue=Math.max.apply(Math,data.map(function(o){return o.value;}));
+            minValue=Math.min.apply(Math,data.map(function(o){return o.value;}));
+            sumValues=0;
+            meanValue=0;
+            for (var j=0;j<data.length;j++) {
+                sumValues+=data[j].value;
+            }
+            if (totalSamples>0) {
+                meanValue=sumValues/totalSamples;
+            }
+            if ((maxValue % 1) != 0 || (minValue % 1) != 0) {
+                if (typeof maxValue % 1 == 'number' && maxValue % 1 != 0) {
+                    numDecimalsMaxValue=maxValue.toString().split('.')[1].length
+                } else {
+                    numDecimalsMaxValue=2
+                }
+                if (typeof minValue % 1 == 'number' && minValue % 1 != 0) {
+                    numDecimalsMinValue=minValue.toString().split('.')[1].length
+                } else {
+                    numDecimalsMinValue=2
+                }
+                numDecimals=Math.max(numDecimalsMaxValue,numDecimalsMinValue)
+            } else {
+                numDecimals=2
+            }
+            meanValue=meanValue.toFixed(numDecimals)
+            summary={'max':maxValue,'min':minValue,'datapointname':this.state.datapointname,'mean':meanValue}
+        } else {
+            summary={'max':0,'min':0,'datapointname':this.state.datapointname,'mean':0}
+        }
+        return summary
+    },
+    cancelSnapshot: function () {
+        this.setState({shareModal:false, live: this.state.livePrevious})
+    },
+    shareSnapshot: function () {
+        user_list=this.refs.users.getValue().split(/[\s,]+/);
+        PubSub.publish('newWidgetDpSnapshot',{interval:this.state.snapshotInterval,user_list:user_list,wid:this.props.wid})
+        this.setState({shareModal:false, live: this.state.livePrevious})
+    },
+    render: function () {
+        if (this.state.summary.hasOwnProperty('datapointname')){
+            var summary=(<tr>
+                            <td>{this.state.summary.datapointname}</td>
+                            <td>{this.state.summary.max}</td>
+                            <td>{this.state.summary.min}</td>
+                            <td>{this.state.summary.mean}</td>
+                        </tr>
+                        );
+        } else {
+            var summary=(<tr>
+                            <td/>
+                            <td/>
+                            <td/>
+                            <td/>
+                        </tr>
+                        );
+        }
+        var data=[{pid:this.props.pid,color:this.state.color,datapointname:this.state.datapointname,data:this.state.data}]
+        share_modal=(
+            <ReactBootstrap.Modal show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
+              <ReactBootstrap.Modal.Header closeButton>
+                <ReactBootstrap.Modal.Title id="contained-modal-title">Share datapoint interval</ReactBootstrap.Modal.Title>
+              </ReactBootstrap.Modal.Header>
+              <ReactBootstrap.Modal.Body>
+                <div className="row" >
+                  <div className="col-md-6">
+                    <ReactBootstrap.Input ref="users" type="textarea" label="Select Users" placeholder="type users separated by comma" />
+                  </div>
+                  <div className="col-md-6">
+                    <strong>Date Interval</strong>
+                    <TimeSlider interval={this.state.snapshotInterval} newIntervalCallback={this.snapshotIntervalCallback} />
+                  </div>
+                </div>
+              </ReactBootstrap.Modal.Body>
+              <ReactBootstrap.Modal.Footer>
+                <ReactBootstrap.Button bsStyle="default" onClick={this.cancelSnapshot}>Cancel</ReactBootstrap.Button>
+                <ReactBootstrap.Button bsStyle="primary" onClick={this.shareSnapshot}>Share</ReactBootstrap.Button>
+              </ReactBootstrap.Modal.Footer>
+            </ReactBootstrap.Modal>
+        );
+        return (<div>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <table className="table table-condensed">
+                        <tr>
+                          <th>Name</th>
+                          <th>max</th>
+                          <th>min</th>
+                          <th>mean</th>
+                        </tr>
+                        {summary}
+                      </table>
+                    </div>
+                    <div className="col-md-6">
+                      <TimeSlider interval={this.state.interval} newIntervalCallback={this.newIntervalCallback} />
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <ContentHistogram data={data} />
+                    </div>
+                    <div className="col-md-6">
+                      <ContentLinegraph interval={this.state.interval} data={data} />
+                    </div>
+                  </div>
+                  <div>
+                    {share_modal}
+                  </div>
+                </div>
+                );
+    }
+});
+
+var WidgetMp = React.createClass({
+    styles: {
+    },
+    getInitialState: function () {
+        return {
+                interval: {its:undefined,ets:undefined},
+                data: {},
+                config: {},
+                live: true,
+                active_view: this.props.view,
+                shareModal:false,
+                shareCounter:this.props.shareCounter,
+                snapshotInterval: undefined,
+                livePrevious: true,
+        }
+    },
+    subscriptionTokens: {},
+    componentWillMount: function () {
+        this.subscriptionTokens[this.props.wid]=[]
+        this.subscriptionTokens[this.props.wid].push({token:PubSub.subscribe('intervalUpdate-'+this.props.wid, this.subscriptionHandler),msg:'intervalUpdate-'+this.props.wid});
+        for (var i=0;i<this.props.datapoints.length;i++) {
+            this.subscriptionTokens[this.props.wid].push({token:PubSub.subscribe('datapointDataUpdate-'+this.props.datapoints[i], this.subscriptionHandler),msg:'datapointDataUpdate-'+this.props.datapoints[i]});
+            this.subscriptionTokens[this.props.wid].push({token:PubSub.subscribe('datapointConfigUpdate-'+this.props.datapoints[i], this.subscriptionHandler),msg:'datapointConfigUpdate-'+this.props.datapoints[i]});
+        }
+    },
+    componentWillUnmount: function () {
+        $.map(this.subscriptionTokens[this.props.wid], function (d) {
+            PubSub.unsubscribe(d.token)
+            }.bind(this));
+        delete this.subscriptionTokens[this.props.wid];
+    },
+    componentDidMount: function () {
+        for (var i=0;i<this.props.datapoints.length;i++) {
+            PubSub.publish('datapointConfigReq',{pid:this.props.datapoints[i]})
+            PubSub.publish('datapointDataReq',{pid:this.props.datapoints[i]})
+        }
+    },
+    componentDidUpdate: function () {
+        PubSub.publish('updateScroll',{})
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.shareCounter>this.state.shareCounter) {
+            this.setState({shareModal:true,shareCounter:nextProps.shareCounter, snapshotInterval:this.state.interval, livePrevious:this.state.live, live: false});
+        }
+    },
+    newIntervalCallback: function (interval) {
+        now=new Date().getTime()/1000;
+        if (interval.hasOwnProperty('its') && interval.hasOwnProperty('ets')) {
+            if (Math.abs(this.state.interval.ets-interval.ets)>1) {
+                if (interval.ets < now-30) {
+                    this.state.live = false;
+                } else {
+                    this.state.live = true;
+                }
+            }
+            if (interval.ets > now) {
+                interval.ets = now
+            }
+            for (var i=0;i<this.props.datapoints.length;i++) {
+                PubSub.publish('datapointDataReq',{pid:this.props.datapoints[i],interval:interval})
+            }
+            this.refreshData(interval);
+        }
+    },
+    snapshotIntervalCallback: function (interval) {
+        now=new Date().getTime()/1000;
+        if (interval.hasOwnProperty('its') && interval.hasOwnProperty('ets')) {
+            if (interval.its == interval.ets) {
+                interval.its=interval.ets-3600
+            }
+            if (interval.ets > now) {
+                interval.ets = now
+            }
+            this.setState({snapshotInterval:interval})
+        }
+    },
+    subscriptionHandler: function (msg,data) {
+        msgType=msg.split('-')[0]
+        switch (msgType) {
+            case 'datapointDataUpdate':
+                pid=msg.split('-')[1]
+                if (this.state.interval.its == undefined || this.state.interval.ets == undefined) {
+                    this.refreshData(data.interval);
+                } else if (this.state.live == true && data.interval.ets > this.state.interval.ets) {
+                    elapsedTs=data.interval.ets-this.state.interval.ets
+                    newInterval={its:this.state.interval.its+elapsedTs, ets: data.interval.ets}
+                    this.refreshData(newInterval, pid)
+                } else if ((this.state.interval.its <= data.interval.its && data.interval.its <= this.state.interval.ets) ||
+                           (this.state.interval.its <= data.interval.ets && data.interval.ets <= this.state.interval.ets)) {
+                    this.refreshData(this.state.interval, pid)
+                }
+                break;
+            case 'datapointConfigUpdate':
+                pid=msg.split('-')[1]
+                this.refreshConfig(pid)
+                break;
+            case 'intervalUpdate':
+                this.newIntervalCallback(data.interval)
+                break;
+        }
+    },
+    viewBtnClick: function (button) {
+        console.log('button click',button)
+        this.setState({active_view:button})
+    },
+    refreshConfig: function (pid) {
+        if (datapointStore._datapointConfig.hasOwnProperty(pid)) {
+            datapointConfig=datapointStore._datapointConfig[pid]
+            shouldUpdate=false
+            if (!this.state.config.hasOwnProperty(pid)) {
+                shouldUpdate = true
+            } else {
+                if (this.state.config[pid].datapointname != datapointConfig.datapointname) {
+                    shouldUpdate = true
+                }
+                if (this.state.config[pid].color != datapointConfig.color) {
+                    shouldUpdate = true
+                }
+            }
+            if (shouldUpdate) {
+                config=this.state.config
+                config[pid]=datapointConfig
+                this.setState({config:config})
+            }
+        }
+    },
+    refreshData: function (interval, pid) {
+        if (pid) {
+            selectedPids=[pid]
+        } else {
+            selectedPids=this.props.datapoints
+        }
+        data=this.state.data
+        for (var i=0;i<selectedPids.length;i++) {
+            data[selectedPids[i]]=[];
+            data[selectedPids[i]]=getIntervalData(selectedPids[i], interval)
+        }
+        this.setState({interval:interval,data:data})
+    },
+    onDrop: function (e) {
+        console.log('onDrop ha llegado',e)
+        console.log('id',e.dataTransfer.getData('id'))
+        id=e.dataTransfer.getData('id')
+        if (id.length==32){
+            data={wid:this.props.wid, 'new_datapoints':[id]}
+            PubSub.publish('modifyWidget',data)
+        }
+    },
+    onDragEnter: function (e) {
+        console.log('onDragEnter ha llegado',e)
+        e.preventDefault();
+    },
+    onDragOver: function (e) {
+        e.preventDefault();
+    },
+    cancelSnapshot: function () {
+        this.setState({shareModal:false, live: this.state.livePrevious})
+    },
+    shareSnapshot: function () {
+        user_list=this.refs.users.getValue().split(/[\s,]+/);
+        PubSub.publish('newWidgetMpSnapshot',{interval:this.state.snapshotInterval,user_list:user_list,wid:this.props.wid})
+        this.setState({shareModal:false, live: this.state.livePrevious})
+    },
+    render: function () {
+        console.log('en el render del mp')
+        var summary=$.map(this.state.data, function (element, key) {
+                    if (this.state.config.hasOwnProperty(key)) {
+                        summary=getDataSummary(element)
+                        datapointStyle={backgroundColor: this.state.config[key].color, borderRadius: '10px'}
+                        return (<tr key={key}>
+                            <td><span style={datapointStyle}>&nbsp;&nbsp;</span><span>&nbsp;</span>{this.state.config[key].datapointname}</td>
+                            <td>{summary.max}</td>
+                            <td>{summary.min}</td>
+                            <td>{summary.mean}</td>
+                        </tr>
+                        );
+                    }
+        }.bind(this));
+        var data=$.map(this.state.data, function (element, key) {
+            if (this.state.config.hasOwnProperty(key)) {
+                return {pid:key,color:this.state.config[key].color,datapointname:this.state.config[key].datapointname,data:element}
+            }
+        }.bind(this));
+        switch (this.state.active_view){
+            case 0:
+                content=<ContentLinegraph interval={this.state.interval} data={data} />
+                break;
+            case 1:
+                content=<ContentHistogram interval={this.state.interval} data={data} />
+                break;
+            case 2:
+                content=<ContentTable interval={this.state.interval} data={data} />
+                break;
+            default:
+                content=<div />
+                break;
+        }
+        view_buttons=$.map([0,1,2], function (element) {
+            if (this.state.active_view==element) {
+                return <button key={element} type="button" className="btn btn-default focus" onClick={function(event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}>{element}</button>
+            } else {
+                return <button key={element} type="button" className="btn btn-default" onClick={function(event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)} >{element}</button>
+            }
+        }.bind(this));
+        share_modal=(
+            <ReactBootstrap.Modal show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
+              <ReactBootstrap.Modal.Header closeButton>
+                <ReactBootstrap.Modal.Title id="contained-modal-title">Share Graph interval</ReactBootstrap.Modal.Title>
+              </ReactBootstrap.Modal.Header>
+              <ReactBootstrap.Modal.Body>
+                <div className="row" >
+                  <div className="col-md-6">
+                    <ReactBootstrap.Input ref="users" type="textarea" label="Select Users" placeholder="type users separated by comma" />
+                  </div>
+                  <div className="col-md-6">
+                    <strong>Date Interval</strong>
+                    <TimeSlider interval={this.state.snapshotInterval} newIntervalCallback={this.snapshotIntervalCallback} />
+                  </div>
+                </div>
+              </ReactBootstrap.Modal.Body>
+              <ReactBootstrap.Modal.Footer>
+                <ReactBootstrap.Button bsStyle="default" onClick={this.cancelSnapshot}>Cancel</ReactBootstrap.Button>
+                <ReactBootstrap.Button bsStyle="primary" onClick={this.shareSnapshot}>Share</ReactBootstrap.Button>
+              </ReactBootstrap.Modal.Footer>
+            </ReactBootstrap.Modal>
+        );
+        return (<div onDrop={this.onDrop} onDragEnter={this.onDragEnter} onDragOver={this.onDragOver}>
+                  <div className="row" >
+                    <div className="col-md-8">
+                      {content}
+                    </div>
+                    <div className="col-md-4">
+                      <div className="row">
+                        <div className="col-md-12">
+                          <TimeSlider interval={this.state.interval} newIntervalCallback={this.newIntervalCallback} />
+                        </div>
+                      </div>
+                      <div className="row">
+                        <div className="col-md-12">
+                          <div className="btn-group" role="group">
+                            {view_buttons}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="row">
+                        <div className="col-md-12">
+                          <table className="table table-condensed">
+                            <tr>
+                              <th>Name</th>
+                              <th>max</th>
+                              <th>min</th>
+                              <th>mean</th>
+                            </tr>
+                            {summary}
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    {share_modal}
+                  </div>
+                </div>
+                );
+    }
+});
+
+var TimeSlider = React.createClass({
+    styles: {
+    },
+    notifyNewInterval: function(interval) {
+        this.props.newIntervalCallback(interval);
+    },
+    componentDidMount: function () {
+        var el = React.findDOMNode(this)
+        d3TimeSlider.create(el, this.props.interval, this.notifyNewInterval)
+    },
+    componentDidUpdate: function () {
+        var el = React.findDOMNode(this)
+        d3TimeSlider.update(el, this.props.interval, this.notifyNewInterval)
+    },
+    render: function () {
+        return (<div />);
+    }
+});
+
+var ContentLinegraph = React.createClass({
+    styles: {
+    },
+    componentDidMount: function () {
+        var el = React.findDOMNode(this)
+        d3Linegraph.create(el, this.props.data, this.props.interval)
+    },
+    componentDidUpdate: function () {
+        var el = React.findDOMNode(this)
+        d3Linegraph.update(el, this.props.data, this.props.interval)
+    },
+    render: function () {
+        return (<div />);
+    }
+});
+
+var ContentHistogram = React.createClass({
+    styles: {
+    },
+    componentDidMount: function () {
+        var el = React.findDOMNode(this)
+        d3Histogram.create(el, this.props.data)
+    },
+    componentDidUpdate: function () {
+        var el = React.findDOMNode(this)
+        d3Histogram.update(el, this.props.data)
+    },
+    render: function () {
+        return (<div />);
+    }
+});
+
+var ContentTable = React.createClass({
+    styles: {
+    },
+    componentDidMount: function () {
+        var el = React.findDOMNode(this)
+        d3Table.create(el, this.props.data)
+    },
+    componentDidUpdate: function () {
+        var el = React.findDOMNode(this)
+        d3Table.update(el, this.props.data)
+    },
+    render: function () {
+        return (<div />);
+    }
+});
+
+var WidgetDsVariable = React.createClass({
+    getInitialState: function () {
+        return {
+                datapoints: this.props.datapoints,
+        }
+    },
+    associateExistingDatapoint: function (event, pid) {
+        event.preventDefault();
+        console.log('associateExistingDatapoint',pid)
+        this.refs.popover.hide()
+        this.props.associateExistingDatapointCallback(this.props.position, this.props.length, pid)
+    },
+    identifyVariable: function () {
+        console.log('el click ha llegado')
+        datapointname=this.refs.datapointname.getValue();
+        if (datapointname.length>1){ 
+            this.refs.popover.hide()
+            this.props.identifyVariableCallback(this.props.position, this.props.length, datapointname)
+        }
+    },
+    render: function () {
+        var already_monitored=$.map(this.state.datapoints, function (element,index) {
+                            return (
+                            <ReactBootstrap.MenuItem key={index} eventKey={element.pid}>
+                              {element.datapointname}
+                            </ReactBootstrap.MenuItem>
+                            );
+        });
+        if (already_monitored.length>0) {
+            dropdown=(<ReactBootstrap.Nav onSelect={this.associateExistingDatapoint}>
+                       <ReactBootstrap.NavDropdown bsSize="xsmall" title="This variable has been identified before" id="nav-dropdown">
+                         {already_monitored}
+                       </ReactBootstrap.NavDropdown>
+                     </ReactBootstrap.Nav>
+                     );
+        } else {
+            dropdown=null
+        }
+        return (
+              <ReactBootstrap.OverlayTrigger ref="popover" trigger="click" rootClose placement="right" overlay={<ReactBootstrap.Popover title="Identify Datapoint">
+                  <div>
+                    <div className="input-group">
+                      <ReactBootstrap.Input ref="datapointname" type="text" className="form-control" placeholder="Datapoint name" />
+                      <span className="input-group-btn">
+                        <button type="submit" className="btn btn-default" onClick={this.identifyVariable}>
+                          Ok
+                        </button>
+                      </span>
+                    </div>
+                  </div>
+                  {dropdown}
+                </ReactBootstrap.Popover>}>
+                <span>{this.props.content}</span>
+              </ReactBootstrap.OverlayTrigger>
+                );
+    }
+});
+

@@ -63,6 +63,22 @@ HTML_TPL_USER_EVENT_NOTIFICATION_NEW_CIRCLE=Template(
               <div class=\"userevents-badge info\"><i class=\"glyphicon glyphicon-info-sign\"></i></div>"
              )
 
+HTML_TPL_USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED=Template(
+              "<div class=\"userevents-panel\">\
+                <div class=\"userevents-title\">New Snapshot Shared</div>\
+                <div class=\"userevents-body\">New snapshot shared of <a onclick=\"PubSub.publish('loadSlide',{nid:'${parameters['nid']}'})\">${parameters['widgetname']}</a></div>\
+              </div>\
+              <div class=\"userevents-badge info\"><i class=\"glyphicon glyphicon-info-sign\"></i></div>"
+             )
+
+HTML_TPL_USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME=Template(
+              "<div class=\"userevents-panel\">\
+                <div class=\"userevents-title\">New Snapshot Received</div>\
+                <div class=\"userevents-body\">User ${parameters['username']} shared a snapshot of <a onclick=\"PubSub.publish('loadSlide',{nid:'${parameters['nid']}',tid:'${parameters['tid']}'})\">${parameters['widgetname']}</a> with you.</div>\
+              </div>\
+              <div class=\"userevents-badge info\"><i class=\"glyphicon glyphicon-info-sign\"></i></div>"
+             )
+
 HTML_TPL_USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION=Template(
               "<div class=\"userevents-panel\">\
                 <div class=\"userevents-title\">Help needed identifying datapoints</div>\
@@ -81,6 +97,8 @@ HTML_TEMPLATES={
     types.USER_EVENT_NOTIFICATION_NEW_WIDGET:HTML_TPL_USER_EVENT_NOTIFICATION_NEW_WIDGET,
     types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD:HTML_TPL_USER_EVENT_NOTIFICATION_NEW_DASHBOARD,
     types.USER_EVENT_NOTIFICATION_NEW_CIRCLE:HTML_TPL_USER_EVENT_NOTIFICATION_NEW_CIRCLE,
+    types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED:HTML_TPL_USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED,
+    types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME:HTML_TPL_USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME,
     types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION: HTML_TPL_USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION,
 }
 

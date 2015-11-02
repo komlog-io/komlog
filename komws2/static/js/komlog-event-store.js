@@ -1,9 +1,20 @@
 function EventStore () {
     this._events = [];
+    this.subscriptionTokens = [];
     this.activeLoop = true;
+
+    this.subscriptionTokens.push({token:PubSub.subscribe('deleteEvent', this.subscriptionHandler.bind(this)),msg:'deleteEvent'});
+
 }
 
 EventStore.prototype = {
+    subscriptionHandler: function (msg, data) {
+        switch (msg) {
+            case 'deleteEvent':
+                processMsgDeleteEvent(data)
+                break;
+        }
+    },
     shouldRequest: function () {
         var now = new Date();
         if (typeof this.lastRequest === "undefined"){
@@ -26,6 +37,12 @@ EventStore.prototype = {
             setTimeout(this.requestLoop.bind(this),60000)
         }
     },
+    deleteEvent: function (seq) {
+        events=this._events.filter( function (el) {
+            return el.seq !== seq
+        });
+        this._events=events
+    }
 };
 
 var eventStore = new EventStore();
@@ -62,6 +79,7 @@ function storeEvents (data) {
         }
     }
     if (newEvents == true) {
+        console.log('asi queda el store',eventStore._events)
         sendNewEventsMessage()
     }
 }
@@ -71,27 +89,72 @@ function sendNewEventsMessage () {
 }
 
 function getEventList (numElem, lastSeq) {
+    console.log('getEventList',numElem,lastSeq)
     events=[]
     if (eventStore._events.length == 0) {
+        console.log('getEventList: no hay eventos',events)
         return events
     } else if (typeof lastSeq === "undefined") {
-        lastIndex=eventStore._events.length-1
+        lastIndex=0
+        console.log('getEventList: lastIndex',lastIndex)
+    } else {
+        for (var i=eventStore._events.length;i>0;i--) {
+            if (eventStore._events[i-1].seq == lastSeq) {
+                lastIndex=i;
+                break;
+            }
+        }
+        console.log('getEventList: lastIndex',lastIndex)
+    }
+    if (typeof lastIndex === "undefined" ) {
+        lastIndex=0
+        console.log('getEventList: lastIndex',lastIndex)
+    }
+    firstIndex=lastIndex+numElem
+    if (firstIndex>eventStore._events.length-1|| isNaN(firstIndex) ) {
+        firstIndex=eventStore._events.length-1;
+    }
+    console.log('getEventList: firstIndex',firstIndex)
+    for (var j=firstIndex;j>=lastIndex;j--) {
+        events.push(eventStore._events[j])
+    }
+    console.log('getEventList: return',events)
+    return events
+}
+
+function getNumEventsNewerThan (lastSeq) {
+    console.log('getNumEventsNewerThan',lastSeq)
+    if (eventStore._events.length == 0) {
+        console.log('getNumEventsNewerThan: no hay eventos',0)
+        return 0
+    } else if (typeof lastSeq === "undefined") {
+        console.log('getNumEventsNewerThan: undefined',0)
+        return 0
     } else {
         for (var i=eventStore._events.length;i>=0;i--) {
             if (eventStore._events[i-1].seq == lastSeq) {
-                lastIndex=i-1;
+                console.log('getNumEventsNewerThan. coincide',eventStore._events.length,i)
+                numEvents=eventStore._events.length-i
+                break;
             }
         }
     }
-    if (typeof lastIndex === "undefined" ) {
-        lastIndex=eventStore._events.length-1;
-    }
-    firstIndex=lastIndex-numElem
-    if (firstIndex <0) {
-        firstIndex=0;
-    }
-    for (var j=lastIndex;j>=firstIndex;j--) {
-        events.push(eventStore._events[j])
-    }
-    return events
+    console.log('getNumEventsNewerThan',numEvents)
+    return numEvents
 }
+
+function processMsgDeleteEvent(msgData) {
+    if (msgData.hasOwnProperty('seq')) {
+        $.ajax({
+                url: '/var/usr/ev/'+msgData.seq,
+                dataType: 'json',
+                type: 'DELETE',
+            })
+            .then(function(data){
+                eventStore.deleteEvent(msgData.seq)
+            }, function(data){
+                console.log('server Delete Event error',data)
+            });
+    }
+}
+

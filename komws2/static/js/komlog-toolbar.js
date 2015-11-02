@@ -5,7 +5,7 @@ $('.pop').each(function () {
     });
 });
 
-function mepinchas (e) {
+function multivariableBtnClick (e) {
         console.log('onclick del boton')
         e.preventDefault();
         var chartName= $(e.target).parent().parent().find('input').val()
@@ -15,7 +15,7 @@ function mepinchas (e) {
         //thePopover.remove();
         console.log('El valor del form es ',chartName,thePopover)
         //PubSub.publish('monitorDatapoint',data)
-        PubSub.publish('newSlide',{type:'lg',widgetname:chartName})
+        PubSub.publish('newSlide',{type:'mp',widgetname:chartName})
 }
 
 $('#newMultivarBtn').on('click', function (e) {

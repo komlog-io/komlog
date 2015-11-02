@@ -176,6 +176,6 @@ def delete_datapoint_request(username, pid):
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.DELETE_DATAPOINT,uid=uid,pid=pid)
     message=messages.DeleteDatapointMessage(pid=pid)
-    msgapi.send_message(message=message)
+    msgapi.send_message(msg=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 

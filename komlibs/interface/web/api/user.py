@@ -98,6 +98,6 @@ def delete_user_request(username):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWAU_DUSR_IU)
     message=messages.DeleteUserMessage(username=username)
-    msgapi.send_message(message=message)
+    msgapi.send_message(msg=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 

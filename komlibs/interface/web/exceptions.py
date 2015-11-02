@@ -70,14 +70,18 @@ class ExceptionHandler(object):
             response=self.f(**kwargs)
             return response if response else webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
         except BAD_PARAMETERS_STATUS_EXCEPTION_LIST as e:
+            logger.logger.debug('BAD PARAMETERS EXCEPTION: '+str(e.error))
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, error=e.error)
         except ACCESS_DENIED_STATUS_EXCEPTION_LIST as e:
+            logger.logger.debug('ACCESS DENIED EXCEPTION: '+str(e.error))
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED,error=e.error)
         except NOT_FOUND_STATUS_EXCEPTION_LIST as e:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND,error=e.error)
         except NOT_ALLOWED_STATUS_EXCEPTION_LIST as e:
+            logger.logger.debug('NOT ALLOWED EXCEPTION: '+str(e.error))
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED,error=e.error)
         except INTERNAL_ERROR_STATUS_EXCEPTION_LIST as e:
+            logger.logger.debug('INTERNAL ERROR EXCEPTION: '+str(e.error))
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=e.error)
         except Exception as e:
             logger.logger.debug('WEB Response non treated Exception: '+str(e))

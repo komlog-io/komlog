@@ -109,6 +109,8 @@ def new_snapshot(uid, wid, interval_init, interval_end, shared_with_users=None,s
                 circle=cassapicircle.get_circle(cid=cid_to_share)
                 if circle and circle.uid==user.uid:
                     cids.add(cid_to_share)
+    if (len(uids)+len(cids))==0:
+        raise exceptions.BadParametersException(error=errors.E_GSA_NS_ESL)
     if widget.type==types.DATASOURCE:
         snapshot=_new_snapshot_datasource(uid=user.uid,wid=wid,interval_init=interval_init, interval_end=interval_end,shared_with_uids=uids,shared_with_cids=cids)
     elif widget.type==types.DATAPOINT:

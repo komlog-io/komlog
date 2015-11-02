@@ -11,6 +11,9 @@ from komlibs.interface.web.api import user
 from komlibs.interface.web.api import datasource
 from komlibs.interface.web.api import datapoint
 from komlibs.interface.web.api import widget
+from komlibs.interface.web.api import snapshot
+from komlibs.interface.web.api import dashboard
+from komlibs.interface.web.api import circle
 from komlibs.interface.web.api import login
 from komlibs.interface.web.api import uri
 from komlibs.interface.web.api import events

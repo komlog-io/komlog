@@ -104,6 +104,6 @@ def delete_agent_request(username, aid):
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.DELETE_AGENT,uid=uid,aid=aid)
     message=messages.DeleteAgentMessage(aid=aid)
-    msgapi.send_message(message=message)
+    msgapi.send_message(msg=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 

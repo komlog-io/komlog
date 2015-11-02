@@ -158,6 +158,6 @@ def delete_datasource_request(username, did):
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.DELETE_DATASOURCE,uid=uid,did=did)
     message=messages.DeleteDatasourceMessage(did=did)
-    msgapi.send_message(message=message)
+    msgapi.send_message(msg=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 
