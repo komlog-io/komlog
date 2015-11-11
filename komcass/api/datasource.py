@@ -236,15 +236,12 @@ def insert_datasource_novelty_detector_for_datapoint(obj):
     connection.session.execute(stmtdatasource.I_A_DATDATASOURCENOVELTYDETECTORDATAPOINT,(obj.did,obj.pid,obj.date,obj.nd,obj.features))
     return True
 
-def delete_datasource_novelty_detector_for_datapoint(did, pid=None, date=None):
+def delete_datasource_novelty_detector_for_datapoint(did, pid, date=None):
     if did and pid and date:
         connection.session.execute(stmtdatasource.D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID_DATE,(did,pid,date))
         return True
     elif did and pid:
         connection.session.execute(stmtdatasource.D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID,(did,pid))
-        return True
-    elif did:
-        connection.session.execute(stmtdatasource.D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID,(did,))
         return True
     return False
 

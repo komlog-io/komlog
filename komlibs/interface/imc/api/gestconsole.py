@@ -8,6 +8,7 @@ Gestconsole message definitions
 from komfig import logger
 from komlibs.general.validation import arguments as args
 from komlibs.events.model import types as eventstypes
+from komlibs.gestaccount.common import delete as deleteapi
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datapoint import api as datapointapi
@@ -173,7 +174,7 @@ def process_message_DELUSER(message):
     if args.is_valid_username(username):
         user=userapi.get_user_config(username=username)
         agents=agentapi.get_agents_config(username=username)
-        userapi.delete_user(username=username)
+        deleteapi.delete_user(username=username)
         #operation=weboperations.DeleteUserOperation(uid=user['uid'],aids=[agent['aid'] for agent in agents])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()
@@ -191,7 +192,7 @@ def process_message_DELAGENT(message):
     aid=message.aid
     if args.is_valid_uuid(aid):
         agent=agentapi.get_agent_config(aid=aid, dids_flag=True)
-        agentapi.delete_agent(aid=agent['aid'])
+        deleteapi.delete_agent(aid=agent['aid'])
         #operation=weboperations.DeleteAgentOperation(aid=aid,uid=agent['uid'])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()
@@ -209,7 +210,7 @@ def process_message_DELDS(message):
     did=message.did
     if args.is_valid_uuid(did):
         datasource=datasourceapi.get_datasource_config(did=did)
-        datasourceapi.delete_datasource(did=did)
+        deleteapi.delete_datasource(did=did)
         #operation=weboperations.DeleteDatasourceOperation(did=did,aid=datasource['aid'],uid=datasource['uid'],pids=datasource['pids'])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()
@@ -228,7 +229,7 @@ def process_message_DELDP(message):
     if args.is_valid_uuid(pid):
         datapoint=datapointapi.get_datapoint_config(pid=pid)
         datasource=datasourceapi.get_datasource_config(did=datapoint['did'])
-        datapointapi.delete_datapoint(pid=pid)
+        deleteapi.delete_datapoint(pid=pid)
         #operation=weboperations.DeleteDatapointOperation(pid=pid,aid=datasource['aid'],uid=datasource['uid'])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()
@@ -246,7 +247,7 @@ def process_message_DELWIDGET(message):
     wid=message.wid
     if args.is_valid_uuid(wid):
         widget=widgetapi.get_widget_config(wid=wid)
-        widgetapi.delete_widget(wid=wid)
+        deleteapi.delete_widget(wid=wid)
         #operation=weboperations.DeleteWidgetOperation(wid=wid,uid=widget['uid'])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()
@@ -264,7 +265,7 @@ def process_message_DELDASHB(message):
     bid=message.bid
     if args.is_valid_uuid(bid):
         dashboard=dashboardapi.get_dashboard_config(bid=bid)
-        dashboardapi.delete_dashboard(bid=bid)
+        deleteapi.delete_dashboard(bid=bid)
         #operation=weboperations.DeleteDashboardOperation(bid=bid,uid=dashboard['uid'])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()

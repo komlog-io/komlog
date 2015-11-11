@@ -50,14 +50,16 @@ def get_dashboard_config_request(username, bid):
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=dashboard)
 
 @exceptions.ExceptionHandler
-def new_dashboard_request(username, dashboardname):
+def new_dashboard_request(username, data):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWADB_NDBR_IU)
-    if not args.is_valid_dashboardname(dashboardname):
+    if not args.is_valid_dict(data):
+        raise exceptions.BadParametersException(error=errors.E_IWADB_NDBR_ID)
+    if not 'dashboardname' in data or not args.is_valid_dashboardname(data['dashboardname']):
         raise exceptions.BadParametersException(error=errors.E_IWADB_NDBR_IDN)
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.NEW_DASHBOARD, uid=uid)
-    dashboard=dashboardapi.create_dashboard(uid=uid, dashboardname=dashboardname)
+    dashboard=dashboardapi.create_dashboard(uid=uid, dashboardname=data['dashboardname'])
     if dashboard:
         operation=weboperations.NewDashboardOperation(uid=dashboard['uid'],bid=dashboard['bid'])
         auth_op=operation.get_auth_operation()

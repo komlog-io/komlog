@@ -375,6 +375,8 @@ body {
   border-radius: 5px;
 }
 
+/* separadores uris */ 
+
 .breadcrumb > li + li:before {
   color: #000;
   content: ".";

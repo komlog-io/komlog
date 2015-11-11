@@ -11,6 +11,7 @@ from komlibs.auth import authorization, requests
 from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.circle import api as circleapi
+from komlibs.gestaccount.common import delete as deleteapi
 from komlibs.interface.web import status, exceptions, errors
 from komlibs.interface.web.model import webmodel
 from komlibs.interface.web.operations import weboperations
@@ -62,7 +63,7 @@ def delete_circle_request(username, cid):
     cid=uuid.UUID(cid)
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.DELETE_CIRCLE,uid=uid,cid=cid)
-    circleapi.delete_circle(cid=cid)
+    deleteapi.delete_circle(cid=cid)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler

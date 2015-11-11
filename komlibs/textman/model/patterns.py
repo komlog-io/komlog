@@ -121,6 +121,6 @@ VAR_REGEXP_OBJECTS=[ro_var_regex_0,
 # patterns used for text tokenization
 
 TEXT_TOKENIZATION_SYMBOL_REGEXP='[ \n\t/\|\(\)\[\];:\.%\$\#"=]'
-TEXT_TOKENIZATION_WORD_REGEXP='(([0-9]*[A-Za-z_/]+[0-9]*)+)'
+TEXT_TOKENIZATION_WORD_REGEXP='([0-9]*[A-Za-z_/]+[0-9]*)+'
 
-ro_text_tokenization=re.compile(TEXT_TOKENIZATION_WORD_REGEXP+'|'+TEXT_TOKENIZATION_SYMBOL_REGEXP)
+ro_text_tokenization=re.compile('('+TEXT_TOKENIZATION_WORD_REGEXP+'|'+TEXT_TOKENIZATION_SYMBOL_REGEXP+')')

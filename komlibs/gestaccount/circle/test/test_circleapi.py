@@ -245,36 +245,6 @@ class GestaccountCircleApiTest(unittest.TestCase):
         db_circles=circleapi.get_users_circles_config(uid=user['uid'])
         self.assertTrue(len(db_circles),3)
 
-    def test_delete_circle_failure_invalid_cid(self):
-        ''' delete_circle should fail if cid is invalid '''
-        cids=[None,23234,23423.23423,'adfasdf',['a','list'],{'a':'dict'},('a','tuple'),{'set'},uuid.uuid1(), timeuuid.uuid1(), uuid.uuid4().hex]
-        for cid in cids:
-            self.assertRaises(exceptions.BadParametersException, circleapi.delete_circle, cid=cid)
-
-    def test_delete_circle_failure_non_existent_circle(self):
-        ''' delete_circle should fail if cid is invalid '''
-        cid=uuid.uuid4()
-        self.assertRaises(exceptions.CircleNotFoundException, circleapi.delete_circle, cid=cid)
-
-    def test_delete_circle_success(self):
-        ''' delete_circle should succeed and delete the circle '''
-        username='test_delete_circle_success_user'
-        email=username+'@komlog.org'
-        password='password'
-        circlename='test_delete_circle_success_circlename'
-        user=userapi.create_user(username=username, password=password, email=email)
-        circle=circleapi.new_users_circle(uid=user['uid'], circlename=circlename)
-        self.assertIsNotNone(circle)
-        self.assertTrue(isinstance(circle['cid'],uuid.UUID))
-        cid=circle['cid']
-        db_circle=circleapi.get_users_circle_config(cid=cid)
-        self.assertEqual(db_circle['cid'],circle['cid'])
-        self.assertEqual(db_circle['circlename'],circlename)
-        self.assertEqual(db_circle['uid'],user['uid'])
-        self.assertEqual(db_circle['members'],[])
-        self.assertTrue(circleapi.delete_circle(cid=cid))
-        self.assertRaises(exceptions.CircleNotFoundException, circleapi.get_users_circle_config, cid=cid)
-
     def test_update_circle_failure_invalid_cid(self):
         ''' update_circle should fail if cid is invalid '''
         cids=[None,23234,23423.23423,'adfasdf',['a','list'],{'a':'dict'},('a','tuple'),{'set'},uuid.uuid1(), timeuuid.uuid1(), uuid.uuid4().hex]

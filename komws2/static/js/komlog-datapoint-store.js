@@ -11,6 +11,7 @@ function DatapointStore () {
     this.subscriptionTokens.push({token:PubSub.subscribe('markPositiveVar', this.subscriptionHandler.bind(this)),msg:'markPositiveVar'});
     this.subscriptionTokens.push({token:PubSub.subscribe('loadDatapointSlide', this.subscriptionHandler.bind(this)),msg:'loadDatapointSlide'});
     this.subscriptionTokens.push({token:PubSub.subscribe('deleteDatapoint', this.subscriptionHandler.bind(this)),msg:'deleteDatapoint'});
+    this.subscriptionTokens.push({token:PubSub.subscribe('modifyDatapoint', this.subscriptionHandler.bind(this)),msg:'modifyDatapoint'});
 
 }
 
@@ -34,6 +35,9 @@ DatapointStore.prototype = {
                 break;
             case 'deleteDatapoint':
                 processMsgDeleteDatapoint(data)
+                break;
+            case 'modifyDatapoint':
+                processMsgModifyDatapoint(data)
                 break;
         }
     },
@@ -457,6 +461,22 @@ function processMsgDeleteDatapoint(msgData) {
                 datapointStore.deleteLoopRequest(msgData.pid,'requestDatapointData')
             }, function(data){
             });
+    }
+}
+
+function processMsgModifyDatapoint(msgData) {
+    if (msgData.hasOwnProperty('color')) {
+        requestData={color:msgData.color}
+        $.ajax({
+            url: '/etc/dp/'+msgData.pid,
+            dataType: 'json',
+            type: 'PUT',
+            data: JSON.stringify(requestData),
+        }).then(function(data){
+            PubSub.publish('datapointConfigReq',{pid:msgData.pid})
+        }, function(data){
+            console.log('Error updating datapoint',data)
+        });
     }
 }
 

@@ -12,6 +12,7 @@ from komlibs.auth.tickets import provision as ticketprov
 from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.snapshot import api as snapshotapi
+from komlibs.gestaccount.common import delete as deleteapi
 from komlibs.gestaccount.widget import types
 from komlibs.interface.web import status, exceptions, errors
 from komlibs.interface.web.model import webmodel
@@ -135,7 +136,7 @@ def delete_snapshot_request(username, nid):
     nid=uuid.UUID(nid)
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.DELETE_SNAPSHOT,uid=uid,nid=nid)
-    snapshotapi.delete_snapshot(nid=nid)
+    deleteapi.delete_snapshot(nid=nid)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler

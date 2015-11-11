@@ -517,32 +517,6 @@ def store_datasource_values(did, date):
                     break
     return {'dp_not_found':loop_pids}
 
-def delete_datapoint(pid):
-    ''' Delete all datapoint info. '''
-    if not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException(error=errors.E_GPA_DDP_IP)
-    datapoint=cassapidatapoint.get_datapoint(pid=pid)
-    if not datapoint:
-        raise exceptions.DatapointNotFoundException(error=errors.E_GPA_DDP_DNF)
-    datasource=cassapidatasource.get_datasource(did=datapoint.did)
-    bids=cassapidashboard.get_dashboards_bids(uid=datasource.uid) if datasource else []
-    widget=cassapiwidget.get_widget_dp(pid=pid)
-    if widget:
-        cassapiwidget.delete_widget(wid=widget.wid)
-        for bid in bids:
-            cassapidashboard.delete_widget_from_dashboard(wid=widget.wid, bid=bid)
-    fromdate=datasource.creation_date if datasource and datasource.creation_date else timeuuid.uuid1(seconds=1)
-    dsmap_dates=cassapidatasource.get_datasource_map_dates(did=datapoint.did, fromdate=fromdate, todate=timeuuid.uuid1())
-    for date in dsmap_dates:
-        cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid)
-    cassapidatapoint.delete_datapoint(pid=pid)
-    cassapidatapoint.delete_datapoint_stats(pid=pid)
-    cassapidatapoint.delete_datapoint_dtree_positives(pid=pid)
-    cassapidatapoint.delete_datapoint_dtree_negatives(pid=pid)
-    cassapidatapoint.delete_datapoint_data(pid=pid)
-    graphuri.dissociate_vertex(ido=pid)
-    return True
-
 def should_datapoint_match_any_sample_variable(pid, date):
     if not args.is_valid_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_GPA_SDMSV_IP)

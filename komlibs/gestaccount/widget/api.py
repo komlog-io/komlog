@@ -68,21 +68,6 @@ def get_widgets_config(uid):
             data.append({'uid':widget.uid, 'widgetname': widget.widgetname, 'wid':widget.wid,'type':types.TABLE,'datapoints':widget.datapoints, 'colors':widget.colors})
     return data
 
-def delete_widget(wid):
-    if not args.is_valid_uuid(wid):
-        raise exceptions.BadParametersException(error=errors.E_GWA_DW_IW)
-    widget=cassapiwidget.get_widget(wid=wid)
-    if not widget:
-        raise exceptions.WidgetNotFoundException(error=errors.E_GWA_DW_WNF)
-    bids=cassapidashboard.get_dashboards_bids(uid=widget.uid)
-    for bid in bids:
-        cassapidashboard.delete_widget_from_dashboard(bid=bid, wid=wid)
-    nids=cassapisnapshot.get_snapshots_nids(uid=widget.uid)
-    for nid in nids:
-        cassapisnapshot.delete_snapshot(nid=nid)
-    cassapiwidget.delete_widget(wid=wid)
-    return True
-
 def new_widget_datasource(uid,did):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GWA_NWDS_IU)

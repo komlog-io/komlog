@@ -109,13 +109,13 @@ var Widget = React.createClass({
             conf={widgetname: "Loading..."}
             widget=(
             <div className="panel panel-default">
-              <WidgetBar conf={conf} closeCallback={this.closeCallback}/>
+              <WidgetBar bid={this.props.bid} wid={this.props.wid} conf={conf} closeCallback={this.closeCallback}/>
             </div>
             );
         } else {
             widget=(
             <div className="panel panel-default">
-                <WidgetBar conf={this.state.conf} shareCallback={this.shareCallback} closeCallback={this.closeCallback} configCallback={this.configCallback}/>
+                <WidgetBar bid={this.props.bid} wid={this.props.wid} conf={this.state.conf} shareCallback={this.shareCallback} closeCallback={this.closeCallback} configCallback={this.configCallback} isPinned={this.props.isPinned} configOpen={this.state.showConfig} />
                 {widget_config}
                 {widget_content}
             </div>
@@ -127,8 +127,22 @@ var Widget = React.createClass({
 
 var WidgetBar = React.createClass({
     getInitialState: function () {
-        return {config_menu:false,
-                }
+        return {
+                allowPin: false,
+                isPinned: false,
+               }
+    },
+    componentWillMount: function () {
+        if (this.props.bid != '0') {
+            this.setState({allowPin:true, isPinned: this.props.isPinned})
+        }
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (this.props.bid != '0') {
+            if (nextProps.isPinned!=this.state.isPinned) {
+                this.setState({isPinned:nextProps.isPinned})
+            }
+        }
     },
     configClick: function() {
         this.props.configCallback()
@@ -139,6 +153,18 @@ var WidgetBar = React.createClass({
     closeClick: function () {
         this.props.closeCallback()
     },
+    pinClick: function () {
+        console.log('pin clicked')
+        if (this.props.isPinned) {
+            console.log('eliminando del dashboard')
+            PubSub.publish('modifyDashboard',{bid:this.props.bid,delete_widgets:[this.props.wid]})
+            this.setState({isPinned:false})
+        } else {
+            console.log('añadiendo al dashboard')
+            PubSub.publish('modifyDashboard',{bid:this.props.bid,new_widgets:[this.props.wid]})
+            this.setState({isPinned:true})
+        }
+    },
     styles: {
         barstyle: {
         },
@@ -146,6 +172,14 @@ var WidgetBar = React.createClass({
             textAlign: 'left',
             width: '100%',
             fontWeight: 'bold',
+        },
+        righticonstylePushed: {
+            textShadow: '2px 2px 5px 2px #ccc',
+            align: 'right',
+            float: 'right',
+            height: '20px',
+            padding: '5px',
+            color: 'black',
         },
         righticonstyle: {
             textShadow: '1px 1px 5px 1px #ccc',
@@ -164,15 +198,27 @@ var WidgetBar = React.createClass({
             color: '#aaa',
         },
     },
-    getInitialState: function() {
-        return {};
-    },
     render: function() {
+        if (this.state.allowPin) {
+            if (this.state.isPinned == true) {
+                pinIcon=<span className="SlideBarIcon glyphicon glyphicon-pushpin" style={this.styles.righticonstylePushed} onClick={this.pinClick}></span>
+            } else {
+                pinIcon=<span className="SlideBarIcon glyphicon glyphicon-pushpin" style={this.styles.righticonstyle} onClick={this.pinClick}></span>
+            }
+        } else {
+            pinIcon=null
+        }
+        if (this.props.configOpen) {
+            configIcon=<span className="SlideBarIcon glyphicon glyphicon-chevron-up" style={this.styles.lefticonstyle} onClick={this.configClick}></span>
+        } else {
+            configIcon=<span className="SlideBarIcon glyphicon glyphicon-chevron-down" style={this.styles.lefticonstyle} onClick={this.configClick}></span>
+        }
         return (
             <div className="SlideBar panel-heading" style={this.styles.barstyle}>
               <span className="SlideBarIcon glyphicon glyphicon-remove" style={this.styles.righticonstyle} onClick={this.closeClick}></span>
               <span className="SlideBarIcon glyphicon glyphicon-send" style={this.styles.righticonstyle} onClick={this.shareClick}></span>
-              <span className="SlideBarIcon glyphicon glyphicon-cog" style={this.styles.lefticonstyle} onClick={this.configClick}></span>
+              {pinIcon}
+              {configIcon}
               <div className="SlideBarName" style={this.styles.namestyle} >
                 <span>{this.props.conf.widgetname}</span>
               </div>
@@ -228,12 +274,12 @@ var WidgetConfigDs = React.createClass({
     },
     render: function () {
         delete_modal=(
-            <ReactBootstrap.Modal show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
+            <ReactBootstrap.Modal bsize="small" show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
               <ReactBootstrap.Modal.Header closeButton>
                 <ReactBootstrap.Modal.Title id="contained-modal-title">Delete Datasource</ReactBootstrap.Modal.Title>
               </ReactBootstrap.Modal.Header>
               <ReactBootstrap.Modal.Body>
-                Datasource {this.state.datasourcename} will be deleted, with all its datapoints.
+                Datasource <strong>{this.state.datasourcename}</strong> will be deleted, with all its datapoints.
                 <strong> Are You sure? </strong>
               </ReactBootstrap.Modal.Body>
               <ReactBootstrap.Modal.Footer>
@@ -246,8 +292,14 @@ var WidgetConfigDs = React.createClass({
               <ReactBootstrap.Collapse in={this.props.showConfig}>
                 <div>
                   <ReactBootstrap.Well>
-                    <ReactBootstrap.Button className="pull-right" bsSize="small" bsStyle="danger" onClick={this.deleteWidget}>Delete</ReactBootstrap.Button>
-                    <strong>Delete Datasource</strong>
+                    <ReactBootstrap.ListGroup >
+                      <ReactBootstrap.ListGroupItem bsSize="xsmall" >
+                        <strong>Delete Datasource</strong>
+                        <div className="text-right">
+                          <ReactBootstrap.Button bsSize="small" bsStyle="danger" onClick={this.deleteWidget}>Delete</ReactBootstrap.Button>
+                        </div>
+                      </ReactBootstrap.ListGroupItem>
+                    </ReactBootstrap.ListGroup>
                   </ReactBootstrap.Well>
                   {delete_modal}
                 </div>
@@ -260,7 +312,10 @@ var WidgetConfigDp = React.createClass({
     getInitialState: function () {
         return {
                 datapointname: '',
+                color: '',
+                boxColor: '',
                 deleteModal: false,
+                updateDisabled: true,
                 }
     },
     subscriptionTokens: {},
@@ -284,11 +339,27 @@ var WidgetConfigDp = React.createClass({
             }.bind(this));
         delete this.subscriptionTokens['cfg-'+this.props.wid];
     },
+    handleChange: function () {
+        color=this.refs.color.getValue()
+        isOk  = /^#[0-9A-F]{6}$/i.test(color)
+        newState={updateDisabled:!isOk}
+        if (isOk) {
+            newState.boxColor=color
+        }
+        this.setState(newState)
+    },
     refreshConfig: function () {
         datapointConfig=datapointStore._datapointConfig[this.props.pid]
         if (this.state.datapointname != datapointConfig.datapointname) {
-            this.setState({datapointname:datapointConfig.datapointname})
+            this.setState({datapointname:datapointConfig.datapointname,color:datapointConfig.color,boxColor:datapointConfig.color})
         }
+    },
+    updateConfig: function () {
+        color=this.refs.color.getValue().toUpperCase();
+        if (color != this.state.color && /^#[0-9A-F]{6}$/i.test(color)) {
+            PubSub.publish('modifyDatapoint',{pid:this.props.pid,color:color})
+        }
+        this.props.configCallback()
     },
     deleteWidget: function () {
         this.setState({deleteModal: true})
@@ -303,12 +374,12 @@ var WidgetConfigDp = React.createClass({
     },
     render: function () {
         delete_modal=(
-            <ReactBootstrap.Modal show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
+            <ReactBootstrap.Modal bsize="small" show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
               <ReactBootstrap.Modal.Header closeButton>
                 <ReactBootstrap.Modal.Title id="contained-modal-title">Delete Datapoint</ReactBootstrap.Modal.Title>
               </ReactBootstrap.Modal.Header>
               <ReactBootstrap.Modal.Body>
-                Datapoint {this.state.datapointname} will be deleted.
+                Datapoint <strong>{this.state.datapointname}</strong> will be deleted.
                 <strong> Are You sure? </strong>
               </ReactBootstrap.Modal.Body>
               <ReactBootstrap.Modal.Footer>
@@ -317,12 +388,27 @@ var WidgetConfigDp = React.createClass({
               </ReactBootstrap.Modal.Footer>
             </ReactBootstrap.Modal>
         );
+        boxColor=<ReactBootstrap.Glyphicon glyph="unchecked" style={{'background-color':this.state.boxColor,'color':this.state.boxColor}} />
         return (
               <ReactBootstrap.Collapse in={this.props.showConfig}>
                 <div>
                   <ReactBootstrap.Well>
-                    <ReactBootstrap.Button className="pull-right" bsSize="small" bsStyle="danger" onClick={this.deleteWidget}>Delete</ReactBootstrap.Button>
-                    <strong>Delete Datapoint</strong>
+                    <ReactBootstrap.ListGroup >
+                      <ReactBootstrap.ListGroupItem bsSize="small" >
+                        <form className="form-horizontal">
+                          <ReactBootstrap.Input ref="color" placeholder={this.state.color} bsSize="small" type="text" label="Datapoint Color" labelClassName="col-xs-3" wrapperClassName="col-xs-3" onChange={this.handleChange} addonAfter={boxColor}/>
+                          <div className="text-right">
+                            <ReactBootstrap.Button bsSize="small" bsStyle="primary" onClick={this.updateConfig} disabled={this.state.updateDisabled} >Update</ReactBootstrap.Button>
+                          </div>
+                        </form>
+                      </ReactBootstrap.ListGroupItem>
+                      <ReactBootstrap.ListGroupItem bsSize="xsmall" >
+                        <strong>Delete Datapoint</strong>
+                        <div className="text-right">
+                          <ReactBootstrap.Button bsSize="small" bsStyle="danger" onClick={this.deleteWidget}>Delete</ReactBootstrap.Button>
+                        </div>
+                      </ReactBootstrap.ListGroupItem>
+                    </ReactBootstrap.ListGroup>
                   </ReactBootstrap.Well>
                   {delete_modal}
                 </div>
@@ -335,21 +421,22 @@ var WidgetConfigMp = React.createClass({
     getInitialState: function () {
         return {
                 deleteModal: false,
+                datapoints: [],
                 }
     },
     subscriptionTokens: {},
     subscriptionHandler: function (msg,data) {
-        switch (msg) {
-            case 'datapointConfigUpdate-'+this.props.pid:
-                this.refreshConfig();
+        msgType=msg.split('-')[0]
+        switch (msgType) {
+            case 'datapointConfigUpdate':
+                pid=msg.split('-')[1]
+                this.refreshConfig(pid);
                 break;
         }
     },
     componentWillMount: function () {
         this.subscriptionTokens['cfg-'+this.props.wid]=[]
-        this.subscriptionTokens['cfg-'+this.props.wid].push({token:PubSub.subscribe('intervalUpdate-'+this.props.wid, this.subscriptionHandler),msg:'intervalUpdate-'+this.props.wid});
         for (var i=0;i<this.props.datapoints.length;i++) {
-            this.subscriptionTokens['cfg-'+this.props.wid].push({token:PubSub.subscribe('datapointDataUpdate-'+this.props.datapoints[i], this.subscriptionHandler),msg:'datapointDataUpdate-'+this.props.datapoints[i]});
             this.subscriptionTokens['cfg-'+this.props.wid].push({token:PubSub.subscribe('datapointConfigUpdate-'+this.props.datapoints[i], this.subscriptionHandler),msg:'datapointConfigUpdate-'+this.props.datapoints[i]});
         }
     },
@@ -365,28 +452,47 @@ var WidgetConfigMp = React.createClass({
         }
     },
     refreshConfig: function () {
-            datasourceConfig=datasourceStore._datasourceConfig[this.props.did]
-            if (datasourceConfig.hasOwnProperty('pids')) {
-                for (var i=0;i<datasourceConfig.pids.length;i++) {
-                    pid=datasourceConfig.pids[i]
-                    if (!datapointStore._datapointConfig.hasOwnProperty(pid)) {
-                        PubSub.publish('datapointConfigReq',{pid:pid})
-                    }
-                }
+        datapoints=[]
+        for (var i=0;i<this.props.datapoints.length;i++) {
+            if (datapointStore._datapointConfig.hasOwnProperty(this.props.datapoints[i])) {
+                datapoint=datapointStore._datapointConfig[this.props.datapoints[i]]
+                datapoints.push({pid:this.props.datapoints[i],color:datapoint.color,datapointname:datapoint.datapointname,lineThrough:false})
             }
-            shouldUpdate=false
-            if (this.state.datasourcename != datasourceConfig.datasourcename) {
-                shouldUpdate = true
-            }
-            if (shouldUpdate) {
-                this.setState({datasourcename:datasourceConfig.datasourcename})
-            }
+        }
+        this.setState({datapoints:datapoints})
     },
     updateConfig: function () {
+        data={wid:this.props.wid}
         new_widgetname=this.refs.widgetname.getValue();
         if (new_widgetname.length>0 && new_widgetname!=this.props.widgetname) {
-            PubSub.publish('modifyWidget',{wid:this.props.wid, new_widgetname:new_widgetname})
-            this.props.configCallback()
+            data.new_widgetname=new_widgetname
+        }
+        for (var i=0;i<this.state.datapoints.length;i++) {
+            deleteDatapoints=[]
+            if (this.state.datapoints[i].lineThrough) {
+                deleteDatapoints.push(this.state.datapoints[i].pid)
+            }
+            if (deleteDatapoints.length>0) {
+                data.delete_datapoints=deleteDatapoints
+            }
+        }
+        if (Object.keys(data).length>1) {
+            PubSub.publish('modifyWidget',data)
+        }
+        this.props.configCallback()
+    },
+    markDatapoint: function (pid) {
+        datapoints=this.state.datapoints
+        render=false
+        for (var i=0;i<datapoints.length;i++) {
+            if (datapoints[i].pid == pid) {
+                datapoints[i].lineThrough=!datapoints[i].lineThrough
+                render=true
+                break;
+            }
+        }
+        if (render) {
+            this.setState({datapoints:datapoints})
         }
     },
     deleteWidget: function () {
@@ -400,14 +506,33 @@ var WidgetConfigMp = React.createClass({
         this.setState({deleteModal: false})
         this.props.closeCallback()
     },
+    renderDatapointList: function () {
+        console.log('generando lista datapoints',this.state.datapoints)
+        list=$.map(this.state.datapoints, function (el) {
+            if (el.lineThrough) {
+                style={'textDecoration':'line-through'}
+                glyph="remove"
+            } else {
+                style={}
+                glyph="ok"
+            }
+            return <tr key={el.pid}>
+                    <td><ReactBootstrap.Glyphicon glyph={glyph} onClick={this.markDatapoint.bind(null,el.pid)}/></td>
+                    <td style={style}><span style={{'backgroundColor':el.color}}>&nbsp;&nbsp;&nbsp;</span><span>&nbsp;{el.datapointname}</span></td>
+                   </tr>
+        }.bind(this));
+        return <ReactBootstrap.Table>
+                 {list}
+               </ReactBootstrap.Table>
+    },
     render: function () {
         delete_modal=(
-            <ReactBootstrap.Modal show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
+            <ReactBootstrap.Modal bsize="small" show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
               <ReactBootstrap.Modal.Header closeButton>
                 <ReactBootstrap.Modal.Title id="contained-modal-title">Delete Graph</ReactBootstrap.Modal.Title>
               </ReactBootstrap.Modal.Header>
               <ReactBootstrap.Modal.Body>
-                Graph {this.props.widgetname} will be deleted,<strong> are You sure?</strong>
+                Graph <strong>{this.props.widgetname}</strong> will be deleted,<strong> are You sure?</strong>
               </ReactBootstrap.Modal.Body>
               <ReactBootstrap.Modal.Footer>
                 <ReactBootstrap.Button bsStyle="default" onClick={this.cancelDelete}>Cancel</ReactBootstrap.Button>
@@ -415,18 +540,28 @@ var WidgetConfigMp = React.createClass({
               </ReactBootstrap.Modal.Footer>
             </ReactBootstrap.Modal>
         );
+        datapointList=this.renderDatapointList();
         return (
               <ReactBootstrap.Collapse in={this.props.showConfig}>
                 <div>
                   <ReactBootstrap.Well>
                     <ReactBootstrap.ListGroup >
                     <ReactBootstrap.ListGroupItem bsSize="small" >
-                    <form className="form-horizontal">
-                      <ReactBootstrap.Input ref="widgetname" placeholder={this.props.widgetname} bsSize="small" type="text" label="Graph Name" labelClassName="col-xs-3" wrapperClassName="col-xs-6" />
-                      <div className="text-right">
-                        <ReactBootstrap.Button bsSize="small" bsStyle="primary" onClick={this.updateConfig}>Update</ReactBootstrap.Button>
-                      </div>
-                    </form>
+                      <ReactBootstrap.Table condensed="true" responsive="true">
+                        <tr>
+                          <td><strong>Graph Name</strong></td>
+                          <td><ReactBootstrap.Input ref="widgetname" placeholder={this.props.widgetname} bsSize="small" type="text"/></td>
+                        </tr>
+                        <tr>
+                          <td><strong>Datapoints</strong></td>
+                          <td>{datapointList}</td>
+                        </tr>
+                        <tr>
+                          <td colSpan="2" className="text-right">
+                            <ReactBootstrap.Button bsSize="small" bsStyle="primary" onClick={this.updateConfig}>Update</ReactBootstrap.Button>
+                          </td>
+                        </tr>
+                      </ReactBootstrap.Table>
                     </ReactBootstrap.ListGroupItem>
                     <ReactBootstrap.ListGroupItem bsSize="xsmall" >
                     <strong>Delete Graph</strong>
@@ -691,7 +826,7 @@ var WidgetDs = React.createClass({
                 );
         }
         share_modal=(
-            <ReactBootstrap.Modal show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
+            <ReactBootstrap.Modal bsize="small" show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
               <ReactBootstrap.Modal.Header closeButton>
                 <ReactBootstrap.Modal.Title id="contained-modal-title">Share datasource status at {this.generateDateString(this.state.snapshotTimestamp)}</ReactBootstrap.Modal.Title>
               </ReactBootstrap.Modal.Header>
@@ -893,7 +1028,7 @@ var WidgetDp = React.createClass({
         }
         var data=[{pid:this.props.pid,color:this.state.color,datapointname:this.state.datapointname,data:this.state.data}]
         share_modal=(
-            <ReactBootstrap.Modal show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
+            <ReactBootstrap.Modal bsize="small" show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
               <ReactBootstrap.Modal.Header closeButton>
                 <ReactBootstrap.Modal.Title id="contained-modal-title">Share datapoint interval</ReactBootstrap.Modal.Title>
               </ReactBootstrap.Modal.Header>
@@ -983,9 +1118,6 @@ var WidgetMp = React.createClass({
             PubSub.publish('datapointConfigReq',{pid:this.props.datapoints[i]})
             PubSub.publish('datapointDataReq',{pid:this.props.datapoints[i]})
         }
-    },
-    componentDidUpdate: function () {
-        PubSub.publish('updateScroll',{})
     },
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.shareCounter>this.state.shareCounter) {
@@ -1152,7 +1284,7 @@ var WidgetMp = React.createClass({
             }
         }.bind(this));
         share_modal=(
-            <ReactBootstrap.Modal show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
+            <ReactBootstrap.Modal bsize="small" show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
               <ReactBootstrap.Modal.Header closeButton>
                 <ReactBootstrap.Modal.Title id="contained-modal-title">Share Graph interval</ReactBootstrap.Modal.Title>
               </ReactBootstrap.Modal.Header>

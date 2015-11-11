@@ -117,28 +117,6 @@ class GestaccountUserApiTest(unittest.TestCase):
         username='test_get_user_config_non_existing_username_user'
         self.assertRaises(exceptions.UserNotFoundException, userapi.get_user_config, username=username)
 
-    def test_delete_user_failure_invalid_username(self):
-        ''' delete_user should fail if username is invalid '''
-        usernames=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4(), uuid.uuid1()]
-        for username in usernames:
-            self.assertRaises(exceptions.BadParametersException, userapi.delete_user, username=username)
-
-    def test_delete_user_failure_non_existent_username(self):
-        ''' delete_user should fail if username does not exist '''
-        username='test_delete_user_failure_non_existent_username'
-        self.assertRaises(exceptions.UserNotFoundException, userapi.delete_user, username=username)
-
-    def test_delete_user_success(self):
-        ''' delete_user should succeed if username exists and delete its info'''
-        username=self.username
-        user=userapi.get_user_config(username=username)
-        self.assertEqual(user['username'],self.userinfo['username'])
-        self.assertEqual(user['uid'],self.userinfo['uid'])
-        self.assertEqual(user['email'],self.userinfo['email'])
-        self.assertEqual(user['state'],self.userinfo['state'])
-        self.assertTrue(userapi.delete_user(username=username))
-        self.assertRaises(exceptions.UserNotFoundException, userapi.get_user_config, username=username)
-
     def test_get_uid_failure_invalid_username(self):
         ''' get_uid should fail if username is invalid '''
         usernames=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4(), uuid.uuid1()]

@@ -63,7 +63,8 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         ''' get_dashboard_config_request should return the dashboard info '''
         username=self.userinfo['username']
         dashboardname='test_get_dashboard_config_request_success'
-        response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+        data={'dashboardname':dashboardname}
+        response=dashboardapi.new_dashboard_request(username=username,data=data)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
@@ -144,7 +145,8 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response2.data, [])
         dashboardname='test_get_dashboard_config_request_success'
-        response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+        data={'dashboardname':dashboardname}
+        response=dashboardapi.new_dashboard_request(username=username,data=data)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
@@ -164,7 +166,8 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.data['wids'],[])
         dashboard1=response.data
         dashboardname='test_get_dashboard_config_request_success_2'
-        response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+        data={'dashboardname':dashboardname}
+        response=dashboardapi.new_dashboard_request(username=username,data=data)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
@@ -241,7 +244,8 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response2.data, [])
         dashboardname='test_delete_dashboard_request_success_1'
-        response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+        data={'dashboardname':dashboardname}
+        response=dashboardapi.new_dashboard_request(username=username,data=data)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
@@ -261,7 +265,8 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.data['wids'],[])
         dashboard1=response.data
         dashboardname='test_delete_dashboard_request_success_2'
-        response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+        data={'dashboardname':dashboardname}
+        response=dashboardapi.new_dashboard_request(username=username,data=data)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
@@ -355,7 +360,8 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         ''' update_dashboard_config_request should succeed '''
         username=self.userinfo['username']
         dashboardname='test_update_dashboard_config_request_success'
-        response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+        data={'dashboardname':dashboardname}
+        response=dashboardapi.new_dashboard_request(username=username,data=data)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
@@ -430,7 +436,8 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         ''' add_widget_request should fail if user has no access over bid or wid '''
         username=self.userinfo['username']
         dashboardname='test_add_widget_request_failure_no_existing_wid'
-        response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+        data={'dashboardname':dashboardname}
+        response=dashboardapi.new_dashboard_request(username=username,data=data)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
@@ -499,7 +506,8 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         ''' delete_widget_request should succeed even if dashboard has no previous widgets '''
         username=self.userinfo['username']
         dashboardname='test_delete_widget_request_success_no_previous_widgets'
-        response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+        data={'dashboardname':dashboardname}
+        response=dashboardapi.new_dashboard_request(username=username,data=data)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
@@ -530,8 +538,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         ''' new_dashboard_request should fail if username is invalid '''
         usernames=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
         dashboardname='test_new_dashboard_request_failure_invalid_username'
+        data={'dashboardname':dashboardname}
         for username in usernames:
-            response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+            response=dashboardapi.new_dashboard_request(username=username,data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_dashboard_request_failure_invalid_dashboardname(self):
@@ -539,21 +548,24 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         dashboardnames=['userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
         username='test_new_dashboard_request_failure_invalid_dashboardname'
         for dashboardname in dashboardnames:
-            response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+            data={'dashboardname':dashboardname}
+            response=dashboardapi.new_dashboard_request(username=username,data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_dashboard_request_failure_non_existent_user(self):
         ''' new_dashboard_request should fail if user does not exist '''
         username='test_new_dashboard_request_failure_non_existent_user'
         dashboardname='test_new_dashboard_request_failure_non_existent_user'
-        response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+        data={'dashboardname':dashboardname}
+        response=dashboardapi.new_dashboard_request(username=username,data=data)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
     def test_new_dashboard_request_success(self):
         ''' new_dashboard_request should fail if user does not exist '''
         username=self.userinfo['username']
         dashboardname='test_new_dashboard_request_success'
-        response=dashboardapi.new_dashboard_request(username=username, dashboardname=dashboardname)
+        data={'dashboardname':dashboardname}
+        response=dashboardapi.new_dashboard_request(username=username,data=data)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))

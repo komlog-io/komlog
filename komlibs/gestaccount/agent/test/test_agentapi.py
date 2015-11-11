@@ -115,29 +115,3 @@ class GestaccountAgentApiTest(unittest.TestCase):
         agentname='test_update_agent_config_success_after_update'
         self.assertTrue(api.update_agent_config( aid=agent['aid'], agentname=agentname)) 
 
-    def test_delete_agent_failure_invalid_aid(self):
-        ''' delete_agent should fail if aid is invalid '''
-        aids=[None, '123123',234234,2342.2342,{'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid1(),timeuuid.uuid1(), uuid.uuid4().hex]
-        for aid in aids:
-            self.assertRaises(exceptions.BadParametersException, api.delete_agent, aid=aid)
-
-    def test_delete_agent_failure_non_existent_aid(self):
-        ''' delete_agent should fail if aid does not exist '''
-        aid=uuid.uuid4()
-        self.assertRaises(exceptions.AgentNotFoundException, api.delete_agent, aid=aid)
-
-    def test_delete_agent_success(self):
-        ''' delete_agent should succeed and delete agent from db '''
-        agentname='test_delete_agent_success'
-        pubkey='pubkeydeleteagentsuccess'
-        version='Test Version'
-        agent=api.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
-        agent2=api.get_agent_config(aid=agent['aid'])
-        self.assertEqual(agent['aid'],agent2['aid'])
-        self.assertEqual(agent['uid'],agent2['uid'])
-        self.assertEqual(agent['agentname'],agent2['agentname'])
-        self.assertEqual(agent['state'],agent2['state'])
-        self.assertEqual(agent['version'],agent2['version'])
-        self.assertTrue(api.delete_agent(aid=agent['aid']))
-        self.assertRaises(exceptions.AgentNotFoundException, api.get_agent_config, aid=agent['aid'])
-

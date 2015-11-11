@@ -80,9 +80,7 @@ class GraphApiUriTest(unittest.TestCase):
         self.assertEqual(uri_id['id'],idd)
         self.assertEqual(uri_id['type'],vertex.DATASOURCE)
         same_uri='.'.join((uri,'.level_5','level_5'))
-        logger.logger.debug('same_uri: '+same_uri)
         uri_id=graphuri.get_id(ido=ido, uri=same_uri)
-        logger.logger.debug('uri_id: '+str(uri_id))
         self.assertIsNotNone(uri_id)
         self.assertEqual(uri_id['id'],idd)
         self.assertEqual(uri_id['type'],vertex.DATASOURCE)
@@ -671,6 +669,36 @@ class GraphApiUriTest(unittest.TestCase):
         self.assertEqual(pid_vertex2['id'],pid)
         self.assertEqual(pid_vertex2['type'],vertex.DATAPOINT)
 
+    def test_dissociate_vertex_success_delete_flag_is_true(self):
+        ''' dissociate_vertex should return True and delete the uri '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        did_uri='test_dissociate_vertex.success.datasource_y'
+        self.assertTrue(graphuri.new_datasource_uri(uid=uid, did=did, uri=did_uri))
+        did_vertex=graphuri.get_id(ido=uid, uri=did_uri)
+        self.assertIsNotNone(did_vertex)
+        self.assertEqual(did_vertex['id'],did)
+        self.assertEqual(did_vertex['type'],vertex.DATASOURCE)
+        self.assertTrue(graphuri.dissociate_vertex(ido=did,delete_uri=True))
+        void_vertex=graphuri.get_id(ido=uid, uri=did_uri)
+        self.assertIsNone(void_vertex)
+
+    def test_dissociate_vertex_success_delete_flag_is_false(self):
+        ''' dissociate_vertex should return True and replace the vertex with a void one keeping the uri '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        did_uri='test_dissociate_vertex.success.datasource_y'
+        self.assertTrue(graphuri.new_datasource_uri(uid=uid, did=did, uri=did_uri))
+        did_vertex=graphuri.get_id(ido=uid, uri=did_uri)
+        self.assertIsNotNone(did_vertex)
+        self.assertEqual(did_vertex['id'],did)
+        self.assertEqual(did_vertex['type'],vertex.DATASOURCE)
+        self.assertTrue(graphuri.dissociate_vertex(ido=did,delete_uri=False))
+        void_vertex=graphuri.get_id(ido=uid, uri=did_uri)
+        self.assertIsNotNone(void_vertex)
+        self.assertTrue(isinstance(void_vertex['id'],uuid.UUID))
+        self.assertEqual(void_vertex['type'],vertex.VOID)
+
     def test_get_joined_uri_failure_invalid_base_uri(self):
         ''' get_joined_uri should fail if base uri is not valid '''
         uris=[234234, 234234.234234, 'a invalid string', uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'},'uri.with.three...consecutive.separators']
@@ -701,4 +729,69 @@ class GraphApiUriTest(unittest.TestCase):
                         ]
         for uri in uri_path_result:
             self.assertEqual(graphuri.get_joined_uri(base=uri[0],path=uri[1]),uri[2])
+
+    def test_delete_void_uri_failure_invalid_idd(self):
+        ''' delete_void_uri should return 0 if idd is invalid '''
+        idds=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for idd in idds:
+            self.assertEqual(graphuri.delete_void_uri(idd=idd),0)
+
+    def test_delete_void_uri_success_no_existent_edges(self):
+        ''' delete_void_uri should return 0 if idd has no incoming nor outgoing uri relations '''
+        idd=uuid.uuid4()
+        self.assertEqual(graphuri.delete_void_uri(idd=idd),0)
+
+    def test_delete_void_uri_success_no_void_vertex(self):
+        ''' delete_void_uri should return 0 if idd is not of type VOID '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        uri='test.uri.with.some.levels'
+        self.assertTrue(graphuri.new_datapoint_uri(pid=pid,uri=uri,uid=uid))
+        self.assertEqual(graphuri.delete_void_uri(idd=pid),0)
+
+    def test_delete_void_uri_success_recursive_true(self):
+        ''' delete_void_uri should delete all edges in this URI '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        uri='test.uri.with.some.levels'
+        self.assertTrue(graphuri.new_datapoint_uri(pid=pid,uri=uri,uid=uid))
+        self.assertTrue(graphuri.dissociate_uri(ido=uid,uri=uri))
+        new_vid_node=graphuri.get_id(ido=uid,uri=uri)
+        self.assertTrue(isinstance(new_vid_node,dict))
+        self.assertTrue(isinstance(new_vid_node['id'],uuid.UUID))
+        self.assertEqual(graphuri.delete_void_uri(idd=new_vid_node['id'],recursive_on_ancestors=True),5)
+
+    def test_delete_void_uri_success_recursive_false(self):
+        ''' delete_void_uri should delete the last edge in this URI '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        uri='test.uri.with.some.levels'
+        self.assertTrue(graphuri.new_datapoint_uri(pid=pid,uri=uri,uid=uid))
+        self.assertTrue(graphuri.dissociate_uri(ido=uid,uri=uri))
+        new_vid_node=graphuri.get_id(ido=uid,uri=uri)
+        self.assertTrue(isinstance(new_vid_node,dict))
+        self.assertTrue(isinstance(new_vid_node['id'],uuid.UUID))
+        self.assertEqual(graphuri.delete_void_uri(idd=new_vid_node['id'],recursive_on_ancestors=False),1)
+
+    def test_delete_void_uri_success_recursive_true_only_delete_nodes_with_no_descendants(self):
+        ''' delete_void_uri should delete the uri partially, only deleting void nodes with no descendants. '''
+        uid=uuid.uuid4()
+        pid1=uuid.uuid4()
+        uri1='test.uri.with.first.variable'
+        pid2=uuid.uuid4()
+        uri2='test.uri.with.second.variable'
+        self.assertTrue(graphuri.new_datapoint_uri(pid=pid1,uri=uri1,uid=uid))
+        self.assertTrue(graphuri.new_datapoint_uri(pid=pid2,uri=uri2,uid=uid))
+        self.assertTrue(graphuri.dissociate_uri(ido=uid,uri=uri1))
+        new_vid_node=graphuri.get_id(ido=uid,uri=uri1)
+        self.assertTrue(isinstance(new_vid_node,dict))
+        self.assertTrue(isinstance(new_vid_node['id'],uuid.UUID))
+        self.assertEqual(graphuri.delete_void_uri(idd=new_vid_node['id'],recursive_on_ancestors=True),2)
+        self.assertIsNone(graphuri.get_id(ido=uid,uri=uri1))
+        self.assertTrue(graphuri.dissociate_uri(ido=uid,uri=uri2))
+        new_vid_node=graphuri.get_id(ido=uid,uri=uri2)
+        self.assertTrue(isinstance(new_vid_node,dict))
+        self.assertTrue(isinstance(new_vid_node['id'],uuid.UUID))
+        self.assertEqual(graphuri.delete_void_uri(idd=new_vid_node['id'],recursive_on_ancestors=True),5)
+        self.assertIsNone(graphuri.get_id(ido=uid,uri=uri2))
 

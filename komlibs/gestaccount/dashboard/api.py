@@ -44,17 +44,6 @@ def get_dashboard_config(bid):
     else:
         raise exceptions.DashboardNotFoundException(error=errors.E_GBA_GDC_DNF)
 
-def delete_dashboard(bid):
-    if not args.is_valid_uuid(bid):
-        raise exceptions.BadParametersException(error=errors.E_GBA_DD_IB)
-    dashboard=cassapidashboard.get_dashboard(bid=bid)
-    if not dashboard:
-        raise exceptions.DashboardNotFoundException(error=errors.E_GBA_DD_DNF)
-    if cassapidashboard.delete_dashboard(bid=bid):
-        return True
-    else:
-        return False
-
 def create_dashboard(uid, dashboardname):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GBA_CRD_IU)

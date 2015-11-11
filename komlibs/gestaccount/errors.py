@@ -466,3 +466,23 @@ E_GCA_DUFC_CNF=1862
 E_GCA_DUFC_UNF=1863
 E_GCA_DUFC_AME=1864
 
+
+#gestaccount common delete
+
+E_GCD_DU_IU=5000 #delete_user invalid uid parameter
+E_GCD_DU_UNF=5001 #delete_user user not found
+
+E_GCD_DA_IA=5100 #delete_agent invalid aid parameter
+
+E_GCD_DDS_ID=5200 #delete_datasource invalid did parameter
+
+E_GCD_DDP_IP=5300 #delete_datapoint invalid pid parameter
+
+E_GCD_DW_IW=5400 #delete_widget invalid wid parameter
+
+E_GCD_DDB_IB=5500 #delete_dashboard invalid bid parameter
+
+E_GCD_DC_IC=5600 #delete_circle invalid cid parameter
+
+E_GCD_DN_IN=5700 #delete_snapshot invalid nid parameter
+

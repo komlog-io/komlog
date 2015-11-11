@@ -104,7 +104,7 @@ def confirm_user(email, code):
         raise exceptions.UserConfirmationException(error=errors.E_GUA_COU_IUE)
     cassapiuser.insert_signup_info(signup_info=signup_info)
     return True
-    
+
 def update_user_config(username, new_email=None, old_password=None, new_password=None):
     ''' This function is used to update user configuration parameters.
     Parameters supported:
@@ -159,46 +159,6 @@ def get_user_config(username):
     data['username']=user.username
     data['state']=user.state
     return data
-
-def delete_user(username):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_GUA_DU_IU)
-    user=cassapiuser.get_user(username=username)
-    if not user:
-        raise exceptions.UserNotFoundException(error=errors.E_GUA_DU_UNF)
-    aids=cassapiagent.get_agents_aids(uid=user.uid)
-    dids=cassapidatasource.get_datasources_dids(uid=user.uid)
-    pids=[]
-    for did in dids:
-        did_pids=cassapidatapoint.get_datapoints_pids(did=did)
-        for pid in did_pids:
-            pids.append(pid)
-    wids=cassapiwidget.get_widgets_wids(uid=user.uid)
-    bids=cassapidashboard.get_dashboards_bids(uid=user.uid)
-    cids=cassapicircle.get_circles_cids(uid=user.uid)
-    nids=cassapisnapshot.get_snapshots_nids(uid=user.uid)
-    cassapiuser.delete_user(username=username)
-    cassapiuser.delete_signup_info(username=username)
-    for aid in aids:
-        cassapiagent.delete_agent(aid=aid)
-    for wid in wids:
-        cassapiwidget.delete_widget(wid=wid)
-    for bid in bids:
-        cassapidashboard.delete_dashboard(bid=bid)
-    for pid in pids:
-        cassapidatapoint.delete_datapoint(pid=pid)
-        cassapidatapoint.delete_datapoint_stats(pid=pid)
-        cassapidatapoint.delete_datapoint_data(pid=pid)
-    for did in dids:
-        cassapidatasource.delete_datasource(did=did)
-        cassapidatasource.delete_datasource_stats(did=did)
-        cassapidatasource.delete_datasource_data(did=did)
-        cassapidatasource.delete_datasource_maps(did=did)
-    for cid in cids:
-        cassapicircle.delete_circle(cid=cid)
-    for nid in nids:
-        cassapisnapshot.delete_snapshot(nid=nid)
-    return True
 
 def get_uid(username):
     if not args.is_valid_username(username):

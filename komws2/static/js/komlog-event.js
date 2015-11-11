@@ -26,7 +26,6 @@ var EventsSideBar = React.createClass({
         }
     },
     disableEvent: function (seq,e) {
-        console.log('disable',seq,e)
         PubSub.publish('deleteEvent',{seq:seq})
         newEvents=this.state.events.filter( function (el) {
             return el.seq !== seq;
@@ -143,8 +142,6 @@ var EventsSideBar = React.createClass({
         return eventList
     },
     render: function () {
-        console.log('listado de eventos',this.state.events)
-        console.log('el stado queda',this.state.numNewEvents,this.state.lastSeq)
         eventList = this.getEventList();
         return (
                 <div>

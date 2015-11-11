@@ -20,6 +20,7 @@ MODULES = [
     'komlibs.gestaccount.dashboard.test.test_dashboardapi.GestaccountDashboardApiTest',
     'komlibs.gestaccount.snapshot.test.test_snapshotapi.GestaccountSnapshotApiTest',
     'komlibs.gestaccount.circle.test.test_circleapi.GestaccountCircleApiTest',
+    'komlibs.gestaccount.common.test.test_delete.GestaccountCommonDeleteTest',
     'komlibs.auth.test.test_authorization.AuthAuthorizationTest',
     'komlibs.auth.quotes.test.test_authorization.AuthQuotesAuthorizationTest',
     'komlibs.auth.quotes.test.test_deny.AuthQuotesDenyTest',

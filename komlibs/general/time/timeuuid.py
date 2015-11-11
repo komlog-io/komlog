@@ -6,6 +6,7 @@ node=0x010000000000
 str_node='010000000000'
 
 HIGHEST_TIME_UUID=util.HIGHEST_TIME_UUID
+LOWEST_TIME_UUID=util.LOWEST_TIME_UUID
 
 def get_unix_timestamp(u):
     return util.unix_time_from_uuid1(u)

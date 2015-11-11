@@ -174,7 +174,7 @@ def new_datasource_uri(uid, did, uri):
 def new_datapoint_uri(pid, uri, did=None, uid=None):
     if not args.is_valid_uuid(pid) or not args.is_valid_uri(uri):
         return False
-    if not pid and not did:
+    if not uid and not did:
         return False
     if did and not args.is_valid_uuid(did):
         return False
@@ -209,10 +209,33 @@ def dissociate_uri(ido, uri):
             vid=uuid.uuid4()
             return graphbase.replace_vertex(actual_vertex=existent_uri['id'], new_vertex=vid, new_vertex_type=vertex.VOID, edge_type_list=[edge.URI_RELATION])
 
-def dissociate_vertex(ido):
+def dissociate_vertex(ido, delete_uri=True):
     ''' Dissociate a vertex is replacing the actual vertex with a void id, migrating the previous vertex connection to the new one '''
     if not args.is_valid_uuid(ido):
         return False
     vid=uuid.uuid4()
-    return graphbase.replace_vertex(actual_vertex=ido, new_vertex=vid, new_vertex_type=vertex.VOID, edge_type_list=[edge.URI_RELATION])
+    result=graphbase.replace_vertex(actual_vertex=ido, new_vertex=vid, new_vertex_type=vertex.VOID, edge_type_list=[edge.URI_RELATION])
+    if result and delete_uri:
+        delete_void_uri(idd=vid)
+    return result
+
+def delete_void_uri(idd, recursive_on_ancestors=True):
+    ''' 
+    if idd points to a void vertex with no descendants, we delete its uri edges.
+    if recursive_on_ancestors is True, we repeat the operation with it ancestors
+    '''
+    if not args.is_valid_uuid(idd):
+        return 0
+    num_deletes=0
+    num_descendants=0
+    for descendant in graphbase.gen_get_outgoing_relations_from(ido=idd, edge_type_list=[edge.URI_RELATION], depth_level=1):
+        num_descendants+=1
+    if num_descendants==0:
+        for ancestor in graphbase.gen_get_incoming_relations_at(idd=idd, edge_type_list=[edge.URI_RELATION], depth_level=1):
+            if vertex.get_dest_vertex_type(rel=ancestor.type) == vertex.VOID:
+                if graphbase.delete_edge(ido=ancestor.ido, idd=idd, edge_type=edge.URI_RELATION):
+                    num_deletes+=1
+                if recursive_on_ancestors:
+                    num_deletes+=delete_void_uri(idd=ancestor.ido)
+    return num_deletes
 

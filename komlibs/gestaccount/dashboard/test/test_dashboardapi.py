@@ -202,24 +202,3 @@ class GestaccountDashboardApiTest(unittest.TestCase):
         config=dashboardapi.get_dashboard_config(bid=bid)
         self.assertEqual(config, {'bid':bid, 'dashboardname':dashboardname,'wids':[]})
 
-    def test_delete_dashboard_failure_invalid_bid(self):
-        ''' delete_dashboard should fail if bid is invalid '''
-        bids=[None, 2342342, 2342342.23423, {'a':'dict'}, ['a','list'],('a','tuple'),{'set'}, uuid.uuid4().hex, uuid.uuid1(), uuid.uuid1().hex, 'dashboardñame']
-        for bid in bids:
-            self.assertRaises(exceptions.BadParametersException, dashboardapi.delete_dashboard, bid=bid)
-
-    def test_delete_dashboard_failure_non_existent_bid(self):
-        ''' delete_dashboard should fail if bid does not exist '''
-        bid=uuid.uuid4()
-        self.assertRaises(exceptions.DashboardNotFoundException, dashboardapi.delete_dashboard, bid=bid)
-
-    def test_delete_dashboard_success(self):
-        ''' delete_dashboard should succeed if bid exist '''
-        username='test_delete_dashboard_success'
-        dashboardname='test_delete_dashboard_success'
-        user=userapi.create_user(username=username,password='password',email=username+'@komlog.org')
-        result=dashboardapi.create_dashboard(uid=user['uid'], dashboardname=dashboardname)
-        bid=result['bid']
-        self.assertTrue(dashboardapi.delete_dashboard( bid=bid))
-        self.assertRaises(exceptions.DashboardNotFoundException, dashboardapi.get_dashboard_config, bid=bid)
-

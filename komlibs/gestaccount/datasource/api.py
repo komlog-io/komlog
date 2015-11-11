@@ -223,41 +223,6 @@ def generate_datasource_map(did, date):
     else:
         raise exceptions.DatasourceDataNotFoundException(error=errors.E_GDA_GDM_DDNF)
 
-def delete_datasource(did):
-    if not args.is_valid_uuid(did):
-        raise exceptions.BadParametersException(error=errors.E_GDA_DD_ID)
-    datasource=cassapidatasource.get_datasource(did=did)
-    if not datasource:
-        raise exceptions.DatasourceNotFoundException(error=errors.E_GDA_DD_DNF)
-    bids=cassapidashboard.get_dashboards_bids(uid=datasource.uid)
-    wids=[]
-    pids=cassapidatapoint.get_datapoints_pids(did=did)
-    for pid in pids:
-        dp_wid=cassapiwidget.get_widget_dp(pid=pid)
-        if dp_wid:
-            wids.append(dp_wid.wid)
-    ds_wid=cassapiwidget.get_widget_ds(did=did)
-    if ds_wid:
-        wids.append(ds_wid.wid)
-    for bid in bids:
-        for wid in wids:
-            cassapidashboard.delete_widget_from_dashboard(wid=wid, bid=bid)
-    for wid in wids:
-        cassapiwidget.delete_widget(wid=wid)
-        graphuri.dissociate_vertex(ido=wid)
-    for pid in pids:
-        cassapidatapoint.delete_datapoint(pid=pid)
-        cassapidatapoint.delete_datapoint_stats(pid=pid)
-        cassapidatapoint.delete_datapoint_data(pid=pid)
-        graphuri.dissociate_vertex(ido=pid)
-    cassapidatasource.delete_datasource(did=datasource.did)
-    cassapidatasource.delete_datasource_stats(did=datasource.did)
-    cassapidatasource.delete_datasource_data(did=datasource.did)
-    cassapidatasource.delete_datasource_maps(did=datasource.did)
-    cassapidatasource.delete_datasource_text_summaries(did=datasource.did)
-    graphuri.dissociate_vertex(ido=did)
-    return True
-
 def generate_datasource_text_summary(did, date):
     if not args.is_valid_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_GDA_GDTS_ID)

@@ -44,15 +44,6 @@ def get_users_circles_config(uid):
         data.append(circle)
     return data
 
-def delete_circle(cid):
-    if not args.is_valid_uuid(cid):
-        raise exceptions.BadParametersException(error=errors.E_GCA_DC_IC)
-    circle=cassapicircle.get_circle(cid=cid)
-    if not circle:
-        raise exceptions.CircleNotFoundException(error=errors.E_GCA_DC_CNF)
-    cassapicircle.delete_circle(cid=cid)
-    return True
-
 def new_users_circle(uid, circlename, members_list=None):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GCA_NUC_IU)

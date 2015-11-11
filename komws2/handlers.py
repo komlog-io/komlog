@@ -451,6 +451,18 @@ class DashboardsHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
+    @auth.userauthenticated
+    def post(self):
+        try:
+            data=json_decode(self.request.body)
+        except Exception as e:
+            self.set_status(400)
+            self.write(json_encode({'message':'Bad parameters'}))
+        else:
+            response=dashboard.new_dashboard_request(username=self.user, data=data)
+            self.set_status(response.status)
+            self.write(json_encode(response.data))
+
 class DashboardConfigHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated

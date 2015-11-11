@@ -1,81 +1,3 @@
-var Workspace = React.createClass({
-    getInitialState: function () {
-        return {slides: []}
-    },
-    shortcutCounter: 1,
-    subscriptionTokens: [],
-    subscriptionHandler: function(msg,data) {
-        switch(msg){
-            case 'loadSlide':
-                slideExists=false
-                if (data.hasOwnProperty('wid')) {
-                    lid = data.wid
-                    type = 'wid'
-                } else if (data.hasOwnProperty('nid')) {
-                    lid = data.nid
-                    type = 'nid'
-                } else if (data.hasOwnProperty('pid')) {
-                    PubSub.publish('loadDatapointSlide',{pid:data.pid})
-                    break;
-                } else if (data.hasOwnProperty('did')) {
-                    PubSub.publish('loadDatasourceSlide',{did:data.did})
-                    break;
-                }
-                tid=data.tid
-                for (var i=0; i<this.state.slides.length;i++) {
-                    if (this.state.slides[i].lid==lid) {
-                        slideExists=true
-                        break;
-                    }
-                }
-                if (slideExists==false && lid) {
-                    slide={lid:lid,tid:tid,shortcut:this.shortcutCounter++,type:type}
-                    new_slides=this.state.slides
-                    new_slides.push(slide)
-                    PubSub.publish('newSlideLoaded',{slide:slide})
-                    this.setState({slides:new_slides});
-                }
-                break;
-            case 'closeSlide':
-                new_slides=this.state.slides.filter(function (el) {
-                        return el.lid.toString()!==data.lid.toString();
-                    });
-                this.setState({slides:new_slides});
-                break;
-            case 'updateScroll':
-                this.componentDidUpdate();
-                break;
-        }
-    },
-    componentWillMount: function () {
-        this.subscriptionTokens.push({token:PubSub.subscribe('loadSlide', this.subscriptionHandler),msg:'loadSlide'});
-        this.subscriptionTokens.push({token:PubSub.subscribe('closeSlide', this.subscriptionHandler),msg:'closeSlide'});
-        this.subscriptionTokens.push({token:PubSub.subscribe('updateScroll', this.subscriptionHandler),msg:'updateScroll'});
-    },
-    componentWillUnmount: function () {
-        this.subscriptionTokens.map(function (d) {
-            PubSub.unsubscribe(d.token)
-            });
-    },
-    componentWillUpdate: function () {
-        this.shouldScrollBottom = $('#workspace-content')[0].scrollTop + $('#workspace-content')[0].offsetHeight === $('#workspace-content')[0].scrollHeight;
-    },
-    componentDidUpdate: function () {
-        if (this.lastScrollHeight != $('#workspace-content')[0].scrollHeight && this.shouldScrollBottom) {
-            $('#workspace-content').scrollTop($('#workspace-content')[0].scrollHeight)
-        }
-        this.lastScrollHeight = $('#workspace-content')[0].scrollHeight;
-    },
-    render: function () {
-        slides = this.state.slides.map( function (slide) {
-            return (<Slide key={slide.shortcut} lid={slide.lid} tid={slide.tid} shortcut={slide.shortcut} type={slide.type}/>)
-        });
-        return (<div className="workspace"> 
-                {slides}
-                </div>);
-    },
-});
-
 var Slide = React.createClass({
     styles: {
         slidestyle:  {
@@ -99,7 +21,7 @@ var Slide = React.createClass({
         switch (this.props.type) {
             case 'wid':
                 return (
-                  <Widget closeCallback={this.closeCallback} wid={this.props.lid}/>
+                  <Widget bid={this.props.bid} closeCallback={this.closeCallback} wid={this.props.lid} isPinned={this.props.isPinned} />
                     );
                 break;
             case 'nid':
@@ -119,6 +41,77 @@ var Slide = React.createClass({
           {slide}
         </div>
         );
+    },
+});
+
+
+var Workspace= React.createClass({
+    getInitialState: function () {
+        return {
+                dashboards: [{bid:'0'}],
+                activeDashboard: '0',
+               }
+    },
+    subscriptionTokens: [],
+    subscriptionHandler: function(msg,data) {
+        switch(msg){
+            case 'showDashboard':
+                this.switchActiveDashboard(data.bid)
+                break;
+        }
+    },
+    componentWillMount: function () {
+        this.subscriptionTokens.push({token:PubSub.subscribe('showDashboard', this.subscriptionHandler),msg:'showDashboard'});
+    },
+    componentWillUnmount: function () {
+        this.subscriptionTokens.map(function (d) {
+            PubSub.unsubscribe(d.token)
+            });
+    },
+    switchActiveDashboard: function (bid) {
+        console.log('switchActiveDashboard');
+        if (this.state.activeDashboard.toString() == bid.toString()) {
+            console.log('same Dashboard');
+            return;
+        } else {
+            for (var i=0; i<this.state.dashboards.length; i++) {
+                if (this.state.dashboards[i].bid.toString() == bid.toString()) {
+                    this.setState({activeDashboard:bid.toString()});
+                    return;
+                }
+            }
+            dashboard=dashboardStore._dashboardConfig[bid.toString()];
+            if (dashboard != undefined && dashboard.dashboardname != undefined) {
+                dashboards=this.state.dashboards
+                dashboards.push({bid:bid.toString()})
+                this.setState({dashboards:dashboards,activeDashboard:bid.toString()})
+            }
+        }
+    },
+    closeDashboard: function (bid) {
+        if (bid.toString() != '0') {
+            dashboards=this.state.dashboards.filter(function (el) {
+                return el.bid.toString() !== bid.toString();
+            });
+            this.setState({activeDashboard:'0',dashboards:dashboards})
+        }
+    },
+    getDashboards: function () {
+        dashboards=this.state.dashboards.map(function (el) {
+            if (this.state.activeDashboard == el.bid) {
+                active=true
+            } else {
+                active=false
+            }
+            return <Dashboard key={el.bid} bid={el.bid} active={active} closeCallback={this.closeDashboard}/>
+        }.bind(this));
+        return dashboards;
+    },
+    render: function () {
+        dashboards = this.getDashboards()
+        return (<div className="workspace">
+                {dashboards}
+                </div>);
     },
 });
 

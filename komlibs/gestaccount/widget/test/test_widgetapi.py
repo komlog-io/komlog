@@ -128,56 +128,6 @@ class GestaccountWidgetApiTest(unittest.TestCase):
                 self.assertEqual(widget['pid'],widget_dp['pid'])
                 self.assertEqual(widget['type'],widget_dp['type'])
 
-    def test_delete_widget_non_existent_widget(self):
-        ''' delete_widget should fail if widget is not in system '''
-        username='test_delete_widget_config_non_existent_widget_user'
-        agentname='test_delete_widget_config_non_existent_widget_agent'
-        datasourcename='test_delete_widget_config_non_existent_widget_datasource'
-        datapointname='test_delete_widget_config_non_existent_widget_datapoint'
-        email=username+'@komlog.org'
-        password='password'
-        pubkey='testdeletewidgetnonexistentwidgetpubkey'
-        version='Test Version'
-        user=userapi.create_user(username=username, password=password, email=email)
-        wid=uuid.uuid4()
-        self.assertRaises(exceptions.WidgetNotFoundException, api.delete_widget, wid=wid)
-
-    def test_delete_widget_ds_success(self):
-        ''' delete_widget should succeed if wid and user exist '''
-        username='test_delete_widget_ds_success_user'
-        agentname='test_delete_widget_ds_success_agent'
-        datasourcename='test_delete_widget_ds_success_datasource'
-        datapointname='test_delete_widget_ds_success_datapoint'
-        email=username+'@komlog.org'
-        password='password'
-        pubkey='testdeletewidgetdssuccesspubkey'
-        version='Test Version'
-        user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        widget=api.new_widget_datasource(uid=user['uid'], did=datasource['did']) 
-        self.assertTrue(api.delete_widget(wid=widget['wid']))
-        self.assertRaises(exceptions.WidgetNotFoundException, api.delete_widget, wid=widget['wid'])
-
-    def test_delete_widget_dp_success(self):
-        ''' delete_widget should succeed if wid and user exist '''
-        username='test_delete_widget_dp_success_user'
-        agentname='test_delete_widget_dp_success_agent'
-        datasourcename='test_delete_widget_dp_success_datasource'
-        datapointname='test_delete_widget_dp_success_datapoint'
-        email=username+'@komlog.org'
-        password='password'
-        pubkey='testdeletewidgetdpsuccesspubkey'
-        version='Test Version'
-        user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
-        widget=api.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid']) 
-        self.assertTrue(api.delete_widget(wid=widget['wid']))
-        self.assertRaises(exceptions.WidgetNotFoundException, api.delete_widget, wid=widget['wid'])
-
     def test_new_widget_datasource_non_existent_username(self):
         ''' new_widget_datasource should fail if username does not exist '''
         uid=uuid.uuid4()
