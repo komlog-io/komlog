@@ -319,19 +319,6 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 break
         self.assertFalse(count>=1000)
         rescontrol.process_message_UPDQUO(msg)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])): 
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_RESAUTH(msg)
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -420,19 +407,6 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 break
         self.assertFalse(count>=1000)
         rescontrol.process_message_UPDQUO(msg)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])): 
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_RESAUTH(msg)
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -2069,19 +2043,6 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 break
         self.assertFalse(count>=1000)
         rescontrol.process_message_UPDQUO(msg)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(aid) and msg.params['did']==uuid.UUID(response.data['did'])): 
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_RESAUTH(msg)
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:

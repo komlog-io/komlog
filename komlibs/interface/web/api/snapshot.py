@@ -8,6 +8,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.auth import update as authupdate
 from komlibs.auth.tickets import provision as ticketprov
 from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount.user import api as userapi
@@ -183,14 +184,17 @@ def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None,
             operation=weboperations.NewSnapshotOperation(uid=snapshot['uid'], nid=snapshot['nid'],wid=snapshot['wid'])
             auth_op=operation.get_auth_operation()
             params=operation.get_params()
-            message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
-            msgapi.send_message(message)
-            message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
-            msgapi.send_message(message)
-            message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
-            msgapi.send_message(message)
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
+            if authupdate.update_resources(operation=auth_op, params=params):
+                message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
+                msgapi.send_message(message)
+                message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
+                msgapi.send_message(message)
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
+            else:
+                deleteapi.delete_snapshot(nid=snapshot['nid'])
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=errors.E_IWASN_NSNR_AUTHERR)
         else:
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
+            deleteapi.delete_snapshot(nid=snapshot['nid'])
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=errors.E_IWASN_NSNR_TCKCE)
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=errors.E_IWASN_NSNR_SCE)
 

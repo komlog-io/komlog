@@ -8,6 +8,7 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.auth import update as authupdate
 from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.circle import api as circleapi
@@ -81,15 +82,17 @@ def new_users_circle_request(username, circlename, members_list=None):
         operation=weboperations.NewCircleOperation(uid=circle['uid'], cid=circle['cid'])
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
-        message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
-        msgapi.send_message(message)
-        message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
-        msgapi.send_message(message)
-        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_CIRCLE, parameters={'cid':circle['cid'].hex})
-        msgapi.send_message(message)
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'cid':circle['cid'].hex})
+        if authupdate.update_resources(operation=auth_op, params=params):
+            message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
+            msgapi.send_message(message)
+            message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_CIRCLE, parameters={'cid':circle['cid'].hex})
+            msgapi.send_message(message)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'cid':circle['cid'].hex})
+        else:
+            deleteapi.delete_circle(cid=circle['cid'])
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=errors.E_IWACI_NUCR_AUTHERR)
     else:
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=errors.E_IWACI_NUCR_CCE)
 
 @exceptions.ExceptionHandler
 def update_circle_request(username, cid, data):

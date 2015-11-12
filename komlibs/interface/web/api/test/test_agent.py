@@ -57,18 +57,6 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
                 break
         self.assertFalse(count>=1000)
         #msg UPDQUO received OK
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        #msg RESAUTH received OK
-        self.assertFalse(count>=1000)
 
     def test_new_agent_request_failure_invalid_username(self):
         ''' new_agent_request should fail if username is invalid '''
@@ -142,19 +130,6 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertFalse(count>=1000)
         rescontrol.process_message_UPDQUO(msg)
         #msg UPDQUO received OK
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        #msg RESAUTH received OK
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_RESAUTH(msg)
         response2 = agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response2.status, status.WEB_STATUS_ACCESS_DENIED)
 
@@ -182,18 +157,6 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
                 break
         self.assertFalse(count>=1000)
         rescontrol.process_message_UPDQUO(msg)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_RESAUTH(msg)
         response2 = agentapi.get_agent_config_request(username=username, aid=response.data['aid'])
         self.assertTrue(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response2.data['aid'],response.data['aid'])
@@ -254,19 +217,6 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertFalse(count>=1000)
         rescontrol.process_message_UPDQUO(msg)
         #msg UPDQUO received OK
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        #msg RESAUTH received OK
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_RESAUTH(msg)
         username2 = 'test_get_agent_config_failure_no_permission_over_this_agent_user'
         password = 'password'
         email2 = username2+'@komlog.org'
@@ -300,18 +250,6 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
                 break
         self.assertFalse(count>=1000)
         rescontrol.process_message_UPDQUO(msg)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response1.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_RESAUTH(msg)
         agentname2='test_get_agents_config_request_success_2'
         pubkey2='TESTGETAGENTSCONFIGREQUESTSUCCESS2'
         version='test library vX.XX'
@@ -333,18 +271,6 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
                 break
         self.assertFalse(count>=1000)
         rescontrol.process_message_UPDQUO(msg)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response2.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_RESAUTH(msg)
         response3 = agentapi.get_agents_config_request(username=username)
         self.assertTrue(response3.status, status.WEB_STATUS_OK)
         self.assertTrue(len(response3.data)>=2)
@@ -411,18 +337,6 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
                 break
         self.assertFalse(count>=1000)
         rescontrol.process_message_UPDQUO(msg)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==uuid.UUID(self.userinfo['uid']) and msg.params['aid']==uuid.UUID(response.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_RESAUTH(msg)
         new_agentname=agentname+'_new'
         data={'agentname':new_agentname}
         response2 = agentapi.update_agent_config_request(username=username, aid=response.data['aid'], data=data)

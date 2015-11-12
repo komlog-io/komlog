@@ -9,9 +9,11 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
+from komlibs.auth import update as authupdate
 from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.dashboard import api as dashboardapi
+from komlibs.gestaccount.common import delete as deleteapi
 from komlibs.interface.web import status, exceptions, errors
 from komlibs.interface.web.model import webmodel
 from komlibs.interface.web.operations import weboperations
@@ -64,13 +66,15 @@ def new_dashboard_request(username, data):
         operation=weboperations.NewDashboardOperation(uid=dashboard['uid'],bid=dashboard['bid'])
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
-        message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
-        msgapi.send_message(message)
-        message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
-        msgapi.send_message(message)
-        message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, parameters={'bid':dashboard['bid'].hex})
-        msgapi.send_message(message)
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'bid':dashboard['bid'].hex})
+        if authupdate.update_resources(operation=auth_op, params=params):
+            message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
+            msgapi.send_message(message)
+            message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, parameters={'bid':dashboard['bid'].hex})
+            msgapi.send_message(message)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'bid':dashboard['bid'].hex})
+        else:
+            deleteapi.delete_dashboard(bid=dashboard['bid'])
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=errors.E_IWADB_NDBR_AUTHERR)
 
 @exceptions.ExceptionHandler
 def delete_dashboard_request(username, bid):
