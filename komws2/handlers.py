@@ -22,12 +22,6 @@ from komlibs.general.time import timeuuid
 from komfig import logger
 from komws2 import auth
 
-class BaseHandler(tornado.web.RequestHandler):
-    
-    @auth.userauthenticated
-    def get_current_user(self):
-        return self.get_secure_cookie('komlog_user')
-
 class AgentsHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
@@ -284,7 +278,7 @@ class DatapointNegativesHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json_encode(response.data))
 
-class UserConfigHandler(BaseHandler):
+class UserConfigHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def get(self):
@@ -309,7 +303,7 @@ class UserConfigHandler(BaseHandler):
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
-class UserHomeHandler(BaseHandler):
+class UserHomeHandler(tornado.web.RequestHandler):
 
     @auth.userauthenticated
     def get(self):
@@ -331,8 +325,10 @@ class LoginHandler(tornado.web.RequestHandler):
             password=self.get_argument('password')
             agentid=self.get_argument('agent',None)
             signature=self.get_argument('signature',None)
-        except Exception:
+        except Exception as e:
+            logger.logger.debug('LOGIN ERROR: '+str(e))
             self.redirect(self.get_login_url()+error)
+            return
         else:
             response=login.login_request(username=username, password=password, agentid=agentid, signature=signature)
             logger.logger.debug('LOGIN RESULT: '+str(response.__dict__))
@@ -348,6 +344,7 @@ class LoginHandler(tornado.web.RequestHandler):
                 self.clear_cookie('komlog_user')
                 self.clear_cookie('komlog_agent')
                 self.redirect(self.get_login_url()+error)
+                return
 
 class LogoutHandler(tornado.web.RequestHandler):
 
@@ -634,11 +631,44 @@ class UserEventsResponsesHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json_encode(response.data))
 
+class AppRootHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        self.render('root.html', page_title='Komlog')
+
+class InviteHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        request_code=self.get_argument('c',default=None) #c : request code
+        if request_code==None:
+            self.render('invite.html', page_title='Komlog')
+        elif request_code=='0':
+            self.render('invite_success.html', page_title='Komlog')
+        else:
+            self.render('invite_error.html', page_title='Komlog')
+
+    def post(self):
+        #suponemos que aquí llega una vez ha validado capcha o algo asi
+        try:
+            email=self.get_argument('email')
+        except Exception:
+            self.redirect('/invite?c=1')
+        else:
+            logger.logger.debug('signup data: '+str(email))
+            self.redirect('/invite?c=0')
+
+class CareersHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        self.render('careers.html', page_title='Komlog')
+
 UUID4_REGEX='[0-9a-fA-F]{32}'
 SEQ_REGEX='[0-9a-fA-F]{20}'
 USERNAME_REGEX='[0-9a-z\-_]+'
 
 HANDLERS = [(r'/login/?', LoginHandler),
+            (r'/invite/?', InviteHandler),
+            (r'/careers/?', CareersHandler),
             (r'/logout/?', LogoutHandler),
             (r'/etc/ag/?', AgentsHandler),
             (r'/etc/ag/('+UUID4_REGEX+')', AgentConfigHandler),
@@ -669,5 +699,6 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/var/usr/ev/('+SEQ_REGEX+')', UserEventsResponsesHandler),
             (r'/home/config', UserConfigHandler),
             (r'/home', UserHomeHandler),
+            (r'/', AppRootHandler),
             ]
 
