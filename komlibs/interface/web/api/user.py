@@ -52,22 +52,11 @@ def get_user_config_request(username):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWAU_GUSCR_IU)
     user=userapi.get_user_config(username=username)
-    agents=agentapi.get_agents_config(uid=user['uid'], dids_flag=True)
-    agents_data=[]
-    for agent in agents:
-        dids=[]
-        for did in agent['dids']:
-            dids.append(did.hex)
-        agents_data.append({'aid':agent['aid'].hex,
-                           'agentname':agent['agentname'],
-                           'state':agent['state'],
-                           'version':agent['version'],
-                           'dids':dids})
     data={'username':user['username'],
           'uid':user['uid'].hex,
           'email':user['email'],
-          'state':user['state'],
-          'agents':agents_data}
+          'state':user['state']
+         }
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
 
 @exceptions.ExceptionHandler

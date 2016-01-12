@@ -99,12 +99,15 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                     if count>=100:
                         break
             userresponse=userapi.get_user_config_request(username=username)
-            did=userresponse.data['agents'][0]['dids'][0]
+            agents_info=agentapi.get_agents_config_request(username=username)
+            did=agents_info.data[0]['dids'][0]
             content='DATAPOINT TESTS CONTENT 0 1 2 3 4 5 6 7 8'
             date=timeuuid.uuid1()
             self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date, content=content))
             self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date))
         self.userinfo=userresponse.data
+        agents_info=agentapi.get_agents_config_request(username=username)
+        self.userinfo['agents']=agents_info.data
 
     def test_new_datapoint_request_success(self):
         ''' new_datapoint_request should succeed if parameters exists, and user has permission '''

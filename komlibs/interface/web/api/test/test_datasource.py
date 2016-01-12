@@ -97,6 +97,8 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
                         break
             userresponse=userapi.get_user_config_request(username=username)
         self.userinfo=userresponse.data
+        agents_info=agentapi.get_agents_config_request(username=username)
+        self.userinfo['agents']=agents_info.data
 
     def test_get_datasource_config_request_success(self):
         ''' get_datasource_config_request should succeed returning the datasource config '''

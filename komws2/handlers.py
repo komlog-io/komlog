@@ -168,6 +168,12 @@ class UsersHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json_encode(response.data))
 
+    @auth.userauthenticated
+    def get(self):
+        response=user.get_user_config_request(username=self.user)
+        self.set_status(response.status)
+        self.write(json_encode(response.data))
+
 class UserConfirmationHandler(tornado.web.RequestHandler):
 
     def get(self):

@@ -261,7 +261,6 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
-        self.assertEqual([],response2.data['agents'])
 
     def test_get_user_config_request_failure_invalid_username(self):
         ''' get_user_config_request should fail if username is invalid'''
@@ -294,7 +293,6 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response.data['uid'],response3.data['uid'])
         self.assertEqual(username,response3.data['username'])
         self.assertEqual(new_email,response3.data['email'])
-        self.assertEqual([],response3.data['agents'])
 
     def test_update_user_config_request_failure_invalid_username(self):
         ''' update_user_config_request should fail if username is invalid '''

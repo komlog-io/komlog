@@ -8,6 +8,7 @@
 <script src="{{ static_url("js/bootstrap.min.js")}}"></script>
 <script src="{{ static_url("js/d3.min.js")}}"></script>
 <script src="{{ static_url("js/pubsub.js")}}"></script>
+<script type="text/jsx" src="{{ static_url("js/komlog-user-store.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-datasource-store.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-datapoint-store.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-widget-store.js")}}"></script>
@@ -21,6 +22,7 @@
 <script type="text/jsx" src="{{ static_url("js/komlog-dashboard.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-snapshot.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-main.js")}}"></script>
+<script type="text/jsx" src="{{ static_url("js/komlog-user-header.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-toolbar.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-navgraph.js")}}"></script>
 <script type="text/jsx" src="{{ static_url("js/komlog-menu.js")}}"></script>
@@ -30,24 +32,8 @@
 {% end %}
 
 {% block body %}
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container-fluid">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">Komlog</a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-          <ul class="nav navbar-nav navbar-right">
-            <li><a href="#">Profile</a></li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <div id='user-header'>
+    </div>
     <div class="container-fluid">
       <div class="row">
         <div class="col-md-3 sidebar">

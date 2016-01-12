@@ -62,6 +62,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                     break
         userresponse=userapi.get_user_config_request(username=username)
         self.userinfo=userresponse.data
+        agents_info=agentapi.get_agents_config_request(username=username)
+        self.userinfo['agents']=agents_info.data
 
     def test_get_widget_config_request_success_widget_ds(self):
         ''' get_widget_config_request should succeed returning the widget_ds config '''

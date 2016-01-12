@@ -84,6 +84,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             userresponse = userapi.get_user_config_request(username=username_to_share)
             self.assertEqual(userresponse.status, status.WEB_STATUS_OK)
         self.userinfo_to_share=userresponse.data
+        agents_info=agentapi.get_agents_config_request(username=username)
+        self.userinfo['agents']=agents_info.data
 
     def test_get_snapshots_config_request_failure_invalid_username(self):
         ''' get_snapshots_config_request should fail if username is invalid '''
