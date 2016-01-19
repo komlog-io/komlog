@@ -185,3 +185,223 @@ class KomcassApiUserTest(unittest.TestCase):
         uid=userapi.get_uid(username=username)
         self.assertTrue(isinstance(uid, uuid.UUID))
 
+    def test_get_invitation_info_non_existing_info(self):
+        ''' get_invitation_info should return an empty array is no info is found '''
+        inv_id=uuid.uuid4()
+        self.assertEqual(userapi.get_invitation_info(inv_id=inv_id),[])
+
+    def test_get_invitation_info_existing_info(self):
+        ''' get_invitation_info should return an array with the found info '''
+        info1=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
+        info2=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
+        info3=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=uuid.uuid4())
+        info4=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
+        info5=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
+        info6=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info3))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info5))
+        self.assertTrue(userapi.insert_invitation_info(info5))
+        self.assertTrue(userapi.insert_invitation_info(info5))
+        self.assertTrue(userapi.insert_invitation_info(info6))
+        info_found=userapi.get_invitation_info(inv_id=info1.inv_id)
+        self.assertEqual(len(info_found),5)
+        info_found=userapi.get_invitation_info(inv_id=info2.inv_id)
+        self.assertEqual(len(info_found),1)
+
+    def test_insert_invitation_info_success(self):
+        ''' insert_invitation_info should insert the info successfully '''
+        info1=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
+        info2=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
+        info3=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=uuid.uuid4())
+        info4=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
+        info5=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
+        info6=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info3))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info5))
+        self.assertTrue(userapi.insert_invitation_info(info5))
+        self.assertTrue(userapi.insert_invitation_info(info5))
+        self.assertTrue(userapi.insert_invitation_info(info6))
+        info_found=userapi.get_invitation_info(inv_id=info1.inv_id)
+        self.assertEqual(len(info_found),5)
+        info_found=userapi.get_invitation_info(inv_id=info2.inv_id)
+        self.assertEqual(len(info_found),1)
+
+    def test_insert_invitation_info_failure_non_Invitation_instance(self):
+        ''' insert_invitation_info should fail if info is not a Invitation instance '''
+        infos=[None, 123123, '2123123123', {'a':'dict'},['a','list']]
+        for info in infos:
+            self.assertFalse(userapi.insert_invitation_info(info))
+
+    def test_delete_invitation_info_success(self):
+        ''' delete_invitation_info should delete the info successfully '''
+        info1=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
+        info2=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
+        info3=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=uuid.uuid4())
+        info4=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
+        info5=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
+        info6=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info1))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info2))
+        self.assertTrue(userapi.insert_invitation_info(info3))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info4))
+        self.assertTrue(userapi.insert_invitation_info(info5))
+        self.assertTrue(userapi.insert_invitation_info(info5))
+        self.assertTrue(userapi.insert_invitation_info(info5))
+        self.assertTrue(userapi.insert_invitation_info(info6))
+        info_found=userapi.get_invitation_info(inv_id=info1.inv_id)
+        self.assertEqual(len(info_found),5)
+        info_found=userapi.get_invitation_info(inv_id=info2.inv_id)
+        self.assertEqual(len(info_found),1)
+        self.assertTrue(userapi.delete_invitation_info(inv_id=info1.inv_id, date=info1.date))
+        self.assertTrue(userapi.delete_invitation_info(inv_id=info2.inv_id, date=info2.date))
+        info_found=userapi.get_invitation_info(inv_id=info1.inv_id)
+        self.assertEqual(len(info_found),4)
+        info_found=userapi.get_invitation_info(inv_id=info2.inv_id)
+        self.assertEqual(len(info_found),0)
+
+    def test_delete_invitation_info_success_even_if_does_not_exist(self):
+        ''' delete_invitation_info should delete the info successfully even if it does not exist '''
+        inv_id=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertTrue(userapi.delete_invitation_info(inv_id=inv_id, date=date))
+
+    def test_get_invitation_request_none_found(self):
+        ''' get_invitation_request should return None if no request is found '''
+        email='test@email.com'
+        self.assertIsNone(userapi.get_invitation_request(email=email))
+
+    def test_get_invitation_request_success(self):
+        ''' get_invitation_request should return the request '''
+        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request1))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request2))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request3))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request4))
+        self.assertEqual(userapi.get_invitation_request(email=request1.email).__dict__,request1.__dict__)
+        self.assertEqual(userapi.get_invitation_request(email=request2.email).__dict__,request2.__dict__)
+        self.assertEqual(userapi.get_invitation_request(email=request3.email).__dict__,request3.__dict__)
+        self.assertEqual(userapi.get_invitation_request(email=request4.email).__dict__,request4.__dict__)
+
+    def test_get_invitation_requests_success(self):
+        ''' get_invitation_request should return the requests with the associated state '''
+        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
+        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request1))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request2))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request3))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request4))
+        requests_found=userapi.get_invitation_requests(state=0)
+        self.assertTrue(len(requests_found)>1)
+        requests_found=userapi.get_invitation_requests(state=1)
+        self.assertTrue(len(requests_found)>1)
+        requests_found=userapi.get_invitation_requests(state=200)
+        self.assertEqual(len(requests_found),0)
+
+    def test_insert_invitation_request_success(self):
+        ''' insert_invitation_request should insert the object successfully '''
+        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
+        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request1))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request2))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request3))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request4))
+        requests_found=userapi.get_invitation_requests(state=0)
+        self.assertTrue(len(requests_found)>1)
+        requests_found=userapi.get_invitation_requests(state=1)
+        self.assertTrue(len(requests_found)>1)
+        requests_found=userapi.get_invitation_requests(state=200)
+        self.assertEqual(len(requests_found),0)
+
+    def test_insert_invitation_request_failure_non_InvitationRequest_instance(self):
+        ''' insert_invitation_request should fail if info is not a InvitationRequest instance '''
+        requests=[None, 123123, '2123123123', {'a':'dict'},['a','list']]
+        for request in requests:
+            self.assertFalse(userapi.insert_invitation_request(request))
+
+    def test_delete_invitation_request_success(self):
+        ''' delete_invitation_request should delete the object successfully '''
+        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
+        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request1))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request2))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request3))
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request4))
+        request=userapi.get_invitation_request(email=request1.email)
+        self.assertIsNotNone(request)
+        self.assertTrue(userapi.delete_invitation_request(email=request.email))
+        request=userapi.get_invitation_request(email=request1.email)
+        self.assertIsNone(request)
+        request=userapi.get_invitation_request(email=request2.email)
+        self.assertIsNotNone(request)
+        self.assertTrue(userapi.delete_invitation_request(email=request.email))
+        request=userapi.get_invitation_request(email=request2.email)
+        self.assertIsNone(request)
+        request=userapi.get_invitation_request(email=request3.email)
+        self.assertIsNotNone(request)
+        self.assertTrue(userapi.delete_invitation_request(email=request.email))
+        request=userapi.get_invitation_request(email=request3.email)
+        self.assertIsNone(request)
+        request=userapi.get_invitation_request(email=request4.email)
+        self.assertIsNotNone(request)
+        self.assertTrue(userapi.delete_invitation_request(email=request.email))
+        request=userapi.get_invitation_request(email=request4.email)
+        self.assertIsNone(request)
+
+    def test_update_invitation_request_state_success(self):
+        ''' update_invitation_request_state should update the state of the request '''
+        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        self.assertTrue(userapi.insert_invitation_request(invitation_request=request1))
+        request=userapi.get_invitation_request(email=request1.email)
+        self.assertIsNotNone(request)
+        self.assertEqual(request.state,0)
+        self.assertTrue(userapi.update_invitation_request_state(email=request.email, new_state=1))
+        request=userapi.get_invitation_request(email=request1.email)
+        self.assertIsNotNone(request)
+        self.assertEqual(request.state,1)
+
+    def test_update_invitation_request_state_failed(self):
+        ''' update_invitation_request_state should fail if invitation_request does not exist '''
+        self.assertFalse(userapi.update_invitation_request_state(email='nonexistent', new_state=1))
+

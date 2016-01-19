@@ -153,20 +153,6 @@ class DatasourcesHandler(tornado.web.RequestHandler):
         self.write(json_encode(response.data))
 
 class UsersHandler(tornado.web.RequestHandler):
-    def post(self):
-        #suponemos que aquí llega una vez ha validado capcha o algo asi
-        try:
-            data=json_decode(self.request.body)
-            username=data['username']
-            password=data['password']
-            email=data['email']
-        except Exception:
-            self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
-        else:
-            response=user.new_user_request(username=username,password=password,email=email)
-            self.set_status(response.status)
-            self.write(json_encode(response.data))
 
     @auth.userauthenticated
     def get(self):
@@ -645,23 +631,30 @@ class AppRootHandler(tornado.web.RequestHandler):
 class InviteHandler(tornado.web.RequestHandler):
 
     def get(self):
-        request_code=self.get_argument('c',default=None) #c : request code
-        if request_code==None:
-            self.render('invite.html', page_title='Komlog')
-        elif request_code=='0':
-            self.render('invite_success.html', page_title='Komlog')
-        else:
-            self.render('invite_error.html', page_title='Komlog')
+        self.render('invite_get.html', page_title='Komlog')
 
     def post(self):
-        #suponemos que aquí llega una vez ha validado capcha o algo asi
-        try:
-            email=self.get_argument('email')
-        except Exception:
-            self.redirect('/invite?c=1')
+        email=self.get_argument('email',default=None)
+        response=user.register_invitation_request(email=email)
+        self.render('invite_post.html', page_title='Komlog', response=response)
+
+class SignupHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        invitation=self.get_argument('i',default=None) #i : invitation id
+        if invitation==None:
+            self.redirect('/invite')
         else:
-            logger.logger.debug('signup data: '+str(email))
-            self.redirect('/invite?c=0')
+            response=user.check_invitation_request(invitation=invitation)
+            self.render('signup_get.html', page_title='Komlog', response=response)
+
+    def post(self):
+        username=self.get_argument('username',default=None)
+        password=self.get_argument('password',default=None)
+        email=self.get_argument('email',default=None)
+        invitation=self.get_argument('i',default=None)
+        response=user.new_user_request(username=username,password=password,email=email,invitation=invitation, require_invitation=True)
+        self.render('signup_post.html', page_title='Komlog', response=response)
 
 class CareersHandler(tornado.web.RequestHandler):
 
@@ -672,8 +665,13 @@ UUID4_REGEX='[0-9a-fA-F]{32}'
 SEQ_REGEX='[0-9a-fA-F]{20}'
 USERNAME_REGEX='[0-9a-z\-_]+'
 
-HANDLERS = [(r'/login/?', LoginHandler),
+HANDLERS = [
+            (r'/', AppRootHandler),
+            (r'/home', UserHomeHandler),
+            (r'/home/config', UserConfigHandler),
+            (r'/login/?', LoginHandler),
             (r'/invite/?', InviteHandler),
+            (r'/signup/?', SignupHandler),
             (r'/careers/?', CareersHandler),
             (r'/logout/?', LogoutHandler),
             (r'/etc/ag/?', AgentsHandler),
@@ -703,8 +701,5 @@ HANDLERS = [(r'/login/?', LoginHandler),
             (r'/var/uri/?', UriHandler),
             (r'/var/usr/ev/?', UserEventsHandler),
             (r'/var/usr/ev/('+SEQ_REGEX+')', UserEventsResponsesHandler),
-            (r'/home/config', UserConfigHandler),
-            (r'/home', UserHomeHandler),
-            (r'/', AppRootHandler),
             ]
 

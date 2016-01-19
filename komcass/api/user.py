@@ -5,6 +5,7 @@ Created on 01/10/2014
 @author: komlog crew
 '''
 
+from komfig import logger
 from komcass.model.orm import user as ormuser
 from komcass.model.statement import user as stmtuser
 from komcass.exception import user as excpuser
@@ -107,4 +108,53 @@ def insert_signup_info(signup_info):
 def delete_signup_info(username):
     connection.session.execute(stmtuser.D_A_MSTSIGNUP_B_USERNAME,(username,))
     return True
+
+def get_invitation_info(inv_id):
+    row=connection.session.execute(stmtuser.S_A_DATINVITATION_B_INVID,(inv_id,))
+    data=[]
+    if row:
+        for d in row:
+            data.append(ormuser.Invitation(**d))
+    return data
+
+def insert_invitation_info(invitation_info):
+    if not isinstance(invitation_info, ormuser.Invitation):
+        return False
+    else:
+        connection.session.execute(stmtuser.I_A_DATINVITATION,(invitation_info.inv_id,invitation_info.date,invitation_info.state,invitation_info.tran_id))
+        return True
+
+def delete_invitation_info(inv_id, date):
+    connection.session.execute(stmtuser.D_A_DATINVITATION_B_INVID_DATE,(inv_id,date))
+    return True
+
+def get_invitation_request(email):
+    row=connection.session.execute(stmtuser.S_A_DATINVITATIONREQUEST_B_EMAIL,(email,))
+    return ormuser.InvitationRequest(**row[0]) if row else None
+
+def get_invitation_requests(state, num=0):
+    if num==0:
+        row=connection.session.execute(stmtuser.S_A_DATINVITATIONREQUEST_B_STATE,(state,))
+    else:
+        row=connection.session.execute(stmtuser.S_A_DATINVITATIONREQUEST_B_STATE_NUM,(state,num))
+    data=[]
+    if row:
+        for d in row:
+            data.append(ormuser.InvitationRequest(**d))
+    return data
+
+def insert_invitation_request(invitation_request):
+    if not isinstance(invitation_request, ormuser.InvitationRequest):
+        return False
+    else:
+        connection.session.execute(stmtuser.I_A_DATINVITATIONREQUEST,(invitation_request.email,invitation_request.date,invitation_request.state,invitation_request.inv_id))
+        return True
+
+def delete_invitation_request(email):
+    connection.session.execute(stmtuser.D_A_DATINVITATIONREQUEST_B_EMAIL,(email,))
+    return True
+
+def update_invitation_request_state(email, new_state):
+    resp=connection.session.execute(stmtuser.U_STATE_DATINVITATIONREQUEST_B_EMAIL,(new_state,email))
+    return resp[0]['[applied]']
 

@@ -1,5 +1,3 @@
-#coding: utf-8
-
 '''
 
 this file enumerate the multiple email types we will send
@@ -10,10 +8,31 @@ this file enumerate the multiple email types we will send
 
 
 NEW_USER=0
+NEW_INVITATION=1
 
 
-bodytemplates={0:'/home/komlog/komlogs/komlibs/mail/newuser_body.tpl'}
-subjects={0:'Welcome to Komlog!'}
-fromaddress={0:'jcazor@gmail.com'}
-toaddress={0:'${to_address}'}
+texttemplates={
+    0:'/home/komlog/komlogs/komlibs/mail/templates/text/new_user_body.tpl',
+    1:'/home/komlog/komlogs/komlibs/mail/templates/text/new_invitation_body.tpl',
+}
+
+htmltemplates={
+    0:'/home/komlog/komlogs/komlibs/mail/templates/html/new_user_body.tpl',
+    1:'/home/komlog/komlogs/komlibs/mail/templates/html/new_invitation_body.tpl',
+}
+
+subjects={
+    0:'Welcome to Komlog!',
+    1:'Join Komlog now!',
+}
+
+fromaddress={
+    0:'jcazor@gmail.com',
+    1:'jcazor@gmail.com',
+}
+
+toaddress={
+    0:'${to_address}',
+    1:'${to_address}',
+}
 

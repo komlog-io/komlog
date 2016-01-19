@@ -1,4 +1,3 @@
-#coding:utf-8
 '''
 
 Gestconsole message definitions 
@@ -118,6 +117,26 @@ def process_message_NEWUSR(message):
             response.status=status.IMC_STATUS_OK
         else:
             logger.logger.error('Error sending new user welcome mail to: '+usermail)
+            response.status=status.IMC_STATUS_INTERNAL_ERROR
+            response.error=999999
+    else:
+        response.status=status.IMC_STATUS_BAD_PARAMETERS
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_NEWINV(message):
+    ''' Los pasos son los siguientes:
+    - Obtenemos la informacion necesaria del mensaje
+    - llamamos a la api de mail para enviar el email con la invitacion
+    '''
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    email=message.email
+    inv_id=message.inv_id
+    if args.is_valid_email(email) and args.is_valid_uuid(inv_id):
+        if mailapi.send_invitation_mail(to=email, inv_id=inv_id):
+            response.status=status.IMC_STATUS_OK
+        else:
+            logger.logger.error('Error sending invitation mail to: '+email)
             response.status=status.IMC_STATUS_INTERNAL_ERROR
             response.error=999999
     else:

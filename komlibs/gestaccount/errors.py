@@ -62,6 +62,39 @@ E_GUA_DU_UNF=81
 E_GUA_GUID_IU=85
 E_GUA_GUID_UNF=86
 
+E_GUA_RIR_IEMAIL=90 #: register invitation request. Invalid Email
+
+E_GUA_GUI_IEMAIL=95 #: generate user invitation. Invalid Email
+
+E_GUA_CUBI_RCF=100 #: create_user_by_invitation. race condition found processing invitation
+
+E_GUA_SIP_IINV=110 #: start_invitation_process. invalid invitation.
+E_GUA_SIP_INVNF=111 #: start_invitation_process. invitation not found.
+E_GUA_SIP_INVAU=112 #: start_invitation_process. invitation already used
+E_GUA_SIP_EIII=113 #: start_invitation_process. error inserting invitation info.
+E_GUA_SIP_ISNE=114 #: start_invitation_process. invitation state not expected.
+
+E_GUA_EIP_IINV=120 #: end_invitation_process. invalid invitation.
+E_GUA_EIP_ITRN=121 #: end_invitation_process. invalid transaction id.
+E_GUA_EIP_INVNF=122 #: end_invitation_process. invitation not found.
+E_GUA_EIP_INUE=123 #: end_invitation_process. invitation not used.
+E_GUA_EIP_RCF=124 #: end_invitation_process. race condition found.
+E_GUA_EIP_SNF=125 #: end_invitation_process. state found not valid.
+E_GUA_EIP_EIII=126 #: end_invitation_process. error inserting invitation info.
+
+E_GUA_UIT_IINV=130 #: undo_invitation_transactions. invalid invitation.
+E_GUA_UIT_ITRN=131 #: undo_invitation_transactions. invalid transaction id.
+E_GUA_UIT_INVNF=131 #: undo_invitation_transactions. invitation info not found.
+
+E_GUA_II_IINV=135 #: initialize_invitation. invalid invitation.
+E_GUA_II_INVNF=136 #: initialize_invitation. invitation info not found.
+E_GUA_II_EIII=137 #: initialize_invitation. error inserting invitation info.
+
+E_GUA_CUI_IINV=145 #: check_unused_invitation. invalid invitation.
+E_GUA_CUI_INVNF=146 #: check_unused_invitation. invitation not found.
+E_GUA_CUI_INVAU=147 #: check_unused_invitation. invitation already used.
+E_GUA_CUI_INVIS=148 #: check_unused_invitation. invitation state invalid.
+
 #gestaccount agent api
 
 E_GAA_AUA_IA=200

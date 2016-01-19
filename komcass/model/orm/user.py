@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 Created on 01/10/2014
 
@@ -24,4 +23,16 @@ class User:
         self.segment=segment
         self.creation_date=creation_date
 
+class Invitation:
+    def __init__(self, inv_id, date, state, tran_id=None):
+        self.inv_id=inv_id
+        self.date=date
+        self.state=state
+        self.tran_id=tran_id
 
+class InvitationRequest:
+    def __init__(self, email, date, state, inv_id=None):
+        self.email=email
+        self.date=date
+        self.state=state
+        self.inv_id=inv_id

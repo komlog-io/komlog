@@ -23,6 +23,11 @@ The range reserved for errors in this module is 100000 - 150000
 E_IWAU_NUSR_IU=100000
 E_IWAU_NUSR_IP=100001
 E_IWAU_NUSR_IE=100002
+E_IWAU_NUSR_IINV=100003 #: new_user_request invalid (malformed) invitation
+E_IWAU_NUSR_INVNF=100004 #: new_user_request invitation not found
+E_IWAU_NUSR_INVAU=100005 #: new_user_request invitation already used
+E_IWAU_NUSR_UAEU=100006 #: new_user_request user already exists (username)
+E_IWAU_NUSR_UAEE=100007 #: new_user_request user already exists (email)
 
 E_IWAU_CUSR_IE=100010
 E_IWAU_CUSR_IC=100011
@@ -37,6 +42,14 @@ E_IWAU_UUSCR_IOP=100024
 
 E_IWAU_DUSR_IU=100030
 
+E_IWAU_RIR_IEMAIL=100040
+
+E_IWAU_CIR_IINV=100050
+E_IWAU_CIR_INVNF=100051
+E_IWAU_CIR_INVAU=100052
+
+E_IWAU_SIR_IEMAIL=100060
+E_IWAU_SIR_INUM=100061
 
 #interface web api agent
 

@@ -39,6 +39,7 @@ USER_EVENT_MESSAGE='USEREV'
 USER_EVENT_RESPONSE_MESSAGE='USEREVRESP'
 GENERATE_TEXT_SUMMARY_MESSAGE='GENTEXTSUMMARY'
 MISSING_DATAPOINT_MESSAGE='MISSINGDP'
+NEW_INV_MAIL_MESSAGE='NEWINV'
 
 
 #MESSAGE MAPPINGS
@@ -65,6 +66,7 @@ MESSAGE_TO_CLASS_MAPPING={STORE_SAMPLE_MESSAGE:'StoreSampleMessage',
                           USER_EVENT_RESPONSE_MESSAGE:'UserEventResponseMessage',
                           GENERATE_TEXT_SUMMARY_MESSAGE:'GenerateTextSummaryMessage',
                           MISSING_DATAPOINT_MESSAGE:'MissingDatapointMessage',
+                          NEW_INV_MAIL_MESSAGE:'NewInvitationMailMessage',
                           }
 
 
@@ -480,4 +482,20 @@ class MissingDatapointMessage:
             self.did=did
             self.date=date
             self.serialized_message='|'.join((self.type,self.did.hex,self.date.hex))
+
+class NewInvitationMailMessage:
+    def __init__(self, serialized_message=None, email=None, inv_id=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,email,inv_id = self.serialized_message.split('|')
+            self.type=mtype
+            self.email=email
+            self.inv_id=uuid.UUID(inv_id)
+        else:
+            if not args.is_valid_email(email) or not args.is_valid_uuid(inv_id):
+                raise exceptions.BadParametersException()
+            self.type=NEW_INV_MAIL_MESSAGE
+            self.email=email
+            self.inv_id=inv_id
+            self.serialized_message='|'.join((self.type,self.email,self.inv_id.hex))
 

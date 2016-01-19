@@ -143,8 +143,10 @@ class Message(object):
 
 def get_message(mailtype,args):
     msg=Message()
-    msg.Body=Template(filename=mailtypes.bodytemplates[mailtype]).render(**args)
+    msg.Body=Template(filename=mailtypes.texttemplates[mailtype]).render(**args)
+    msg.Html=Template(filename=mailtypes.htmltemplates[mailtype]).render(**args)
     msg.Subject = Template(mailtypes.subjects[mailtype]).render(**args)
     msg.From = Template(mailtypes.fromaddress[mailtype]).render(**args)
     msg._to = Template(mailtypes.toaddress[mailtype]).render(**args)
     return msg
+

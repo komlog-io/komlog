@@ -168,3 +168,163 @@ def get_uid(username):
         raise exceptions.UserNotFoundException(error=errors.E_GUA_GUID_UNF)
     return uid
 
+def register_invitation_request(email):
+    ''' register_invitation_request is used to store a request of invitation,
+        associated with an email provided by the user.
+    '''
+    if not args.is_valid_email(email):
+        raise exceptions.BadParametersException(error=errors.E_GUA_RIR_IEMAIL)
+    request=cassapiuser.get_invitation_request(email=email)
+    if request is None:
+        now=timeuuid.uuid1()
+        request=ormuser.InvitationRequest(email=email, date=now, state=states.INVITATION_REQUEST_REGISTERED)
+        return cassapiuser.insert_invitation_request(invitation_request=request)
+    else:
+        return True # request already registered
+
+def generate_user_invitations(email=None, num=1):
+    ''' generate_user_invitations is used to provision a new invitation in initial state
+        in the system.
+        - If email is passed, the invitation its associtated to the specified email, if not
+        the system selects one from the pending invitation requests.
+        - If num is passed, the system generates as many invitations as requested by num.
+        
+        Note that if num is greater than 1, the email argument takes no effect.
+        
+        This function returns an array with as many invitations as requested. in JSON format
+        as this example:
+        [{'email':'email@example.com','inv_id':uuid.UUID4() generated},...]
+    '''
+    if email is not None and not args.is_valid_email(email):
+        raise exceptions.BadParametersException(error=errors.E_GUA_GUI_IEMAIL)
+    generated=[]
+    regs=[]
+    if num>1 or (num==1 and email is None):
+        requests=cassapiuser.get_invitation_requests(state=states.INVITATION_REQUEST_REGISTERED,num=num)
+        for request in requests:
+            regs.append(request)
+    elif email is not None:
+        request=cassapiuser.get_invitation_request(email=email)
+        if not request:
+            request=ormuser.InvitationRequest(email=email, date=timeuuid.uuid1(), state=states.INVITATION_REQUEST_REGISTERED)
+            if cassapiuser.insert_invitation_request(request):
+                regs.append(request)
+        else:
+            regs.append(request)
+    for request in regs:
+        invitation=ormuser.Invitation(inv_id=uuid.uuid4(), date=timeuuid.uuid1(),state=states.INVITATION_UNUSED)
+        request.inv_id=invitation.inv_id
+        request.state=states.INVITATION_REQUEST_ASSOCIATED
+        if cassapiuser.insert_invitation_request(request) and cassapiuser.insert_invitation_info(invitation):
+            generated.append({'email':request.email,'inv_id':request.inv_id})
+        else:
+            cassapiuser.delete_invitation_info(inv_id=invitation.inv_id, date=invitation.date)
+            request.inv_id=None
+            request.state=states.INVITATION_REQUEST_REGISTERED
+            cassapiuser.insert_invitation_request(request)
+    return generated
+
+def create_user_by_invitation(username, password, email, inv_id):
+    ''' This function creates a new user in the database if invitation is valid '''
+    tran_id=start_invitation_process(inv_id=inv_id)
+    user_info=None
+    try:
+        user_info=create_user(username=username, password=password, email=email)
+        if user_info:
+            end_invitation_process(inv_id=inv_id, tran_id=tran_id)
+        else:
+            initialize_invitation(inv_id=inv_id)
+    except Exception as e:
+        if user_info:
+            cassapiuser.delete_user(username=user_info['username'])
+            cassapiuser.delete_signup_info(username=user_info['username'])
+        undo_invitation_transactions(inv_id=inv_id, tran_id=tran_id)
+        raise e
+    else:
+        return user_info
+
+def start_invitation_process(inv_id):
+    if not args.is_valid_uuid(inv_id):
+        raise exceptions.BadParametersException(error=errors.E_GUA_SIP_IINV)
+    invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
+    if len(invitation_info)==0:
+        raise exceptions.InvitationNotFoundException(error=errors.E_GUA_SIP_INVNF)
+    elif len(invitation_info)>1:
+        raise exceptions.InvitationProcessException(error=errors.E_GUA_SIP_INVAU)
+    elif invitation_info[0].state == states.INVITATION_UNUSED and invitation_info[0].tran_id == None:
+        now=timeuuid.uuid1()
+        tran_id=uuid.uuid4()
+        new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=states.INVITATION_USING, tran_id=tran_id)
+        if not cassapiuser.insert_invitation_info(invitation_info=new_info):
+            raise exceptions.InvitationProcessException(error=errors.E_GUA_SIP_EIII)
+        return tran_id
+    else:
+        raise exceptions.InvitationProcessException(error=errors.E_GUA_SIP_ISNE)
+
+def end_invitation_process(inv_id, tran_id):
+    if not args.is_valid_uuid(inv_id):
+        raise exceptions.BadParametersException(error=errors.E_GUA_EIP_IINV)
+    if not args.is_valid_uuid(tran_id):
+        raise exceptions.BadParametersException(error=errors.E_GUA_EIP_ITRN)
+    invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
+    if len(invitation_info)==0:
+        raise exceptions.InvitationNotFoundException(error=errors.E_GUA_EIP_INVNF)
+    elif len(invitation_info)==1:
+        raise exceptions.InvitationProcessException(error=errors.E_GUA_EIP_INUE)
+    else:
+        using_found=False
+        for reg in invitation_info:
+            if reg.state==states.INVITATION_USING:
+                if reg.tran_id != tran_id:
+                    raise exceptions.InvitationProcessException(error=errors.E_GUA_EIP_RCF)
+                else:
+                    using_found=True
+        if not using_found:
+            raise exceptions.InvitationProcessException(error=errors.E_GUA_EIP_SNF)
+        else:
+            now=timeuuid.uuid1()
+            new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=states.INVITATION_USED, tran_id=tran_id)
+            if not cassapiuser.insert_invitation_info(invitation_info=new_info):
+                raise exceptions.InvitationProcessException(error=errors.E_GUA_EIP_EIII)
+        return True
+
+def undo_invitation_transactions(inv_id, tran_id):
+    if not args.is_valid_uuid(inv_id):
+        raise exceptions.BadParametersException(error=errors.E_GUA_UIT_IINV)
+    if not args.is_valid_uuid(tran_id):
+        raise exceptions.BadParametersException(error=errors.E_GUA_UIT_ITRN)
+    invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
+    if len(invitation_info)==0:
+        raise exceptions.InvitationNotFoundException(error=errors.E_GUA_UIT_INVNF)
+    for reg in invitation_info:
+        if reg.tran_id==tran_id:
+            cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
+    return True
+
+def initialize_invitation(inv_id):
+    if not args.is_valid_uuid(inv_id):
+        raise exceptions.BadParametersException(error=errors.E_GUA_II_IINV)
+    invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
+    if len(invitation_info)==0:
+        raise exceptions.InvitationNotFoundException(error=errors.E_GUA_II_INVNF)
+    for reg in invitation_info:
+        cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
+    now=timeuuid.uuid1()
+    new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=states.INVITATION_UNUSED)
+    if not cassapiuser.insert_invitation_info(invitation_info=new_info):
+        raise exceptions.InvitationProcessException(error=errors.E_GUA_II_EIII)
+    return True
+
+def check_unused_invitation(inv_id):
+    if not args.is_valid_uuid(inv_id):
+        raise exceptions.BadParametersException(error=errors.E_GUA_CUI_IINV)
+    invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
+    if len(invitation_info)==0:
+        raise exceptions.InvitationNotFoundException(error=errors.E_GUA_CUI_INVNF)
+    elif len(invitation_info)>1:
+        raise exceptions.InvitationProcessException(error=errors.E_GUA_CUI_INVAU)
+    elif len(invitation_info)==1 and invitation_info[0].state==states.INVITATION_UNUSED:
+        return True
+    else:
+        raise exceptions.InvitationProcessException(error=errors.E_GUA_CUI_INVIS)
+

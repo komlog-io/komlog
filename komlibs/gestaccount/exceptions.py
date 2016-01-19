@@ -178,3 +178,11 @@ class CircleDeleteMemberException(GestaccountException):
     def __init__(self, error):
         super(CircleDeleteMemberException,self).__init__(error=error)
 
+class InvitationNotFoundException(GestaccountException):
+    def __init__(self, error):
+        super(InvitationNotFoundException,self).__init__(error=error)
+
+class InvitationProcessException(GestaccountException):
+    def __init__(self, error):
+        super(InvitationProcessException,self).__init__(error=error)
+
