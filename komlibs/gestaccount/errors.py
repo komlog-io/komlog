@@ -95,6 +95,24 @@ E_GUA_CUI_INVNF=146 #: check_unused_invitation. invitation not found.
 E_GUA_CUI_INVAU=147 #: check_unused_invitation. invitation already used.
 E_GUA_CUI_INVIS=148 #: check_unused_invitation. invitation state invalid.
 
+E_GUA_RFR_IU=155 #: register_forget_request. invalid username.
+E_GUA_RFR_IEMAIL=156 #: register_forget_request. invalid email.
+E_GUA_RFR_NPP=157 #: register_forget_request. no param passed.
+E_GUA_RFR_DBE=158 #: register_forget_request. database error.
+E_GUA_RFR_UNF=159 #: register_forget_request. user not found.
+
+E_GUA_CUFC_ICODE=165 #: check_unused_forget_code. invalid code.
+E_GUA_CUFC_CNF=166 #: check_unused_forget_code. code not found.
+E_GUA_CUFC_CODEAU=167 #: check_unused_forget_code. code already used.
+
+E_GUA_RP_ICODE=175 #: reset_password. invalid code.
+E_GUA_RP_IPWD=176 #: reset_password. invalid password.
+E_GUA_RP_CNF=177 #: reset_password. code not found.
+E_GUA_RP_CODEAU=178 #: reset_password. code already used.
+E_GUA_RP_UNF=179 #: reset_password. user not found.
+E_GUA_RP_EUDB=180 #: reset_password. error updating database.
+E_GUA_RP_EGPWD=181 #: reset_password. error generating new password.
+
 #gestaccount agent api
 
 E_GAA_AUA_IA=200

@@ -21,15 +21,22 @@ STATEMENTS={0:'select * from mst_user where username=?',
             300:'select * from dat_invitation_request where email=?',
             301:'select * from dat_invitation_request where state=?',
             302:'select * from dat_invitation_request where state=? limit ?',
+            400:'select * from dat_forget_request where code=?',
+            401:'select * from dat_forget_request where state=?',
+            402:'select * from dat_forget_request where state=? limit ?',
             5000:'insert into mst_user (username,uid,password,email,state,segment,creation_date) values (?,?,?,?,?,?,?)',
             5100:'insert into mst_signup (username,signup_code,email,creation_date,utilization_date) values (?,?,?,?,?)',
             5200:'insert into dat_invitation (inv_id,date,state,tran_id) values (?,?,?,?)',
             5300:'insert into dat_invitation_request (email,date,state,inv_id) values (?,?,?,?)',
+            5400:'insert into dat_forget_request (code,date,state,uid) values (?,?,?,?)',
             7000:'delete from mst_user where username=?',
             7100:'delete from mst_signup where username=?',
             7200:'delete from dat_invitation where inv_id=? and date=?',
             7300:'delete from dat_invitation_request where email=?',
+            7400:'delete from dat_forget_request where code=?',
+            9000:'update mst_user set password=? where username=? if exists',
             9300:'update dat_invitation_request set state=? where email=? if exists',
+            9400:'update dat_forget_request set state=? where code=? if exists',
            }
 
 # selects (0 - 4999)
@@ -57,6 +64,12 @@ S_A_DATINVITATIONREQUEST_B_EMAIL=300
 S_A_DATINVITATIONREQUEST_B_STATE=301
 S_A_DATINVITATIONREQUEST_B_STATE_NUM=302
 
+# dat_forget_request
+
+S_A_DATFORGETREQUEST_B_CODE=400
+S_A_DATFORGETREQUEST_B_STATE=401
+S_A_DATFORGETREQUEST_B_STATE_NUM=402
+
 # Inserts (5000 - 6999)
 
 # mst_user
@@ -74,6 +87,10 @@ I_A_DATINVITATION=5200
 # dat_invitation_request
 
 I_A_DATINVITATIONREQUEST=5300
+
+# dat_forget_request
+
+I_A_DATFORGETREQUEST=5400
 
 # Deletes (7000 - 8999)
 
@@ -93,9 +110,15 @@ D_A_DATINVITATION_B_INVID_DATE=7200
 
 D_A_DATINVITATIONREQUEST_B_EMAIL=7300
 
+# dat_forget_request
+
+D_A_DATFORGETREQUEST_B_CODE=7400
+
 # Updates (9000 - 9999)
 
 # mst_user
+
+U_PASSWORD_MSTUSER_B_USERNAME=9000
 
 # mst_signup
 
@@ -104,4 +127,8 @@ D_A_DATINVITATIONREQUEST_B_EMAIL=7300
 # dat_invitation_request
 
 U_STATE_DATINVITATIONREQUEST_B_EMAIL=9300
+
+# dat_forget_request
+
+U_STATE_DATFORGETREQUEST_B_CODE=9400
 

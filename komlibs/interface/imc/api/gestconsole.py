@@ -144,6 +144,26 @@ def process_message_NEWINV(message):
     return response
 
 @exceptions.ExceptionHandler
+def process_message_FORGETMAIL(message):
+    ''' Los pasos son los siguientes:
+    - Obtenemos la informacion necesaria del mensaje
+    - llamamos a la api de mail para enviar el email para el restablecimiento de la password
+    '''
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    email=message.email
+    code=message.code
+    if args.is_valid_email(email) and args.is_valid_uuid(code):
+        if mailapi.send_forget_mail(to=email, code=code):
+            response.status=status.IMC_STATUS_OK
+        else:
+            logger.logger.error('Error sending forget mail to: '+email)
+            response.status=status.IMC_STATUS_INTERNAL_ERROR
+            response.error=999999
+    else:
+        response.status=status.IMC_STATUS_BAD_PARAMETERS
+    return response
+
+@exceptions.ExceptionHandler
 def process_message_NEWDSW(message):
     ''' this message creates a new DS_WIDGET associated to a did and uid '''
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)

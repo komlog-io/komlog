@@ -488,3 +488,207 @@ class GestaccountUserApiTest(unittest.TestCase):
         inv_id=invitations[0]['inv_id']
         self.assertTrue(userapi.check_unused_invitation(inv_id=inv_id))
 
+    def test_register_forget_request_failure_invalid_username(self):
+        ''' register_forget_request should fail if username is invalid '''
+        usernames=[34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4(), uuid.uuid1(),'email@fake','@badmail','fake@']
+        for username in usernames:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.register_forget_request(username=username)
+            self.assertEqual(cm.exception.error,errors.E_GUA_RFR_IU)
+
+    def test_register_forget_request_failure_invalid_email(self):
+        ''' register_forget_request should fail if email is invalid '''
+        emails=[34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4(), uuid.uuid1(),'email@fake','@badmail','fake@']
+        for email in emails:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.register_forget_request(email=email)
+            self.assertEqual(cm.exception.error,errors.E_GUA_RFR_IEMAIL)
+
+    def test_register_forget_request_failure_no_parameter_passed(self):
+        ''' register_forget_request should fail if username and email are None '''
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            userapi.register_forget_request()
+        self.assertEqual(cm.exception.error,errors.E_GUA_RFR_NPP)
+
+    def test_register_forget_request_failure_non_existing_user(self):
+        ''' register_forget_request should fail if user does not exist '''
+        username='test_register_forget_request_failure_non_existing_user'
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            userapi.register_forget_request(username=username)
+        self.assertEqual(cm.exception.error,errors.E_GUA_RFR_UNF)
+
+    def test_register_forget_request_success_passing_username(self):
+        ''' register_forget_request should succeed if we pass username '''
+        username = 'test_register_forget_request_success_passing_username'
+        password = 'password'
+        email = username+'@komlog.org'
+        userinfo = userapi.create_user(username=username, password=password, email=email)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        self.assertIsNotNone(userinfo['signup_code'])
+        forget_request=userapi.register_forget_request(username=username)
+        self.assertTrue('code' in forget_request)
+        self.assertTrue('username' in forget_request)
+        self.assertTrue('email' in forget_request)
+        self.assertTrue('uid' in forget_request)
+        self.assertTrue(isinstance(forget_request['code'], uuid.UUID))
+        self.assertEqual(forget_request['username'], username)
+        self.assertEqual(forget_request['email'], email)
+        self.assertEqual(forget_request['uid'],userinfo['uid'])
+
+    def test_register_forget_request_success_passing_email(self):
+        ''' register_forget_request should succeed if we pass username '''
+        username = 'test_register_forget_request_success_passing_email'
+        password = 'password'
+        email = username+'@komlog.org'
+        userinfo = userapi.create_user(username=username, password=password, email=email)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        self.assertIsNotNone(userinfo['signup_code'])
+        forget_request=userapi.register_forget_request(email=email)
+        self.assertTrue('code' in forget_request)
+        self.assertTrue('username' in forget_request)
+        self.assertTrue('email' in forget_request)
+        self.assertTrue('uid' in forget_request)
+        self.assertTrue(isinstance(forget_request['code'], uuid.UUID))
+        self.assertEqual(forget_request['username'], username)
+        self.assertEqual(forget_request['email'], email)
+        self.assertEqual(forget_request['uid'],userinfo['uid'])
+
+    def test_check_unused_forget_code_failure_invalid_code(self):
+        ''' check_unused_forget_code should fail if code is invalid '''
+        codes=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4().hex, uuid.uuid1(),'email@fake','@badmail','fake@']
+        for code in codes:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.check_unused_forget_code(code=code)
+            self.assertEqual(cm.exception.error, errors.E_GUA_CUFC_ICODE)
+
+    def test_check_unused_forget_code_failure_non_existent_code(self):
+        ''' check_unused_forget_code should fail if code does not exist '''
+        code=uuid.uuid4()
+        with self.assertRaises(exceptions.ForgetRequestNotFoundException) as cm:
+            userapi.check_unused_forget_code(code=code)
+        self.assertEqual(cm.exception.error, errors.E_GUA_CUFC_CNF)
+
+    def test_check_unused_forget_code_failure_used_code(self):
+        ''' check_unused_forget_code should fail if code is already used '''
+        username = 'test_check_unused_forget_code_failure_already_used_code'
+        password = 'password'
+        email = username+'@komlog.org'
+        userinfo = userapi.create_user(username=username, password=password, email=email)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        self.assertIsNotNone(userinfo['signup_code'])
+        forget_request=userapi.register_forget_request(username=username)
+        self.assertTrue('code' in forget_request)
+        self.assertTrue('username' in forget_request)
+        self.assertTrue('email' in forget_request)
+        self.assertTrue('uid' in forget_request)
+        self.assertTrue(isinstance(forget_request['code'], uuid.UUID))
+        self.assertEqual(forget_request['username'], username)
+        self.assertEqual(forget_request['email'], email)
+        self.assertEqual(forget_request['uid'],userinfo['uid'])
+        code=forget_request['code']
+        self.assertTrue(cassapiuser.update_forget_request_state(code=code, new_state=states.FORGET_REQUEST_USED))
+        with self.assertRaises(exceptions.ForgetRequestException) as cm:
+            userapi.check_unused_forget_code(code=code)
+        self.assertEqual(cm.exception.error, errors.E_GUA_CUFC_CODEAU)
+
+    def test_check_unused_forget_code_success(self):
+        ''' check_unused_forget_code should succeed '''
+        username = 'test_check_unused_forget_code_success'
+        password = 'password'
+        email = username+'@komlog.org'
+        userinfo = userapi.create_user(username=username, password=password, email=email)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        self.assertIsNotNone(userinfo['signup_code'])
+        forget_request=userapi.register_forget_request(username=username)
+        self.assertTrue('code' in forget_request)
+        self.assertTrue('username' in forget_request)
+        self.assertTrue('email' in forget_request)
+        self.assertTrue('uid' in forget_request)
+        self.assertTrue(isinstance(forget_request['code'], uuid.UUID))
+        self.assertEqual(forget_request['username'], username)
+        self.assertEqual(forget_request['email'], email)
+        self.assertEqual(forget_request['uid'],userinfo['uid'])
+        code=forget_request['code']
+        self.assertTrue(userapi.check_unused_forget_code(code=code))
+
+    def test_reset_password_failure_invalid_code(self):
+        ''' reset_password should fail if code is not valid '''
+        codes=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4().hex, uuid.uuid1(),'email@fake','@badmail','fake@']
+        password = 'password'
+        for code in codes:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.reset_password(code=code, password=password)
+            self.assertEqual(cm.exception.error, errors.E_GUA_RP_ICODE)
+
+    def test_reset_password_failure_invalid_password(self):
+        ''' reset_password should fail if password is not valid '''
+        passwords=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4(), uuid.uuid1(),'pasNÑÑÑW od. asdf34 ']
+        code=uuid.uuid4()
+        for password in passwords:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.reset_password(code=code, password=password)
+            self.assertEqual(cm.exception.error, errors.E_GUA_RP_IPWD)
+
+    def test_reset_password_failure_code_not_found(self):
+        ''' reset_password should fail if code does not exist on system '''
+        code=uuid.uuid4()
+        password='temporal'
+        with self.assertRaises(exceptions.ForgetRequestNotFoundException) as cm:
+            userapi.reset_password(code=code, password=password)
+        self.assertEqual(cm.exception.error, errors.E_GUA_RP_CNF)
+
+    def test_reset_password_failure_code_already_used(self):
+        ''' reset_password should fail if code is already used '''
+        username = 'test_reset_password_failure_code_already_used'
+        password = 'password'
+        email = username+'@komlog.org'
+        userinfo = userapi.create_user(username=username, password=password, email=email)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        self.assertIsNotNone(userinfo['signup_code'])
+        forget_request=userapi.register_forget_request(username=username)
+        self.assertTrue('code' in forget_request)
+        self.assertTrue('username' in forget_request)
+        self.assertTrue('email' in forget_request)
+        self.assertTrue('uid' in forget_request)
+        self.assertTrue(isinstance(forget_request['code'], uuid.UUID))
+        self.assertEqual(forget_request['username'], username)
+        self.assertEqual(forget_request['email'], email)
+        self.assertEqual(forget_request['uid'],userinfo['uid'])
+        new_password='temporal2'
+        code=forget_request['code']
+        self.assertTrue(userapi.reset_password(code=code, password=new_password))
+        self.assertTrue(userapi.auth_user(username, new_password))
+        new_password='temporal3'
+        with self.assertRaises(exceptions.ForgetRequestException) as cm:
+            userapi.reset_password(code=code, password=new_password)
+        self.assertEqual(cm.exception.error, errors.E_GUA_RP_CODEAU)
+        self.assertFalse(userapi.auth_user(username, new_password))
+
+    def test_reset_password_success(self):
+        ''' reset_password should succeed '''
+        username = 'test_reset_password_failure_success'
+        password = 'password'
+        email = username+'@komlog.org'
+        userinfo = userapi.create_user(username=username, password=password, email=email)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        self.assertIsNotNone(userinfo['signup_code'])
+        forget_request=userapi.register_forget_request(username=username)
+        self.assertTrue('code' in forget_request)
+        self.assertTrue('username' in forget_request)
+        self.assertTrue('email' in forget_request)
+        self.assertTrue('uid' in forget_request)
+        self.assertTrue(isinstance(forget_request['code'], uuid.UUID))
+        self.assertEqual(forget_request['username'], username)
+        self.assertEqual(forget_request['email'], email)
+        self.assertEqual(forget_request['uid'],userinfo['uid'])
+        new_password='temporal2'
+        code=forget_request['code']
+        self.assertTrue(userapi.reset_password(code=code, password=new_password))
+        self.assertTrue(userapi.auth_user(username, new_password))
+

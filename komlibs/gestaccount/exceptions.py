@@ -186,3 +186,11 @@ class InvitationProcessException(GestaccountException):
     def __init__(self, error):
         super(InvitationProcessException,self).__init__(error=error)
 
+class ForgetRequestNotFoundException(GestaccountException):
+    def __init__(self, error):
+        super(ForgetRequestNotFoundException,self).__init__(error=error)
+
+class ForgetRequestException(GestaccountException):
+    def __init__(self, error):
+        super(ForgetRequestException,self).__init__(error=error)
+

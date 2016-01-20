@@ -36,3 +36,11 @@ class InvitationRequest:
         self.date=date
         self.state=state
         self.inv_id=inv_id
+
+class ForgetRequest:
+    def __init__(self, code, date, state, uid=None):
+        self.code=code
+        self.date=date
+        self.state=state
+        self.uid=uid
+

@@ -656,6 +656,29 @@ class SignupHandler(tornado.web.RequestHandler):
         response=user.new_user_request(username=username,password=password,email=email,invitation=invitation, require_invitation=True)
         self.render('signup_post.html', page_title='Komlog', response=response)
 
+class ForgetHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        code=self.get_argument('c',default=None) #c : code
+        if code==None:
+            self.render('forget_get.html', page_title='Komlog', reset=False)
+        else:
+            response=user.check_forget_code_request(code=code)
+            self.render('forget_get.html', page_title='Komlog', reset=True, response=response)
+
+    def post(self):
+        account=self.get_argument('account',default=None)
+        password=self.get_argument('password',default=None)
+        code=self.get_argument('c',default=None) #c : code
+        if account == None and password == None and code == None:
+            self.redirect('/forget')
+        elif account != None:
+            response=user.register_forget_request(account=account)
+            self.render('forget_post.html', page_title='Komlog', reset=False, response=response)
+        else:
+            response=user.reset_password_request(code=code, password=password)
+            self.render('forget_post.html', page_title='Komlog', reset=True, response=response)
+
 class CareersHandler(tornado.web.RequestHandler):
 
     def get(self):
@@ -672,6 +695,7 @@ HANDLERS = [
             (r'/login/?', LoginHandler),
             (r'/invite/?', InviteHandler),
             (r'/signup/?', SignupHandler),
+            (r'/forget/?', ForgetHandler),
             (r'/careers/?', CareersHandler),
             (r'/logout/?', LogoutHandler),
             (r'/etc/ag/?', AgentsHandler),

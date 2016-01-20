@@ -615,3 +615,315 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(msg.inv_id, uuid.UUID(response.data[0][1]))
         self.assertTrue(args.is_valid_uuid(msg.inv_id))
 
+    def test_register_forget_request_failure_invalid_account(self):
+        ''' register_forget_request should fail if account is not an email nor username '''
+        accounts = ['u@ser@komlog.org', 'invalid_email_ñ@domain.com','email@.com','.@domain.com','my email@domain.com','email . @email.com',234234,None,{'a':'dict'}, ['a list',],('a','tuple'),'userÑameInvalid']
+        for account in accounts:
+            response=userapi.register_forget_request(account=account)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAU_RFR_IACCOUNT)
+
+    def test_register_forget_request_failure_non_existent_email(self):
+        ''' register_forget_request should fail if email passed does not belong to any user '''
+        email='test_register_forget_request_failure_non_existent_email@komlog.org'
+        response=userapi.register_forget_request(account=email)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, errors.E_IWAU_RFR_UNF)
+
+    def test_register_forget_request_failure_non_existent_username(self):
+        ''' register_forget_request should fail if username passed does not belong to any user '''
+        username='test_register_forget_request_failure_non_existent_email'
+        response=userapi.register_forget_request(account=username)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, errors.E_IWAU_RFR_UNF)
+
+    def test_register_forget_request_success_passing_user_email(self):
+        ''' register_forget_request should succeed if we pass an existing email '''
+        username = 'test_register_forget_request_success_passing_user_email'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        response2 = userapi.get_user_config_request(username=username)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.data['uid'],response2.data['uid'])
+        self.assertEqual(username,response2.data['username'])
+        self.assertEqual(email,response2.data['email'])
+        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
+                msgapi.send_message(msg)
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertEqual(msg.email, email)
+        self.assertTrue(args.is_valid_code(msg.code))
+        response3=userapi.register_forget_request(account=email)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['username'], username)
+        self.assertEqual(response3.data['email'],email)
+        msg_addr=routing.get_address(type=messages.FORGET_MAIL_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.FORGET_MAIL_MESSAGE or msg.email!=email:
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertEqual(response3.data['code'],msg.code.hex)
+
+    def test_register_forget_request_success_passing_user_username(self):
+        ''' register_forget_request should succeed if we pass an existing username '''
+        username = 'test_register_forget_request_success_passing_user_username'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        response2 = userapi.get_user_config_request(username=username)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.data['uid'],response2.data['uid'])
+        self.assertEqual(username,response2.data['username'])
+        self.assertEqual(email,response2.data['email'])
+        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
+                msgapi.send_message(msg)
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertEqual(msg.email, email)
+        self.assertTrue(args.is_valid_code(msg.code))
+        response3=userapi.register_forget_request(account=username)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['username'], username)
+        self.assertEqual(response3.data['email'],email)
+        msg_addr=routing.get_address(type=messages.FORGET_MAIL_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.FORGET_MAIL_MESSAGE or msg.email!=email:
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertEqual(response3.data['code'],msg.code.hex)
+
+    def test_check_forget_code_request_failure_invalid_code(self):
+        ''' check_forget_code_request should fail if code is invalid '''
+        codes= ['u@ser@komlog.org', 'invalid_email_ñ@domain.com','email@.com','.@domain.com','my email@domain.com','email . @email.com',234234,None,{'a':'dict'}, ['a list',],('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        for code in codes:
+            response=userapi.check_forget_code_request(code=code)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAU_CFR_ICODE)
+
+    def test_check_forget_code_request_failure_non_existent_code(self):
+        ''' check_forget_code_request should fail if code is invalid '''
+        code=uuid.uuid4().hex
+        response=userapi.check_forget_code_request(code=code)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, errors.E_IWAU_CFR_CNF)
+
+    def test_check_forget_code_request_failure_already_used_code(self):
+        ''' check_forget_code_request should fail if code is already used '''
+        username = 'test_check_forget_request_failure_already_used_code'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        response2 = userapi.get_user_config_request(username=username)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.data['uid'],response2.data['uid'])
+        self.assertEqual(username,response2.data['username'])
+        self.assertEqual(email,response2.data['email'])
+        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
+                msgapi.send_message(msg)
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertEqual(msg.email, email)
+        self.assertTrue(args.is_valid_code(msg.code))
+        response3=userapi.register_forget_request(account=username)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['username'], username)
+        self.assertEqual(response3.data['email'],email)
+        msg_addr=routing.get_address(type=messages.FORGET_MAIL_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.FORGET_MAIL_MESSAGE or msg.email!=email:
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertEqual(response3.data['code'],msg.code.hex)
+        code=response3.data['code']
+        password='newpassword'
+        response=userapi.reset_password_request(code=code, password=password)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        response=userapi.check_forget_code_request(code=code)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, errors.E_IWAU_CFR_CODEAU)
+
+    def test_check_forget_code_request_success(self):
+        ''' check_forget_code_request should succeed '''
+        username = 'test_check_forget_code_request_succeed'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        response2 = userapi.get_user_config_request(username=username)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.data['uid'],response2.data['uid'])
+        self.assertEqual(username,response2.data['username'])
+        self.assertEqual(email,response2.data['email'])
+        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
+                msgapi.send_message(msg)
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertEqual(msg.email, email)
+        self.assertTrue(args.is_valid_code(msg.code))
+        response3=userapi.register_forget_request(account=username)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['username'], username)
+        self.assertEqual(response3.data['email'],email)
+        msg_addr=routing.get_address(type=messages.FORGET_MAIL_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.FORGET_MAIL_MESSAGE or msg.email!=email:
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertEqual(response3.data['code'],msg.code.hex)
+        code=response3.data['code']
+        response=userapi.check_forget_code_request(code=code)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.data, {'code':code})
+
+    def test_reset_password_request_failure_invalid_code(self):
+        ''' reset_password_request should fail if code is invalid '''
+        codes = ['u@ser@komlog.org', 'invalid_code','my code',234234,None,{'a':'dict'}, ['a list',],('a','tuple')]
+        password='temporal'
+        for code in codes:
+            response=userapi.reset_password_request(code=code, password=password)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAU_RPR_ICODE)
+
+    def test_reset_password_request_failure_invalid_password(self):
+        ''' reset_password_request should fail if code is invalid '''
+        passwords = [None, 23423424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','short']
+        code=uuid.uuid4().hex
+        for password in passwords:
+            response=userapi.reset_password_request(code=code, password=password)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAU_RPR_IPWD)
+
+    def test_reset_password_request_failure_code_not_found(self):
+        ''' reset_password_request should fail if code is not found '''
+        code=uuid.uuid4().hex
+        password='temporal'
+        response=userapi.reset_password_request(code=code, password=password)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, errors.E_IWAU_RPR_CNF)
+
+    def test_reset_password_request_failure_code_already_used(self):
+        ''' reset_password_request should fail if code is already used'''
+        username = 'test_reset_password_request_failure_code_already_used'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        response2 = userapi.get_user_config_request(username=username)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.data['uid'],response2.data['uid'])
+        self.assertEqual(username,response2.data['username'])
+        self.assertEqual(email,response2.data['email'])
+        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
+                msgapi.send_message(msg)
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertEqual(msg.email, email)
+        self.assertTrue(args.is_valid_code(msg.code))
+        response3=userapi.register_forget_request(account=username)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['username'], username)
+        self.assertEqual(response3.data['email'],email)
+        msg_addr=routing.get_address(type=messages.FORGET_MAIL_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
+            self.assertIsNotNone(msg)
+            if msg.type!=messages.FORGET_MAIL_MESSAGE or msg.email!=email:
+                count+=1
+                if count>=1000:
+                    break
+            else:
+                break
+        self.assertEqual(response3.data['code'],msg.code.hex)
+        code=response3.data['code']
+        password='newpassword'
+        response=userapi.reset_password_request(code=code, password=password)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        password='newpassword2'
+        response=userapi.reset_password_request(code=code, password=password)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, errors.E_IWAU_RPR_CODEAU)
+

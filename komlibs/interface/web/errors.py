@@ -51,6 +51,19 @@ E_IWAU_CIR_INVAU=100052
 E_IWAU_SIR_IEMAIL=100060
 E_IWAU_SIR_INUM=100061
 
+E_IWAU_RFR_IACCOUNT=100070 #: register_forget_request: invalid account received
+E_IWAU_RFR_UNF=100071 #: register_forget_request: user not found
+
+E_IWAU_CFR_ICODE=100080 #: check_forget_code_request: invalid code
+E_IWAU_CFR_CNF=100081 #: check_forget_code_request: code not found
+E_IWAU_CFR_CODEAU=100082 #: check_forget_code_request: code already used
+
+E_IWAU_RPR_ICODE=100090 #: reset_password_request: invalid code
+E_IWAU_RPR_IPWD=100091 #: reset_password_request: invalid password
+E_IWAU_RPR_UNF=100092 #: reset_password_request: user not found.
+E_IWAU_RPR_CNF=100093 #: reset_password_request: code not found
+E_IWAU_RPR_CODEAU=100094 #: reset_password_request: code already used.
+
 #interface web api agent
 
 E_IWAA_NAGR_IU=100200

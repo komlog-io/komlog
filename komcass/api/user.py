@@ -66,6 +66,10 @@ def insert_user(user):
         connection.session.execute(stmtuser.I_A_MSTUSER,(user.username,user.uid,user.password,user.email,user.state,user.segment,user.creation_date))
         return True
 
+def update_user_password(username, password):
+    resp=connection.session.execute(stmtuser.U_PASSWORD_MSTUSER_B_USERNAME,(password,username))
+    return resp[0]['[applied]'] if resp else False
+
 def delete_user(username):
     connection.session.execute(stmtuser.D_A_MSTUSER_B_USERNAME,(username,))
     return True
@@ -156,5 +160,35 @@ def delete_invitation_request(email):
 
 def update_invitation_request_state(email, new_state):
     resp=connection.session.execute(stmtuser.U_STATE_DATINVITATIONREQUEST_B_EMAIL,(new_state,email))
-    return resp[0]['[applied]']
+    return resp[0]['[applied]'] if resp else False
+
+def get_forget_request(code):
+    row=connection.session.execute(stmtuser.S_A_DATFORGETREQUEST_B_CODE,(code,))
+    return ormuser.ForgetRequest(**row[0]) if row else None
+
+def get_forget_requests(state, num=0):
+    if num==0:
+        row=connection.session.execute(stmtuser.S_A_DATFORGETREQUEST_B_STATE,(state,))
+    else:
+        row=connection.session.execute(stmtuser.S_A_DATFORGETREQUEST_B_STATE_NUM,(state,num))
+    data=[]
+    if row:
+        for d in row:
+            data.append(ormuser.ForgetRequest(**d))
+    return data
+
+def insert_forget_request(forget_request):
+    if not isinstance(forget_request, ormuser.ForgetRequest):
+        return False
+    else:
+        connection.session.execute(stmtuser.I_A_DATFORGETREQUEST,(forget_request.code,forget_request.date,forget_request.state,forget_request.uid))
+        return True
+
+def delete_forget_request(code):
+    connection.session.execute(stmtuser.D_A_DATFORGETREQUEST_B_CODE,(code,))
+    return True
+
+def update_forget_request_state(code, new_state):
+    resp=connection.session.execute(stmtuser.U_STATE_DATFORGETREQUEST_B_CODE,(new_state,code))
+    return resp[0]['[applied]'] if resp else False
 

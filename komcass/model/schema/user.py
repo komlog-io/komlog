@@ -12,6 +12,8 @@ OBJECTS=['MST_USER',
          'DAT_INVITATION',
          'DAT_INVITATION_REQUEST',
          'DAT_INVITATION_REQUEST_INDEX_01',
+         'DAT_FORGET_REQUEST',
+         'DAT_FORGET_REQUEST_INDEX_01',
         ]
 
 MST_USER='''
@@ -76,5 +78,19 @@ DAT_INVITATION_REQUEST='''
 
 DAT_INVITATION_REQUEST_INDEX_01='''
         CREATE INDEX ON dat_invitation_request (state);
+    '''
+
+DAT_FORGET_REQUEST='''
+        CREATE TABLE dat_forget_request (
+            code uuid,
+            date timeuuid,
+            state int,
+            uid uuid,
+            PRIMARY KEY (code)
+        );
+    '''
+
+DAT_FORGET_REQUEST_INDEX_01='''
+        CREATE INDEX ON dat_forget_request (state);
     '''
 

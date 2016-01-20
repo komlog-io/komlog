@@ -328,3 +328,60 @@ def check_unused_invitation(inv_id):
     else:
         raise exceptions.InvitationProcessException(error=errors.E_GUA_CUI_INVIS)
 
+def register_forget_request(username=None, email=None):
+    ''' register_forget_request is used to store a request when a user wants to reset
+        her password.
+        we will register the request associated to her uid.
+    '''
+    if username is not None and not args.is_valid_username(username):
+        raise exceptions.BadParametersException(error=errors.E_GUA_RFR_IU)
+    if email is not None and not args.is_valid_email(email):
+        raise exceptions.BadParametersException(error=errors.E_GUA_RFR_IEMAIL)
+    if not username and not email:
+        raise exceptions.BadParametersException(error=errors.E_GUA_RFR_NPP)
+    user=cassapiuser.get_user(username=username, email=email)
+    if user:
+        code=uuid.uuid4()
+        now=timeuuid.uuid1()
+        request=ormuser.ForgetRequest(code=code, date=now, state=states.FORGET_REQUEST_UNUSED, uid=user.uid)
+        if cassapiuser.insert_forget_request(forget_request=request):
+            return {'code':code,'username':user.username, 'email':user.email, 'uid':user.uid}
+        else:
+            raise exceptions.ForgetRequestException(error=errors.E_GUA_RFR_DBE)
+    else:
+        raise exceptions.UserNotFoundException(error=errors.E_GUA_RFR_UNF)
+
+def check_unused_forget_code(code):
+    if not args.is_valid_uuid(code):
+        raise exceptions.BadParametersException(error=errors.E_GUA_CUFC_ICODE)
+    request=cassapiuser.get_forget_request(code=code)
+    if not request:
+        raise exceptions.ForgetRequestNotFoundException(error=errors.E_GUA_CUFC_CNF)
+    elif request.state != states.FORGET_REQUEST_UNUSED:
+        raise exceptions.ForgetRequestException(error=errors.E_GUA_CUFC_CODEAU)
+    else:
+        return True
+
+def reset_password(code, password):
+    if not args.is_valid_uuid(code):
+        raise exceptions.BadParametersException(error=errors.E_GUA_RP_ICODE)
+    if not args.is_valid_password(password):
+        raise exceptions.BadParametersException(error=errors.E_GUA_RP_IPWD)
+    request=cassapiuser.get_forget_request(code=code)
+    if not request:
+        raise exceptions.ForgetRequestNotFoundException(error=errors.E_GUA_RP_CNF)
+    elif request.state != states.FORGET_REQUEST_UNUSED:
+        raise exceptions.ForgetRequestException(error=errors.E_GUA_RP_CODEAU)
+    user=cassapiuser.get_user(uid=request.uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=errors.E_GUA_RP_UNF)
+    new_password=get_hpassword(user.uid,password)
+    if new_password:
+        if cassapiuser.update_user_password(username=user.username, password=new_password):
+            cassapiuser.update_forget_request_state(code=code, new_state=states.FORGET_REQUEST_USED)
+            return True
+        else:
+            raise exceptions.ForgetRequestException(error=errors.E_GUA_RP_EUDB)
+    raise exceptions.ForgetRequestException(error=errors.E_GUA_RP_EGPWD)
+
+

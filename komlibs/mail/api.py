@@ -25,7 +25,19 @@ def send_invitation_mail(to, inv_id):
               'domain':config.get(options.MAIL_DOMAIN)
              }
     mailmessage=mailmessages.get_message(mailtypes.NEW_INVITATION,mailargs)
-    logger.logger.debug('EMAIL a enviar: '+str(mailmessage.__dict__))
+    if connection.mailer.send(mailmessage):
+        return True
+    else:
+        return False
+
+def send_forget_mail(to, code):
+    if not arguments.is_valid_email(to) or not arguments.is_valid_uuid(code):
+        return False
+    mailargs={'to_address':to,
+              'code':code.hex,
+              'domain':config.get(options.MAIL_DOMAIN)
+             }
+    mailmessage=mailmessages.get_message(mailtypes.FORGET,mailargs)
     if connection.mailer.send(mailmessage):
         return True
     else:

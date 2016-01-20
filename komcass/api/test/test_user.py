@@ -405,3 +405,128 @@ class KomcassApiUserTest(unittest.TestCase):
         ''' update_invitation_request_state should fail if invitation_request does not exist '''
         self.assertFalse(userapi.update_invitation_request_state(email='nonexistent', new_state=1))
 
+    def test_get_forget_request_none_found(self):
+        ''' get_forget_request should return None if no request is found '''
+        code=uuid.uuid4()
+        self.assertIsNone(userapi.get_forget_request(code=code))
+
+    def test_get_forget_request_success(self):
+        ''' get_forget_request should return the request '''
+        request1=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uuid.uuid4())
+        request2=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uuid.uuid4())
+        request3=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uuid.uuid4())
+        request4=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uuid.uuid4())
+        self.assertTrue(userapi.insert_forget_request(forget_request=request1))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request2))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request3))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request4))
+        self.assertEqual(userapi.get_forget_request(code=request1.code).__dict__,request1.__dict__)
+        self.assertEqual(userapi.get_forget_request(code=request2.code).__dict__,request2.__dict__)
+        self.assertEqual(userapi.get_forget_request(code=request3.code).__dict__,request3.__dict__)
+        self.assertEqual(userapi.get_forget_request(code=request4.code).__dict__,request4.__dict__)
+
+    def test_get_forget_requests_success(self):
+        ''' get_forget_request should return the requests with the associated state '''
+        request1=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uuid.uuid4())
+        request2=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uuid.uuid4())
+        request3=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=1,uid=uuid.uuid4())
+        request4=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=1,uid=uuid.uuid4())
+        self.assertTrue(userapi.insert_forget_request(forget_request=request1))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request2))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request3))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request4))
+        requests_found=userapi.get_forget_requests(state=0)
+        self.assertTrue(len(requests_found)>1)
+        requests_found=userapi.get_forget_requests(state=1)
+        self.assertTrue(len(requests_found)>1)
+        requests_found=userapi.get_forget_requests(state=200)
+        self.assertEqual(len(requests_found),0)
+
+    def test_insert_forget_request_success(self):
+        ''' insert_forget_request should insert the object successfully '''
+        request1=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uuid.uuid4())
+        request2=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uuid.uuid4())
+        request3=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=1,uid=uuid.uuid4())
+        request4=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=1,uid=uuid.uuid4())
+        self.assertTrue(userapi.insert_forget_request(forget_request=request1))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request2))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request3))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request4))
+        requests_found=userapi.get_forget_requests(state=0)
+        self.assertTrue(len(requests_found)>1)
+        requests_found=userapi.get_forget_requests(state=1)
+        self.assertTrue(len(requests_found)>1)
+        requests_found=userapi.get_forget_requests(state=200)
+        self.assertEqual(len(requests_found),0)
+
+    def test_insert_forget_request_failure_non_ForgetRequest_instance(self):
+        ''' insert_forget_request should fail if info is not a ForgetRequest instance '''
+        requests=[None, 123123, '2123123123', {'a':'dict'},['a','list']]
+        for request in requests:
+            self.assertFalse(userapi.insert_forget_request(request))
+
+    def test_delete_forget_request_success(self):
+        ''' delete_forget_request should delete the object successfully '''
+        request1=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uuid.uuid4())
+        request2=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uuid.uuid4())
+        request3=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=1,uid=uuid.uuid4())
+        request4=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=1,uid=uuid.uuid4())
+        self.assertTrue(userapi.insert_forget_request(forget_request=request1))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request2))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request3))
+        self.assertTrue(userapi.insert_forget_request(forget_request=request4))
+        request=userapi.get_forget_request(code=request1.code)
+        self.assertIsNotNone(request)
+        self.assertTrue(userapi.delete_forget_request(code=request.code))
+        request=userapi.get_forget_request(code=request1.code)
+        self.assertIsNone(request)
+        request=userapi.get_forget_request(code=request2.code)
+        self.assertIsNotNone(request)
+        self.assertTrue(userapi.delete_forget_request(code=request.code))
+        request=userapi.get_forget_request(code=request2.code)
+        self.assertIsNone(request)
+        request=userapi.get_forget_request(code=request3.code)
+        self.assertIsNotNone(request)
+        self.assertTrue(userapi.delete_forget_request(code=request.code))
+        request=userapi.get_forget_request(code=request3.code)
+        self.assertIsNone(request)
+        request=userapi.get_forget_request(code=request4.code)
+        self.assertIsNotNone(request)
+        self.assertTrue(userapi.delete_forget_request(code=request.code))
+        request=userapi.get_forget_request(code=request4.code)
+        self.assertIsNone(request)
+
+    def test_update_forget_request_state_success(self):
+        ''' update_forget_request_state should update the state of the request '''
+        request1=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uuid.uuid4())
+        self.assertTrue(userapi.insert_forget_request(forget_request=request1))
+        request=userapi.get_forget_request(code=request1.code)
+        self.assertIsNotNone(request)
+        self.assertEqual(request.state,0)
+        self.assertTrue(userapi.update_forget_request_state(code=request.code, new_state=1))
+        request=userapi.get_forget_request(code=request1.code)
+        self.assertIsNotNone(request)
+        self.assertEqual(request.state,1)
+
+    def test_update_forget_request_state_failed(self):
+        ''' update_forget_request_state should fail if forget_request does not exist '''
+        self.assertFalse(userapi.update_forget_request_state(code=uuid.uuid4(), new_state=1))
+
+    def test_update_user_password_success(self):
+        ''' update_user_password should update the password successfully '''
+        username='test_new_user_success_user'
+        password='password'
+        email=username+'@komlog.org'
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        user=ormuser.User(username=username, password=password, email=email, uid=uid, creation_date=creation_date)
+        self.assertTrue(userapi.new_user(user))
+        new_password='temporal'
+        self.assertTrue(userapi.update_user_password(username=username, password=new_password))
+
+    def test_update_user_password_failed_user_not_found(self):
+        ''' update_forget_request_state should fail if forget_request does not exist '''
+        username='test_update_user_password_failed_user_not_found'
+        password='temporal'
+        self.assertFalse(userapi.update_user_password(username=username, password=password))
+

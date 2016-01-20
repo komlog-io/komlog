@@ -1,0 +1,45 @@
+{% extends "p_base.html" %}
+
+{% block p_content %}
+    <!-- Page Content -->
+    <div class="container">
+      <div class="well">
+        {% if reset == False %}
+        <h2>Forgot your password?</h2>
+        <h5>Enter your email or username and we will send you an email to reset your password.</h5>
+        <form class="form-inline form-invite" method="post" action="">
+          <div class="form-group">
+            <label for="account" class="sr-only">Account</label>
+            <input type="text" id="account" name="account" class="form-control" placeholder="email or username" required autofocus>
+          </div>
+          <button class="btn btn-primary" type="submit">Send</button>
+        </form>
+        {% elif response.status != status.WEB_STATUS_OK %}
+        <div class="alert alert-danger" role="alert">
+            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+            <span class="sr-only">Error:</span>
+            Invalid code, please request your password reset again.
+        </div>
+        <h2>Forgot your password?</h2>
+        <h5>Enter your email or username and we will send you an email to reset your password.</h5>
+        <form class="form-inline form-invite" method="post" action="">
+          <div class="form-group">
+            <label for="account" class="sr-only">Account</label>
+            <input type="text" id="account" name="account" class="form-control" placeholder="email or username" required autofocus>
+          </div>
+          <button class="btn btn-primary" type="submit">Send</button>
+        </form>
+        {% else %}
+        <form class="form-signin" method="post" action="">
+          <h2 class="form-signin-heading">Set the new password</h2>
+          <label for="new-password" class="sr-only">New password</label>
+          <input type="password" id="password" name="password" class="form-control" placeholder="new password" required autofocus>
+          <label for="retype-password" class="sr-only">Retype Password</label>
+          <input type="password" id="retype-password" name="retype-password" class="form-control" placeholder="retype password" required>
+          <button class="btn btn-success " type="submit">Set new password</button>
+        </form>
+        {% end %}
+      </div>
+    </div>
+    <!-- /.container -->
+{% end %}

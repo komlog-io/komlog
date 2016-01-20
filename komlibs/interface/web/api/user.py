@@ -174,3 +174,75 @@ def send_invitation_request(email=None, num=1):
         sent.append((invitation['email'],invitation['inv_id'].hex))
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data=sent)
 
+@exceptions.ExceptionHandler
+def register_forget_request(account):
+    if not args.is_valid_email(account) and not args.is_valid_username(account):
+        raise exceptions.BadParametersException(error=errors.E_IWAU_RFR_IACCOUNT)
+    try:
+        if args.is_valid_email(account):
+            request=userapi.register_forget_request(email=account)
+        else:
+            request=userapi.register_forget_request(username=account)
+    except gestexcept.UserNotFoundException:
+        status_c=status.WEB_STATUS_BAD_PARAMETERS
+        data={'message':'User not found','account':account}
+        error=errors.E_IWAU_RFR_UNF
+        return webmodel.WebInterfaceResponse(status=status_c, data=data, error=error)
+    else:
+        message=messages.ForgetMailMessage(email=request['email'], code=request['code'])
+        msgapi.send_message(message)
+        data={'username':request['username'],'email':request['email'],'code':request['code'].hex}
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
+
+@exceptions.ExceptionHandler
+def check_forget_code_request(code):
+    if not args.is_valid_hex_uuid(code):
+        raise exceptions.BadParametersException(error=errors.E_IWAU_CFR_ICODE)
+    try:
+        code=uuid.UUID(code)
+        userapi.check_unused_forget_code(code=code)
+    except gestexcept.ForgetRequestNotFoundException as e:
+        status_c=status.WEB_STATUS_BAD_PARAMETERS
+        data={'message':'Code not found'}
+        error=errors.E_IWAU_CFR_CNF
+        return webmodel.WebInterfaceResponse(status=status_c, data=data, error=error)
+    except gestexcept.ForgetRequestException as e:
+        if e.error == gesterrors.E_GUA_CUFC_CODEAU:
+            status_c=status.WEB_STATUS_BAD_PARAMETERS
+            data={'message':'Code Already Used'}
+            error=errors.E_IWAU_CFR_CODEAU
+        else:
+            status_c=status.WEB_STATUS_INTERNAL_ERROR
+            data={'message':'Error code '+str(e.error)}
+            error=e.error
+        return webmodel.WebInterfaceResponse(status=status_c, data=data, error=error)
+    else:
+        data={'code':code.hex}
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
+
+@exceptions.ExceptionHandler
+def reset_password_request(code, password):
+    if not args.is_valid_hex_uuid(code):
+        raise exceptions.BadParametersException(error=errors.E_IWAU_RPR_ICODE)
+    if not args.is_valid_password(password):
+        raise exceptions.BadParametersException(error=errors.E_IWAU_RPR_IPWD)
+    try:
+        code=uuid.UUID(code)
+        userapi.reset_password(code=code, password=password)
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    except gestexcept.UserNotFoundException:
+        status_c=status.WEB_STATUS_NOT_FOUND
+        error=errors.E_IWAU_RPR_UNF
+        return webmodel.WebInterfaceResponse(status=status_c, error=error)
+    except (gestexcept.ForgetRequestException,gestexcept.ForgetRequestNotFoundException) as e:
+        status_c=status.WEB_STATUS_BAD_PARAMETERS
+        if e.error==gesterrors.E_GUA_RP_CODEAU:
+            error=errors.E_IWAU_RPR_CODEAU
+        elif e.error==gesterrors.E_GUA_RP_CNF:
+            error=errors.E_IWAU_RPR_CNF
+        else:
+            error=e.error
+        return webmodel.WebInterfaceResponse(status=status_c, error=error)
+
+
+
