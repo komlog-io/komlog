@@ -15,22 +15,34 @@ STATEMENTS={10000:'select * from mst_agent where aid=?',
             10001:'select * from mst_agent where uid=?',
             10002:'select count(*) from mst_agent where uid=?',
             10003:'select aid from mst_agent where uid=?',
-            11000:'insert into mst_agent (aid,uid,agentname,pubkey,version,state,creation_date) values (?,?,?,?,?,?,?)',
-            12000:'delete from mst_agent where aid=?',
+            15000:'insert into mst_agent (aid,uid,agentname,pubkey,version,state,creation_date) values (?,?,?,?,?,?,?)',
+            15001:'insert into mst_agent (aid,uid,agentname,pubkey,version,state,creation_date) values (?,?,?,?,?,?,?) if not exists',
+            17000:'delete from mst_agent where aid=?',
            }
 
-# selects
+# selects (10000 - 14999)
+
+# mst_agent
 
 S_A_MSTAGENT_B_AID=10000
 S_A_MSTAGENT_B_UID=10001
 S_COUNT_MSTAGENT_B_UID=10002
 S_AID_MSTAGENT_B_UID=10003
 
-# Inserts
+# Inserts (15000 - 16999)
 
-I_A_MSTAGENT=11000
+# mst_agent
 
-# Deletes
+I_A_MSTAGENT=15000
+I_A_MSTAGENT_INE=15001
 
-D_A_MSTAGENT_B_AID=12000
+# Deletes (17000 - 18999)
+
+# mst_agent
+
+D_A_MSTAGENT_B_AID=17000
+
+# Update (19000 - 19999)
+
+# mst_agent
 

@@ -55,12 +55,8 @@ def new_datasource(datasource):
     if not datasource:
         return False
     else:
-        existing_datasource=get_datasource(did=datasource.did)
-        if existing_datasource:
-            return False
-        else:
-            connection.session.execute(stmtdatasource.I_A_MSTDATASOURCE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.state,datasource.creation_date))
-            return True
+        resp=connection.session.execute(stmtdatasource.I_A_MSTDATASOURCE_INE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.state,datasource.creation_date))
+        return resp[0]['[applied]'] if resp else False
 
 def insert_datasource(datasource):
     if not isinstance(datasource, ormdatasource.Datasource):

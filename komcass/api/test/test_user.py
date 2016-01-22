@@ -514,7 +514,7 @@ class KomcassApiUserTest(unittest.TestCase):
 
     def test_update_user_password_success(self):
         ''' update_user_password should update the password successfully '''
-        username='test_new_user_success_user'
+        username='test_update_user_password_success'
         password='password'
         email=username+'@komlog.org'
         uid=uuid.uuid4()

@@ -23,6 +23,13 @@ def get_expired_ticket(tid):
     else:
         return None
 
+def new_ticket(ticket):
+    if not isinstance(ticket, ormticket.Ticket):
+        return False
+    else:
+        resp=connection.session.execute(stmtticket.I_A_AUTHTICKET_INE,(ticket.tid,ticket.date,ticket.uid,ticket.expires,ticket.allowed_uids,ticket.allowed_cids,ticket.resources,ticket.permissions,ticket.interval_init,ticket.interval_end))
+        return resp[0]['[applied]'] if resp else False
+
 def insert_ticket(ticket):
     if not isinstance(ticket, ormticket.Ticket):
         return False

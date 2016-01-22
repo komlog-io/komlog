@@ -25,6 +25,7 @@ STATEMENTS={0:'select * from mst_user where username=?',
             401:'select * from dat_forget_request where state=?',
             402:'select * from dat_forget_request where state=? limit ?',
             5000:'insert into mst_user (username,uid,password,email,state,segment,creation_date) values (?,?,?,?,?,?,?)',
+            5001:'insert into mst_user (username,uid,password,email,state,segment,creation_date) values (?,?,?,?,?,?,?) if not exists',
             5100:'insert into mst_signup (username,signup_code,email,creation_date,utilization_date) values (?,?,?,?,?)',
             5200:'insert into dat_invitation (inv_id,date,state,tran_id) values (?,?,?,?)',
             5300:'insert into dat_invitation_request (email,date,state,inv_id) values (?,?,?,?)',
@@ -75,6 +76,7 @@ S_A_DATFORGETREQUEST_B_STATE_NUM=402
 # mst_user
 
 I_A_MSTUSER=5000
+I_A_MSTUSER_INE=5001
 
 # mst_signup
 

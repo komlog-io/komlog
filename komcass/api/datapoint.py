@@ -103,12 +103,8 @@ def new_datapoint(datapoint):
     if not isinstance(datapoint, ormdatapoint.Datapoint):
         return False
     else:
-        existing_datapoint=get_datapoint(datapoint.pid)
-        if existing_datapoint:
-            return False
-        else:
-            connection.session.execute(stmtdatapoint.I_A_MSTDATAPOINT,(datapoint.pid, datapoint.did, datapoint.datapointname, datapoint.color, datapoint.creation_date))
-            return True
+        resp=connection.session.execute(stmtdatapoint.I_A_MSTDATAPOINT_INE,(datapoint.pid, datapoint.did, datapoint.datapointname, datapoint.color, datapoint.creation_date))
+        return resp[0]['[applied]'] if resp else False
 
 def insert_datapoint(datapoint):
     if not isinstance(datapoint, ormdatapoint.Datapoint):

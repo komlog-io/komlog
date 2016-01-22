@@ -59,7 +59,7 @@ def new_snapshot_ticket(uid, nid, expires=False, share_type=None):
     interval_init=snapshot.interval_init
     interval_end=snapshot.interval_end
     ticket=ormticket.Ticket(tid=tid, date=date, uid=uid, expires=expires, allowed_uids=allowed_uids, allowed_cids=allowed_cids, resources=resources, permissions=permissions, interval_init=interval_init, interval_end=interval_end)
-    if ticketapi.insert_ticket(ticket=ticket):
+    if ticketapi.new_ticket(ticket=ticket):
         return {'tid':tid}
     else:
         raise exceptions.TicketCreationException(error=errors.E_ATP_NST_EIDB)

@@ -48,12 +48,8 @@ def get_dashboard_widgets(bid):
 def new_dashboard(dobj):
     if not isinstance(dobj, ormdashboard.Dashboard):
         return False
-    db=connection.session.execute(stmtdashboard.S_A_MSTDASHBOARD_B_BID,(dobj.bid,))
-    if db:
-        return False
-    else:
-        connection.session.execute(stmtdashboard.I_A_MSTDASHBOARD,(dobj.bid,dobj.uid,dobj.dashboardname,dobj.creation_date,dobj.widgets))
-        return True
+    resp=connection.session.execute(stmtdashboard.I_A_MSTDASHBOARD_INE,(dobj.bid,dobj.uid,dobj.dashboardname,dobj.creation_date,dobj.widgets))
+    return resp[0]['[applied]'] if resp else False
 
 def insert_dashboard(dobj):
     if not isinstance(dobj, ormdashboard.Dashboard):

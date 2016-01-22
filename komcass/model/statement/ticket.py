@@ -13,6 +13,7 @@ def get_statement(num):
 STATEMENTS={160000:'select * from auth_ticket where tid=?',
             160100:'select * from auth_ticket_expired where tid=?',
             165000:'insert into auth_ticket (tid,date,uid,expires,allowed_uids,allowed_cids,resources,permissions,interval_init,interval_end) values (?,?,?,?,?,?,?,?,?,?)',
+            165001:'insert into auth_ticket (tid,date,uid,expires,allowed_uids,allowed_cids,resources,permissions,interval_init,interval_end) values (?,?,?,?,?,?,?,?,?,?) if not exists',
             165100:'insert into auth_ticket_expired (tid,date,uid,expires,allowed_uids,allowed_cids,resources,permissions,interval_init,interval_end) values (?,?,?,?,?,?,?,?,?,?)',
             167000:'delete from auth_ticket where tid=?',
             167100:'delete from auth_ticket_expired where tid=?',
@@ -33,6 +34,7 @@ S_A_AUTHTICKETEXPIRED_B_TID=160100
 # dat_auth_ticket
 
 I_A_AUTHTICKET=165000
+I_A_AUTHTICKET_INE=165001
 
 # dat_auth_ticket_expired
 

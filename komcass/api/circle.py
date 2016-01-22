@@ -49,11 +49,8 @@ def delete_circle(cid):
 def new_circle(circle):
     if not isinstance(circle, ormcircle.Circle):
         return False
-    existingcircle=get_circle(cid=circle.cid)
-    if existingcircle:
-        return False
-    else:
-        return insert_circle(circle=circle)
+    resp=connection.session.execute(stmtcircle.I_A_MSTCIRCLE_INE,(circle.cid,circle.uid,circle.type,circle.creation_date,circle.circlename,circle.members))
+    return resp[0]['[applied]'] if resp else False
 
 def insert_circle(circle):
     if not isinstance(circle, ormcircle.Circle):

@@ -91,11 +91,23 @@ def get_number_of_snapshots(uid=None, wid=None):
 def new_snapshot(snapshot):
     if not isinstance(snapshot, ormsnapshot.Snapshot):
         return False
-    existingsnapshot=get_snapshot(snapshot.nid)
-    if existingsnapshot:
-        return False
+    resp=connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOT_INE,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.type,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date,snapshot.shared_with_uids,snapshot.shared_with_cids))
+    if resp[0]['[applied]']:
+        if snapshot.type==prmwidget.types.DATASOURCE:
+            _insert_snapshot_ds(snapshot)
+        elif snapshot.type==prmwidget.types.DATAPOINT:
+            _insert_snapshot_dp(snapshot)
+        elif snapshot.type==prmwidget.types.MULTIDP:
+            _insert_snapshot_multidp(snapshot)
+        elif snapshot.type==prmwidget.types.HISTOGRAM:
+            _insert_snapshot_histogram(snapshot)
+        elif snapshot.type==prmwidget.types.LINEGRAPH:
+            _insert_snapshot_linegraph(snapshot)
+        elif snapshot.type==prmwidget.types.TABLE:
+            _insert_snapshot_table(snapshot)
+        return True
     else:
-        return insert_snapshot(snapshot)
+        return False
 
 def insert_snapshot(snapshot):
     if not isinstance(snapshot, ormsnapshot.Snapshot):

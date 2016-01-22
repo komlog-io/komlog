@@ -44,12 +44,8 @@ def new_agent(agent):
     if not isinstance(agent, ormagent.Agent):
         return False
     else:
-        existing_agent=connection.session.execute(stmtagent.S_A_MSTAGENT_B_AID,(agent.aid,))
-        if existing_agent:
-            return False
-        else:
-            connection.session.execute(stmtagent.I_A_MSTAGENT,(agent.aid,agent.uid,agent.agentname,agent.pubkey,agent.version,agent.state,agent.creation_date))
-            return True
+        resp=connection.session.execute(stmtagent.I_A_MSTAGENT_INE,(agent.aid,agent.uid,agent.agentname,agent.pubkey,agent.version,agent.state,agent.creation_date))
+        return resp[0]['[applied]'] if resp else False
 
 def insert_agent(agent):
     if not isinstance(agent, ormagent.Agent):

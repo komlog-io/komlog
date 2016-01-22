@@ -37,6 +37,7 @@ STATEMENTS={90000:'select * from mst_widget where wid=?',
             90600:'select * from mst_widget_multidp where wid=?',
             90601:'select wid from mst_widget_multidp where datapoints contains ?',
             95000:'insert into mst_widget (wid,uid,type,creation_date,widgetname) values (?,?,?,?,?)',
+            95001:'insert into mst_widget (wid,uid,type,creation_date,widgetname) values (?,?,?,?,?) if not exists',
             95100:'insert into mst_widget_ds (wid,did) values (?,?)',
             95200:'insert into mst_widget_dp (wid,pid) values (?,?)',
             95300:'insert into mst_widget_histogram (wid,datapoints,colors) values (?,?,?)',
@@ -112,6 +113,7 @@ S_WID_MSTWIDGETMULTIDP_B_PID=90601
 # mst_widget
 
 I_A_MSTWIDGET=95000
+I_A_MSTWIDGET_INE=95001
 
 # mst_widget_ds
 

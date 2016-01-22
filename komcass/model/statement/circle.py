@@ -17,13 +17,16 @@ STATEMENTS={140000:'select * from mst_circle where cid=?',
             140004:'select cid from mst_circle where uid=?',
             140005:'select count(*) from mst_circle where uid=? and type=? allow filtering',
             140006:'select count(*) from mst_circle where uid=?',
-            141000:'insert into mst_circle (cid,uid,type,creation_date,circlename,members) values (?,?,?,?,?,?)',
-            142000:'delete from mst_circle where cid=?',
-            142001:'delete members[?] from mst_circle where cid=?',
-            143000:'update mst_circle set members=? where cid=?',
+            145000:'insert into mst_circle (cid,uid,type,creation_date,circlename,members) values (?,?,?,?,?,?)',
+            145001:'insert into mst_circle (cid,uid,type,creation_date,circlename,members) values (?,?,?,?,?,?) if not exists',
+            147000:'delete from mst_circle where cid=?',
+            147001:'delete members[?] from mst_circle where cid=?',
+            149000:'update mst_circle set members=? where cid=?',
            }
 
-# selects
+# selects (140000 - 144999)
+
+# mst_circle
 
 S_A_MSTCIRCLE_B_CID=140000
 S_A_MSTCIRCLE_B_UID_TYPE=140001
@@ -33,16 +36,23 @@ S_CID_MSTCIRCLE_B_UID=140004
 S_COUNT_MSTCIRCLE_B_UID_TYPE=140005
 S_COUNT_MSTCIRCLE_B_UID=140006
 
-# Inserts
+# Inserts (145000 - 146999 )
 
-I_A_MSTCIRCLE=141000
+# mst_circle
 
-# Deletes
+I_A_MSTCIRCLE=145000
+I_A_MSTCIRCLE_INE=145001
 
-D_A_MSTCIRCLE_B_CID=142000
-D_MEMBER_MSTCIRCLE_B_MEMBER_CID=142001
+# Deletes (147000 - 148999)
 
-# Updates
+# mst_circle
 
-U_MEMBERS_MSTCIRCLE_B_CID=143000
+D_A_MSTCIRCLE_B_CID=147000
+D_MEMBER_MSTCIRCLE_B_MEMBER_CID=147001
+
+# Updates (149000 - 149999)
+
+# mst_circle
+
+U_MEMBERS_MSTCIRCLE_B_CID=149000
 

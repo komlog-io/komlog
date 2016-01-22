@@ -78,6 +78,65 @@ class KomcassApiTicketTest(unittest.TestCase):
         self.assertEqual(db_ticket.interval_init,ticket.interval_init)
         self.assertEqual(db_ticket.interval_end,ticket.interval_end)
 
+    def test_new_ticket_failure_no_ticket_object(self):
+        ''' new_ticket should return False if argument is not a Ticket object '''
+        tickets=[23,'23423',2342.2342, {'a':'dict'},('a','tuple'),{'set'},['a','list'],uuid.uuid4(), uuid.uuid1()]
+        for ticket in tickets:
+            self.assertFalse(ticketapi.new_ticket(ticket=ticket))
+
+    def test_new_ticket_success(self):
+        ''' new_ticket should succeed '''
+        tid=uuid.uuid4()
+        date=uuid.uuid1()
+        uid=uuid.uuid4()
+        expires=uuid.uuid1()
+        allowed_uids={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+        allowed_cids={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+        resources={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+        permissions={uuid.uuid4():0,uuid.uuid4():3,uuid.uuid4():6}
+        interval_init=uuid.uuid1()
+        interval_end=uuid.uuid1()
+        ticket=ormticket.Ticket(tid=tid,date=date,uid=uid,expires=expires,allowed_uids=allowed_uids,allowed_cids=allowed_cids,resources=resources,permissions=permissions,interval_init=interval_init,interval_end=interval_end)
+        self.assertTrue(ticketapi.new_ticket(ticket=ticket))
+        db_ticket=ticketapi.get_ticket(tid=tid)
+        self.assertEqual(db_ticket.tid,ticket.tid)
+        self.assertEqual(db_ticket.date,ticket.date)
+        self.assertEqual(db_ticket.uid,ticket.uid)
+        self.assertEqual(db_ticket.expires,ticket.expires)
+        self.assertEqual(db_ticket.allowed_uids,ticket.allowed_uids)
+        self.assertEqual(db_ticket.allowed_cids,ticket.allowed_cids)
+        self.assertEqual(db_ticket.resources,ticket.resources)
+        self.assertEqual(db_ticket.permissions,ticket.permissions)
+        self.assertEqual(db_ticket.interval_init,ticket.interval_init)
+        self.assertEqual(db_ticket.interval_end,ticket.interval_end)
+
+    def test_new_ticket_failure_already_exists(self):
+        ''' new_ticket should fail if already exists a ticket with the same tid '''
+        tid=uuid.uuid4()
+        date=uuid.uuid1()
+        uid=uuid.uuid4()
+        expires=uuid.uuid1()
+        allowed_uids={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+        allowed_cids={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+        resources={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+        permissions={uuid.uuid4():0,uuid.uuid4():3,uuid.uuid4():6}
+        interval_init=uuid.uuid1()
+        interval_end=uuid.uuid1()
+        ticket=ormticket.Ticket(tid=tid,date=date,uid=uid,expires=expires,allowed_uids=allowed_uids,allowed_cids=allowed_cids,resources=resources,permissions=permissions,interval_init=interval_init,interval_end=interval_end)
+        self.assertTrue(ticketapi.new_ticket(ticket=ticket))
+        db_ticket=ticketapi.get_ticket(tid=tid)
+        self.assertEqual(db_ticket.tid,ticket.tid)
+        self.assertEqual(db_ticket.date,ticket.date)
+        self.assertEqual(db_ticket.uid,ticket.uid)
+        self.assertEqual(db_ticket.expires,ticket.expires)
+        self.assertEqual(db_ticket.allowed_uids,ticket.allowed_uids)
+        self.assertEqual(db_ticket.allowed_cids,ticket.allowed_cids)
+        self.assertEqual(db_ticket.resources,ticket.resources)
+        self.assertEqual(db_ticket.permissions,ticket.permissions)
+        self.assertEqual(db_ticket.interval_init,ticket.interval_init)
+        self.assertEqual(db_ticket.interval_end,ticket.interval_end)
+        self.assertFalse(ticketapi.new_ticket(ticket=ticket))
+
     def test_insert_ticket_failure_no_ticket_object(self):
         ''' insert_ticket should return False if argument is not a Ticket object '''
         tickets=[23,'23423',2342.2342, {'a':'dict'},('a','tuple'),{'set'},['a','list'],uuid.uuid4(), uuid.uuid1()]

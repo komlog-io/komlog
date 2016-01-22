@@ -24,6 +24,7 @@ STATEMENTS={120000:'select * from mst_snapshot where nid=?',
             120500:'select * from mst_snapshot_table where nid=?',
             120600:'select * from mst_snapshot_multidp where nid=?',
             125000:'insert into mst_snapshot (nid,uid,wid,type,interval_init,interval_end,widgetname,creation_date,shared_with_uids,shared_with_cids) values (?,?,?,?,?,?,?,?,?,?)',
+            125001:'insert into mst_snapshot (nid,uid,wid,type,interval_init,interval_end,widgetname,creation_date,shared_with_uids,shared_with_cids) values (?,?,?,?,?,?,?,?,?,?) if not exists',
             125100:'insert into mst_snapshot_ds (nid,did,datasource_config,datapoints_config) values (?,?,?,?)',
             125200:'insert into mst_snapshot_dp (nid,pid,datapoint_config) values (?,?,?)',
             125300:'insert into mst_snapshot_histogram (nid,datapoints,colors) values (?,?,?)',
@@ -80,6 +81,7 @@ S_A_MSTSNAPSHOTMULTIDP_B_NID=120600
 # mst_snapshot
 
 I_A_MSTSNAPSHOT=125000
+I_A_MSTSNAPSHOT_INE=125001
 
 # mst_snapshot_ds
 

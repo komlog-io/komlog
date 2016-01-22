@@ -56,8 +56,8 @@ def new_user(user):
         userinfo=get_user(uid=user.uid)
         if userinfo:
             return False
-        connection.session.execute(stmtuser.I_A_MSTUSER,(user.username,user.uid,user.password,user.email,user.state,user.segment,user.creation_date))
-        return True
+        resp=connection.session.execute(stmtuser.I_A_MSTUSER_INE,(user.username,user.uid,user.password,user.email,user.state,user.segment,user.creation_date))
+        return resp[0]['[applied]'] if resp else False
 
 def insert_user(user):
     if not isinstance(user, ormuser.User):

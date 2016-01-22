@@ -103,11 +103,23 @@ def delete_widget(wid):
 def new_widget(widget):
     if not isinstance(widget, ormwidget.Widget):
         return False
-    existingwidget=get_widget(widget.wid)
-    if existingwidget:
-        return False
+    resp=connection.session.execute(stmtwidget.I_A_MSTWIDGET_INE,(widget.wid,widget.uid,widget.type,widget.creation_date, widget.widgetname))
+    if resp[0]['[applied]']:
+        if widget.type==prmwidget.types.DATASOURCE:
+            _insert_widget_ds(widget)
+        elif widget.type==prmwidget.types.DATAPOINT:
+            _insert_widget_dp(widget)
+        elif widget.type==prmwidget.types.HISTOGRAM:
+            _insert_widget_histogram(widget)
+        elif widget.type==prmwidget.types.LINEGRAPH:
+            _insert_widget_linegraph(widget)
+        elif widget.type==prmwidget.types.TABLE:
+            _insert_widget_table(widget)
+        elif widget.type==prmwidget.types.MULTIDP:
+            _insert_widget_multidp(widget)
+        return True
     else:
-        return insert_widget(widget)
+        return False
 
 def insert_widget(widget):
     if not isinstance(widget, ormwidget.Widget):
