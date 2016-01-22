@@ -35,6 +35,50 @@ class AuthTicketsProvisionTest(unittest.TestCase):
                 provision.new_snapshot_ticket(uid=uid, nid=nid)
             self.assertEqual(cm.exception.error, errors.E_ATP_NST_INID)
 
+    def test_new_snapshot_ticket_failure_invalid_uids(self):
+        ''' new_snapshot_ticket should fail if allowed_uids is invalid '''
+        uids=[24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),uuid.uuid4().hex, uuid.uuid1(), 'Usernames','user name']
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        for uid_s in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=uid_s)
+            self.assertEqual(cm.exception.error, errors.E_ATP_NST_IUIDS)
+
+    def test_new_snapshot_ticket_failure_invalid_uids_item(self):
+        ''' new_snapshot_ticket should fail if an allowed_uids item is invalid '''
+        items=[24232, 2342.23423, 'a',uuid.uuid4().hex, uuid.uuid1(), 'Usernames','user name']
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        for item in items:
+            allowed_uids={uuid.uuid4()}
+            allowed_uids.add(item)
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=allowed_uids)
+            self.assertEqual(cm.exception.error, errors.E_ATP_NST_IUIDSI)
+
+    def test_new_snapshot_ticket_failure_invalid_cids(self):
+        ''' new_snapshot_ticket should fail if allowed_cids is invalid '''
+        cids=[24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),uuid.uuid4().hex, uuid.uuid1(), 'Usernames','user name']
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        for cid_s in cids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_cids=cid_s)
+            self.assertEqual(cm.exception.error, errors.E_ATP_NST_ICIDS)
+
+    def test_new_snapshot_ticket_failure_invalid_cids_item(self):
+        ''' new_snapshot_ticket should fail if an allowed_cids item is invalid '''
+        items=[24232, 2342.23423, 'a',uuid.uuid4().hex, uuid.uuid1(), 'Usernames','user name']
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        for item in items:
+            allowed_cids={uuid.uuid4()}
+            allowed_cids.add(item)
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_cids=allowed_cids)
+            self.assertEqual(cm.exception.error, errors.E_ATP_NST_ICIDSI)
+
     def test_new_snapshot_ticket_failure_invalid_expires(self):
         ''' new_snapshot_ticket should fail if expires is invalid '''
         expires=[ 24232, 2342.23423, {'a':'dict'},['a','list'],('a','tuple'),{'set'},uuid.uuid4().hex, uuid.uuid4(), 'Usernames','user name']
@@ -56,12 +100,21 @@ class AuthTicketsProvisionTest(unittest.TestCase):
                 provision.new_snapshot_ticket(uid=uid, nid=nid, expires=expires, share_type=share_type)
             self.assertEqual(cm.exception.error, errors.E_ATP_NST_ISHT)
 
+    def test_new_snapshot_ticket_failure_no_items_to_share(self):
+        ''' new_snapshot_ticket should fail if there are not items to share with '''
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            provision.new_snapshot_ticket(uid=uid, nid=nid)
+        self.assertEqual(cm.exception.error, errors.E_ATP_NST_NSL)
+
     def test_new_snapshot_ticket_failure_non_existent_snapshot(self):
         ''' new_snapshot_ticket should fail if snapshot does not exist '''
         uid=uuid.uuid4()
         nid=uuid.uuid4()
+        allowed_uids={uuid.uuid4()}
         with self.assertRaises(exceptions.TicketCreationException) as cm:
-            provision.new_snapshot_ticket(uid=uid, nid=nid)
+            provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=allowed_uids)
         self.assertEqual(cm.exception.error, errors.E_ATP_NST_SNF)
 
     def test_new_snapshot_ticket_success_SnapshotDs(self):
@@ -78,9 +131,9 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
         datapoints_config=[]
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
-        tid=provision.new_snapshot_ticket(uid=uid, nid=nid)
+        tid=provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids)
         self.assertTrue(isinstance(tid['tid'],uuid.UUID))
         ticket=ticketapi.get_ticket(tid=tid['tid'])
         self.assertEqual(ticket.tid, tid['tid'])
@@ -106,9 +159,9 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         shared_with_uids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid,datapointname=pid.hex,color=str(pid))
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
-        tid=provision.new_snapshot_ticket(uid=uid, nid=nid)
+        tid=provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids)
         self.assertTrue(isinstance(tid['tid'],uuid.UUID))
         ticket=ticketapi.get_ticket(tid=tid['tid'])
         self.assertEqual(ticket.tid, tid['tid'])
@@ -140,9 +193,9 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         datapoints_config=[datapoint1,datapoint2,datapoint3]
         shared_with_uids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
-        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids, active_visualization=0)
+        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, datapoints_config=datapoints_config, active_visualization=0)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
-        tid=provision.new_snapshot_ticket(uid=uid, nid=nid)
+        tid=provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids)
         self.assertTrue(isinstance(tid['tid'],uuid.UUID))
         ticket=ticketapi.get_ticket(tid=tid['tid'])
         self.assertEqual(ticket.tid, tid['tid'])
@@ -171,10 +224,10 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         datasource_config=ormsnapshot.SnapshotDatasourceConfig(did=did, datasourcename=did.hex)
         datapoints_config=[]
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         expires=timeuuid.uuid1()
-        tid=provision.new_snapshot_ticket(uid=uid, nid=nid, expires=expires, share_type=share.NEW_SNAPSHOT_SHARE_READ_AND_SHARE)
+        tid=provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids, expires=expires, share_type=share.NEW_SNAPSHOT_SHARE_READ_AND_SHARE)
         self.assertTrue(isinstance(tid['tid'],uuid.UUID))
         ticket=ticketapi.get_ticket(tid=tid['tid'])
         self.assertEqual(ticket.tid, tid['tid'])
@@ -200,10 +253,10 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         shared_with_uids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid,datapointname=pid.hex,color=str(pid))
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids)
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         expires=timeuuid.uuid1()
-        tid=provision.new_snapshot_ticket(uid=uid, nid=nid, expires=expires, share_type=share.NEW_SNAPSHOT_SHARE_READ_AND_SHARE)
+        tid=provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids, expires=expires, share_type=share.NEW_SNAPSHOT_SHARE_READ_AND_SHARE)
         self.assertTrue(isinstance(tid['tid'],uuid.UUID))
         ticket=ticketapi.get_ticket(tid=tid['tid'])
         self.assertEqual(ticket.tid, tid['tid'])
@@ -235,10 +288,10 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         datapoints_config=[datapoint1,datapoint2,datapoint3]
         shared_with_uids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
         shared_with_cids={uuid.uuid4(), uuid.uuid4(), uuid.uuid4()}
-        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, datapoints_config=datapoints_config, shared_with_uids=shared_with_uids, shared_with_cids=shared_with_cids, active_visualization=0)
+        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, datapoints_config=datapoints_config, active_visualization=0)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         expires=timeuuid.uuid1()
-        tid=provision.new_snapshot_ticket(uid=uid, nid=nid, expires=expires, share_type=share.NEW_SNAPSHOT_SHARE_READ_AND_SHARE)
+        tid=provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids, expires=expires, share_type=share.NEW_SNAPSHOT_SHARE_READ_AND_SHARE)
         self.assertTrue(isinstance(tid['tid'],uuid.UUID))
         ticket=ticketapi.get_ticket(tid=tid['tid'])
         self.assertEqual(ticket.tid, tid['tid'])

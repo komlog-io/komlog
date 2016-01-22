@@ -44,8 +44,6 @@ MST_SNAPSHOT='''
             interval_end timeuuid,
             widgetname text,
             creation_date timeuuid,
-            shared_with_uids set<uuid>,
-            shared_with_cids set<uuid>,
             PRIMARY KEY (nid)
         );
     '''

@@ -264,7 +264,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(widget)
         snapshot=snapshotapi.new_snapshot(wid=widget['wid'],uid=user['uid'],interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1())
         self.assertIsNotNone(snapshot)
-        ticket=ticketapi.new_snapshot_ticket(uid=user['uid'],nid=snapshot['nid'])
+        ticket=ticketapi.new_snapshot_ticket(uid=user['uid'],nid=snapshot['nid'], allowed_uids={uuid.uuid4()})
         self.assertIsNotNone(ticket)
         event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
         nid=snapshot['nid']
@@ -308,9 +308,9 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(datasource)
         widget=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did'])
         self.assertIsNotNone(widget)
-        snapshot=snapshotapi.new_snapshot(wid=widget['wid'],uid=user['uid'],interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1(), shared_with_users=[username+'1'], shared_with_cids=[circle['cid']])
+        snapshot=snapshotapi.new_snapshot(wid=widget['wid'],uid=user['uid'],interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1())
         self.assertIsNotNone(snapshot)
-        ticket=ticketapi.new_snapshot_ticket(uid=user['uid'],nid=snapshot['nid'])
+        ticket=ticketapi.new_snapshot_ticket(uid=user['uid'],nid=snapshot['nid'], allowed_uids={user1['uid']},allowed_cids={circle['cid']})
         self.assertIsNotNone(ticket)
         event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
         nid=snapshot['nid']
@@ -343,6 +343,8 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertEqual(user4_event[0]['uid'],user4['uid'])
         self.assertEqual(user4_event[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
         self.assertEqual(user4_event[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename,'username':username})
+        user5_event=eventsuser.get_events(uid=user5['uid'])
+        self.assertEqual(len(user5_event),0)
 
     def test_get_events_failure_invalid_uid(self):
         ''' get_events should fail if uid is invalid '''
@@ -1296,39 +1298,6 @@ class EventsApiUserTest(unittest.TestCase):
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
         self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_TNF)
 
-    def test_new_event_notification_new_snapshot_shared_success_only_insert_the_sharing_user(self):
-        ''' new_event should succeed if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and insert the event in the sharing user only, because snapshot is not shared with anyone '''
-        username='test_new_event_notification_new_snapshot_shared_success'
-        password='temporal'
-        email=username+'@komlog.org'
-        user=userapi.create_user(username=username, password=password, email=email)
-        self.assertIsNotNone(user)
-        agentname='test_new_event_agent'
-        pubkey='pubkey'
-        version='version'
-        datasourcename='test_new_event_datasource'
-        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
-        self.assertIsNotNone(agent)
-        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
-        self.assertIsNotNone(datasource)
-        widget=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did'])
-        self.assertIsNotNone(widget)
-        snapshot=snapshotapi.new_snapshot(wid=widget['wid'],uid=user['uid'],interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1())
-        self.assertIsNotNone(snapshot)
-        ticket=ticketapi.new_snapshot_ticket(uid=user['uid'],nid=snapshot['nid'])
-        self.assertIsNotNone(ticket)
-        event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
-        nid=snapshot['nid']
-        tid=ticket['tid']
-        parameters={'tid':tid.hex,'nid':nid.hex}
-        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertIsNotNone(event)
-        db_events=eventsuser.get_events(uid=user['uid'])
-        self.assertEqual(len(db_events),1)
-        self.assertEqual(db_events[0]['uid'],user['uid'])
-        self.assertEqual(db_events[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED)
-        self.assertEqual(db_events[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename})
-
     def test_new_event_notification_new_snapshot_shared_success_insert_to_the_sharing_user_and_circles(self):
         ''' new_event should succeed if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and insert the event in the sharing user only, because snapshot is not shared with anyone '''
         username='test_new_event_notification_new_snapshot_shared_success_with_sharing_users'
@@ -1359,9 +1328,9 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(datasource)
         widget=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did'])
         self.assertIsNotNone(widget)
-        snapshot=snapshotapi.new_snapshot(wid=widget['wid'],uid=user['uid'],interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1(), shared_with_users=[username+'1'], shared_with_cids=[circle['cid']])
+        snapshot=snapshotapi.new_snapshot(wid=widget['wid'],uid=user['uid'],interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1())
         self.assertIsNotNone(snapshot)
-        ticket=ticketapi.new_snapshot_ticket(uid=user['uid'],nid=snapshot['nid'])
+        ticket=ticketapi.new_snapshot_ticket(uid=user['uid'],nid=snapshot['nid'], allowed_uids={user1['uid']}, allowed_cids={circle['cid']})
         self.assertIsNotNone(ticket)
         event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED
         nid=snapshot['nid']
@@ -1394,4 +1363,6 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertEqual(user4_event[0]['uid'],user4['uid'])
         self.assertEqual(user4_event[0]['type'],types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
         self.assertEqual(user4_event[0]['parameters'],{'nid':nid,'tid':tid,'widgetname':datasourcename,'username':username})
+        user5_event=eventsuser.get_events(uid=user5['uid'])
+        self.assertEqual(len(user5_event),0)
 

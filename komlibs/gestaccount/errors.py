@@ -451,12 +451,12 @@ E_GSA_NS_IW=1541
 E_GSA_NS_III=1542
 E_GSA_NS_IIE=1543
 E_GSA_NS_IIO=1544 #  new_snapshot invalid interval order. interval_init > interval_end
-E_GSA_NS_ISWU=1545
-E_GSA_NS_ISWC=1546
+E_GSA_NS_ISWU=1545 #: new_snapshot. Invalid shared_with_users parameter. (DEPRECATED)
+E_GSA_NS_ISWC=1546 #: new_snapshot. Invalid shared_with_uids parameter. (DEPRECATED)
 E_GSA_NS_UNF=1547
 E_GSA_NS_WNF=1548
 E_GSA_NS_SCE=1549
-E_GSA_NS_ESL=1550 # new_snapshot empty sharing list error.
+E_GSA_NS_ESL=1550 #: new_snapshot. Empty sharing list error. (DEPRECATED)
 
 E_GSA_NSDS_WNF=1560
 E_GSA_NSDS_SCE=1561

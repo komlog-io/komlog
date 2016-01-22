@@ -24,7 +24,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoint1=ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=str(pid1))
         datapoint2=ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=str(pid2))
         datapoints_config=[datapoint1,datapoint2]
-        snapshotds=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshotds=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshotds))
         snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(snapshotds.nid,snapshot.nid)
@@ -70,7 +70,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoint1=ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=str(pid1))
         datapoint2=ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=str(pid2))
         datapoints_config=[datapoint1,datapoint2]
-        snapshotds=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshotds=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshotds))
         snapshots=snapshotapi.get_snapshots(uid=uid)
         self.assertEqual(len(snapshots),1)
@@ -120,7 +120,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoint1=ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=str(pid1))
         datapoint2=ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=str(pid2))
         datapoints_config=[datapoint1,datapoint2]
-        snapshotds=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshotds=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshotds))
         nids=snapshotapi.get_snapshots_nids(uid=uid)
         self.assertEqual(len(nids),1)
@@ -150,7 +150,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoint1=ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=str(pid1))
         datapoint2=ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=str(pid2))
         datapoints_config=[datapoint1,datapoint2]
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
@@ -166,7 +166,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         pid=uuid.uuid4()
         datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
@@ -182,7 +182,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(), uuid.uuid4()}
         colors={uuid.uuid4():'#AABBDD',uuid.uuid4():'#BBDDCC'}
-        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
@@ -198,7 +198,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(), uuid.uuid4()}
         colors={uuid.uuid4():'#AABBDD',uuid.uuid4():'#BBDDCC'}
-        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
@@ -214,7 +214,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(), uuid.uuid4()}
         colors={uuid.uuid4():'#AABBDD',uuid.uuid4():'#BBDDCC'}
-        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
@@ -233,7 +233,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoints_config=[ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=pid1.hex),ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=pid2.hex)]
         datapoints={pid1, pid2}
         active_visualization=0
-        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, active_visualization=active_visualization, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, active_visualization=active_visualization, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         nids=snapshotapi.get_snapshots_nids(wid=wid)
         self.assertEqual(nids,[nid])
@@ -271,7 +271,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoint1=ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=str(pid1))
         datapoint2=ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=str(pid2))
         datapoints_config=[datapoint1,datapoint2]
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -301,7 +301,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         pid=uuid.uuid4()
         datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -332,7 +332,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(),uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB',uuid.uuid4():'#AABBDD'}
-        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -363,7 +363,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(),uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB',uuid.uuid4():'#AABBDD'}
-        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -394,7 +394,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(),uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB',uuid.uuid4():'#AABBDD'}
-        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -428,7 +428,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoints_config=[ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=str(pid1)),ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=str(pid2))]
         datapoints={pid1, pid2}
         active_visualization=0
-        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, active_visualization=active_visualization, datapoints=datapoints,shared_with_uids={},shared_with_cids={}, datapoints_config=datapoints_config)
+        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, active_visualization=active_visualization, datapoints=datapoints, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -481,7 +481,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoint1=ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=str(pid1))
         datapoint2=ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=str(pid2))
         datapoints_config=[datapoint1,datapoint2]
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -526,7 +526,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         pid=uuid.uuid4()
         datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -554,7 +554,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(),uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB',uuid.uuid4():'#BBDDAA'}
-        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -582,7 +582,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(),uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB',uuid.uuid4():'#BBDDAA'}
-        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -610,7 +610,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(),uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB',uuid.uuid4():'#BBDDAA'}
-        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -641,7 +641,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoints_config=[ormsnapshot.SnapshotDatapointConfig(pid=pid1, datapointname=pid1.hex, color=str(pid1)),ormsnapshot.SnapshotDatapointConfig(pid=pid2, datapointname=pid2.hex,color=str(pid2))]
         datapoints={pid1,pid2}
         active_visualization=0
-        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, active_visualization=active_visualization, datapoints=datapoints, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, active_visualization=active_visualization, datapoints=datapoints, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -686,7 +686,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(),uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB',uuid.uuid4():'#BBDDAA'}
-        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         self.assertFalse(snapshotapi.new_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
@@ -721,7 +721,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoint1=ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=str(pid1))
         datapoint2=ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=str(pid2))
         datapoints_config=[datapoint1,datapoint2]
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -766,7 +766,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         pid=uuid.uuid4()
         datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -794,7 +794,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(), uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB', uuid.uuid4():'#AABBDD'}
-        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -822,7 +822,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(), uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB', uuid.uuid4():'#AABBDD'}
-        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -850,7 +850,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(), uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB', uuid.uuid4():'#AABBDD'}
-        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -881,7 +881,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoints_config=[ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex, color=str(pid1)),ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex, color=str(pid2))]
         datapoints={pid1,pid2}
         active_visualization=0
-        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, active_visualization=active_visualization, datapoints=datapoints, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, active_visualization=active_visualization, datapoints=datapoints, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -967,7 +967,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoint1=ormsnapshot.SnapshotDatapointConfig(pid=pid1,datapointname=pid1.hex,color=str(pid1))
         datapoint2=ormsnapshot.SnapshotDatapointConfig(pid=pid2,datapointname=pid2.hex,color=str(pid2))
         datapoints_config=[datapoint1,datapoint2]
-        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -1012,7 +1012,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         pid=uuid.uuid4()
         datapoint_config=ormsnapshot.SnapshotDatapointConfig(pid=pid, datapointname=pid.hex, color=str(pid))
-        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -1040,7 +1040,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(), uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB', uuid.uuid4():'#AABBDD'}
-        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotHistogram(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -1068,7 +1068,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(), uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB', uuid.uuid4():'#AABBDD'}
-        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotLinegraph(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -1096,7 +1096,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datapoints={uuid.uuid4(), uuid.uuid4()}
         colors={uuid.uuid4():'#AADDBB', uuid.uuid4():'#AABBDD'}
-        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors,shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotTable(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, datapoints=datapoints, colors=colors)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)
@@ -1127,7 +1127,7 @@ class KomcassApiSnapshotTest(unittest.TestCase):
         datapoints_config=[ormsnapshot.SnapshotDatapointConfig(pid=pid1, datapointname=pid1.hex, color=str(pid1)),ormsnapshot.SnapshotDatapointConfig(pid=pid2, datapointname=pid2.hex, color=str(pid2))]
         datapoints={pid1,pid2}
         active_visualization=0
-        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date,active_visualization=active_visualization, datapoints=datapoints, datapoints_config=datapoints_config, shared_with_uids={},shared_with_cids={})
+        snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date,active_visualization=active_visualization, datapoints=datapoints, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.insert_snapshot(snapshot=snapshot))
         resp_snapshot=snapshotapi.get_snapshot(nid=nid)
         self.assertEqual(resp_snapshot.nid,snapshot.nid)

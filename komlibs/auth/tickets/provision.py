@@ -15,15 +15,33 @@ from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komfig import logger
 
-def new_snapshot_ticket(uid, nid, expires=False, share_type=None):
+def new_snapshot_ticket(uid, nid, allowed_uids=None, allowed_cids=None, expires=False, share_type=None):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_ATP_NST_IUID)
     if not args.is_valid_uuid(nid):
         raise exceptions.BadParametersException(error=errors.E_ATP_NST_INID)
+    if allowed_uids and not args.is_valid_set(allowed_uids):
+        raise exceptions.BadParametersException(error=errors.E_ATP_NST_IUIDS)
+    if allowed_cids and not args.is_valid_set(allowed_cids):
+        raise exceptions.BadParametersException(error=errors.E_ATP_NST_ICIDS)
     if expires and not args.is_valid_date(expires):
         raise exceptions.BadParametersException(error=errors.E_ATP_NST_IEXP)
     if share_type and (not args.is_valid_int(share_type) or not share_type in share.NEW_SNAPSHOT_OPTIONS_AVAILABLE_TO_USER):
         raise exceptions.BadParametersException(error=errors.E_ATP_NST_ISHT)
+    if allowed_uids:
+        for user_id in allowed_uids:
+            if not args.is_valid_uuid(user_id):
+                raise exceptions.BadParametersException(error=errors.E_ATP_NST_IUIDSI)
+    else:
+        allowed_uids=set()
+    if allowed_cids:
+        for circle_id in allowed_cids:
+            if not args.is_valid_uuid(circle_id):
+                raise exceptions.BadParametersException(error=errors.E_ATP_NST_ICIDSI)
+    else:
+        allowed_cids=set()
+    if len(allowed_uids)+len(allowed_cids)==0:
+        raise exceptions.BadParametersException(error=errors.E_ATP_NST_NSL)
     snapshot=snapshotapi.get_snapshot(nid=nid)
     if not snapshot:
         raise exceptions.TicketCreationException(error=errors.E_ATP_NST_SNF)
@@ -50,12 +68,6 @@ def new_snapshot_ticket(uid, nid, expires=False, share_type=None):
             permissions[pid]=permission.NEW_SNAPSHOT_TICKET_PID_PERMISSIONS[share_type]
     else:
         raise exceptions.TicketCreationException(error=errors.E_ATP_NST_USTF)
-    allowed_uids=set()
-    allowed_cids=set()
-    for user_id in snapshot.shared_with_uids:
-        allowed_uids.add(user_id)
-    for circle_id in snapshot.shared_with_cids:
-        allowed_cids.add(circle_id)
     interval_init=snapshot.interval_init
     interval_end=snapshot.interval_end
     ticket=ormticket.Ticket(tid=tid, date=date, uid=uid, expires=expires, allowed_uids=allowed_uids, allowed_cids=allowed_cids, resources=resources, permissions=permissions, interval_init=interval_init, interval_end=interval_end)

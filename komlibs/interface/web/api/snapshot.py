@@ -150,18 +150,24 @@ def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None,
         raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_IUL)
     if cid_list and not args.is_valid_list(cid_list):
         raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_ICL)
+    uids=set()
     if user_list:
         for user in user_list:
             if not args.is_valid_username(user):
                 raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_IULE)
+            else:
+                user_uid=userapi.get_uid(username=user)
+                if user_uid:
+                    uids.add(user_uid)
+    cids=set()
     if cid_list:
         for cid in cid_list:
             if not args.is_valid_hex_uuid(cid):
                 raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_ICLE)
+            else:
+                cids.add(uuid.UUID(cid))
     wid=uuid.UUID(wid)
-    cid_uuid_list=[uuid.UUID(cid) for cid in cid_list] if cid_list else []
-    users_list=[user for user in user_list] if user_list else []
-    if len(cid_uuid_list+users_list)==0:
+    if len(uids)+len(cids)==0:
         raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_ESL)
     if seq and args.is_valid_sequence(seq):
         interval_init=timeuuid.get_uuid1_from_custom_sequence(seq)
@@ -177,9 +183,9 @@ def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None,
         raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_NSNTS)
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.NEW_SNAPSHOT, uid=uid, wid=wid)
-    snapshot=snapshotapi.new_snapshot(uid=uid,wid=wid,interval_init=interval_init,interval_end=interval_end,shared_with_users=user_list,shared_with_cids=cid_uuid_list)
+    snapshot=snapshotapi.new_snapshot(uid=uid,wid=wid,interval_init=interval_init,interval_end=interval_end)
     if snapshot:
-        ticket=ticketprov.new_snapshot_ticket(uid=uid,nid=snapshot['nid'])
+        ticket=ticketprov.new_snapshot_ticket(uid=uid,nid=snapshot['nid'],allowed_uids=uids, allowed_cids=cids)
         if ticket:
             operation=weboperations.NewSnapshotOperation(uid=snapshot['uid'], nid=snapshot['nid'],wid=snapshot['wid'])
             auth_op=operation.get_auth_operation()

@@ -361,12 +361,10 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         agentname='test_delete_snapshot_success_agent'
         pubkey='testdeletesnapshotsuccesspubkey'
         version='Test Version'
-        circlename='test_delete_snapshot_success'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=uid, aid=agent['aid'], datasourcename=datasourcename)
-        circle=circleapi.new_users_circle(uid=uid, circlename=circlename)
         widgetds=widgetapi.new_widget_datasource(uid=uid, did=datasource['did']) 
-        snapshot=snapshotapi.new_snapshot(uid=uid, wid=widgetds['wid'], interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1(seconds=2), shared_with_cids=[circle['cid']])
+        snapshot=snapshotapi.new_snapshot(uid=uid, wid=widgetds['wid'], interval_init=timeuuid.uuid1(seconds=1), interval_end=timeuuid.uuid1(seconds=2))
         self.assertIsNotNone(cassapisnapshot.get_snapshot(nid=snapshot['nid']))
         self.assertTrue(deleteapi.delete_snapshot(nid=snapshot['nid']))
         self.assertIsNone(cassapisnapshot.get_snapshot(nid=snapshot['nid']))

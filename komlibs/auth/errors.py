@@ -114,46 +114,51 @@ E_AQA_ANDP_DSNF=55000
 
 # auth tickets provision
 
-E_ATP_NST_IUID=56000 #new_snapshot_ticket invalid uid
-E_ATP_NST_INID=56001 #new_snapshot_ticket invalid nid
-E_ATP_NST_IEXP=56002 #new_snapshot_ticket invalid expires date
-E_ATP_NST_ISHT=56003 #new_snapshot_ticket invalid share type
-E_ATP_NST_SNF=56004 #new_snapshot_ticket snapshot not found
-E_ATP_NST_EIDB=56005 #new_snapshot_ticket error inserting database
-E_ATP_NST_USTF=56005 #new_snapshot_ticket error unknown snapshot type found
+E_ATP_NST_IUID=56000 #: new_snapshot_ticket invalid uid
+E_ATP_NST_INID=56001 #: new_snapshot_ticket invalid nid
+E_ATP_NST_IEXP=56002 #: new_snapshot_ticket invalid expires date
+E_ATP_NST_ISHT=56003 #: new_snapshot_ticket invalid share type
+E_ATP_NST_SNF=56004 #: new_snapshot_ticket snapshot not found
+E_ATP_NST_EIDB=56005 #: new_snapshot_ticket error inserting database
+E_ATP_NST_USTF=56006 #: new_snapshot_ticket error unknown snapshot type found
+E_ATP_NST_IUIDS=56007 #: new_snapshot_ticket invalid allowed_uids type
+E_ATP_NST_ICIDS=56008 #: new_snapshot_ticket invalid allowed_cids type
+E_ATP_NST_IUIDSI=56009 #: new_snapshot_ticket invalid allowed_uids item
+E_ATP_NST_ICIDSI=56010 #: new_snapshot_ticket invalid allowed_cids item
+E_ATP_NST_NSL=56011 #: new_snapshot_ticket no sharing list passed or zero length
 
 # auth tickets authorization
 
-E_ATA_AGDSD_IUID=57000 #authorize_get_datasource_data invalid uid
-E_ATA_AGDSD_ITID=57001 #authorize_get_datasource_data invalid tid
-E_ATA_AGDSD_IDID=57002 #authorize_get_datasource_data invalid did
-E_ATA_AGDSD_III=57003 #authorize_get_datasource_data invalid interval init
-E_ATA_AGDSD_IIE=57004 #authorize_get_datasource_data invalid interval end
-E_ATA_AGDSD_TNF=57005 #authorize_get_datasource_data ticket not found
-E_ATA_AGDSD_EXPT=57006 #authorize_get_datasource_data ticket expired
-E_ATA_AGDSD_UNA=57007 #authorize_get_datasource_data user not allowed
-E_ATA_AGDSD_DNA=57008 #authorize_get_datasource_data did not allowed
-E_ATA_AGDSD_IINT=57009 #authorize_get_datasource_data invalid interval
-E_ATA_AGDSD_INSP=57010 #authorize_get_datasource_data insufficient permissions
+E_ATA_AGDSD_IUID=57000 #: authorize_get_datasource_data invalid uid
+E_ATA_AGDSD_ITID=57001 #: authorize_get_datasource_data invalid tid
+E_ATA_AGDSD_IDID=57002 #: authorize_get_datasource_data invalid did
+E_ATA_AGDSD_III=57003 #: authorize_get_datasource_data invalid interval init
+E_ATA_AGDSD_IIE=57004 #: authorize_get_datasource_data invalid interval end
+E_ATA_AGDSD_TNF=57005 #: authorize_get_datasource_data ticket not found
+E_ATA_AGDSD_EXPT=57006 #: authorize_get_datasource_data ticket expired
+E_ATA_AGDSD_UNA=57007 #: authorize_get_datasource_data user not allowed
+E_ATA_AGDSD_DNA=57008 #: authorize_get_datasource_data did not allowed
+E_ATA_AGDSD_IINT=57009 #: authorize_get_datasource_data invalid interval
+E_ATA_AGDSD_INSP=57010 #: authorize_get_datasource_data insufficient permissions
 
-E_ATA_AGDPD_IUID=57050 #authorize_get_datapoint_data invalid uid
-E_ATA_AGDPD_ITID=57051 #authorize_get_datapoint_data invalid tid
-E_ATA_AGDPD_IPID=57052 #authorize_get_datapoint_data invalid pid
-E_ATA_AGDPD_III=57053 #authorize_get_datapoint_data invalid interval init
-E_ATA_AGDPD_IIE=57054 #authorize_get_datapoint_data invalid interval end
-E_ATA_AGDPD_TNF=57055 #authorize_get_datapoint_data ticket not found
-E_ATA_AGDPD_EXPT=57056 #authorize_get_datapoint_data ticket expired
-E_ATA_AGDPD_UNA=57057 #authorize_get_datapoint_data user not allowed
-E_ATA_AGDPD_DNA=57058 #authorize_get_datapoint_data pid not allowed
-E_ATA_AGDPD_IINT=57059 #authorize_get_datapoint_data invalid interval
-E_ATA_AGDPD_INSP=57060 #authorize_get_datapoint_data insufficient permissions
+E_ATA_AGDPD_IUID=57050 #: authorize_get_datapoint_data invalid uid
+E_ATA_AGDPD_ITID=57051 #: authorize_get_datapoint_data invalid tid
+E_ATA_AGDPD_IPID=57052 #: authorize_get_datapoint_data invalid pid
+E_ATA_AGDPD_III=57053 #: authorize_get_datapoint_data invalid interval init
+E_ATA_AGDPD_IIE=57054 #: authorize_get_datapoint_data invalid interval end
+E_ATA_AGDPD_TNF=57055 #: authorize_get_datapoint_data ticket not found
+E_ATA_AGDPD_EXPT=57056 #: authorize_get_datapoint_data ticket expired
+E_ATA_AGDPD_UNA=57057 #: authorize_get_datapoint_data user not allowed
+E_ATA_AGDPD_DNA=57058 #: authorize_get_datapoint_data pid not allowed
+E_ATA_AGDPD_IINT=57059 #: authorize_get_datapoint_data invalid interval
+E_ATA_AGDPD_INSP=57060 #: authorize_get_datapoint_data insufficient permissions
 
-E_ATA_AGSNC_IUID=57100 #authorize_get_snapshot_config invalid uid
-E_ATA_AGSNC_ITID=57101 #authorize_get_snapshot_config invalid tid
-E_ATA_AGSNC_INID=57102 #authorize_get_snapshot_config invalid nid
-E_ATA_AGSNC_TNF=57103 #authorize_get_snapshot_config ticket not found
-E_ATA_AGSNC_EXPT=57104 #authorize_get_snapshot_config ticket expired
-E_ATA_AGSNC_UNA=57105 #authorize_get_snapshot_config user not allowed
-E_ATA_AGSNC_DNA=57106 #authorize_get_snapshot_config nid not allowed
-E_ATA_AGSNC_INSP=57107 #authorize_get_snapshot_config insufficient permissions
+E_ATA_AGSNC_IUID=57100 #: authorize_get_snapshot_config invalid uid
+E_ATA_AGSNC_ITID=57101 #: authorize_get_snapshot_config invalid tid
+E_ATA_AGSNC_INID=57102 #: authorize_get_snapshot_config invalid nid
+E_ATA_AGSNC_TNF=57103 #: authorize_get_snapshot_config ticket not found
+E_ATA_AGSNC_EXPT=57104 #: authorize_get_snapshot_config ticket expired
+E_ATA_AGSNC_UNA=57105 #: authorize_get_snapshot_config user not allowed
+E_ATA_AGSNC_DNA=57106 #: authorize_get_snapshot_config nid not allowed
+E_ATA_AGSNC_INSP=57107 #: authorize_get_snapshot_config insufficient permissions
 
