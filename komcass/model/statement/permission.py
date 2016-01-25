@@ -21,10 +21,6 @@ STATEMENTS={80000:'select * from perm_user_agent where uid=?',
             80301:'select * from perm_user_widget where uid=? and wid=?',
             80400:'select * from perm_user_dashboard where uid=?',
             80401:'select * from perm_user_dashboard where uid=? and bid=?',
-            80500:'select * from perm_agent_datasource where aid=?',
-            80501:'select * from perm_agent_datasource where aid=? and did=?',
-            80600:'select * from perm_agent_datapoint where aid=?',
-            80601:'select * from perm_agent_datapoint where aid=? and pid=?',
             80700:'select * from perm_user_snapshot where uid=?',
             80701:'select * from perm_user_snapshot where uid=? and nid=?',
             80800:'select * from perm_user_circle where uid=?',
@@ -34,8 +30,6 @@ STATEMENTS={80000:'select * from perm_user_agent where uid=?',
             85200:'insert into perm_user_datapoint (uid,pid,perm) values (?,?,?)',
             85300:'insert into perm_user_widget (uid,wid,perm) values (?,?,?)',
             85400:'insert into perm_user_dashboard (uid,bid,perm) values (?,?,?)',
-            85500:'insert into perm_agent_datasource (aid,did,perm) values (?,?,?)',
-            85600:'insert into perm_agent_datapoint (aid,pid,perm) values (?,?,?)',
             85700:'insert into perm_user_snapshot (uid,nid,perm) values (?,?,?)',
             85800:'insert into perm_user_circle (uid,cid,perm) values (?,?,?)',
             87000:'delete from perm_user_agent where uid=?',
@@ -48,10 +42,6 @@ STATEMENTS={80000:'select * from perm_user_agent where uid=?',
             87301:'delete from perm_user_widget where uid=? and wid=?',
             87400:'delete from perm_user_dashboard where uid=?',
             87401:'delete from perm_user_dashboard where uid=? and bid=?',
-            87500:'delete from perm_agent_datasource where aid=?',
-            87501:'delete from perm_agent_datasource where aid=? and did=?',
-            87600:'delete from perm_agent_datapoint where aid=?',
-            87601:'delete from perm_agent_datapoint where aid=? and pid=?',
             87700:'delete from perm_user_snapshot where uid=?',
             87701:'delete from perm_user_snapshot where uid=? and nid=?',
             87800:'delete from perm_user_circle where uid=?',
@@ -85,16 +75,6 @@ S_A_PERMUSERWIDGET_B_UID_WID=80301
 S_A_PERMUSERDASHBOARD_B_UID=80400
 S_A_PERMUSERDASHBOARD_B_UID_BID=80401
 
-# perm_agent_datasource
-
-S_A_PERMAGENTDATASOURCE_B_AID=80500
-S_A_PERMAGENTDATASOURCE_B_AID_DID=80501
-
-# perm_agent_datapoint
-
-S_A_PERMAGENTDATAPOINT_B_AID=80600
-S_A_PERMAGENTDATAPOINT_B_AID_PID=80601
-
 # perm_user_snapshot
 
 S_A_PERMUSERSNAPSHOT_B_UID=80700
@@ -126,14 +106,6 @@ I_A_PERMUSERWIDGET=85300
 # perm_user_dashboard
 
 I_A_PERMUSERDASHBOARD=85400
-
-# perm_agent_datasource
-
-I_A_PERMAGENTDATASOURCE=85500
-
-# perm_agent_datapoint
-
-I_A_PERMAGENTDATAPOINT=85600
 
 # perm_user_snapshot
 
@@ -170,16 +142,6 @@ D_P_PERMUSERWIDGET_B_UID_WID=87301
 D_P_PERMUSERDASHBOARD_B_UID=87400
 D_P_PERMUSERDASHBOARD_B_UID_BID=87401
 
-# perm_agent_datasource
-
-D_P_PERMAGENTDATASOURCE_B_AID=87500
-D_P_PERMAGENTDATASOURCE_B_AID_DID=87501
-
-# perm_agent_datapoint
-
-D_P_PERMAGENTDATAPOINT_B_AID=87600
-D_P_PERMAGENTDATAPOINT_B_AID_PID=87601
-
 # perm_user_snapshot
 
 D_P_PERMUSERSNAPSHOT_B_UID=87700
@@ -201,10 +163,6 @@ D_P_PERMUSERCIRCLE_B_UID_CID=87801
 # perm_user_widget
 
 # perm_user_dashboard
-
-# perm_agent_datasource
-
-# perm_agent_datapoint
 
 # perm_user_snapshot
 

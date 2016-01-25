@@ -84,7 +84,6 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         perm=permissions.CAN_EDIT
         cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
         cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
-        cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
         self.assertTrue(authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did))
 
     def test_authorize_post_datasource_data_failure(self):
@@ -95,13 +94,12 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         self.assertFalse(authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did))
 
     def test_authorize_post_datasource_data_failure_no_user_agent_perm(self):
-        ''' authorize_post_datasource_data should succeed if permission is granted'''
+        ''' authorize_post_datasource_data should fail if not user_agent perm is found '''
         uid=self.user['uid']
         aid=uuid.uuid4()
         did=uuid.uuid4()
         perm=permissions.CAN_EDIT
         cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-        cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
         self.assertFalse(authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did))
 
     def test_authorize_post_datasource_data_failure_no_user_datasource_perm(self):
@@ -110,17 +108,6 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         aid=uuid.uuid4()
         did=uuid.uuid4()
         perm=permissions.CAN_EDIT
-        cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
-        cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
-        self.assertFalse(authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did))
-
-    def test_authorize_post_datasource_data_failure_no_agent_datasource_perm(self):
-        ''' authorize_post_datasource_data should succeed if permission is granted'''
-        uid=self.user['uid']
-        aid=uuid.uuid4()
-        did=uuid.uuid4()
-        perm=permissions.CAN_EDIT
-        cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
         cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
         self.assertFalse(authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did))
 

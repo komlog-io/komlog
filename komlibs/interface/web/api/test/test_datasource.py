@@ -364,25 +364,20 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response=datasourceapi.upload_datasource_data_request(username=username, aid=aid, did=did, content=content, destination=destination)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
 
-    def test_upload_datasource_data_request_failure_agent_no_permission_over_datasource(self):
-        ''' upload_datasource_data should store content on a file and return a received status code '''
-        username='test_upload_datasource_data_request_failure_agent_no_permission_over_datasource'
-        password = 'password'
-        email = username+'@komlog.org'
-        response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertEqual(response.status, status.WEB_STATUS_OK)
-        agentname='test_upload_datasource_data_request_failure_agent_no_permission_over_datasource_agent'
+    def test_upload_datasource_data_request_success_different_agent_but_from_the_same_user(self):
+        ''' upload_datasource_data should store content if the agent uploading data belongs to the datasource user '''
+        username=self.userinfo['username']
+        agentname='test_upload_datasource_data_request_success_different_agent_but_from_the_same_user_agent'
         pubkey='TESTUPLOADDATASOURCEDATAREQUESTFAILURENOPERMISSIONAGENT'
         version='test library vX.XX'
         response = agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        username=self.userinfo['username']
         aid=response.data['aid']
         did=self.userinfo['agents'][0]['dids'][0]
         content='Datasource Content upload_datasource_data_request_success 0 1 2 3 4'
         destination='/tmp/'
         response=datasourceapi.upload_datasource_data_request(username=username, aid=aid, did=did, content=content, destination=destination)
-        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
 
     def test_update_datasource_config_request_success(self):
         ''' update_datasource_config should succeed if user and did exists, user have permission and datasourcename parameter is passed '''

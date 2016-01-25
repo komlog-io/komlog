@@ -154,64 +154,6 @@ def delete_user_dashboards_perm(uid):
     connection.session.execute(stmtperm.D_P_PERMUSERDASHBOARD_B_UID,(uid,))
     return True
 
-def get_agent_datasource_perm(aid, did):
-    row=connection.session.execute(stmtperm.S_A_PERMAGENTDATASOURCE_B_AID_DID,(aid,did))
-    if not row:
-        return None
-    elif len(row)==1:
-        return ormperm.AgentDatasourcePerm(**row[0])
-    else:
-        raise excpperm.DataConsistencyException(function='get_agentdatasourceperm',field='did',value=did)
-
-def get_agent_datasources_perm(aid):
-    perms=[]
-    row=connection.session.execute(stmtperm.S_A_PERMAGENTDATASOURCE_B_AID,(aid,))
-    if row:
-        for perm in row:
-            perms.append(ormperm.AgentDatasourcePerm(**perm))
-    return perms
-
-def insert_agent_datasource_perm(aid, did, perm):
-    connection.session.execute(stmtperm.I_A_PERMAGENTDATASOURCE,(aid,did,perm))
-    return True
-
-def delete_agent_datasource_perm(aid, did):
-    connection.session.execute(stmtperm.D_P_PERMAGENTDATASOURCE_B_AID_DID,(aid,did))
-    return True
-
-def delete_agent_datasources_perm(aid):
-    connection.session.execute(stmtperm.D_P_PERMAGENTDATASOURCE_B_AID,(aid,))
-    return True
-
-def get_agent_datapoint_perm(aid, pid):
-    row=connection.session.execute(stmtperm.S_A_PERMAGENTDATAPOINT_B_AID_PID,(aid,pid))
-    if not row:
-        return None
-    if len(row)==1:
-        return ormperm.AgentDatapointPerm(**row[0])
-    else:
-        raise excpperm.DataConsistencyException(function='get_agentdatapointperm',field='pid',value=pid)
-
-def get_agent_datapoints_perm(aid):
-    perms=[]
-    row=connection.session.execute(stmtperm.S_A_PERMAGENTDATAPOINT_B_AID,(aid,))
-    if row:
-        for perm in row:
-            perms.append(ormperm.AgentDatapointPerm(**perm))
-    return perms
-
-def insert_agent_datapoint_perm(aid, pid, perm):
-    connection.session.execute(stmtperm.I_A_PERMAGENTDATAPOINT,(aid,pid,perm))
-    return True
-
-def delete_agent_datapoint_perm(aid, pid):
-    connection.session.execute(stmtperm.D_P_PERMAGENTDATAPOINT_B_AID_PID,(aid,pid))
-    return True
-
-def delete_agent_datapoints_perm(aid):
-    connection.session.execute(stmtperm.D_P_PERMAGENTDATAPOINT_B_AID,(aid,))
-    return True
-
 def get_user_snapshot_perm(uid, nid):
     row=connection.session.execute(stmtperm.S_A_PERMUSERSNAPSHOT_B_UID_NID,(uid,nid))
     return ormperm.UserSnapshotPerm(**row[0]) if row else None

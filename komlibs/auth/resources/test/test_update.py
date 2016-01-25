@@ -60,11 +60,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         params={'aid':uuid.uuid4(),'did':uuid.uuid4()}
         self.assertFalse(update.new_datasource(params))
 
-    def test_new_datasource_no_aid(self):
-        ''' new_datasource should fail if no aid is passed'''
-        params={'uid':uuid.uuid4(),'did':uuid.uuid4()}
-        self.assertFalse(update.new_datasource(params))
-
     def test_new_datasource_no_did(self):
         ''' new_datasource should fail if no did is passed'''
         params={'uid':uuid.uuid4(),'aid':uuid.uuid4()}
@@ -73,14 +68,10 @@ class AuthResourcesUpdateTest(unittest.TestCase):
     def test_new_datasource_success(self):
         ''' new_datasource should succeed if permissions can be set'''
         uid=uuid.uuid4()
-        aid=uuid.uuid4()
         did=uuid.uuid4()
-        params={'uid':uid,'aid':aid,'did':did}
+        params={'uid':uid,'did':did}
         self.assertTrue(update.new_datasource(params))
         permission=cassapiperm.get_user_datasource_perm(uid=uid, did=did)
-        self.assertIsNotNone(permission)
-        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
-        permission=cassapiperm.get_agent_datasource_perm(aid=aid, did=did)
         self.assertIsNotNone(permission)
         self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
 
@@ -199,13 +190,11 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                 datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
                 cassapidatasource.insert_datasource(datasource)
                 cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-                cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
                 for i in range(0,10):
                     pid=uuid.uuid4()
                     datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
                     cassapidatapoint.insert_datapoint(datapoint)
                     cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
-                    cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
         for i in range(0,100):
             wid=uuid.uuid4()
             bid=uuid.uuid4()
@@ -236,18 +225,9 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         self.assertEqual(len(perm_list),100)
         for item in perm_list:
             self.assertEqual(item.perm, permissions.NONE)
-        for aid in aids:
-            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
-            self.assertEqual(len(perm_list),100)
-            for item in perm_list:
-                self.assertEqual(item.perm, permissions.NONE)
-            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
-            self.assertEqual(len(perm_list),1000)
-            for item in perm_list:
-                self.assertEqual(item.perm, permissions.NONE)
 
     def test_delete_agent_success(self):
-        ''' delete_agent should revoke permission to the user and agents to the agent and its datasoruces and datapoints '''
+        ''' delete_agent should revoke permission to the agent '''
         uid=uuid.uuid4()
         aids=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
         selected_aid=aids[0]
@@ -267,7 +247,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
                     cassapidatasource.insert_datasource(datasource)
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
                     wid=uuid.uuid4()
                     widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=did.hex, creation_date=uuid.uuid1(), did=did)
                     cassapiwidget.insert_widget(widget)
@@ -279,7 +258,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
                         cassapidatapoint.insert_datapoint(datapoint)
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
-                        cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
                         wid=uuid.uuid4()
                         widget=ormwidget.WidgetDp(wid=wid, uid=uid, widgetname=pid.hex, creation_date=uuid.uuid1(), pid=pid)
                         cassapiwidget.insert_widget(widget)
@@ -291,7 +269,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
                     cassapidatasource.insert_datasource(datasource)
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
                     for i in range(0,10):
                         pid=uuid.uuid4()
                         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
@@ -319,44 +296,30 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         self.assertEqual(len(perm_list),300)
         for item in perm_list:
             if item.did in selected_dids:
-                self.assertEqual(item.perm, permissions.NONE)
+                # we keep the same perms to the elements "created" by the deleted agent, because they can be accessed by other agents. Datasources DO NOT belong to agents.
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
             else:
                 self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
         perm_list=cassapiperm.get_user_datapoints_perm(uid=uid)
         self.assertEqual(len(perm_list),3000)
         for item in perm_list:
             if item.pid in selected_pids:
-                self.assertEqual(item.perm, permissions.NONE)
+                # we keep the same perms to the elements "created" by the deleted agent, because they can be accessed by other agents. Datapoints DO NOT belong to agents.
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
             else:
                 self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
         perm_list=cassapiperm.get_user_widgets_perm(uid=uid)
         self.assertEqual(len(perm_list),1200)
         for item in perm_list:
             if item.wid in selected_wids:
-                self.assertEqual(item.perm, permissions.NONE)
+                # we keep the same perms to the elements "created" by the deleted agent, because they can be accessed by other agents. Widgets DO NOT belong to agents.
+                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
             else:
                 self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
         perm_list=cassapiperm.get_user_dashboards_perm(uid=uid)
         self.assertEqual(len(perm_list),100)
         for item in perm_list:
             self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-        for aid in aids:
-            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
-            self.assertEqual(len(perm_list),100)
-            if aid == selected_aid:
-                for item in perm_list:
-                    self.assertEqual(item.perm, permissions.NONE)
-            else:
-                for item in perm_list:
-                    self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
-            if aid == selected_aid:
-                self.assertEqual(len(perm_list),1000)
-                for item in perm_list:
-                    self.assertEqual(item.perm, permissions.NONE)
-            else:
-                for item in perm_list:
-                    self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
 
     def test_delete_widget_success(self):
         ''' delete_widget should revoke access to the selected widget '''
@@ -374,13 +337,11 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                 datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
                 cassapidatasource.insert_datasource(datasource)
                 cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-                cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
                 for i in range(0,10):
                     pid=uuid.uuid4()
                     datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
                     cassapidatapoint.insert_datapoint(datapoint)
                     cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
-                    cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
         for i in range(0,10):
             wid=uuid.uuid4()
             if i==0:
@@ -416,15 +377,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         self.assertEqual(len(perm_list),10)
         for item in perm_list:
             self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-        for aid in aids:
-            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
-            self.assertEqual(len(perm_list),10)
-            for item in perm_list:
-                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
-            self.assertEqual(len(perm_list),100)
-            for item in perm_list:
-                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
 
     def test_delete_dashboard_success(self):
         ''' delete_dashboard should revoke access to the selected dashboard '''
@@ -442,13 +394,11 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                 datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
                 cassapidatasource.insert_datasource(datasource)
                 cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-                cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
                 for i in range(0,10):
                     pid=uuid.uuid4()
                     datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
                     cassapidatapoint.insert_datapoint(datapoint)
                     cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
-                    cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
         for i in range(0,10):
             wid=uuid.uuid4()
             bid=uuid.uuid4()
@@ -484,15 +434,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                 self.assertEqual(item.perm, permissions.NONE)
             else:
                 self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-        for aid in aids:
-            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
-            self.assertEqual(len(perm_list),10)
-            for item in perm_list:
-                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
-            self.assertEqual(len(perm_list),100)
-            for item in perm_list:
-                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
 
     def test_delete_datasource_success(self):
         ''' delete_datasource should revoke permission to the user and agents to the datasource and its datapoints (and their associated widgetds and widgetdp '''
@@ -518,7 +459,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
                     cassapidatasource.insert_datasource(datasource)
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
                     widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=did.hex, creation_date=uuid.uuid1(), did=did)
                     cassapiwidget.insert_widget(widget)
                     cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
@@ -531,7 +471,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
                         cassapidatapoint.insert_datapoint(datapoint)
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
-                        cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
                         widget=ormwidget.WidgetDp(wid=wid, uid=uid, widgetname=pid.hex, creation_date=uuid.uuid1(), pid=pid)
                         cassapiwidget.insert_widget(widget)
                         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
@@ -541,7 +480,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
                     cassapidatasource.insert_datasource(datasource)
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
                     for i in range(0,10):
                         pid=uuid.uuid4()
                         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
@@ -587,20 +525,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         self.assertEqual(len(perm_list),100)
         for item in perm_list:
             self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-        for aid in aids:
-            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
-            self.assertEqual(len(perm_list),100)
-            for item in perm_list:
-                if item.did == selected_did:
-                    self.assertEqual(item.perm, permissions.NONE)
-                else:
-                    self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
-            for item in perm_list:
-                if item.pid in selected_pids:
-                    self.assertEqual(item.perm, permissions.NONE)
-                else:
-                    self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
 
     def test_delete_datapoint_success(self):
         ''' delete_point should revoke permission to the user and agents to the datapoint (and widgetdp) '''
@@ -625,7 +549,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
                     cassapidatasource.insert_datasource(datasource)
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
                     widget=ormwidget.WidgetDs(wid=wid, uid=uid, widgetname=did.hex, creation_date=uuid.uuid1(), did=did)
                     cassapiwidget.insert_widget(widget)
                     cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
@@ -638,7 +561,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
                         cassapidatapoint.insert_datapoint(datapoint)
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
-                        cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
                         widget=ormwidget.WidgetDp(wid=wid, uid=uid, widgetname=pid.hex, creation_date=uuid.uuid1(), pid=pid)
                         cassapiwidget.insert_widget(widget)
                         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
@@ -648,7 +570,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
                     cassapidatasource.insert_datasource(datasource)
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-                    cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
                     for i in range(0,10):
                         pid=uuid.uuid4()
                         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
@@ -691,19 +612,8 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         self.assertEqual(len(perm_list),100)
         for item in perm_list:
             self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-        for aid in aids:
-            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
-            self.assertEqual(len(perm_list),100)
-            for item in perm_list:
-                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
-            for item in perm_list:
-                if item.pid == selected_pid:
-                    self.assertEqual(item.perm, permissions.NONE)
-                else:
-                    self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
 
-    def NO_test_delete_snapshot_success(self):
+    def test_delete_snapshot_success(self):
         ''' delete_snapshot should revoke access to the selected snapshot '''
         uid=uuid.uuid4()
         selected_wid=None
@@ -719,13 +629,11 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                 datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=did.hex)
                 cassapidatasource.insert_datasource(datasource)
                 cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-                cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm)
                 for i in range(0,10):
                     pid=uuid.uuid4()
                     datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
                     cassapidatapoint.insert_datapoint(datapoint)
                     cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
-                    cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=pid, perm=perm)
         for i in range(0,10):
             wid=uuid.uuid4()
             if i==0:
@@ -761,15 +669,6 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         self.assertEqual(len(perm_list),10)
         for item in perm_list:
             self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-        for aid in aids:
-            perm_list=cassapiperm.get_agent_datasources_perm(aid=aid)
-            self.assertEqual(len(perm_list),10)
-            for item in perm_list:
-                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
-            perm_list=cassapiperm.get_agent_datapoints_perm(aid=aid)
-            self.assertEqual(len(perm_list),100)
-            for item in perm_list:
-                self.assertEqual(item.perm, permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE)
 
     def test_new_circle_no_uid(self):
         ''' new_circle should fail if no uid is passed'''

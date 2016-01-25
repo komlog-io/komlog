@@ -26,20 +26,6 @@ class UserDatapointPerm:
         self.pid=pid
         self.perm=perm
 
-class AgentDatasourcePerm:
-    ''' This class is used to access Agent-Datasource permission relation '''
-    def __init__(self, aid, did=None, perm=None):
-        self.aid=aid
-        self.did=did
-        self.perm=perm
-
-class AgentDatapointPerm:
-    ''' This class is used to access Agent-Datapoint permission relation '''
-    def __init__(self, aid, pid=None, perm=None ):
-        self.aid=aid
-        self.pid=pid
-        self.perm=perm
-
 class UserWidgetPerm:
     ''' This class is used to access User-Widget permission relation '''
     def __init__(self, uid, wid=None, perm=None):

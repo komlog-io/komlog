@@ -46,7 +46,7 @@ def get_update_funcs(operation):
         return []
 
 def new_agent(params):
-    if 'aid' not in params or 'uid' not in params:
+    if not 'aid' in params or not 'uid' in params:
         return False
     aid=params['aid']
     uid=params['uid']
@@ -56,14 +56,12 @@ def new_agent(params):
     return False
 
 def new_datasource(params):
-    if not 'aid' in params or not 'uid' in params or not 'did' in params:
+    if not 'uid' in params or not 'did' in params:
         return False
-    aid=params['aid']
     uid=params['uid']
     did=params['did']
     perm=permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE
-    if cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm) and \
-       cassapiperm.insert_agent_datasource_perm(aid=aid, did=did, perm=perm):
+    if cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm):
         return True
     return False
 
@@ -137,41 +135,15 @@ def delete_user(uid):
     datapoints=cassapiperm.get_user_datapoints_perm(uid=uid)
     for datapoint in datapoints:
         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=datapoint.pid, perm=perm)
-    aids=cassapiagent.get_agents_aids(uid=uid)
-    for aid in aids:
-        datasources=cassapiperm.get_agent_datasources_perm(aid=aid)
-        for datasource in datasources:
-            cassapiperm.insert_agent_datasource_perm(aid=aid, did=datasource.did, perm=perm)
-        datapoints=cassapiperm.get_agent_datapoints_perm(aid=aid)
-        for datapoint in datapoints:
-            cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=datapoint.pid, perm=perm)
     return True
 
 
 def delete_agent(aid):
-    ''' This function revoke all access to every element an agent has'''
+    ''' This function revoke access to the agent '''
     perm=permissions.NONE
     agent=cassapiagent.get_agent(aid=aid)
     if agent:
         cassapiperm.insert_user_agent_perm(uid=agent.uid, aid=aid, perm=perm)
-        dids=cassapidatasource.get_datasources_dids(aid=aid)
-        for did in dids:
-            cassapiperm.insert_user_datasource_perm(uid=agent.uid, did=did, perm=perm)
-            pids=cassapidatapoint.get_datapoints_pids(did=did)
-            for pid in pids:
-                cassapiperm.insert_user_datapoint_perm(uid=agent.uid, pid=pid, perm=perm)
-    datasources=cassapiperm.get_agent_datasources_perm(aid=aid)
-    for datasource in datasources:
-        cassapiperm.insert_agent_datasource_perm(aid=aid, did=datasource.did, perm=perm)
-        widgetds=cassapiwidget.get_widget_ds(did=datasource.did)
-        if widgetds:
-            cassapiperm.insert_user_widget_perm(uid=agent.uid, wid=widgetds.wid, perm=perm)
-    datapoints=cassapiperm.get_agent_datapoints_perm(aid=aid)
-    for datapoint in datapoints:
-        cassapiperm.insert_agent_datapoint_perm(aid=aid, pid=datapoint.pid, perm=perm)
-        widgetdp=cassapiwidget.get_widget_dp(pid=datapoint.pid)
-        if widgetdp:
-            cassapiperm.insert_user_widget_perm(uid=agent.uid, wid=widgetdp.wid, perm=perm)
     return True
 
 def delete_datasource(did):
@@ -180,14 +152,12 @@ def delete_datasource(did):
     datasource=cassapidatasource.get_datasource(did=did)
     if datasource:
         cassapiperm.insert_user_datasource_perm(uid=datasource.uid, did=did, perm=perm)
-        cassapiperm.insert_agent_datasource_perm(aid=datasource.aid, did=did, perm=perm)
         widgetds=cassapiwidget.get_widget_ds(did=datasource.did)
         if widgetds:
             cassapiperm.insert_user_widget_perm(uid=datasource.uid, wid=widgetds.wid, perm=perm)
         pids=cassapidatapoint.get_datapoints_pids(did=did)
         for pid in pids:
             cassapiperm.insert_user_datapoint_perm(uid=datasource.uid, pid=pid, perm=perm)
-            cassapiperm.insert_agent_datapoint_perm(aid=datasource.aid, pid=pid, perm=perm)
             widgetdp=cassapiwidget.get_widget_dp(pid=pid)
             if widgetdp:
                 cassapiperm.insert_user_widget_perm(uid=datasource.uid, wid=widgetdp.wid, perm=perm)
@@ -201,7 +171,6 @@ def delete_datapoint(pid):
         datasource=cassapidatasource.get_datasource(did=datapoint.did)
         if datasource:
             cassapiperm.insert_user_datapoint_perm(uid=datasource.uid, pid=pid, perm=perm)
-            cassapiperm.insert_agent_datapoint_perm(aid=datasource.aid, pid=pid, perm=perm)
             widgetdp=cassapiwidget.get_widget_dp(pid=pid)
             if widgetdp:
                 cassapiperm.insert_user_widget_perm(uid=datasource.uid, wid=widgetdp.wid, perm=perm)

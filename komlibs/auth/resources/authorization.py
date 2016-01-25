@@ -29,12 +29,10 @@ def authorize_get_datasource_data(uid,did):
 
 def authorize_post_datasource_data(uid,aid,did):
     user_datasource_perm=cassapiperm.get_user_datasource_perm(uid=uid,did=did)
-    user_agent_perm=cassapiperm.get_user_agent_perm(uid=uid, aid=aid)
-    agent_datasource_perm=cassapiperm.get_agent_datasource_perm(aid=aid, did=did)
-    return True if user_datasource_perm and user_agent_perm and agent_datasource_perm \
-    and user_datasource_perm.perm & permissions.CAN_EDIT \
-    and user_agent_perm.perm & permissions.CAN_EDIT \
-    and agent_datasource_perm.perm & permissions.CAN_EDIT else False
+    user_agent_perm=cassapiperm.get_user_agent_perm(uid=uid,aid=aid)
+    return True if user_datasource_perm and user_agent_perm and \
+        user_datasource_perm.perm & permissions.CAN_EDIT and \
+        user_agent_perm.perm & permissions.CAN_EDIT else False
 
 def authorize_new_agent(uid):
     ''' Resource authorization not needed in this request '''
