@@ -2,6 +2,7 @@ import unittest
 import uuid
 import json
 from komlibs.auth import operations
+from komlibs.auth import errors as autherrors
 from komlibs.gestaccount.widget import types
 from komlibs.gestaccount.widget import visualization_types as vistypes
 from komlibs.gestaccount.datasource import api as gestdatasourceapi
@@ -369,7 +370,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         widgetinfo = widgetapi.get_widget_config_request(username=new_username, wid=wid)
         self.assertEqual(widgetinfo.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(widgetinfo.data, None)
+        self.assertEqual(widgetinfo.data,{'error':autherrors.E_AA_AGWC_RE})
 
     def test_get_widgets_config_request_success(self):
         ''' get_widgets_config_request should succeed if username exists and return the widgets config '''
@@ -2093,7 +2094,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         widgetrelated = widgetapi.get_related_widgets_request(username=new_username, wid=wid)
         self.assertEqual(widgetrelated.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(widgetrelated.data, None)
+        self.assertEqual(widgetrelated.data,{'error':autherrors.E_AA_AGWC_RE})
 
     def test_get_related_widgets_request_success(self):
         ''' get_releated_widgets_request should succeed '''

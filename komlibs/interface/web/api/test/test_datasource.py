@@ -2,6 +2,7 @@ import unittest
 import uuid
 import json
 from komlibs.auth import operations
+from komlibs.auth import errors as autherrors
 from komlibs.gestaccount.datasource import api as gestdatasourceapi
 from komlibs.interface.web.api import user as userapi 
 from komlibs.interface.web.api import agent as agentapi 
@@ -155,7 +156,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         did=self.userinfo['agents'][0]['dids'][0]
         datasourceinfo = datasourceapi.get_datasource_config_request(username=new_username, did=did)
         self.assertEqual(datasourceinfo.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(datasourceinfo.data, None)
+        self.assertEqual(datasourceinfo.data, {'error':autherrors.E_AA_AGDSC_RE})
 
     def test_get_datasources_config_request_success(self):
         ''' get_datasources_config_request should succeed if username exists and return the datasources config '''
