@@ -47,23 +47,31 @@ var RelatedSlides = React.createClass({
     },
     render: function () {
         related = $.map(this.state.slides, function (d,i) {
-            return (
-                      <li key={d.wid} onClick={this.handleClick.bind(null,d.wid)}>
-                        <div className="sliderelated-panel">{d.widgetname}</div>
-                        <div className="sliderelated-badge">
-                          <i className={d.className} />
-                        </div>
-                      </li>
-                   )
+            return React.createElement('li', {key:d.wid, onClick:this.handleClick.bind(null,d.wid)},
+                     React.createElement('div', {className:"sliderelated-panel"}, d.widgetname),
+                     React.createElement('div', {className:"sliderelated-badge"},
+                       React.createElement('li', {className:d.className})
+                     )
+                   );
+            //return (
+                      //<li key={d.wid} onClick={this.handleClick.bind(null,d.wid)}>
+                        //<div className="sliderelated-panel">{d.widgetname}</div>
+                        //<div className="sliderelated-badge">
+                          //<i className={d.className} />
+                        //</div>
+                      //</li>
+                   //)
         }.bind(this));
-        return (<ul className="sliderelated">
-                { related }
-                </ul>);
+        return React.createElement('ul', {className:"sliderelated"}, related);
+        //return (<ul className="sliderelated">
+                //{ related }
+                //</ul>);
     }
 });
 
-React.render(
-    <RelatedSlides />
+ReactDOM.render(
+    React.createElement(RelatedSlides, null)
+    //<RelatedSlides />
     ,
     document.getElementById('related-slides')
 );

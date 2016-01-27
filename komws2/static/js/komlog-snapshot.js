@@ -52,19 +52,22 @@ var Snapshot = React.createClass({
         } else {
             switch (this.state.conf.type) {
                 case 'ds':
-                    return (
-                      <SnapshotDs nid={this.props.nid} tid={this.props.tid} datasource={this.state.conf.datasource} datapoints={this.state.conf.datapoints} its={this.state.conf.its} seq={this.state.conf.seq}/>
-                      );
+                    return React.createElement(SnapshotDs, {nid:this.props.nid, tid:this.props.tid, datasource:this.state.conf.datasource, datapoints:this.state.conf.datapoints, its:this.state.conf.its, seq:this.state.conf.seq});
+                    //return (
+                      //<SnapshotDs nid={this.props.nid} tid={this.props.tid} datasource={this.state.conf.datasource} datapoints={this.state.conf.datapoints} its={this.state.conf.its} seq={this.state.conf.seq}/>
+                      //);
                     break;
                 case 'dp':
-                    return (
-                      <SnapshotDp nid={this.props.nid} tid={this.props.tid} datapoint={this.state.conf.datapoint} its={this.state.conf.its} ets={this.state.conf.ets}/>
-                      );
+                    return React.createElement(SnapshotDp, {nid:this.props.nid, tid:this.props.tid, datapoint:this.state.conf.datapoint, its:this.state.conf.its, ets:this.state.conf.ets});
+                    //return (
+                      //<SnapshotDp nid={this.props.nid} tid={this.props.tid} datapoint={this.state.conf.datapoint} its={this.state.conf.its} ets={this.state.conf.ets}/>
+                      //);
                     break;
                 case 'mp':
-                    return (
-                      <SnapshotMp nid={this.props.nid} tid={this.props.tid} view={this.state.conf.view} datapoints={this.state.conf.datapoints} its={this.state.conf.its} ets={this.state.conf.ets}/>
-                      );
+                    return React.createElement(SnapshotMp, {nid:this.props.nid, tid:this.props.tid, view:this.state.conf.view, datapoints:this.state.conf.datapoints, its:this.state.conf.its, ets:this.state.conf.ets});
+                    //return (
+                      //<SnapshotMp nid={this.props.nid} tid={this.props.tid} view={this.state.conf.view} datapoints={this.state.conf.datapoints} its={this.state.conf.its} ets={this.state.conf.ets}/>
+                      //);
                     break;
                 default:
                     return null;
@@ -76,18 +79,25 @@ var Snapshot = React.createClass({
         snapshot_content=this.getSnapshotContentEl();
         if ($.isEmptyObject(this.state.conf)) {
             conf={widgetname: "Loading..."}
-            snapshot=(
-            <div className="panel panel-default">
-              <SnapshotBar conf={conf} closeCallback={this.closeCallback}/>
-            </div>
-            );
+            snapshot=React.createElement('div', {className:"panel panel-default"},
+                       React.createElement(SnapshotBar, {conf:conf, closeCallback:this.closeCallback})
+                     );
+            //snapshot=(
+            //<div className="panel panel-default">
+              //<SnapshotBar conf={conf} closeCallback={this.closeCallback}/>
+            //</div>
+            //);
         } else {
-            snapshot=(
-            <div className="panel panel-default">
-              <SnapshotBar conf={this.state.conf} shareCallback={this.shareCallback} closeCallback={this.closeCallback}/>
-              {snapshot_content}
-            </div>
-            );
+            snapshot=React.createElement('div', {className:"panel panel-default"},
+                       React.createElement(SnapshotBar, {conf:this.state.conf, shareCallback:this.shareCallback, closeCallback:this.closeCallback}),
+                       snapshot_content
+                     );
+            //snapshot=(
+            //<div className="panel panel-default">
+              //<SnapshotBar conf={this.state.conf} shareCallback={this.shareCallback} closeCallback={this.closeCallback}/>
+              //{snapshot_content}
+            //</div>
+            //);
         }
         return snapshot
     },
@@ -123,18 +133,28 @@ var SnapshotBar = React.createClass({
         return {};
     },
     render: function() {
-        return (
-            <div className="SlideBar panel-heading" style={this.styles.barstyle}>
-                <div className="SlideBarIcons" style={this.styles.iconstyle}>
-                    <span className="glyphicon glyphicon-remove" onClick={this.closeClick}></span>
-                </div>
-                <div className="SlideBarName" style={this.styles.namestyle} >
-                    <span className="glyphicon glyphicon-option-vertical" style={this.styles.barseparatorstyle} onClick={this.moveClick}></span>
-                    <span > </span>
-                    <span>{this.props.conf.widgetname}</span>
-                </div>
-            </div>
-        );
+        return React.createElement('div', {className:"SlideBar panel-heading", style:this.styles.barstyle},
+                 React.createElement('div', {className:"SlideBarIcons", style:this.styles.iconstyle},
+                   React.createElement('span', {className:"glyphicon glyphicon-remove", onClick:this.closeClick})
+                 ),
+                 React.createElement('div', {className:"SlideBarName", style:this.styles.namestyle},
+                   React.createElement('span', {className:"glyphicon glyphicon-option-vertical", style:this.styles.barseparatorstyle, onClick:this.moveClick}),
+                   " ",
+                   this.props.conf.widgetname
+                 )
+               );
+        //return (
+            //<div className="SlideBar panel-heading" style={this.styles.barstyle}>
+                //<div className="SlideBarIcons" style={this.styles.iconstyle}>
+                    //<span className="glyphicon glyphicon-remove" onClick={this.closeClick}></span>
+                //</div>
+                //<div className="SlideBarName" style={this.styles.namestyle} >
+                    //<span className="glyphicon glyphicon-option-vertical" style={this.styles.barseparatorstyle} onClick={this.moveClick}></span>
+                    //<span > </span>
+                    //<span>{this.props.conf.widgetname}</span>
+                //</div>
+            //</div>
+        //);
     }
 });
 
@@ -263,39 +283,54 @@ var SnapshotDs = React.createClass({
         elements=this.generateHtmlContent(this.state.dsData)
         var element_nodes=$.map(elements, function (element) {
             if (element.type == 'text') {
-                return (<span key={element.ne}>{element.data}</span>);
+                return React.createElement('span', {key:element.ne},element.data);
+                //return (<span key={element.ne}>{element.data}</span>);
             }else if (element.type == 'nl') {
-                return (<br key={element.ne} />);
+                return React.createElement('br', {key:element.ne});
+                //return (<br key={element.ne} />);
             }else if (element.type == 'datapoint') {
-                tooltip=(
-                  <ReactBootstrap.Tooltip>{element.datapointname}</ReactBootstrap.Tooltip>
-                  );
-                return (
-                        <ReactBootstrap.OverlayTrigger placement="top" overlay={tooltip}>
-                          <span key={element.ne} style={element.style} >{element.data}</span>
-                        </ReactBootstrap.OverlayTrigger>
-                    );
+                tooltip=React.createElement(ReactBootstrap.Tooltip, null, element.datapoint);
+                //tooltip=(
+                  //<ReactBootstrap.Tooltip>{element.datapointname}</ReactBootstrap.Tooltip>
+                  //);
+                return React.createElement(ReactBootstrap.OverlayTrigger, {placement:"top", overlay:tooltip},
+                         React.createElement('span', {key:element.ne, style:element.style}, element.data)
+                       );
+                //return (
+                        //<ReactBootstrap.OverlayTrigger placement="top" overlay={tooltip}>
+                          //<span key={element.ne} style={element.style} >{element.data}</span>
+                        //</ReactBootstrap.OverlayTrigger>
+                    //);
             }
         }.bind(this));
         if (typeof this.state.timestamp === 'number') {
-            info_node=(
-                <div style={this.styles.infostyle}>
-                <ReactBootstrap.Glyphicon glyph="time" />
-                <span style={this.styles.timestyle}> {this.generateDateString(this.state.timestamp)}</span>
-                </div>
-                );
+            info_node=React.createElement('div', {style:this.styles.infostyle},
+                        React.createElement(ReactBootstrap.Glyphicon, {glyph:"time"}),
+                        React.createElement('span', {style:this.styles.timestyle}, this.generateDateString(this.state.timestamp))
+                      );
+            //info_node=(
+                //<div style={this.styles.infostyle}>
+                //<ReactBootstrap.Glyphicon glyph="time" />
+                //<span style={this.styles.timestyle}> {this.generateDateString(this.state.timestamp)}</span>
+                //</div>
+                //);
         } else {
-            info_node=(
-                <div style={this.styles.infostyle} />
-                );
+            info_node=React.createElement('div', {style:this.styles.infostyle});
+            //info_node=(
+                //<div style={this.styles.infostyle} />
+                //);
         }
-        return (<div>
-                  {info_node}
-                  <div>
-                    {element_nodes}
-                  </div>
-                </div>
-                );
+        return React.createElement('div', null,
+                 info_node,
+                 React.createElement('div', null, element_nodes)
+               );
+        //return (<div>
+                  //{info_node}
+                  //<div>
+                    //{element_nodes}
+                  //</div>
+                //</div>
+                //);
     }
 });
 
@@ -390,50 +425,88 @@ var SnapshotDp = React.createClass({
     },
     render: function () {
         if (this.state.summary.hasOwnProperty('datapointname')){
-            var summary=(<tr>
-                            <td>{this.state.summary.datapointname}</td>
-                            <td>{this.state.summary.max}</td>
-                            <td>{this.state.summary.min}</td>
-                            <td>{this.state.summary.mean}</td>
-                        </tr>
-                        );
+            summary=React.createElement('tr', null,
+                      React.createElement('td', null, this.state.summary.datapointname),
+                      React.createElement('td', null, this.state.summary.max),
+                      React.createElement('td', null, this.state.summary.min),
+                      React.createElement('td', null, this.state.summary.mean)
+                    );
+            //var summary=(<tr>
+                            //<td>{this.state.summary.datapointname}</td>
+                            //<td>{this.state.summary.max}</td>
+                            //<td>{this.state.summary.min}</td>
+                            //<td>{this.state.summary.mean}</td>
+                        //</tr>
+                        //);
         } else {
-            var summary=(<tr>
-                            <td/>
-                            <td/>
-                            <td/>
-                            <td/>
-                        </tr>
-                        );
+            summary=React.createElement('tr', null,
+                      React.createElement('td', null),
+                      React.createElement('td', null),
+                      React.createElement('td', null),
+                      React.createElement('td', null)
+                    );
+            //var summary=(<tr>
+                            //<td/>
+                            //<td/>
+                            //<td/>
+                            //<td/>
+                        //</tr>
+                        //);
         }
         var data=[{pid:this.props.datapoint.pid,color:this.props.datapoint.color,datapointname:this.props.datapoint.datapointname,data:this.state.data}]
-        return (<div>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <table className="table table-condensed">
-                        <tr>
-                          <th>Name</th>
-                          <th>max</th>
-                          <th>min</th>
-                          <th>mean</th>
-                        </tr>
-                        {summary}
-                      </table>
-                    </div>
-                    <div className="col-md-6">
-                      <TimeSlider interval={this.state.interval} newIntervalCallback={this.newIntervalCallback} interval_limits={{its:this.props.its,ets:this.props.ets}}/>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-md-6">
-                      <ContentHistogram data={data} />
-                    </div>
-                    <div className="col-md-6">
-                      <ContentLinegraph interval={this.state.interval} data={data} />
-                    </div>
-                  </div>
-                </div>
-                );
+        return React.createElement('div', null,
+                 React.createElement('div', {className:"row"},
+                   React.createElement('div', {className:"col-md-6"},
+                     React.createElement('table', {className:"table table-condensed"},
+                       React.createElement('tr', null,
+                         React.createElement('th',null,"Name"),
+                         React.createElement('th',null,"max"),
+                         React.createElement('th',null,"min"),
+                         React.createElement('th',null,"mean")
+                       ),
+                       summary
+                     )
+                   ),
+                   React.createElement('div', {className:"col-md-6"},
+                     React.createElement(TimeSlider, {interval:this.state.interval, newIntervalCallback:this.newIntervalCallback})
+                   )
+                 ),
+                 React.createElement('div', {className:"row"},
+                   React.createElement('div', {className:"col-md-6"},
+                     React.createElement(ContentHistogram, {data:data})
+                   ),
+                   React.createElement('div', {className:"col-md-6"},
+                     React.createElement(ContentLinegraph, {interval:this.state.interval, data:data})
+                   )
+                 )
+               );
+        //return (<div>
+                  //<div className="row">
+                    //<div className="col-md-6">
+                      //<table className="table table-condensed">
+                        //<tr>
+                          //<th>Name</th>
+                          //<th>max</th>
+                          //<th>min</th>
+                          //<th>mean</th>
+                        //</tr>
+                        //{summary}
+                      //</table>
+                    //</div>
+                    //<div className="col-md-6">
+                      //<TimeSlider interval={this.state.interval} newIntervalCallback={this.newIntervalCallback} interval_limits={{its:this.props.its,ets:this.props.ets}}/>
+                    //</div>
+                  //</div>
+                  //<div className="row">
+                    //<div className="col-md-6">
+                      //<ContentHistogram data={data} />
+                    //</div>
+                    //<div className="col-md-6">
+                      //<ContentLinegraph interval={this.state.interval} data={data} />
+                    //</div>
+                  //</div>
+                //</div>
+                //);
     }
 });
 
@@ -527,13 +600,23 @@ var SnapshotMp = React.createClass({
             if (datapointname !== null) {
                 summary=getDataSummary(element)
                 datapointStyle={backgroundColor: color, borderRadius: '10px'}
-                return (<tr key={key}>
-                    <td><span style={datapointStyle}>&nbsp;&nbsp;</span><span>&nbsp;</span>{datapointname}</td>
-                    <td>{summary.max}</td>
-                    <td>{summary.min}</td>
-                    <td>{summary.mean}</td>
-                </tr>
-                );
+                return React.createElement('tr', {key:key},
+                         React.createElement('td', null,
+                           React.createElement('span',{style:datapointStyle},"  "),
+                           React.createElement('span',null,"  "),
+                           this.state.config[key].datapointname
+                         ),
+                         React.createElement('td', null, summary.max),
+                         React.createElement('td', null, summary.min),
+                         React.createElement('td', null, summary.mean)
+                       );
+                //return (<tr key={key}>
+                    //<td><span style={datapointStyle}>&nbsp;&nbsp;</span><span>&nbsp;</span>{datapointname}</td>
+                    //<td>{summary.max}</td>
+                    //<td>{summary.min}</td>
+                    //<td>{summary.mean}</td>
+                //</tr>
+                //);
             }
         }.bind(this));
         var data=$.map(this.state.data, function (element, key) {
@@ -552,60 +635,96 @@ var SnapshotMp = React.createClass({
         }.bind(this));
         switch (this.state.active_view){
             case 0:
-                content=<ContentLinegraph interval={this.state.interval} data={data} />
+                content=React.createElement(ContentLinegraph, {interval:this.state.interval, data:data});
+                //content=<ContentLinegraph interval={this.state.interval} data={data} />
                 break;
             case 1:
-                content=<ContentHistogram interval={this.state.interval} data={data} />
+                content=React.createElement(ContentHistogram, {interval:this.state.interval, data:data});
+                //content=<ContentHistogram interval={this.state.interval} data={data} />
                 break;
             case 2:
-                content=<ContentTable interval={this.state.interval} data={data} />
+                content=React.createElement(ContentTable, {interval:this.state.interval, data:data});
+                //content=<ContentTable interval={this.state.interval} data={data} />
                 break;
             default:
-                content=<div />
+                content=React.createElement('div',null);
+                //content=<div />
                 break;
         }
         view_buttons=$.map([0,1,2], function (element) {
             if (this.state.active_view==element) {
-                return (<button key={element} type="button" className="btn btn-default focus" onClick={function(event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}>{element}</button>)
+                return React.createElement('button', {key:element, type:"button", className:"btn btn-default focus", onClick:function (event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}, element);
+                //return (<button key={element} type="button" className="btn btn-default focus" onClick={function(event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}>{element}</button>)
             } else {
-                return (<button key={element} type="button" className="btn btn-default" onClick={function(event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)} >{element}</button>)
+                return React.createElement('button', {key:element, type:"button", className:"btn btn-default", onClick:function (event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}, element);
+                //return (<button key={element} type="button" className="btn btn-default" onClick={function(event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)} >{element}</button>)
             }
         }.bind(this));
-        return (<div>
-                  <div className="row" >
-                    <div className="col-md-8">
-                      {content}
-                    </div>
-                    <div className="col-md-4">
-                      <div className="row">
-                        <div className="col-md-12">
-                          <TimeSlider interval={this.state.interval} newIntervalCallback={this.newIntervalCallback} interval_limits={{its:this.props.its,ets:this.props.ets}}/>
-                        </div>
-                      </div>
-                      <div className="row">
-                        <div className="col-md-12">
-                          <div className="btn-group" role="group">
-                            {view_buttons}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="row">
-                        <div className="col-md-12">
-                          <table className="table table-condensed">
-                            <tr>
-                              <th>Name</th>
-                              <th>max</th>
-                              <th>min</th>
-                              <th>mean</th>
-                            </tr>
-                            {summary}
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                );
+        return React.createElement('div', null,
+                 React.createElement('div', {className:"row"},
+                   React.createElement('div', {className:"col-md-8"}, content),
+                   React.createElement('div', {className:"col-md-4"},
+                     React.createElement('div', {className:"row"},
+                       React.createElement('div', {className:"col-md-12"},
+                         React.createElement(TimeSlider, {interval:this.state.interval, newIntervalCallback:this.newIntervalCallback, interval_limits:{its:this.props.its, ets:this.props.ets}})
+                       )
+                     ),
+                     React.createElement('div', {className:"row"},
+                       React.createElement('div', {className:"col-md-12"},
+                         React.createElement('div', {className:"btn-group", role:"group"}, view_buttons)
+                       )
+                     ),
+                     React.createElement('div', {className:"row"},
+                       React.createElement('div', {className:"col-md-12"},
+                         React.createElement('table', {className:"table table-condensed"},
+                           React.createElement('tr', null,
+                             React.createElement('th', null, "Name"),
+                             React.createElement('th', null, "max"),
+                             React.createElement('th', null, "min"),
+                             React.createElement('th', null, "mean")
+                           ),
+                           summary
+                         )
+                       )
+                     )
+                   )
+                 )
+               );
+        //return (<div>
+                  //<div className="row" >
+                    //<div className="col-md-8">
+                      //{content}
+                    //</div>
+                    //<div className="col-md-4">
+                      //<div className="row">
+                        //<div className="col-md-12">
+                          //<TimeSlider interval={this.state.interval} newIntervalCallback={this.newIntervalCallback} interval_limits={{its:this.props.its,ets:this.props.ets}}/>
+                        //</div>
+                      //</div>
+                      //<div className="row">
+                        //<div className="col-md-12">
+                          //<div className="btn-group" role="group">
+                            //{view_buttons}
+                          //</div>
+                        //</div>
+                      //</div>
+                      //<div className="row">
+                        //<div className="col-md-12">
+                          //<table className="table table-condensed">
+                            //<tr>
+                              //<th>Name</th>
+                              //<th>max</th>
+                              //<th>min</th>
+                              //<th>mean</th>
+                            //</tr>
+                            //{summary}
+                          //</table>
+                        //</div>
+                      //</div>
+                    //</div>
+                  //</div>
+                //</div>
+                //);
     }
 });
 

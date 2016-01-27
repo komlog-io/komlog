@@ -1,4 +1,6 @@
-var Dashboard= React.createClass({
+var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+
+var Dashboard=React.createClass({
     getInitialState: function () {
         return {
                 slides: [],
@@ -146,7 +148,8 @@ var Dashboard= React.createClass({
     },
     getSlideList: function () {
         slides = this.state.slides.map( function (slide) {
-            return (<Slide key={slide.shortcut} bid={this.props.bid} lid={slide.lid} tid={slide.tid} shortcut={slide.shortcut} type={slide.type} isPinned={slide.isPinned} />)
+            return React.createElement(Slide, {key:slide.shortcut, bid:this.props.bid, lid:slide.lid, tid:slide.tid, shortcut:slide.shortcut, type:slide.type, isPinned:slide.isPinned});
+            //return (<Slide key={slide.shortcut} bid={this.props.bid} lid={slide.lid} tid={slide.tid} shortcut={slide.shortcut} type={slide.type} isPinned={slide.isPinned} />)
         }.bind(this));
         return slides
     },
@@ -157,12 +160,22 @@ var Dashboard= React.createClass({
         } else {
             display='none'
         }
-        return (<div className="workspace modal-container" style={{'display':display}}> 
-                  <DashboardHeader bid={this.props.bid} dashboardname={this.state.dashboardname} closeCallback={this.closeDashboard} />
-                  <div>
-                    {slides}
-                  </div>
-                </div>);
+        return React.createElement('div', {className:"workspace modal-container", style:{display:display}}, 
+                 React.createElement(DashboardHeader, {bid:this.props.bid, dashboardname:this.state.dashboardname, closeCallback:this.closeDashboard}),
+                 React.createElement('div', null, 
+                   React.createElement(ReactCSSTransitionGroup, {transitionName:'list-item', transitionEnterTimeout:500, transitionLeaveTimeout:300}, 
+                     slides
+                     )
+                   )
+                 );
+        //return (<div className="workspace modal-container" style={{'display':display}}> 
+                  //<DashboardHeader bid={this.props.bid} dashboardname={this.state.dashboardname} closeCallback={this.closeDashboard} />
+                  //<div>
+                    //<ReactCSSTransitionGroup transitionName="list-item" transitionEnterTimeout={500} transitionLeaveTimeout={300}>
+                    //{slides}
+                    //</ReactCSSTransitionGroup>
+                  //</div>
+                //</div>);
     },
 });
 
@@ -198,68 +211,120 @@ var DashboardHeader= React.createClass({
     },
     getDashboardHeader: function () {
         if (this.props.bid == '0') {
-            return (
-                  <div>
-                    <h3 className="dashboard-header">
-                      {this.props.dashboardname}
-                    </h3>
-                  </div>
-                );
+            return React.createElement('div', null, 
+                     React.createElement('h3', {className:"dashboard-header"},
+                       this.props.dashboardname
+                       )
+                     );
+            //return (
+                  //<div>
+                    //<h3 className="dashboard-header">
+                      //{this.props.dashboardname}
+                    //</h3>
+                  //</div>
+                //);
         } else {
-            return (
-                    <div>
-                      <h3 className="dashboard-header">
-                        {this.props.dashboardname}
-                        <small><ReactBootstrap.Glyphicon glyph="remove" className="pull-right" onClick={this.closeDashboard}>&nbsp;</ReactBootstrap.Glyphicon></small>
-                        <small><ReactBootstrap.Glyphicon glyph="cog" className="pull-right"  onClick={this.showConfig}>&nbsp;</ReactBootstrap.Glyphicon></small>
-                      </h3>
-                      <ReactBootstrap.Collapse in={this.state.showConfig}>
-                        <div>
-                          <ReactBootstrap.Well>
-                            <ReactBootstrap.ListGroup >
-                              <ReactBootstrap.ListGroupItem bsSize="small" >
-                                <form className="form-horizontal">
-                                  <ReactBootstrap.Input ref="dashboardname" placeholder={this.props.dashboardname} bsSize="small" type="text" label="Dashboard Name" labelClassName="col-xs-3" wrapperClassName="col-xs-6" />
-                                  <div className="text-right">
-                                    <ReactBootstrap.Button bsSize="small" bsStyle="primary" onClick={this.updateConfig}>Update</ReactBootstrap.Button>
-                                  </div>
-                                </form>
-                              </ReactBootstrap.ListGroupItem>
-                              <ReactBootstrap.ListGroupItem bsSize="xsmall" >
-                                <strong>Delete Dashboard</strong>
-                                <div className="text-right">
-                                  <ReactBootstrap.Button bsSize="small" bsStyle="danger" onClick={this.deleteDashboard}>Delete</ReactBootstrap.Button>
-                                </div>
-                              </ReactBootstrap.ListGroupItem>
-                            </ReactBootstrap.ListGroup>
-                          </ReactBootstrap.Well>
-                          <ReactBootstrap.Modal bsize="small" show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
-                            <ReactBootstrap.Modal.Header closeButton>
-                              <ReactBootstrap.Modal.Title id="contained-modal-title">Delete Dashboard</ReactBootstrap.Modal.Title>
-                            </ReactBootstrap.Modal.Header>
-                            <ReactBootstrap.Modal.Body>
-                              Dashboard {this.props.dashboardname} will be deleted.
-                              <strong> Are You sure? </strong>
-                            </ReactBootstrap.Modal.Body>
-                            <ReactBootstrap.Modal.Footer>
-                              <ReactBootstrap.Button bsStyle="default" onClick={this.cancelDelete}>Cancel</ReactBootstrap.Button>
-                              <ReactBootstrap.Button bsStyle="primary" onClick={this.confirmDelete}>Delete</ReactBootstrap.Button>
-                            </ReactBootstrap.Modal.Footer>
-                          </ReactBootstrap.Modal>
-                        </div>
-                      </ReactBootstrap.Collapse>
-                    </div>
-                );
+            return React.createElement('div', null, 
+                     React.createElement('h3', {className:"dashboard-header"},
+                       this.props.dashboardname,
+                       React.createElement('small', null,
+                         React.createElement(ReactBootstrap.Glyphicon, {glyph:"remove", className:"pull-right", onClick:this.closeDashboard}," ")
+                       ),
+                       React.createElement('small', null,
+                         React.createElement(ReactBootstrap.Glyphicon, {glyph:"cog", className:"pull-right", onClick:this.showConfig}," ")
+                       )
+                     ),
+                     React.createElement(ReactBootstrap.Collapse, {in:this.state.showConfig}, 
+                       React.createElement('div', null, 
+                         React.createElement(ReactBootstrap.Well, null, 
+                           React.createElement(ReactBootstrap.ListGroup, null,
+                             React.createElement(ReactBootstrap.ListGroupItem, {bsSize:"small"},
+                               React.createElement('form', {className:"form-horizontal"},
+                                 React.createElement(ReactBootstrap.Input, {ref:"dashboardname", placeholder:this.props.dashboardname, bsSize:"small", type:"text", label:"Dashboard Name", labelClassName:"col-xs-3", wrapperClassName:"col-xs-6"}),
+                                 React.createElement('div', {className:"text-right"}, 
+                                   React.createElement(ReactBootstrap.Button, {bsSize:"small", bsStyle:"primary", onClick:this.updateConfig}, "Update")
+                                 )
+                               )
+                             ),
+                             React.createElement(ReactBootstrap.ListGroupItem, {bsSize:"small"},
+                               React.createElement('strong', null, "Delete Dashboard"),
+                               React.createElement('div', {className:"text-right"}, 
+                                 React.createElement(ReactBootstrap.Button, {bsSize:"small", bsStyle:"danger", onClick:this.deleteDashboard}, "Delete")
+                               )
+                             )
+                           )
+                         ),
+                         React.createElement(ReactBootstrap.Modal, {bsSize:"small", show:this.state.deleteModal, onHide:this.cancelDelete, container:this, "aria-labeledby":"contained-modal-title"},
+                           React.createElement(ReactBootstrap.Modal.Header, {closeButton:true},
+                             React.createElement(ReactBootstrap.Modal.Title, {id:"contained-modal-title"}, "Delete Dashboard")
+                           ), 
+                           React.createElement(ReactBootstrap.Modal.Body, null,
+                             "Dashboard "+this.props.dashboardname+" will be deleted",
+                             React.createElement('strong', null, "Are You Sure?")
+                           ),
+                           React.createElement(ReactBootstrap.Modal.Footer, null, 
+                             React.createElement(ReactBootstrap.Button, {bsStyle:"default", onClick:this.cancelDelete}, "Cancel"),
+                             React.createElement(ReactBootstrap.Button, {bsStyle:"primary", onClick:this.confirmDelete}, "Delete")
+                           )
+                         )
+                       )
+                     )
+                   );
+            //return (
+                    //<div>
+                      //<h3 className="dashboard-header">
+                        //{this.props.dashboardname}
+                        //<small><ReactBootstrap.Glyphicon glyph="remove" className="pull-right" onClick={this.closeDashboard}>&nbsp;</ReactBootstrap.Glyphicon></small>
+                        //<small><ReactBootstrap.Glyphicon glyph="cog" className="pull-right"  onClick={this.showConfig}>&nbsp;</ReactBootstrap.Glyphicon></small>
+                      //</h3>
+                      //<ReactBootstrap.Collapse in={this.state.showConfig}>
+                        //<div>
+                          //<ReactBootstrap.Well>
+                            //<ReactBootstrap.ListGroup >
+                              //<ReactBootstrap.ListGroupItem bsSize="small" >
+                                //<form className="form-horizontal">
+                                  //<ReactBootstrap.Input ref="dashboardname" placeholder={this.props.dashboardname} bsSize="small" type="text" label="Dashboard Name" labelClassName="col-xs-3" wrapperClassName="col-xs-6" />
+                                  //<div className="text-right">
+                                    //<ReactBootstrap.Button bsSize="small" bsStyle="primary" onClick={this.updateConfig}>Update</ReactBootstrap.Button>
+                                  //</div>
+                                //</form>
+                              //</ReactBootstrap.ListGroupItem>
+                              //<ReactBootstrap.ListGroupItem bsSize="xsmall" >
+                                //<strong>Delete Dashboard</strong>
+                                //<div className="text-right">
+                                  //<ReactBootstrap.Button bsSize="small" bsStyle="danger" onClick={this.deleteDashboard}>Delete</ReactBootstrap.Button>
+                                //</div>
+                              //</ReactBootstrap.ListGroupItem>
+                            //</ReactBootstrap.ListGroup>
+                          //</ReactBootstrap.Well>
+                          //<ReactBootstrap.Modal bsize="small" show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
+                            //<ReactBootstrap.Modal.Header closeButton>
+                              //<ReactBootstrap.Modal.Title id="contained-modal-title">Delete Dashboard</ReactBootstrap.Modal.Title>
+                            //</ReactBootstrap.Modal.Header>
+                            //<ReactBootstrap.Modal.Body>
+                              //Dashboard {this.props.dashboardname} will be deleted.
+                              //<strong> Are You sure? </strong>
+                            //</ReactBootstrap.Modal.Body>
+                            //<ReactBootstrap.Modal.Footer>
+                              //<ReactBootstrap.Button bsStyle="default" onClick={this.cancelDelete}>Cancel</ReactBootstrap.Button>
+                              //<ReactBootstrap.Button bsStyle="primary" onClick={this.confirmDelete}>Delete</ReactBootstrap.Button>
+                            //</ReactBootstrap.Modal.Footer>
+                          //</ReactBootstrap.Modal>
+                        //</div>
+                      //</ReactBootstrap.Collapse>
+                    //</div>
+                //);
         }
     },
     render: function () {
         header=this.getDashboardHeader();
         if (header) {
-            return (
-                  <div>
-                    {header}
-                  </div>
-                  );
+            return React.createElement('div', null, header);
+            //return (
+                  //<div>
+                    //{header}
+                  //</div>
+                  //);
         } else {
             return null
         }

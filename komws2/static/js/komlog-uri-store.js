@@ -1,6 +1,5 @@
 function UriStore () {
-    this._vertices = [];
-    this._edges = [];
+    this._nodes={}
     this.subscriptionTokens = [];
     this.subscriptionTokens.push({token:PubSub.subscribe('uriReq', this.subscriptionHandler.bind(this)),msg:'UriReq'});
     this.subscriptionTokens.push({token:PubSub.subscribe('uriActionReq', this.subscriptionHandler.bind(this)),msg:'UriActionReq'});
@@ -46,11 +45,14 @@ function storeUriData (data) {
 
 function storeExpandedInfo(root) {
     if (root.hasOwnProperty('id')) {
-        UriStore._vertices[root.id]={uri:root.name,type:root.type,id:root.id}
-    }
-    if (root.hasOwnProperty('children')) {
-        for (var i=0;i<root.children.length;i++) {
-            storeExpandedInfo(root.children[i])
+        UriStore._nodes[root.id]={uri:root.name,type:root.type,id:root.id, children:[]}
+        if (root.hasOwnProperty('children')) {
+            for (var i=0;i<root.children.length;i++) {
+                UriStore._nodes[root.id].children.push(root.children[i].name)
+            }
+            for (var i=0;i<root.children.length;i++) {
+                storeExpandedInfo(root.children[i])
+            }
         }
     }
 }
@@ -64,17 +66,28 @@ function getUriGraph (rootUri, numVertices) {
     return UriStore._data
 }
 
+function getNodeInfo (uri) {
+    info={}
+    for (var node in UriStore._nodes) {
+        if (UriStore._nodes[node].uri == uri) {
+            info=UriStore._nodes[node]
+            break;
+        }
+    }
+    return info
+}
+
 function processMsgUriActionReq (data) {
-    if (UriStore._vertices.hasOwnProperty(data.id)) {
-        vertex=UriStore._vertices[data.id]
-        if (vertex.type=='p') {
-            PubSub.publish('loadSlide',{pid:vertex.id})
-        } else if (vertex.type=='d') {
-            PubSub.publish('loadSlide',{did:vertex.id})
-        } else if (vertex.type=='w') {
-            PubSub.publish('loadSlide',{wid:vertex.id})
-        } else if (vertex.type=='v') {
-            PubSub.publish('uriReq',{uri:vertex.uri})
+    if (UriStore._nodes.hasOwnProperty(data.id)) {
+        node=UriStore._nodes[data.id]
+        if (node.type=='p') {
+            PubSub.publish('loadSlide',{pid:node.id})
+        } else if (node.type=='d') {
+            PubSub.publish('loadSlide',{did:node.id})
+        } else if (node.type=='w') {
+            PubSub.publish('loadSlide',{wid:node.id})
+        } else if (node.type=='v') {
+            PubSub.publish('uriReq',{uri:node.uri})
         }
     }
 }

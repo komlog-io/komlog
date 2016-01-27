@@ -10,7 +10,6 @@ html {
 body {
   padding-top: 50px;
   margin-bottom: 60px;
-  background-color: #eee;
 }
 
 
@@ -84,6 +83,10 @@ body {
  * Main content
  */
 
+::-webkit-scrollbar { 
+  display: none; 
+}
+
 .main {
   position: fixed;
   top: 51px;
@@ -95,7 +98,6 @@ body {
   overflow-x: hidden;
   overflow-y: scroll; /*Scrollable contents if viewport is shorter than content.*/
   /*border-left: 1px solid #eee;*/
-  border-right: 1px solid #eee;
 }
 
 .main .page-header {
@@ -264,6 +266,11 @@ body {
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.175);
 }
 
+.userevents > .userevents-panel:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.175);
+  border: 1px solid #c4c4c4;
+}
+
 .userevents > li > .userevents-badge {
   color: #fff;
   width: 40px;
@@ -381,4 +388,42 @@ body {
   color: #000;
   content: ".";
   padding: 0px;
+}
+
+/* 
+    Navigation Tree
+                    */
+
+.tree-item {
+  background-color: #fff;
+  line-height: 35px;
+  border-bottom: 1px solid #d4d4d4;
+  position: relative;
+  -webkit-box-shadow: 0 1px 6px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 1px 0px rgba(0, 0, 0, 0.175);
+}
+
+.tree-item:hover {
+  background-color: #F8F8F8;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.175);
+  border-bottom: 1px solid #d4d4d4;
+  border-right: 1px solid #d4d4d4;
+}
+
+.list-item-enter {
+  opacity: 0.01;
+}
+
+.list-item-enter.list-item-enter-active {
+  opacity: 1;
+  transition: opacity 500ms ease-in;
+}
+
+.list-item-leave {
+  opacity: 1;
+}
+
+.list-item-leave.list-item-leave-active {
+  opacity: 0.01;
+  transition: opacity 300ms ease-in;
 }

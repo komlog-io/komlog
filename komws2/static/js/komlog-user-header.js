@@ -40,29 +40,50 @@ var UserHeader= React.createClass({
         }
     },
     render: function () {
-        return (
-    <ReactBootstrap.Navbar fixedTop fluid="True">
-        <ReactBootstrap.Nav pullLeft>
-            Komlog
-        </ReactBootstrap.Nav>
-        <ReactBootstrap.Nav pullRight >
-            <ReactBootstrap.NavDropdown pullRight title={this.state.username}>
-                <ReactBootstrap.MenuItem key={1}>
-                <span><ReactBootstrap.Glyphicon glyph="cog" /> {this.state.email}</span>
-                </ReactBootstrap.MenuItem>
-                <ReactBootstrap.MenuItem divider />
-                <ReactBootstrap.MenuItem key={2} href="/logout">
-                    <span><ReactBootstrap.Glyphicon glyph="log-out" /> Log Out</span>
-                </ReactBootstrap.MenuItem>
-            </ReactBootstrap.NavDropdown>
-        </ReactBootstrap.Nav>
-    </ReactBootstrap.Navbar>
-);
+        return React.createElement(ReactBootstrap.Navbar, {fixedTop:true, fluid:true},
+                 React.createElement(ReactBootstrap.Nav, {pullLeft:true}, "Komlog"),
+                 React.createElement(ReactBootstrap.Nav, {pullRight:true},
+                   React.createElement(ReactBootstrap.NavDropdown, {pullRight:true, title:this.state.username},
+                     React.createElement(ReactBootstrap.MenuItem, {key:1},
+                       React.createElement('span', null,
+                         React.createElement(ReactBootstrap.Glyphicon, {glyph:"cog"}),
+                         " "+this.state.email
+                       )
+                     ),
+                     React.createElement(ReactBootstrap.MenuItem, {divider:true}),
+                     React.createElement(ReactBootstrap.MenuItem, {key:2, href:"/logout"},
+                       React.createElement('span', null,
+                         React.createElement(ReactBootstrap.Glyphicon, {glyph:"log-out"}),
+                         " Log Out"
+                       )
+                     )
+                   )
+                 )
+               );
+        //return (
+    //<ReactBootstrap.Navbar fixedTop fluid="True">
+        //<ReactBootstrap.Nav pullLeft>
+            //Komlog
+        //</ReactBootstrap.Nav>
+        //<ReactBootstrap.Nav pullRight >
+            //<ReactBootstrap.NavDropdown pullRight title={this.state.username}>
+                //<ReactBootstrap.MenuItem key={1}>
+                //<span><ReactBootstrap.Glyphicon glyph="cog" /> {this.state.email}</span>
+                //</ReactBootstrap.MenuItem>
+                //<ReactBootstrap.MenuItem divider />
+                //<ReactBootstrap.MenuItem key={2} href="/logout">
+                    //<span><ReactBootstrap.Glyphicon glyph="log-out" /> Log Out</span>
+                //</ReactBootstrap.MenuItem>
+            //</ReactBootstrap.NavDropdown>
+        //</ReactBootstrap.Nav>
+    //</ReactBootstrap.Navbar>
+//);
     },
 });
 
-React.render(
-    <UserHeader />
+ReactDOM.render(
+    React.createElement(UserHeader, null)
+    //<UserHeader />
     ,
     document.getElementById('user-header')
 );
