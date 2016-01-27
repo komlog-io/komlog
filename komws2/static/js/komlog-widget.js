@@ -741,10 +741,9 @@ var WidgetDs = React.createClass({
     styles: {
         infostyle: {
             float: 'right',
+            color: '#aaa',
+            padding: '3px 5px 0px 0px'
         },
-        timestyle: {
-            color: 'green',
-        }
     },
     getInitialState: function () {
         return {dsData: undefined,
