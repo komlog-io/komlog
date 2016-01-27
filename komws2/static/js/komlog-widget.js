@@ -835,6 +835,31 @@ var WidgetDs = React.createClass({
             }
         }
     },
+    getDateStatement: function (timestamp) {
+        if (typeof timestamp === 'number') {
+            var date = new Date(timestamp*1000);
+            var now = new Date();
+            diff = now.getTime()/1000 - timestamp;
+            if (diff<0) {
+                return React.createElement('span',{title:date.toString()}, " right now");
+            } else {
+                if (diff<60) {
+                    when=" right now"
+                } else if (diff<3600) {
+                    when=" "+(diff/60 | 0)+" min"+(diff/60>=2 ? "utes":"")+" ago";
+                } else if (diff<86400) {
+                    when=" "+(diff/3600 | 0)+" hour"+(diff/3600>=2 ? "s":"")+" ago";
+                } else if (diff<2678400) {
+                    when=" "+(diff/86400 | 0)+" day"+(diff/86400>=2 ? "s":"")+" ago";
+                } else {
+                    when=" "+(diff/2678400 | 0)+" month"+(diff/2678400>=2 ? "s":"")+" ago";
+                }
+                return React.createElement('span',{title:date.toString()}, when);
+            }
+        } else {
+            return null
+        }
+    },
     generateDateString: function (timestamp) {
         if (typeof timestamp === 'number') {
             var date = new Date(timestamp*1000);
@@ -983,7 +1008,8 @@ var WidgetDs = React.createClass({
         if (typeof this.state.timestamp === 'number') {
             info_node=React.createElement('div', {style:this.styles.infostyle},
                         React.createElement(ReactBootstrap.Glyphicon, {glyph:"time"}),
-                        React.createElement('span', {style:this.styles.timestyle}, this.generateDateString(this.state.timestamp))
+                        this.getDateStatement(this.state.timestamp)
+                        //React.createElement('span', {style:this.styles.timestyle}, this.generateDateString(this.state.timestamp))
                       );
             //info_node=(
                 //<div style={this.styles.infostyle}>

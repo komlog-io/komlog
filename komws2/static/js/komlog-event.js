@@ -60,20 +60,33 @@ var EventsSideBar = React.createClass({
         }
         this.setState({events:events,lastSeq:lastSeq,newEvents:false,numNewEvents:numNewEvents})
     },
-    generateDateString: function (timestamp) {
+    getDateStatement: function (timestamp) {
         if (typeof timestamp === 'number') {
             var date = new Date(timestamp*1000);
-            var hours = date.getHours();
-            var minutes = "0" + date.getMinutes();
-            var seconds = "0" + date.getSeconds();
-            return hours + ':' + minutes.substr(minutes.length-2) + ':' + seconds.substr(seconds.length-2);
+            var now = new Date();
+            diff = now.getTime()/1000 - timestamp;
+            if (diff<0) {
+                return React.createElement('span',{title:date.toString()}, ' right now');
+            } else {
+                if (diff<60) {
+                    when=" right now"
+                } else if (diff<3600) {
+                    when=" "+(diff/60 | 0)+" min"+(diff/60>=2 ? "s":"")+" ago";
+                } else if (diff<86400) {
+                    when=" "+(diff/3600 | 0)+" hour"+(diff/3600>=2 ? "s":"")+" ago";
+                } else if (diff<2678400) {
+                    when=" "+(diff/86400 | 0)+" day"+(diff/86400>=2 ? "s":"")+" ago";
+                } else {
+                    when=" "+(diff/2678400 | 0)+" month"+(diff/2678400>=2 ? "s":"")+" ago";
+                }
+                return React.createElement('span',{title:date.toString()}, when);
+            }
         } else {
-            return ''
+            return null
         }
     },
     getEventList: function () {
         eventList = $.map(this.state.events, function (d,i) {
-            date=this.generateDateString(d.ts)
             if (d.type < 1000) {
                 icon=React.createElement(ReactBootstrap.Glyphicon, {glyp:"info-sign"});
                 //icon=(<ReactBootstrap.Glyphicon glyph="info-sign" />)
@@ -174,7 +187,7 @@ var EventsSideBar = React.createClass({
                        React.createElement('div', {className:"userevents-bar"},
                          React.createElement('span', null,
                            React.createElement(ReactBootstrap.Glyphicon, {glyph:"time"}),
-                           " "+date
+                             this.getDateStatement(d.ts)
                          ),
                          React.createElement('span', {onClick:this.disableEvent.bind(this,d.seq), className:"pull-right"},
                            React.createElement(ReactBootstrap.Glyphicon, {glyph:"remove"})
