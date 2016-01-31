@@ -86,6 +86,9 @@ class ExceptionHandler(object):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=e.error)
         except Exception as e:
             logger.logger.debug('WEB Response non treated Exception: '+str(e))
-            data={'error':'internal error'}
+            if 'error' in e:
+                data={'error':'internal error '+str(e.error)}
+            else:
+                data={'error':'internal error'}
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=-1)
 
