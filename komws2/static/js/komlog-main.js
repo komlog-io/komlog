@@ -21,15 +21,9 @@ var Slide = React.createClass({
         switch (this.props.type) {
             case 'wid':
                 return React.createElement(Widget, {bid:this.props.bid, closeCallback:this.closeCallback, wid:this.props.lid, isPinned:this.props.isPinned})
-                //return (
-                  //<Widget bid={this.props.bid} closeCallback={this.closeCallback} wid={this.props.lid} isPinned={this.props.isPinned} />
-                    //);
                 break;
             case 'nid':
                 return React.createElement(Snapshot, {closeCallback:this.closeCallback, nid:this.props.lid, tid:this.props.tid})
-                //return (
-                  //<Snapshot closeCallback={this.closeCallback} nid={this.props.lid} tid={this.props.tid}/>
-                    //);
                 break;
             default:
                 return null;
@@ -39,11 +33,6 @@ var Slide = React.createClass({
     render: function() {
         slide=this.getSlideEl();
         return React.createElement('div', {className:"Slide modal-container", style:this.styles.slidestyle}, slide);
-        //return (
-        //<div className="Slide modal-container" style={this.styles.slidestyle} >
-          //{slide}
-        //</div>
-        //);
     },
 });
 
@@ -103,22 +92,17 @@ var Workspace= React.createClass({
         dashboards=this.state.dashboards.map(function (el) {
             active=this.state.activeDashboard == el.bid ? true : false;
             return React.createElement(Dashboard, {key:el.bid, bid:el.bid, active:active, closeCallback:this.closeDashboard})
-            //return <Dashboard key={el.bid} bid={el.bid} active={active} closeCallback={this.closeDashboard}/>
         }.bind(this));
         return dashboards;
     },
     render: function () {
         dashboards = this.getDashboards()
         return React.createElement('div', {className:"workspace"}, dashboards)
-        //return (<div className="workspace">
-                //{dashboards}
-                //</div>);
     },
 });
 
 ReactDOM.render(
     React.createElement(Workspace, null)
-    //<Workspace />
     ,
     document.getElementById('workspace-content')
 );

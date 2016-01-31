@@ -88,7 +88,7 @@ def new_snapshot(uid, wid, interval_init, interval_end):
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
         raise exceptions.WidgetNotFoundException(error=errors.E_GSA_NS_WNF)
-    if interval_init>interval_end:
+    if interval_init.time>interval_end.time:
         interval_init,interval_end=interval_end,interval_init
     snapshot=None
     if widget.type==types.DATASOURCE:

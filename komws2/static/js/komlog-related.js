@@ -53,25 +53,13 @@ var RelatedSlides = React.createClass({
                        React.createElement('li', {className:d.className})
                      )
                    );
-            //return (
-                      //<li key={d.wid} onClick={this.handleClick.bind(null,d.wid)}>
-                        //<div className="sliderelated-panel">{d.widgetname}</div>
-                        //<div className="sliderelated-badge">
-                          //<i className={d.className} />
-                        //</div>
-                      //</li>
-                   //)
         }.bind(this));
         return React.createElement('ul', {className:"sliderelated"}, related);
-        //return (<ul className="sliderelated">
-                //{ related }
-                //</ul>);
     }
 });
 
 ReactDOM.render(
     React.createElement(RelatedSlides, null)
-    //<RelatedSlides />
     ,
     document.getElementById('related-slides')
 );

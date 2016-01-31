@@ -80,18 +80,11 @@ var TreeItem = React.createClass({
         if (this.props.uri == '') {
             children=$.map(this.state.children, function (uri,i) {
                 return React.createElement(TreeItem, {key:uri, uri:uri})
-                //return <TreeItem key={uri} uri={uri} />
             });
 
             return React.createElement('div', null, 
                      React.createElement(ReactCSSTransitionGroup, {transitionName:"list-item", transitionEnterTimeout:500, transitionLeaveTimeout:300}, children)
                      );
-            //return (<div>
-                    //<ReactCSSTransitionGroup transitionName="list-item" transitionEnterTimeout={500} transitionLeaveTimeout={300}>
-                    //{children}
-                    //</ReactCSSTransitionGroup>
-                   //</div>
-                   //);
         } else {
             if (this.state.collapse == false) {
                 if (this.state.children.length>0) {
@@ -99,32 +92,22 @@ var TreeItem = React.createClass({
                     children=$.map(this.state.children, function (uri, i) {
                         return React.createElement(TreeItem, {key:uri, uri:uri});
                     });
-                    //collapseIcon=<ReactBootstrap.Glyphicon style={{'width':'15px'}} glyph={ this.state.collapseGlyph} />
-                    //children=$.map(this.state.children, function (uri,i) {
-                        //return <TreeItem key={uri} uri={uri} />
-                    //});
                 } else {
                     collapseIcon=React.createElement('span', {style:{marginLeft:'15px'}});
-                    //collapseIcon=<span style={{'marginLeft':'15px'}} />
                     children=null
                 }
             } else {
                 children=null
                 if (this.state.children.length>0) {
                     collapseIcon=React.createElement(ReactBootstrap.Glyphicon, {style:{width:'15px'}, glyph:this.state.collapseGlyph});
-                    //collapseIcon=<ReactBootstrap.Glyphicon style={{'width':'15px'}} glyph={ this.state.collapseGlyph} />
                 } else {
                     collapseIcon=React.createElement('span', {style:{marginLeft:'15px'}});
-                    //collapseIcon=<span style={{'marginLeft':'15px'}} />
                 }
             }
             if (this.state.hasActions) {
                 action=React.createElement('div', {style:{width:'15px', float:'right'}}, 
                          React.createElement(ReactBootstrap.Glyphicon, {style:{color:'#555',marginRight:'-10px'}, glyph:'triangle-right', onClick:this.requestAction})
                          );
-                //action=<div style={{'width':'15px','float':'right'}}>
-                         //<ReactBootstrap.Glyphicon style={{'color':'#555','marginRight':'-10px'}} glyph='triangle-right' onClick={this.requestAction} />
-                       //</div>
             } else {
                 action=null
             }
@@ -140,27 +123,12 @@ var TreeItem = React.createClass({
                         React.createElement(ReactCSSTransitionGroup, {transitionName:'list-item', transitionEnterTimeout:500, transitionLeaveTimeout:300}, 
                           children)
                         );
-            //return (<div>
-                      //<div className="tree-item" draggable={this.state.draggable} onDragStart={this.onDragStart}>
-                        //{action}
-                        //<div style={this.state.style} onClick={this.toggleCollapse}>
-                          //{collapseIcon}
-                          //<ReactBootstrap.Glyphicon style={{'width':'15px','paddingLeft':'2px'}} glyph={this.state.typeGlyph }/>
-                          //<span style={{'paddingLeft':'5px'}}>{this.state.name}</span>
-                        //</div>
-                      //</div>
-                      //<ReactCSSTransitionGroup transitionName="list-item" transitionEnterTimeout={500} transitionLeaveTimeout={300}>
-                        //{children}
-                      //</ReactCSSTransitionGroup>
-                    //</div>
-                    //);
         }
     },
 });
 
 ReactDOM.render(
     React.createElement(TreeItem, {uri:''})
-    //<TreeItem uri='' />
     ,
     document.getElementById('navigation-tree')
 );

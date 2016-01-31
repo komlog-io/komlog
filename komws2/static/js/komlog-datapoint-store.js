@@ -244,6 +244,7 @@ function requestDatapointData (pid, interval, originalInterval, tid) {
             data: parameters,
         })
         .done(function (response) {
+            console.log('datos recibidos',pid)
             datapointStore.storeDatapointData(pid,response)
             receivedTs=$.map(response, function (e) {
                 return e.ts
@@ -319,13 +320,7 @@ function getIntervalData (pid, interval) {
             }
         });
     }
-    intervalData.sort(function (a,b) {
-        if (a.ts > b.ts) {
-            return 1
-        } else {
-            return -1
-        }
-    });
+    intervalData.sort(function (a,b) { return a.ts - b.ts });
     return intervalData
 }
 

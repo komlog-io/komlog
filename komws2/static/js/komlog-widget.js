@@ -3,7 +3,10 @@ var Widget = React.createClass({
         return {
                 conf:{},
                 shareCounter: 0,
+                downloadCounter: 0,
                 showConfig: false, 
+                barMessage:null,
+                barMessageCounter: 0,
                 }
     },
     subscriptionTokens: {},
@@ -36,6 +39,12 @@ var Widget = React.createClass({
     closeCallback: function() {
         this.props.closeCallback();
     },
+    downloadCallback: function() {
+        this.setState({downloadCounter:this.state.downloadCounter+1})
+    },
+    barMessage: function (data) {
+        this.setState({barMessage:data, barMessageCounter:this.state.barMessageCounter+1});
+    },
     refreshConfig: function () {
         if (widgetStore._widgetConfig.hasOwnProperty(this.props.wid)) {
             widgetConfig=widgetStore._widgetConfig[this.props.wid]
@@ -56,22 +65,13 @@ var Widget = React.createClass({
         } else {
             switch (this.state.conf.type) {
                 case 'ds':
-                    return React.createElement(WidgetDs, {wid:this.props.wid, did:this.state.conf.did, shareCounter:this.state.shareCounter});
-                    //return (
-                      //<WidgetDs wid={this.props.wid} did={this.state.conf.did} shareCounter={this.state.shareCounter}/>
-                      //);
+                    return React.createElement(WidgetDs, {wid:this.props.wid, did:this.state.conf.did, shareCounter:this.state.shareCounter, downloadCounter:this.state.downloadCounter});
                     break;
                 case 'dp':
-                    return React.createElement(WidgetDp, {wid:this.props.wid, pid:this.state.conf.pid, shareCounter:this.state.shareCounter});
-                    //return (
-                      //<WidgetDp wid={this.props.wid} pid={this.state.conf.pid} shareCounter={this.state.shareCounter}/>
-                      //);
+                    return React.createElement(WidgetDp, {wid:this.props.wid, pid:this.state.conf.pid, shareCounter:this.state.shareCounter, downloadCounter:this.state.downloadCounter, barMessageCallback:this.barMessage});
                     break;
                 case 'mp':
-                    return React.createElement(WidgetMp, {wid:this.props.wid, datapoints:this.state.conf.datapoints, view:this.state.conf.view, shareCounter:this.state.shareCounter});
-                    //return (
-                      //<WidgetMp wid={this.props.wid} datapoints={this.state.conf.datapoints} view={this.state.conf.view} shareCounter={this.state.shareCounter}/>
-                      //);
+                    return React.createElement(WidgetMp, {wid:this.props.wid, datapoints:this.state.conf.datapoints, widgetname:this.state.conf.widgetname, view:this.state.conf.view, shareCounter:this.state.shareCounter, downloadCounter:this.state.downloadCounter});
                     break;
                 default:
                     return null;
@@ -86,21 +86,12 @@ var Widget = React.createClass({
             switch (this.state.conf.type) {
                 case 'ds':
                     return React.createElement(WidgetConfigDs, {showConfig:this.state.showConfig, closeCallback:this.closeCallback, configCallback:this.configCallback, wid:this.props.wid, did:this.state.conf.did});
-                    //return (
-                          //<WidgetConfigDs showConfig={this.state.showConfig} closeCallback={this.closeCallback} configCallback={this.configCallback} wid={this.props.wid} did={this.state.conf.did} />
-                      //);
                     break;
                 case 'dp':
                     return React.createElement(WidgetConfigDp, {showConfig:this.state.showConfig, closeCallback:this.closeCallback, configCallback:this.configCallback, wid:this.props.wid, pid:this.state.conf.pid});
-                    //return (
-                          //<WidgetConfigDp showConfig={this.state.showConfig} closeCallback={this.closeCallback} configCallback={this.configCallback} wid={this.props.wid} pid={this.state.conf.pid} />
-                      //);
                     break;
                 case 'mp':
                     return React.createElement(WidgetConfigMp, {showConfig:this.state.showConfig, closeCallback:this.closeCallback, configCallback:this.configCallback, wid:this.props.wid, datapoints:this.state.conf.datapoints, widgetname:this.state.conf.widgetname});
-                    //return (
-                          //<WidgetConfigMp showConfig={this.state.showConfig} closeCallback={this.closeCallback} configCallback={this.configCallback} wid={this.props.wid} datapoints={this.state.conf.datapoints} widgetname={this.state.conf.widgetname} />
-                      //);
                     break;
                 default:
                     return null;
@@ -116,24 +107,12 @@ var Widget = React.createClass({
             widget=React.createElement('div', {className:"panel panel-default"},
                      React.createElement(WidgetBar, {bid:this.props.bid, wid:this.props.wid, conf:conf, closeCallback:this.closeCallback})
                    );
-            //widget=(
-            //<div className="panel panel-default">
-              //<WidgetBar bid={this.props.bid} wid={this.props.wid} conf={conf} closeCallback={this.closeCallback}/>
-            //</div>
-            //);
         } else {
             widget=React.createElement('div', {className:"panel panel-default"},
-                     React.createElement(WidgetBar, {bid:this.props.bid, wid:this.props.wid, conf:this.state.conf, shareCallback:this.shareCallback, closeCallback:this.closeCallback, configCallback:this.configCallback, isPinned:this.props.isPinned, configOpen:this.state.showConfig}),
+                     React.createElement(WidgetBar, {bid:this.props.bid, wid:this.props.wid, conf:this.state.conf, message:this.state.barMessage, messageCounter:this.state.barMessageCounter, shareCallback:this.shareCallback, closeCallback:this.closeCallback, configCallback:this.configCallback, isPinned:this.props.isPinned, configOpen:this.state.showConfig, downloadCallback:this.downloadCallback}),
                      widget_config,
                      widget_content
                    );
-            //widget=(
-            //<div className="panel panel-default">
-                //<WidgetBar bid={this.props.bid} wid={this.props.wid} conf={this.state.conf} shareCallback={this.shareCallback} closeCallback={this.closeCallback} configCallback={this.configCallback} isPinned={this.props.isPinned} configOpen={this.state.showConfig} />
-                //{widget_config}
-                //{widget_content}
-            //</div>
-            //);
         }
         return widget
     },
@@ -144,6 +123,8 @@ var WidgetBar = React.createClass({
         return {
                 allowPin: false,
                 isPinned: false,
+                message:null,
+                messageCounter:0,
                }
     },
     componentWillMount: function () {
@@ -157,6 +138,10 @@ var WidgetBar = React.createClass({
                 this.setState({isPinned:nextProps.isPinned})
             }
         }
+        if (nextProps.messageCounter>this.state.messageCounter) {
+            console.log('recibido nuevo message',nextProps.message)
+            this.setState({message:nextProps.message, messageCounter:nextProps.messageCounter});
+        }
     },
     configClick: function() {
         this.props.configCallback()
@@ -166,6 +151,9 @@ var WidgetBar = React.createClass({
     },
     closeClick: function () {
         this.props.closeCallback()
+    },
+    downloadClick: function () {
+        this.props.downloadCallback()
     },
     pinClick: function () {
         console.log('pin clicked')
@@ -178,6 +166,11 @@ var WidgetBar = React.createClass({
             PubSub.publish('modifyDashboard',{bid:this.props.bid,new_widgets:[this.props.wid]})
             this.setState({isPinned:true})
         }
+    },
+    messageDismiss: function () {
+        console.log('hacemos el dismisss')
+        this.setState({message:null})
+        console.log('message vale', this.state.message)
     },
     styles: {
         barstyle: {
@@ -203,6 +196,13 @@ var WidgetBar = React.createClass({
             padding: '5px',
             color: '#aaa',
         },
+        messagestyle: {
+            textShadow: '1px 1px 5px 1px #ccc',
+            float: 'right',
+            height: '25%',
+            padding: '0px 10px 0px',
+            marginBottom: '0px',
+        },
         lefticonstyle: {
             textShadow: '1px 1px 5px 1px #ccc',
             align: 'left',
@@ -216,41 +216,34 @@ var WidgetBar = React.createClass({
         if (this.state.allowPin) {
             if (this.state.isPinned == true) {
                 pinIcon=React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-pushpin", style:this.styles.righticonstylePushed, onClick:this.pinClick});
-                //pinIcon=<span className="SlideBarIcon glyphicon glyphicon-pushpin" style={this.styles.righticonstylePushed} onClick={this.pinClick}></span>
             } else {
                 pinIcon=React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-pushpin", style:this.styles.righticonstyle, onClick:this.pinClick});
-                //pinIcon=<span className="SlideBarIcon glyphicon glyphicon-pushpin" style={this.styles.righticonstyle} onClick={this.pinClick}></span>
             }
         } else {
             pinIcon=null
         }
         if (this.props.configOpen) {
             configIcon=React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-chevron-down", style:this.styles.lefticonstyle, onClick:this.configClick});
-            //configIcon=<span className="SlideBarIcon glyphicon glyphicon-chevron-down" style={this.styles.lefticonstyle} onClick={this.configClick}></span>
         } else {
             configIcon=React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-chevron-right", style:this.styles.lefticonstyle, onClick:this.configClick});
-            //configIcon=<span className="SlideBarIcon glyphicon glyphicon-chevron-right" style={this.styles.lefticonstyle} onClick={this.configClick}></span>
+        }
+        if (this.state.message!=null) {
+            console.log('message vale', this.state.message)
+            message=React.createElement(ReactBootstrap.Alert, {bsStyle:this.state.message.style, onDismiss:this.messageDismiss, dismissAfter:2000, style:this.styles.messagestyle, noButton:true}, this.state.message.message);
+        } else {
+            message=null
         }
         return React.createElement('div', {className:"SlideBar panel-heading", style:this.styles.barstyle},
                  React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-remove", style:this.styles.righticonstyle, onClick:this.closeClick}),
                  React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-send", style:this.styles.righticonstyle, onClick:this.shareClick}),
+                 React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-download", style:this.styles.righticonstyle, onClick:this.downloadClick}),
+                 message,
                  pinIcon,
                  configIcon,
                  React.createElement('div', {className:"SlideBarName", style:this.styles.namestyle},
                    React.createElement('span', null, this.props.conf.widgetname)
                  )
                );
-        //return (
-            //<div className="SlideBar panel-heading" style={this.styles.barstyle}>
-              //<span className="SlideBarIcon glyphicon glyphicon-remove" style={this.styles.righticonstyle} onClick={this.closeClick}></span>
-              //<span className="SlideBarIcon glyphicon glyphicon-send" style={this.styles.righticonstyle} onClick={this.shareClick}></span>
-              //{pinIcon}
-              //{configIcon}
-              //<div className="SlideBarName" style={this.styles.namestyle} >
-                //<span>{this.props.conf.widgetname}</span>
-              //</div>
-            //</div>
-        //);
     }
 });
 
@@ -315,21 +308,6 @@ var WidgetConfigDs = React.createClass({
                          React.createElement(ReactBootstrap.Button, {bsStyle:"primary", onClick:this.confirmDelete}, "Delete")
                        )
                      );
-        //delete_modal=(
-            //<ReactBootstrap.Modal bsize="small" show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
-              //<ReactBootstrap.Modal.Header closeButton>
-                //<ReactBootstrap.Modal.Title id="contained-modal-title">Delete Datasource</ReactBootstrap.Modal.Title>
-              //</ReactBootstrap.Modal.Header>
-              //<ReactBootstrap.Modal.Body>
-                //Datasource <strong>{this.state.datasourcename}</strong> will be deleted, with all its datapoints.
-                //<strong> Are You sure? </strong>
-              //</ReactBootstrap.Modal.Body>
-              //<ReactBootstrap.Modal.Footer>
-                //<ReactBootstrap.Button bsStyle="default" onClick={this.cancelDelete}>Cancel</ReactBootstrap.Button>
-                //<ReactBootstrap.Button bsStyle="primary" onClick={this.confirmDelete}>Delete</ReactBootstrap.Button>
-              //</ReactBootstrap.Modal.Footer>
-            //</ReactBootstrap.Modal>
-        //);
         return React.createElement(ReactBootstrap.Collapse, {in:this.props.showConfig},
                  React.createElement('div', null,
                    React.createElement(ReactBootstrap.Well, null,
@@ -345,23 +323,6 @@ var WidgetConfigDs = React.createClass({
                    delete_modal
                  )
                )
-        //return (
-              //<ReactBootstrap.Collapse in={this.props.showConfig}>
-                //<div>
-                  //<ReactBootstrap.Well>
-                    //<ReactBootstrap.ListGroup >
-                      //<ReactBootstrap.ListGroupItem bsSize="xsmall" >
-                        //<strong>Delete Datasource</strong>
-                        //<div className="text-right">
-                          //<ReactBootstrap.Button bsSize="small" bsStyle="danger" onClick={this.deleteWidget}>Delete</ReactBootstrap.Button>
-                        //</div>
-                      //</ReactBootstrap.ListGroupItem>
-                    //</ReactBootstrap.ListGroup>
-                  //</ReactBootstrap.Well>
-                  //{delete_modal}
-                //</div>
-              //</ReactBootstrap.Collapse>
-              //);
     }
 });
 
@@ -445,22 +406,6 @@ var WidgetConfigDp = React.createClass({
                          React.createElement(ReactBootstrap.Button, {bsStyle:"primary", onClick:this.confirmDelete}, "Delete")
                        )
                      );
-        //delete_modal=(
-            //<ReactBootstrap.Modal bsize="small" show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
-              //<ReactBootstrap.Modal.Header closeButton>
-                //<ReactBootstrap.Modal.Title id="contained-modal-title">Delete Datapoint</ReactBootstrap.Modal.Title>
-              //</ReactBootstrap.Modal.Header>
-              //<ReactBootstrap.Modal.Body>
-                //Datapoint <strong>{this.state.datapointname}</strong> will be deleted.
-                //<strong> Are You sure? </strong>
-              //</ReactBootstrap.Modal.Body>
-              //<ReactBootstrap.Modal.Footer>
-                //<ReactBootstrap.Button bsStyle="default" onClick={this.cancelDelete}>Cancel</ReactBootstrap.Button>
-                //<ReactBootstrap.Button bsStyle="primary" onClick={this.confirmDelete}>Delete</ReactBootstrap.Button>
-              //</ReactBootstrap.Modal.Footer>
-            //</ReactBootstrap.Modal>
-        //);
-        //boxColor=<ReactBootstrap.Glyphicon glyph="unchecked" style={{'background-color':this.state.boxColor,'color':this.state.boxColor}} />
         boxColor=React.createElement(ReactBootstrap.Glyphicon, {glyph:"unchecked", style:{backgroundColor:this.state.boxColor, color:this.state.boxColor}});
         return React.createElement(ReactBootstrap.Collapse, {in:this.props.showConfig},
                  React.createElement('div', null,
@@ -485,31 +430,6 @@ var WidgetConfigDp = React.createClass({
                    delete_modal
                  )
                )
-        //return (
-              //<ReactBootstrap.Collapse in={this.props.showConfig}>
-                //<div>
-                  //<ReactBootstrap.Well>
-                    //<ReactBootstrap.ListGroup >
-                      //<ReactBootstrap.ListGroupItem bsSize="small" >
-                        //<form className="form-horizontal">
-                          //<ReactBootstrap.Input ref="color" placeholder={this.state.color} bsSize="small" type="text" label="Datapoint Color" labelClassName="col-xs-3" wrapperClassName="col-xs-3" onChange={this.handleChange} addonAfter={boxColor}/>
-                          //<div className="text-right">
-                            //<ReactBootstrap.Button bsSize="small" bsStyle="primary" onClick={this.updateConfig} disabled={this.state.updateDisabled} >Update</ReactBootstrap.Button>
-                          //</div>
-                        //</form>
-                      //</ReactBootstrap.ListGroupItem>
-                      //<ReactBootstrap.ListGroupItem bsSize="xsmall" >
-                        //<strong>Delete Datapoint</strong>
-                        //<div className="text-right">
-                          //<ReactBootstrap.Button bsSize="small" bsStyle="danger" onClick={this.deleteWidget}>Delete</ReactBootstrap.Button>
-                        //</div>
-                      //</ReactBootstrap.ListGroupItem>
-                    //</ReactBootstrap.ListGroup>
-                  //</ReactBootstrap.Well>
-                  //{delete_modal}
-                //</div>
-              //</ReactBootstrap.Collapse>
-              //);
     }
 });
 
@@ -621,15 +541,8 @@ var WidgetConfigMp = React.createClass({
                        React.createElement('span', null,el.datapointname)
                      )
                    );
-            //return <tr key={el.pid}>
-                    //<td><ReactBootstrap.Glyphicon glyph={glyph} onClick={this.markDatapoint.bind(null,el.pid)}/></td>
-                    //<td style={style}><span style={{'backgroundColor':el.color}}>&nbsp;&nbsp;&nbsp;</span><span>&nbsp;{el.datapointname}</span></td>
-                   //</tr>
         }.bind(this));
         return React.createElement(ReactBootstrap.Table, null, list);
-        //return <ReactBootstrap.Table>
-                 //{list}
-               //</ReactBootstrap.Table>
     },
     render: function () {
         delete_modal=React.createElement(ReactBootstrap.Modal, {bsSize:"small", show:this.state.deleteModal, onHide:this.cancelDelete, container:this, "aria-labeledby":"contained-modal-title"},
@@ -647,20 +560,6 @@ var WidgetConfigMp = React.createClass({
                          React.createElement(ReactBootstrap.Button, {bsStyle:"primary", onClick:this.confirmDelete}, "Delete")
                        )
                      );
-        //delete_modal=(
-            //<ReactBootstrap.Modal bsize="small" show={this.state.deleteModal} onHide={this.cancelDelete} container={this} aria-labelledby="contained-modal-title">
-              //<ReactBootstrap.Modal.Header closeButton>
-                //<ReactBootstrap.Modal.Title id="contained-modal-title">Delete Graph</ReactBootstrap.Modal.Title>
-              //</ReactBootstrap.Modal.Header>
-              //<ReactBootstrap.Modal.Body>
-                //Graph <strong>{this.props.widgetname}</strong> will be deleted,<strong> are You sure?</strong>
-              //</ReactBootstrap.Modal.Body>
-              //<ReactBootstrap.Modal.Footer>
-                //<ReactBootstrap.Button bsStyle="default" onClick={this.cancelDelete}>Cancel</ReactBootstrap.Button>
-                //<ReactBootstrap.Button bsStyle="primary" onClick={this.confirmDelete}>Delete</ReactBootstrap.Button>
-              //</ReactBootstrap.Modal.Footer>
-            //</ReactBootstrap.Modal>
-        //);
         datapointList=this.renderDatapointList();
         return React.createElement(ReactBootstrap.Collapse, {in:this.props.showConfig},
                  React.createElement('div', null,
@@ -700,40 +599,6 @@ var WidgetConfigMp = React.createClass({
                    delete_modal
                  )
                )
-        //return (
-              //<ReactBootstrap.Collapse in={this.props.showConfig}>
-                //<div>
-                  //<ReactBootstrap.Well>
-                    //<ReactBootstrap.ListGroup >
-                    //<ReactBootstrap.ListGroupItem bsSize="small" >
-                      //<ReactBootstrap.Table condensed="true" responsive="true">
-                        //<tr>
-                          //<td><strong>Graph Name</strong></td>
-                          //<td><ReactBootstrap.Input ref="widgetname" placeholder={this.props.widgetname} bsSize="small" type="text"/></td>
-                        //</tr>
-                        //<tr>
-                          //<td><strong>Datapoints</strong></td>
-                          //<td>{datapointList}</td>
-                        //</tr>
-                        //<tr>
-                          //<td colSpan="2" className="text-right">
-                            //<ReactBootstrap.Button bsSize="small" bsStyle="primary" onClick={this.updateConfig}>Update</ReactBootstrap.Button>
-                          //</td>
-                        //</tr>
-                      //</ReactBootstrap.Table>
-                    //</ReactBootstrap.ListGroupItem>
-                    //<ReactBootstrap.ListGroupItem bsSize="xsmall" >
-                    //<strong>Delete Graph</strong>
-                    //<div className="text-right">
-                      //<ReactBootstrap.Button bsSize="small" bsStyle="danger" onClick={this.deleteWidget}>Delete</ReactBootstrap.Button>
-                    //</div>
-                    //</ReactBootstrap.ListGroupItem>
-                    //</ReactBootstrap.ListGroup>
-                  //</ReactBootstrap.Well>
-                  //{delete_modal}
-                //</div>
-              //</ReactBootstrap.Collapse>
-              //);
     }
 });
 
@@ -754,6 +619,7 @@ var WidgetDs = React.createClass({
                 snapshotSeq:undefined,
                 shareModal:false,
                 shareCounter:this.props.shareCounter,
+                downloadCounter:this.props.downloadCounter,
                 }
     },
     subscriptionTokens: {},
@@ -794,6 +660,14 @@ var WidgetDs = React.createClass({
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.shareCounter>this.state.shareCounter) {
             this.setState({shareModal:true,shareCounter:nextProps.shareCounter,snapshotTimestamp:this.state.timestamp,snapshotSeq:this.state.seq});
+        } else if (nextProps.downloadCounter>this.state.downloadCounter) {
+            this.downloadContent();
+            this.setState({downloadCounter:nextProps.downloadCounter});
+        }
+    },
+    downloadContent: function () {
+        if (this.state.dsData.content && this.state.dsData.content.length>0) {
+            downloadFile(this.state.datasourcename+'.txt',this.state.dsData.content,'text/plain')
         }
     },
     refreshData: function () {
@@ -976,51 +850,28 @@ var WidgetDs = React.createClass({
         var element_nodes=$.map(elements, function (element) {
             if (element.type == 'text') {
                 return React.createElement('span', {key:element.ne},element.data);
-                //return (<span key={element.ne}>{element.data}</span>);
             }else if (element.type == 'nl') {
                 return React.createElement('br',{key:element.ne});
-                //return (<br key={element.ne} />);
             }else if (element.type == 'datapoint') {
                 if (element.classname=='datapoint') { 
                     tooltip=React.createElement(ReactBootstrap.Tooltip, null, element.datapointname);
-                    //tooltip=(
-                      //<ReactBootstrap.Tooltip>{element.datapointname}</ReactBootstrap.Tooltip>
-                      //);
                     return React.createElement(ReactBootstrap.OverlayTrigger, {placement:"top", overlay:tooltip},
                              React.createElement('span',{key:element.ne, style:element.style, draggable:"true", onClick:this.onClickDatapoint.bind(null,element.pid), onDragStart:this.onDragStartDatapoint.bind(null,element.pid)}, element.data)
                            );
-                    //return (
-                        //<ReactBootstrap.OverlayTrigger placement="top" overlay={tooltip}>
-                          //<span key={element.ne} style={element.style} draggable='true' onClick={this.onClickDatapoint.bind(null,element.pid)} onDragStart={this.onDragStartDatapoint.bind(null,element.pid)}>{element.data}</span>
-                        //</ReactBootstrap.OverlayTrigger>
-                      //);
                 } else {
                     return React.createElement('span',{key:element.ne, style:element.style, draggable:"true", onClick:this.onClickDatapoint.bind(null,element.pid), onDragStart:this.onDragStartDatapoint.bind(null,element.pid)}, element.data);
-                    //return (<span key={element.ne} style={element.style} draggable='true' onClick={this.onClickDatapoint.bind(null,element.pid)} onDragStart={this.onDragStartDatapoint.bind(null,element.pid)}>{element.data}</span>);
                 }
             }else if (element.type == 'variable') {
                 return React.createElement(WidgetDsVariable, {key:element.ne, content:element.data, position:element.position, length:element.length, identifyVariableCallback:this.identifyVariable, datapoints:element.datapoints, associateExistingDatapointCallback:this.associateExistingDatapoint});
-                //return (<WidgetDsVariable key={element.ne} content={element.data} position={element.position} length={element.length} identifyVariableCallback={this.identifyVariable} datapoints={element.datapoints} associateExistingDatapointCallback={this.associateExistingDatapoint}/>
-                    //);
             }
         }.bind(this));
         if (typeof this.state.timestamp === 'number') {
             info_node=React.createElement('div', {style:this.styles.infostyle},
                         React.createElement(ReactBootstrap.Glyphicon, {glyph:"time"}),
                         this.getDateStatement(this.state.timestamp)
-                        //React.createElement('span', {style:this.styles.timestyle}, this.generateDateString(this.state.timestamp))
                       );
-            //info_node=(
-                //<div style={this.styles.infostyle}>
-                //<ReactBootstrap.Glyphicon glyph="time" />
-                //<span style={this.styles.timestyle}> {this.generateDateString(this.state.timestamp)}</span>
-                //</div>
-                //);
         } else {
             info_node=React.createElement('div', {style:this.styles.infostyle});
-            //info_node=(
-                //<div style={this.styles.infostyle} />
-                //);
         }
         share_modal=React.createElement(ReactBootstrap.Modal, {bsSize:"small", show:this.state.shareModal, onHide:this.cancelSnapshot, container:this, "aria-labelledby":"contained-modal-title"},
                       React.createElement(ReactBootstrap.Modal.Header, {closeButton:true},
@@ -1034,35 +885,11 @@ var WidgetDs = React.createClass({
                         React.createElement(ReactBootstrap.Button, {bsStyle:"primary", onClick:this.shareSnapshot}, "Share")
                       )
                     );
-        //share_modal=(
-            //<ReactBootstrap.Modal bsize="small" show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
-              //<ReactBootstrap.Modal.Header closeButton>
-                //<ReactBootstrap.Modal.Title id="contained-modal-title">Share datasource status at {this.generateDateString(this.state.snapshotTimestamp)}</ReactBootstrap.Modal.Title>
-              //</ReactBootstrap.Modal.Header>
-              //<ReactBootstrap.Modal.Body>
-                //<ReactBootstrap.Input ref="users" type="textarea" label="Select Users" placeholder="type users separated by comma" />
-              //</ReactBootstrap.Modal.Body>
-              //<ReactBootstrap.Modal.Footer>
-                //<ReactBootstrap.Button bsStyle="default" onClick={this.cancelSnapshot}>Cancel</ReactBootstrap.Button>
-                //<ReactBootstrap.Button bsStyle="primary" onClick={this.shareSnapshot}>Share</ReactBootstrap.Button>
-              //</ReactBootstrap.Modal.Footer>
-            //</ReactBootstrap.Modal>
-        //);
         return React.createElement('div', null,
                  info_node,
                  React.createElement('div',null, element_nodes),
                  React.createElement('div',null, share_modal)
                );
-        //return (<div>
-                  //{info_node}
-                  //<div>
-                    //{element_nodes}
-                  //</div>
-                  //<div>
-                    //{share_modal}
-                  //</div>
-                //</div>
-                //);
     }
 });
 
@@ -1079,6 +906,7 @@ var WidgetDp = React.createClass({
                 live: true,
                 shareModal:false,
                 shareCounter:this.props.shareCounter,
+                downloadCounter:this.props.downloadCounter,
                 snapshotInterval: undefined,
                 livePrevious: true,
         }
@@ -1103,6 +931,21 @@ var WidgetDp = React.createClass({
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.shareCounter>this.state.shareCounter) {
             this.setState({shareModal:true,shareCounter:nextProps.shareCounter, snapshotInterval:this.state.interval, livePrevious:this.state.live, live: false});
+        } else if (nextProps.downloadCounter>this.state.downloadCounter) {
+            this.downloadContent();
+            this.setState({downloadCounter:nextProps.downloadCounter});
+        }
+    },
+    downloadContent: function () {
+        if (this.state.data.length>0) {
+            csv="date,"+this.state.datapointname+"\n"
+            $.map(this.state.data, function (r,i) {
+                csv+=new Date(r.ts*1000).toISOString()+','+r.value+"\n"
+            });
+            downloadFile(this.state.datapointname+'.csv',csv,'text/csv')
+        } else {
+            console.log('voy a lanzar el callback porque no hay datos')
+            this.props.barMessageCallback({style:'danger',message:'No data in selected interval'});
         }
     },
     newIntervalCallback: function (interval) {
@@ -1230,13 +1073,6 @@ var WidgetDp = React.createClass({
                       React.createElement('td', null, this.state.summary.min),
                       React.createElement('td', null, this.state.summary.mean)
                     );
-            //var summary=(<tr>
-                            //<td>{this.state.summary.datapointname}</td>
-                            //<td>{this.state.summary.max}</td>
-                            //<td>{this.state.summary.min}</td>
-                            //<td>{this.state.summary.mean}</td>
-                        //</tr>
-                        //);
         } else {
             summary=React.createElement('tr', null,
                       React.createElement('td', null),
@@ -1244,13 +1080,6 @@ var WidgetDp = React.createClass({
                       React.createElement('td', null),
                       React.createElement('td', null)
                     );
-            //var summary=(<tr>
-                            //<td/>
-                            //<td/>
-                            //<td/>
-                            //<td/>
-                        //</tr>
-                        //);
         }
         var data=[{pid:this.props.pid,color:this.state.color,datapointname:this.state.datapointname,data:this.state.data}]
         share_modal=React.createElement(ReactBootstrap.Modal, {bsSize:"small", show:this.state.shareModal, onHide:this.cancelSnapshot, container:this, "aria-labelledby":"contained-modal-title"},
@@ -1273,28 +1102,6 @@ var WidgetDp = React.createClass({
                         React.createElement(ReactBootstrap.Button, {bsStyle:"primary", onClick:this.shareSnapshot}, "Share")
                       )
                     );
-        //share_modal=(
-            //<ReactBootstrap.Modal bsize="small" show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
-              //<ReactBootstrap.Modal.Header closeButton>
-                //<ReactBootstrap.Modal.Title id="contained-modal-title">Share datapoint interval</ReactBootstrap.Modal.Title>
-              //</ReactBootstrap.Modal.Header>
-              //<ReactBootstrap.Modal.Body>
-                //<div className="row" >
-                  //<div className="col-md-6">
-                    //<ReactBootstrap.Input ref="users" type="textarea" label="Select Users" placeholder="type users separated by comma" />
-                  //</div>
-                  //<div className="col-md-6">
-                    //<strong>Date Interval</strong>
-                    //<TimeSlider interval={this.state.snapshotInterval} newIntervalCallback={this.snapshotIntervalCallback} />
-                  //</div>
-                //</div>
-              //</ReactBootstrap.Modal.Body>
-              //<ReactBootstrap.Modal.Footer>
-                //<ReactBootstrap.Button bsStyle="default" onClick={this.cancelSnapshot}>Cancel</ReactBootstrap.Button>
-                //<ReactBootstrap.Button bsStyle="primary" onClick={this.shareSnapshot}>Share</ReactBootstrap.Button>
-              //</ReactBootstrap.Modal.Footer>
-            //</ReactBootstrap.Modal>
-        //);
         return React.createElement('div', null,
                  React.createElement('div', {className:"row"},
                    React.createElement('div', {className:"col-md-6"},
@@ -1324,36 +1131,6 @@ var WidgetDp = React.createClass({
                    share_modal
                  )
                );
-        //return (<div>
-                  //<div className="row">
-                    //<div className="col-md-6">
-                      //<table className="table table-condensed">
-                        //<tr>
-                          //<th>Name</th>
-                          //<th>max</th>
-                          //<th>min</th>
-                          //<th>mean</th>
-                        //</tr>
-                        //{summary}
-                      //</table>
-                    //</div>
-                    //<div className="col-md-6">
-                      //<TimeSlider interval={this.state.interval} newIntervalCallback={this.newIntervalCallback} />
-                    //</div>
-                  //</div>
-                  //<div className="row">
-                    //<div className="col-md-6">
-                      //<ContentHistogram data={data} />
-                    //</div>
-                    //<div className="col-md-6">
-                      //<ContentLinegraph interval={this.state.interval} data={data} />
-                    //</div>
-                  //</div>
-                  //<div>
-                    //{share_modal}
-                  //</div>
-                //</div>
-                //);
     }
 });
 
@@ -1370,6 +1147,7 @@ var WidgetMp = React.createClass({
                 shareModal:false,
                 shareCounter:this.props.shareCounter,
                 snapshotInterval: undefined,
+                downloadCounter: this.props.downloadCounter,
                 livePrevious: true,
         }
     },
@@ -1397,6 +1175,9 @@ var WidgetMp = React.createClass({
     componentWillReceiveProps: function (nextProps) {
         if (nextProps.shareCounter>this.state.shareCounter) {
             this.setState({shareModal:true,shareCounter:nextProps.shareCounter, snapshotInterval:this.state.interval, livePrevious:this.state.live, live: false});
+        } else if (nextProps.downloadCounter>this.state.downloadCounter) {
+            this.downloadContent();
+            this.setState({downloadCounter:nextProps.downloadCounter});
         }
     },
     newIntervalCallback: function (interval) {
@@ -1428,6 +1209,45 @@ var WidgetMp = React.createClass({
                 interval.ets = now
             }
             this.setState({snapshotInterval:interval})
+        }
+    },
+    downloadContent: function () {
+        if (Object.keys(this.state.data).length>0) {
+            x={}
+            x_final=[]
+            y_final=[]
+            for (var prop in this.state.config) {
+                y={}
+                if (prop in this.state.data) {
+                    for (var i=0;i<this.state.data[prop].length;i++) {
+                        x[this.state.data[prop][i].ts]=0
+                        y[this.state.data[prop][i].ts]=this.state.data[prop][i].value
+                    }
+                    y_final.push(y)
+                }
+            }
+            for (var prop in x) {
+                x_final.push(prop)
+            }
+            x_final.sort(function (a,b) {return a-b})
+            csv="date"
+            for (var prop in this.state.config) {
+                csv+=","+this.state.config[prop].datapointname
+            }
+            csv+="\n"
+            for (var i=0;i<x_final.length;i++) {
+                line=new Date(x_final[i]*1000).toISOString();
+                for (var j=0;j<y_final.length;j++) {
+                    value=( x_final[i] in y_final[j]) ? y_final[j][x_final[i]] : null
+                    line+=value != null ? ","+value : ","
+                }
+                csv+=line+"\n"
+            }
+            downloadFile(this.props.widgetname+'.csv',csv,'text/csv')
+        } else {
+            console.log('no hya datos')
+            //console.log('voy a lanzar el callback porque no hay datos')
+            //this.props.barMessageCallback({style:'danger',message:'No data in selected interval'});
         }
     },
     subscriptionHandler: function (msg,data) {
@@ -1533,13 +1353,6 @@ var WidgetMp = React.createClass({
                                  React.createElement('td', null, summary.min),
                                  React.createElement('td', null, summary.mean)
                                );
-                        //return (<tr key={key}>
-                            //<td><span style={datapointStyle}>&nbsp;&nbsp;</span><span>&nbsp;</span>{this.state.config[key].datapointname}</td>
-                            //<td>{summary.max}</td>
-                            //<td>{summary.min}</td>
-                            //<td>{summary.mean}</td>
-                        //</tr>
-                        //);
                     }
         }.bind(this));
         var data=$.map(this.state.data, function (element, key) {
@@ -1550,28 +1363,22 @@ var WidgetMp = React.createClass({
         switch (this.state.active_view){
             case 0:
                 content=React.createElement(ContentLinegraph, {interval:this.state.interval, data:data});
-                //content=<ContentLinegraph interval={this.state.interval} data={data} />
                 break;
             case 1:
                 content=React.createElement(ContentHistogram, {interval:this.state.interval, data:data});
-                //content=<ContentHistogram interval={this.state.interval} data={data} />
                 break;
             case 2:
                 content=React.createElement(ContentTable, {interval:this.state.interval, data:data});
-                //content=<ContentTable interval={this.state.interval} data={data} />
                 break;
             default:
                 content=React.createElement('div',null);
-                //content=<div />
                 break;
         }
         view_buttons=$.map([0,1,2], function (element) {
             if (this.state.active_view==element) {
                 return React.createElement('button', {key:element, type:"button", className:"btn btn-default focus", onClick:function (event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}, element);
-                //return <button key={element} type="button" className="btn btn-default focus" onClick={function(event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}>{element}</button>
             } else {
                 return React.createElement('button', {key:element, type:"button", className:"btn btn-default", onClick:function (event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}, element);
-                //return <button key={element} type="button" className="btn btn-default" onClick={function(event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)} >{element}</button>
             }
         }.bind(this));
         share_modal=React.createElement(ReactBootstrap.Modal, {bsSize:"small", show:this.state.shareModal, onHide:this.cancelSnapshot, container:this, "aria-labelledby":"contained-modal-title"},
@@ -1594,28 +1401,6 @@ var WidgetMp = React.createClass({
                         React.createElement(ReactBootstrap.Button, {bsStyle:"primary", onClick:this.shareSnapshot}, "Share")
                       )
                     );
-        //share_modal=(
-            //<ReactBootstrap.Modal bsize="small" show={this.state.shareModal} onHide={this.cancelSnapshot} container={this} aria-labelledby="contained-modal-title">
-              //<ReactBootstrap.Modal.Header closeButton>
-                //<ReactBootstrap.Modal.Title id="contained-modal-title">Share Graph interval</ReactBootstrap.Modal.Title>
-              //</ReactBootstrap.Modal.Header>
-              //<ReactBootstrap.Modal.Body>
-                //<div className="row" >
-                  //<div className="col-md-6">
-                    //<ReactBootstrap.Input ref="users" type="textarea" label="Select Users" placeholder="type users separated by comma" />
-                  //</div>
-                  //<div className="col-md-6">
-                    //<strong>Date Interval</strong>
-                    //<TimeSlider interval={this.state.snapshotInterval} newIntervalCallback={this.snapshotIntervalCallback} />
-                  //</div>
-                //</div>
-              //</ReactBootstrap.Modal.Body>
-              //<ReactBootstrap.Modal.Footer>
-                //<ReactBootstrap.Button bsStyle="default" onClick={this.cancelSnapshot}>Cancel</ReactBootstrap.Button>
-                //<ReactBootstrap.Button bsStyle="primary" onClick={this.shareSnapshot}>Share</ReactBootstrap.Button>
-              //</ReactBootstrap.Modal.Footer>
-            //</ReactBootstrap.Modal>
-        //);
         return React.createElement('div', {onDrop:this.onDrop, onDragEnter:this.onDragEnter, onDragOver:this.onDragOver},
                  React.createElement('div', {className:"row"},
                    React.createElement('div', {className:"col-md-8"}, content),
@@ -1647,44 +1432,6 @@ var WidgetMp = React.createClass({
                  ),
                  React.createElement('div', null, share_modal)
                );
-        //return (<div onDrop={this.onDrop} onDragEnter={this.onDragEnter} onDragOver={this.onDragOver}>
-                  //<div className="row" >
-                    //<div className="col-md-8">
-                      //{content}
-                    //</div>
-                    //<div className="col-md-4">
-                      //<div className="row">
-                        //<div className="col-md-12">
-                          //<TimeSlider interval={this.state.interval} newIntervalCallback={this.newIntervalCallback} />
-                        //</div>
-                      //</div>
-                      //<div className="row">
-                        //<div className="col-md-12">
-                          //<div className="btn-group" role="group">
-                            //{view_buttons}
-                          //</div>
-                        //</div>
-                      //</div>
-                      //<div className="row">
-                        //<div className="col-md-12">
-                          //<table className="table table-condensed">
-                            //<tr>
-                              //<th>Name</th>
-                              //<th>max</th>
-                              //<th>min</th>
-                              //<th>mean</th>
-                            //</tr>
-                            //{summary}
-                          //</table>
-                        //</div>
-                      //</div>
-                    //</div>
-                  //</div>
-                  //<div>
-                    //{share_modal}
-                  //</div>
-                //</div>
-                //);
     }
 });
 
@@ -1695,16 +1442,15 @@ var TimeSlider = React.createClass({
         this.props.newIntervalCallback(interval);
     },
     componentDidMount: function () {
-        var el = React.findDOMNode(this)
+        var el = ReactDOM.findDOMNode(this)
         d3TimeSlider.create(el, this.props.interval, this.notifyNewInterval)
     },
     componentDidUpdate: function () {
-        var el = React.findDOMNode(this)
+        var el = ReactDOM.findDOMNode(this)
         d3TimeSlider.update(el, this.props.interval, this.notifyNewInterval)
     },
     render: function () {
         return React.createElement('div', null);
-        //return (<div />);
     }
 });
 
@@ -1712,16 +1458,15 @@ var ContentLinegraph = React.createClass({
     styles: {
     },
     componentDidMount: function () {
-        var el = React.findDOMNode(this)
+        var el = ReactDOM.findDOMNode(this)
         d3Linegraph.create(el, this.props.data, this.props.interval)
     },
     componentDidUpdate: function () {
-        var el = React.findDOMNode(this)
+        var el = ReactDOM.findDOMNode(this)
         d3Linegraph.update(el, this.props.data, this.props.interval)
     },
     render: function () {
         return React.createElement('div', null);
-        //return (<div />);
     }
 });
 
@@ -1729,16 +1474,15 @@ var ContentHistogram = React.createClass({
     styles: {
     },
     componentDidMount: function () {
-        var el = React.findDOMNode(this)
+        var el = ReactDOM.findDOMNode(this)
         d3Histogram.create(el, this.props.data)
     },
     componentDidUpdate: function () {
-        var el = React.findDOMNode(this)
+        var el = ReactDOM.findDOMNode(this)
         d3Histogram.update(el, this.props.data)
     },
     render: function () {
         return React.createElement('div', null);
-        //return (<div />);
     }
 });
 
@@ -1746,16 +1490,15 @@ var ContentTable = React.createClass({
     styles: {
     },
     componentDidMount: function () {
-        var el = React.findDOMNode(this)
+        var el = ReactDOM.findDOMNode(this)
         d3Table.create(el, this.props.data)
     },
     componentDidUpdate: function () {
-        var el = React.findDOMNode(this)
+        var el = ReactDOM.findDOMNode(this)
         d3Table.update(el, this.props.data)
     },
     render: function () {
         return React.createElement('div', null);
-        //return (<div />);
     }
 });
 
@@ -1782,22 +1525,11 @@ var WidgetDsVariable = React.createClass({
     render: function () {
         var already_monitored=$.map(this.state.datapoints, function (element,index) {
                             return React.createElement(ReactBootstrap.MenuItem, {key:index, eventKey:element.pid}, element.datapointname);
-                            //return (
-                            //<ReactBootstrap.MenuItem key={index} eventKey={element.pid}>
-                              //{element.datapointname}
-                            //</ReactBootstrap.MenuItem>
-                            //);
         });
         if (already_monitored.length>0) {
             dropdown=React.createElement(ReactBootstrap.Nav, {onSelect:this.associateExistingDatapoint},
                        React.createElement(ReactBootstrap.NavDropdown, {bsSize:"xsmall", title:"This variable has been identified before", id:"nav-dropdown"},already_monitored)
                      );
-            //dropdown=(<ReactBootstrap.Nav onSelect={this.associateExistingDatapoint}>
-                       //<ReactBootstrap.NavDropdown bsSize="xsmall" title="This variable has been identified before" id="nav-dropdown">
-                         //{already_monitored}
-                       //</ReactBootstrap.NavDropdown>
-                     //</ReactBootstrap.Nav>
-                     //);
         } else {
             dropdown=null
         }
@@ -1815,23 +1547,6 @@ var WidgetDsVariable = React.createClass({
                  )},
                  React.createElement('span', null, this.props.content)
                );
-        //return (
-              //<ReactBootstrap.OverlayTrigger ref="popover" trigger="click" rootClose placement="right" overlay={<ReactBootstrap.Popover title="Identify Datapoint">
-                  //<div>
-                    //<div className="input-group">
-                      //<ReactBootstrap.Input ref="datapointname" type="text" className="form-control" placeholder="Datapoint name" />
-                      //<span className="input-group-btn">
-                        //<button type="submit" className="btn btn-default" onClick={this.identifyVariable}>
-                          //Ok
-                        //</button>
-                      //</span>
-                    //</div>
-                  //</div>
-                  //{dropdown}
-                //</ReactBootstrap.Popover>}>
-                //<span>{this.props.content}</span>
-              //</ReactBootstrap.OverlayTrigger>
-                //);
     }
 });
 

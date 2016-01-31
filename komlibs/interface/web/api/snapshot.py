@@ -173,12 +173,10 @@ def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None,
         interval_init=timeuuid.get_uuid1_from_custom_sequence(seq)
         interval_end=interval_init
     elif its and ets and args.is_valid_timestamp(its) and args.is_valid_timestamp(ets):
+        if its>ets:
+            its,ets=ets,its
         interval_init=timeuuid.uuid1(seconds=its)
         interval_end=timeuuid.uuid1(seconds=ets)
-        if interval_init>interval_end:
-            temp=interval_end
-            interval_end=interval_init
-            interval_init=temp
     else:
         raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_NSNTS)
     uid=userapi.get_uid(username=username)

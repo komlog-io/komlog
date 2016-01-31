@@ -3,6 +3,7 @@ var Snapshot = React.createClass({
         return {
                 conf:{},
                 shareCounter: 0,
+                downloadCounter: 0,
                 }
     },
     subscriptionTokens: {},
@@ -32,6 +33,9 @@ var Snapshot = React.createClass({
     closeCallback: function() {
         this.props.closeCallback();
     },
+    downloadCallback: function() {
+        this.setState({downloadCounter:this.state.downloadCounter+1})
+    },
     refreshConfig: function () {
         if (snapshotStore._snapshotConfig.hasOwnProperty(this.props.nid)) {
             snapshotConfig=snapshotStore._snapshotConfig[this.props.nid]
@@ -52,22 +56,13 @@ var Snapshot = React.createClass({
         } else {
             switch (this.state.conf.type) {
                 case 'ds':
-                    return React.createElement(SnapshotDs, {nid:this.props.nid, tid:this.props.tid, datasource:this.state.conf.datasource, datapoints:this.state.conf.datapoints, its:this.state.conf.its, seq:this.state.conf.seq});
-                    //return (
-                      //<SnapshotDs nid={this.props.nid} tid={this.props.tid} datasource={this.state.conf.datasource} datapoints={this.state.conf.datapoints} its={this.state.conf.its} seq={this.state.conf.seq}/>
-                      //);
+                    return React.createElement(SnapshotDs, {nid:this.props.nid, tid:this.props.tid, datasource:this.state.conf.datasource, datapoints:this.state.conf.datapoints, its:this.state.conf.its, seq:this.state.conf.seq, downloadCounter:this.state.downloadCounter});
                     break;
                 case 'dp':
-                    return React.createElement(SnapshotDp, {nid:this.props.nid, tid:this.props.tid, datapoint:this.state.conf.datapoint, its:this.state.conf.its, ets:this.state.conf.ets});
-                    //return (
-                      //<SnapshotDp nid={this.props.nid} tid={this.props.tid} datapoint={this.state.conf.datapoint} its={this.state.conf.its} ets={this.state.conf.ets}/>
-                      //);
+                    return React.createElement(SnapshotDp, {nid:this.props.nid, tid:this.props.tid, datapoint:this.state.conf.datapoint, its:this.state.conf.its, ets:this.state.conf.ets, downloadCounter:this.state.downloadCounter});
                     break;
                 case 'mp':
-                    return React.createElement(SnapshotMp, {nid:this.props.nid, tid:this.props.tid, view:this.state.conf.view, datapoints:this.state.conf.datapoints, its:this.state.conf.its, ets:this.state.conf.ets});
-                    //return (
-                      //<SnapshotMp nid={this.props.nid} tid={this.props.tid} view={this.state.conf.view} datapoints={this.state.conf.datapoints} its={this.state.conf.its} ets={this.state.conf.ets}/>
-                      //);
+                    return React.createElement(SnapshotMp, {nid:this.props.nid, tid:this.props.tid, view:this.state.conf.view, datapoints:this.state.conf.datapoints, its:this.state.conf.its, ets:this.state.conf.ets, downloadCounter:this.state.downloadCounter, widgetname:this.state.conf.widgetname});
                     break;
                 default:
                     return null;
@@ -82,33 +77,28 @@ var Snapshot = React.createClass({
             snapshot=React.createElement('div', {className:"panel panel-default"},
                        React.createElement(SnapshotBar, {conf:conf, closeCallback:this.closeCallback})
                      );
-            //snapshot=(
-            //<div className="panel panel-default">
-              //<SnapshotBar conf={conf} closeCallback={this.closeCallback}/>
-            //</div>
-            //);
         } else {
             snapshot=React.createElement('div', {className:"panel panel-default"},
-                       React.createElement(SnapshotBar, {conf:this.state.conf, shareCallback:this.shareCallback, closeCallback:this.closeCallback}),
+                       React.createElement(SnapshotBar, {conf:this.state.conf, shareCallback:this.shareCallback, closeCallback:this.closeCallback, downloadCallback:this.downloadCallback}),
                        snapshot_content
                      );
-            //snapshot=(
-            //<div className="panel panel-default">
-              //<SnapshotBar conf={this.state.conf} shareCallback={this.shareCallback} closeCallback={this.closeCallback}/>
-              //{snapshot_content}
-            //</div>
-            //);
         }
         return snapshot
     },
 });
 
 var SnapshotBar = React.createClass({
+    getInitialState: function() {
+        return {};
+    },
     moveClick: function() {
         alert('hola');
     },
     closeClick: function () {
         this.props.closeCallback()
+    },
+    downloadClick: function () {
+        this.props.downloadCallback()
     },
     styles: {
         barstyle: {
@@ -118,43 +108,29 @@ var SnapshotBar = React.createClass({
             width: '100%',
             fontWeight: 'bold',
         },
-        barseparatorstyle: {
-            color: '#bbb',
-        },
-        iconstyle: {
+        righticonstyle: {
             textShadow: '1px 1px 5px 1px #ccc',
-            align: 'right',
-            valign: 'top',
             float: 'right',
             height: '20px',
+            padding: '0px 5px 0px',
+            color: '#aaa',
         },
-    },
-    getInitialState: function() {
-        return {};
+        lefticonstyle: {
+            textShadow: '1px 1px 5px 1px #ccc',
+            float: 'left',
+            height: '20px',
+            padding: '0px 5px 0px',
+        },
     },
     render: function() {
         return React.createElement('div', {className:"SlideBar panel-heading", style:this.styles.barstyle},
-                 React.createElement('div', {className:"SlideBarIcons", style:this.styles.iconstyle},
-                   React.createElement('span', {className:"glyphicon glyphicon-remove", onClick:this.closeClick})
-                 ),
+                 React.createElement(ReactBootstrap.Glyphicon, {className:"SlideBarIcon", glyph:"remove", onClick:this.closeClick, style:this.styles.righticonstyle}),
+                 React.createElement(ReactBootstrap.Glyphicon, {className:"SlideBarIcon", glyph:"download", onClick:this.downloadClick, style:this.styles.righticonstyle}),
+                 React.createElement(ReactBootstrap.Glyphicon, {glyph:"camera", style:this.styles.lefticonstyle}),
                  React.createElement('div', {className:"SlideBarName", style:this.styles.namestyle},
-                   React.createElement('span', {className:"glyphicon glyphicon-option-vertical", style:this.styles.barseparatorstyle, onClick:this.moveClick}),
-                   " ",
                    this.props.conf.widgetname
                  )
                );
-        //return (
-            //<div className="SlideBar panel-heading" style={this.styles.barstyle}>
-                //<div className="SlideBarIcons" style={this.styles.iconstyle}>
-                    //<span className="glyphicon glyphicon-remove" onClick={this.closeClick}></span>
-                //</div>
-                //<div className="SlideBarName" style={this.styles.namestyle} >
-                    //<span className="glyphicon glyphicon-option-vertical" style={this.styles.barseparatorstyle} onClick={this.moveClick}></span>
-                    //<span > </span>
-                    //<span>{this.props.conf.widgetname}</span>
-                //</div>
-            //</div>
-        //);
     }
 });
 
@@ -169,6 +145,7 @@ var SnapshotDs = React.createClass({
     getInitialState: function () {
         return {dsData: undefined,
                 timestamp: undefined,
+                downloadCounter:this.props.downloadCounter,
                 }
     },
     subscriptionTokens: {},
@@ -194,12 +171,23 @@ var SnapshotDs = React.createClass({
             }.bind(this));
         delete this.subscriptionTokens[this.props.nid];
     },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.downloadCounter>this.state.downloadCounter) {
+            this.downloadContent();
+            this.setState({downloadCounter:nextProps.downloadCounter});
+        }
+    },
     refreshData: function () {
         if (datasourceStore._snapshotDsData.hasOwnProperty(this.props.datasource.did)) {
             datasourceData=datasourceStore._snapshotDsData[this.props.datasource.did]
             if (!this.state.dsData && datasourceData.hasOwnProperty(this.props.seq)) {
                 this.setState({dsData:datasourceData[this.props.seq],timestamp:datasourceData[this.props.seq].ts})
             }
+        }
+    },
+    downloadContent: function () {
+        if (this.state.dsData.content && this.state.dsData.content.length>0) {
+            downloadFile(this.props.datasource.datasourcename+'.txt',this.state.dsData.content,'text/plain')
         }
     },
     getDateStatement: function (timestamp) {
@@ -297,23 +285,13 @@ var SnapshotDs = React.createClass({
         var element_nodes=$.map(elements, function (element) {
             if (element.type == 'text') {
                 return React.createElement('span', {key:element.ne},element.data);
-                //return (<span key={element.ne}>{element.data}</span>);
             }else if (element.type == 'nl') {
                 return React.createElement('br', {key:element.ne});
-                //return (<br key={element.ne} />);
             }else if (element.type == 'datapoint') {
                 tooltip=React.createElement(ReactBootstrap.Tooltip, null, element.datapoint);
-                //tooltip=(
-                  //<ReactBootstrap.Tooltip>{element.datapointname}</ReactBootstrap.Tooltip>
-                  //);
                 return React.createElement(ReactBootstrap.OverlayTrigger, {placement:"top", overlay:tooltip},
                          React.createElement('span', {key:element.ne, style:element.style}, element.data)
                        );
-                //return (
-                        //<ReactBootstrap.OverlayTrigger placement="top" overlay={tooltip}>
-                          //<span key={element.ne} style={element.style} >{element.data}</span>
-                        //</ReactBootstrap.OverlayTrigger>
-                    //);
             }
         }.bind(this));
         if (typeof this.state.timestamp === 'number') {
@@ -321,29 +299,13 @@ var SnapshotDs = React.createClass({
                         React.createElement(ReactBootstrap.Glyphicon, {glyph:"time"}),
                         this.getDateStatement(this.state.timestamp)
                       );
-            //info_node=(
-                //<div style={this.styles.infostyle}>
-                //<ReactBootstrap.Glyphicon glyph="time" />
-                //<span style={this.styles.timestyle}> {this.generateDateString(this.state.timestamp)}</span>
-                //</div>
-                //);
         } else {
             info_node=React.createElement('div', {style:this.styles.infostyle});
-            //info_node=(
-                //<div style={this.styles.infostyle} />
-                //);
         }
         return React.createElement('div', null,
                  info_node,
                  React.createElement('div', null, element_nodes)
                );
-        //return (<div>
-                  //{info_node}
-                  //<div>
-                    //{element_nodes}
-                  //</div>
-                //</div>
-                //);
     }
 });
 
@@ -355,6 +317,7 @@ var SnapshotDp = React.createClass({
                 interval: {its:this.props.its,ets:this.props.ets},
                 data: [],
                 summary: {},
+                downloadCounter:this.props.downloadCounter,
             }
     },
     subscriptionTokens: {},
@@ -370,6 +333,21 @@ var SnapshotDp = React.createClass({
             PubSub.unsubscribe(d.token)
             }.bind(this));
         delete this.subscriptionTokens[this.props.nid];
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.downloadCounter>this.state.downloadCounter) {
+            this.downloadContent();
+            this.setState({downloadCounter:nextProps.downloadCounter});
+        }
+    },
+    downloadContent: function () {
+        if (this.state.data.length>0) {
+            csv="date,"+this.props.datapoint.datapointname+"\n"
+            $.map(this.state.data, function (r,i) {
+                csv+=new Date(r.ts*1000).toISOString()+','+r.value+"\n"
+            });
+            downloadFile(this.props.datapoint.datapointname+'.csv',csv,'text/csv')
+        }
     },
     newIntervalCallback: function (interval) {
         if (interval.hasOwnProperty('its') && interval.hasOwnProperty('ets')) {
@@ -444,13 +422,6 @@ var SnapshotDp = React.createClass({
                       React.createElement('td', null, this.state.summary.min),
                       React.createElement('td', null, this.state.summary.mean)
                     );
-            //var summary=(<tr>
-                            //<td>{this.state.summary.datapointname}</td>
-                            //<td>{this.state.summary.max}</td>
-                            //<td>{this.state.summary.min}</td>
-                            //<td>{this.state.summary.mean}</td>
-                        //</tr>
-                        //);
         } else {
             summary=React.createElement('tr', null,
                       React.createElement('td', null),
@@ -458,15 +429,9 @@ var SnapshotDp = React.createClass({
                       React.createElement('td', null),
                       React.createElement('td', null)
                     );
-            //var summary=(<tr>
-                            //<td/>
-                            //<td/>
-                            //<td/>
-                            //<td/>
-                        //</tr>
-                        //);
         }
         var data=[{pid:this.props.datapoint.pid,color:this.props.datapoint.color,datapointname:this.props.datapoint.datapointname,data:this.state.data}]
+        console.log('SNAPSHOT es lo que hay',data)
         return React.createElement('div', null,
                  React.createElement('div', {className:"row"},
                    React.createElement('div', {className:"col-md-6"},
@@ -493,33 +458,6 @@ var SnapshotDp = React.createClass({
                    )
                  )
                );
-        //return (<div>
-                  //<div className="row">
-                    //<div className="col-md-6">
-                      //<table className="table table-condensed">
-                        //<tr>
-                          //<th>Name</th>
-                          //<th>max</th>
-                          //<th>min</th>
-                          //<th>mean</th>
-                        //</tr>
-                        //{summary}
-                      //</table>
-                    //</div>
-                    //<div className="col-md-6">
-                      //<TimeSlider interval={this.state.interval} newIntervalCallback={this.newIntervalCallback} interval_limits={{its:this.props.its,ets:this.props.ets}}/>
-                    //</div>
-                  //</div>
-                  //<div className="row">
-                    //<div className="col-md-6">
-                      //<ContentHistogram data={data} />
-                    //</div>
-                    //<div className="col-md-6">
-                      //<ContentLinegraph interval={this.state.interval} data={data} />
-                    //</div>
-                  //</div>
-                //</div>
-                //);
     }
 });
 
@@ -532,6 +470,7 @@ var SnapshotMp = React.createClass({
                 data: {},
                 config: {},
                 active_view: this.props.view,
+                downloadCounter: this.props.downloadCounter,
         }
     },
     subscriptionTokens: {},
@@ -550,6 +489,54 @@ var SnapshotMp = React.createClass({
     componentDidMount: function () {
         for (var i=0;i<this.props.datapoints.length;i++) {
             PubSub.publish('datapointDataReq',{pid:this.props.datapoints[i].pid,interval:this.state.interval,tid:this.props.tid})
+        }
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (nextProps.downloadCounter>this.state.downloadCounter) {
+            this.downloadContent();
+            this.setState({downloadCounter:nextProps.downloadCounter});
+        }
+    },
+    downloadContent: function () {
+        if (Object.keys(this.state.data).length>0) {
+            x={}
+            x_final=[]
+            y_final=[]
+            for (var i=0;i<this.props.datapoints.length;i++) {
+                pid=this.props.datapoints[i].pid
+                y={}
+                if (pid in this.state.data) {
+                    for (var j=0;j<this.state.data[pid].length;j++) {
+                        x[this.state.data[pid][j].ts]=0
+                        y[this.state.data[pid][j].ts]=this.state.data[pid][j].value
+                    }
+                    y_final.push(y)
+                }
+            }
+            for (var prop in x) {
+                x_final.push(prop)
+            }
+            x_final.sort(function (a,b) {return a-b})
+            console.log('x_final',x_final)
+            console.log('y_final',y_final)
+            csv="date"
+            for (var i=0;i<this.props.datapoints.length;i++) {
+                csv+=","+this.props.datapoints[i].datapointname
+            }
+            csv+="\n"
+            for (var i=0;i<x_final.length;i++) {
+                line=new Date(x_final[i]*1000).toISOString();
+                for (var j=0;j<y_final.length;j++) {
+                    value=( x_final[i] in y_final[j]) ? y_final[j][x_final[i]] : null
+                    line+=value != null ? ","+value : ","
+                }
+                csv+=line+"\n"
+            }
+            downloadFile(this.props.widgetname+'.csv',csv,'text/csv')
+        } else {
+            console.log('no hya datos')
+            //console.log('voy a lanzar el callback porque no hay datos')
+            //this.props.barMessageCallback({style:'danger',message:'No data in selected interval'});
         }
     },
     newIntervalCallback: function (interval) {
@@ -599,7 +586,6 @@ var SnapshotMp = React.createClass({
         this.setState({interval:interval,data:data})
     },
     render: function () {
-        console.log('en el render del snap mp')
         var summary=$.map(this.state.data, function (element, key) {
             var color=null;
             var datapointname=null;
@@ -617,21 +603,14 @@ var SnapshotMp = React.createClass({
                          React.createElement('td', null,
                            React.createElement('span',{style:datapointStyle},"  "),
                            React.createElement('span',null,"  "),
-                           this.state.config[key].datapointname
-                         ),
+                           datapointname),
                          React.createElement('td', null, summary.max),
                          React.createElement('td', null, summary.min),
                          React.createElement('td', null, summary.mean)
                        );
-                //return (<tr key={key}>
-                    //<td><span style={datapointStyle}>&nbsp;&nbsp;</span><span>&nbsp;</span>{datapointname}</td>
-                    //<td>{summary.max}</td>
-                    //<td>{summary.min}</td>
-                    //<td>{summary.mean}</td>
-                //</tr>
-                //);
             }
         }.bind(this));
+        console.log('summary vale',summary)
         var data=$.map(this.state.data, function (element, key) {
             color=null;
             datapointname=null;
@@ -646,31 +625,26 @@ var SnapshotMp = React.createClass({
                 return {pid:key,color:color,datapointname:datapointname,data:element}
             }
         }.bind(this));
+        console.log('data vale',data)
         switch (this.state.active_view){
             case 0:
                 content=React.createElement(ContentLinegraph, {interval:this.state.interval, data:data});
-                //content=<ContentLinegraph interval={this.state.interval} data={data} />
                 break;
             case 1:
                 content=React.createElement(ContentHistogram, {interval:this.state.interval, data:data});
-                //content=<ContentHistogram interval={this.state.interval} data={data} />
                 break;
             case 2:
                 content=React.createElement(ContentTable, {interval:this.state.interval, data:data});
-                //content=<ContentTable interval={this.state.interval} data={data} />
                 break;
             default:
                 content=React.createElement('div',null);
-                //content=<div />
                 break;
         }
         view_buttons=$.map([0,1,2], function (element) {
             if (this.state.active_view==element) {
                 return React.createElement('button', {key:element, type:"button", className:"btn btn-default focus", onClick:function (event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}, element);
-                //return (<button key={element} type="button" className="btn btn-default focus" onClick={function(event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}>{element}</button>)
             } else {
                 return React.createElement('button', {key:element, type:"button", className:"btn btn-default", onClick:function (event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}, element);
-                //return (<button key={element} type="button" className="btn btn-default" onClick={function(event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)} >{element}</button>)
             }
         }.bind(this));
         return React.createElement('div', null,
@@ -703,41 +677,6 @@ var SnapshotMp = React.createClass({
                    )
                  )
                );
-        //return (<div>
-                  //<div className="row" >
-                    //<div className="col-md-8">
-                      //{content}
-                    //</div>
-                    //<div className="col-md-4">
-                      //<div className="row">
-                        //<div className="col-md-12">
-                          //<TimeSlider interval={this.state.interval} newIntervalCallback={this.newIntervalCallback} interval_limits={{its:this.props.its,ets:this.props.ets}}/>
-                        //</div>
-                      //</div>
-                      //<div className="row">
-                        //<div className="col-md-12">
-                          //<div className="btn-group" role="group">
-                            //{view_buttons}
-                          //</div>
-                        //</div>
-                      //</div>
-                      //<div className="row">
-                        //<div className="col-md-12">
-                          //<table className="table table-condensed">
-                            //<tr>
-                              //<th>Name</th>
-                              //<th>max</th>
-                              //<th>min</th>
-                              //<th>mean</th>
-                            //</tr>
-                            //{summary}
-                          //</table>
-                        //</div>
-                      //</div>
-                    //</div>
-                  //</div>
-                //</div>
-                //);
     }
 });
 
