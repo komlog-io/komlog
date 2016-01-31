@@ -15,10 +15,8 @@ def get_user_iface_deny(uid, iface):
     row=connection.session.execute(stmtiface.S_A_IFUSERDENY_B_UID_INTERFACE,(uid,iface))
     if not row:
         return None
-    elif len(row)==1:
-        return ormiface.UserIfaceDeny(**row[0])
     else:
-        raise excpiface.DataConsistencyException(function='get_userifacedeny',field='iface',value=iface)
+        return ormiface.UserIfaceDeny(**row[0])
 
 def get_user_ifaces_deny(uid):
     ifaces=[]

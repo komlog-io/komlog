@@ -15,10 +15,8 @@ def get_user_segment(sid):
     row=connection.session.execute(stmtsegment.S_A_PRMUSERSEGMENT_B_SID,(sid,))
     if not row:
         return None
-    if len(row)==1:
-        return ormsegment.UserSegment(**row[0])
     else:
-        raise excpsegment.DataConsistencyException(function='get_segment_info',field='id',value=segment_id)
+        return ormsegment.UserSegment(**row[0])
 
 def insert_user_segment(sobj):
     if not isinstance(sobj, ormsegment.UserSegment):

@@ -16,10 +16,8 @@ def get_datasource(did):
     row=connection.session.execute(stmtdatasource.S_A_MSTDATASOURCE_B_DID,(did,))
     if not row:
         return None
-    elif len(row)==1:
-        return ormdatasource.Datasource(**row[0])
     else:
-        raise excpdatasource.DataConsistencyException(function='get_datasource',field='did',value=did)
+        return ormdatasource.Datasource(**row[0])
 
 def get_datasources(aid=None, uid=None):
     datasources=[]
@@ -73,10 +71,8 @@ def get_datasource_stats(did):
     row=connection.session.execute(stmtdatasource.S_A_MSTDATASOURCESTATS_B_DID,(did,))
     if not row:
         return None
-    elif len(row)==1:
-        return ormdatasource.DatasourceStats(**row[0])
     else:
-        raise excpdatasource.DataConsistencyException(function='get_datasource_stats',field='did',value=did)
+        return ormdatasource.DatasourceStats(**row[0])
 
 def set_last_received(did, last_received):
     connection.session.execute(stmtdatasource.I_LASTRECEIVED_MSTDATASOURCESTATS_B_DID,(did,last_received))
@@ -94,10 +90,8 @@ def get_datasource_data_at(did, date):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCE_B_DID_DATE,(did,date))
     if not row:
         return None
-    elif len(row)==1:
-        return ormdatasource.DatasourceData(**row[0])
     else:
-        raise excpdatasource.DataConsistencyException(function='get_datasource_data',field='did',value=did)
+        return ormdatasource.DatasourceData(**row[0])
 
 def get_datasource_data(did, fromdate, todate):
     data=[]
@@ -145,10 +139,8 @@ def get_datasource_map(did, date):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMAP_B_DID_DATE,(did,date))
     if not row:
         return None
-    elif len(row)==1:
-        return ormdatasource.DatasourceMap(**row[0])
     else:
-        raise excpdatasource.DataConsistencyException(function='get_datasource_map',field='did',value=did)
+        return ormdatasource.DatasourceMap(**row[0])
 
 def get_datasource_maps(did, fromdate, todate):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))

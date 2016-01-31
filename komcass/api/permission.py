@@ -13,10 +13,8 @@ def get_user_agent_perm(uid, aid):
     row=connection.session.execute(stmtperm.S_A_PERMUSERAGENT_B_UID_AID,(uid,aid))
     if not row:
         return None
-    elif len(row)==1:
-        return ormperm.UserAgentPerm(**row[0])
     else:
-        raise excpperm.DataConsistencyException(function='get_useragentperm',field='aid',value=aid)
+        return ormperm.UserAgentPerm(**row[0])
 
 def get_user_agents_perm(uid):
     perms=[]
@@ -42,10 +40,8 @@ def get_user_datasource_perm(uid, did):
     row=connection.session.execute(stmtperm.S_A_PERMUSERDATASOURCE_B_UID_DID,(uid,did))
     if not row:
         return None
-    elif len(row)==1:
-        return ormperm.UserDatasourcePerm(**row[0])
     else:
-        raise excpperm.DataConsistencyException(function='get_userdatasourceperm',field='did',value=did)
+        return ormperm.UserDatasourcePerm(**row[0])
 
 def get_user_datasources_perm(uid):
     perms=[]
@@ -71,10 +67,8 @@ def get_user_datapoint_perm(uid, pid):
     row=connection.session.execute(stmtperm.S_A_PERMUSERDATAPOINT_B_UID_PID,(uid,pid))
     if not row:
         return None
-    elif len(row)==1:
-        return ormperm.UserDatapointPerm(**row[0])
     else:
-        raise excpperm.DataConsistencyException(function='get_userdatapointperm',field='pid',value=pid)
+        return ormperm.UserDatapointPerm(**row[0])
 
 def get_user_datapoints_perm(uid):
     perms=[]
@@ -100,10 +94,8 @@ def get_user_widget_perm(uid, wid):
     row=connection.session.execute(stmtperm.S_A_PERMUSERWIDGET_B_UID_WID,(uid,wid))
     if not row:
         return None
-    elif len(row)==1:
-        return ormperm.UserWidgetPerm(**row[0])
     else:
-        raise excpperm.DataConsistencyException(function='get_userwidgetperm',field='wid',value=wid)
+        return ormperm.UserWidgetPerm(**row[0])
 
 def get_user_widgets_perm(uid):
     perms=[]
@@ -129,10 +121,8 @@ def get_user_dashboard_perm(uid, bid):
     row=connection.session.execute(stmtperm.S_A_PERMUSERDASHBOARD_B_UID_BID,(uid,bid))
     if not row:
         return None
-    elif len(row)==1:
-        return ormperm.UserDashboardPerm(**row[0])
     else:
-        raise excpperm.DataConsistencyException(function='get_userdashboardperm',field='bid',value=bid)
+        return ormperm.UserDashboardPerm(**row[0])
 
 def get_user_dashboards_perm(uid):
     perms=[]

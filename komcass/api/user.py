@@ -16,26 +16,20 @@ def get_user(username=None, uid=None, email=None):
         row=connection.session.execute(stmtuser.S_A_MSTUSER_B_USERNAME,(username,))
         if not row:
             return None
-        elif len(row)==1:
-            return ormuser.User(**row[0])
         else:
-            raise excpuser.DataConsistencyException(function='get_user',field='username',value=username)
+            return ormuser.User(**row[0])
     elif uid:
         row=connection.session.execute(stmtuser.S_A_MSTUSER_B_UID,(uid,))
         if not row:
             return None
-        if len(row)==1:
-            return ormuser.User(**row[0])
         else:
-            raise excpuser.DataConsistencyException(function='get_user',field='uid',value=uid)
+            return ormuser.User(**row[0])
     elif email:
         row=connection.session.execute(stmtuser.S_A_MSTUSER_B_EMAIL,(email,))
         if not row:
             return None
-        if len(row)==1:
-            return ormuser.User(**row[0])
         else:
-            raise excpuser.DataConsistencyException(function='get_user',field='email',value=email)
+            return ormuser.User(**row[0])
     else:
         return None
 
@@ -79,26 +73,20 @@ def get_signup_info(email=None, signup_code=None, username=None):
         row=connection.session.execute(stmtuser.S_A_MSTSIGNUP_B_EMAIL,(email,))
         if not row:
             return None
-        elif len(row)==1:
-            return ormuser.SignUp(**row[0])
         else:
-            raise excpuser.DataConsistencyException(function='get_signup_info',field='email',value=email)
+            return ormuser.SignUp(**row[0])
     elif signup_code:
         row=connection.session.execute(stmtuser.S_A_MSTSIGNUP_B_SIGNUPCODE,(signup_code,))
         if not row:
             return None
-        elif len(row)==1:
-            return ormuser.SignUp(**row[0])
         else:
-            raise excpuser.DataConsistencyException(function='get_signup_info',field='signup_code',value=signup_code)
+            return ormuser.SignUp(**row[0])
     elif username:
         row=connection.session.execute(stmtuser.S_A_MSTSIGNUP_B_USERNAME,(username,))
         if not row:
             return None
-        elif len(row)==1:
-            return ormuser.SignUp(**row[0])
         else:
-            raise excpuser.DataConsistencyException(function='get_signup_info',field='username',value=username)
+            return ormuser.SignUp(**row[0])
     else:
         return None
 

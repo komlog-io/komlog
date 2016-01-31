@@ -14,10 +14,8 @@ def get_datapoint(pid):
     row=connection.session.execute(stmtdatapoint.S_A_MSTDATAPOINT_B_PID,(pid,))
     if not row:
         return None
-    elif len(row)==1:
-        return ormdatapoint.Datapoint(**row[0])
     else:
-        raise excpdatapoint.DataConsistencyException(function='get_datapoint',field='pid',value=pid)
+        return ormdatapoint.Datapoint(**row[0])
 
 def get_datapoints(did):
     row=connection.session.execute(stmtdatapoint.S_A_MSTDATAPOINT_B_DID,(did,))
@@ -43,10 +41,8 @@ def get_datapoint_stats(pid):
     row=connection.session.execute(stmtdatapoint.S_A_MSTDATAPOINTSTATS_B_PID,(pid,))
     if not row:
         return None
-    elif len(row)==1:
-        return ormdatapoint.DatapointStats(**row[0])
     else:
-        raise excpdatapoint.DataConsistencyException(function='get_datapoint_stats',field='pid',value=pid)
+        return ormdatapoint.DatapointStats(**row[0])
 
 def get_datapoint_dtree_positives(pid):
     row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINTDTREEPOSITIVES_B_PID,(pid,))
@@ -60,10 +56,8 @@ def get_datapoint_dtree_positives_at(pid, date):
     row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINTDTREEPOSITIVES_B_PID_DATE,(pid,date))
     if not row:
         return None
-    if len(row)==1:
-        return ormdatapoint.DatapointDtreePositives(**row[0])
     else:
-        raise excpdatapoint.DataConsistencyException(function='get_datapoint_dtree_positives_at',field='pid',value=pid)
+        return ormdatapoint.DatapointDtreePositives(**row[0])
 
 def get_datapoint_dtree_negatives(pid):
     row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINTDTREENEGATIVES_B_PID,(pid,))
@@ -77,19 +71,15 @@ def get_datapoint_dtree_negatives_at(pid, date):
     row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINTDTREENEGATIVES_B_PID_DATE,(pid,date))
     if not row:
         return None
-    elif len(row)==1:
-        return ormdatapoint.DatapointDtreeNegatives(**row[0])
     else:
-        raise excpdatapoint.DataConsistencyException(function='get_datapoint_dtree_negatives_at',field='pid',value=pid)
+        return ormdatapoint.DatapointDtreeNegatives(**row[0])
 
 def get_datapoint_data_at(pid, date):
     row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINT_B_PID_DATE,(pid,date))
     if not row:
         return None
-    elif len(row)==1:
-        return ormdatapoint.DatapointData(row[0]['pid'],row[0]['date'],row[0]['value'])
     else:
-        raise excpdatapoint.DataConsistencyException(function='get_datapoint_data_at',field='pid',value=pid)
+        return ormdatapoint.DatapointData(row[0]['pid'],row[0]['date'],row[0]['value'])
 
 def get_datapoint_data(pid, fromdate, todate, reverse=False, num_regs=100):
     row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINT_B_PID_INITDATE_ENDDATE_NUMREGS,(pid,fromdate,todate,num_regs))

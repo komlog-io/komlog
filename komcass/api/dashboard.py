@@ -16,10 +16,8 @@ def get_dashboard(bid):
     row=connection.session.execute(stmtdashboard.S_A_MSTDASHBOARD_B_BID,(bid,))
     if not row:
         return None
-    elif len(row)==1:
-        return ormdashboard.Dashboard(**row[0])
     else:
-        raise excpdashboard.ConsistencyDataException(function='get_dashboard',field='bid',value=bid)
+        return ormdashboard.Dashboard(**row[0])
 
 def get_dashboards(uid):
     row=connection.session.execute(stmtdashboard.S_A_MSTDASHBOARD_B_UID,(uid,))

@@ -14,10 +14,8 @@ def get_user_quotes(uid):
     row=connection.session.execute(stmtquote.S_A_QUOUSER_B_UID,(uid,))
     if not row:
         return None
-    elif len(row)==1:
-        return ormquote.UserQuo(**row[0])
     else:
-        raise excpquote.DataConsistencyException(function='get_user_quotes',field='uid',value=uid)
+        return ormquote.UserQuo(**row[0])
 
 def set_user_quotes(uid, quotes):
     connection.session.execute(stmtquote.I_A_QUOUSER,(uid,quotes))
@@ -39,10 +37,8 @@ def get_agent_quotes(aid):
     row=connection.session.execute(stmtquote.S_A_QUOAGENT_B_AID,(aid,))
     if not row:
         return None
-    elif len(row)==1:
-        return ormquote.AgentQuo(**row[0])
     else:
-        raise excpquote.DataConsistencyException(function='get_agent_quotes',field='aid',value=aid)
+        return ormquote.AgentQuo(**row[0])
 
 def set_agent_quotes(aid, quotes):
     connection.session.execute(stmtquote.I_A_QUOAGENT,(aid,quotes))
@@ -64,10 +60,8 @@ def get_datasource_quotes(did):
     row=connection.session.execute(stmtquote.S_A_QUODATASOURCE_B_DID,(did,))
     if not row:
         return None
-    elif len(row)==1:
-        return ormquote.DatasourceQuo(**row[0])
     else:
-        raise excpquote.DataConsistencyException(function='get_datasource_quotes',field='did',value=did)
+        return ormquote.DatasourceQuo(**row[0])
 
 def set_datasource_quotes(did, quotes):
     connection.session.execute(stmtquote.I_A_QUODATASOURCE,(did,quotes))
@@ -89,10 +83,8 @@ def get_datapoint_quotes(pid):
     row=connection.session.execute(stmtquote.S_A_QUODATAPOINT_B_PID,(pid,))
     if not row:
         return None
-    elif len(row)==1:
-        return ormquote.DatapointQuo(**row[0])
     else:
-        raise excpquote.DataConsistencyException(function='get_datapoint_quotes',field='pid',value=pid)
+        return ormquote.DatapointQuo(**row[0])
 
 def set_datapoint_quotes(pid, quotes):
     connection.session.execute(stmtquote.I_A_QUODATAPOINT,(pid,quotes))
@@ -114,10 +106,8 @@ def get_widget_quotes(wid):
     row=connection.session.execute(stmtquote.S_A_QUOWIDGET_B_WID,(wid,))
     if not row:
         return None
-    elif len(row)==1:
-        return ormquote.WidgetQuo(**row[0])
     else:
-        raise excpquote.DataConsistencyException(function='get_widget_quotes',field='wid',value=wid)
+        return ormquote.WidgetQuo(**row[0])
 
 def set_widget_quotes(wid, quotes):
     connection.session.execute(stmtquote.I_A_QUOWIDGET,(wid,quotes))
@@ -139,10 +129,8 @@ def get_dashboard_quotes(bid):
     row=connection.session.execute(stmtquote.S_A_QUODASHBOARD_B_BID,(bid,))
     if not row:
         return None
-    if len(row)==1:
-        return ormquote.DashboardQuo(**row[0])
     else:
-        raise excpquote.DataConsistencyException(function='get_dashboard_quotes',field='bid',value=bid)
+        return ormquote.DashboardQuo(**row[0])
 
 def set_dashboard_quotes(bid, quotes):
     connection.session.execute(stmtquote.I_A_QUODASHBOARD,(bid,quotes))
@@ -164,10 +152,8 @@ def get_circle_quotes(cid):
     row=connection.session.execute(stmtquote.S_A_QUOCIRCLE_B_CID,(cid,))
     if not row:
         return None
-    if len(row)==1:
-        return ormquote.CircleQuo(**row[0])
     else:
-        raise excpquote.DataConsistencyException(function='get_circle_quotes',field='cid',value=cid)
+        return ormquote.CircleQuo(**row[0])
 
 def set_circle_quotes(cid, quotes):
     connection.session.execute(stmtquote.I_A_QUOCIRCLE,(cid,quotes))

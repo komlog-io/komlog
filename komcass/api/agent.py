@@ -15,10 +15,8 @@ def get_agent(aid):
     row=connection.session.execute(stmtagent.S_A_MSTAGENT_B_AID,(aid,))
     if not row:
         return None
-    elif len(row)==1:
-        return ormagent.Agent(**row[0])
     else:
-        raise excpagent.DataConsistencyException(function='get_agent',field='aid',value=aid)
+        return ormagent.Agent(**row[0])
 
 def get_agents(uid):
     row=connection.session.execute(stmtagent.S_A_MSTAGENT_B_UID,(uid,))
