@@ -4,6 +4,7 @@ var Snapshot = React.createClass({
                 conf:{},
                 shareCounter: 0,
                 downloadCounter: 0,
+                barMessageTime: 0,
                 }
     },
     subscriptionTokens: {},
@@ -36,6 +37,11 @@ var Snapshot = React.createClass({
     downloadCallback: function() {
         this.setState({downloadCounter:this.state.downloadCounter+1})
     },
+    barMessage: function (data) {
+        if ('messageTime' in data && data.messageTime > this.state.barMessageTime) {
+            this.setState({barMessage:data.message, barMessageTime:data.messageTime});
+        }
+    },
     refreshConfig: function () {
         if (snapshotStore._snapshotConfig.hasOwnProperty(this.props.nid)) {
             snapshotConfig=snapshotStore._snapshotConfig[this.props.nid]
@@ -59,10 +65,10 @@ var Snapshot = React.createClass({
                     return React.createElement(SnapshotDs, {nid:this.props.nid, tid:this.props.tid, datasource:this.state.conf.datasource, datapoints:this.state.conf.datapoints, its:this.state.conf.its, seq:this.state.conf.seq, downloadCounter:this.state.downloadCounter});
                     break;
                 case 'dp':
-                    return React.createElement(SnapshotDp, {nid:this.props.nid, tid:this.props.tid, datapoint:this.state.conf.datapoint, its:this.state.conf.its, ets:this.state.conf.ets, downloadCounter:this.state.downloadCounter});
+                    return React.createElement(SnapshotDp, {nid:this.props.nid, tid:this.props.tid, datapoint:this.state.conf.datapoint, its:this.state.conf.its, ets:this.state.conf.ets, downloadCounter:this.state.downloadCounter, barMessageCallback:this.barMessage});
                     break;
                 case 'mp':
-                    return React.createElement(SnapshotMp, {nid:this.props.nid, tid:this.props.tid, view:this.state.conf.view, datapoints:this.state.conf.datapoints, its:this.state.conf.its, ets:this.state.conf.ets, downloadCounter:this.state.downloadCounter, widgetname:this.state.conf.widgetname});
+                    return React.createElement(SnapshotMp, {nid:this.props.nid, tid:this.props.tid, view:this.state.conf.view, datapoints:this.state.conf.datapoints, its:this.state.conf.its, ets:this.state.conf.ets, downloadCounter:this.state.downloadCounter, widgetname:this.state.conf.widgetname, barMessageCallback:this.barMessage});
                     break;
                 default:
                     return null;
@@ -73,13 +79,12 @@ var Snapshot = React.createClass({
     render: function() {
         snapshot_content=this.getSnapshotContentEl();
         if ($.isEmptyObject(this.state.conf)) {
-            conf={widgetname: "Loading..."}
             snapshot=React.createElement('div', {className:"panel panel-default"},
-                       React.createElement(SnapshotBar, {conf:conf, closeCallback:this.closeCallback})
+                       React.createElement(SnapshotBar, {conf:this.state.conf, closeCallback:this.closeCallback})
                      );
         } else {
             snapshot=React.createElement('div', {className:"panel panel-default"},
-                       React.createElement(SnapshotBar, {conf:this.state.conf, shareCallback:this.shareCallback, closeCallback:this.closeCallback, downloadCallback:this.downloadCallback}),
+                       React.createElement(SnapshotBar, {conf:this.state.conf, shareCallback:this.shareCallback, closeCallback:this.closeCallback, downloadCallback:this.downloadCallback, message:this.state.barMessage, messageTime:this.state.barMessageTime}),
                        snapshot_content
                      );
         }
@@ -89,7 +94,18 @@ var Snapshot = React.createClass({
 
 var SnapshotBar = React.createClass({
     getInitialState: function() {
-        return {};
+        return {
+            message:{type:'info',message:'Loading'},
+            messageTime:0,
+        };
+    },
+    componentWillReceiveProps: function (nextProps) {
+        if (!('widgetname' in this.props.conf) && 'widgetname' in nextProps.conf) {
+            this.setState({message:{type:null,message:null},messageTime:(new Date).getTime()});
+        }
+        if (nextProps.messageTime>this.state.messageTime) {
+            this.setState({message:nextProps.message, messageTime:nextProps.messageTime});
+        }
     },
     moveClick: function() {
         alert('hola');
@@ -121,15 +137,21 @@ var SnapshotBar = React.createClass({
             height: '20px',
             padding: '0px 5px 0px',
         },
+        messagestyle: {
+            float: 'right',
+            height: '25%',
+            padding: '0px 10px 0px',
+            marginBottom: '0px',
+        },
     },
     render: function() {
+        message=React.createElement(Alert, {style:this.styles.messagestyle,type:this.state.message.type,message:this.state.message.message,messageTime:this.state.messageTime,autoCloseable: ('widgetname' in this.props.conf) ? true : false})
         return React.createElement('div', {className:"SlideBar panel-heading", style:this.styles.barstyle},
                  React.createElement(ReactBootstrap.Glyphicon, {className:"SlideBarIcon", glyph:"remove", onClick:this.closeClick, style:this.styles.righticonstyle}),
                  React.createElement(ReactBootstrap.Glyphicon, {className:"SlideBarIcon", glyph:"download", onClick:this.downloadClick, style:this.styles.righticonstyle}),
+                 message,
                  React.createElement(ReactBootstrap.Glyphicon, {glyph:"camera", style:this.styles.lefticonstyle}),
-                 React.createElement('div', {className:"SlideBarName", style:this.styles.namestyle},
-                   this.props.conf.widgetname
-                 )
+                 React.createElement('div', {className:"SlideBarName", style:this.styles.namestyle},this.props.conf.widgetname ? this.props.conf.widgetname : '')
                );
     }
 });
@@ -347,6 +369,8 @@ var SnapshotDp = React.createClass({
                 csv+=new Date(r.ts*1000).toISOString()+','+r.value+"\n"
             });
             downloadFile(this.props.datapoint.datapointname+'.csv',csv,'text/csv')
+        } else {
+            this.props.barMessageCallback({message:{type:'info',message:'No data in selected interval'},messageTime:(new Date).getTime()});
         }
     },
     newIntervalCallback: function (interval) {
@@ -517,26 +541,26 @@ var SnapshotMp = React.createClass({
                 x_final.push(prop)
             }
             x_final.sort(function (a,b) {return a-b})
-            console.log('x_final',x_final)
-            console.log('y_final',y_final)
-            csv="date"
-            for (var i=0;i<this.props.datapoints.length;i++) {
-                csv+=","+this.props.datapoints[i].datapointname
-            }
-            csv+="\n"
-            for (var i=0;i<x_final.length;i++) {
-                line=new Date(x_final[i]*1000).toISOString();
-                for (var j=0;j<y_final.length;j++) {
-                    value=( x_final[i] in y_final[j]) ? y_final[j][x_final[i]] : null
-                    line+=value != null ? ","+value : ","
+            if (x_final.length>0) {
+                csv="date"
+                for (var i=0;i<this.props.datapoints.length;i++) {
+                    csv+=","+this.props.datapoints[i].datapointname
                 }
-                csv+=line+"\n"
+                csv+="\n"
+                for (var i=0;i<x_final.length;i++) {
+                    line=new Date(x_final[i]*1000).toISOString();
+                    for (var j=0;j<y_final.length;j++) {
+                        value=( x_final[i] in y_final[j]) ? y_final[j][x_final[i]] : null
+                        line+=value != null ? ","+value : ","
+                    }
+                    csv+=line+"\n"
+                }
+                downloadFile(this.props.widgetname+'.csv',csv,'text/csv')
+            } else {
+                this.props.barMessageCallback({message:{type:'info',message:'No data in selected interval'},messageTime:(new Date).getTime()});
             }
-            downloadFile(this.props.widgetname+'.csv',csv,'text/csv')
         } else {
-            console.log('no hya datos')
-            //console.log('voy a lanzar el callback porque no hay datos')
-            //this.props.barMessageCallback({style:'danger',message:'No data in selected interval'});
+            this.props.barMessageCallback({message:{type:'danger',message:'No datapoints in graph'},messageTime:(new Date).getTime()});
         }
     },
     newIntervalCallback: function (interval) {

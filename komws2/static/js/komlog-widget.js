@@ -5,8 +5,7 @@ var Widget = React.createClass({
                 shareCounter: 0,
                 downloadCounter: 0,
                 showConfig: false, 
-                barMessage:null,
-                barMessageCounter: 0,
+                barMessageTime: 0,
                 }
     },
     subscriptionTokens: {},
@@ -43,7 +42,9 @@ var Widget = React.createClass({
         this.setState({downloadCounter:this.state.downloadCounter+1})
     },
     barMessage: function (data) {
-        this.setState({barMessage:data, barMessageCounter:this.state.barMessageCounter+1});
+        if ('messageTime' in data && data.messageTime > this.state.barMessageTime) {
+            this.setState({barMessage:data.message, barMessageTime:data.messageTime});
+        }
     },
     refreshConfig: function () {
         if (widgetStore._widgetConfig.hasOwnProperty(this.props.wid)) {
@@ -71,7 +72,7 @@ var Widget = React.createClass({
                     return React.createElement(WidgetDp, {wid:this.props.wid, pid:this.state.conf.pid, shareCounter:this.state.shareCounter, downloadCounter:this.state.downloadCounter, barMessageCallback:this.barMessage});
                     break;
                 case 'mp':
-                    return React.createElement(WidgetMp, {wid:this.props.wid, datapoints:this.state.conf.datapoints, widgetname:this.state.conf.widgetname, view:this.state.conf.view, shareCounter:this.state.shareCounter, downloadCounter:this.state.downloadCounter});
+                    return React.createElement(WidgetMp, {wid:this.props.wid, datapoints:this.state.conf.datapoints, widgetname:this.state.conf.widgetname, view:this.state.conf.view, shareCounter:this.state.shareCounter, downloadCounter:this.state.downloadCounter, barMessageCallback:this.barMessage});
                     break;
                 default:
                     return null;
@@ -103,13 +104,12 @@ var Widget = React.createClass({
         widget_content=this.getWidgetContentEl();
         widget_config=this.getWidgetConfigEl();
         if ($.isEmptyObject(this.state.conf)) {
-            conf={widgetname: "Loading..."}
             widget=React.createElement('div', {className:"panel panel-default"},
-                     React.createElement(WidgetBar, {bid:this.props.bid, wid:this.props.wid, conf:conf, closeCallback:this.closeCallback})
+                     React.createElement(WidgetBar, {bid:this.props.bid, wid:this.props.wid,conf:this.state.conf,closeCallback:this.closeCallback})
                    );
         } else {
             widget=React.createElement('div', {className:"panel panel-default"},
-                     React.createElement(WidgetBar, {bid:this.props.bid, wid:this.props.wid, conf:this.state.conf, message:this.state.barMessage, messageCounter:this.state.barMessageCounter, shareCallback:this.shareCallback, closeCallback:this.closeCallback, configCallback:this.configCallback, isPinned:this.props.isPinned, configOpen:this.state.showConfig, downloadCallback:this.downloadCallback}),
+                     React.createElement(WidgetBar, {bid:this.props.bid, wid:this.props.wid, conf:this.state.conf, message:this.state.barMessage, messageTime:this.state.barMessageTime, shareCallback:this.shareCallback, closeCallback:this.closeCallback, configCallback:this.configCallback, isPinned:this.props.isPinned, configOpen:this.state.showConfig, downloadCallback:this.downloadCallback}),
                      widget_config,
                      widget_content
                    );
@@ -121,11 +121,11 @@ var Widget = React.createClass({
 var WidgetBar = React.createClass({
     getInitialState: function () {
         return {
-                allowPin: false,
-                isPinned: false,
-                message:null,
-                messageCounter:0,
-               }
+            allowPin: false,
+            isPinned: false,
+            message:{type:'info',message:'Loading'},
+            messageTime:0,
+        }
     },
     componentWillMount: function () {
         if (this.props.bid != '0') {
@@ -138,9 +138,11 @@ var WidgetBar = React.createClass({
                 this.setState({isPinned:nextProps.isPinned})
             }
         }
-        if (nextProps.messageCounter>this.state.messageCounter) {
-            console.log('recibido nuevo message',nextProps.message)
-            this.setState({message:nextProps.message, messageCounter:nextProps.messageCounter});
+        if (!('widgetname' in this.props.conf) && 'widgetname' in nextProps.conf) {
+            this.setState({message:{type:null,message:null},messageTime:(new Date).getTime()});
+        }
+        if (nextProps.messageTime>this.state.messageTime) {
+            this.setState({message:nextProps.message, messageTime:nextProps.messageTime});
         }
     },
     configClick: function() {
@@ -156,21 +158,13 @@ var WidgetBar = React.createClass({
         this.props.downloadCallback()
     },
     pinClick: function () {
-        console.log('pin clicked')
         if (this.props.isPinned) {
-            console.log('eliminando del dashboard')
             PubSub.publish('modifyDashboard',{bid:this.props.bid,delete_widgets:[this.props.wid]})
             this.setState({isPinned:false})
         } else {
-            console.log('añadiendo al dashboard')
             PubSub.publish('modifyDashboard',{bid:this.props.bid,new_widgets:[this.props.wid]})
             this.setState({isPinned:true})
         }
-    },
-    messageDismiss: function () {
-        console.log('hacemos el dismisss')
-        this.setState({message:null})
-        console.log('message vale', this.state.message)
     },
     styles: {
         barstyle: {
@@ -197,7 +191,6 @@ var WidgetBar = React.createClass({
             color: '#aaa',
         },
         messagestyle: {
-            textShadow: '1px 1px 5px 1px #ccc',
             float: 'right',
             height: '25%',
             padding: '0px 10px 0px',
@@ -227,22 +220,15 @@ var WidgetBar = React.createClass({
         } else {
             configIcon=React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-chevron-right", style:this.styles.lefticonstyle, onClick:this.configClick});
         }
-        if (this.state.message!=null) {
-            console.log('message vale', this.state.message)
-            message=React.createElement(ReactBootstrap.Alert, {bsStyle:this.state.message.style, onDismiss:this.messageDismiss, dismissAfter:2000, style:this.styles.messagestyle, noButton:true}, this.state.message.message);
-        } else {
-            message=null
-        }
+        message=React.createElement(Alert, {style:this.styles.messagestyle,type:this.state.message.type,message:this.state.message.message,messageTime:this.state.messageTime,autoCloseable: ('widgetname' in this.props.conf) ? true : false})
         return React.createElement('div', {className:"SlideBar panel-heading", style:this.styles.barstyle},
                  React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-remove", style:this.styles.righticonstyle, onClick:this.closeClick}),
                  React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-send", style:this.styles.righticonstyle, onClick:this.shareClick}),
                  React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-download", style:this.styles.righticonstyle, onClick:this.downloadClick}),
-                 message,
                  pinIcon,
+                 message,
                  configIcon,
-                 React.createElement('div', {className:"SlideBarName", style:this.styles.namestyle},
-                   React.createElement('span', null, this.props.conf.widgetname)
-                 )
+                 React.createElement('div', {className:"SlideBarName", style:this.styles.namestyle},this.props.conf.widgetname ? this.props.conf.widgetname : '')
                );
     }
 });
@@ -944,8 +930,7 @@ var WidgetDp = React.createClass({
             });
             downloadFile(this.state.datapointname+'.csv',csv,'text/csv')
         } else {
-            console.log('voy a lanzar el callback porque no hay datos')
-            this.props.barMessageCallback({style:'danger',message:'No data in selected interval'});
+            this.props.barMessageCallback({message:{type:'info',message:'No data in selected interval'},messageTime:(new Date).getTime()});
         }
     },
     newIntervalCallback: function (interval) {
@@ -1230,24 +1215,26 @@ var WidgetMp = React.createClass({
                 x_final.push(prop)
             }
             x_final.sort(function (a,b) {return a-b})
-            csv="date"
-            for (var prop in this.state.config) {
-                csv+=","+this.state.config[prop].datapointname
-            }
-            csv+="\n"
-            for (var i=0;i<x_final.length;i++) {
-                line=new Date(x_final[i]*1000).toISOString();
-                for (var j=0;j<y_final.length;j++) {
-                    value=( x_final[i] in y_final[j]) ? y_final[j][x_final[i]] : null
-                    line+=value != null ? ","+value : ","
+            if (x_final.length>0) {
+                csv="date"
+                for (var prop in this.state.config) {
+                    csv+=","+this.state.config[prop].datapointname
                 }
-                csv+=line+"\n"
+                csv+="\n"
+                for (var i=0;i<x_final.length;i++) {
+                    line=new Date(x_final[i]*1000).toISOString();
+                    for (var j=0;j<y_final.length;j++) {
+                        value=( x_final[i] in y_final[j]) ? y_final[j][x_final[i]] : null
+                        line+=value != null ? ","+value : ","
+                    }
+                    csv+=line+"\n"
+                }
+                downloadFile(this.props.widgetname+'.csv',csv,'text/csv')
+            } else {
+                this.props.barMessageCallback({message:{type:'info',message:'No data in selected interval'},messageTime:(new Date).getTime()});
             }
-            downloadFile(this.props.widgetname+'.csv',csv,'text/csv')
         } else {
-            console.log('no hya datos')
-            //console.log('voy a lanzar el callback porque no hay datos')
-            //this.props.barMessageCallback({style:'danger',message:'No data in selected interval'});
+            this.props.barMessageCallback({message:{type:'danger',message:'No datapoints in graph'},messageTime:(new Date).getTime()});
         }
     },
     subscriptionHandler: function (msg,data) {
