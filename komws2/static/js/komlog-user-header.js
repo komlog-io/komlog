@@ -40,8 +40,12 @@ var UserHeader= React.createClass({
         }
     },
     render: function () {
-        return React.createElement(ReactBootstrap.Navbar, {fixedTop:true, fluid:true},
-                 React.createElement(ReactBootstrap.Nav, {pullLeft:true}, "Komlog"),
+        return React.createElement(ReactBootstrap.Navbar, {staticTop:true, fluid:true, inverse:true},
+                 React.createElement(ReactBootstrap.Navbar.Header, null, 
+                   React.createElement(ReactBootstrap.Navbar.Brand, null, 
+                     React.createElement('a',{href:"#"}, "Komlog")
+                   )
+                 ),
                  React.createElement(ReactBootstrap.Nav, {pullRight:true},
                    React.createElement(ReactBootstrap.NavDropdown, {pullRight:true, title:this.state.username},
                      React.createElement(ReactBootstrap.MenuItem, {key:1},

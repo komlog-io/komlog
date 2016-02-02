@@ -244,7 +244,6 @@ function requestDatapointData (pid, interval, originalInterval, tid) {
             data: parameters,
         })
         .done(function (response) {
-            console.log('datos recibidos',pid)
             datapointStore.storeDatapointData(pid,response)
             receivedTs=$.map(response, function (e) {
                 return e.ts
@@ -421,10 +420,14 @@ function processMsgMonitorDatapoint (data) {
             data: JSON.stringify(requestData),
         })
         .done(function (data) {
+            PubSub.publish('barMessage',{message:{type:'success', message:'New datapoint monitored'},messageTime:(new Date).getTime()})
             setTimeout(PubSub.publish('datapointConfigReq',{pid:data.pid}),5000)
             setTimeout(PubSub.publish('datasourceConfigReq',{did:requestData.did}),5000)
             setTimeout(PubSub.publish('datasourceDataReq',{did:requestData.did}),5000)
         })
+        .fail(function (data) {
+            PubSub.publish('barMessage',{message:{type:'danger', message:'Error monitoring new datapoint. Code: '+data.responseJSON.error},messageTime:(new Date).getTime()})
+        });
     }
 }
 
@@ -455,6 +458,7 @@ function processMsgDeleteDatapoint(msgData) {
                 datapointStore.deleteLoopRequest(msgData.pid,'requestDatapointConfig')
                 datapointStore.deleteLoopRequest(msgData.pid,'requestDatapointData')
             }, function(data){
+                PubSub.publish('barMessage',{message:{type:'danger', message:'Error deleting datapoint. Code: '+data.responseJSON.error},messageTime:(new Date).getTime()})
             });
     }
 }
@@ -470,7 +474,7 @@ function processMsgModifyDatapoint(msgData) {
         }).then(function(data){
             PubSub.publish('datapointConfigReq',{pid:msgData.pid})
         }, function(data){
-            console.log('Error updating datapoint',data)
+            PubSub.publish('barMessage',{message:{type:'danger', message:'Error updating datapoint. Code: '+data.responseJSON.error},messageTime:(new Date).getTime()})
         });
     }
 }

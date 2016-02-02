@@ -14,11 +14,15 @@ var Widget = React.createClass({
             case 'widgetConfigUpdate-'+this.props.wid:
                 this.refreshConfig()
                 break;
+            case 'barMessage.'+this.props.wid:
+                this.barMessage(data)
+                break;
         }
     },
     componentWillMount: function () {
         this.subscriptionTokens[this.props.wid]=[]
         this.subscriptionTokens[this.props.wid].push({token:PubSub.subscribe('widgetConfigUpdate-'+this.props.wid, this.subscriptionHandler),msg:'widgetConfigUpdate-'+this.props.wid});
+        this.subscriptionTokens[this.props.wid].push({token:PubSub.subscribe('barMessage.'+this.props.wid, this.subscriptionHandler),msg:'barMessage.'+this.props.wid});
     },
     componentDidMount: function () {
         PubSub.publish('widgetConfigReq',{wid:this.props.wid})
@@ -42,6 +46,7 @@ var Widget = React.createClass({
         this.setState({downloadCounter:this.state.downloadCounter+1})
     },
     barMessage: function (data) {
+        console.log('barMessage received',data)
         if ('messageTime' in data && data.messageTime > this.state.barMessageTime) {
             this.setState({barMessage:data.message, barMessageTime:data.messageTime});
         }
@@ -840,8 +845,8 @@ var WidgetDs = React.createClass({
                 return React.createElement('br',{key:element.ne});
             }else if (element.type == 'datapoint') {
                 if (element.classname=='datapoint') { 
-                    tooltip=React.createElement(ReactBootstrap.Tooltip, null, element.datapointname);
-                    return React.createElement(ReactBootstrap.OverlayTrigger, {placement:"top", overlay:tooltip},
+                    tooltip=React.createElement(ReactBootstrap.Tooltip, {id:'datapoint'}, element.datapointname);
+                    return React.createElement(ReactBootstrap.OverlayTrigger, {key:element.ne, placement:"top", overlay:tooltip},
                              React.createElement('span',{key:element.ne, style:element.style, draggable:"true", onClick:this.onClickDatapoint.bind(null,element.pid), onDragStart:this.onDragStartDatapoint.bind(null,element.pid)}, element.data)
                            );
                 } else {
@@ -1301,8 +1306,6 @@ var WidgetMp = React.createClass({
         this.setState({interval:interval,data:data})
     },
     onDrop: function (e) {
-        console.log('onDrop ha llegado',e)
-        console.log('id',e.dataTransfer.getData('id'))
         id=e.dataTransfer.getData('id')
         if (id.length==32){
             data={wid:this.props.wid, 'new_datapoints':[id]}
@@ -1310,7 +1313,6 @@ var WidgetMp = React.createClass({
         }
     },
     onDragEnter: function (e) {
-        console.log('onDragEnter ha llegado',e)
         e.preventDefault();
     },
     onDragOver: function (e) {
@@ -1325,22 +1327,21 @@ var WidgetMp = React.createClass({
         this.setState({shareModal:false, live: this.state.livePrevious})
     },
     render: function () {
-        console.log('en el render del mp')
         var summary=$.map(this.state.data, function (element, key) {
-                    if (this.state.config.hasOwnProperty(key)) {
-                        summary=getDataSummary(element)
-                        datapointStyle={backgroundColor: this.state.config[key].color, borderRadius: '10px'}
-                        return React.createElement('tr', {key:key},
-                                 React.createElement('td', null,
-                                   React.createElement('span',{style:datapointStyle},"  "),
-                                   React.createElement('span',null,"  "),
-                                   this.state.config[key].datapointname
-                                 ),
-                                 React.createElement('td', null, summary.max),
-                                 React.createElement('td', null, summary.min),
-                                 React.createElement('td', null, summary.mean)
-                               );
-                    }
+            if (this.state.config.hasOwnProperty(key)) {
+                summary=getDataSummary(element)
+                datapointStyle={backgroundColor: this.state.config[key].color, borderRadius: '10px'}
+                return React.createElement('tr', {key:key},
+                    React.createElement('td', null,
+                    React.createElement('span',{style:datapointStyle},"  "),
+                    React.createElement('span',null,"  "),
+                        this.state.config[key].datapointname
+                    ),
+                    React.createElement('td', null, summary.max),
+                    React.createElement('td', null, summary.min),
+                    React.createElement('td', null, summary.mean)
+                );
+            }
         }.bind(this));
         var data=$.map(this.state.data, function (element, key) {
             if (this.state.config.hasOwnProperty(key)) {
@@ -1521,7 +1522,7 @@ var WidgetDsVariable = React.createClass({
             dropdown=null
         }
         return React.createElement(ReactBootstrap.OverlayTrigger, {ref:"popover", trigger:"click", rootClose:true, placement:"right", overlay:
-                 React.createElement(ReactBootstrap.Popover, {title:"Identify Datapoint"},
+                 React.createElement(ReactBootstrap.Popover, {id:"datapoint", title:"Identify Datapoint"},
                    React.createElement('div', null,
                      React.createElement('div', {className:"input-group"},
                        React.createElement(ReactBootstrap.Input, {ref:"datapointname", type:"text", className:"form-control", placeholder:"Datapoint name"}),

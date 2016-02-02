@@ -7,10 +7,6 @@ html {
       position: relative;
       min-height: 100%;
 }
-body {
-  padding-top: 50px;
-  margin-bottom: 60px;
-}
 
 
 /*
@@ -73,7 +69,6 @@ body {
   top: 51px;
   bottom: 30px;
   right: 0;
-  z-index: 1000;
   display: block;
   overflow-y: scroll;
   background-color: #F0F0F0;
@@ -85,7 +80,7 @@ body {
  */
 
 ::-webkit-scrollbar { 
-  display: none; 
+    display: none; 
 }
 
 .main {
@@ -430,4 +425,23 @@ body {
 .list-item-leave.list-item-leave-active {
   opacity: 0.01;
   transition: opacity 300ms ease-in;
+}
+
+/* 
+  Alert Area 
+             */
+
+.alert-area {
+    z-index: 1000;
+    width: 100%;
+    position: fixed;
+    top:0;
+    text-align: center;
+}
+
+.alert-area>div {
+    display: inline-block;
+    padding: 5px;
+    margin: 0 auto;
+    text-align: center;
 }

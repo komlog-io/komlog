@@ -26,15 +26,15 @@ var snapshotStore = new SnapshotStore();
 function processMsgDeleteSnapshot(msgData) {
     if (msgData.hasOwnProperty('nid')) {
         $.ajax({
-                url: '/etc/sn/'+msgData.nid,
-                dataType: 'json',
-                type: 'DELETE',
-            })
-            .then(function(data){
-                PubSub.publish('closeSlide',{lid:msgData.nid});
-            }, function(data){
-                PubSub.publish('closeSlide',{lid:msgData.nid});
-            });
+            url: '/etc/sn/'+msgData.nid,
+            dataType: 'json',
+            type: 'DELETE',
+        })
+        .then(function(data){
+            PubSub.publish('closeSlide',{lid:msgData.nid});
+        }, function(data){
+            PubSub.publish('barMessage.'+msgData.nid,{message:{type:'danger',message:'Error deleting snapshot. Code: '+data.responseJSON.error},messageTime:(new Date).getTime()});
+        });
     }
 }
 

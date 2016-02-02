@@ -102,16 +102,13 @@ DashboardStore.prototype = {
             $.each(data, function (key,value) {
                 if (key=='dashboardname' && this._dashboardConfig[bid].dashboardname != value) {
                     doStore=true
-                    console.log('no coincide la conf recibida con la actual',this._dashboardConfig[bid],data)
                 } else if (key == 'wids') {
                     if (data.wids.length != this._dashboardConfig[bid].wids.length) {
                         doStore = true
-                        console.log('no coincide la conf recibida con la actual',this._dashboardConfig[bid],data)
                     } else {
                         for (var i=0;i<data.wids.length;i++) {
                             if (this._dashboardConfig[bid].wids.indexOf(data.wids[i])==-1) {
                                 doStore = true;
-                                console.log('no coincide la conf recibida con la actual',this._dashboardConfig[bid],data)
                                 break;
                             }
                         }
@@ -145,9 +142,10 @@ function processMsgNewDashboard(msgData) {
     })
     .done(function (data) {
         PubSub.publish('dashboardConfigReq',{bid:data.bid})
+        PubSub.publish('barMessage',{message:{type:'success',message:'Dashboard created successfully'},messageTime:(new Date).getTime()})
     })
     .fail(function (data) {
-        console.log('dashboard creation error',data)
+        PubSub.publish('barMessage',{message:{type:'danger',message:'Error creating dashboard. Code: '+data.responseJSON.error},messageTime:(new Date).getTime()})
     })
 }
 
@@ -227,6 +225,7 @@ function processMsgDeleteDashboard(msgData) {
             .then(function(data){
                 dashboardStore.deleteLoopRequest(msgData.bid,'requestDashboardConfig')
             }, function(data){
+                PubSub.publish('barMessage',{message:{type:'danger',message:'Error deleting dashboard. Code: '+data.responseJSON.error},messageTime:(new Date).getTime()})
             });
     }
 }

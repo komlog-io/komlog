@@ -214,14 +214,15 @@ function processMsgModifyWidget(msgData) {
 function processMsgDeleteWidget(msgData) {
     if (msgData.hasOwnProperty('wid')) {
         $.ajax({
-                url: '/etc/wg/'+msgData.wid,
-                dataType: 'json',
-                type: 'DELETE',
-            })
-            .then(function(data){
-                widgetStore.deleteLoopRequest(msgData.wid,'requestWidgetConfig')
-            }, function(data){
-            });
+            url: '/etc/wg/'+msgData.wid,
+            dataType: 'json',
+            type: 'DELETE',
+        })
+        .then(function(data){
+            widgetStore.deleteLoopRequest(msgData.wid,'requestWidgetConfig')
+        }, function(data){
+            PubSub.publish('barMessage.'+msgData.wid,{message:{type:'danger',message:'Error deleting widget. Code '+data.responseJSON.error},messageTime:(new Date).getTime()})
+        });
     }
 }
 
@@ -263,12 +264,10 @@ function processMsgNewWidgetDsSnapshot(msgData) {
         data: JSON.stringify(requestData),
     })
     .done(function (data) {
-        alert('Snapshot created successfully');
-        console.log('Snapshot created successfully',data);
+        PubSub.publish('barMessage.'+msgData.wid,{message:{type:'success',message:'Snapshot shared successfully'},messageTime:(new Date).getTime()})
     })
     .fail(function (data) {
-        alert('Snapshot creation failed');
-        console.log('Snapshot creation failed',data);
+        PubSub.publish('barMessage.'+msgData.wid,{message:{type:'danger',message:'Error creating snapshot. Code '+data.responseJSON.error},messageTime:(new Date).getTime()})
     })
 }
 
@@ -281,12 +280,10 @@ function processMsgNewWidgetDpSnapshot(msgData) {
         data: JSON.stringify(requestData),
     })
     .done(function (data) {
-        alert('Snapshot created successfully');
-        console.log('Snapshot created successfully',data);
+        PubSub.publish('barMessage.'+msgData.wid,{message:{type:'success',message:'Snapshot shared successfully'},messageTime:(new Date).getTime()})
     })
     .fail(function (data) {
-        alert('Snapshot creation failed');
-        console.log('Snapshot creation failed',data);
+        PubSub.publish('barMessage.'+msgData.wid,{message:{type:'danger',message:'Error creating snapshot. Code '+data.responseJSON.error},messageTime:(new Date).getTime()})
     })
 }
 
@@ -299,12 +296,10 @@ function processMsgNewWidgetMpSnapshot(msgData) {
         data: JSON.stringify(requestData),
     })
     .done(function (data) {
-        alert('Snapshot created successfully');
-        console.log('Snapshot created successfully',data);
+        PubSub.publish('barMessage.'+msgData.wid,{message:{type:'success',message:'Snapshot shared successfully'},messageTime:(new Date).getTime()})
     })
     .fail(function (data) {
-        alert('Snapshot creation failed');
-        console.log('Snapshot creation failed',data);
+        PubSub.publish('barMessage.'+msgData.wid,{message:{type:'danger',message:'Error creating snapshot. Code '+data.responseJSON.error},messageTime:(new Date).getTime()})
     })
 }
 

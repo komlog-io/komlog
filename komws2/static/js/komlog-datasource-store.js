@@ -259,10 +259,8 @@ function requestSnapshotDsData (did,tid,seq) {
 
 function sendSnapshotDsDataUpdate (did,seq) {
     if (datasourceStore._snapshotDsData.hasOwnProperty(did) && datasourceStore._snapshotDsData[did].hasOwnProperty(seq)) {
-        console.log('mandamos datos snapshot')
         PubSub.publish('snapshotDsDataUpdate-'+did,{seq:seq})
     } 
-    console.log('salimos mandamos datos snapshot')
 }
 
 function processMsgDeleteDatasource(msgData) {
@@ -276,6 +274,7 @@ function processMsgDeleteDatasource(msgData) {
                 datasourceStore.deleteLoopRequest(msgData.pid,'requestDatasourceConfig')
                 datasourceStore.deleteLoopRequest(msgData.pid,'requestDatasourceData')
             }, function(data){
+                PubSub.publish('barMessage',{message:{type:'danger',message:'Error deleting datasource. Code: '+data.responseJSON.error},messageTime:(new Date).getTime()})
             });
     }
 }
