@@ -3,6 +3,7 @@
 @author: komlog crew
 '''
 
+import json
 from komcass.model.parametrization.events import types
 
 class UserEvent:
@@ -11,6 +12,12 @@ class UserEvent:
         self.date=date
         self.priority=priority
         self.type=type
+
+class UserEventGraphSummary:
+    def __init__(self, uid, date, summary=None):
+        self.uid=uid
+        self.date=date
+        self.summary=json.loads(summary) if isinstance(summary,str) else summary
 
 class UserEventNotificationNewUser(UserEvent):
     def __init__(self, uid, date, priority, username):

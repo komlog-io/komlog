@@ -124,7 +124,7 @@ def get_hash_sequence(content, left_position, right_position, sequence_deep):
 def get_numeric_value(variable):
     if variable.decimal_separator==variables.DECIMAL_SEPARATOR_NONE:
         numeric_value=variable.content.replace('.','').replace(',','')
-        return Decimal(variable.content)
+        return Decimal(numeric_value)
     elif variable.decimal_separator==variables.DECIMAL_SEPARATOR_COMMA:
         numeric_value=variable.content.replace('.','').replace(',','.')
         return Decimal(numeric_value)

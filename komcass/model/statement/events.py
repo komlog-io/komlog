@@ -19,6 +19,7 @@ STATEMENTS={
             150101:'select * from dat_user_events_disabled where uid=? and date<=? order by date desc limit ?',
             150102:'select * from dat_user_events_disabled where uid=? and date<=? and date>=? order by date desc',
             150103:'select * from dat_user_events_disabled where uid=? and date>=? order by date desc',
+            150150:'select * from dat_user_events_graph_summary where uid=? and date=?',
             150200:'select * from dat_ue_notif_new_user where uid=? and date=?',
             150300:'select * from dat_ue_notif_new_agent where uid=? and date=?',
             150400:'select * from dat_ue_notif_new_datasource where uid=? and date=?',
@@ -33,6 +34,7 @@ STATEMENTS={
             151200:'select * from dat_ue_notif_new_snapshot_shared_with_me where uid=? and date=?',
             155000:'insert into dat_user_events (uid,date,priority,type) values (?,?,?,?)',
             155100:'insert into dat_user_events_disabled (uid,date,priority,type) values (?,?,?,?)',
+            155150:'insert into dat_user_events_graph_summary (uid,date,summary) values (?,?,?)',
             155200:'insert into dat_ue_notif_new_user (uid,date,username) values (?,?,?)',
             155300:'insert into dat_ue_notif_new_agent (uid,date,aid,agentname) values (?,?,?,?)',
             155400:'insert into dat_ue_notif_new_datasource (uid,date,aid,did,datasourcename) values (?,?,?,?,?)',
@@ -48,17 +50,30 @@ STATEMENTS={
             157001:'delete from dat_user_events where uid=? and date=?',
             157100:'delete from dat_user_events_disabled where uid=?',
             157101:'delete from dat_user_events_disabled where uid=? and date=?',
+            157150:'delete from dat_user_events_graph_summary where uid=?',
+            157151:'delete from dat_user_events_graph_summary where uid=? and date=?',
             157200:'delete from dat_ue_notif_new_user where uid=?',
+            157201:'delete from dat_ue_notif_new_user where uid=? and date=?',
             157300:'delete from dat_ue_notif_new_agent where uid=?',
+            157301:'delete from dat_ue_notif_new_agent where uid=? and date=?',
             157400:'delete from dat_ue_notif_new_datasource where uid=?',
+            157401:'delete from dat_ue_notif_new_datasource where uid=? and date=?',
             157500:'delete from dat_ue_notif_new_datapoint where uid=?',
+            157501:'delete from dat_ue_notif_new_datapoint where uid=? and date=?',
             157600:'delete from dat_ue_notif_new_widget where uid=?',
+            157601:'delete from dat_ue_notif_new_widget where uid=? and date=?',
             157700:'delete from dat_ue_notif_new_dashboard where uid=?',
+            157701:'delete from dat_ue_notif_new_dashboard where uid=? and date=?',
             157800:'delete from dat_ue_notif_new_circle where uid=?',
+            157801:'delete from dat_ue_notif_new_circle where uid=? and date=?',
             157900:'delete from dat_ue_interv_dp_identification where uid=?',
+            157901:'delete from dat_ue_interv_dp_identification where uid=? and date=?',
             158000:'delete from dat_uer_interv_dp_identification where uid=? and date=?',
+            158001:'delete from dat_uer_interv_dp_identification where uid=? and date=? and response_date=?',
             158100:'delete from dat_ue_notif_new_snapshot_shared where uid=?',
+            158101:'delete from dat_ue_notif_new_snapshot_shared where uid=? and date=?',
             158200:'delete from dat_ue_notif_new_snapshot_shared_with_me where uid=?',
+            158201:'delete from dat_ue_notif_new_snapshot_shared_with_me where uid=? and date=?',
            }
 
 # selects (150000 - 154999)
@@ -76,6 +91,10 @@ S_A_DATUSEREVENTSDISABLED_B_UID_DATE=150100
 S_A_DATUSEREVENTSDISABLED_B_UID_ENDDATE_COUNT=150101
 S_A_DATUSEREVENTSDISABLED_B_UID_ENDDATE_FROMDATE=150102
 S_A_DATUSEREVENTSDISABLED_B_UID_FROMDATE=150103
+
+# dat_user_events_graph_summary
+
+S_A_DATUSEREVENTSGRAPHSUMMARY_B_UID_DATE=150150
 
 # dat_ue_notif_new_user
 
@@ -131,6 +150,10 @@ I_A_DATUSEREVENTS=155000
 # dat_user_events_disabled
 
 I_A_DATUSEREVENTSDISABLED=155100
+
+# dat_user_events_graph_summary
+
+I_A_DATUSEREVENTSGRAPHSUMMARY=155150
 
 # dat_ue_notif_new_user
 
@@ -189,49 +212,65 @@ D_A_DATUSEREVENTS_B_UID_DATE=157001
 D_A_DATUSEREVENTSDISABLED_B_UID=157100
 D_A_DATUSEREVENTSDISABLED_B_UID_DATE=157101
 
+# dat_user_events_graph_summary
+
+D_A_DATUSEREVENTSGRAPHSUMMARY_B_UID=157150
+D_A_DATUSEREVENTSGRAPHSUMMARY_B_UID_DATE=157151
+
 # dat_ue_notif_new_user
 
 D_A_DATUENOTIFNEWUSER_B_UID=157200
+D_A_DATUENOTIFNEWUSER_B_UID_DATE=157201
 
 # dat_ue_notif_new_agent
 
 D_A_DATUENOTIFNEWAGENT_B_UID=157300
+D_A_DATUENOTIFNEWAGENT_B_UID_DATE=157301
 
 # dat_ue_notif_new_datasource
 
 D_A_DATUENOTIFNEWDATASOURCE_B_UID=157400
+D_A_DATUENOTIFNEWDATASOURCE_B_UID_DATE=157401
 
 # dat_ue_notif_new_datapoint
 
 D_A_DATUENOTIFNEWDATAPOINT_B_UID=157500
+D_A_DATUENOTIFNEWDATAPOINT_B_UID_DATE=157501
 
 # dat_ue_notif_new_widget
 
 D_A_DATUENOTIFNEWWIDGET_B_UID=157600
+D_A_DATUENOTIFNEWWIDGET_B_UID_DATE=157601
 
 # dat_ue_notif_new_dashboard
 
 D_A_DATUENOTIFNEWDASHBOARD_B_UID=157700
+D_A_DATUENOTIFNEWDASHBOARD_B_UID_DATE=157701
 
 # dat_ue_notif_new_circle
 
 D_A_DATUENOTIFNEWCIRCLE_B_UID=157800
+D_A_DATUENOTIFNEWCIRCLE_B_UID_DATE=157801
 
 # dat_ue_intervention_datapoint_identification
 
 D_A_DATUEINTERVDPIDENTIFICATION_B_UID=157900
+D_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE=157901
 
 # dat_uer_intervention_datapoint_identification
 
 D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE=158000
+D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE_RESPDATE=158001
 
 # dat_ue_notif_new_snapshot_shared
 
 D_A_DATUENOTIFNEWSNAPSHOTSHARED_B_UID=158100
+D_A_DATUENOTIFNEWSNAPSHOTSHARED_B_UID_DATE=158101
 
 # dat_ue_notif_new_snapshot_shared_with_me
 
 D_A_DATUENOTIFNEWSNAPSHOTSHAREDWITHME_B_UID=158200
+D_A_DATUENOTIFNEWSNAPSHOTSHAREDWITHME_B_UID_DATE=158201
 
 
 # Updates (159000 - 159999)

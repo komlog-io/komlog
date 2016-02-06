@@ -875,3 +875,140 @@ d3ResourceGraph = {
     }   
 }
 
+d3SummaryLinegraph = {
+    update: function(el, datapoints, its, ets) {
+        y_values_array=[]
+        for (var i=0;i<datapoints.length;i++) {
+            y_values_array.push(d3.min(datapoints[i].data, function(d) { return d[1]; }))
+            y_values_array.push(d3.max(datapoints[i].data, function(d) { return d[1]; }))
+        }
+        var formatCount = d3.format(",.0f");
+        var formatPercent = d3.format(",.1f");
+        var customTimeFormat = d3.time.format.multi([
+          [".%L", function(d) { return d.getMilliseconds(); }],
+          [":%S", function(d) { return d.getSeconds(); }],
+          ["%I:%M", function(d) { return d.getMinutes(); }],
+          ["%I %p", function(d) { return d.getHours(); }],
+          ["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }],
+          ["%b %d", function(d) { return d.getDate() != 1; }],
+          ["%B", function(d) { return d.getMonth(); }],
+          ["%Y", function() { return true; }]
+          ]);
+        var margin = {top: 20, right: 0, bottom: 40, left: 10},
+            height = 200 - margin.top - margin.bottom;
+        width=d3.select(el).node().getBoundingClientRect().width-margin.left
+        var x = d3.time.scale()
+            .range([0, width])
+            .domain([new Date(its*1000),new Date(ets*1000)])
+        yDomain=d3.extent(y_values_array)
+        yMargin=(yDomain[1]-yDomain[0])*0.1
+        if (yMargin==0) {
+            yMargin=1
+        }
+        var y = d3.scale.linear()
+            .domain([yDomain[0]-yMargin,yDomain[1]+yMargin])
+            .rangeRound([height, 0]);
+        var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom")
+            .ticks(7)
+            .tickFormat(customTimeFormat);
+        var yAxis = d3.svg.axis() .scale(y)
+            .orient("left").ticks(8);
+        var svg = d3.select(el).select("svg g")
+        var line = d3.svg.line()
+                   .x(function (d) {return x(new Date(d[0]*1000))})
+                   .y(function (d) {return y(d[1])});
+        lines=svg.selectAll('.line')
+            .data(datapoints, function(d) {return d.color})
+        lines.enter()
+            .append('path')
+            .style('fill','none')
+            .style('stroke',function (d) {return d.color})
+            .attr('class','line')
+            .attr('d',function (d) {return line(d.data)});
+        lines.exit()
+            .remove()
+        lines.transition()
+            .duration(500)
+            .style('fill','none')
+            .style('stroke',function (d) {return d.color})
+            .attr('class','line')
+            .attr('d',function (d) {return line(d.data)});
+        svg.select('.x.axis')
+            .transition()
+            .duration(500)
+            .call(xAxis);
+        svg.select('.y.axis')
+            .transition()
+            .duration(500)
+            .call(yAxis);
+    },
+    create: function(el, datapoints, its, ets) {
+        y_values_array=[]
+        for (var i=0;i<datapoints.length;i++) {
+            y_values_array.push(d3.min(datapoints[i].data, function(d) { return d[1]; }))
+            y_values_array.push(d3.max(datapoints[i].data, function(d) { return d[1]; }))
+        }
+        var formatCount = d3.format(",.0f");
+        var formatPercent = d3.format(",.1f");
+        var customTimeFormat = d3.time.format.multi([
+          [".%L", function(d) { return d.getMilliseconds(); }],
+          [":%S", function(d) { return d.getSeconds(); }],
+          ["%I:%M", function(d) { return d.getMinutes(); }],
+          ["%I %p", function(d) { return d.getHours(); }],
+          ["%a %d", function(d) { return d.getDay() && d.getDate() != 1; }],
+          ["%b %d", function(d) { return d.getDate() != 1; }],
+          ["%B", function(d) { return d.getMonth(); }],
+          ["%Y", function() { return true; }]
+          ]);
+        var margin = {top: 20, right: 0, bottom: 40, left: 10},
+            height = 200 - margin.top - margin.bottom;
+        width=d3.select(el).node().getBoundingClientRect().width-margin.left
+        var x = d3.time.scale()
+            .range([0, width])
+            .domain([new Date(its*1000),new Date(ets*1000)])
+        yDomain=d3.extent(y_values_array)
+        yMargin=(yDomain[1]-yDomain[0])*0.1
+        if (yMargin==0) {
+            yMargin=1
+        }
+        var y = d3.scale.linear()
+            .domain([yDomain[0]-yMargin,yDomain[1]+yMargin])
+            .rangeRound([height, 0]);
+        var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom")
+            .ticks(7)
+            .tickFormat(customTimeFormat);
+        var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left").ticks(8);
+        var svg = d3.select(el).append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        var line = d3.svg.line()
+                   .x(function (d) {return x(new Date(d[0]*1000))})
+                   .y(function (d) {return y(d[1])});
+        svg.selectAll('.line')
+            .data(datapoints)
+            .enter()
+            .append('path')
+            .style('fill','none')
+            .style('stroke',function (d) {return d.color})
+            .attr('class','line')
+            .attr('d',function (d) {return line(d.data)});
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .style('shape-rendering','crispEdges')
+            .call(xAxis);
+        svg.append("g")
+            .attr("class", "y axis")
+            .style('shape-rendering','crispEdges')
+            .call(yAxis);
+    },
+}
+

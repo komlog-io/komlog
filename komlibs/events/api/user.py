@@ -5,7 +5,7 @@ Methods for manipulating User Events
 '''
 
 from komfig import logger
-import uuid, json
+import uuid
 from komcass.api import events as cassapievents
 from komcass.api import user as cassapiuser
 from komcass.api import agent as cassapiagent
@@ -16,11 +16,12 @@ from komcass.api import dashboard as cassapidashboard
 from komcass.api import circle as cassapicircle
 from komcass.api import snapshot as cassapisnapshot
 from komcass.api import ticket as cassapiticket
+from komcass.model.orm import events as ormevents
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
 from komlibs.events import errors, exceptions
+from komlibs.events.api import summary
 from komlibs.events.model import types, priorities, templates
-from komcass.model.orm import events as ormevents
 
 def get_event(uid, date):
     if not args.is_valid_uuid(uid):
@@ -33,7 +34,7 @@ def get_event(uid, date):
     else:
         return _get_event_data(event)
 
-def get_events(uid, to_date=None, from_date=None, count=30, params_serializable=False, html_literal=False):
+def get_events(uid, to_date=None, from_date=None, count=30, params_serializable=False, html_content=False):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_EAU_GEVS_IU)
     if to_date and not args.is_valid_date(to_date):
@@ -53,12 +54,12 @@ def get_events(uid, to_date=None, from_date=None, count=30, params_serializable=
         events=cassapievents.get_user_events(uid=uid, from_date=from_date)
     data=[]
     for event in events:
-        event_data=_get_event_data(event, params_serializable=params_serializable, html_literal=html_literal)
+        event_data=_get_event_data(event, params_serializable=params_serializable, html_content=html_content)
         if event_data:
             data.append(event_data)
     return data
 
-def _get_event_data(event, params_serializable=False, html_literal=False):
+def _get_event_data(event, params_serializable=False, html_content=False):
     if not isinstance(event, ormevents.UserEvent):
         return None
     else:
@@ -67,8 +68,9 @@ def _get_event_data(event, params_serializable=False, html_literal=False):
         except Exception:
             raise exceptions.EventNotFoundException(error=errors.E_EAU_GEVD_EVNF)
         else:
-            if html_literal and params_serializable:
+            if html_content and params_serializable:
                 event_data['html']=_get_event_html_template(event_type=event.type, parameters=event_data['parameters'])
+                event_data['summary']=summary.get_user_event_graph_summary_data(uid=event.uid, date=event.date)
             return event_data
 
 def _get_event_data_notification_new_user(event,params_serializable):
@@ -129,9 +131,11 @@ def _get_event_data_notification_new_snapshot_shared_with_me(event, params_seria
 
 def _get_event_html_template(event_type, parameters):
     if event_type in templates.HTML_TEMPLATES:
-        return templates.HTML_TEMPLATES[event_type].render(parameters=parameters)
+        title=templates.HTML_TITLE_TEMPLATES[event_type].render(parameters=parameters)
+        body=templates.HTML_BODY_TEMPLATES[event_type].render(parameters=parameters)
+        return {'title':title,'body':body}
     else:
-        return ''
+        return {}
 
 def enable_event(uid, date):
     if not args.is_valid_uuid(uid):
@@ -392,21 +396,28 @@ def _insert_event_notification_new_snapshot_shared(uid, parameters):
                     shared_uids.add(shared_user.uid)
             circles_info[shared_circle.cid]=shared_circle.circlename
     shared_event=ormevents.UserEventNotificationNewSnapshotShared(uid=user.uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, widgetname=snapshot.widgetname, nid=snapshot.nid, tid=ticket.tid, shared_with_users=users_info, shared_with_circles=circles_info)
+    summary_data=summary.generate_user_event_graph_summary_data(event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters=parameters)
     op_failed=False
     if cassapievents.insert_user_event(shared_event):
+        graph_summary=ormevents.UserEventGraphSummary(uid=user.uid, date=now, summary=summary_data)
+        cassapievents.insert_user_event_graph_summary(graph_summary)
         insert_events=[]
         for uid in shared_uids:
-            shared_event=ormevents.UserEventNotificationNewSnapshotSharedWithMe(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME, username=user.username, widgetname=snapshot.widgetname, nid=snapshot.nid, tid=ticket.tid)
-            if not cassapievents.insert_user_event(shared_event):
+            event=ormevents.UserEventNotificationNewSnapshotSharedWithMe(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME, username=user.username, widgetname=snapshot.widgetname, nid=snapshot.nid, tid=ticket.tid)
+            if not cassapievents.insert_user_event(event):
                 op_failed=True
                 break
             else:
-                insert_events.append(shared_event)
+                graph_summary=ormevents.UserEventGraphSummary(uid=uid, date=now, summary=summary_data)
+                cassapievents.insert_user_event_graph_summary(graph_summary)
+                insert_events.append(event)
         if op_failed:
-            for shared_event in insert_events:
-                cassapievents.delete_user_event(event=shared_event)
+            for event in insert_events:
+                cassapievents.delete_user_event(event=event)
+                cassapievents.delete_user_event_graph_summary(uid=event.uid, date=event.date)
     if op_failed:
         cassapievents.delete_user_event(event=shared_event)
+        cassapievents.delete_user_event_graph_summary(uid=shared_event.uid, date=shared_event.date)
         raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNSS_DBPIE)
     else:
         return {'uid':uid, 'date':now}

@@ -19,11 +19,13 @@ STATEMENTS={20000:'select * from mst_datasource where did=?',
             20100:'select * from mst_datasource_stats where did=?',
             20200:'select * from dat_datasource where did=? and date=?',
             20201:'select * from dat_datasource where did=? and date>=? and date<=? order by date desc',
+            20202:'select * from dat_datasource where did=? and date>=? and date<=? order by date desc limit ?',
             20300:'select variables from dat_datasource_map where did=? and date=?',
             20301:'select datapoints from dat_datasource_map where did=? and date=?',
             20302:'select * from dat_datasource_map where did=? and date=?',
             20303:'select * from dat_datasource_map where did=? and date>=? and date<=? order by date desc',
             20304:'select date from dat_datasource_map where did=? and date>=? and date<=? order by date desc',
+            20305:'select * from dat_datasource_map where did=? and date>=? and date<=? order by date desc limit ?',
             20400:'select * from dat_datasource_text_summary where did=? and date=?',
             20401:'select * from dat_datasource_text_summary where did=? and date>=? and date<=? order by date desc',
             20500:'select * from dat_datasource_novelty_detector_datapoint where did=? and pid=? order by date desc limit 1',
@@ -71,6 +73,7 @@ S_A_MSTDATASOURCESTATS_B_DID=20100
 
 S_A_DATDATASOURCE_B_DID_DATE=20200
 S_A_DATDATASOURCE_B_DID_INITDATE_ENDDATE=20201
+S_A_DATDATASOURCE_B_DID_INITDATE_ENDDATE_COUNT=20202
 
 # dat_datasource_map
 
@@ -79,6 +82,7 @@ S_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE=20301
 S_A_DATDATASOURCEMAP_B_DID_DATE=20302
 S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20303
 S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20304
+S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE_COUNT=20305
 
 # dat_datasource_text_summary
 

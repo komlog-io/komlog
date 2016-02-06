@@ -1,3 +1,17 @@
+var EventSummary = React.createClass ({
+    componentDidMount: function () {
+        var el = ReactDOM.findDOMNode(this)
+        if (this.props.data.type == 'dp') {
+            d3SummaryLinegraph.create(el, this.props.data.datapoints, this.props.data.its, this.props.data.ets)
+        } else if (this.props.data.type == 'mp') {
+            d3SummaryLinegraph.create(el, this.props.data.datapoints, this.props.data.its, this.props.data.ets)
+        }
+    },
+    render: function () {
+        return React.createElement('div', {className: 'user-event-summary'});
+    }
+});
+
 var EventsSideBar = React.createClass({
     getInitialState: function () {
         return {events:[],
@@ -87,92 +101,26 @@ var EventsSideBar = React.createClass({
     },
     getEventList: function () {
         eventList = $.map(this.state.events, function (d,i) {
-            if (d.type < 1000) {
-                icon=React.createElement(ReactBootstrap.Glyphicon, {glyp:"info-sign"});
-                className="userevents-panel "+d.priority
-                if (d.type == 1) {
-                    title=React.createElement('span', null, "New User");
-                    message=React.createElement('div', null, "Welcome to Komlog, "+d.params.username+"!");
-                } else if (d.type == 2) {
-                    title=React.createElement('span', null, "New Agent");
-                    message=React.createElement('div', null, "Agent "+d.params.agentname+" created.");
-                } else if (d.type == 3) {
-                    title=React.createElement('span', null, "New Datasource");
-                    message=React.createElement('div', null,
-                              "Datasource ",
-                              React.createElement('a', {onClick:() => PubSub.publish('loadSlide',{did:d.params.did})}, d.params.datasourcename),
-                              " created."
-                            );
-                } else if (d.type == 4) {
-                    title=React.createElement('span', null, "New Datapoint");
-                    message=React.createElement('div', null,
-                              "Datapoint ",
-                              React.createElement('a', {onClick:() => PubSub.publish('loadSlide',{pid:d.params.pid})}, d.params.datapointname),
-                              " created, associated to datasource ",
-                              React.createElement('a', {onClick:() => PubSub.publish('loadSlide',{did:d.params.did})}, d.params.datasourcename)
-                            );
-                } else if (d.type == 5) {
-                    title=React.createElement('span', null, "New Graph");
-                    message=React.createElement('div', null,
-                              "Graph ",
-                              React.createElement('a', {onClick:() => PubSub.publish('loadSlide',{wid:d.params.wid})}, d.params.widgetname),
-                              " created."
-                            );
-                } else if (d.type == 6) {
-                    title=React.createElement('span', null, "New Dashboard");
-                    message=React.createElement('div', null,
-                              "Dashboard ",
-                              React.createElement('a', {onClick:() => PubSub.publish('loadSlide',{bid:d.params.bid})}, d.params.dashboardname),
-                              " created."
-                            );
-                } else if (d.type == 7) {
-                    title=React.createElement('span', null, "New Circle");
-                    message=React.createElement('div', null, "Circle "+d.params.circlename+" created.");
-                } else if (d.type == 8) {
-                    title=React.createElement('span', null, "New Snapshot Shared");
-                    message=React.createElement('div', null,
-                              "New snapshot shared of ",
-                              React.createElement('a', {onClick:() => PubSub.publish('loadSlide',{nid:d.params.nid})}, d.params.widgetname),
-                              "."
-                            );
-                } else if (d.type == 9) {
-                    title=React.createElement('span', null, "New Snapshot Received");
-                    message=React.createElement('div', null,
-                              "User "+d.params.username+' shared a snapshot of ',
-                              React.createElement('a', {onClick:() => PubSub.publish('loadSlide',{nid:d.params.nid, tid:d.params.tid})}, d.params.widgetname),
-                              " with you."
-                            );
-                } else {
-                    title=React.createElement('span', null, "?");
-                    message=React.createElement('div', null, "Whats this?");
-                }
-            } else if (d.type >= 1000 && d.type <10000) {
-                icon=React.createElement(ReactBootstrap.Glyphicon, {glyp:"question-sign"});
-                    title=React.createElement('span', null, "WTF");
-                    message=React.createElement('div', null);
+            icon=React.createElement(ReactBootstrap.Glyphicon, {glyph:"info-sign", className:"user-event-id-icon"});
+            event_title={__html:d.html.title}
+            event_body={__html:d.html.body}
+            title=React.createElement('div', {dangerouslySetInnerHTML:event_title});
+            body=React.createElement('div', {dangerouslySetInnerHTML:event_body});
+            if ('summary' in d && d.summary!=null) {
+                summary=React.createElement(EventSummary, {data:d.summary})
             } else {
-                icon=React.createElement(ReactBootstrap.Glyphicon, {glyp:"exclamation-sign"});
-                    title=React.createElement('span', null, "WTF");
-                    message=React.createElement('div', null);
+                summary=null
             }
-            return React.createElement('li', {key:d.seq, className:"userevents"},
-                     React.createElement('div', {className:className},
-                       React.createElement('div', {className:"userevents-bar"},
-                         React.createElement('span', null,
-                           React.createElement(ReactBootstrap.Glyphicon, {glyph:"time"}),
-                             this.getDateStatement(d.ts)
-                         ),
-                         React.createElement('span', {onClick:this.disableEvent.bind(this,d.seq), className:"pull-right"},
-                           React.createElement(ReactBootstrap.Glyphicon, {glyph:"remove"})
-                         )
-                       ),
-                       React.createElement('div', {className:"userevents-title"},
-                         icon,
-                         " ",
-                         title
-                       ),
-                       React.createElement('div', {className:"userevents-body"}, message)
-                     )
+            return React.createElement('li', {key:d.seq, className:"user-event"},
+                     icon,
+                     React.createElement('div', {className:"user-event-title"},
+                       title
+                     ),
+                     React.createElement('div', {className:"user-event-subtitle"},
+                       this.getDateStatement(d.ts)
+                     ),
+                     React.createElement('div', {className:"user-event-body"}, body),
+                     summary
                    );
         }.bind(this));
         return eventList
@@ -191,7 +139,7 @@ var EventsSideBar = React.createClass({
                      )
                    )
                  ),
-                 React.createElement('ul', {className:"userevents"}, eventList)
+                 React.createElement('ul', {className:"user-events"}, eventList)
                );
     }
 });

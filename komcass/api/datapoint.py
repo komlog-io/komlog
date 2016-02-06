@@ -81,12 +81,15 @@ def get_datapoint_data_at(pid, date):
     else:
         return ormdatapoint.DatapointData(row[0]['pid'],row[0]['date'],row[0]['value'])
 
-def get_datapoint_data(pid, fromdate, todate, reverse=False, num_regs=100):
-    row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINT_B_PID_INITDATE_ENDDATE_NUMREGS,(pid,fromdate,todate,num_regs))
+def get_datapoint_data(pid, fromdate, todate, count=None):
+    if count is None:
+        row=connection.session.execute(stmtdatapoint.S_DATEVALUE_DATDATAPOINT_B_PID_INITDATE_ENDDATE,(pid,fromdate,todate))
+    else:
+        row=connection.session.execute(stmtdatapoint.S_DATEVALUE_DATDATAPOINT_B_PID_INITDATE_ENDDATE_COUNT,(pid,fromdate,todate,count))
     data=[]
     if row:
         for d in row:
-            data.append(ormdatapoint.DatapointData(d['pid'],d['date'],d['value']))
+            data.append(d)
     return data
 
 def new_datapoint(datapoint):

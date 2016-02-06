@@ -43,7 +43,7 @@ def get_datapoint_data_request(username, pid, start_date, end_date, tid=None):
     authorization.authorize_request(request=requests.GET_DATAPOINT_DATA,uid=uid,pid=pid,ii=ii,ie=ie,tid=tid)
     ii=timeuuid.min_uuid_from_time(timestamp=float(start_date)) if start_date else None
     ie=timeuuid.max_uuid_from_time(timestamp=float(end_date)) if end_date else None
-    data=datapointapi.get_datapoint_data(pid, fromdate=ii, todate=ie)
+    data=datapointapi.get_datapoint_data(pid, fromdate=ii, todate=ie, count=300) #300 regs max
     response_data=[]
     for point in data:
         response_data.append({'ts':timeuuid.get_unix_timestamp(point['date']),

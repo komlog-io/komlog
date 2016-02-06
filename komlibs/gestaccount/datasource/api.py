@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 datasource.py: library for managing datasource operations
 
@@ -249,9 +248,9 @@ def generate_datasource_novelty_detector_for_datapoint(pid):
         inline_dates.append(sample.date)
     init_date=timeuuid.uuid1(seconds=1)
     end_date=timeuuid.uuid1()
-    num_regs=1000
-    for reg in cassapidatapoint.get_datapoint_data(pid=pid, fromdate=init_date, todate=end_date, num_regs=num_regs):
-        inline_dates.append(reg.date)
+    count=1000
+    for reg in cassapidatapoint.get_datapoint_data(pid=pid, fromdate=init_date, todate=end_date, count=count):
+        inline_dates.append(reg['date'])
     inline_dates=sorted(list(set(inline_dates)))
     if len(inline_dates)==0:
         raise exceptions.DatasourceDataNotFoundException(error=errors.E_GDA_GDNDFD_DSDNF)

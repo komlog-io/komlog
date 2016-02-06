@@ -1023,3 +1023,342 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(len(responses),0)
 
 
+    def test_get_user_event_graph_summary_non_existing_uid(self):
+        ''' get_user_event_graph_summary should return None if uid does not exist '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertIsNone(eventsapi.get_user_event_graph_summary(uid=uid, date=date))
+
+    def test_get_user_event_graph_summary_non_existing_date(self):
+        ''' get_user_event_graph_summary should return None if event at the specified date does not exist '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        summary={'a':'text','b':23234,'c':[234,'234234',242,'afaAA33']}
+        graph_summary=ormevents.UserEventGraphSummary(uid=uid,date=date,summary=summary)
+        self.assertTrue(eventsapi.insert_user_event_graph_summary(graph_summary))
+        new_date=timeuuid.uuid1()
+        self.assertIsNone(eventsapi.get_user_event_graph_summary(uid=uid, date=new_date))
+
+    def test_get_user_event_graph_summary_success(self):
+        ''' get_user_event_graph_summary should succeed if event exists '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        summary={'a':'text','b':23234,'c':[234,'234234',242,'afaAA33']}
+        graph_summary=ormevents.UserEventGraphSummary(uid=uid,date=date,summary=summary)
+        self.assertTrue(eventsapi.insert_user_event_graph_summary(graph_summary))
+        db_graph_summary=eventsapi.get_user_event_graph_summary(uid=uid, date=date)
+        self.assertIsNotNone(db_graph_summary)
+        self.assertEqual(graph_summary.uid,db_graph_summary.uid)
+        self.assertEqual(graph_summary.date,db_graph_summary.date)
+        self.assertEqual(graph_summary.summary,db_graph_summary.summary)
+
+    def test_delete_user_event_failure_non_UserEvent_instance(self):
+        ''' delete_user_event should return False if event is not an instance of UserEvent '''
+        events=[None,23, '23423',uuid.uuid4(),{'dict':'dict'},{'set'},['list'],('tuple','tuple2')]
+        for event in events:
+            self.assertFalse(eventsapi.delete_user_event(event))
+
+    def test_delete_user_event_success_non_existing_event(self):
+        ''' delete_user_event should return True if event does not exist '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        username='test_delete_user_event_success_non_existing_event'
+        event=ormevents.UserEventNotificationNewUser(uid=uid,date=date,priority=1,username=username)
+        self.assertTrue(eventsapi.delete_user_event(event))
+
+    def test_delete_user_event_success_user_event_notification_new_user(self):
+        ''' delete_user_event should succeed if event is an UserEvent instance '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        username='test_delete_user_event_success'
+        event=ormevents.UserEventNotificationNewUser(uid=uid,date=date,priority=1,username=username)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertEqual(event.uid, db_user_event.uid)
+        self.assertEqual(event.date, db_user_event.date)
+        self.assertEqual(event.priority, db_user_event.priority)
+        self.assertEqual(event.type, db_user_event.type)
+        self.assertEqual(db_user_event.type, types.USER_EVENT_NOTIFICATION_NEW_USER)
+        self.assertEqual(event.username, db_user_event.username)
+        self.assertTrue(eventsapi.delete_user_event(event))
+        self.assertIsNone(eventsapi.get_user_event(uid=uid, date=date))
+
+    def test_delete_user_event_success_user_event_notification_new_agent(self):
+        ''' delete_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        agentname='test_delete_user_event_success_user_event_notification_new_agent'
+        event=ormevents.UserEventNotificationNewAgent(uid=uid,date=date, priority=1,aid=aid,agentname=agentname)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_AGENT)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.aid,db_user_event.aid)
+        self.assertEqual(event.agentname,db_user_event.agentname)
+        self.assertTrue(eventsapi.delete_user_event(event))
+        self.assertIsNone(eventsapi.get_user_event(uid=uid, date=date))
+
+    def test_delete_user_event_success_user_event_notification_new_datasource(self):
+        ''' delete_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        datasourcename='test_delete_user_event_success_user_event_notification_new_datasource'
+        event=ormevents.UserEventNotificationNewDatasource(uid=uid,date=date, priority=1,aid=aid, did=did, datasourcename=datasourcename)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.aid,db_user_event.aid)
+        self.assertEqual(event.did,db_user_event.did)
+        self.assertEqual(event.datasourcename,db_user_event.datasourcename)
+        self.assertTrue(eventsapi.delete_user_event(event))
+        self.assertIsNone(eventsapi.get_user_event(uid=uid, date=date))
+
+    def test_delete_user_event_success_user_event_notification_new_datapoint(self):
+        ''' delete_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        datasourcename='test_delete_user_event_success_user_event_notification_new_datapoint'
+        datapointname='test_delete_user_event_success_user_event_notification_new_datapoint'
+        event=ormevents.UserEventNotificationNewDatapoint(uid=uid,date=date, priority=1,did=did, pid=pid, datasourcename=datasourcename, datapointname=datapointname)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.did,db_user_event.did)
+        self.assertEqual(event.pid,db_user_event.pid)
+        self.assertEqual(event.datasourcename,db_user_event.datasourcename)
+        self.assertEqual(event.datapointname,db_user_event.datapointname)
+        self.assertTrue(eventsapi.delete_user_event(event))
+        self.assertIsNone(eventsapi.get_user_event(uid=uid, date=date))
+
+    def test_delete_user_event_success_user_event_notification_new_widget(self):
+        ''' delete_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        wid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        widgetname='test_delete_user_event_success_user_event_notification_new_widget'
+        event=ormevents.UserEventNotificationNewWidget(uid=uid,date=date, priority=1,wid=wid,widgetname=widgetname)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_WIDGET)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.wid,db_user_event.wid)
+        self.assertEqual(event.widgetname,db_user_event.widgetname)
+        self.assertTrue(eventsapi.delete_user_event(event))
+        self.assertIsNone(eventsapi.get_user_event(uid=uid, date=date))
+
+    def test_delete_user_event_success_user_event_notification_new_dashboard(self):
+        ''' delete_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        bid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        dashboardname='test_delete_user_event_success_user_event_notification_new_dashboard'
+        event=ormevents.UserEventNotificationNewDashboard(uid=uid,date=date, priority=1,bid=bid,dashboardname=dashboardname)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.bid,db_user_event.bid)
+        self.assertEqual(event.dashboardname,db_user_event.dashboardname)
+        self.assertTrue(eventsapi.delete_user_event(event))
+        self.assertIsNone(eventsapi.get_user_event(uid=uid, date=date))
+
+    def test_delete_user_event_success_user_event_notification_new_circle(self):
+        ''' delete_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        cid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        circlename='test_delete_user_event_success_user_event_notification_new_circle'
+        event=ormevents.UserEventNotificationNewCircle(uid=uid,date=date, priority=1,cid=cid,circlename=circlename)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_CIRCLE)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.cid,db_user_event.cid)
+        self.assertEqual(event.circlename,db_user_event.circlename)
+        self.assertTrue(eventsapi.delete_user_event(event))
+        self.assertIsNone(eventsapi.get_user_event(uid=uid, date=date))
+
+    def test_delete_user_event_success_user_event_notification_new_snapshot_shared(self):
+        ''' delete_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        tid=uuid.uuid4()
+        widgetname='test_get_user_event_success_user_event_notification_new_snapshot_shared'
+        shared_with_users={uuid.uuid4():'username1',uuid.uuid4():'username3'}
+        shared_with_circles={uuid.uuid4():'circlename1',uuid.uuid4():'circlename5'}
+        date=timeuuid.uuid1()
+        event=ormevents.UserEventNotificationNewSnapshotShared(uid=uid,date=date, priority=1,nid=nid,tid=tid,widgetname=widgetname,shared_with_users=shared_with_users,shared_with_circles=shared_with_circles)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.nid,db_user_event.nid)
+        self.assertEqual(event.tid,db_user_event.tid)
+        self.assertEqual(event.widgetname,db_user_event.widgetname)
+        self.assertEqual(event.shared_with_users,db_user_event.shared_with_users)
+        self.assertEqual(event.shared_with_circles,db_user_event.shared_with_circles)
+        self.assertTrue(eventsapi.delete_user_event(event))
+        self.assertIsNone(eventsapi.get_user_event(uid=uid, date=date))
+
+    def test_delete_user_event_success_user_event_notification_new_snapshot_shared_with_me(self):
+        ''' delete_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        nid=uuid.uuid4()
+        tid=uuid.uuid4()
+        widgetname='test_get_user_event_success_user_event_notification_new_snapshot_shared'
+        username='test_get_user_event_success_user_event_notification_new_snapshot_shared_username'
+        date=timeuuid.uuid1()
+        event=ormevents.UserEventNotificationNewSnapshotSharedWithMe(uid=uid,date=date, priority=1,nid=nid,tid=tid,widgetname=widgetname,username=username)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.nid,db_user_event.nid)
+        self.assertEqual(event.tid,db_user_event.tid)
+        self.assertEqual(event.widgetname,db_user_event.widgetname)
+        self.assertEqual(event.username,db_user_event.username)
+        self.assertTrue(eventsapi.delete_user_event(event))
+        self.assertIsNone(eventsapi.get_user_event(uid=uid, date=date))
+
+    def test_delete_user_event_success_user_event_intervention_datapoint_identification(self):
+        ''' delete_user_event should succeed if event exists '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        did=uuid.uuid4()
+        ds_date=timeuuid.uuid1()
+        discarded=[uuid.uuid4(), uuid.uuid4()]
+        doubts=[uuid.uuid4(), uuid.uuid4()]
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.did,db_user_event.did)
+        self.assertEqual(event.ds_date,db_user_event.ds_date)
+        self.assertEqual(sorted(event.doubts),sorted(db_user_event.doubts))
+        self.assertEqual(sorted(event.discarded),sorted(db_user_event.discarded))
+        self.assertTrue(eventsapi.delete_user_event(event))
+        self.assertIsNone(eventsapi.get_user_event(uid=uid, date=date))
+
+
+    def test_delete_user_event_response_success_intervention_datapoint_identification(self):
+        ''' delete_user_event_response should delete the indicated response '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        did=uuid.uuid4()
+        ds_date=timeuuid.uuid1()
+        discarded=[uuid.uuid4(), uuid.uuid4()]
+        doubts=[uuid.uuid4(), uuid.uuid4()]
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response1))
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response2))
+        responses=eventsapi.get_user_event_responses(event)
+        self.assertEqual(len(responses),2)
+        for response in responses:
+            self.assertTrue(isinstance(response, ormevents.UserEventResponseInterventionDatapointIdentification))
+        self.assertTrue(eventsapi.delete_user_event_response(response1))
+        responses=eventsapi.get_user_event_responses(event)
+        self.assertEqual(len(responses),1)
+
+    def test_delete_user_event_responses_failure_invalid_event_type(self):
+        ''' delete_user_event_responses should fail if event type is not valid '''
+        events=[None,23, '23423',uuid.uuid4(),{'dict':'dict'},{'set'},['list'],('tuple','tuple2')]
+        for event in events:
+            self.assertFalse(eventsapi.delete_user_event_responses(event))
+
+    def test_delete_user_event_responses_success_no_event_found(self):
+        ''' delete_user_event_responses should return True if no event is found '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        did=uuid.uuid4()
+        ds_date=timeuuid.uuid1()
+        discarded=[uuid.uuid4(), uuid.uuid4()]
+        doubts=[uuid.uuid4(), uuid.uuid4()]
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(eventsapi.delete_user_event_responses(event))
+
+    def test_delete_user_event_responses_success_no_response_found(self):
+        ''' delete_user_event_responses should return True if event has no responses '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        did=uuid.uuid4()
+        ds_date=timeuuid.uuid1()
+        discarded=[uuid.uuid4(), uuid.uuid4()]
+        doubts=[uuid.uuid4(), uuid.uuid4()]
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        responses=eventsapi.get_user_event_responses(event)
+        self.assertEqual(len(responses),0)
+        self.assertTrue(eventsapi.delete_user_event_responses(event))
+        responses=eventsapi.get_user_event_responses(event)
+        self.assertEqual(len(responses),0)
+
+    def test_delete_user_event_responses_success_intervention_datapoint_identification(self):
+        ''' delete_user_event_responses should delete the event responses '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        did=uuid.uuid4()
+        ds_date=timeuuid.uuid1()
+        discarded=[uuid.uuid4(), uuid.uuid4()]
+        doubts=[uuid.uuid4(), uuid.uuid4()]
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response1))
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        self.assertTrue(eventsapi.insert_user_event_response(response2))
+        responses=eventsapi.get_user_event_responses(event)
+        self.assertEqual(len(responses),2)
+        for response in responses:
+            self.assertTrue(isinstance(response, ormevents.UserEventResponseInterventionDatapointIdentification))
+        self.assertTrue(eventsapi.delete_user_event_responses(event))
+        responses=eventsapi.get_user_event_responses(event)
+        self.assertEqual(len(responses),0)
+
+

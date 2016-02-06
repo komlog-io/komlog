@@ -7,6 +7,7 @@ from komcass.model.schema import keyspace
 OBJECTS=[
          'DAT_USER_EVENTS',
          'DAT_USER_EVENTS_DISABLED',
+         'DAT_USER_EVENTS_GRAPH_SUMMARY',
          'DAT_UE_NOTIF_NWUS',
          'DAT_UE_NOTIF_NWAG',
          'DAT_UE_NOTIF_NWDS',
@@ -37,6 +38,15 @@ DAT_USER_EVENTS_DISABLED='''
             date timeuuid,
             priority int,
             type int,
+            PRIMARY KEY (uid,date)
+        );
+    '''
+
+DAT_USER_EVENTS_GRAPH_SUMMARY='''
+        CREATE TABLE dat_user_events_graph_summary (
+            uid uuid,
+            date timeuuid,
+            summary text,
             PRIMARY KEY (uid,date)
         );
     '''

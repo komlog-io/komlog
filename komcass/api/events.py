@@ -2,10 +2,12 @@
 @author: komlog crew
 '''
 
+import json
 from komcass.model.orm import events as ormevents
 from komcass.model.parametrization.events import types
 from komcass.model.statement import events as stmtevents
 from komcass import connection
+from komfig import logger
 
 
 def get_user_event(uid, date):
@@ -227,6 +229,7 @@ def _insert_user_event_notification_new_snapshot_shared_with_me(event):
 def delete_user_events(uid):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUSEREVENTSDISABLED_B_UID,(uid,))
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTSGRAPHSUMMARY_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWUSER_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWAGENT_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWDATASOURCE_B_UID,(uid,))
@@ -308,6 +311,119 @@ def delete_user_events_responses_intervention_datapoint_identification(uid):
         connection.session.execute(stmtevents.D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE,(resp.uid,resp.date))
     return True
 
+def get_user_event_graph_summary(uid, date):
+    row=connection.session.execute(stmtevents.S_A_DATUSEREVENTSGRAPHSUMMARY_B_UID_DATE,(uid,date))
+    if row:
+        return ormevents.UserEventGraphSummary(**row[0])
+    else:
+        return None
+
+def insert_user_event_graph_summary(summary):
+    if not isinstance(summary, ormevents.UserEventGraphSummary):
+        return False
+    else:
+        try:
+            text_summary=json.dumps(summary.summary) if isinstance(summary.summary,dict) else summary.summary
+            connection.session.execute(stmtevents.I_A_DATUSEREVENTSGRAPHSUMMARY, (summary.uid,summary.date,text_summary))
+            return True
+        except Exception:
+            return False
+
+def delete_user_event_graph_summary(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTSGRAPHSUMMARY_B_UID_DATE,(uid,date))
+    return True
+
+def delete_user_event(event):
+    if not isinstance(event, ormevents.UserEvent):
+        return False
+    else:
+        try:
+            return delete_user_event_funcs[event.type](event.uid, event.date)
+        except KeyError:
+            return False
+
+def _delete_user_event_notification_new_user(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid,date))
+    connection.session.execute(stmtevents.D_A_DATUENOTIFNEWUSER_B_UID_DATE, (uid, date))
+    return True
+
+def _delete_user_event_notification_new_agent(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
+    connection.session.execute(stmtevents.D_A_DATUENOTIFNEWAGENT_B_UID_DATE, (uid, date))
+    return True
+
+def _delete_user_event_notification_new_datasource(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
+    connection.session.execute(stmtevents.D_A_DATUENOTIFNEWDATASOURCE_B_UID_DATE, (uid, date))
+    return True
+
+def _delete_user_event_notification_new_datapoint(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
+    connection.session.execute(stmtevents.D_A_DATUENOTIFNEWDATAPOINT_B_UID_DATE, (uid, date))
+    return True
+
+def _delete_user_event_notification_new_widget(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
+    connection.session.execute(stmtevents.D_A_DATUENOTIFNEWWIDGET_B_UID_DATE, (uid, date))
+    return True
+
+def _delete_user_event_notification_new_dashboard(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
+    connection.session.execute(stmtevents.D_A_DATUENOTIFNEWDASHBOARD_B_UID_DATE, (uid, date))
+    return True
+
+def _delete_user_event_notification_new_circle(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
+    connection.session.execute(stmtevents.D_A_DATUENOTIFNEWCIRCLE_B_UID_DATE, (uid, date))
+    return True
+
+def _delete_user_event_intervention_datapoint_identification(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
+    connection.session.execute(stmtevents.D_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE, (uid, date))
+    return True
+
+def _delete_user_event_notification_new_snapshot_shared(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid,date))
+    connection.session.execute(stmtevents.D_A_DATUENOTIFNEWSNAPSHOTSHARED_B_UID_DATE, (uid, date))
+    return True
+
+def _delete_user_event_notification_new_snapshot_shared_with_me(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
+    connection.session.execute(stmtevents.D_A_DATUENOTIFNEWSNAPSHOTSHAREDWITHME_B_UID_DATE, (uid, date))
+    return True
+
+def _delete_user_event_intervention_datapoint_identification(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
+    connection.session.execute(stmtevents.D_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE, (uid, date))
+    return True
+
+def delete_user_event_responses(event):
+    if not isinstance(event, ormevents.UserEvent):
+        return False
+    else:
+        responses=get_user_event_responses(event)
+        deleted=[]
+        for response in responses:
+            if delete_user_event_response(response):
+                deleted.append(response)
+            else:
+                for d_response in deleted:
+                    insert_user_event_response(d_response)
+                return False
+        return True
+
+def delete_user_event_response(response):
+    if not isinstance(response, ormevents.UserEventResponse):
+        return False
+    else:
+        try:
+            return delete_user_event_response_funcs[response.type](response.uid, response.date, response.response_date)
+        except Exception as e:
+            return False
+
+def _delete_user_event_response_intervention_datapoint_identification(uid, date, response_date):
+    connection.session.execute(stmtevents.D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE_RESPDATE,(uid,date,response_date))
+    return True
 
 #### Type Funcs associations
 
@@ -338,11 +454,28 @@ insert_user_event_funcs = {
     types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:_insert_user_event_intervention_datapoint_identification,
 }
 
+delete_user_event_funcs = {
+    types.USER_EVENT_NOTIFICATION_NEW_USER:_delete_user_event_notification_new_user,
+    types.USER_EVENT_NOTIFICATION_NEW_AGENT:_delete_user_event_notification_new_agent,
+    types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE:_delete_user_event_notification_new_datasource,
+    types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT:_delete_user_event_notification_new_datapoint,
+    types.USER_EVENT_NOTIFICATION_NEW_WIDGET:_delete_user_event_notification_new_widget,
+    types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD:_delete_user_event_notification_new_dashboard,
+    types.USER_EVENT_NOTIFICATION_NEW_CIRCLE:_delete_user_event_notification_new_circle,
+    types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED:_delete_user_event_notification_new_snapshot_shared,
+    types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME:_delete_user_event_notification_new_snapshot_shared_with_me,
+    types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:_delete_user_event_intervention_datapoint_identification,
+}
+
 get_user_event_responses_funcs = {
     types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:_get_user_event_responses_intervention_datapoint_identification,
 }
 
 insert_user_event_response_funcs = {
     types.USER_EVENT_RESPONSE_INTERVENTION_DATAPOINT_IDENTIFICATION:_insert_user_event_response_intervention_datapoint_identification,
+}
+
+delete_user_event_response_funcs = {
+    types.USER_EVENT_RESPONSE_INTERVENTION_DATAPOINT_IDENTIFICATION:_delete_user_event_response_intervention_datapoint_identification,
 }
 

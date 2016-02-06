@@ -17,3 +17,7 @@ class UserEventCreationException(EventsException):
     def __init__(self, error):
         super(UserEventCreationException,self).__init__(error=error)
 
+class SummaryCreationException(EventsException):
+    def __init__(self, error):
+        super(SummaryCreationException,self).__init__(error=error)
+

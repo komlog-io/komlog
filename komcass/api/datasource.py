@@ -93,9 +93,12 @@ def get_datasource_data_at(did, date):
     else:
         return ormdatasource.DatasourceData(**row[0])
 
-def get_datasource_data(did, fromdate, todate):
+def get_datasource_data(did, fromdate, todate, count=None):
     data=[]
-    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCE_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
+    if count is None:
+        row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCE_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
+    else:
+        row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCE_B_DID_INITDATE_ENDDATE_COUNT,(did,fromdate,todate, count))
     if row:
         for d in row:
             data.append(ormdatasource.DatasourceData(**d))
@@ -142,8 +145,11 @@ def get_datasource_map(did, date):
     else:
         return ormdatasource.DatasourceMap(**row[0])
 
-def get_datasource_maps(did, fromdate, todate):
-    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
+def get_datasource_maps(did, fromdate, todate, count=None):
+    if not count:
+        row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
+    else:
+        row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE_COUNT,(did,fromdate,todate,count))
     data=[]
     if row:
         for m in row:

@@ -26,10 +26,12 @@ def get_user_events_request(username, ets=None, its=None):
         raise exceptions.BadParametersException(error=errors.E_IWAEV_GEVR_IETS)
     if its and not args.is_valid_string_float(its):
         raise exceptions.BadParametersException(error=errors.E_IWAEV_GEVR_IITS)
+    if its and ets and float(its)>float(ets):
+        its,ets=ets,its
     uid=userapi.get_uid(username=username)
     end_date=timeuuid.uuid1(seconds=float(ets)) if ets else None
     init_date=timeuuid.uuid1(seconds=float(its)) if its else None
-    events=userevents.get_events(uid=uid, to_date=end_date, from_date=init_date, params_serializable=True, html_literal=True)
+    events=userevents.get_events(uid=uid, to_date=end_date, from_date=init_date, params_serializable=True, html_content=True)
     response_data=[]
     for event in events:
         reg={}
@@ -39,6 +41,8 @@ def get_user_events_request(username, ets=None, its=None):
         reg['seq']=timeuuid.get_custom_sequence(event['date'])
         reg['params']=event['parameters']
         reg['html']=event['html']
+        if 'summary' in event:
+            reg['summary']=event['summary']
         response_data.append(reg)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 

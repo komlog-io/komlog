@@ -17,6 +17,9 @@ STATEMENTS={30000:'select * from mst_datapoint where pid=?',
             30100:'select * from mst_datapoint_stats where pid=?',
             30200:'select * from dat_datapoint  where pid=? and date=?',
             30201:'select * from dat_datapoint where pid=? and date>=? and date<=? order by date desc limit ?',
+            30202:'select * from dat_datapoint where pid=? and date>=? and date<=? order by date desc',
+            30203:'select date,value from dat_datapoint where pid=? and date>=? and date<=? order by date desc limit ?',
+            30204:'select date,value from dat_datapoint where pid=? and date>=? and date<=? order by date desc',
             30300:'select * from dat_datapoint_dtree_positives where pid=?',
             30301:'select * from dat_datapoint_dtree_positives where pid=? and date=?',
             30400:'select * from dat_datapoint_dtree_negatives where pid=?',
@@ -57,7 +60,10 @@ S_A_MSTDATAPOINTSTATS_B_PID=30100
 # dat_datapoint
 
 S_A_DATDATAPOINT_B_PID_DATE=30200
-S_A_DATDATAPOINT_B_PID_INITDATE_ENDDATE_NUMREGS=30201
+S_A_DATDATAPOINT_B_PID_INITDATE_ENDDATE_COUNT=30201
+S_A_DATDATAPOINT_B_PID_INITDATE_ENDDATE=30202
+S_DATEVALUE_DATDATAPOINT_B_PID_INITDATE_ENDDATE_COUNT=30203
+S_DATEVALUE_DATDATAPOINT_B_PID_INITDATE_ENDDATE=30204
 
 # dat_datapoint_dtree_positives
 

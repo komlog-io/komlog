@@ -4,14 +4,18 @@
 
 /* Move down content because we have a fixed navbar that is 50px tall */
 html {
-      position: relative;
-      min-height: 100%;
+  position: relative;
+  min-height: 100%;
 }
 
 
 /*
  * Global add-ons
  */
+
+a {
+  cursor: pointer;
+}
 
 .sub-header {
   padding-bottom: 10px;
@@ -31,7 +35,7 @@ html {
  */
 
 .toolbar {
-    margin-bottom: 10px;
+  margin-bottom: 10px;
 }
 
 .sidebar {
@@ -72,7 +76,7 @@ html {
   display: block;
   overflow-y: scroll;
   background-color: #F0F0F0;
-  /*border-left: 1px solid #eee;*/
+  padding: 0px;
 }
 
 /*
@@ -89,7 +93,7 @@ html {
   bottom: 0;
   z-index: 1000;
   display: block;
-  padding: 20px;
+  padding: 20px 5px 20px 5px;
   margin-bottom: 30px;
   overflow-x: hidden;
   overflow-y: scroll; /*Scrollable contents if viewport is shorter than content.*/
@@ -228,9 +232,9 @@ html {
   User Events
 */
 
-.userevents {
+.user-events {
   list-style: none;
-  padding: 10px 0 10px;
+  padding: 20px 20px 10px 5px;
   position: relative;
 }
 
@@ -243,31 +247,64 @@ html {
   z-index: 100;
 }
 
-.userevents > li {
-  position: relative;
-}
-.userevents > li:before,
-.userevents > li:after {
-  content: " ";
-  display: table;
-}
-.userevents > li:after {
-  clear: both;
-}
-.userevents > .userevents-panel {
+.user-event {
+  margin-bottom: 10px;
+  padding:5px;
   background-color: #fff;
-  width: calc( 100% - 15px );
-  float: left;
-  border: 1px solid #d4d4d4;
+  border: 1px solid #fff;
   border-radius: 5px;
   position: relative;
   -webkit-box-shadow: 0 1px 6px rgba(0, 0, 0, 0.175);
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.175);
 }
 
-.userevents > .userevents-panel:hover {
+.user-event:hover {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.175);
-  border: 1px solid #c4c4c4;
+  border: 1px solid #aaa;
+}
+
+.user-event:hover .user-event-title-icon{
+  visibility: visible;
+}
+
+.user-event-id-icon {
+  position: relative;
+  top: 0px;
+  left: 0px;
+  font-size: 35px;
+  float:left;
+  margin-right: 5px;
+  color: #aaa;
+}
+
+.user-event-title {
+  font-size: 16px;
+  color: #444;
+  padding-left: 40px;
+}
+
+.user-event-title-icon {
+  visibility: hidden;
+  color: #aaa;
+}
+
+.user-event-subtitle {
+  color: #aaa;
+  font-size: 12px;
+  padding-left: 40px;
+}
+
+.user-event-body {
+  margin: 10px 17px 20px;
+}
+
+.user-event-body a {
+  color: #444;
+  font-weight: bold;
+}
+
+.user-event-summary {
+  margin: 10px 17px 20px;
 }
 
 .userevents > li > .userevents-badge {

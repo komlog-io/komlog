@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 datapoint.py: library for managing datapoints operations
 
@@ -25,7 +24,7 @@ from komlibs.ai.decisiontree import api as dtreeapi
 from komfig import logger
 from komlibs.graph.api import uri as graphuri
 
-def get_datapoint_data(pid, fromdate=None, todate=None):
+def get_datapoint_data(pid, fromdate=None, todate=None, count=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
     no comprobamos que el pid existe '''
     if not args.is_valid_uuid(pid):
@@ -34,19 +33,18 @@ def get_datapoint_data(pid, fromdate=None, todate=None):
         raise exceptions.BadParametersException(error=errors.E_GPA_GDD_ITD)
     if fromdate and not args.is_valid_date(fromdate):
         raise exceptions.BadParametersException(error=errors.E_GPA_GDD_IFD)
+    if count and not args.is_valid_int(count):
+        raise exceptions.BadParametersException(error=errors.E_GPA_GDD_ICNT)
     if not todate:
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
         todate=datapoint_stats.last_received if datapoint_stats and datapoint_stats.last_received else timeuuid.uuid1()
     if not fromdate:
         fromdate=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(todate)-43200)
-    datapoint_data_list=cassapidatapoint.get_datapoint_data(pid=pid,fromdate=fromdate,todate=todate)
-    data=[]
-    if datapoint_data_list==[]:
+    datapoint_data=cassapidatapoint.get_datapoint_data(pid=pid,fromdate=fromdate,todate=todate, count=count)
+    if len(datapoint_data)==0:
         raise exceptions.DatapointDataNotFoundException(error=errors.E_GPA_GDD_DDNF, last_date=fromdate)
     else:
-        for datapoint_data in datapoint_data_list:
-            data.append({'date':datapoint_data.date,'value':datapoint_data.value})
-    return data
+        return datapoint_data
 
 def create_datapoint(did, datapointname, color):
     '''
