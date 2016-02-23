@@ -352,7 +352,7 @@ function getDataSummary (data) {
             numDecimals=2
         }
         meanValue=meanValue.toFixed(numDecimals)
-        summary={'max':maxValue,'min':minValue,'mean':meanValue}
+        summary={'max':d3.format(",")(maxValue),'min':d3.format(",")(minValue),'mean':d3.format(",")(meanValue)}
     } else {
         summary={'max':0,'min':0,'mean':0}
     }

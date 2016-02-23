@@ -79,11 +79,11 @@ var Snapshot = React.createClass({
     render: function() {
         snapshot_content=this.getSnapshotContentEl();
         if ($.isEmptyObject(this.state.conf)) {
-            snapshot=React.createElement('div', {className:"panel panel-default"},
+            snapshot=React.createElement('div', null,
                        React.createElement(SnapshotBar, {conf:this.state.conf, closeCallback:this.closeCallback})
                      );
         } else {
-            snapshot=React.createElement('div', {className:"panel panel-default"},
+            snapshot=React.createElement('div', null,
                        React.createElement(SnapshotBar, {conf:this.state.conf, shareCallback:this.shareCallback, closeCallback:this.closeCallback, downloadCallback:this.downloadCallback, message:this.state.barMessage, messageTime:this.state.barMessageTime}),
                        snapshot_content
                      );
@@ -157,13 +157,6 @@ var SnapshotBar = React.createClass({
 });
 
 var SnapshotDs = React.createClass({
-    styles: {
-        infostyle: {
-            float: 'right',
-            color: '#aaa',
-            padding: '3px 5px 0px 0px'
-        },
-    },
     getInitialState: function () {
         return {dsData: undefined,
                 timestamp: undefined,
@@ -212,27 +205,12 @@ var SnapshotDs = React.createClass({
             downloadFile(this.props.datasource.datasourcename+'.txt',this.state.dsData.content,'text/plain')
         }
     },
-    getDateStatement: function (timestamp) {
+    getDsInfo: function (timestamp) {
         if (typeof timestamp === 'number') {
+            var dateFormat = d3.time.format("%Y/%m/%d - %H:%M:%S")
             var date = new Date(timestamp*1000);
-            var now = new Date();
-            diff = now.getTime()/1000 - timestamp;
-            if (diff<0) {
-                return React.createElement('span',{title:date.toString()}, " right now");
-            } else {
-                if (diff<60) {
-                    when=" right now"
-                } else if (diff<3600) {
-                    when=" "+(diff/60 | 0)+" min"+(diff/60>=2 ? "utes":"")+" ago";
-                } else if (diff<86400) {
-                    when=" "+(diff/3600 | 0)+" hour"+(diff/3600>=2 ? "s":"")+" ago";
-                } else if (diff<2678400) {
-                    when=" "+(diff/86400 | 0)+" day"+(diff/86400>=2 ? "s":"")+" ago";
-                } else {
-                    when=" "+(diff/2678400 | 0)+" month"+(diff/2678400>=2 ? "s":"")+" ago";
-                }
-                return React.createElement('span',{title:date.toString()}, when);
-            }
+            dateText=dateFormat(date)
+            return React.createElement('div', {className: "ds-info"}, dateText);
         } else {
             return null
         }
@@ -244,14 +222,14 @@ var SnapshotDs = React.createClass({
         }
         var numElement = 0
         var cursorPosition=0
-        newLineRegex=/(?:\r\n|\r|\n)/g
+        var newLineRegex=/(?:\r\n|\r|\n)/g
         for (var i=0;i<dsData.variables.length;i++) {
-            position=dsData.variables[i][0]
-            length=dsData.variables[i][1]
-            dsSubContent=dsData.content.substr(cursorPosition,position-cursorPosition)
-            start=0
+            var position=dsData.variables[i][0]
+            var length=dsData.variables[i][1]
+            var dsSubContent=dsData.content.substr(cursorPosition,position-cursorPosition)
+            var start=0
             while((match=newLineRegex.exec(dsSubContent)) != null) {
-                text=dsSubContent.substr(start,match.index-start).replace(/ /g, '\u00a0');
+                var text=dsSubContent.substr(start,match.index-start).replace(/ /g, '\u00a0');
                 elements.push({ne:numElement++,type:'text',data:text});
                 elements.push({ne:numElement++,type:'nl'});
                 start=match.index+match.length-1
@@ -260,13 +238,13 @@ var SnapshotDs = React.createClass({
                 text=dsSubContent.substr(start,position-start).replace(/ /g, '\u00a0');
                 elements.push({ne:numElement++,type:'text',data:text});
             }
-            datapointFound=false;
+            var datapointFound=false;
             for (var j=0;j<dsData.datapoints.length;j++) {
                 if (dsData.datapoints[j].index == dsData.variables[i][0]) {
                     datapointFound=true
                     text=dsData.content.substr(position,length)
-                    color='black'
-                    datapointname=''
+                    var color='black'
+                    var datapointname=''
                     for (var k=0;k<this.props.datapoints.length;k++) {
                         if (this.props.datapoints[k].pid == dsData.datapoints[j].pid) {
                             datapointname=this.props.datapoints[k].datapointname
@@ -303,6 +281,8 @@ var SnapshotDs = React.createClass({
         return elements
     },
     render: function () {
+        console.log('datos del snapshot',this.state.dsData)
+        console.log('datos de props',this.props.datapoints)
         elements=this.generateHtmlContent(this.state.dsData)
         var element_nodes=$.map(elements, function (element) {
             if (element.type == 'text') {
@@ -310,36 +290,28 @@ var SnapshotDs = React.createClass({
             }else if (element.type == 'nl') {
                 return React.createElement('br', {key:element.ne});
             }else if (element.type == 'datapoint') {
-                tooltip=React.createElement(ReactBootstrap.Tooltip, null, element.datapoint);
+                tooltip=React.createElement(ReactBootstrap.Tooltip, {id:'datapoint'}, element.datapointname);
                 return React.createElement(ReactBootstrap.OverlayTrigger, {placement:"top", overlay:tooltip},
                          React.createElement('span', {key:element.ne, style:element.style}, element.data)
                        );
             }
         }.bind(this));
-        if (typeof this.state.timestamp === 'number') {
-            info_node=React.createElement('div', {style:this.styles.infostyle},
-                        React.createElement(ReactBootstrap.Glyphicon, {glyph:"time"}),
-                        this.getDateStatement(this.state.timestamp)
-                      );
-        } else {
-            info_node=React.createElement('div', {style:this.styles.infostyle});
-        }
+        info_node=this.getDsInfo(this.state.timestamp)
         return React.createElement('div', null,
                  info_node,
-                 React.createElement('div', null, element_nodes)
+                 React.createElement('div',{className: 'ds-content'}, element_nodes)
                );
     }
 });
 
 var SnapshotDp = React.createClass({
-    styles: {
-    },
     getInitialState: function () {
         return {
                 interval: {its:this.props.its,ets:this.props.ets},
                 data: [],
                 summary: {},
                 downloadCounter:this.props.downloadCounter,
+                activeVis: 0,
             }
     },
     subscriptionTokens: {},
@@ -360,6 +332,13 @@ var SnapshotDp = React.createClass({
         if (nextProps.downloadCounter>this.state.downloadCounter) {
             this.downloadContent();
             this.setState({downloadCounter:nextProps.downloadCounter});
+        }
+    },
+    selectVis: function (event) {
+        event.preventDefault();
+        buttonId=parseInt(event.target.id)
+        if (this.state.activeVis != buttonId) {
+            this.setState({activeVis:buttonId})
         }
     },
     downloadContent: function () {
@@ -432,7 +411,7 @@ var SnapshotDp = React.createClass({
                 numDecimals=2
             }
             meanValue=meanValue.toFixed(numDecimals)
-            summary={'max':maxValue,'min':minValue,'datapointname':this.props.datapoint.datapointname,'mean':meanValue}
+            summary={'max':d3.format(",")(maxValue),'min':d3.format(",")(minValue),'datapointname':this.props.datapoint.datapointname,'mean':d3.format(",")(meanValue),'color':this.props.datapoint.color}
         } else {
             summary={'max':0,'min':0,'datapointname':this.props.datapoint.datapointname,'mean':0}
         }
@@ -440,60 +419,67 @@ var SnapshotDp = React.createClass({
     },
     render: function () {
         if (this.state.summary.hasOwnProperty('datapointname')){
-            summary=React.createElement('tr', null,
-                      React.createElement('td', null, this.state.summary.datapointname),
-                      React.createElement('td', null, this.state.summary.max),
-                      React.createElement('td', null, this.state.summary.min),
-                      React.createElement('td', null, this.state.summary.mean)
-                    );
+            var summary=React.createElement('tr', null,
+                React.createElement('td', null,
+                  React.createElement('span', {style:{backgroundColor: this.state.summary.color, borderRadius: '5px'}}, '\u00a0\u00a0\u00a0'),
+                  React.createElement('span', null, '\u00a0\u00a0'),
+                  React.createElement('span', null,this.state.summary.datapointname)
+                ),
+                React.createElement('td', null, this.state.summary.max),
+                React.createElement('td', null, this.state.summary.min),
+                React.createElement('td', null, this.state.summary.mean)
+            );
         } else {
-            summary=React.createElement('tr', null,
-                      React.createElement('td', null),
-                      React.createElement('td', null),
-                      React.createElement('td', null),
-                      React.createElement('td', null)
-                    );
+            var summary=React.createElement('tr', null,
+                React.createElement('td', null),
+                React.createElement('td', null),
+                React.createElement('td', null),
+                React.createElement('td', null)
+            );
         }
         var data=[{pid:this.props.datapoint.pid,color:this.props.datapoint.color,datapointname:this.props.datapoint.datapointname,data:this.state.data}]
-        console.log('SNAPSHOT es lo que hay',data)
+        var visContent=this.state.activeVis == 0 ?  React.createElement(ContentLinegraph, {interval:this.state.interval, data:data, newIntervalCallback:this.newIntervalCallback}) : 
+            this.state.activeVis == 1 ? React.createElement(ContentHistogram, {data:data}) :
+            null;
         return React.createElement('div', null,
-                 React.createElement('div', {className:"row"},
-                   React.createElement('div', {className:"col-md-6"},
-                     React.createElement('table', {className:"table table-condensed"},
-                       React.createElement('tr', null,
-                         React.createElement('th',null,"Name"),
-                         React.createElement('th',null,"max"),
-                         React.createElement('th',null,"min"),
-                         React.createElement('th',null,"mean")
-                       ),
-                       summary
-                     )
-                   ),
-                   React.createElement('div', {className:"col-md-6"},
-                     React.createElement(TimeSlider, {interval:this.state.interval, newIntervalCallback:this.newIntervalCallback})
-                   )
-                 ),
-                 React.createElement('div', {className:"row"},
-                   React.createElement('div', {className:"col-md-6"},
-                     React.createElement(ContentHistogram, {data:data})
-                   ),
-                   React.createElement('div', {className:"col-md-6"},
-                     React.createElement(ContentLinegraph, {interval:this.state.interval, data:data})
-                   )
-                 )
-               );
+            React.createElement('div', {className:"dp-stats"},
+              React.createElement('table', {className:"table-condensed"},
+                React.createElement('tbody', null,
+                  React.createElement('tr', null,
+                    React.createElement('th',null,""),
+                    React.createElement('th',null,"max"),
+                    React.createElement('th',null,"min"),
+                    React.createElement('th',null,"mean")
+                  ),
+                  summary
+                )
+              )
+            ),
+            React.createElement('div', {className:"row visual-bar"},
+              React.createElement('div', {className:"col-md-5 text-center"},
+                React.createElement(ReactBootstrap.ButtonGroup, {bsSize:"xsmall"},
+                  React.createElement(ReactBootstrap.Button, {id:"0", active:this.state.activeVis == 0 ? true : false, onClick: this.selectVis },"chart"),
+                  React.createElement(ReactBootstrap.Button, {id:"1", active:this.state.activeVis == 1 ? true : false, onClick: this.selectVis },"histogram")
+                )
+              ),
+              React.createElement('div', {className:"col-md-7"},
+                React.createElement(TimeSlider, {interval:this.state.interval, newIntervalCallback:this.newIntervalCallback})
+              )
+            ),
+            React.createElement('div', {className:"row"},
+              React.createElement('div', {className:"col-md-12"}, visContent)
+            )
+        );
     }
 });
 
 var SnapshotMp = React.createClass({
-    styles: {
-    },
     getInitialState: function () {
         return {
                 interval: {its:this.props.its,ets:this.props.ets},
                 data: {},
                 config: {},
-                active_view: this.props.view,
+                activeVis: this.props.view,
                 downloadCounter: this.props.downloadCounter,
         }
     },
@@ -519,6 +505,13 @@ var SnapshotMp = React.createClass({
         if (nextProps.downloadCounter>this.state.downloadCounter) {
             this.downloadContent();
             this.setState({downloadCounter:nextProps.downloadCounter});
+        }
+    },
+    selectVis: function (event) {
+        event.preventDefault();
+        buttonId=parseInt(event.target.id)
+        if (this.state.activeVis != buttonId) {
+            this.setState({activeVis:buttonId})
         }
     },
     downloadContent: function () {
@@ -592,10 +585,6 @@ var SnapshotMp = React.createClass({
                 break;
         }
     },
-    viewBtnClick: function (button) {
-        console.log('button click',button)
-        this.setState({active_view:button})
-    },
     refreshData: function (interval, pid) {
         if (pid) {
             selectedPids=[pid]
@@ -621,20 +610,20 @@ var SnapshotMp = React.createClass({
                 }
             }
             if (datapointname !== null) {
-                summary=getDataSummary(element)
-                datapointStyle={backgroundColor: color, borderRadius: '10px'}
+                var dpSummary=getDataSummary(element)
+                var datapointStyle={backgroundColor: color, borderRadius: '5px'}
                 return React.createElement('tr', {key:key},
                          React.createElement('td', null,
-                           React.createElement('span',{style:datapointStyle},"  "),
-                           React.createElement('span',null,"  "),
-                           datapointname),
-                         React.createElement('td', null, summary.max),
-                         React.createElement('td', null, summary.min),
-                         React.createElement('td', null, summary.mean)
+                           React.createElement('span',{style:datapointStyle},"\u00a0\u00a0\u00a0"),
+                           React.createElement('span',null,"\u00a0\u00a0"),
+                           React.createElement('span', null, datapointname)
+                         ),
+                         React.createElement('td', null, dpSummary.max),
+                         React.createElement('td', null, dpSummary.min),
+                         React.createElement('td', null, dpSummary.mean)
                        );
             }
         }.bind(this));
-        console.log('summary vale',summary)
         var data=$.map(this.state.data, function (element, key) {
             color=null;
             datapointname=null;
@@ -649,58 +638,38 @@ var SnapshotMp = React.createClass({
                 return {pid:key,color:color,datapointname:datapointname,data:element}
             }
         }.bind(this));
-        console.log('data vale',data)
-        switch (this.state.active_view){
-            case 0:
-                content=React.createElement(ContentLinegraph, {interval:this.state.interval, data:data});
-                break;
-            case 1:
-                content=React.createElement(ContentHistogram, {interval:this.state.interval, data:data});
-                break;
-            case 2:
-                content=React.createElement(ContentTable, {interval:this.state.interval, data:data});
-                break;
-            default:
-                content=React.createElement('div',null);
-                break;
-        }
-        view_buttons=$.map([0,1,2], function (element) {
-            if (this.state.active_view==element) {
-                return React.createElement('button', {key:element, type:"button", className:"btn btn-default focus", onClick:function (event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}, element);
-            } else {
-                return React.createElement('button', {key:element, type:"button", className:"btn btn-default", onClick:function (event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}, element);
-            }
-        }.bind(this));
+        var visContent=this.state.activeVis == 0 ?  React.createElement(ContentLinegraph, {interval:this.state.interval, data:data, newIntervalCallback:this.newIntervalCallback}) : 
+            this.state.activeVis == 1 ? React.createElement(ContentHistogram, {data:data}) :
+            null;
         return React.createElement('div', null,
-                 React.createElement('div', {className:"row"},
-                   React.createElement('div', {className:"col-md-8"}, content),
-                   React.createElement('div', {className:"col-md-4"},
-                     React.createElement('div', {className:"row"},
-                       React.createElement('div', {className:"col-md-12"},
-                         React.createElement(TimeSlider, {interval:this.state.interval, newIntervalCallback:this.newIntervalCallback, interval_limits:{its:this.props.its, ets:this.props.ets}})
-                       )
-                     ),
-                     React.createElement('div', {className:"row"},
-                       React.createElement('div', {className:"col-md-12"},
-                         React.createElement('div', {className:"btn-group", role:"group"}, view_buttons)
-                       )
-                     ),
-                     React.createElement('div', {className:"row"},
-                       React.createElement('div', {className:"col-md-12"},
-                         React.createElement('table', {className:"table table-condensed"},
-                           React.createElement('tr', null,
-                             React.createElement('th', null, "Name"),
-                             React.createElement('th', null, "max"),
-                             React.createElement('th', null, "min"),
-                             React.createElement('th', null, "mean")
-                           ),
-                           summary
-                         )
-                       )
-                     )
-                   )
-                 )
-               );
+            React.createElement('div', {className:"dp-stats"},
+              React.createElement('table', {className:"table-condensed"},
+                React.createElement('tbody', null,
+                  React.createElement('tr', null,
+                    React.createElement('th',null,""),
+                    React.createElement('th',null,"max"),
+                    React.createElement('th',null,"min"),
+                    React.createElement('th',null,"mean")
+                  ),
+                  summary
+                )
+              )
+            ),
+            React.createElement('div', {className:"row visual-bar"},
+              React.createElement('div', {className:"col-md-5 text-center"},
+                React.createElement(ReactBootstrap.ButtonGroup, {bsSize:"xsmall"},
+                  React.createElement(ReactBootstrap.Button, {id:"0", active:this.state.activeVis == 0 ? true : false, onClick: this.selectVis },"chart"),
+                  React.createElement(ReactBootstrap.Button, {id:"1", active:this.state.activeVis == 1 ? true : false, onClick: this.selectVis },"histogram")
+                )
+              ),
+              React.createElement('div', {className:"col-md-7"},
+                React.createElement(TimeSlider, {interval:this.state.interval, newIntervalCallback:this.newIntervalCallback})
+              )
+            ),
+            React.createElement('div', {className:"row"},
+              React.createElement('div', {className:"col-md-12"}, visContent)
+            )
+       );
     }
 });
 

@@ -1,7 +1,7 @@
 var DesktopMenu = React.createClass({
     getInitialState: function () {
         return {inputName:'',
-                inputStyle:'',
+                inputStyle:null,
                 inputPlaceholder:'Name'}
     },
     subscriptionTokens: [],
@@ -23,7 +23,7 @@ var DesktopMenu = React.createClass({
     },
     handleChange: function () {
         name=this.refs.inputName.getValue();
-        this.setState({inputName:name,inputStyle:''})
+        this.setState({inputName:name,inputStyle:null})
     },
     newGraph: function () {
         name=this.refs.inputName.getValue();

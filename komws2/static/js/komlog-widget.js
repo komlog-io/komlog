@@ -109,11 +109,11 @@ var Widget = React.createClass({
         widget_content=this.getWidgetContentEl();
         widget_config=this.getWidgetConfigEl();
         if ($.isEmptyObject(this.state.conf)) {
-            widget=React.createElement('div', {className:"panel panel-default"},
+            widget=React.createElement('div', null,
                      React.createElement(WidgetBar, {bid:this.props.bid, wid:this.props.wid,conf:this.state.conf,closeCallback:this.closeCallback})
                    );
         } else {
-            widget=React.createElement('div', {className:"panel panel-default"},
+            widget=React.createElement('div', null,
                      React.createElement(WidgetBar, {bid:this.props.bid, wid:this.props.wid, conf:this.state.conf, message:this.state.barMessage, messageTime:this.state.barMessageTime, shareCallback:this.shareCallback, closeCallback:this.closeCallback, configCallback:this.configCallback, isPinned:this.props.isPinned, configOpen:this.state.showConfig, downloadCallback:this.downloadCallback}),
                      widget_config,
                      widget_content
@@ -172,8 +172,6 @@ var WidgetBar = React.createClass({
         }
     },
     styles: {
-        barstyle: {
-        },
         namestyle: {
             textAlign: 'left',
             width: '100%',
@@ -185,7 +183,8 @@ var WidgetBar = React.createClass({
             float: 'right',
             height: '20px',
             padding: '5px',
-            color: 'black',
+            color: 'yellow',
+            textShadow: '-1px 0 black, 0 1px black, 1px 0 black, 0 -1px black',
         },
         righticonstyle: {
             textShadow: '1px 1px 5px 1px #ccc',
@@ -193,7 +192,6 @@ var WidgetBar = React.createClass({
             float: 'right',
             height: '20px',
             padding: '5px',
-            color: '#aaa',
         },
         messagestyle: {
             float: 'right',
@@ -207,7 +205,6 @@ var WidgetBar = React.createClass({
             float: 'left',
             height: '20px',
             padding: '5px',
-            color: '#aaa',
         },
     },
     render: function() {
@@ -226,7 +223,7 @@ var WidgetBar = React.createClass({
             configIcon=React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-chevron-right", style:this.styles.lefticonstyle, onClick:this.configClick});
         }
         message=React.createElement(Alert, {style:this.styles.messagestyle,type:this.state.message.type,message:this.state.message.message,messageTime:this.state.messageTime,autoCloseable: ('widgetname' in this.props.conf) ? true : false})
-        return React.createElement('div', {className:"SlideBar panel-heading", style:this.styles.barstyle},
+        return React.createElement('div', {className:"SlideBar panel-heading"},
                  React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-remove", style:this.styles.righticonstyle, onClick:this.closeClick}),
                  React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-send", style:this.styles.righticonstyle, onClick:this.shareClick}),
                  React.createElement('span', {className:"SlideBarIcon glyphicon glyphicon-download", style:this.styles.righticonstyle, onClick:this.downloadClick}),
@@ -557,7 +554,7 @@ var WidgetConfigMp = React.createClass({
                    React.createElement(ReactBootstrap.Well, null,
                      React.createElement(ReactBootstrap.ListGroup, null,
                        React.createElement(ReactBootstrap.ListGroupItem, {bsSize:"small"},
-                         React.createElement(ReactBootstrap.Table, {condensed:"true",responsive:"true"},
+                         React.createElement(ReactBootstrap.Table, {condensed:true,responsive:true},
                            React.createElement('tr', null,
                              React.createElement('td',null,
                                React.createElement('strong',null,"Graph Name")
@@ -594,13 +591,6 @@ var WidgetConfigMp = React.createClass({
 });
 
 var WidgetDs = React.createClass({
-    styles: {
-        infostyle: {
-            float: 'right',
-            color: '#aaa',
-            padding: '3px 5px 0px 0px'
-        },
-    },
     getInitialState: function () {
         return {dsData: undefined,
                 datasourcename: '',
@@ -699,38 +689,22 @@ var WidgetDs = React.createClass({
             }
         }
     },
-    getDateStatement: function (timestamp) {
+    getDsInfo: function (timestamp) {
         if (typeof timestamp === 'number') {
+            var dateFormat = d3.time.format("%Y/%m/%d - %H:%M:%S")
             var date = new Date(timestamp*1000);
-            var now = new Date();
-            diff = now.getTime()/1000 - timestamp;
-            if (diff<0) {
-                return React.createElement('span',{title:date.toString()}, " right now");
-            } else {
-                if (diff<60) {
-                    when=" right now"
-                } else if (diff<3600) {
-                    when=" "+(diff/60 | 0)+" min"+(diff/60>=2 ? "utes":"")+" ago";
-                } else if (diff<86400) {
-                    when=" "+(diff/3600 | 0)+" hour"+(diff/3600>=2 ? "s":"")+" ago";
-                } else if (diff<2678400) {
-                    when=" "+(diff/86400 | 0)+" day"+(diff/86400>=2 ? "s":"")+" ago";
-                } else {
-                    when=" "+(diff/2678400 | 0)+" month"+(diff/2678400>=2 ? "s":"")+" ago";
-                }
-                return React.createElement('span',{title:date.toString()}, when);
-            }
+            dateText=dateFormat(date)
+            return React.createElement('div', {className: "ds-info"}, dateText);
         } else {
             return null
         }
     },
     generateDateString: function (timestamp) {
         if (typeof timestamp === 'number') {
+            var dateFormat = d3.time.format("%Y/%m/%d - %H:%M:%S")
             var date = new Date(timestamp*1000);
-            var hours = date.getHours();
-            var minutes = "0" + date.getMinutes();
-            var seconds = "0" + date.getSeconds();
-            return hours + ':' + minutes.substr(minutes.length-2) + ':' + seconds.substr(seconds.length-2);
+            dateText=dateFormat(date)
+            return dateText
         } else {
             return ''
         }
@@ -856,17 +830,10 @@ var WidgetDs = React.createClass({
                 return React.createElement(WidgetDsVariable, {key:element.ne, content:element.data, position:element.position, length:element.length, identifyVariableCallback:this.identifyVariable, datapoints:element.datapoints, associateExistingDatapointCallback:this.associateExistingDatapoint});
             }
         }.bind(this));
-        if (typeof this.state.timestamp === 'number') {
-            info_node=React.createElement('div', {style:this.styles.infostyle},
-                        React.createElement(ReactBootstrap.Glyphicon, {glyph:"time"}),
-                        this.getDateStatement(this.state.timestamp)
-                      );
-        } else {
-            info_node=React.createElement('div', {style:this.styles.infostyle});
-        }
+        info_node=this.getDsInfo(this.state.timestamp)
         share_modal=React.createElement(ReactBootstrap.Modal, {bsSize:"small", show:this.state.shareModal, onHide:this.cancelSnapshot, container:this, "aria-labelledby":"contained-modal-title"},
                       React.createElement(ReactBootstrap.Modal.Header, {closeButton:true},
-                        React.createElement(ReactBootstrap.Modal.Title, {id:"contained-modal-title"}, "Share datasource status at "+this.generateDateString(this.state.snapshotTimestamp))
+                        React.createElement(ReactBootstrap.Modal.Title, {id:"contained-modal-title"}, "Share snapshot at "+this.generateDateString(this.state.snapshotTimestamp))
                       ),
                       React.createElement(ReactBootstrap.Modal.Body, null,
                         React.createElement(ReactBootstrap.Input, {ref:"users", type:"textarea", label:"Select Users", placeholder:"type users separated by comma"})
@@ -878,15 +845,13 @@ var WidgetDs = React.createClass({
                     );
         return React.createElement('div', null,
                  info_node,
-                 React.createElement('div',null, element_nodes),
+                 React.createElement('div',{className: 'ds-content'}, element_nodes),
                  React.createElement('div',null, share_modal)
                );
     }
 });
 
 var WidgetDp = React.createClass({
-    styles: {
-    },
     getInitialState: function () {
         return {
                 interval: {its:undefined,ets:undefined},
@@ -895,6 +860,7 @@ var WidgetDp = React.createClass({
                 data: [],
                 summary: {},
                 live: true,
+                activeVis: 0,
                 shareModal:false,
                 shareCounter:this.props.shareCounter,
                 downloadCounter:this.props.downloadCounter,
@@ -925,6 +891,13 @@ var WidgetDp = React.createClass({
         } else if (nextProps.downloadCounter>this.state.downloadCounter) {
             this.downloadContent();
             this.setState({downloadCounter:nextProps.downloadCounter});
+        }
+    },
+    selectVis: function (event) {
+        event.preventDefault();
+        buttonId=parseInt(event.target.id)
+        if (this.state.activeVis != buttonId) {
+            this.setState({activeVis:buttonId})
         }
     },
     downloadContent: function () {
@@ -1041,9 +1014,9 @@ var WidgetDp = React.createClass({
                 numDecimals=2
             }
             meanValue=meanValue.toFixed(numDecimals)
-            summary={'max':maxValue,'min':minValue,'datapointname':this.state.datapointname,'mean':meanValue}
+            summary={'max':d3.format(",")(maxValue),'min':d3.format(",")(minValue),'color':this.state.color,'datapointname':this.state.datapointname,'mean':d3.format(",")(meanValue)}
         } else {
-            summary={'max':0,'min':0,'datapointname':this.state.datapointname,'mean':0}
+            summary={'max':0,'min':0,'color':this.state.color,'datapointname':this.state.datapointname,'mean':0}
         }
         return summary
     },
@@ -1057,14 +1030,18 @@ var WidgetDp = React.createClass({
     },
     render: function () {
         if (this.state.summary.hasOwnProperty('datapointname')){
-            summary=React.createElement('tr', null,
-                      React.createElement('td', null, this.state.summary.datapointname),
+            var summary=React.createElement('tr', null,
+                      React.createElement('td', null,
+                        React.createElement('span', {style:{backgroundColor: this.state.summary.color, borderRadius: '5px'}}, '\u00a0\u00a0\u00a0'),
+                        React.createElement('span', null, '\u00a0\u00a0'),
+                        React.createElement('span', null,this.state.summary.datapointname)
+                      ),
                       React.createElement('td', null, this.state.summary.max),
                       React.createElement('td', null, this.state.summary.min),
                       React.createElement('td', null, this.state.summary.mean)
                     );
         } else {
-            summary=React.createElement('tr', null,
+            var summary=React.createElement('tr', null,
                       React.createElement('td', null),
                       React.createElement('td', null),
                       React.createElement('td', null),
@@ -1074,17 +1051,11 @@ var WidgetDp = React.createClass({
         var data=[{pid:this.props.pid,color:this.state.color,datapointname:this.state.datapointname,data:this.state.data}]
         share_modal=React.createElement(ReactBootstrap.Modal, {bsSize:"small", show:this.state.shareModal, onHide:this.cancelSnapshot, container:this, "aria-labelledby":"contained-modal-title"},
                       React.createElement(ReactBootstrap.Modal.Header, {closeButton:true},
-                        React.createElement(ReactBootstrap.Modal.Title, {id:"contained-modal-title"}, "Share datapoint interval")
+                        React.createElement(ReactBootstrap.Modal.Title, {id:"contained-modal-title"}, "Share snapshot")
                       ),
                       React.createElement(ReactBootstrap.Modal.Body, null,
-                        React.createElement('div', {className:"row"},
-                          React.createElement('div', {className:"col-md-6"},
-                            React.createElement(ReactBootstrap.Input, {ref:"users", type:"textarea", label:"Select Users", placeholder:"type users separated by comma"})
-                          ),
-                          React.createElement('div', {className:"col-md-6"},
-                            React.createElement('strong', null, "Date Interval"),
-                            React.createElement(TimeSlider, {interval:this.state.snapshotInterval, newIntervalCallback:this.snapshotIntervalCallback})
-                          )
+                        React.createElement('div', null,
+                          React.createElement(ReactBootstrap.Input, {ref:"users", type:"textarea", label:"Select Users", placeholder:"type users separated by comma"})
                         )
                       ),
                       React.createElement(ReactBootstrap.Modal.Footer, null,
@@ -1092,48 +1063,50 @@ var WidgetDp = React.createClass({
                         React.createElement(ReactBootstrap.Button, {bsStyle:"primary", onClick:this.shareSnapshot}, "Share")
                       )
                     );
+        var visContent=this.state.activeVis == 0 ?  React.createElement(ContentLinegraph, {interval:this.state.interval, data:data, newIntervalCallback:this.newIntervalCallback}) : 
+            this.state.activeVis == 1 ? React.createElement(ContentHistogram, {data:data}) :
+            null;
         return React.createElement('div', null,
-                 React.createElement('div', {className:"row"},
-                   React.createElement('div', {className:"col-md-6"},
-                     React.createElement('table', {className:"table table-condensed"},
+                 React.createElement('div', {className:"dp-stats"},
+                   React.createElement('table', {className:"table-condensed"},
+                     React.createElement('tbody', null,
                        React.createElement('tr', null,
-                         React.createElement('th',null,"Name"),
+                         React.createElement('th',null,""),
                          React.createElement('th',null,"max"),
                          React.createElement('th',null,"min"),
                          React.createElement('th',null,"mean")
                        ),
                        summary
                      )
+                   )
+                 ),
+                 React.createElement('div', {className:"row visual-bar"},
+                   React.createElement('div', {className:"col-md-5 text-center"},
+                     React.createElement(ReactBootstrap.ButtonGroup, {bsSize:"xsmall"},
+                       React.createElement(ReactBootstrap.Button, {id:"0", active:this.state.activeVis == 0 ? true : false, onClick: this.selectVis },"chart"),
+                       React.createElement(ReactBootstrap.Button, {id:"1", active:this.state.activeVis == 1 ? true : false, onClick: this.selectVis },"histogram")
+                     )
                    ),
-                   React.createElement('div', {className:"col-md-6"},
+                   React.createElement('div', {className:"col-md-7"},
                      React.createElement(TimeSlider, {interval:this.state.interval, newIntervalCallback:this.newIntervalCallback})
                    )
                  ),
                  React.createElement('div', {className:"row"},
-                   React.createElement('div', {className:"col-md-6"},
-                     React.createElement(ContentHistogram, {data:data})
-                   ),
-                   React.createElement('div', {className:"col-md-6"},
-                     React.createElement(ContentLinegraph, {interval:this.state.interval, data:data})
-                   )
+                   React.createElement('div', {className:"col-md-12"}, visContent)
                  ),
-                 React.createElement('div', null,
-                   share_modal
-                 )
+                 React.createElement('div', null, share_modal)
                );
     }
 });
 
 var WidgetMp = React.createClass({
-    styles: {
-    },
     getInitialState: function () {
         return {
                 interval: {its:undefined,ets:undefined},
                 data: {},
                 config: {},
                 live: true,
-                active_view: this.props.view,
+                activeVis: this.props.view,
                 shareModal:false,
                 shareCounter:this.props.shareCounter,
                 snapshotInterval: undefined,
@@ -1168,6 +1141,13 @@ var WidgetMp = React.createClass({
         } else if (nextProps.downloadCounter>this.state.downloadCounter) {
             this.downloadContent();
             this.setState({downloadCounter:nextProps.downloadCounter});
+        }
+    },
+    selectVis: function (event) {
+        event.preventDefault();
+        buttonId=parseInt(event.target.id)
+        if (this.state.activeVis != buttonId) {
+            this.setState({activeVis:buttonId})
         }
     },
     newIntervalCallback: function (interval) {
@@ -1267,10 +1247,6 @@ var WidgetMp = React.createClass({
                 break;
         }
     },
-    viewBtnClick: function (button) {
-        console.log('button click',button)
-        this.setState({active_view:button})
-    },
     refreshConfig: function (pid) {
         if (datapointStore._datapointConfig.hasOwnProperty(pid)) {
             datapointConfig=datapointStore._datapointConfig[pid]
@@ -1329,17 +1305,17 @@ var WidgetMp = React.createClass({
     render: function () {
         var summary=$.map(this.state.data, function (element, key) {
             if (this.state.config.hasOwnProperty(key)) {
-                summary=getDataSummary(element)
-                datapointStyle={backgroundColor: this.state.config[key].color, borderRadius: '10px'}
+                var dpSummary=getDataSummary(element)
+                var datapointStyle={backgroundColor: this.state.config[key].color, borderRadius: '5px'}
                 return React.createElement('tr', {key:key},
                     React.createElement('td', null,
-                    React.createElement('span',{style:datapointStyle},"  "),
-                    React.createElement('span',null,"  "),
-                        this.state.config[key].datapointname
+                      React.createElement('span',{style:datapointStyle},"\u00a0\u00a0\u00a0"),
+                      React.createElement('span',null,"\u00a0\u00a0"),
+                      React.createElement('span', null,this.state.config[key].datapointname)
                     ),
-                    React.createElement('td', null, summary.max),
-                    React.createElement('td', null, summary.min),
-                    React.createElement('td', null, summary.mean)
+                    React.createElement('td', null, dpSummary.max),
+                    React.createElement('td', null, dpSummary.min),
+                    React.createElement('td', null, dpSummary.mean)
                 );
             }
         }.bind(this));
@@ -1348,75 +1324,48 @@ var WidgetMp = React.createClass({
                 return {pid:key,color:this.state.config[key].color,datapointname:this.state.config[key].datapointname,data:element}
             }
         }.bind(this));
-        switch (this.state.active_view){
-            case 0:
-                content=React.createElement(ContentLinegraph, {interval:this.state.interval, data:data});
-                break;
-            case 1:
-                content=React.createElement(ContentHistogram, {interval:this.state.interval, data:data});
-                break;
-            case 2:
-                content=React.createElement(ContentTable, {interval:this.state.interval, data:data});
-                break;
-            default:
-                content=React.createElement('div',null);
-                break;
-        }
-        view_buttons=$.map([0,1,2], function (element) {
-            if (this.state.active_view==element) {
-                return React.createElement('button', {key:element, type:"button", className:"btn btn-default focus", onClick:function (event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}, element);
-            } else {
-                return React.createElement('button', {key:element, type:"button", className:"btn btn-default", onClick:function (event) {event.preventDefault(); this.viewBtnClick(element)}.bind(this)}, element);
-            }
-        }.bind(this));
         share_modal=React.createElement(ReactBootstrap.Modal, {bsSize:"small", show:this.state.shareModal, onHide:this.cancelSnapshot, container:this, "aria-labelledby":"contained-modal-title"},
                       React.createElement(ReactBootstrap.Modal.Header, {closeButton:true},
-                        React.createElement(ReactBootstrap.Modal.Title, {id:"contained-modal-title"}, "Share graph interval")
+                        React.createElement(ReactBootstrap.Modal.Title, {id:"contained-modal-title"}, "Share snapshot")
                       ),
                       React.createElement(ReactBootstrap.Modal.Body, null,
-                        React.createElement('div', {className:"row"},
-                          React.createElement('div', {className:"col-md-6"},
-                            React.createElement(ReactBootstrap.Input, {ref:"users", type:"textarea", label:"Select Users", placeholder:"type users separated by comma"})
-                          ),
-                          React.createElement('div', {className:"col-md-6"},
-                            React.createElement('strong', null, "Date Interval"),
-                            React.createElement(TimeSlider, {interval:this.state.snapshotInterval, newIntervalCallback:this.snapshotIntervalCallback})
-                          )
-                        )
+                        React.createElement(ReactBootstrap.Input, {ref:"users", type:"textarea", label:"Select Users", placeholder:"type users separated by comma"})
                       ),
                       React.createElement(ReactBootstrap.Modal.Footer, null,
                         React.createElement(ReactBootstrap.Button, {bsStyle:"default", onClick:this.cancelSnapshot}, "Cancel"),
                         React.createElement(ReactBootstrap.Button, {bsStyle:"primary", onClick:this.shareSnapshot}, "Share")
                       )
                     );
+        var visContent=this.state.activeVis == 0 ?  React.createElement(ContentLinegraph, {interval:this.state.interval, data:data, newIntervalCallback:this.newIntervalCallback}) : 
+            this.state.activeVis == 1 ? React.createElement(ContentHistogram, {data:data}) :
+            null;
         return React.createElement('div', {onDrop:this.onDrop, onDragEnter:this.onDragEnter, onDragOver:this.onDragOver},
-                 React.createElement('div', {className:"row"},
-                   React.createElement('div', {className:"col-md-8"}, content),
-                   React.createElement('div', {className:"col-md-4"},
-                     React.createElement('div', {className:"row"},
-                       React.createElement('div', {className:"col-md-12"},
-                         React.createElement(TimeSlider, {interval:this.state.interval, newIntervalCallback:this.newIntervalCallback})
-                       )
-                     ),
-                     React.createElement('div', {className:"row"},
-                       React.createElement('div', {className:"col-md-12"},
-                         React.createElement('div', {className:"btn-group", role:"group"}, view_buttons)
-                       )
-                     ),
-                     React.createElement('div', {className:"row"},
-                       React.createElement('div', {className:"col-md-12"},
-                         React.createElement('table', {className:"table table-condensed"},
-                           React.createElement('tr', null,
-                             React.createElement('th', null, "Name"),
-                             React.createElement('th', null, "max"),
-                             React.createElement('th', null, "min"),
-                             React.createElement('th', null, "mean")
-                           ),
-                           summary
-                         )
-                       )
+                 React.createElement('div', {className:"dp-stats"},
+                   React.createElement('table', {className:"table-condensed"},
+                     React.createElement('tbody', null,
+                       React.createElement('tr', null,
+                         React.createElement('th',null,""),
+                         React.createElement('th',null,"max"),
+                         React.createElement('th',null,"min"),
+                         React.createElement('th',null,"mean")
+                       ),
+                       summary
                      )
                    )
+                 ),
+                 React.createElement('div', {className:"row visual-bar"},
+                   React.createElement('div', {className:"col-md-5 text-center"},
+                     React.createElement(ReactBootstrap.ButtonGroup, {bsSize:"xsmall"},
+                       React.createElement(ReactBootstrap.Button, {id:"0", active:this.state.activeVis == 0 ? true : false, onClick: this.selectVis },"chart"),
+                       React.createElement(ReactBootstrap.Button, {id:"1", active:this.state.activeVis == 1 ? true : false, onClick: this.selectVis },"histogram")
+                     )
+                   ),
+                   React.createElement('div', {className:"col-md-7"},
+                     React.createElement(TimeSlider, {interval:this.state.interval, newIntervalCallback:this.newIntervalCallback})
+                   )
+                 ),
+                 React.createElement('div', {className:"row"},
+                   React.createElement('div', {className:"col-md-12"}, visContent)
                  ),
                  React.createElement('div', null, share_modal)
                );
@@ -1424,8 +1373,6 @@ var WidgetMp = React.createClass({
 });
 
 var TimeSlider = React.createClass({
-    styles: {
-    },
     notifyNewInterval: function(interval) {
         this.props.newIntervalCallback(interval);
     },
@@ -1443,15 +1390,34 @@ var TimeSlider = React.createClass({
 });
 
 var ContentLinegraph = React.createClass({
-    styles: {
+    getInitialState: function () {
+        return {
+                zoomInterval: {its:0,ets:0}
+        }
+    },
+    notifyNewInterval: function(interval) {
+        this.setState({zoomInterval:interval})
+        this.props.newIntervalCallback(interval);
+    },
+    shouldComponentUpdate: function (nextProps, nextState) {
+        if (nextState.zoomInterval.ets != this.state.zoomInterval.ets) {
+            //no actualizo otra vez porque es por un nuevo zoom
+            return false
+        } else if (nextProps.interval.ets == this.state.zoomInterval.ets && nextProps.interval.its == this.state.zoomInterval.its ) {
+            //no actualizo otra vez porque es el update provocado por el zoom
+            return false
+        } else {
+            console.log('actualizo el estado del linegraph')
+            return true
+        }
     },
     componentDidMount: function () {
         var el = ReactDOM.findDOMNode(this)
-        d3Linegraph.create(el, this.props.data, this.props.interval)
+        d3Linegraph.create(el, this.props.data, this.props.interval, this.notifyNewInterval)
     },
     componentDidUpdate: function () {
         var el = ReactDOM.findDOMNode(this)
-        d3Linegraph.update(el, this.props.data, this.props.interval)
+        d3Linegraph.update(el, this.props.data, this.props.interval, this.notifyNewInterval)
     },
     render: function () {
         return React.createElement('div', null);
@@ -1516,7 +1482,7 @@ var WidgetDsVariable = React.createClass({
         });
         if (already_monitored.length>0) {
             dropdown=React.createElement(ReactBootstrap.Nav, {onSelect:this.associateExistingDatapoint},
-                       React.createElement(ReactBootstrap.NavDropdown, {bsSize:"xsmall", title:"This variable has been identified before", id:"nav-dropdown"},already_monitored)
+                       React.createElement(ReactBootstrap.NavDropdown, {bsSize:"xsmall", title:"Already existing datapoint", id:"nav-dropdown"},already_monitored)
                      );
         } else {
             dropdown=null

@@ -93,6 +93,7 @@ def _generate_graph_summary_data_UENNSS(parameters):
             aggregated_data=aggregate.aggregate_timeseries_data(data=[[timeuuid.get_unix_timestamp(d['date']),float(d['value'])] for d in dp_data], bins=50, interval=[its,ets])
             summary['datapoints'].append({\
                 'color':datapoint.color,\
+                'datapointname':datapoint.datapointname,\
                 'data':aggregated_data\
             })
         if dp_with_data>0:

@@ -6,7 +6,6 @@ var TreeItem = React.createClass({
     },
     subscriptionTokens: [],
     componentWillMount: function () {
-        console.log('estoy vivo');
         this.subscriptionTokens.push({token:PubSub.subscribe('uriUpdate', this.subscriptionHandler),msg:'uriUpdate'});
         path=this.props.uri.split('.')
         paddingLeft=(path.length-1)*17

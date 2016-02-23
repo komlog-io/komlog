@@ -5,6 +5,8 @@ var EventSummary = React.createClass ({
             d3SummaryLinegraph.create(el, this.props.data.datapoints, this.props.data.its, this.props.data.ets)
         } else if (this.props.data.type == 'mp') {
             d3SummaryLinegraph.create(el, this.props.data.datapoints, this.props.data.its, this.props.data.ets)
+        } else if (this.props.data.type == 'ds') {
+            d3SummaryDatasource.create(el, this.props.data.datasource, this.props.data.ts)
         }
     },
     render: function () {

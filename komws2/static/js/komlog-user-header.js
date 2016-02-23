@@ -47,11 +47,11 @@ var UserHeader= React.createClass({
                    )
                  ),
                  React.createElement(ReactBootstrap.Nav, {pullRight:true},
-                   React.createElement(ReactBootstrap.NavDropdown, {pullRight:true, title:this.state.username},
+                   React.createElement(ReactBootstrap.NavDropdown, {id:"dropdown",pullRight:true, title:this.state.username},
                      React.createElement(ReactBootstrap.MenuItem, {key:1},
                        React.createElement('span', null,
                          React.createElement(ReactBootstrap.Glyphicon, {glyph:"cog"}),
-                         " "+this.state.email
+                         " Configuration" 
                        )
                      ),
                      React.createElement(ReactBootstrap.MenuItem, {divider:true}),

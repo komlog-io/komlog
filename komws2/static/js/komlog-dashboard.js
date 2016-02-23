@@ -38,6 +38,8 @@ var Dashboard=React.createClass({
             PubSub.publish('dashboardConfigReq',{bid:this.props.bid})
         }
     },
+    componentDidUpdate: function () {
+    },
     componentWillUnmount: function () {
         $.map(this.subscriptionTokens[this.props.bid], function (d) {
             PubSub.unsubscribe(d.token)
@@ -71,7 +73,6 @@ var Dashboard=React.createClass({
                             slides[i].isPinned=false;
                         }
                     }
-                    console.log('llego ')
                     for (var i=0;i<state.wids.length;i++) {
                         slide=slides.filter( function (el) {
                             return el.lid == state.wids[i]
@@ -86,7 +87,6 @@ var Dashboard=React.createClass({
                     }
                     state.slides=slides;
                 }
-                console.log('actualizo state',state,Object.keys(state).length)
                 this.setState(state);
             }
         }
@@ -147,9 +147,10 @@ var Dashboard=React.createClass({
         }
     },
     getSlideList: function () {
+        bid = this.props.bid
         slides = this.state.slides.map( function (slide) {
-            return React.createElement(Slide, {key:slide.shortcut, bid:this.props.bid, lid:slide.lid, tid:slide.tid, shortcut:slide.shortcut, type:slide.type, isPinned:slide.isPinned});
-        }.bind(this));
+            return React.createElement(Slide, {key:slide.shortcut, bid:bid, lid:slide.lid, tid:slide.tid, shortcut:slide.shortcut, type:slide.type, isPinned:slide.isPinned});
+        });
         return slides
     },
     render: function () {
@@ -159,13 +160,14 @@ var Dashboard=React.createClass({
         } else {
             display='none'
         }
-        return React.createElement('div', {className:"workspace modal-container", style:{display:display}}, 
-                 React.createElement(DashboardHeader, {bid:this.props.bid, dashboardname:this.state.dashboardname, closeCallback:this.closeDashboard}),
-                 React.createElement('div', null, 
-                   React.createElement(ReactCSSTransitionGroup, {transitionName:'list-item', transitionEnterTimeout:500, transitionLeaveTimeout:300}, 
-                     slides
-                     )
-                   )
+        return React.createElement('div', {className:"workspace modal-container", style:{display:display}},
+                 //React.createElement(DashboardHeader, {bid:this.props.bid, dashboardname:this.state.dashboardname, closeCallback:this.closeDashboard}),
+                 //React.createElement('div', null, 
+                   //React.createElement(ReactCSSTransitionGroup, {transitionName:'list-item', transitionEnterTimeout:500, transitionLeaveTimeout:300}, 
+                     //slides
+                     //)
+                   //)
+                 React.createElement(DashboardGrid, {children:slides})
                  );
     },
 });
@@ -263,6 +265,164 @@ var DashboardHeader= React.createClass({
         } else {
             return null
         }
+    },
+});
+
+var DashboardGrid=React.createClass({
+    getInitialState: function () {
+        return {
+            columns: 0,
+            width: 0,
+            cellWidth: 0,
+            cells: {},
+            colDim:{},
+       }
+    },
+    componentDidMount: function () {
+        var width=ReactDOM.findDOMNode(this).offsetWidth
+        var height=ReactDOM.findDOMNode(this).offsetHeight
+        var minCellWidth = 450;
+        var columns = parseInt(width / minCellWidth);
+        var cellWidth= parseInt(width / columns);
+        var colDim={}
+        for (var i = 0; i< columns; i++) {
+            colDim[i]={x:i*cellWidth,y:0}
+        }
+        this.setState({cellWidth:cellWidth, columns: columns, colDim:colDim})
+    },
+    componentDidUpdate: function () {
+        var shouldUpdate = false;
+        var cells = this.state.cells
+        var colDim = this.state.colDim
+        var cellsLayout = {}
+        // update cells dims
+        for (var lid in this.refs) {
+            var curX = this.refs[lid].offsetLeft
+            var curY = this.refs[lid].offsetTop
+            var curWidth = this.refs[lid].offsetWidth
+            var curHeight = this.refs[lid].offsetHeight
+            if (cells.hasOwnProperty(lid)) {
+                var curCell = cells[lid]
+                if (curCell.x != curX || curCell.y != curY || curCell.width != curWidth || curCell.height != curHeight ) {
+                    shouldUpdate = true;
+                    curCell.x = curX
+                    curCell.y = curY
+                    curCell.width = curWidth
+                    curCell.height = curHeight
+                }
+            } else {
+                shouldUpdate = true;
+                cells[lid]={x:curX, y:curY, width:curWidth, height:curHeight}
+            }
+            for (var colNum in colDim) {
+                if (curX == colDim[colNum].x && (parseInt(curY)+parseInt(curHeight)>colDim[colNum].y)) {
+                    shouldUpdate = true;
+                    colDim[colNum].y=parseInt(curY)+parseInt(curHeight)
+                }
+            }
+        }
+        //nos quedamos con las cells que existen actualmente
+        for (var oldLid in cells) {
+            var hasIt = false;
+            for (var newLid in this.refs) {
+                if (oldLid == newLid) {
+                    hasIt = true;
+                    break;
+                }
+            }
+            if (hasIt == false) {
+                shouldUpdate = true;
+                delete cells[oldLid]
+            } else {
+                if (!cellsLayout.hasOwnProperty(cells[newLid].x)) {
+                    cellsLayout[cells[newLid].x]=[]
+                }
+                cellsLayout[cells[newLid].x].push({y:cells[newLid].y, height:cells[newLid].height, ref:newLid})
+            }
+        }
+        // ahora tenemos que agrupar las cells si hay huecos o separarlas si hay solapes
+        var newY = 0
+        var ref = null;
+        for (var col in cellsLayout) {
+            cellsLayout[col].sort(function (a,b) {return a.y - b.y})
+            newY=0;
+            for (var i=0;i<cellsLayout[col].length;i++) {
+                ref = cellsLayout[col][i].ref
+                cells[ref].y = newY
+                cellsLayout[col][i].y = newY // lo necesitaremos en el siguiente paso
+                newY += cells[ref].height
+                if (i == cellsLayout[col].length-1) {
+                    for (var colNum in colDim) {
+                        if (col == colDim[colNum].x) {
+                            colDim[colNum].y=cellsLayout[col][i].y+cellsLayout[col][i].height
+                        }
+                    }
+                }
+            }
+        }
+        // por ultimo, debemos ver si alguna columna tiene demasiadas cells y hay que moverlas a otras columnas
+        var relocated = false
+        for (var col in cellsLayout) {
+            cellsLayout[col].sort(function (a,b) {return b.y - a.y}) //descendente
+            for (var i=0;i<cellsLayout[col].length;i++) {
+                ref = cellsLayout[col][i].ref
+                for (var colNum in colDim) {
+                    if (col != colDim[colNum].x && colDim[colNum].y < cellsLayout[col][i].y) {
+                        relocated = true;
+                        cells[ref].x = colDim[colNum].x
+                        cells[ref].y = colDim[colNum].y
+                        colDim[colNum].y= cells[ref].y+cells[ref].height
+                        break;
+                    }
+                    relocated = false;
+                }
+                if (!relocated) {
+                    break;
+                }
+            }
+        }
+        
+        if (shouldUpdate) {
+            this.setState({cells:cells, colDim:colDim})
+        }
+    },
+    getGrid: function () {
+        var grid=[]
+        if (this.state.columns == 0) {
+            return grid
+        } else {
+            var cells = this.state.cells
+            var colDim = this.state.colDim
+            var cellWidth = this.state.cellWidth
+            grid = React.Children.map( this.props.children, function (child, i) {
+                if (child.props.lid in cells) {
+                    var x = cells[child.props.lid].x
+                    var y = cells[child.props.lid].y
+                    var width = cells[child.props.lid].width
+                } else {
+                    var x = colDim[0].x;
+                    var y = colDim[0].y;
+                    var width = cellWidth
+                    for (var col in colDim) {
+                        if (colDim[col].y < y ) {
+                            x = colDim[col].x;
+                            y = colDim[col].y;
+                        }
+                    }
+                }
+                var cellStyle={left:x, top:y, width: width}
+                return React.createElement('div',{className:'grid-element', key:child.props.lid, ref:child.props.lid, style:cellStyle},
+                    child
+                )
+            });
+            return grid
+        }
+    },
+    render: function () {
+        grid = this.getGrid();
+        return React.createElement('div',null,
+            grid
+        );
     },
 });
 

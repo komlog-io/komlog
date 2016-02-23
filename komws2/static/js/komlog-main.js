@@ -1,13 +1,4 @@
 var Slide = React.createClass({
-    styles: {
-        slidestyle:  {
-            padding: '1px',
-            margin: '5px',
-            backgroundColor: 'white',
-            boxShadow: '1px 1px 5px 1px #ccc',
-            borderRadius: '5px',
-        },
-    },
     getInitialState: function () {
         return {
                 conf:{},
@@ -32,7 +23,7 @@ var Slide = React.createClass({
     },
     render: function() {
         slide=this.getSlideEl();
-        return React.createElement('div', {className:"Slide modal-container", style:this.styles.slidestyle}, slide);
+        return React.createElement('div', {className:"Slide modal-container"}, slide)
     },
 });
 
