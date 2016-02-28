@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-#coding: utf-8
-
 import tornado.web
 from tornado.template import Template
 from tornado.escape import json_encode,json_decode,xhtml_escape

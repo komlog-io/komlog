@@ -1,4 +1,88 @@
-var DesktopMenu = React.createClass({
+var SideMenu = React.createClass({
+    getInitialState: function () {
+        return {
+            activeTab: 1
+        }
+    },
+    componentDidMount: function () {
+        console.log('el side menu está listo')
+    },
+    switchTab: function (eventKey) {
+        if (eventKey != this.state.activeTab) {
+            this.setState({activeTab:eventKey})
+        }
+    },
+    render: function () {
+        return React.createElement('div', null,
+            React.createElement('div',{className:"brand"},"_< Komlog"),
+            React.createElement(MenuToolBar,null),
+            React.createElement(ReactBootstrap.Tabs, {activeKey:this.state.activeTab, onSelect: this.switchTab},
+              React.createElement(ReactBootstrap.Tab, {eventKey:1, title:"Dashboards"}, React.createElement(DashboardList, null)),
+              React.createElement(ReactBootstrap.Tab, {eventKey:2, title:"Data model"}, React.createElement(TreeItem, {uri:''}))
+            ),
+            React.createElement('div',{className:"side-footer"},
+              "Made with ",
+              React.createElement('span',{className:'glyphicon glyphicon-heart'}),
+              " by ",
+              React.createElement('span',{className:'side-footer-brand'},"Komlog")
+            )
+        );
+    }
+});
+
+var DashboardList = React.createClass ({
+    getInitialState: function () {
+        return {
+            activeBid: '0'
+        }
+    },
+    subscriptionTokens: [],
+    componentWillMount: function () {
+        this.subscriptionTokens.push({token:PubSub.subscribe('dashboardConfigUpdate', this.subscriptionHandler),msg:'dashboardConfigUpdate'});
+
+    },
+    subscriptionHandler: function (msg,data) {
+        switch (msg) {
+            case 'dashboardConfigUpdate':
+                this.forceUpdate();
+                break;
+        }
+    },
+    componentDidMount: function () {
+        PubSub.publish('dashboardsConfigReq',{})
+    },
+    switchDashboard: function (bid, event) {
+        event.preventDefault();
+        PubSub.publish('showDashboard',{bid:bid})
+        this.setState({activeBid:bid})
+    },
+    getDashboardList: function () {
+        var dashboards=[]
+        var activeBid = this.state.activeBid
+        for (var bid in dashboardStore._dashboardConfig) {
+            dashboards.push({bid:bid, dashboardname:dashboardStore._dashboardConfig[bid].dashboardname})
+        }
+        dashboards.sort(function (a,b) {
+            return a.dashboardname-b.dashboardname
+        });
+        var listItems=$.map(dashboards, function (e,i) {
+            var className=activeBid == e.bid ? "list-item-active" : "list-item"
+            return React.createElement('li', {key:i+1, className:className, onClick:this.switchDashboard.bind(this, e.bid)},e.dashboardname);
+        }.bind(this))
+        var className=activeBid == 0 ? "list-item-active" : "list-item"
+        return React.createElement('ul', {className:"menu-list"},
+                 React.createElement('li', {key:0, className:className, onClick:this.switchDashboard.bind(this,'0')},"Home"),
+                 listItems
+               );
+    },
+    render: function () {
+        var dashboardList = this.getDashboardList()
+        return dashboardList
+    }
+});
+
+
+var MenuToolBar= React.createClass({
     getInitialState: function () {
         return {inputName:'',
                 inputStyle:null,
@@ -85,22 +169,15 @@ var DesktopMenu = React.createClass({
                          )
                        )
                      );
-        dashboards=this.getDashboardList()
         return React.createElement(ReactBootstrap.ButtonGroup, null,
-                 React.createElement(ReactBootstrap.Dropdown, {id:"dashboards"},
-                   React.createElement(ReactBootstrap.Dropdown.Toggle, {noCaret:true},
-                     React.createElement(ReactBootstrap.Glyphicon, {glyph:"th-large"})
-                   ),
-                   dashboards
-                 ),
                  React.createElement(ReactBootstrap.Input, {onChange:this.handleChange, placeholder:this.state.inputPlaceholder, value:this.state.inputName, bsStyle:this.state.inputStyle, ref:"inputName", type:"text", buttonBefore:inputOptions})
                );
     }
 });
 
 ReactDOM.render(
-    React.createElement(DesktopMenu,null)
+    React.createElement(SideMenu,null)
     ,
-    document.getElementById('desktop-menu')
+    document.getElementById('side-menu')
 );
 

@@ -421,7 +421,7 @@ var SnapshotDp = React.createClass({
         if (this.state.summary.hasOwnProperty('datapointname')){
             var summary=React.createElement('tr', null,
                 React.createElement('td', null,
-                  React.createElement('span', {style:{backgroundColor: this.state.summary.color, borderRadius: '5px'}}, '\u00a0\u00a0\u00a0'),
+                  React.createElement('span', {style:{backgroundColor: this.state.summary.color, borderRadius: '5px'}}, '\u00a0\u00a0\u00a0\u00a0\u00a0'),
                   React.createElement('span', null, '\u00a0\u00a0'),
                   React.createElement('span', null,this.state.summary.datapointname)
                 ),
@@ -614,7 +614,7 @@ var SnapshotMp = React.createClass({
                 var datapointStyle={backgroundColor: color, borderRadius: '5px'}
                 return React.createElement('tr', {key:key},
                          React.createElement('td', null,
-                           React.createElement('span',{style:datapointStyle},"\u00a0\u00a0\u00a0"),
+                           React.createElement('span',{style:datapointStyle},"\u00a0\u00a0\u00a0\u00a0"),
                            React.createElement('span',null,"\u00a0\u00a0"),
                            React.createElement('span', null, datapointname)
                          ),

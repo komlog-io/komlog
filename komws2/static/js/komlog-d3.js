@@ -440,7 +440,7 @@ d3Linegraph = {
             lines.style('stroke',function (d) {return d.color})
                 .attr('d',function (d) { return line(d.data)});
             svg.selectAll('.line')
-                .style('stroke-width',mouseIn == true ? 2:3)
+                .style('stroke-width',2)
             
         }
 
@@ -577,10 +577,6 @@ d3Linegraph = {
                 .transition()
                 .duration(300)
                 .style('opacity', 0.6);
-            svg.selectAll('.line')
-                .transition()
-                .duration(300)
-                .style('stroke-width','2');
         }
 
         function mouseleave () {
@@ -599,10 +595,6 @@ d3Linegraph = {
                 .transition()
                 .duration(100)
                 .style('opacity', 0);
-            svg.selectAll('.line')
-                .transition()
-                .duration(100)
-                .style('stroke-width','3');
             var zoomArea = svg.select('.zoom-area')
                 .style('opacity', 0)
             zoomArea.select("rect")
@@ -1398,7 +1390,7 @@ d3SummaryLinegraph = {
                 d3.select(el).select('.caption-box')
                     .transition()
                     .duration(300)
-                    .style('opacity', 0.6)
+                    .style('opacity', 0.8)
                 d3.select(el).select('.x-axis')
                     .selectAll('.tick')
                     .transition()

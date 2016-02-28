@@ -8,21 +8,12 @@
     <title>{{ page_title }}</title>
     <meta name="description" content="" />
     <meta name="author" content="komlog crew" />
-    <link href="{{ static_url("css/bootstrap.min.css") }}" rel="stylesheet">
-    <link href="{{ static_url("css/style.css") }}" rel="stylesheet">
+    <link href="{{ static_url('3p/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ static_url('css/style.css') }}" rel="stylesheet">
   </head>
   <body>
-      {% block body %}
-      {% end %}
-    <div class="footer">
-      <div class="container-fluid">
-        <div class=row">
-          <div class="col-md-2 col-md-offset-10 motto">
-            <p class="text-muted text-right text-bottom"><strong>&#169; Komlog </strong> Made in Madrid with <span class="text-danger">&#9829;</span></p>
-          </div>
-        </div>
-      </div>
-    </div>
+    {% block body %}
+    {% end %}
     {% block jsDefinition %}
     {% end %}
   </body>

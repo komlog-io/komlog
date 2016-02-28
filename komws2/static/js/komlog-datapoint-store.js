@@ -206,6 +206,7 @@ var datapointStore = new DatapointStore();
 datapointStore.requestLoop()
 
 function processMsgDatapointDataReq (data) {
+    console.log('procesando datapointDataReq')
     if (data.hasOwnProperty('pid')) {
         if (!data.hasOwnProperty('tid')) {
             datapointStore.addLoopRequest(data.pid,'requestDatapointData',60000)
@@ -238,13 +239,16 @@ function requestDatapointData (pid, interval, originalInterval, tid) {
             sendDatapointDataUpdate(pid, originalInterval)
         }
     } else {
+        console.log('lanzando request ajax')
         $.ajax({
             url: '/var/dp/'+pid,
             dataType: 'json',
             data: parameters,
         })
         .done(function (response) {
+            console.log('recibida respuesta',response)
             datapointStore.storeDatapointData(pid,response)
+            console.log('almacenados datos')
             receivedTs=$.map(response, function (e) {
                 return e.ts
             });
@@ -253,7 +257,7 @@ function requestDatapointData (pid, interval, originalInterval, tid) {
                 minTs=Math.min.apply(null, receivedTs)
                 notifInterval={its:minTs, ets:maxTs}
             }
-            if (0 < response.length && response.length < 100) {
+            if (0 < response.length && response.length < 300) {
                 if (originalInterval) {
                     datapointStore.updateIntervalsRequested(pid,interval);
                     sendDatapointDataUpdate(pid,originalInterval)
@@ -264,7 +268,7 @@ function requestDatapointData (pid, interval, originalInterval, tid) {
                     datapointStore.updateIntervalsRequested(pid,notifInterval);
                     sendDatapointDataUpdate(pid,notifInterval)
                 }
-            } else if (response.length == 100) {
+            } else if (response.length == 300) {
                 if (!interval && !originalInterval) {
                     datapointStore.updateIntervalsRequested(pid,notifInterval)
                     sendDatapointDataUpdate(pid,notifInterval)
@@ -306,6 +310,7 @@ function getMissingSubInterval (pid, interval) {
 
 function sendDatapointDataUpdate (pid, interval) {
     if (datapointStore._datapointData.hasOwnProperty(pid)) {
+        console.log('voy a enviar datapointdataupdate')
         PubSub.publish('datapointDataUpdate-'+pid,{interval:interval})
     }
 }

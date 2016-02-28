@@ -1,5 +1,3 @@
-var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
-
 var Dashboard=React.createClass({
     getInitialState: function () {
         return {
@@ -162,11 +160,6 @@ var Dashboard=React.createClass({
         }
         return React.createElement('div', {className:"workspace modal-container", style:{display:display}},
                  //React.createElement(DashboardHeader, {bid:this.props.bid, dashboardname:this.state.dashboardname, closeCallback:this.closeDashboard}),
-                 //React.createElement('div', null, 
-                   //React.createElement(ReactCSSTransitionGroup, {transitionName:'list-item', transitionEnterTimeout:500, transitionLeaveTimeout:300}, 
-                     //slides
-                     //)
-                   //)
                  React.createElement(DashboardGrid, {children:slides})
                  );
     },
@@ -309,16 +302,14 @@ var DashboardGrid=React.createClass({
                     curCell.y = curY
                     curCell.width = curWidth
                     curCell.height = curHeight
+                    if (curWidth == 0 && ReactDOM.findDOMNode(this).offsetWidth != 0) {
+                        // si volvemos a cargar un dashboard las widths estaban a 0
+                        curCell.width = this.state.cellWidth
+                    }
                 }
             } else {
                 shouldUpdate = true;
                 cells[lid]={x:curX, y:curY, width:curWidth, height:curHeight}
-            }
-            for (var colNum in colDim) {
-                if (curX == colDim[colNum].x && (parseInt(curY)+parseInt(curHeight)>colDim[colNum].y)) {
-                    shouldUpdate = true;
-                    colDim[colNum].y=parseInt(curY)+parseInt(curHeight)
-                }
             }
         }
         //nos quedamos con las cells que existen actualmente
@@ -339,6 +330,12 @@ var DashboardGrid=React.createClass({
                 }
                 cellsLayout[cells[newLid].x].push({y:cells[newLid].y, height:cells[newLid].height, ref:newLid})
             }
+        }
+        var colDimYOld={}
+        // reseteamos la longitud de las columnas
+        for (var colNum in colDim) {
+            colDimYOld[colNum]=colDim[colNum].y
+            colDim[colNum].y=0;
         }
         // ahora tenemos que agrupar las cells si hay huecos o separarlas si hay solapes
         var newY = 0
@@ -381,8 +378,15 @@ var DashboardGrid=React.createClass({
                 }
             }
         }
+        for (var colNum in colDim) {
+            if (colDimYOld[colNum] != colDim[colNum].y) {
+                shouldUpdate = true
+            }
+        }
         
         if (shouldUpdate) {
+            console.log('voy a actualizar las celdas',cells)
+            console.log('las dimensiones de las columnas quedan ',colDim)
             this.setState({cells:cells, colDim:colDim})
         }
     },

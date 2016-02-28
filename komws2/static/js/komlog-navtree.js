@@ -2,13 +2,19 @@ var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
 var TreeItem = React.createClass({
     getInitialState: function () {
-        return {collapse:true,draggable:'false',children:[], collapseGlyph:'menu-right', typeGlyph:'unchecked'}
+        return {
+            collapse:true,
+            draggable:false,
+            children:[],
+            collapseGlyph:'menu-right',
+            typeGlyph:'unchecked'
+        }
     },
     subscriptionTokens: [],
     componentWillMount: function () {
         this.subscriptionTokens.push({token:PubSub.subscribe('uriUpdate', this.subscriptionHandler),msg:'uriUpdate'});
         path=this.props.uri.split('.')
-        paddingLeft=(path.length-1)*17
+        paddingLeft=(path.length-1)*12
         name=path[path.length-1]
         this.setState({name:name,style:{paddingLeft:paddingLeft.toString()+'px'}})
     },
@@ -32,7 +38,7 @@ var TreeItem = React.createClass({
     onDragStart: function (event) {
         console.log('dragstart')
         event.stopPropagation()
-        if (this.state.navDraggable=='true') {
+        if (this.state.draggable==true) {
             event.dataTransfer.setData('id',this.state.id)
         }
     },
@@ -61,7 +67,7 @@ var TreeItem = React.createClass({
             orderedChildren=info.children.sort(function (a,b) {
                 return a>b ? 1 : -1;
             });
-            draggable=(info.type=='p'? 'true':'false')
+            draggable=(info.type=='p'? true:false)
             if (info.type=='p'){
                 typeGlyph='stats'
                 hasActions=true
@@ -77,58 +83,48 @@ var TreeItem = React.createClass({
     },
     render: function () {
         if (this.props.uri == '') {
-            children=$.map(this.state.children, function (uri,i) {
+            var children=$.map(this.state.children, function (uri,i) {
                 return React.createElement(TreeItem, {key:uri, uri:uri})
             });
 
             return React.createElement('div', null, 
-                     React.createElement(ReactCSSTransitionGroup, {transitionName:"list-item", transitionEnterTimeout:500, transitionLeaveTimeout:300}, children)
+                     React.createElement(ReactCSSTransitionGroup, {transitionName:"tree-item", transitionEnterTimeout:500, transitionLeaveTimeout:300}, children)
                      );
         } else {
             if (this.state.collapse == false) {
                 if (this.state.children.length>0) {
-                    collapseIcon=React.createElement(ReactBootstrap.Glyphicon, {style:{width:'15px'}, glyph:this.state.collapseGlyph});
-                    children=$.map(this.state.children, function (uri, i) {
+                    var collapseIcon=React.createElement(ReactBootstrap.Glyphicon, {style:{width:'10px',fontSize:"8px"}, glyph:this.state.collapseGlyph});
+                    var children=$.map(this.state.children, function (uri, i) {
                         return React.createElement(TreeItem, {key:uri, uri:uri});
                     });
                 } else {
-                    collapseIcon=React.createElement('span', {style:{marginLeft:'15px'}});
-                    children=null
+                    var collapseIcon=React.createElement('span', {style:{marginLeft:'10px'}});
+                    var children=null
                 }
             } else {
-                children=null
+                var children=null
                 if (this.state.children.length>0) {
-                    collapseIcon=React.createElement(ReactBootstrap.Glyphicon, {style:{width:'15px'}, glyph:this.state.collapseGlyph});
+                    var collapseIcon=React.createElement(ReactBootstrap.Glyphicon, {style:{width:'10px',fontSize:"8px"}, glyph:this.state.collapseGlyph});
                 } else {
-                    collapseIcon=React.createElement('span', {style:{marginLeft:'15px'}});
+                    var collapseIcon=React.createElement('span', {style:{marginLeft:'10px'}});
                 }
             }
             if (this.state.hasActions) {
-                action=React.createElement('div', {style:{width:'15px', float:'right'}}, 
-                         React.createElement(ReactBootstrap.Glyphicon, {style:{color:'#555',marginRight:'-10px'}, glyph:'triangle-right', onClick:this.requestAction})
-                         );
+                var action=React.createElement(ReactBootstrap.Glyphicon, {className:"action-icon", glyph:this.state.typeGlyph, onClick:this.requestAction})
             } else {
                 action=null
             }
             return  React.createElement('div', null, 
-                        React.createElement('div', {className:'tree-item', draggable:this.state.draggable, onDragStart:this.onDragStart},
-                        action, 
-                        React.createElement('div', {style:this.state.style, onClick:this.toggleCollapse}, 
-                          collapseIcon,
-                          React.createElement(ReactBootstrap.Glyphicon, {style:{width:'15px',paddingLeft:'2px'}, glyph:this.state.typeGlyph}),
-                          React.createElement('span', {style:{paddingLeft:'5px'}}, this.state.name)
-                          )
-                        ),
-                        React.createElement(ReactCSSTransitionGroup, {transitionName:'list-item', transitionEnterTimeout:500, transitionLeaveTimeout:300}, 
-                          children)
-                        );
+            React.createElement('div', {className:'tree-item', draggable:this.state.draggable, onDragStart:this.onDragStart},
+              action, 
+              React.createElement('div', {style:this.state.style, onClick:this.toggleCollapse}, 
+                collapseIcon,
+                React.createElement('span', {style:{paddingLeft:'5px'}}, this.state.name)
+              )
+            ),
+            React.createElement(ReactCSSTransitionGroup, {transitionName:'tree-item', transitionEnterTimeout:500, transitionLeaveTimeout:300}, children)
+            );
         }
     },
 });
-
-ReactDOM.render(
-    React.createElement(TreeItem, {uri:''})
-    ,
-    document.getElementById('navigation-tree')
-);
 

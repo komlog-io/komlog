@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
 {% block jsDefinition %}
-<script src="{{ static_url("js/react-with-addons-0.14.6.js")}}"></script>
-<script src="{{ static_url("js/react-dom-0.14.6.js")}}"></script>
-<script src="{{ static_url("js/react-bootstrap.min.js")}}"></script>
-<script src="{{ static_url("js/jquery.min.js")}}"></script>
-<script src="{{ static_url("js/bootstrap.min.js")}}"></script>
-<script src="{{ static_url("js/d3.min.js")}}"></script>
-<script src="{{ static_url("js/pubsub.js")}}"></script>
+<script src="{{ static_url("3p/js/react-with-addons-0.14.6.js")}}"></script>
+<script src="{{ static_url("3p/js/react-dom-0.14.6.js")}}"></script>
+<script src="{{ static_url("3p/js/react-bootstrap.min.js")}}"></script>
+<script src="{{ static_url("3p/js/jquery.min.js")}}"></script>
+<script src="{{ static_url("3p/js/bootstrap.min.js")}}"></script>
+<script src="{{ static_url("3p/js/d3.min.js")}}"></script>
+<script src="{{ static_url("3p/js/pubsub.js")}}"></script>
 <script src="{{ static_url("js/komlog-utils.js")}}"></script>
 <script src="{{ static_url("js/komlog-alert.js")}}"></script>
 <script src="{{ static_url("js/komlog-user-store.js")}}"></script>
@@ -40,19 +40,13 @@
     </div>
     <div class="container-fluid">
       <div class="row">
-        <div class="col-md-1 sidebar">
-          <div id="desktop-menu">
-          </div>
-          <div id="navigation-tree">
-          </div>
-          <div id="related-slides">
-          </div>
+        <div class="col-md-9 main" id="workspace-content">
         </div>
-        <div class="col-md-9 col-md-offset-1 main" id="workspace-content">
-        </div>
-        <div class="col-md-2 col-md-offset-10 sidebar-right">
+        <div class="col-md-3 col-md-offset-9 sidebar-right">
           <div id="events-sidebar" />
         </div>
+      </div>
+      <div id="side-menu" class="side-menu">
       </div>
     </div>
 {% end %}

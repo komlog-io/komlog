@@ -248,6 +248,7 @@ function requestDashboardsConfig () {
                 dashboardStore.storeConfig(data[i].bid, data[i]);
             }
         }
+        console.log('voy a mandar un update')
         PubSub.publish('dashboardConfigUpdate',{})
     })
 }

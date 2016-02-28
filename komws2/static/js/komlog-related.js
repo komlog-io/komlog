@@ -58,9 +58,9 @@ var RelatedSlides = React.createClass({
     }
 });
 
-ReactDOM.render(
-    React.createElement(RelatedSlides, null)
-    ,
-    document.getElementById('related-slides')
-);
+//ReactDOM.render(
+    //React.createElement(RelatedSlides, null)
+    //,
+    //document.getElementById('related-slides')
+//);
 

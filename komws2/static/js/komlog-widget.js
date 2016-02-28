@@ -592,16 +592,18 @@ var WidgetConfigMp = React.createClass({
 
 var WidgetDs = React.createClass({
     getInitialState: function () {
-        return {dsData: undefined,
-                datasourcename: '',
-                timestamp:0,
-                seq:undefined,
-                snapshotTimestamp:0,
-                snapshotSeq:undefined,
-                shareModal:false,
-                shareCounter:this.props.shareCounter,
-                downloadCounter:this.props.downloadCounter,
-                }
+        return {
+            contentWidth: null,
+            dsData: undefined,
+            datasourcename: '',
+            timestamp:0,
+            seq:undefined,
+            snapshotTimestamp:0,
+            snapshotSeq:undefined,
+            shareModal:false,
+            shareCounter:this.props.shareCounter,
+            downloadCounter:this.props.downloadCounter,
+        }
     },
     subscriptionTokens: {},
     onClickDatapoint: function(pid,e) {
@@ -609,7 +611,7 @@ var WidgetDs = React.createClass({
         PubSub.publish('loadSlide',{pid:pid})
     },
     onDragStartDatapoint: function (pid,e) {
-        console.log('dragstartnavbar')
+        console.log('dragstartdp')
         e.stopPropagation()
         e.dataTransfer.setData('id',pid)
     },
@@ -631,6 +633,10 @@ var WidgetDs = React.createClass({
     componentDidMount: function () {
         PubSub.publish('datasourceDataReq',{did:this.props.did})
         PubSub.publish('datasourceConfigReq',{did:this.props.did})
+        if (this.state.contentWidth == null) {
+            var contentWidth = ReactDOM.findDOMNode(this).clientWidth
+            this.setState({contentWidth:contentWidth})
+        }
     },
     componentWillUnmount: function () {
         $.map(this.subscriptionTokens[this.props.wid], function (d) {
@@ -694,7 +700,9 @@ var WidgetDs = React.createClass({
             var dateFormat = d3.time.format("%Y/%m/%d - %H:%M:%S")
             var date = new Date(timestamp*1000);
             dateText=dateFormat(date)
-            return React.createElement('div', {className: "ds-info"}, dateText);
+            return React.createElement('div', {style:{"textAlign":"center"}},
+                     React.createElement('div',{className: "ds-info"}, dateText)
+                   );
         } else {
             return null
         }
@@ -709,6 +717,18 @@ var WidgetDs = React.createClass({
             return ''
         }
     },
+    getFontClass: function (dsData) {
+        if (!dsData || this.state.contentWidth == null) {
+            return 'font-normal'
+        }
+        var newLineRegex=/(?:\r\n|\r|\n)/g
+        var contentWidth = this.state.contentWidth
+        var normalLength = contentWidth / 8
+        var lines = dsData.content.split(newLineRegex)
+        var meanLineSize=d3.mean(lines, function (d) {return d.length > 0 ? d.length : normalLength})
+        var fontClass = meanLineSize * 10 < contentWidth ? 'font-large' : meanLineSize * 6 > contentWidth ? 'font-small' : 'font-normal';
+        return fontClass
+    },
     generateHtmlContent: function (dsData) {
         var elements=[]
         if (!dsData) {
@@ -716,51 +736,51 @@ var WidgetDs = React.createClass({
         }
         var numElement = 0
         var cursorPosition=0
-        newLineRegex=/(?:\r\n|\r|\n)/g
-        datasourcePids=[]
+        var newLineRegex=/(?:\r\n|\r|\n)/g
+        var datasourcePids=[]
         if (datasourceStore._datasourceConfig.hasOwnProperty(this.props.did)) {
-            datasourceConfig=datasourceStore._datasourceConfig[this.props.did]
+            var datasourceConfig=datasourceStore._datasourceConfig[this.props.did]
             if (datasourceConfig.hasOwnProperty('pids')) {
                 for (var i=0;i<datasourceConfig.pids.length;i++) {
                     if (datapointStore._datapointConfig.hasOwnProperty(datasourceConfig.pids[i])) {
-                        datapointname=datapointStore._datapointConfig[datasourceConfig.pids[i]].datapointname
+                        var datapointname=datapointStore._datapointConfig[datasourceConfig.pids[i]].datapointname
                         datasourcePids.push({pid:datasourceConfig.pids[i],datapointname:datapointname})
                     }
                 }
             }
         }
         datasourcePids.sort( function (a,b) {
-            nameA=a.datapointname.toLowerCase();
-            nameB=b.datapointname.toLowerCase();
+            var nameA=a.datapointname.toLowerCase();
+            var nameB=b.datapointname.toLowerCase();
             return ((nameA < nameB) ? -1 : ((nameA > nameB) ? 1 : 0));
         });
         for (var i=0;i<dsData.variables.length;i++) {
-            position=dsData.variables[i][0]
-            length=dsData.variables[i][1]
-            dsSubContent=dsData.content.substr(cursorPosition,position-cursorPosition)
-            start=0
+            var position=dsData.variables[i][0]
+            var length=dsData.variables[i][1]
+            var dsSubContent=dsData.content.substr(cursorPosition,position-cursorPosition)
+            var start=0
             while((match=newLineRegex.exec(dsSubContent)) != null) {
-                text=dsSubContent.substr(start,match.index-start).replace(/ /g, '\u00a0');
+                var text=dsSubContent.substr(start,match.index-start).replace(/ /g, '\u00a0');
                 elements.push({ne:numElement++,type:'text',data:text});
                 elements.push({ne:numElement++,type:'nl'});
                 start=match.index+match.length-1
             }
             if (start<position) {
-                text=dsSubContent.substr(start,position-start).replace(/ /g, '\u00a0');
+                var text=dsSubContent.substr(start,position-start).replace(/ /g, '\u00a0');
                 elements.push({ne:numElement++,type:'text',data:text});
             }
-            datapointFound=false;
+            var datapointFound=false;
             for (var j=0;j<dsData.datapoints.length;j++) {
                 if (dsData.datapoints[j].index == dsData.variables[i][0]) {
-                    text=dsData.content.substr(position,length)
+                    var text=dsData.content.substr(position,length)
                     if (datapointStore._datapointConfig.hasOwnProperty(dsData.datapoints[j].pid)) {
-                        color=datapointStore._datapointConfig[dsData.datapoints[j].pid].color
-                        datapointname=datapointStore._datapointConfig[dsData.datapoints[j].pid].datapointname
-                        classname='datapoint'
+                        var color=datapointStore._datapointConfig[dsData.datapoints[j].pid].color
+                        var datapointname=datapointStore._datapointConfig[dsData.datapoints[j].pid].datapointname
+                        var classname='datapoint'
                     } else {
-                        color='black'
-                        datapointname=''
-                        classname=''
+                        var color='black'
+                        var datapointname=''
+                        var classname=''
                     }
                     elements.push({ne:numElement++,type:'datapoint',pid:dsData.datapoints[j].pid,p:position,l:length,style:{color:color},data:text,datapointname:datapointname,classname:classname})
                     datapointFound=true
@@ -768,7 +788,7 @@ var WidgetDs = React.createClass({
                 }
             }
             if (datapointFound == false) {
-                text=dsData.content.substr(position,length)
+                var text=dsData.content.substr(position,length)
                 elements.push({ne:numElement++, type:'variable',data:text,position:position,length:length,datapoints:datasourcePids})
             } else {
                 datapointFound = false
@@ -812,6 +832,7 @@ var WidgetDs = React.createClass({
     },
     render: function () {
         elements=this.generateHtmlContent(this.state.dsData)
+        textClass=this.getFontClass(this.state.dsData)
         var element_nodes=$.map(elements, function (element) {
             if (element.type == 'text') {
                 return React.createElement('span', {key:element.ne},element.data);
@@ -821,7 +842,7 @@ var WidgetDs = React.createClass({
                 if (element.classname=='datapoint') { 
                     tooltip=React.createElement(ReactBootstrap.Tooltip, {id:'datapoint'}, element.datapointname);
                     return React.createElement(ReactBootstrap.OverlayTrigger, {key:element.ne, placement:"top", overlay:tooltip},
-                             React.createElement('span',{key:element.ne, style:element.style, draggable:"true", onClick:this.onClickDatapoint.bind(null,element.pid), onDragStart:this.onDragStartDatapoint.bind(null,element.pid)}, element.data)
+                             React.createElement('span',{key:element.ne, className:"datapoint", style:element.style, draggable:"true", onClick:this.onClickDatapoint.bind(null,element.pid), onDragStart:this.onDragStartDatapoint.bind(null,element.pid)}, element.data)
                            );
                 } else {
                     return React.createElement('span',{key:element.ne, style:element.style, draggable:"true", onClick:this.onClickDatapoint.bind(null,element.pid), onDragStart:this.onDragStartDatapoint.bind(null,element.pid)}, element.data);
@@ -845,7 +866,7 @@ var WidgetDs = React.createClass({
                     );
         return React.createElement('div', null,
                  info_node,
-                 React.createElement('div',{className: 'ds-content'}, element_nodes),
+                 React.createElement('div',{className: 'ds-content '+textClass}, element_nodes),
                  React.createElement('div',null, share_modal)
                );
     }
@@ -946,6 +967,7 @@ var WidgetDp = React.createClass({
     subscriptionHandler: function (msg,data) {
         switch (msg) {
             case 'datapointDataUpdate-'+this.props.pid:
+                console.log('recibo datapointdataupdate')
                 if (this.state.interval.its == undefined || this.state.interval.ets == undefined) {
                     this.refreshData(data.interval);
                 } else if (this.state.live == true && data.interval.ets > this.state.interval.ets) {
@@ -958,9 +980,11 @@ var WidgetDp = React.createClass({
                 }
                 break;
             case 'datapointConfigUpdate-'+this.props.pid:
+                console.log('recibo datapointconfig')
                 this.refreshConfig()
                 break;
             case 'intervalUpdate-'+this.props.wid:
+                console.log('recibo intervalupdate')
                 this.newIntervalCallback(data.interval)
                 break;
         }
@@ -1029,6 +1053,7 @@ var WidgetDp = React.createClass({
         this.setState({shareModal:false, live: this.state.livePrevious})
     },
     render: function () {
+        console.log('estoy en el render del widget dp');
         if (this.state.summary.hasOwnProperty('datapointname')){
             var summary=React.createElement('tr', null,
                       React.createElement('td', null,
@@ -1282,17 +1307,23 @@ var WidgetMp = React.createClass({
         this.setState({interval:interval,data:data})
     },
     onDrop: function (e) {
-        id=e.dataTransfer.getData('id')
+        console.log('recibido onDrop')
+        var id=e.dataTransfer.getData('id')
+        console.log('el id que hemos encontrado es',id)
         if (id.length==32){
-            data={wid:this.props.wid, 'new_datapoints':[id]}
+            var data={wid:this.props.wid, 'new_datapoints':[id]}
+            console.log('vamos a añadir el dp',id)
             PubSub.publish('modifyWidget',data)
         }
     },
     onDragEnter: function (e) {
+        console.log('alguien ha entradoooo')
         e.preventDefault();
     },
     onDragOver: function (e) {
+        console.log('alguien esta por aqui rondandooooo')
         e.preventDefault();
+        return false;
     },
     cancelSnapshot: function () {
         this.setState({shareModal:false, live: this.state.livePrevious})
@@ -1309,7 +1340,7 @@ var WidgetMp = React.createClass({
                 var datapointStyle={backgroundColor: this.state.config[key].color, borderRadius: '5px'}
                 return React.createElement('tr', {key:key},
                     React.createElement('td', null,
-                      React.createElement('span',{style:datapointStyle},"\u00a0\u00a0\u00a0"),
+                      React.createElement('span',{style:datapointStyle},"\u00a0\u00a0\u00a0\u00a0"),
                       React.createElement('span',null,"\u00a0\u00a0"),
                       React.createElement('span', null,this.state.config[key].datapointname)
                     ),
@@ -1499,7 +1530,7 @@ var WidgetDsVariable = React.createClass({
                    ),
                    dropdown
                  )},
-                 React.createElement('span', null, this.props.content)
+                 React.createElement('span', {className:"variable"}, this.props.content)
                );
     }
 });
