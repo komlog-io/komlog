@@ -1,4 +1,5 @@
 *.pyc
 *~
 *.swp
+komws2/static/3p/
 
