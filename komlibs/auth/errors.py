@@ -1,3 +1,22 @@
+'''
+In this file we define the different error codes that will be
+added to the exceptions in the auth modules, to identify
+the point in the code where it raised
+
+The pattern used to name an error is:
+
+E_XXX_YYY_ZZZ
+
+where:
+
+- XXX is the code to identify the file
+- YYY is the code to identify the function
+- ZZZ is the code to identify the reason the exception was raised
+
+The range reserved for errors in this module is 50000 - 100000
+
+'''
+
 #auth authorization
 
 E_AA_AR_UNF=50000

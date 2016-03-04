@@ -65,9 +65,9 @@ class ExceptionHandler(object):
     def __init__(self, f):
         self.f=f
 
-    def __call__(self, **kwargs):
+    def __call__(self, *args, **kwargs):
         try:
-            response=self.f(**kwargs)
+            response=self.f(*args, **kwargs)
             return response if response else webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
         except BAD_PARAMETERS_STATUS_EXCEPTION_LIST as e:
             data={'error':e.error}

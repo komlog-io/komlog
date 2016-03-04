@@ -1,0 +1,15 @@
+# status regarding protocol
+
+PROTOCOL_ERROR=4000
+
+
+# status regarding message
+
+MESSAGE_EXECUTION_DENIED=4100
+MESSAGE_ACCEPTED_FOR_PROCESSING=4101
+MESSAGE_EXECUTION_ERROR=4102
+
+# status regarding resources
+
+RESOURCE_NOT_FOUND = 4200
+

@@ -1,5 +1,3 @@
-#coding: utf-8
-
 import signal
 import time
 from komws2 import webapp
