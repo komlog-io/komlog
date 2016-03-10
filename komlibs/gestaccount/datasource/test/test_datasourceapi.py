@@ -9,7 +9,7 @@ from komlibs.gestaccount.datapoint import api as datapointapi
 from komlibs.gestaccount.datasource import api
 from komlibs.gestaccount import exceptions, errors
 from komlibs.general.time import timeuuid
-from komlibs.general.string import stringops
+from komlibs.general.crypto import crypto
 
 class GestaccountDatasourceApiTest(unittest.TestCase):
     ''' komlog.gestaccount.datasource.api tests '''
@@ -24,7 +24,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
             userapi.create_user(username=username, password=password, email=email)
             self.user=userapi.get_user_config(username=username)
         agentname='test_gestaccount.datasource.api_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         try:
             self.agent=agentapi.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -100,7 +100,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_get_datasources_config_success_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         self.agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         data=api.get_datasources_config(uid=user['uid'])
@@ -407,7 +407,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         color='#FFDDEE'
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
         date=timeuuid.uuid1()
-        content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc.. 20 something '+stringops.get_randomstring(size=10)
+        content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         self.assertTrue(api.store_datasource_data(did=datasource['did'], date=date, content=content))
         self.assertTrue(api.generate_datasource_text_summary(did=datasource['did'],date=date))
         self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=date))
@@ -418,7 +418,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         self.assertTrue(datapointapi.store_datasource_values(did=datasource['did'],date=date))
         for i in range(1,200):
             date=timeuuid.uuid1()
-            content='mark_negative_variable content with ññññ and 23 32 554 and \nnew  lines\ttabs\tetc.. '+' '*int(i/2)+' something '+stringops.get_randomstring(size=1)
+            content='mark_negative_variable content with ññññ and 23 32 554 and \nnew  lines\ttabs\tetc.. '+' '*int(i/2)+' something '+crypto.get_random_string(size=1)
             self.assertTrue(api.store_datasource_data(did=datasource['did'], date=date, content=content))
             self.assertTrue(api.generate_datasource_text_summary(did=datasource['did'],date=date))
             self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=date))
@@ -429,7 +429,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
                 self.assertTrue(datapointapi.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length))
             self.assertTrue(datapointapi.store_datasource_values(did=datasource['did'],date=date))
         new_date=timeuuid.uuid1()
-        new_content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc.. 20 something '+stringops.get_randomstring(size=10)
+        new_content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         self.assertTrue(api.store_datasource_data(did=datasource['did'], date=new_date, content=new_content))
         self.assertTrue(api.generate_datasource_text_summary(did=datasource['did'],date=new_date))
         self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=new_date))
@@ -470,7 +470,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         color='#FFDDEE'
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
         date=timeuuid.uuid1()
-        content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc.. 20 something '+stringops.get_randomstring(size=10)
+        content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         self.assertTrue(api.store_datasource_data(did=datasource['did'], date=date, content=content))
         #self.assertTrue(api.generate_datasource_text_summary(did=datasource['did'],date=date))
         self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=date))
@@ -493,7 +493,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         color='#FFDDEE'
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
         date=timeuuid.uuid1()
-        content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc.. 20 something '+stringops.get_randomstring(size=10)
+        content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         self.assertTrue(api.store_datasource_data(did=datasource['did'], date=date, content=content))
         self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=date))
         self.assertTrue(api.generate_datasource_text_summary(did=datasource['did'],date=date))
@@ -502,7 +502,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         length=2
         self.assertTrue(datapointapi.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length))
         self.assertTrue(datapointapi.store_datasource_values(did=datasource['did'],date=date))
-        new_content='some content with some variables 32 but nothing to do with previous 211 samples '+stringops.get_randomstring(size=10)
+        new_content='some content with some variables 32 but nothing to do with previous 211 samples '+crypto.get_random_string(size=10)
         new_date=timeuuid.uuid1()
         self.assertTrue(api.store_datasource_data(did=datasource['did'], date=new_date, content=new_content))
         self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=new_date))
@@ -522,7 +522,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         color='#FFDDEE'
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
         date=timeuuid.uuid1()
-        content='mark_negative_variable content with ññññ and a: 23, b: 32, c: 554 and \nnew lines\ttabs\tetc.. 20 something '+stringops.get_randomstring(size=10)
+        content='mark_negative_variable content with ññññ and a: 23, b: 32, c: 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         self.assertTrue(api.store_datasource_data(did=datasource['did'], date=date, content=content))
         self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=date))
         self.assertTrue(api.generate_datasource_text_summary(did=datasource['did'],date=date))
@@ -531,7 +531,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         length=2
         self.assertTrue(datapointapi.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length))
         self.assertTrue(datapointapi.store_datasource_values(did=datasource['did'],date=date))
-        new_content='mark_negative_variable content with ññññ and b: 32, c: 554 and \nnew lines\ttabs\tetc.. 20 something '+stringops.get_randomstring(size=10)
+        new_content='mark_negative_variable content with ññññ and b: 32, c: 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         new_date=timeuuid.uuid1()
         self.assertTrue(api.store_datasource_data(did=datasource['did'], date=new_date, content=new_content))
         self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=new_date))
@@ -551,7 +551,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         color='#FFDDEE'
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
         date=timeuuid.uuid1()
-        content='mark_negative_variable content with ññññ and a: 23, b: 32, c: 554 and \nnew lines\ttabs\tetc.. 20 something '+stringops.get_randomstring(size=10)
+        content='mark_negative_variable content with ññññ and a: 23, b: 32, c: 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         self.assertTrue(api.store_datasource_data(did=datasource['did'], date=date, content=content))
         self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=date))
         self.assertTrue(api.generate_datasource_text_summary(did=datasource['did'],date=date))
@@ -562,7 +562,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         self.assertTrue(datapointapi.store_datasource_values(did=datasource['did'],date=date))
         for i in range(1,200):
             date=timeuuid.uuid1()
-            content='mark_negative_variable content with ññññ and a: 23, b: 32, c: 554 and \nnew  lines\ttabs\tetc.. '+' '*int(i/2)+' something '+stringops.get_randomstring(size=2)
+            content='mark_negative_variable content with ññññ and a: 23, b: 32, c: 554 and \nnew  lines\ttabs\tetc.. '+' '*int(i/2)+' something '+crypto.get_random_string(size=2)
             self.assertTrue(api.store_datasource_data(did=datasource['did'], date=date, content=content))
             self.assertTrue(api.generate_datasource_text_summary(did=datasource['did'],date=date))
             self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=date))
@@ -572,7 +572,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
                 length=2
                 self.assertTrue(datapointapi.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length))
             self.assertTrue(datapointapi.store_datasource_values(did=datasource['did'],date=date))
-        new_content='mark_negative_variable content with ññññ and a: *30*  ,b: 32, c: 554 and \nnew lines\ttabs\tetc.. 20 something '+stringops.get_randomstring(size=10)
+        new_content='mark_negative_variable content with ññññ and a: *30*  ,b: 32, c: 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         new_date=timeuuid.uuid1()
         self.assertTrue(api.store_datasource_data(did=datasource['did'], date=new_date, content=new_content))
         self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=new_date))

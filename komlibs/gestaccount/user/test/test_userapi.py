@@ -28,7 +28,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         userinfo = userapi.create_user(username=username, password=password, email=email)
         self.assertEqual(username, userinfo['username'])
         self.assertEqual(email, userinfo['email'])
-        self.assertIsNotNone(userinfo['signup_code'])
+        self.assertIsNotNone(userinfo['code'])
 
     def test_auth_user(self):
         ''' auth_user should authenticate the user '''
@@ -45,7 +45,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         userinfo = userapi.create_user(username=username, password=password, email=email)
-        self.assertTrue(userapi.confirm_user(email=userinfo['email'], code=userinfo['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=userinfo['email'], code=userinfo['code']))
 
     def test_confirm_user_invalid_code(self):
         ''' confirm_user should fail if code is not valid or not found '''
@@ -62,7 +62,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         email = username+'@komlog.org'
         userinfo = userapi.create_user(username=username, password=password, email=email)
         email = username+'_fake@komlog.org'
-        self.assertRaises(exceptions.UserNotFoundException, userapi.confirm_user, email=email, code=userinfo['signup_code'])
+        self.assertRaises(exceptions.UserNotFoundException, userapi.confirm_user, email=email, code=userinfo['code'])
 
     def test_confirm_user_failure_already_used_code(self):
         ''' confirm_user should modify user state if we pass a valid email and code '''
@@ -70,8 +70,8 @@ class GestaccountUserApiTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         userinfo = userapi.create_user(username=username, password=password, email=email)
-        self.assertTrue(userapi.confirm_user(email=userinfo['email'], code=userinfo['signup_code']))
-        self.assertRaises(exceptions.UserConfirmationException, userapi.confirm_user, email=userinfo['email'], code=userinfo['signup_code'])
+        self.assertTrue(userapi.confirm_user(email=userinfo['email'], code=userinfo['code']))
+        self.assertRaises(exceptions.UserConfirmationException, userapi.confirm_user, email=userinfo['email'], code=userinfo['code'])
 
     def test_update_user_config_no_params(self):
         ''' update_user_config shoud fail if no params is passed'''
@@ -215,7 +215,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertEqual(user_info['username'],username)
         self.assertEqual(user_info['email'],email)
         self.assertTrue('uid' in user_info)
-        self.assertTrue('signup_code' in user_info)
+        self.assertTrue('code' in user_info)
 
     def test_create_user_by_invitation_failure_already_used_invitation(self):
         username='test_create_user_by_invitation_failure_already_used_invitation'
@@ -227,7 +227,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertEqual(user_info['username'],username)
         self.assertEqual(user_info['email'],email)
         self.assertTrue('uid' in user_info)
-        self.assertTrue('signup_code' in user_info)
+        self.assertTrue('code' in user_info)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id)
         self.assertEqual(cm.exception.error, errors.E_GUA_SIP_INVAU)
@@ -257,7 +257,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertEqual(user_info['username'],username)
         self.assertEqual(user_info['email'],email)
         self.assertTrue('uid' in user_info)
-        self.assertTrue('signup_code' in user_info)
+        self.assertTrue('code' in user_info)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.start_invitation_process(inv_id=inv_id)
         self.assertEqual(cm.exception.error, errors.E_GUA_SIP_INVAU)
@@ -456,7 +456,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertEqual(user_info['username'],username)
         self.assertEqual(user_info['email'],email)
         self.assertTrue('uid' in user_info)
-        self.assertTrue('signup_code' in user_info)
+        self.assertTrue('code' in user_info)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.check_unused_invitation(inv_id=inv_id)
         self.assertEqual(cm.exception.error, errors.E_GUA_CUI_INVAU)
@@ -525,7 +525,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         userinfo = userapi.create_user(username=username, password=password, email=email)
         self.assertEqual(username, userinfo['username'])
         self.assertEqual(email, userinfo['email'])
-        self.assertIsNotNone(userinfo['signup_code'])
+        self.assertIsNotNone(userinfo['code'])
         forget_request=userapi.register_forget_request(username=username)
         self.assertTrue('code' in forget_request)
         self.assertTrue('username' in forget_request)
@@ -544,7 +544,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         userinfo = userapi.create_user(username=username, password=password, email=email)
         self.assertEqual(username, userinfo['username'])
         self.assertEqual(email, userinfo['email'])
-        self.assertIsNotNone(userinfo['signup_code'])
+        self.assertIsNotNone(userinfo['code'])
         forget_request=userapi.register_forget_request(email=email)
         self.assertTrue('code' in forget_request)
         self.assertTrue('username' in forget_request)
@@ -578,7 +578,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         userinfo = userapi.create_user(username=username, password=password, email=email)
         self.assertEqual(username, userinfo['username'])
         self.assertEqual(email, userinfo['email'])
-        self.assertIsNotNone(userinfo['signup_code'])
+        self.assertIsNotNone(userinfo['code'])
         forget_request=userapi.register_forget_request(username=username)
         self.assertTrue('code' in forget_request)
         self.assertTrue('username' in forget_request)
@@ -602,7 +602,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         userinfo = userapi.create_user(username=username, password=password, email=email)
         self.assertEqual(username, userinfo['username'])
         self.assertEqual(email, userinfo['email'])
-        self.assertIsNotNone(userinfo['signup_code'])
+        self.assertIsNotNone(userinfo['code'])
         forget_request=userapi.register_forget_request(username=username)
         self.assertTrue('code' in forget_request)
         self.assertTrue('username' in forget_request)
@@ -626,7 +626,7 @@ class GestaccountUserApiTest(unittest.TestCase):
 
     def test_reset_password_failure_invalid_password(self):
         ''' reset_password should fail if password is not valid '''
-        passwords=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4(), uuid.uuid1(),'pasNÑÑÑW od. asdf34 ']
+        passwords=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), uuid.uuid4(), uuid.uuid1(),'short']
         code=uuid.uuid4()
         for password in passwords:
             with self.assertRaises(exceptions.BadParametersException) as cm:
@@ -649,7 +649,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         userinfo = userapi.create_user(username=username, password=password, email=email)
         self.assertEqual(username, userinfo['username'])
         self.assertEqual(email, userinfo['email'])
-        self.assertIsNotNone(userinfo['signup_code'])
+        self.assertIsNotNone(userinfo['code'])
         forget_request=userapi.register_forget_request(username=username)
         self.assertTrue('code' in forget_request)
         self.assertTrue('username' in forget_request)
@@ -677,7 +677,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         userinfo = userapi.create_user(username=username, password=password, email=email)
         self.assertEqual(username, userinfo['username'])
         self.assertEqual(email, userinfo['email'])
-        self.assertIsNotNone(userinfo['signup_code'])
+        self.assertIsNotNone(userinfo['code'])
         forget_request=userapi.register_forget_request(username=username)
         self.assertTrue('code' in forget_request)
         self.assertTrue('username' in forget_request)

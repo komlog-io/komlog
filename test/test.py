@@ -54,6 +54,7 @@ MODULES = [
     'komlibs.interface.imc.api.test.test_textmining.InterfaceImcApiTextminingTest',
     'komlibs.interface.imc.api.test.test_events.InterfaceImcApiEventsTest',
     'komlibs.interface.imc.api.test.test_anomalies.InterfaceImcApiAnomaliesTest',
+    'komlibs.interface.web.api.test.test_login.InterfaceWebApiLoginTest',
     'komlibs.interface.web.api.test.test_user.InterfaceWebApiUserTest',
     'komlibs.interface.web.api.test.test_agent.InterfaceWebApiAgentTest',
     'komlibs.interface.web.api.test.test_datasource.InterfaceWebApiDatasourceTest',

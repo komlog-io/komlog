@@ -6,6 +6,7 @@ from komcass.api import datasource as cassapidatasource
 from komcass.api import datapoint as cassapidatapoint
 from komlibs.auth.tickets import provision as ticketapi
 from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto
 from komlibs.general import colors as libcolors
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
@@ -56,7 +57,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         agentname='test_get_event_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_get_event_datasource'
         agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
@@ -126,7 +127,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         agentname='test_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_datasource'
         agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
@@ -151,7 +152,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         agentname='test_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_datasource'
         agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
@@ -186,7 +187,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         agentname='test_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_datasource'
         datapointname='test_datapoint'
@@ -214,7 +215,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         agentname='test_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_datasource'
         datapointname='test_datapoint'
@@ -254,7 +255,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         agentname='test_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_datasource'
         datapointname_1='test_datapoint_1'
@@ -286,7 +287,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         agentname='test_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_datasource'
         datapointname_1='test_datapoint_1'
@@ -334,7 +335,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         agentname='test_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_datasource'
         datapointname_1='test_datapoint_1'

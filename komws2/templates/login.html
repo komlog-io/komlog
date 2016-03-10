@@ -5,19 +5,22 @@
     <div class="container">
       <div class="well well-signin">
         <form class="form-signin" method="post" action="">
-          <h2 class="form-signin-heading">Sign in</h2>
+          {% module xsrf_form_html() %}
+          <h2 class="form-signin-heading text-center">Sign in</h2>
           <label for="username" class="sr-only">Username</label>
-          <input type="text" id="username" name="username" class="form-control" placeholder="Username" required autofocus>
+          <input type="text" id="username" name="u" class="form-control" placeholder="Username" required autofocus>
           <label for="password" class="sr-only">Password</label>
-          <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
-          <div class="checkbox">
-            <label>
-              <input type="checkbox" value="remember-me"> Remember me
-            </label>
-          </div>
+          <input type="password" id="password" name="p" class="form-control" placeholder="Password" required>
+          {% if response and response.status == status.WEB_STATUS_ACCESS_DENIED %}
+          <h5 class="text-danger">The email and password you entered don't match.</h5>
+          {% elif response and response.status == status.WEB_STATUS_BAD_PARAMETERS %}
+          <h5 class="text-danger">Check your username and password.</h5>
+          {% elif response and response.status == status.WEB_STATUS_INTERNAL_ERROR %}
+          <h5 class="text-danger">Ups.. something went wrong. error: {{ response.error }}</h5>
+          {% end %}
           <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
         </form>
-        <h6 class="pull-right">
+        <h6 class="text-right">
             <a href="/forget">Forgot your password?</a>
         </h6>
       </div>

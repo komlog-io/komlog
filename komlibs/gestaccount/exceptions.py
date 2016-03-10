@@ -194,3 +194,11 @@ class ForgetRequestException(GestaccountException):
     def __init__(self, error):
         super(ForgetRequestException,self).__init__(error=error)
 
+class ChallengeGenerationException(GestaccountException):
+    def __init__(self, error):
+        super(ChallengeGenerationException,self).__init__(error=error)
+
+class ChallengeValidationException(GestaccountException):
+    def __init__(self, error):
+        super(ChallengeValidationException,self).__init__(error=error)
+

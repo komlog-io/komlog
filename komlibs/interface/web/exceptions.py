@@ -23,6 +23,7 @@ ACCESS_DENIED_STATUS_EXCEPTION_LIST=(
     gestexcept.UserAlreadyExistsException,
     gestexcept.AgentAlreadyExistsException,
     gestexcept.InvalidPasswordException,
+    gestexcept.ChallengeValidationException,
 )
 
 NOT_FOUND_STATUS_EXCEPTION_LIST=(
@@ -55,6 +56,7 @@ INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
     gestexcept.CircleAddMemberException,
     gestexcept.CircleDeleteMemberException,
     eventexcept.UserEventCreationException,
+    gestexcept.ChallengeGenerationException,
 )
 
 NOT_ALLOWED_STATUS_EXCEPTION_LIST=(
@@ -86,9 +88,7 @@ class ExceptionHandler(object):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=e.error)
         except Exception as e:
             logger.logger.debug('WEB Response non treated Exception: '+str(e))
-            if 'error' in e:
-                data={'error':'internal error '+str(e.error)}
-            else:
-                data={'error':'internal error'}
+            error=getattr(e,'error',-1)
+            data={'error':error}
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=-1)
 

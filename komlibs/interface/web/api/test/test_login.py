@@ -1,0 +1,352 @@
+import unittest
+import uuid
+import json
+from base64 import b64encode, b64decode
+from komfig import logger
+from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto 
+from komlibs.gestaccount import errors as gesterrors
+from komlibs.gestaccount.user import api as userapi
+from komlibs.gestaccount.agent import api as agentapi
+from komcass.api import agent as cassapiagent
+from komlibs.interface.web.api import login as loginapi
+from komlibs.interface.web.model import webmodel
+from komlibs.interface.web import status, exceptions, errors
+
+
+class InterfaceWebApiLoginTest(unittest.TestCase):
+    ''' komlibs.interface.web.api.login tests '''
+
+    def test_login_request_failure_no_password_nor_pubkey_passed(self):
+        ''' login_request should fail if password and pubkey are None '''
+        username = 'username'
+        response, cookie = loginapi.login_request(username)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, errors.E_IWAL_LR_IPRM)
+
+    def test_user_login_request_failure_invalid_username(self):
+        ''' user_login_request should fail if username is invalid '''
+        usernames = ['username\n', 1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'},None]
+        password = 'password'
+        for username in usernames:
+            response, cookie = loginapi.login_request(username, password=password)
+            self.assertEqual(cookie, None)
+            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAL_ULR_IU)
+
+    def test_user_login_request_failure_invalid_password(self):
+        ''' user_login_request should fail if password is invalid '''
+        passwords= ['short', 1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'}]
+        username = 'username'
+        for password in passwords:
+            response, cookie = loginapi.login_request(username, password=password)
+            self.assertEqual(cookie, None)
+            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAL_ULR_IPWD)
+
+    def test_user_login_request_failure_non_existent_username(self):
+        ''' user_login_request should fail if username does not exist '''
+        username = 'test_user_login_request_failure_non_existent_username'
+        password = 'password'
+        response, cookie = loginapi.login_request(username, password=password)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GUA_AUU_UNF)
+
+    def test_user_login_request_failure_wrong_password(self):
+        ''' user_login_request should fail if password is wrong '''
+        username = 'test_user_login_request_failure_wrong_password'
+        password = 'password'
+        email = username + '@komlog.org'
+        user = userapi.create_user(username=username, password=password, email=email)
+        password = 'wrong_password'
+        response, cookie = loginapi.login_request(username, password=password)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.error, errors.E_IWAL_ULR_AUTHERR)
+
+    def test_user_login_request_success(self):
+        ''' user_login_request should succeed '''
+        username = 'test_user_login_request_success'
+        password = 'password'
+        email = username + '@komlog.org'
+        user = userapi.create_user(username=username, password=password, email=email)
+        response, cookie = loginapi.login_request(username, password=password)
+        self.assertEqual(cookie, {'user':username,'agent':None})
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.data, {'redirect':'/home'})
+        self.assertEqual(response.error, None)
+
+    def test_agent_login_generate_challenge_request_failure_invalid_username(self):
+        ''' agent_login_generate_challenge_request should fail if username is invalid '''
+        usernames = ['username\n', 1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'},None]
+        pubkey = 'pubkey'
+        for username in usernames:
+            response, cookie = loginapi.login_request(username, pubkey=pubkey)
+            self.assertEqual(cookie, None)
+            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAL_ALGCR_IU)
+
+    def test_agent_login_generate_challenge_request_failure_invalid_pubkey(self):
+        ''' agent_login_generate_challenge_request should fail if pubkey is invalid '''
+        pubkeys = [1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'}, crypto.generate_rsa_key().public_key(), crypto.serialize_public_key(crypto.generate_rsa_key().public_key())]
+        username = 'username'
+        for pubkey in pubkeys:
+            response, cookie = loginapi.login_request(username, pubkey=pubkey)
+            self.assertEqual(cookie, None)
+            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAL_ALGCR_IPK)
+
+    def test_agent_login_generate_challenge_request_failure_non_existent_username(self):
+        ''' agent_login_generate_challenge_request should fail if username does not exist '''
+        username = 'test_agent_login_generate_challenge_request_failure_non_existent_username'
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GAA_GAC_UNF)
+
+    def test_agent_login_generate_challenge_request_failure_non_existent_agent(self):
+        ''' agent_login_generate_challenge_request should fail if agent does not exist '''
+        username = 'test_agent_login_generate_challenge_request_failure_non_existent_agent'
+        password = 'password'
+        email = username + '@komlog.org'
+        user = userapi.create_user(username=username, password=password, email=email)
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GAA_GAC_ANF)
+
+    def test_agent_login_generate_challenge_request_success(self):
+        ''' agent_login_generate_challenge_request should succeed '''
+        username = 'test_agent_login_generate_challenge_request_succeed'
+        password = 'password'
+        email = username + '@komlog.org'
+        user = userapi.create_user(username=username, password=password, email=email)
+        agentname = 'test_agent_login_generate_challenge_request_succeed_agentname'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        agent = agentapi.create_agent(uid=user['uid'],agentname=agentname,pubkey=pubkey,version='v')
+        pubkey = b64encode(pubkey).decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue('challenge' in response.data)
+        self.assertTrue(isinstance(response.data['challenge'],str))
+        self.assertEqual(response.error, None)
+
+    def test_agent_login_validate_challenge_request_failure_invalid_username(self):
+        ''' agent_login_validate_challenge_request should fail if username is invalid '''
+        usernames = ['username\n', 1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'},None]
+        pubkey = 'pubkey'
+        challenge = 'challenge'
+        signature = 'signature'
+        for username in usernames:
+            response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+            self.assertEqual(cookie, None)
+            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAL_ALVCR_IU)
+
+    def test_agent_login_validate_challenge_request_failure_invalid_pubkey(self):
+        ''' agent_login_validate_challenge_request should fail if username is invalid '''
+        pubkeys = [1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'}, crypto.generate_rsa_key().public_key(), crypto.serialize_public_key(crypto.generate_rsa_key().public_key())]
+        username = 'username'
+        challenge = 'challenge'
+        signature = 'signature'
+        for pubkey in pubkeys:
+            response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+            self.assertEqual(cookie, None)
+            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAL_ALVCR_IPK)
+
+    def test_agent_login_validate_challenge_request_failure_invalid_challenge(self):
+        ''' agent_login_validate_challenge_request should fail if challenge is invalid '''
+        challenges = [1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'},None]
+        pubkey = 'pubkey'
+        username = 'username'
+        signature = 'signature'
+        for challenge in challenges:
+            response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+            self.assertEqual(cookie, None)
+            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAL_ALVCR_ICH)
+
+    def test_agent_login_validate_challenge_request_failure_invalid_signature(self):
+        ''' agent_login_validate_challenge_request should fail if signature is invalid '''
+        signatures = [1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'},None]
+        pubkey = 'pubkey'
+        username = 'username'
+        challenge = 'signature'
+        for signature in signatures:
+            response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+            self.assertEqual(cookie, None)
+            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, errors.E_IWAL_ALVCR_ISG)
+
+    def test_agent_login_validate_challenge_request_failure_non_existent_username(self):
+        ''' agent_login_validate_challenge_request should fail if username does not exist '''
+        username = 'test_agent_login_validate_challenge_request_failure_non_existent_username'
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
+        challenge=b64encode(b'challenge').decode('utf-8')
+        signature=b64encode(b'signature').decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_UNF)
+
+    def test_agent_login_validate_challenge_request_failure_non_existent_agent(self):
+        ''' agent_login_validate_challenge_request should fail if agent does not exist '''
+        username = 'test_agent_login_validate_challenge_request_failure_non_existent_agent'
+        password = 'password'
+        email = username+'@komlog.org'
+        user = userapi.create_user(username=username, password=password, email=email)
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
+        challenge=b64encode(b'challenge').decode('utf-8')
+        signature=b64encode(b'signature').decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_ANF)
+
+    def test_agent_login_validate_challenge_request_failure_non_existent_challenge(self):
+        ''' agent_login_validate_challenge_request should fail if challenge does not exist '''
+        username = 'test_agent_login_validate_challenge_request_failure_non_existent_challenge'
+        password = 'password'
+        email = username+'@komlog.org'
+        user = userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='version'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
+        pubkey = b64encode(pubkey).decode('utf-8')
+        challenge=b64encode(b'challenge').decode('utf-8')
+        signature=b64encode(b'signature').decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHNF)
+
+    def test_agent_login_validate_challenge_request_failure_wrong_signature(self):
+        ''' agent_login_validate_challenge_request should fail if signature is wrong '''
+        username = 'test_agent_login_validate_challenge_request_failure_wrong_signature'
+        password = 'password'
+        email = username+'@komlog.org'
+        user = userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='version'
+        key = crypto.generate_rsa_key()
+        pubkey = crypto.serialize_public_key(key.public_key())
+        agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
+        pubkey = b64encode(pubkey).decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        serialized_priv_key=crypto.serialize_private_key(key)
+        ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
+        ch_hash = crypto.get_hash(ch_plain)
+        ch_resp = b64encode(ch_hash).decode('utf-8')
+        signature=b64encode(b'signature').decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_EVS)
+
+    def test_agent_login_validate_challenge_request_success(self):
+        ''' agent_login_validate_challenge_request should succeed '''
+        username = 'test_agent_login_validate_challenge_request_success'
+        password = 'password'
+        email = username+'@komlog.org'
+        user = userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='version'
+        key = crypto.generate_rsa_key()
+        pubkey = crypto.serialize_public_key(key.public_key())
+        agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
+        pubkey = b64encode(pubkey).decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        serialized_priv_key=crypto.serialize_private_key(key)
+        ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
+        ch_hash = crypto.get_hash(ch_plain)
+        ch_resp = b64encode(ch_hash).decode('utf-8')
+        signature=b64encode(crypto.sign_message(serialized_priv_key, ch_hash)).decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        self.assertEqual(cookie, {'user':username, 'agent':agent['aid'].hex})
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.error, None)
+
+    def test_agent_login_validate_challenge_request_failure_already_validated_challenge(self):
+        ''' agent_login_validate_challenge_request should fail if challenge has been validated before'''
+        username = 'test_agent_login_validate_challenge_request_failure_already_validated_challenge'
+        password = 'password'
+        email = username+'@komlog.org'
+        user = userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='version'
+        key = crypto.generate_rsa_key()
+        pubkey = crypto.serialize_public_key(key.public_key())
+        agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
+        pubkey = b64encode(pubkey).decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        serialized_priv_key=crypto.serialize_private_key(key)
+        ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
+        ch_hash = crypto.get_hash(ch_plain)
+        ch_resp = b64encode(ch_hash).decode('utf-8')
+        signature=b64encode(crypto.sign_message(serialized_priv_key, ch_hash)).decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        self.assertEqual(cookie, {'user':username, 'agent':agent['aid'].hex})
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.error, None)
+        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHAU)
+
+    def test_agent_login_validate_challenge_request_failure_challenge_expired(self):
+        ''' agent_login_validate_challenge_request should fail if challenge has expired '''
+        username = 'test_agent_login_validate_challenge_request_failure_challenge_expired'
+        password = 'password'
+        email = username+'@komlog.org'
+        user = userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='version'
+        key = crypto.generate_rsa_key()
+        pubkey = crypto.serialize_public_key(key.public_key())
+        agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
+        pubkey = b64encode(pubkey).decode('utf-8')
+        response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        serialized_priv_key=crypto.serialize_private_key(key)
+        ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
+        ch_hash = crypto.get_hash(ch_plain)
+        ch_resp = b64encode(ch_hash).decode('utf-8')
+        signature=b64encode(crypto.sign_message(serialized_priv_key, ch_hash)).decode('utf-8')
+        agent_challenge=cassapiagent.get_agent_challenge(aid=agent['aid'], challenge=ch_hash)
+        self.assertIsNotNone(agent_challenge)
+        agent_challenge.generated = timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(agent_challenge.generated)-61)
+        self.assertTrue(cassapiagent.insert_agent_challenge(agent_challenge))
+        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        self.assertEqual(cookie, None)
+        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHEX)
+

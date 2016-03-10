@@ -13,6 +13,7 @@ from komcass.model.orm import widget as ormwidget
 from komcass.model.orm import snapshot as ormsnapshot
 from komlibs.general import colors as libcolors
 from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto 
 from decimal import Decimal
 
 class GestaccountSnapshotApiTest(unittest.TestCase):
@@ -81,7 +82,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         datapointname='test_new_snapshot_datasource_success_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testnewsnapshotdssuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -112,7 +113,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         datapointname='test_new_snapshot_datapoint_success_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testnewsnapshotdpsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -143,7 +144,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_new_snapshot_histogram_failure_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -168,7 +169,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_new_snapshot_histogram_success_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -199,7 +200,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_new_snapshot_linegraph_failure_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -224,7 +225,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_new_snapshot_linegraph_success_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -255,7 +256,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_new_snapshot_table_failure_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -280,7 +281,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_new_snapshot_table_success_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -311,7 +312,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_new_snapshot_multidp_failure_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -336,7 +337,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_new_snapshot_multidp_success_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -376,7 +377,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         datasourcename='test_get_snapshot_config_success_snapshot_datasource_datasource'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testgetsnapshotconfigsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -418,7 +419,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         datapointname='test_get_snapshot_config_success_snapshot_datapoint_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testgetsnapshotconfigdpsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -459,7 +460,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         datapointname='test_get_snapshot_config_success_snapshot_histogram_datapoint'
         widgetname='test_get_snapshot_config_success_snapshot_histogram_widget'
         email=username+'@komlog.org'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         password='password'
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
@@ -501,7 +502,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_get_snapshot_config_success_snapshot_linegraph_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -542,7 +543,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_get_snapshot_config_success_snapshot_table_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -583,7 +584,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_get_snapshot_config_success_snapshot_multidp_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -647,7 +648,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         datasourcename='test_get_snapshot_config_success_snapshot_table_datasource'
         datapointname='test_get_snapshot_config_success_snapshot_table_datapoint'
         widgetname='test_get_snapshot_config_success_snapshot_table_widget'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -706,7 +707,7 @@ class GestaccountSnapshotApiTest(unittest.TestCase):
         widgetname='test_delete_snapshot_success_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='test_version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)

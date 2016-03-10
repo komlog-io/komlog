@@ -5,6 +5,7 @@ from komcass.api import datapoint as cassapidatapoint
 from komlibs.textman.api import variables as textmanvar
 from komlibs.ai.decisiontree import api as dtreeapi
 from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datasource import api as datasourceapi
@@ -25,7 +26,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         except Exception:
             self.user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_gestaccount.datapoint.api_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         try:
             self.agent=agentapi.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)

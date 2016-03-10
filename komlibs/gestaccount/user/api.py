@@ -5,7 +5,7 @@ creation date: 2013/03/31
 author: jcazor
 '''
 
-import uuid,crypt
+import uuid
 from komcass.api import user as cassapiuser
 from komcass.api import agent as cassapiagent
 from komcass.api import datasource as cassapidatasource
@@ -19,20 +19,8 @@ from komlibs.gestaccount.user import states, segments
 from komlibs.gestaccount import exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
-from komlibs.general.string import stringops
+from komlibs.general.crypto import crypto
 
-
-def get_hpassword(uid,password):
-    if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_GUA_GHP_IU)
-    if not args.is_valid_password(password):
-        raise exceptions.BadParametersException(error=errors.E_GUA_GHP_IP)
-    salt='$6$'+str(uid).split('-')[1]+'$'
-    try:
-        hpassword=crypt.crypt(password,salt)
-    except TypeError:
-        return None
-    return hpassword
 
 def auth_user(username, password):
     if not args.is_valid_username(username):
@@ -42,13 +30,7 @@ def auth_user(username, password):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GUA_AUU_UNF)
-    hpassword=get_hpassword(user.uid,password)
-    if not hpassword:
-        raise exceptions.BadParametersException(error=errors.E_GUA_AUU_HPNF)
-    if user.password==get_hpassword(user.uid, password):
-        return True
-    else:
-        return False
+    return crypto.verify_password(password, user.password, user.uid.bytes)
 
 def create_user(username, password, email):
     '''This function creates a new user in the database'''
@@ -65,17 +47,17 @@ def create_user(username, password, email):
     if user:
         raise exceptions.UserAlreadyExistsException(error=errors.E_GUA_CRU_UAEE)
     uid=uuid.uuid4()
-    hpassword=get_hpassword(uid,password)
+    hpassword=crypto.get_hashed_password(password, uid.bytes)
     if not hpassword:
         raise exceptions.BadParametersException(error=errors.E_GUA_CRU_HPNF)
     now=timeuuid.uuid1()
     segment=segments.FREE
     user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.FREE, creation_date=now, state=states.PREACTIVE)
     if cassapiuser.new_user(user=user):
-        signup_code=stringops.get_randomstring(size=32)
-        signup_info=ormuser.SignUp(username=user.username, signup_code=signup_code, email=user.email, creation_date=user.creation_date)
+        code=crypto.get_random_string(size=32)
+        signup_info=ormuser.SignUp(username=user.username, code=code, email=user.email, creation_date=user.creation_date)
         if cassapiuser.insert_signup_info(signup_info=signup_info):
-            return {'uid':user.uid, 'email':user.email, 'signup_code':signup_info.signup_code, 'username':user.username}
+            return {'uid':user.uid, 'email':user.email, 'code':signup_info.code, 'username':user.username}
         else:
             cassapiuser.delete_user(username=user.username)
             return None
@@ -91,7 +73,7 @@ def confirm_user(email, code):
     signup_info=cassapiuser.get_signup_info(email=email)
     if signup_info is None:
         raise exceptions.UserNotFoundException(error=errors.E_GUA_COU_CNF)
-    if signup_info.signup_code!=code:
+    if signup_info.code!=code:
         raise exceptions.UserConfirmationException(error=errors.E_GUA_COU_CMM)
     if signup_info.utilization_date:
         raise exceptions.UserConfirmationException(error=errors.E_GUA_COU_CAU)
@@ -124,11 +106,11 @@ def update_user_config(username, new_email=None, old_password=None, new_password
     if new_password and old_password:
         if not args.is_valid_password(new_password) or not args.is_valid_password(old_password):
             raise exceptions.BadParametersException(error=errors.E_GUA_UUC_IP)
-        if not user.password==get_hpassword(user.uid,old_password):
+        if not crypto.verify_password(old_password, user.password, user.uid.bytes):
             raise exceptions.InvalidPasswordException(error=errors.E_GUA_UUC_PNM)
         if new_password==old_password:
             raise exceptions.BadParametersException(error=errors.E_GUA_UUC_EQP)
-        new_password=get_hpassword(user.uid,new_password)
+        new_password=crypto.get_hashed_password(new_password, user.uid.bytes)
         if new_password:
             user.password=new_password
         else:
@@ -375,7 +357,7 @@ def reset_password(code, password):
     user=cassapiuser.get_user(uid=request.uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GUA_RP_UNF)
-    new_password=get_hpassword(user.uid,password)
+    new_password=crypto.get_hashed_password(password, user.uid.bytes)
     if new_password:
         if cassapiuser.update_user_password(username=user.username, password=new_password):
             cassapiuser.update_forget_request_state(code=code, new_state=states.FORGET_REQUEST_USED)

@@ -10,6 +10,7 @@ from komcass.api import snapshot as cassapisnapshot
 from komcass.api import circle as cassapicircle
 from komlibs.general import colors
 from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datasource import api as datasourceapi
@@ -34,7 +35,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
             self.user=userapi.get_user_config(username=username)
         except Exception:
             user=userapi.create_user(username=username, password=password, email=email)
-            self.assertTrue(userapi.confirm_user(email=email, code=user['signup_code']))
+            self.assertTrue(userapi.confirm_user(email=email, code=user['code']))
             self.user=userapi.get_user_config(username=username)
             self.assertIsNotNone(self.user)
 
@@ -60,7 +61,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
-        self.assertTrue(userapi.confirm_user(email=email, code=user['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user['code']))
         self.assertIsNotNone(cassapiuser.get_user(username=username))
         self.assertIsNotNone(cassapiuser.get_signup_info(username=username))
         self.assertTrue(deleteapi.delete_user(username=username))
@@ -83,7 +84,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
     def test_delete_agent_success(self):
         ''' delete_agent should succeed and delete agent from db '''
         agentname='test_delete_agent_success'
-        pubkey='pubkeydeleteagentsuccess'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         agent=agentapi.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -108,7 +109,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         ''' delete_datasource should succeed and delete datasource completely from db, even its associated widgets and datapoints, and these from its dashboards '''
         uid=self.user['uid']
         agentname='test_delete_datasource_success'
-        pubkey='pubkeydeletedatasourcesuccess'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         agent=agentapi.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -157,7 +158,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         ''' delete_datapoint should succeed, and delete it from the maps where appears '''
         uid=self.user['uid']
         agentname='test_delete_datapoint_success'
-        pubkey='pubkeydeletedatapointsuccess'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -201,7 +202,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         ''' delete_datapoint should succeed, and delete it from the widgets where it appears '''
         uid=self.user['uid']
         agentname='test_delete_datapoint_success_widgets'
-        pubkey='pubkeydeletedatapointsuccesswidgets'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -251,7 +252,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         datapointname='test_delete_widget_ds_success_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testdeletewidgetdssuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -270,7 +271,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         datapointname2='test_delete_widget_dp_success_datapoint2'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testdeletewidgetdpsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -359,7 +360,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         uid=self.user['uid']
         datasourcename='test_delete_snapshot_success_datasource'
         agentname='test_delete_snapshot_success_agent'
-        pubkey='testdeletesnapshotsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=uid, aid=agent['aid'], datasourcename=datasourcename)

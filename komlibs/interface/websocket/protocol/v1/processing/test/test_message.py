@@ -7,6 +7,7 @@ from komimc import api as msgapi
 from komlibs.auth import exceptions as authexcept
 from komlibs.auth import errors as autherrors
 from komlibs.auth import authorization, requests
+from komlibs.general.crypto import crypto
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.gestaccount import errors as gesterrors
 from komlibs.gestaccount.user import api as userapi
@@ -70,7 +71,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         aid=uuid.uuid4().hex
         msg={'v':1,'action':types.MESSAGE_POST_DATASOURCE_DATA,'payload':{'uri':'uri','ts':time.time(),'content':'content'}}
         with self.assertRaises(gestexcept.AgentNotFoundException) as cm:
@@ -84,9 +85,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey='TESTPUBKEY'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -104,9 +105,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey='TESTPUBKEY'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -125,9 +126,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey='TESTPUBKEY'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -146,9 +147,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey='TESTPUBKEY'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -168,9 +169,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey='TESTPUBKEY'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -199,9 +200,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey='TESTPUBKEY'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -231,9 +232,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey='TESTPUBKEY'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -264,9 +265,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey='TESTPUBKEY'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -297,9 +298,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey='TESTPUBKEY'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -330,9 +331,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['signup_code']))
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey='TESTPUBKEY'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)

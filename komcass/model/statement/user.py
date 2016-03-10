@@ -16,7 +16,7 @@ STATEMENTS={0:'select * from mst_user where username=?',
             3:'select uid from mst_user where username=?',
             100:'select * from mst_signup where email=?',
             101:'select * from mst_signup where username=?',
-            102:'select * from mst_signup where signup_code=?',
+            102:'select * from mst_signup where code=?',
             200:'select * from dat_invitation where inv_id=? order by date desc;',
             300:'select * from dat_invitation_request where email=?',
             301:'select * from dat_invitation_request where state=?',
@@ -26,7 +26,7 @@ STATEMENTS={0:'select * from mst_user where username=?',
             402:'select * from dat_forget_request where state=? limit ?',
             5000:'insert into mst_user (username,uid,password,email,state,segment,creation_date) values (?,?,?,?,?,?,?)',
             5001:'insert into mst_user (username,uid,password,email,state,segment,creation_date) values (?,?,?,?,?,?,?) if not exists',
-            5100:'insert into mst_signup (username,signup_code,email,creation_date,utilization_date) values (?,?,?,?,?)',
+            5100:'insert into mst_signup (username,code,email,creation_date,utilization_date) values (?,?,?,?,?)',
             5200:'insert into dat_invitation (inv_id,date,state,tran_id) values (?,?,?,?)',
             5300:'insert into dat_invitation_request (email,date,state,inv_id) values (?,?,?,?)',
             5400:'insert into dat_forget_request (code,date,state,uid) values (?,?,?,?)',
@@ -53,7 +53,7 @@ S_UID_MSTUSER_B_USERNAME=3
 
 S_A_MSTSIGNUP_B_EMAIL=100
 S_A_MSTSIGNUP_B_USERNAME=101
-S_A_MSTSIGNUP_B_SIGNUPCODE=102
+S_A_MSTSIGNUP_B_CODE=102
 
 # dat_invitation
 

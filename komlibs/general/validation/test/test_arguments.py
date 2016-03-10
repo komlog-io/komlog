@@ -1,8 +1,7 @@
-#coding:utf-8
-
 import unittest
 import uuid
 from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto
 from komlibs.general.validation import arguments
 
 class GeneralValidationArgumentsTest(unittest.TestCase):
@@ -87,16 +86,21 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
 
     def test_is_valid_password_invalid(self):
         ''' is_valid_password should fail if password is not valid '''
-        params=[None, 234234, 'with spaces is not valid by now','onlyasciiÑ',
+        params=[None, 234234,
                'six',
-               'morethan256charsisnotvalid123456789101214161820222426283032343638404244464850525456586062646668707274767880828486889092949698100103106109112115118121124127130133136139142145148151154157160163166169172175178181184187190193196199202205208211214217220223226229232235238241244247250253256'
+               'morethan256charsisnotvalid123456789101214161820222426283032343638404244464850525456586062646668707274767880828486889092949698100103106109112115118121124127130133136139142145148151154157160163166169172175178181184187190193196199202205208211214217220223226229232235238241244247250253256',
+               ('a','tuple'),
+               ['a','list'],
+               {'a':'dict'},
+               {'set'},
+               uuid.uuid4()
                ]
         for param in params:
             self.assertFalse(arguments.is_valid_password(param)) 
 
     def test_is_valid_password_valid(self):
         ''' is_valid_password should succeed if password is valid '''
-        params=['123123A#','12!password','ApasswordWithNumbers43343AndCAPITALSandsimbols+']
+        params=['123123A#','12!password','ApasswordWithNumbers43343AndCAPITALSandsimbols+','cualquier cadena unicode æßðđ@# lo que ññ sea Pæ,']
         for param in params:
             self.assertTrue(arguments.is_valid_password(param)) 
 
@@ -114,7 +118,7 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
 
     def test_is_valid_code_invalid(self):
         ''' is_valid_code should fail if code is not valid '''
-        params=[None, 234234,'spaces not allowed','Only ASCII ÑÑ','notallowed\'#$%&/()@"!','\n','\t','']
+        params=[None, 234234,'Only ASCII ÑÑ',('tuple','notallowed'),{'set','notallowed'},{'dict':'notall'}, uuid.uuid4()]
         for param in params:
             self.assertFalse(arguments.is_valid_code(param)) 
 
@@ -151,16 +155,22 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
             self.assertTrue(arguments.is_valid_uri(param)) 
 
     def test_is_valid_pubkey_invalid(self):
-        ''' is_valid_pubkey should fail if pubkey is not valid '''
-        params=[None, 234234,'Only ASCII ÑÑ','tabulators not allowed \t','semicolon not allowed ;']
+        ''' is_valid_pubkey should fail if pubkey is not valid
+            pubkeys should be at least 4096 bits long '''
+        params=[None, 234234,'not ASCII ÑÑ','tabulators not allowed \t','semicolon not allowed ;',
+            crypto.serialize_public_key(crypto.generate_rsa_key(key_size=1024).public_key()),
+            crypto.serialize_private_key(crypto.generate_rsa_key()),
+            ]
         for param in params:
             self.assertFalse(arguments.is_valid_pubkey(param)) 
 
     def test_is_valid_pubkey_valid(self):
         ''' is_valid_pubkey should succeed if pubkey is valid '''
-        params=['pubkey','Spaces allowed','New lines \n allowed','other chars allowed +/-']
-        for param in params:
-            self.assertTrue(arguments.is_valid_pubkey(param)) 
+        pubkeys=[crypto.serialize_public_key(crypto.generate_rsa_key().public_key()),
+            crypto.serialize_public_key(crypto.generate_rsa_key(key_size=8192).public_key())
+            ]
+        for pubkey in pubkeys:
+            self.assertTrue(arguments.is_valid_pubkey(pubkey))
 
     def test_is_valid_version_invalid(self):
         ''' is_valid_version should fail if version is not valid '''

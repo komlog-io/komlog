@@ -9,6 +9,7 @@ from komlibs.gestaccount.widget import visualization_types as vistypes
 from komlibs.gestaccount import exceptions, errors
 from komcass.model.orm import widget as ormwidget
 from komlibs.general import colors as libcolors
+from komlibs.general.crypto import crypto
 
 class GestaccountWidgetApiTest(unittest.TestCase):
     ''' komlog.gestaccount.widget.api tests '''
@@ -26,7 +27,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_get_widget_config_success_datasource_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testgetwidgetconfigsuccessDSWIDGETpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -47,7 +48,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_get_widget_config_success_datapoint_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testgetwidgetconfigsuccessDPWIDGETpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -67,7 +68,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         widgetname='test_get_widget_config_success_multidp_widget'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testgetwidgetconfigsuccessWIDGETMPpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -92,7 +93,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_get_widgets_config_success_no_widgets_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testgetwidgetsconfigssuccessnowidgetspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         data=api.get_widgets_config(uid=user['uid'])
@@ -106,7 +107,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_get_widgets_config_success_some_widgets_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testgetwidgetsconfigsuccesssomewidgetspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -151,7 +152,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_new_widget_datasource_success_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testnewwidgetdssuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -189,7 +190,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_new_widget_datapoint_success_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testnewwidgetdpsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -234,7 +235,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_new_widget_linegraph_success_agent'
-        pubkey='testnewwidgetlinegraphsuccessHISTOGRAMpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_new_widget_linegraph_success_datasource'
         datapointname='test_new_widget_linegraph_success_datapoint'
@@ -259,7 +260,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_add_datapoint_to_widget_linegraph_success_agent'
-        pubkey='testnewwidgetlinegraphsuccessHISTOGRAMpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_add_datapoint_to_widget_linegraph_success_datasource'
         datapointname='test_add_datapoint_to_widget_linegraph_success_datapoint'
@@ -293,7 +294,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_delete_datapoint_from_widget_linegraph_success_agent'
-        pubkey='testnewwidgetlinegraphsuccessHISTOGRAMpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_delete_datapoint_from_widget_linegraph_success_datasource'
         datapointname='test_delete_datapoint_from_widget_linegraph_success_datapoint'
@@ -352,7 +353,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_new_widget_table_success_agent'
-        pubkey='testnewwidgettablesuccessTABLEpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_new_widget_table_success_datasource'
         datapointname='test_new_widget_table_success_datapoint'
@@ -377,7 +378,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_add_datapoint_to_widget_table_success_agent'
-        pubkey='testnewwidgettablesuccessTABLEpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_add_datapoint_to_widget_table_success_datasource'
         datapointname='test_add_datapoint_to_widget_table_success_datapoint'
@@ -411,7 +412,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_delete_datapoint_from_widget_table_success_agent'
-        pubkey='testnewwidgettablesuccessTABLEpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_delete_datapoint_from_widget_table_success_datasource'
         datapointname='test_delete_datapoint_from_widget_table_success_datapoint'
@@ -470,7 +471,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_new_widget_histogram_success_agent'
-        pubkey='testnewwidgethistogramsuccessHISTOGRAMpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_new_widget_histogram_success_datasource'
         datapointname='test_new_widget_histogram_success_datapoint'
@@ -521,7 +522,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_new_widget_multidp_success_agent'
-        pubkey='testnewwidgethistogramsuccessMULTIDPpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_new_widget_multidp_success_datasource'
         datapointname='test_new_widget_multidp_success_datapoint'
@@ -566,7 +567,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_add_datapoint_to_widget_histogram_success_agent'
-        pubkey='testnewwidgethistogramsuccessHISTOGRAMpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_add_datapoint_to_widget_histogram_success_datasource'
         datapointname='test_add_datapoint_to_widget_histogram_success_datapoint'
@@ -600,7 +601,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_add_datapoint_to_widget_multidp_success_agent'
-        pubkey='testnewwidgethistogramsuccessMULTIDPpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_add_datapoint_to_widget_multidp_success_datasource'
         datapointname='test_add_datapoint_to_widget_multidp_success_datapoint'
@@ -634,7 +635,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_add_datapoint_to_widget_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testgetwidgetconfigsuccessDSWIDGETpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -676,7 +677,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_delete_datapoint_from_widget_histogram_success_agent'
-        pubkey='testnewwidgethistogramsuccessHISTOGRAMpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_delete_datapoint_from_widget_histogram_success_datasource'
         datapointname='test_delete_datapoint_from_widget_histogram_success_datapoint'
@@ -715,7 +716,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         password='password'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_delete_datapoint_from_widget_multidp_success_agent'
-        pubkey='testdeletedpfromwidgetmultidpsuccessMULTIDPpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         datasourcename='test_delete_datapoint_from_widget_multidp_success_datasource'
         datapointname='test_delete_datapoint_from_widget_multidp_success_datapoint'
@@ -757,7 +758,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_delete_datapoint_from_widget_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testgetwidgetconfigsuccessDSWIDGETpubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -842,7 +843,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datasourcename='test_update_widget_datasource_success'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgetdatasourcesuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -890,7 +891,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_datapoint_success'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgetdatapointsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -951,7 +952,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_histogram_success_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgethistogramsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -991,7 +992,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_histogram_success_only_widgetname_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgethistogramsuccesspubkeyonlywidgetname'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1030,7 +1031,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_histogram_success_only_colors_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgethistogramsuccesspubkeyonlycolors'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1069,7 +1070,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_histogram_failure_non_existent_pid_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgethistogramfailurenonexistentpid'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1101,7 +1102,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_histogram_failure_invalid_color_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgethistogramfailureinvalidcolor'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1166,7 +1167,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_linegraph_success_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgetlinegraphsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1206,7 +1207,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_linegraph_success_only_widgetname_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgetlinegraphsuccesspubkeyonlywidgetname'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1245,7 +1246,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_linegraph_success_only_colors_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgetlinegraphsuccesspubkeyonlycolors'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1284,7 +1285,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_linegraph_failure_non_existent_pid_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgetlinegraphfailurenonexistentpid'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1316,7 +1317,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_linegraph_failure_invalid_color_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgetlinegraphfailureinvalidcolor'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1381,7 +1382,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_table_success_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgettablesuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1421,7 +1422,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_table_success_only_widgetname_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgettablesuccesspubkeyonlywidgetname'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1460,7 +1461,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_table_success_only_colors_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgettablesuccesspubkeyonlycolors'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1499,7 +1500,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_table_failure_non_existent_pid_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgettablefailurenonexistentpid'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1531,7 +1532,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_table_failure_invalid_color_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgettablefailureinvalidcolor'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1601,7 +1602,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_multidp_success_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgetmultidpsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1642,7 +1643,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_multidp_failure_vis_not_supp_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgetmultidpfailurevisnotsupppubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1676,7 +1677,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_multidp_success_only_widgetname_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgetmultidpsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1714,7 +1715,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_update_widget_multidp_success_only_active_visualization_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testupdatewidgetmultidpsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1761,7 +1762,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_get_related_widgets_success_datapoint'
         email=username+'@komlog.org'
         password='password'
-        pubkey='testgetrelatedwidgetsuccesspubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)

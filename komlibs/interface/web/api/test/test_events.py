@@ -11,6 +11,7 @@ from komlibs.events.model import types
 from komlibs.events.api import user as usereventsapi
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto
 from komlibs.gestaccount import errors as gesterrors
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datasource import api as datasourceapi
@@ -184,7 +185,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
         agentname='test_event_response_request_failure_no_missing_parameter_found'
-        pubkey='pubkeytesteventresponserequestfailurenomissingparameterfound'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -213,7 +214,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
         agentname='test_event_response_request_failure_invalid_missing_parameter_type'
-        pubkey='pubkeytesteventresponserequestfailureinvalidmissingparametertype'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -242,7 +243,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
         agentname='test_event_response_request_failure_noidentified_parameter_found'
-        pubkey='pubkeytesteventresponserequestfailurenoidentifiedparameterfound'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -271,7 +272,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
         agentname='test_event_response_request_failure_invalid_identified_parameter_type'
-        pubkey='pubkeytesteventresponserequestfailureinvalididentifiedparametertype'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -300,7 +301,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
         agentname='test_event_response_request_failure_invalid_missing_item'
-        pubkey='pubkeytesteventresponserequestfailureinvalidmissingitem'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -329,7 +330,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
         agentname='test_event_response_request_failure_invalid_identified_item'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -358,7 +359,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
         agentname='test_event_response_request_failure_non_supported_event_type'
-        pubkey='pubkeytesteventresponserequestfailurenonsupportedeventtype'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -377,7 +378,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         username=self.userinfo['username']
         uid=uuid.UUID(self.userinfo['uid'])
         agentname='test_event_response_request_success_message_sent'
-        pubkey='pubkeytesteventresponserequestsuccessmessagesent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)

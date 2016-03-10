@@ -313,3 +313,21 @@ E_IWAEV_EVRPR_IMSIT=104205 #event_response_request invalid missing item
 E_IWAEV_EVRPR_IIDIT=104206 #event_response_request invalid identified item
 E_IWAEV_EVRPR_IEVT=104207 #event_response_request non supported event type
 
+
+# interface web api login
+
+E_IWAL_LR_IPRM = 105000 #: login_request: invalid parameters
+
+
+E_IWAL_ULR_IU      = 105100 #: user_login_request: invalid username
+E_IWAL_ULR_IPWD    = 105101 #: user_login_request: invalid password
+E_IWAL_ULR_AUTHERR = 105102 #: user_login_request: invalid password
+
+E_IWAL_ALGCR_IU    = 105200 #: agent_login_generate_challenge_request: invalid username
+E_IWAL_ALGCR_IPK   = 105201 #: agent_login_generate_challenge_request: invalid pubkey
+
+E_IWAL_ALVCR_IU    = 105300 #: agent_login_validate_challenge_request: invalid username
+E_IWAL_ALVCR_IPK   = 105301 #: agent_login_validate_challenge_request: invalid pubkey
+E_IWAL_ALVCR_ICH   = 105302 #: agent_login_validate_challenge_request: invalid challenge
+E_IWAL_ALVCR_ISG   = 105303 #: agent_login_validate_challenge_request: invalid signature
+

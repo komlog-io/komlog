@@ -68,15 +68,15 @@ def delete_user(username):
     connection.session.execute(stmtuser.D_A_MSTUSER_B_USERNAME,(username,))
     return True
 
-def get_signup_info(email=None, signup_code=None, username=None):
+def get_signup_info(email=None, code=None, username=None):
     if email:
         row=connection.session.execute(stmtuser.S_A_MSTSIGNUP_B_EMAIL,(email,))
         if not row:
             return None
         else:
             return ormuser.SignUp(**row[0])
-    elif signup_code:
-        row=connection.session.execute(stmtuser.S_A_MSTSIGNUP_B_SIGNUPCODE,(signup_code,))
+    elif code:
+        row=connection.session.execute(stmtuser.S_A_MSTSIGNUP_B_CODE,(code,))
         if not row:
             return None
         else:
@@ -94,7 +94,7 @@ def insert_signup_info(signup_info):
     if not isinstance(signup_info, ormuser.SignUp):
         return False
     else:
-        connection.session.execute(stmtuser.I_A_MSTSIGNUP,(signup_info.username,signup_info.signup_code,signup_info.email,signup_info.creation_date,signup_info.utilization_date))
+        connection.session.execute(stmtuser.I_A_MSTSIGNUP,(signup_info.username,signup_info.code,signup_info.email,signup_info.creation_date,signup_info.utilization_date))
         return True
 
 def delete_signup_info(username):

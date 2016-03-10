@@ -1,6 +1,7 @@
 import unittest
 import uuid
 import json
+from base64 import b64decode, b64encode
 from komlibs.auth import operations
 from komlibs.auth import errors as autherrors
 from komlibs.gestaccount.datasource import api as gestdatasourceapi
@@ -11,6 +12,7 @@ from komlibs.interface.web.model import webmodel
 from komlibs.interface.web import status, exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto
 from komlibs.interface.imc.api import rescontrol
 from komlibs.interface.imc.model import messages
 from komimc import bus, routing
@@ -34,7 +36,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             self.assertEqual(userresponse.status, status.WEB_STATUS_OK)
             self.userinfo=userresponse.data
             agentname='test_komlibs.interface.web.api.datasource_agent'
-            pubkey='TESTKOMLIBSINTERFACEWEBAPIDATASOURCEAGENT'
+            pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
             version='test library vX.XX'
             response = agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
             aid=response.data['aid']
@@ -369,7 +371,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         ''' upload_datasource_data should store content if the agent uploading data belongs to the datasource user '''
         username=self.userinfo['username']
         agentname='test_upload_datasource_data_request_success_different_agent_but_from_the_same_user_agent'
-        pubkey='TESTUPLOADDATASOURCEDATAREQUESTFAILURENOPERMISSIONAGENT'
+        pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response.status, status.WEB_STATUS_OK)

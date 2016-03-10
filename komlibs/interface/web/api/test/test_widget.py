@@ -1,6 +1,7 @@
 import unittest
 import uuid
 import json
+from base64 import b64encode, b64decode
 from komlibs.auth import operations
 from komlibs.auth import errors as autherrors
 from komlibs.gestaccount.widget import types
@@ -15,6 +16,7 @@ from komlibs.interface.web.model import webmodel
 from komlibs.interface.web import status, exceptions
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto
 from komlibs.interface.imc.model import messages
 from komlibs.interface.imc.api import rescontrol, gestconsole
 from komimc import bus, routing
@@ -47,7 +49,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             self.assertEqual(userresponse.status, status.WEB_STATUS_OK)
         self.userinfo=userresponse.data
         agentname='test_komlibs.interface.web.api.widget_agent'
-        pubkey='TESTKOMLIBSINTERFACEWEBAPIWIDGETAGENT'
+        pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:

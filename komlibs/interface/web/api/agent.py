@@ -1,4 +1,5 @@
 import uuid
+from base64 import b64decode
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization, requests
@@ -20,12 +21,13 @@ def new_agent_request(username, agentname, pubkey, version):
         raise exceptions.BadParametersException(error=errors.E_IWAA_NAGR_IU)
     if not args.is_valid_agentname(agentname):
         raise exceptions.BadParametersException(error=errors.E_IWAA_NAGR_IAN)
-    if not args.is_valid_pubkey(pubkey):
+    if not args.is_valid_string(pubkey):
         raise exceptions.BadParametersException(error=errors.E_IWAA_NAGR_IPK)
     if not args.is_valid_version(version):
         raise exceptions.BadParametersException(error=errors.E_IWAA_NAGR_IV)
     uid=userapi.get_uid(username=username)
     authorization.authorize_request(request=requests.NEW_AGENT,uid=uid)
+    pubkey=b64decode(pubkey.encode('utf-8'))
     agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
     if agent:
         operation=weboperations.NewAgentOperation(uid=uid,aid=agent['aid'])

@@ -3,6 +3,7 @@ import uuid
 from komcass.api import events as cassapievents
 from komcass.model.orm import events as ormevents
 from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto
 from komlibs.events.api import user_responses
 from komlibs.events.api import user
 from komlibs.events.model import types, priorities
@@ -268,7 +269,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         email=username+'@komlog.org'
         komlog_user=userapi.create_user(username=username, password=password, email=email)
         agentname='test__process_event_response_user_event_intervention_datapoint_identification_success_agentname'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test version'
         agent=agentapi.create_agent(uid=komlog_user['uid'],agentname=agentname, pubkey=pubkey, version=version)
         datasourcename='test__process_event_response_user_event_intervention_datapoint_identification_success_datasourcename'

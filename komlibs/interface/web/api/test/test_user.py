@@ -92,7 +92,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
     def test_new_user_request_failure_invalid_password(self):
         ''' new_user_request should fail if password is invalid'''
         username = 'test_new_user_request_failure_invalid_password_user'
-        passwords = [None, 23423424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','short']
+        passwords = [None, 23423424, {'a':'dict'},['a list',],'short',{'set'}]
         email = username+'@komlog.org'
         for password in passwords:
             response=userapi.new_user_request(username=username, password=password, email=email)
@@ -238,7 +238,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
     def test_confirm_user_request_failure_invalid_code(self):
         ''' new_user_request should fail if email is invalid/malformed'''
         email='user@komlog.org'
-        codes = ['u@ser@komlog.org', 'invalid_code','my code',234234,None,{'a':'dict'}, ['a list',],('a','tuple')]
+        codes = ['@@æ¶đu@ser@komlog.org', 'invaliæßðđd_code','my coæßðđde',234234,None,{'a':'dict'}, ['a list',],('a','tuple')]
         for code in codes:
             response=userapi.confirm_user_request(code=code, email=email)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
@@ -731,7 +731,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
 
     def test_check_forget_code_request_failure_invalid_code(self):
         ''' check_forget_code_request should fail if code is invalid '''
-        codes= ['u@ser@komlog.org', 'invalid_email_ñ@domain.com','email@.com','.@domain.com','my email@domain.com','email . @email.com',234234,None,{'a':'dict'}, ['a list',],('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        codes= ['u@ser@komlog.orgæðđ', 'invalid_email_ñ@domain.com','email@.c@ðlom',234234,None,{'a':'dict'}, ['a list',],('a','tuple'),uuid.uuid4(), uuid.uuid1()]
         for code in codes:
             response=userapi.check_forget_code_request(code=code)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
@@ -858,7 +858,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
 
     def test_reset_password_request_failure_invalid_password(self):
         ''' reset_password_request should fail if code is invalid '''
-        passwords = [None, 23423424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','short']
+        passwords = [None, 23423424, {'a':'dict'},['a list',],'short']
         code=uuid.uuid4().hex
         for password in passwords:
             response=userapi.reset_password_request(code=code, password=password)

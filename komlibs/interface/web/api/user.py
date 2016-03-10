@@ -66,7 +66,7 @@ def new_user_request(username, password, email, invitation=None, require_invitat
     else:
         user=userapi.create_user(username, password, email)
     if user:
-        message=messages.NewUserNotificationMessage(email=user['email'], code=user['signup_code'])
+        message=messages.NewUserNotificationMessage(email=user['email'], code=user['code'])
         msgapi.send_message(message)
         message=messages.UserEventMessage(uid=user['uid'],event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_USER)
         msgapi.send_message(message)

@@ -6,14 +6,13 @@ This library is for implementing functions for argument validation
 
 import re
 import uuid
+from komlibs.general.crypto import crypto
 
 
 KOMLOGID=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\n)$')
 KOMLOGDESC=re.compile('^[ a-zA-Z0-9\-\._@#!\(\):/$%&+=]+(?!\n)$')
 KOMLOGURI=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\n)$')
 KOMLOGRELURI=re.compile('^([a-z0-9\-_]+\.\.?)*[a-z0-9\-_]+(?!\n)$')
-PASSWORD=re.compile('''^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~":;,\.<>\\\-]{6,256}(?!\n)$''')
-NOTPUBKEY=re.compile('[^ a-zA-Z0-9\-\+/=\n]')
 NOTVERSION=re.compile('[^ a-zA-Z0-9\-\+/:\._]')
 CODE=re.compile('^[a-zA-Z0-9]+$')
 WHITESPACES=re.compile(' ')
@@ -95,10 +94,13 @@ def is_valid_string(argument):
         return False
     return True
 
+def is_valid_bytes(argument):
+    if isinstance(argument,bytes):
+        return True
+    return False
+
 def is_valid_password(argument):
-    if not isinstance(argument,str):
-        return False
-    if PASSWORD.search(argument):
+    if isinstance(argument,str) and len(argument)>=6 and len(argument)<=256:
         return True
     return False
 
@@ -109,19 +111,21 @@ def is_valid_email(argument):
         return True
     return False
 
+
 def is_valid_code(argument):
-    if not isinstance(argument,str):
-        return False
-    if CODE.search(argument):
-        return True
+    if isinstance(argument,str):
+        try:
+            argument.encode('ascii')
+            return True
+        except UnicodeEncodeError:
+            return False
     return False
 
 def is_valid_pubkey(argument):
-    if not isinstance(argument,str):
-        return False
-    if NOTPUBKEY.search(argument):
-        return False
-    return True
+    pubkey=crypto.load_public_key(argument)
+    if pubkey and pubkey.key_size >= 4096:
+        return True
+    return False
 
 def is_valid_version(argument):
     if not isinstance(argument,str):
@@ -245,4 +249,18 @@ def is_valid_hexcolor(argument):
         except Exception:
             return False
     return True
+
+def is_valid_challenge(argument):
+    if not isinstance(argument, str):
+        return False
+    try:
+        b=bytes().fromhex(argument)
+    except Exception:
+        return False
+    else:
+        if len(b)==32:
+            return True
+        else:
+            return False
+
 

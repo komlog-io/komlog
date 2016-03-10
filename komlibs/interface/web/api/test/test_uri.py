@@ -1,7 +1,9 @@
 import unittest
 import uuid
+from base64 import b64encode, b64decode
 from komlibs.auth import operations
 from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto
 from komlibs.interface.web.api import user as userapi 
 from komlibs.interface.web.api import agent as agentapi 
 from komlibs.interface.web.api import datasource as datasourceapi 
@@ -32,7 +34,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             self.assertEqual(userresponse.status, status.WEB_STATUS_OK)
             self.userinfo=userresponse.data
             agentname='test_komlibs.interface.web.api.uri_agent'
-            pubkey='TESTKOMLIBSINTERFACEWEBAPIURIAGENT'
+            pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
             version='test library vX.XX'
             response = agentapi.new_agent_request(username=self.userinfo['username'], agentname=agentname, pubkey=pubkey, version=version)
             aid=response.data['aid']

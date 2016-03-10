@@ -157,7 +157,7 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
 
     def test_NewUserNotificationMessage_failure_invalid_code(self):
         ''' creation of a NewUserNotivicationMessage should fail if email is invalid '''
-        codes=[None, -23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]
+        codes=[None, -23423, 2323.2342, 'User/name no ASCII ññññ',{'a','dict'},['a','list'],('a','tuple'), timeuuid.uuid1()]
         email='test_newusernotificationmessage@komlog.org'
         for code in codes:
             self.assertRaises(exceptions.BadParametersException, messages.NewUserNotificationMessage, email=email, code=code)

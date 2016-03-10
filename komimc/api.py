@@ -32,7 +32,6 @@ def retrieve_message(timeout=0):
             logger.logger.exception('Cannot map message.type to message Class: '+str(e))
             return None
     else:
-        logger.logger.debug('Timeout expired waiting for messages')
         return None
 
 def process_message(message):
@@ -63,5 +62,4 @@ def retrieve_message_from(addr, timeout=0):
             logger.logger.exception('Cannot map message.type to message Class: '+str(e))
             return None
     else:
-        logger.logger.debug('Timeout expired waiting for messages')
         return None

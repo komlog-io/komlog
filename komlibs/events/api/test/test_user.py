@@ -3,6 +3,7 @@ import uuid
 from komcass.api import datasource as cassapidatasource
 from komlibs.auth.tickets import provision as ticketapi
 from komlibs.general.time import timeuuid
+from komlibs.general.crypto import crypto
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.datasource import api as datasourceapi
@@ -67,7 +68,7 @@ class EventsApiUserTest(unittest.TestCase):
         password='temporal'
         email=username+'@komlog.org'
         agentname='test_get_event_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
         user=userapi.create_user(username=username, password=password, email=email)
@@ -90,7 +91,7 @@ class EventsApiUserTest(unittest.TestCase):
         password='temporal'
         email=username+'@komlog.org'
         agentname='test_get_event_new_datasource_success_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_get_event_new_datasource_success_datasource'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
@@ -116,7 +117,7 @@ class EventsApiUserTest(unittest.TestCase):
         password='temporal'
         email=username+'@komlog.org'
         agentname='test_get_event_new_datapoint_success_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_get_event_new_datapoint_success_datasource'
         datapointname='test_get_event_new_datapoint_success_datapoint'
@@ -146,7 +147,7 @@ class EventsApiUserTest(unittest.TestCase):
         email=username+'@komlog.org'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
         agentname='test_get_event_new_widget_success_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_get_event_new_widget_success_datasource'
         user=userapi.create_user(username=username, password=password, email=email)
@@ -219,7 +220,7 @@ class EventsApiUserTest(unittest.TestCase):
         doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
         discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
         agentname='test_get_event_intervention_datapoint_identification_success_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_get_event_intervention_datapoint_identification_success_datasource'
         user=userapi.create_user(username=username, password=password, email=email)
@@ -253,7 +254,7 @@ class EventsApiUserTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         agentname='test_get_event_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_get_event_datasource'
         agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
@@ -299,7 +300,7 @@ class EventsApiUserTest(unittest.TestCase):
         circle=circleapi.new_users_circle(uid=user['uid'],circlename='circle',members_list=circle_members)
         self.assertIsNotNone(circle)
         agentname='test_get_event_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_get_event_datasource'
         agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
@@ -644,7 +645,7 @@ class EventsApiUserTest(unittest.TestCase):
         password='temporal'
         email=username+'@komlog.org'
         agentname='test_new_event_new_agent_success'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
         user=userapi.create_user(username=username, password=password, email=email)
@@ -723,7 +724,7 @@ class EventsApiUserTest(unittest.TestCase):
         password='temporal'
         email=username+'@komlog.org'
         agentname='test_new_event_new_datasource_success_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_new_event_new_datasource_success_datasource'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
@@ -805,7 +806,7 @@ class EventsApiUserTest(unittest.TestCase):
         password='temporal'
         email=username+'@komlog.org'
         agentname='test_new_event_new_datapoint_failure_non_existent_datasource_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_new_event_new_datapoint_failure_non_existent_datasource'
         datapointname='test_new_event_new_datapoint_failure_non_existent_datasource'
@@ -830,7 +831,7 @@ class EventsApiUserTest(unittest.TestCase):
         password='temporal'
         email=username+'@komlog.org'
         agentname='test_new_event_new_datapoint_success_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_new_event_new_datapoint_success_datasource'
         datapointname='test_new_event_new_datapoint_success_datapoint'
@@ -917,7 +918,7 @@ class EventsApiUserTest(unittest.TestCase):
         email=username+'@komlog.org'
         event_type=types.USER_EVENT_NOTIFICATION_NEW_WIDGET
         agentname='test_new_event_new_widget_success_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_new_event_new_widget_success_datasource'
         user=userapi.create_user(username=username, password=password, email=email)
@@ -1168,7 +1169,7 @@ class EventsApiUserTest(unittest.TestCase):
         doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
         discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
         agentname='test_new_event_intervention_datapoint_identification_success_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_new_event_intervention_datapoint_identification_success_datasource'
         user=userapi.create_user(username=username, password=password, email=email)
@@ -1279,7 +1280,7 @@ class EventsApiUserTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         agentname='test_new_event_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_new_event_datasource'
         agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
@@ -1319,7 +1320,7 @@ class EventsApiUserTest(unittest.TestCase):
         circle=circleapi.new_users_circle(uid=user['uid'],circlename='circle',members_list=circle_members)
         self.assertIsNotNone(circle)
         agentname='test_new_event_agent'
-        pubkey='pubkey'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         datasourcename='test_new_event_datasource'
         agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)

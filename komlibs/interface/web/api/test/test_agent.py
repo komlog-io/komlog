@@ -1,6 +1,7 @@
 import unittest
 import uuid
 import json
+from base64 import b64encode, b64decode
 from komlibs.auth import operations
 from komlibs.interface.web.api import user as userapi 
 from komlibs.interface.web.api import agent as agentapi 
@@ -10,6 +11,7 @@ from komlibs.interface.web import status, exceptions
 from komlibs.interface.imc.api import rescontrol
 from komlibs.interface.imc.model import messages
 from komlibs.general.validation import arguments as args
+from komlibs.general.crypto import crypto
 from komlibs.gestaccount.agent import states
 from komimc import bus, routing
 from komimc import api as msgapi
@@ -37,7 +39,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' new_agent_request should succeed if arguments are valid and return the agent id '''
         username=self.userinfo['username']
         agentname='test_new_agent_request_success'
-        pubkey='TESTNEWAGENTREQUESTSUCCESS'
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
@@ -62,7 +64,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' new_agent_request should fail if username is invalid '''
         usernames=[None, 23423422, 23423.2342, {'a':'dict'},['a','list'],json.dumps('username'),'Username','userñame','user name','\tusername']
         agentname='test_new_agent_request_failure_invalid_username'
-        pubkey='TESTNEWAGENTREQUESTFAILURE'
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         for username in usernames:
             response=agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
@@ -72,7 +74,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' new_agent_request should fail if agentname is invalid '''
         agentnames=[None, 23423422, 23423.2342, {'a':'dict'},['a','list'],json.dumps('username'),'userñame','user\nname','\tusername']
         username='test_new_agent_request_failure_invalid_agentname'
-        pubkey='TESTNEWAGENTREQUESTFAILURE'
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         for agentname in agentnames:
             response=agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
@@ -80,7 +82,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
 
     def test_new_agent_request_failure_invalid_pubkey(self):
         ''' new_agent_request should fail if pubkey is invalid '''
-        pubkeys=[None, 23423422, 23423.2342, {'a':'dict'},['a','list'],json.dumps('username'),'userñame','\tusername']
+        pubkeys=[None, 23423422, 23423.2342, {'a':'dict'},['a','list']]
         agentname='test_new_agent_request_failure_invalid_pubkey'
         username='test_new_agent_request_failure_invalid_pubkey'
         version='test library vX.XX'
@@ -93,7 +95,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         versions=[None, 23423422, 23423.2342, {'a':'dict'},['a','list'],json.dumps('username'),'userñame','user\nname','\tusername']
         agentname='test_new_agent_request_failure_invalid_version'
         username='test_new_agent_request_failure_invalid_version'
-        pubkey='TESTNEWAGENTREQUESTFAILURE'
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         for version in versions:
             response=agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
@@ -102,7 +104,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' new_agent_request should fail if user does not exists '''
         username='test_new_agent_request_failure_non_existent_user'
         agentname='test_new_agent_request_failure_non_existent_user'
-        pubkey='TESTNEWAGENTREQUESTFAILURE'
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response=agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
@@ -111,7 +113,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' new_agent_request should succeed if arguments are valid and return the agent id '''
         username=self.userinfo['username']
         agentname='test_new_agent_request_failure_agent_already_exists'
-        pubkey='TESTNEWAGENTREQUESTFAILUREAGENTALREADYEXISTS'
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -137,7 +139,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' get_agent_config_request should succeed if agent exists and return the agent config '''
         username=self.userinfo['username']
         agentname='test_get_agent_config_request_success'
-        pubkey='TESTGETAGENTCONFIGREQUESTSUCCESS'
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
@@ -161,7 +163,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response2.data['aid'],response.data['aid'])
         self.assertEqual(response2.data['agentname'],agentname)
-        self.assertEqual(response2.data['state'], states.PENDING_USER_VALIDATION)
+        self.assertEqual(response2.data['state'], states.ACTIVE)
         self.assertEqual(response2.data['version'], version)
 
     def test_get_agent_config_request_failure_invalid_username(self):
@@ -198,7 +200,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' get_agent_config_request should fail if user does not have permission over the agent '''
         username=self.userinfo['username']
         agentname='test_get_agent_config_request_failure_no_permission_over_this_agent'
-        pubkey='TESTNEWAGENTREQUESTFAILURENOPERMISSIONOVERTHISAGENT'
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -230,7 +232,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' get_agents_config_request should succeed if username exists and return the agents config '''
         username=self.userinfo['username']
         agentname1='test_get_agents_config_request_success_1'
-        pubkey1='TESTGETAGENTSCONFIGREQUESTSUCCESS1'
+        pubkey1 = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response1 = agentapi.new_agent_request(username=username, agentname=agentname1, pubkey=pubkey1, version=version)
         self.assertTrue(isinstance(response1, webmodel.WebInterfaceResponse))
@@ -251,7 +253,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertFalse(count>=1000)
         rescontrol.process_message_UPDQUO(msg)
         agentname2='test_get_agents_config_request_success_2'
-        pubkey2='TESTGETAGENTSCONFIGREQUESTSUCCESS2'
+        pubkey2 = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response2 = agentapi.new_agent_request(username=username, agentname=agentname2, pubkey=pubkey2, version=version)
         self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
@@ -279,12 +281,12 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
             if reg['aid']==response1.data['aid']:
                 agent_seen+=1
                 self.assertEqual(reg['agentname'],agentname1)
-                self.assertEqual(reg['state'], states.PENDING_USER_VALIDATION)
+                self.assertEqual(reg['state'], states.ACTIVE)
                 self.assertEqual(reg['version'], version)
             elif reg['aid']==response2.data['aid']:
                 agent_seen+=1
                 self.assertEqual(reg['agentname'],agentname2)
-                self.assertEqual(reg['state'], states.PENDING_USER_VALIDATION)
+                self.assertEqual(reg['state'], states.ACTIVE)
                 self.assertEqual(reg['version'], version)
         self.assertEqual(agent_seen,2)
 
@@ -317,7 +319,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' update_agent_config_request should succeed if agent exists and the new conf is set '''
         username=self.userinfo['username']
         agentname='test_update_agent_config_request_success'
-        pubkey='TESTUPDATEAGENTCONFIGREQUESTSUCCESS'
+        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = agentapi.new_agent_request(username=username, agentname=agentname, pubkey=pubkey, version=version)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
@@ -345,7 +347,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['aid'],response.data['aid'])
         self.assertEqual(response3.data['agentname'],new_agentname)
-        self.assertEqual(response3.data['state'], states.PENDING_USER_VALIDATION)
+        self.assertEqual(response3.data['state'], states.ACTIVE)
         self.assertEqual(response3.data['version'], version)
 
     def test_update_agent_config_request_failure_invalid_username(self):

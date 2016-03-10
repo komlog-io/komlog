@@ -3,7 +3,6 @@ import uuid
 import json
 import tornado.web
 from tornado.template import Template
-from tornado.escape import json_encode,json_decode,xhtml_escape
 from komlibs.interface.web.api import agent
 from komlibs.interface.web.api import user
 from komlibs.interface.web.api import datasource
@@ -22,7 +21,7 @@ from komws2 import auth
 
 class AgentsHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self):
         try:
             req_data=json_decode(self.request.body)
@@ -31,60 +30,60 @@ class AgentsHandler(tornado.web.RequestHandler):
             agentname=req_data['agentname']
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=agent.new_agent_request(username=self.user, agentname=agentname, pubkey=pubkey, version=version)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self):
         response=agent.get_agents_config_request(username=self.user)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class AgentConfigHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self,aid):
         response=agent.get_agent_config_request(username=self.user, aid=aid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def put(self,aid):
         try:
             data=json_decode(self.request.body)
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=agent.update_agent_config_request(username=self.user, aid=aid, data=data)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self, aid):
         response=agent.delete_agent_request(username=self.user, aid=aid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class DatasourceDataHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self,did):
         try:
             seq=self.get_argument('seq',default=None)
             tid=self.get_argument('t',default=None)
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datasource.get_datasource_data_request(username=self.user, did=did, seq=seq, tid=tid)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.agentauthenticated
+    @auth.authenticated
     def post(self,did):
         try:
             aid=self.agent
@@ -93,70 +92,70 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             dest_dir=self.application.dest_dir
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             if ctype.find('application/json')>=0:
                 response=datasource.upload_datasource_data_request(username=self.user, aid=aid, did=did, content=content, destination=dest_dir)
                 self.set_status(response.status)
-                self.write(json_encode(response.data))
+                self.write(json.dumps(response.data))
             else:
                 self.set_status(400)
-                self.write(json_encode({'message':'Bad Request'}))
+                self.write(json.dumps({'message':'Bad Request'}))
 
 class DatasourceConfigHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self,did):
         response=datasource.get_datasource_config_request(username=self.user, did=did)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def put(self, did):
         try:
             content=json_decode(self.request.body)
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datasource.update_datasource_config_request(username=self.user, did=did, content=content)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self, did):
         response=datasource.delete_datasource_request(username=self.user, did=did)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class DatasourcesHandler(tornado.web.RequestHandler):
 
-    @auth.agentauthenticated
+    @auth.authenticated
     def post(self):
         try:
             data=json_decode(self.request.body)
             datasourcename=data['datasourcename']
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datasource.new_datasource_request(username=self.user, aid=self.agent, datasourcename=datasourcename)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self):
         response=datasource.get_datasources_config_request(username=self.user)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class UsersHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self):
         response=user.get_user_config_request(username=self.user)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class UserConfirmationHandler(tornado.web.RequestHandler):
 
@@ -167,15 +166,15 @@ class UserConfirmationHandler(tornado.web.RequestHandler):
             email=self.get_argument('e') #email
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=user.confirm_user_request(email=email,code=code)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
 class DatapointDataHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self,pid):
         try:
             start_date=self.get_argument('its',default=None) #sd : start date
@@ -183,41 +182,41 @@ class DatapointDataHandler(tornado.web.RequestHandler):
             tid=self.get_argument('t',default=None) #ticket id
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datapoint.get_datapoint_data_request(username=self.user, pid=pid, start_date=start_date, end_date=end_date,tid=tid)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
 class DatapointConfigHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self,pid):
         response=datapoint.get_datapoint_config_request(username=self.user, pid=pid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def put(self, pid):
         try:
             data=json_decode(self.request.body)
         except TypeError:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad Parameters'}))
+            self.write(json.dumps({'message':'Bad Parameters'}))
         else:
             response=datapoint.update_datapoint_config_request(username=self.user, pid=pid, data=data)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self, pid):
         response=datapoint.delete_datapoint_request(username=self.user, pid=pid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class DatapointsHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self):
         try:
             data=json_decode(self.request.body)
@@ -228,15 +227,15 @@ class DatapointsHandler(tornado.web.RequestHandler):
             datapointname=data['datapointname'] #dp name
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datapoint.new_datapoint_request(username=self.user, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
 class DatapointPositivesHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self, pid):
         try:
             data=json_decode(self.request.body)
@@ -245,15 +244,15 @@ class DatapointPositivesHandler(tornado.web.RequestHandler):
             length=data['l']
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datapoint.mark_positive_variable_request(username=self.user, pid=pid, sequence=sequence, position=position, length=length)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
 class DatapointNegativesHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self, pid):
         try:
             data=json_decode(self.request.body)
@@ -262,158 +261,149 @@ class DatapointNegativesHandler(tornado.web.RequestHandler):
             length=data['l']
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datapoint.mark_negative_variable_request(username=self.user, pid=pid, sequence=sequence, position=position, length=length)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
 class UserConfigHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self):
         response=user.get_user_config_request(username=self.user)
         self.render('config.html',userdata=response.data,page_title='Komlog')
 
-    @auth.userauthenticated
+    @auth.authenticated
     def put(self):
         try:
             data=json_decode(self.request.body)
         except ValueError:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=user.update_user_config_request(username=self.user, data=data)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self):
         response=user.delete_user_request(username=self.user)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class UserHomeHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self):
         self.render('home.html', page_title='Komlog')
 
 class LoginHandler(tornado.web.RequestHandler):
 
     def get(self):
-        try:
-            errorcode=self.get_argument('error')
-        except:
-            errorcode=''
-        self.render('login.html',errorcode=errorcode)
+        self.render('login.html',page_title='Komlog', response=None)
 
     def post(self):
-        error='?error=1'
         try:
-            username=self.get_argument('username')
-            password=self.get_argument('password')
-            agentid=self.get_argument('agent',None)
-            signature=self.get_argument('signature',None)
+            username=self.get_argument('u',None)
+            password=self.get_argument('p',None)
+            pubkey=self.get_argument('k',None)
+            challenge=self.get_argument('c',None)
+            signature=self.get_argument('s',None)
         except Exception as e:
-            logger.logger.debug('LOGIN ERROR: '+str(e))
-            self.redirect(self.get_login_url()+error)
-            return
+            self.redirect(self.get_login_url())
         else:
-            response=login.login_request(username=username, password=password, agentid=agentid, signature=signature)
-            logger.logger.debug('LOGIN RESULT: '+str(response.__dict__))
-            if response.status==status.WEB_STATUS_OK:
-                self.set_secure_cookie('komlog_user',username,httponly=True)#, secure=True)
-                if agentid:
-                    aid=uuid.UUID(agentid)
-                    self.set_secure_cookie('komlog_agent',agentid, httponly=True)#, secure=True)
-                    self.redirect('/etc/ag/'+aid.hex)
-                else:
-                    self.redirect('/home') 
+            response,cookie=login.login_request(username=username, password=password, pubkey=pubkey, challenge=challenge, signature=signature)
+            if cookie:
+                self.set_secure_cookie('kid',json.dumps(cookie), expires_days=7, httponly=True)#, secure=True)
+            if isinstance(response.data, dict) and 'redirect' in response.data:
+                self.redirect(response.data['redirect'])
             else:
-                self.clear_cookie('komlog_user')
-                self.clear_cookie('komlog_agent')
-                self.redirect(self.get_login_url()+error)
-                return
+                if pubkey is not None:
+                    self.set_status(response.status)
+                    self.write(json.dumps(response.data))
+                else:
+                    self.render('login.html',page_title='Komlog', response=response)
 
 class LogoutHandler(tornado.web.RequestHandler):
 
     def get(self):
-        self.clear_cookie("komlog_user")
-        self.clear_cookie("komlog_agent")
-        self.redirect(self.get_login_url())
+        self.clear_cookie('kid')
+        ctype=self.request.headers.get('Content-Type')
+        if not ctype or ctype.find('application/json')<0:
+            self.redirect(self.get_login_url())
 
 class WidgetsHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self):
         response=widget.get_widgets_config_request(username=self.user)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self):
         try:
             data=json_decode(self.request.body)
         except Exception as e:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=widget.new_widget_request(username=self.user, data=data)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
 class WidgetConfigHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self,wid):
         response=widget.get_widget_config_request(username=self.user, wid=wid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def put(self, wid):
         try:
             data=json_decode(self.request.body)
         except TypeError:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad Parameters'}))
+            self.write(json.dumps({'message':'Bad Parameters'}))
         else:
             response=widget.update_widget_config_request(username=self.user, wid=wid, data=data)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self, wid):
         response=widget.delete_widget_request(username=self.user, wid=wid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class WidgetDatapointsHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self, wid, pid):
         response=widget.add_datapoint_request(username=self.user, wid=wid, pid=pid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self, wid, pid):
         response=widget.delete_datapoint_request(username=self.user, wid=wid, pid=pid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class WidgetRelatedHandler(tornado.web.RequestHandler):
     
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self, wid):
         response=widget.get_related_widgets_request(username=self.user, wid=wid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class WidgetSnapshotsHandler(tornado.web.RequestHandler):
     
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self, wid):
         try:
             data=json_decode(self.request.body)
@@ -424,95 +414,95 @@ class WidgetSnapshotsHandler(tornado.web.RequestHandler):
             cid_list=data['cl'] if 'cl' in data else None
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=snapshot.new_snapshot_request(username=self.user, wid=wid, user_list=user_list, cid_list=cid_list, its=its, ets=ets, seq=seq)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
 class DashboardsHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self):
         response=dashboard.get_dashboards_config_request(username=self.user)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self):
         try:
             data=json_decode(self.request.body)
         except Exception as e:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=dashboard.new_dashboard_request(username=self.user, data=data)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
 class DashboardConfigHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self,bid):
         response=dashboard.get_dashboard_config_request(username=self.user, bid=bid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def put(self, bid):
         try:
             data=json_decode(self.request.body)
         except TypeError:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad Parameters'}))
+            self.write(json.dumps({'message':'Bad Parameters'}))
         else:
             response=dashboard.update_dashboard_config_request(username=self.user, bid=bid, data=data)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self, bid):
         response=dashboard.delete_dashboard_request(username=self.user, bid=bid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class DashboardWidgetsHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self, bid, wid):
         response=dashboard.add_widget_request(username=self.user, bid=bid, wid=wid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self, bid, wid):
         response=dashboard.delete_widget_request(username=self.user, bid=bid, wid=wid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class SnapshotConfigHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self, nid):
         try:
             tid=self.get_argument('t',default=None) #ticket id
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=snapshot.get_snapshot_config_request(username=self.user, nid=nid, tid=tid)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self, nid):
         response=snapshot.delete_snapshot_request(username=self.user, nid=nid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class CirclesHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self):
         try:
             req_data=json_decode(self.request.body)
@@ -520,106 +510,106 @@ class CirclesHandler(tornado.web.RequestHandler):
             members=req_data['members'] if 'members' in req_data else None
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=circle.new_circle_request(username=self.user, circlename=circlename, members_list=members)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self):
         response=circle.get_users_circles_config_request(username=self.user)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class CircleConfigHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self, cid):
         response=circle.get_users_circle_config_request(username=self.user, cid=cid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def put(self,cid):
         try:
             data=json_decode(self.request.body)
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=circle.update_circle_request(username=self.user, cid=cid, data=data)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self, cid):
         response=circle.delete_circle_request(username=self.user, cid=cid)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class CircleMembersHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self, cid, member):
         response=circle.add_user_to_circle_request(username=self.user, cid=cid, member=member)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self, cid, member):
         response=circle.delete_user_from_circle_request(username=self.user, cid=cid, member=member)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class UriHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self):
         try:
             req_uri=self.get_argument('uri',default=None) #uri
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=uri.get_uri_request(username=self.user, uri=req_uri)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
 class UserEventsHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def get(self):
         try:
             ets=self.get_argument('ets',default=None) #end_date
             its=self.get_argument('its',default=None) #end_date
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=events.get_user_events_request(username=self.user, ets=ets, its=its)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
 class UserEventsResponsesHandler(tornado.web.RequestHandler):
 
-    @auth.userauthenticated
+    @auth.authenticated
     def post(self, seq):
         try:
             req_data=json_decode(self.request.body)
         except Exception:
             self.set_status(400)
-            self.write(json_encode({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=events.event_response_request(username=self.user, seq=seq, data=req_data)
             self.set_status(response.status)
-            self.write(json_encode(response.data))
+            self.write(json.dumps(response.data))
 
-    @auth.userauthenticated
+    @auth.authenticated
     def delete(self, seq):
         response=events.disable_event_request(username=self.user, seq=seq)
         self.set_status(response.status)
-        self.write(json_encode(response.data))
+        self.write(json.dumps(response.data))
 
 class AppRootHandler(tornado.web.RequestHandler):
 

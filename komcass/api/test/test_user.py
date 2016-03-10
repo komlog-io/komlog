@@ -12,13 +12,13 @@ class KomcassApiUserTest(unittest.TestCase):
 
     def setUp(self):
         username='test_komlog.komcass.api.user_user'
-        password='password'
+        password=b'password'
         email=username+'@komlog.org'
         uid=uuid.uuid4()
         creation_date=timeuuid.uuid1()
         code='test_komlog.komcass.api.user_code'
         self.user=ormuser.User(username=username, password=password, email=email, uid=uid, creation_date=creation_date)
-        self.signup_info=ormuser.SignUp(username=username, signup_code=code, email=email, creation_date=creation_date)
+        self.signup_info=ormuser.SignUp(username=username, code=code, email=email, creation_date=creation_date)
         userapi.insert_user(self.user)
         userapi.insert_signup_info(self.signup_info)
 
@@ -77,7 +77,7 @@ class KomcassApiUserTest(unittest.TestCase):
     def test_new_user_success(self):
         '''' new_user should succeed if user is created successfully '''
         username='test_new_user_success_user'
-        password='password'
+        password=b'password'
         email=username+'@komlog.org'
         uid=uuid.uuid4()
         creation_date=timeuuid.uuid1()
@@ -98,7 +98,7 @@ class KomcassApiUserTest(unittest.TestCase):
     def test_insert_user_success(self):
         '''' new_user should succeed if user is created successfully '''
         username='test_insert_user_success_user'
-        password='password'
+        password=b'password'
         email=username+'@komlog.org'
         uid=uuid.uuid4()
         for i in range(1,10):
@@ -122,7 +122,7 @@ class KomcassApiUserTest(unittest.TestCase):
         signup_info=userapi.get_signup_info(username=username)
         self.assertEqual(signup_info.username, self.signup_info.username)
         self.assertEqual(signup_info.email, self.signup_info.email)
-        self.assertEqual(signup_info.signup_code, self.signup_info.signup_code)
+        self.assertEqual(signup_info.code, self.signup_info.code)
 
     def test_get_signup_info_non_existing_username(self):
         ''' get_user should return None if we pass a non existing username '''
@@ -131,16 +131,16 @@ class KomcassApiUserTest(unittest.TestCase):
 
     def test_get_signup_info_existing_code(self):
         ''' get_signup_info should succeed if we pass an existing code '''
-        code=self.signup_info.signup_code
-        signup_info=userapi.get_signup_info(signup_code=code)
+        code=self.signup_info.code
+        signup_info=userapi.get_signup_info(code=code)
         self.assertEqual(signup_info.username, self.signup_info.username)
         self.assertEqual(signup_info.email, self.signup_info.email)
-        self.assertEqual(signup_info.signup_code, self.signup_info.signup_code)
+        self.assertEqual(signup_info.code, self.signup_info.code)
 
     def test_get_signup_info_non_existing_code(self):
         ''' get_user should return None if we pass a non existing code '''
         code='test_get_signup_info_non_existing_code'
-        self.assertIsNone(userapi.get_signup_info(signup_code=code))
+        self.assertIsNone(userapi.get_signup_info(code=code))
 
     def test_get_signup_info_existing_email(self):
         ''' get_signup_info should succeed if we pass an existing email '''
@@ -148,7 +148,7 @@ class KomcassApiUserTest(unittest.TestCase):
         signup_info=userapi.get_signup_info(email=email)
         self.assertEqual(signup_info.username, self.signup_info.username)
         self.assertEqual(signup_info.email, self.signup_info.email)
-        self.assertEqual(signup_info.signup_code, self.signup_info.signup_code)
+        self.assertEqual(signup_info.code, self.signup_info.code)
 
     def test_get_signup_info_non_existing_email(self):
         ''' get_user should return None if we pass a non existing email '''
@@ -515,18 +515,18 @@ class KomcassApiUserTest(unittest.TestCase):
     def test_update_user_password_success(self):
         ''' update_user_password should update the password successfully '''
         username='test_update_user_password_success'
-        password='password'
+        password=b'password'
         email=username+'@komlog.org'
         uid=uuid.uuid4()
         creation_date=timeuuid.uuid1()
         user=ormuser.User(username=username, password=password, email=email, uid=uid, creation_date=creation_date)
         self.assertTrue(userapi.new_user(user))
-        new_password='temporal'
+        new_password=b'temporal'
         self.assertTrue(userapi.update_user_password(username=username, password=new_password))
 
     def test_update_user_password_failed_user_not_found(self):
         ''' update_forget_request_state should fail if forget_request does not exist '''
         username='test_update_user_password_failed_user_not_found'
-        password='temporal'
+        password=b'temporal'
         self.assertFalse(userapi.update_user_password(username=username, password=password))
 
