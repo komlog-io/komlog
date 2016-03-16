@@ -15,7 +15,7 @@ from komcass.api import datapoint as cassapidatapoint
 from komcass.api import widget as cassapiwidget
 from komcass.api import dashboard as cassapidashboard
 from komcass.model.orm import agent as ormagent
-from komlibs.gestaccount.agent import states
+from komlibs.gestaccount.agent.states import *
 from komlibs.gestaccount import exceptions, errors
 from komlibs.general.crypto import crypto
 from komlibs.general.validation import arguments as args
@@ -88,8 +88,8 @@ def create_agent(uid,agentname,pubkey,version):
     if user:
         aid=uuid.uuid4()
         now=timeuuid.uuid1()
-        agent_pubkey=ormagent.AgentPubkey(uid=uid, pubkey=pubkey, aid=aid, state=states.ACTIVE)
-        agent=ormagent.Agent(aid=aid, uid=uid, agentname=agentname, pubkey=pubkey, version=version, state=states.ACTIVE,creation_date=now)
+        agent_pubkey=ormagent.AgentPubkey(uid=uid, pubkey=pubkey, aid=aid, state=AgentStates.ACTIVE)
+        agent=ormagent.Agent(aid=aid, uid=uid, agentname=agentname, pubkey=pubkey, version=version, state=AgentStates.ACTIVE,creation_date=now)
         if cassapiagent.new_agent_pubkey(obj=agent_pubkey):
             if cassapiagent.new_agent(agent=agent):
                 return {'uid':agent.uid, 'aid':agent.aid, 'agentname':agent.agentname, 'pubkey':agent.pubkey, 'version':agent.version, 'state':agent.state}
@@ -106,8 +106,8 @@ def activate_agent(aid):
         raise exceptions.BadParametersException(error=errors.E_GAA_ACA_IA)
     agent=cassapiagent.get_agent(aid=aid)
     if agent:
-        agent_pubkey=ormagent.AgentPubkey(uid=agent.uid, pubkey=agent.pubkey, aid=agent.aid, state=states.ACTIVE)
-        agent.state=states.ACTIVE
+        agent_pubkey=ormagent.AgentPubkey(uid=agent.uid, pubkey=agent.pubkey, aid=agent.aid, state=AgentStates.ACTIVE)
+        agent.state=AgentStates.ACTIVE
         if cassapiagent.insert_agent(agent=agent) and cassapiagent.insert_agent_pubkey(obj=agent_pubkey):
             return True
         else:
@@ -120,8 +120,8 @@ def suspend_agent(aid):
         raise exceptions.BadParametersException(error=errors.E_GAA_SPA_IA)
     agent=cassapiagent.get_agent(aid=aid)
     if agent:
-        agent_pubkey=ormagent.AgentPubkey(uid=agent.uid, pubkey=agent.pubkey, aid=agent.aid, state=states.SUSPENDED)
-        agent.state=states.SUSPENDED
+        agent_pubkey=ormagent.AgentPubkey(uid=agent.uid, pubkey=agent.pubkey, aid=agent.aid, state=AgentStates.SUSPENDED)
+        agent.state=AgentStates.SUSPENDED
         if cassapiagent.insert_agent(agent=agent) and cassapiagent.insert_agent_pubkey(obj=agent_pubkey):
             return True
         else:

@@ -5,27 +5,21 @@ This file implements some methods for agent authentication
 @author: jcazor
 '''
 
-import tornado.web
-import functools
-import urllib.parse
-from urllib.parse import urlencode
+import functools, json
+from komlibs.auth import passport
 from komfig import logger
 
-def authenticated(method):
+def agent_authenticated(method):
     @functools.wraps(method)
     def authlogic(self,*args,**kwargs):
-        kid=self.get_secure_cookie('kid')
-        if not kid:
+        try:
+            cookie=json.loads(self.get_secure_cookie('kid').decode('utf-8'))
+            self.passport=passport.get_agent_passport(cookie=cookie)
+        except Exception:
+            self.clear_cookie('kid')
             self.close(code=4003,reason='auth required')
             return
         else:
-            try:
-                kid=json.loads(kid.decode('utf-8'))
-                self.user=kid['user']
-                self.agent=kid['agent']
-            except Exception:
-                return
-            else:
-                return method(self, *args, **kwargs)
+            return method(self, *args, **kwargs)
     return authlogic
 

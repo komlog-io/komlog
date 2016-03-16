@@ -21,11 +21,11 @@ from komlibs.gestaccount import exceptions, errors
 from komlibs.graph.api import uri as graphuri
 from komlibs.graph.api import kin as graphkin
 
-def delete_user(username):
-    if not args.is_valid_username(username):
+def delete_user(uid):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GCD_DU_IU)
-    uid=cassapiuser.get_uid(username=username)
-    if not uid:
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GCD_DU_UNF)
     aids=cassapiagent.get_agents_aids(uid=uid)
     dids=cassapidatasource.get_datasources_dids(uid=uid)
@@ -45,8 +45,8 @@ def delete_user(username):
         delete_widget(wid=wid)
     for did in dids:
         delete_datasource(did=did)
-    cassapiuser.delete_user(username=username)
-    cassapiuser.delete_signup_info(username=username)
+    cassapiuser.delete_user(username=user.username)
+    cassapiuser.delete_signup_info(username=user.username)
     return True
 
 def delete_agent(aid):

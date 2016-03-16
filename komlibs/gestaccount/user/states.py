@@ -5,25 +5,23 @@ creation date: 2013/03/31
 author: jcazor
 '''
 
-# User states
+from enum import Enum
 
-PREACTIVE = 0
-ACTIVE    = 1
+class UserStates(int, Enum):
+    PREACTIVE = 0
+    ACTIVE    = 1
 
-# Invitation states
+class InvitationStates(int, Enum):
+    UNUSED = 0
+    USING  = 1
+    USED   = 2
 
-INVITATION_UNUSED = 0
-INVITATION_USING  = 1
-INVITATION_USED   = 2
+class InvitationRequestStates(int, Enum):
+    REGISTERED = 0
+    ASSOCIATED = 1
+    SENT       = 2
 
-# Invitation request states
-
-INVITATION_REQUEST_REGISTERED = 0
-INVITATION_REQUEST_ASSOCIATED = 1
-INVITATION_REQUEST_SENT       = 2
-
-# Forget requests states
-
-FORGET_REQUEST_UNUSED = 0
-FORGET_REQUEST_USED = 1
+class ForgetRequestStates(int, Enum):
+    UNUSED = 0
+    USED   = 1
 

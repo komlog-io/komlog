@@ -2,11 +2,11 @@
 from komlibs.auth import operations as authoperations
 from komlibs.general.validation import arguments as args
 from komlibs.interface.websocket.protocol.v1 import errors, exceptions
-from komlibs.interface.websocket.protocol.v1.model import types
+from komlibs.interface.websocket.protocol.v1.model.types import Operation
 
 
 OPAUTHS={
-    types.OPERATION_NEW_DATASOURCE:authoperations.NEW_DATASOURCE,
+    Operation.NEW_DATASOURCE:authoperations.NEW_DATASOURCE,
 }
 
 class WSIFaceOperation:
@@ -27,7 +27,7 @@ class WSIFaceOperation:
     def oid(self, value):
         if self._oid:
             raise exceptions.OperationValidationException(error=errors.E_IWSPV1MO_WSIO_OIDAI)
-        if args.is_valid_int(value):
+        if value in Operation:
             self._oid = value
         else:
             raise exceptions.OperationValidationException(error=errors.E_IWSPV1MO_WSIO_IOID)
@@ -44,7 +44,7 @@ class NewDatasourceOperation(WSIFaceOperation):
         self.uid = uid
         self.aid = aid
         self.did = did
-        super(NewDatasourceOperation, self).__init__(oid=types.OPERATION_NEW_DATASOURCE)
+        super(NewDatasourceOperation, self).__init__(oid=Operation.NEW_DATASOURCE)
 
     @property
     def params(self):

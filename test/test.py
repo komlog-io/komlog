@@ -23,6 +23,7 @@ MODULES = [
     'komlibs.gestaccount.circle.test.test_circleapi.GestaccountCircleApiTest',
     'komlibs.gestaccount.common.test.test_delete.GestaccountCommonDeleteTest',
     'komlibs.auth.test.test_authorization.AuthAuthorizationTest',
+    'komlibs.auth.test.test_passport.AuthPassportTest',
     'komlibs.auth.quotes.test.test_authorization.AuthQuotesAuthorizationTest',
     'komlibs.auth.quotes.test.test_deny.AuthQuotesDenyTest',
     'komlibs.auth.quotes.test.test_compare.AuthQuotesCompareTest',
@@ -72,7 +73,7 @@ MODULES = [
     'komlibs.interface.websocket.protocol.v1.processing.test.test_message.InterfaceWebSocketProtocolV1ProcessingMessageTest',
     'komlibs.interface.websocket.protocol.v1.test.test_api.InterfaceWebSocketProtocolV1ApiTest',
     'komlibs.interface.websocket.test.test_api.InterfaceWebSocketApiTest',
-    ]
+]
 
 def run_tests():
     try:

@@ -46,7 +46,7 @@ def authorize_get_datasource_data(uid, tid, did, ii, ie):
     permissions_needed=permissions.CAN_READ_DATA
     if did in ticket.permissions and permissions_needed & ticket.permissions[did]:
         if ii>=ticket.interval_init and ii<=ticket.interval_end and ie>= ticket.interval_init and ie<=ticket.interval_end:
-            return True
+            return
         else:
             raise exceptions.AuthorizationException(error=errors.E_ATA_AGDSD_IINT)
     else:
@@ -85,7 +85,7 @@ def authorize_get_datapoint_data(uid, tid, pid, ii, ie):
     permissions_needed=permissions.CAN_READ_DATA
     if pid in ticket.permissions and permissions_needed & ticket.permissions[pid]:
         if ii>=ticket.interval_init and ii<=ticket.interval_end and ie>=ticket.interval_init and ie<=ticket.interval_end:
-            return True
+            return
         else:
             raise exceptions.AuthorizationException(error=errors.E_ATA_AGDPD_IINT)
     else:
@@ -119,7 +119,7 @@ def authorize_get_snapshot_config(uid, tid, nid):
         raise exceptions.AuthorizationException(error=errors.E_ATA_AGSNC_DNA)
     permissions_needed=permissions.CAN_READ_CONFIG
     if nid in ticket.permissions and permissions_needed & ticket.permissions[nid]:
-        return True
+        return
     else:
         raise exceptions.AuthorizationException(error=errors.E_ATA_AGSNC_INSP)
 

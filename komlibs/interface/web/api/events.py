@@ -7,6 +7,9 @@ This file defines the logic associated with web interface operations
 import uuid
 from komfig import logger
 from komimc import api as msgapi
+from komlibs.auth import authorization
+from komlibs.auth.requests import Requests
+from komlibs.auth.passport import Passport
 from komlibs.events.api import user as userevents
 from komlibs.events.api import user_responses as userresponsesevents
 from komlibs.events.model import types as eventstypes
@@ -19,19 +22,19 @@ from komlibs.general.time import timeuuid
 
 
 @exceptions.ExceptionHandler
-def get_user_events_request(username, ets=None, its=None):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWAEV_GEVR_IU)
+def get_user_events_request(passport, ets=None, its=None):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWAEV_GEVR_IPSP)
     if ets and not args.is_valid_string_float(ets):
         raise exceptions.BadParametersException(error=errors.E_IWAEV_GEVR_IETS)
     if its and not args.is_valid_string_float(its):
         raise exceptions.BadParametersException(error=errors.E_IWAEV_GEVR_IITS)
     if its and ets and float(its)>float(ets):
         its,ets=ets,its
-    uid=userapi.get_uid(username=username)
     end_date=timeuuid.uuid1(seconds=float(ets)) if ets else None
     init_date=timeuuid.uuid1(seconds=float(its)) if its else None
-    events=userevents.get_events(uid=uid, to_date=end_date, from_date=init_date, params_serializable=True, html_content=True)
+    authorization.authorize_request(request=Requests.GET_USER_EVENTS,passport=passport)
+    events=userevents.get_events(uid=passport.uid, to_date=end_date, from_date=init_date, params_serializable=True, html_content=True)
     response_data=[]
     for event in events:
         reg={}
@@ -47,27 +50,27 @@ def get_user_events_request(username, ets=None, its=None):
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
-def disable_event_request(username, seq):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWAEV_DEVR_IU)
+def disable_event_request(passport, seq):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWAEV_DEVR_IPSP)
     if not args.is_valid_sequence(seq):
         raise exceptions.BadParametersException(error=errors.E_IWAEV_DEVR_ISEQ)
-    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=Requests.DISABLE_EVENT,passport=passport)
     date=timeuuid.get_uuid1_from_custom_sequence(seq)
-    userevents.disable_event(uid=uid, date=date)
+    userevents.disable_event(uid=passport.uid, date=date)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
-def event_response_request(username, seq, data):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWAEV_EVRPR_IU)
+def event_response_request(passport, seq, data):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWAEV_EVRPR_IPSP)
     if not args.is_valid_sequence(seq):
         raise exceptions.BadParametersException(error=errors.E_IWAEV_EVRPR_ISEQ)
     if not args.is_valid_dict(data):
         raise exceptions.BadParametersException(error=errors.E_IWAEV_EVRPR_IDAT)
-    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=Requests.RESPONSE_EVENT,passport=passport)
     date=timeuuid.get_uuid1_from_custom_sequence(seq)
-    event=userevents.get_event(uid=uid, date=date)
+    event=userevents.get_event(uid=passport.uid, date=date)
     if event['type']==eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:
         parameters={'missing':[],'identified':[]}
         if not 'missing' in data or not isinstance(data['missing'],list):
@@ -88,7 +91,7 @@ def event_response_request(username, seq, data):
                 raise exceptions.BadParametersException(error=errors.E_IWAEV_EVRPR_IIDIT)
             else:
                 parameters['identified'].append({'pid':dp_info['pid'],'p':dp_info['p'],'l':dp_info['l']})
-        message=messages.UserEventResponseMessage(uid=uid, date=date, parameters=parameters)
+        message=messages.UserEventResponseMessage(uid=passport.uid,date=date,parameters=parameters)
         msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
     else:

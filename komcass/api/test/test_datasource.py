@@ -30,7 +30,6 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertEqual(datasource.aid, self.datasource1.aid)
         self.assertEqual(datasource.uid, self.datasource1.uid)
         self.assertEqual(datasource.datasourcename, self.datasource1.datasourcename)
-        self.assertEqual(datasource.state, self.datasource1.state)
 
     def test_get_datasource_non_existing_did(self):
         ''' get_datasource should return None if we pass a non existing did '''
@@ -117,9 +116,8 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         aid=uuid.uuid4()
         uid=uuid.uuid4()
         name='test_insert_datasource_success_datasourcename'
-        state=0
         date=timeuuid.uuid1()
-        datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=name, state=state, creation_date=date)
+        datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=name, creation_date=date)
         self.assertTrue(datasourceapi.insert_datasource(datasource))
         datasource_db=datasourceapi.get_datasource(did=datasource.did)
         self.assertTrue(isinstance(datasource_db, ormdatasource.Datasource))
@@ -127,7 +125,6 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertEqual(datasource.aid, datasource_db.aid)
         self.assertEqual(datasource.uid, datasource_db.uid)
         self.assertEqual(datasource.datasourcename, datasource_db.datasourcename)
-        self.assertEqual(datasource.state, datasource_db.state)
 
     def test_insert_datasource_no_datasource_object(self):
         ''' insert_datasource should return False if argument passed is not a datasource object '''
@@ -141,9 +138,8 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         aid=uuid.uuid4()
         uid=uuid.uuid4()
         name='test_insert_datasource_success_datasourcename'
-        state=0
         date=timeuuid.uuid1()
-        datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=name, state=state, creation_date=date)
+        datasource=ormdatasource.Datasource(did=did, aid=aid, uid=uid, datasourcename=name, creation_date=date)
         self.assertTrue(datasourceapi.insert_datasource(datasource))
         datasource_db=datasourceapi.get_datasource(did=datasource.did)
         self.assertTrue(isinstance(datasource_db, ormdatasource.Datasource))

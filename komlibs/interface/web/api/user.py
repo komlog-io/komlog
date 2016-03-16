@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 
 This file defines the logic associated with web interface requests
@@ -9,6 +8,8 @@ import uuid
 from komfig import logger
 from komimc import api as msgapi
 from komlibs.auth import authorization
+from komlibs.auth.requests import Requests
+from komlibs.auth.passport import Passport
 from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.gestaccount import errors as gesterrors
@@ -82,10 +83,11 @@ def confirm_user_request(email, code):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
-def get_user_config_request(username):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWAU_GUSCR_IU)
-    user=userapi.get_user_config(username=username)
+def get_user_config_request(passport):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWAU_GUSCR_IPSP)
+    authorization.authorize_request(request=Requests.GET_USER_CONFIG, passport=passport)
+    user=userapi.get_user_config(uid=passport.uid)
     data={'username':user['username'],
           'uid':user['uid'].hex,
           'email':user['email'],
@@ -94,12 +96,11 @@ def get_user_config_request(username):
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
 
 @exceptions.ExceptionHandler
-def update_user_config_request(username, data):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWAU_UUSCR_IU)
+def update_user_config_request(passport, data):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWAU_UUSCR_IPSP)
     if not args.is_valid_dict(data):
         raise exceptions.BadParametersException(error=errors.E_IWAU_UUSCR_ID)
-    #we dont authorize here because a user can always update herself
     request_params={}
     if 'email' in data:
         if not args.is_valid_email(data['email']):
@@ -113,14 +114,16 @@ def update_user_config_request(username, data):
         if not args.is_valid_password(data['old_password']):
             raise exceptions.BadParametersException(error=errors.E_IWAU_UUSCR_IOP)
         request_params['old_password']=data['old_password']
-    if userapi.update_user_config(username=username, **request_params):
+    authorization.authorize_request(request=Requests.UPDATE_USER_CONFIG, passport=passport)
+    if userapi.update_user_config(uid=passport.uid, **request_params):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
-def delete_user_request(username):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWAU_DUSR_IU)
-    message=messages.DeleteUserMessage(username=username)
+def delete_user_request(passport):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWAU_DUSR_IPSP)
+    authorization.authorize_request(request=Requests.DELETE_USER, passport=passport)
+    message=messages.DeleteUserMessage(uid=passport.uid)
     msgapi.send_message(msg=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 
@@ -243,6 +246,4 @@ def reset_password_request(code, password):
         else:
             error=e.error
         return webmodel.WebInterfaceResponse(status=status_c, error=error)
-
-
 

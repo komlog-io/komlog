@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 Created on 01/10/2014
 
@@ -53,14 +52,14 @@ def new_datasource(datasource):
     if not datasource:
         return False
     else:
-        resp=connection.session.execute(stmtdatasource.I_A_MSTDATASOURCE_INE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.state,datasource.creation_date))
+        resp=connection.session.execute(stmtdatasource.I_A_MSTDATASOURCE_INE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.creation_date))
         return resp[0]['[applied]'] if resp else False
 
 def insert_datasource(datasource):
     if not isinstance(datasource, ormdatasource.Datasource):
         return False
     else:
-        connection.session.execute(stmtdatasource.I_A_MSTDATASOURCE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.state,datasource.creation_date))
+        connection.session.execute(stmtdatasource.I_A_MSTDATASOURCE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.creation_date))
         return True
 
 def delete_datasource(did):

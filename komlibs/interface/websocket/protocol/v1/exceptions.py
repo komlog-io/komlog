@@ -68,8 +68,6 @@ class ExceptionHandler:
             return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, reason='msg exec error', error=e.error)
         except Exception as e:
             logger.logger.debug('WEBSOCKET Response non treated Exception: '+str(e))
-            if 'error' in e:
-                return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, error=e.error)
-            else:
-                return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, error=1)
+            error=getattr(e,'error',-1)
+            return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, error=error)
 

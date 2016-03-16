@@ -326,18 +326,18 @@ class NewDSWidgetMessage:
             self.serialized_message='|'.join((self.type,self.uid.hex,self.did.hex))
 
 class DeleteUserMessage:
-    def __init__(self, serialized_message=None, username=None):
+    def __init__(self, serialized_message=None, uid=None):
         if serialized_message:
             self.serialized_message=serialized_message
-            mtype,username = self.serialized_message.split('|')
+            mtype,uid= self.serialized_message.split('|')
             self.type=mtype
-            self.username=username
+            self.uid=uuid.UUID(uid)
         else:
-            if not args.is_valid_username(username):
+            if not args.is_valid_uuid(uid):
                 raise exceptions.BadParametersException()
             self.type=DELETE_USER_MESSAGE
-            self.username=username
-            self.serialized_message='|'.join((self.type,self.username))
+            self.uid=uid
+            self.serialized_message='|'.join((self.type,self.uid.hex))
 
 class DeleteAgentMessage:
     def __init__(self, serialized_message=None, aid=None):

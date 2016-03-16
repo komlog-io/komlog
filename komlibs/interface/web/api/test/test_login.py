@@ -3,15 +3,17 @@ import uuid
 import json
 from base64 import b64encode, b64decode
 from komfig import logger
+from komlibs.auth import errors as autherrors
 from komlibs.general.time import timeuuid
 from komlibs.general.crypto import crypto 
+from komlibs.general.validation import arguments as args
 from komlibs.gestaccount import errors as gesterrors
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komcass.api import agent as cassapiagent
 from komlibs.interface.web.api import login as loginapi
 from komlibs.interface.web.model import webmodel
-from komlibs.interface.web import status, exceptions, errors
+from komlibs.interface.web import status, errors
 
 
 class InterfaceWebApiLoginTest(unittest.TestCase):
@@ -78,7 +80,9 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         email = username + '@komlog.org'
         user = userapi.create_user(username=username, password=password, email=email)
         response, cookie = loginapi.login_request(username, password=password)
-        self.assertEqual(cookie, {'user':username,'agent':None})
+        self.assertEqual(cookie['user'], username)
+        self.assertEqual(cookie['aid'],None)
+        self.assertTrue(args.is_valid_sequence(cookie['seq']))
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, {'redirect':'/home'})
@@ -258,6 +262,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
         pubkey = b64encode(pubkey).decode('utf-8')
         response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
         serialized_priv_key=crypto.serialize_private_key(key)
         ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
         ch_hash = crypto.get_hash(ch_plain)
@@ -282,13 +287,16 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
         pubkey = b64encode(pubkey).decode('utf-8')
         response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
         serialized_priv_key=crypto.serialize_private_key(key)
         ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
         ch_hash = crypto.get_hash(ch_plain)
         ch_resp = b64encode(ch_hash).decode('utf-8')
         signature=b64encode(crypto.sign_message(serialized_priv_key, ch_hash)).decode('utf-8')
         response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
-        self.assertEqual(cookie, {'user':username, 'agent':agent['aid'].hex})
+        self.assertEqual(cookie['user'], username)
+        self.assertEqual(cookie['aid'],agent['aid'].hex)
+        self.assertTrue(args.is_valid_sequence(cookie['seq']))
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.error, None)
@@ -306,13 +314,16 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
         pubkey = b64encode(pubkey).decode('utf-8')
         response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
         serialized_priv_key=crypto.serialize_private_key(key)
         ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
         ch_hash = crypto.get_hash(ch_plain)
         ch_resp = b64encode(ch_hash).decode('utf-8')
         signature=b64encode(crypto.sign_message(serialized_priv_key, ch_hash)).decode('utf-8')
         response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
-        self.assertEqual(cookie, {'user':username, 'agent':agent['aid'].hex})
+        self.assertEqual(cookie['user'], username)
+        self.assertEqual(cookie['aid'],agent['aid'].hex)
+        self.assertTrue(args.is_valid_sequence(cookie['seq']))
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.error, None)
@@ -335,6 +346,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
         pubkey = b64encode(pubkey).decode('utf-8')
         response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
         serialized_priv_key=crypto.serialize_private_key(key)
         ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
         ch_hash = crypto.get_hash(ch_plain)

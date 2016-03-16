@@ -6,12 +6,14 @@ This file defines the logic associated with web interface operations
 
 from komfig import logger
 from base64 import b64encode, b64decode
-from komlibs.auth import authorization, requests
+from komlibs.auth import authorization
+from komlibs.auth.requests import Requests
 from komlibs.interface.web.model import webmodel
 from komlibs.interface.web import status, exceptions, errors
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.general.validation import arguments as args
+from komlibs.general.time import timeuuid
 
 def cookie_appender(f):
     def func(*args, **kwargs):
@@ -38,19 +40,17 @@ def _user_login_request(username, password):
         raise exceptions.BadParametersException(error=errors.E_IWAL_ULR_IU)
     if not args.is_valid_password(password):
         raise exceptions.BadParametersException(error=errors.E_IWAL_ULR_IPWD)
-    #authorization.authorize_request(request=requests.USER_LOGIN_REQUEST, username=username)
     if not userapi.auth_user(username=username, password=password):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, error=errors.E_IWAL_ULR_AUTHERR), None
     else:
         data={'redirect':'/home'}
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data), {'user':username, 'agent':None}
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data), {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
 
 def _agent_login_generate_challenge_request(username, pubkey):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=errors.E_IWAL_ALGCR_IU)
     if not args.is_valid_string(pubkey):
         raise exceptions.BadParametersException(error=errors.E_IWAL_ALGCR_IPK)
-    #authorization.authorize_request(request=requests.AGENT_LOGIN_REQUEST, username=username, pubkey=pubkey)
     try:
         pubkey=b64decode(pubkey.encode('utf-8'))
     except Exception:
@@ -68,7 +68,6 @@ def _agent_login_validate_challenge_request(username, pubkey, challenge, signatu
         raise exceptions.BadParametersException(error=errors.E_IWAL_ALVCR_ICH)
     if not args.is_valid_string(signature):
         raise exceptions.BadParametersException(error=errors.E_IWAL_ALVCR_ISG)
-    #authorization.authorize_request(request=requests.AGENT_LOGIN_REQUEST, username=username, pubkey=pubkey)
     try:
         pubkey=b64decode(pubkey.encode('utf-8'))
         challenge=b64decode(challenge.encode('utf-8'))
@@ -76,6 +75,6 @@ def _agent_login_validate_challenge_request(username, pubkey, challenge, signatu
     except Exception:
         raise exceptions.BadParametersException(error=errors.E_IWAL_ALVCR_IPK)
     aid=agentapi.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge, signature=signature)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK), {'user':username, 'agent':aid.hex}
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK), {'user':username, 'aid':aid.hex, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
 
 

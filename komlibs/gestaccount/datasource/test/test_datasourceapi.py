@@ -19,10 +19,12 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         password='password'
         email='test_gestaccount.datasource.api_user@komlog.org'
         try:
-            self.user=userapi.get_user_config(username=username)
+            uid=userapi.get_uid(username=username)
         except Exception:
-            userapi.create_user(username=username, password=password, email=email)
-            self.user=userapi.get_user_config(username=username)
+            user=userapi.create_user(username=username, password=password, email=email)
+            uid=user['uid']
+        finally:
+            self.user=userapi.get_user_config(uid=uid)
         agentname='test_gestaccount.datasource.api_agent'
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'

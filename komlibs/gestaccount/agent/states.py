@@ -5,7 +5,10 @@ creation date: 2013/03/31
 author: jcazor
 '''
 
-PENDING_USER_VALIDATION  =   0 #: this states is when an agent needs to be validated on creation.
-ACTIVE                   =   1 #: Active state. Normally the agents will be created in this state.
-SUSPENDED                =   2 #: Suspended. The agent can't do things like upload info, login, etc.
+from enum import Enum
+
+class AgentStates(int, Enum):
+    PENDING_USER_VALIDATION  =   1 #: agent needs to be validated on creation.
+    ACTIVE                   =   2 #: Active state.Usually agents will be created in this state.
+    SUSPENDED                =   3 #: Suspended. Agent can't do things like upload info, login, etc.
 

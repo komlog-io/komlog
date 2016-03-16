@@ -2,7 +2,7 @@ import unittest
 import uuid
 from komfig import logger
 from komlibs.gestaccount.agent import api
-from komlibs.gestaccount.agent import states
+from komlibs.gestaccount.agent.states import *
 from komlibs.gestaccount.user import api as userapi
 from komlibs.gestaccount import exceptions, errors
 from komcass.api import agent as cassapiagent
@@ -18,10 +18,12 @@ class GestaccountAgentApiTest(unittest.TestCase):
         self.password='password'
         self.email='test_gestaccount.agent.api_user@komlog.org'
         try:
-            self.user=userapi.get_user_config(username=self.username)
+            uid=userapi.get_uid(username=self.username)
         except Exception:
-            userapi.create_user(username=self.username, password=self.password, email=self.email)
-            self.user=userapi.get_user_config(username=self.username)
+            user=userapi.create_user(username=self.username, password=self.password, email=self.email)
+            uid=user['uid']
+        finally:
+            self.user=userapi.get_user_config(uid=uid)
 
     def test_create_agent_non_existent_user(self):
         ''' create_agent should fail if user is not found in system '''
@@ -42,7 +44,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         self.assertEqual(agent['agentname'], agentname)
         self.assertEqual(agent['pubkey'], pubkey)
         self.assertEqual(agent['version'], version)
-        self.assertEqual(agent['state'], states.ACTIVE)
+        self.assertEqual(agent['state'], AgentStates.ACTIVE)
 
     def test_create_agent_already_existing_agent(self):
         ''' create_agent should fail if agent already exists '''
@@ -65,10 +67,10 @@ class GestaccountAgentApiTest(unittest.TestCase):
         agent=api.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         self.assertTrue(api.suspend_agent(aid=agent['aid']))
         data=api.get_agent_config(aid=agent['aid'])
-        self.assertEqual(data['state'],states.SUSPENDED)
+        self.assertEqual(data['state'], AgentStates.SUSPENDED)
         self.assertTrue(api.activate_agent(aid=agent['aid']))
         data=api.get_agent_config(aid=agent['aid'])
-        self.assertEqual(data['state'],states.ACTIVE)
+        self.assertEqual(data['state'], AgentStates.ACTIVE)
 
     def test_suspend_agent_non_existent_agent(self):
         ''' suspend_agent should fail if agent is not found in system '''
@@ -84,10 +86,10 @@ class GestaccountAgentApiTest(unittest.TestCase):
         version='Test Version'
         agent=api.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         data=api.get_agent_config(aid=agent['aid'])
-        self.assertEqual(data['state'],states.ACTIVE)
+        self.assertEqual(data['state'], AgentStates.ACTIVE)
         self.assertTrue(api.suspend_agent(aid=agent['aid']))
         data=api.get_agent_config(aid=agent['aid'])
-        self.assertEqual(data['state'],states.SUSPENDED)
+        self.assertEqual(data['state'], AgentStates.SUSPENDED)
 
     def test_get_agent_config_non_existent_agent(self):
         ''' get_agent_config should fail if agent is not found in system '''
@@ -104,7 +106,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         self.assertIsInstance(data,dict) 
         self.assertEqual(data['aid'],agent['aid']) 
         self.assertEqual(data['agentname'],agentname) 
-        self.assertEqual(data['state'],states.ACTIVE) 
+        self.assertEqual(data['state'], AgentStates.ACTIVE) 
         self.assertEqual(data['version'],version) 
 
     def test_get_agents_config_non_existent_user(self):
@@ -142,7 +144,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
 
     def test_generate_auth_challenge_failure_invalid_username(self):
         ''' generate_auth_challenge should fail if username is invalid '''
-        usernames=[None, 3423423243, 2.2, {'a':'dict'},['a','list'],uuid.uuid4(),('a','tuple'),{'set'},'with_ñññ']
+        usernames=[None, 3423423243, 2.2, {'a':'dict'},['a','list'],('a','tuple'),{'set'},'with_ñññ', uuid.uuid1()]
         pubkey='whatakey'
         for username in usernames:
             with self.assertRaises(exceptions.BadParametersException) as cm:
@@ -152,7 +154,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
     def test_generate_auth_challenge_failure_invalid_pubkey(self):
         ''' generate_auth_challenge should fail if pubkey is invalid '''
         pubkeys=[None, 3423423243, 2.2, {'a':'dict'},['a','list'],uuid.uuid4(),('a','tuple'),{'set'},'with_ñññ', crypto.generate_rsa_key(), crypto.serialize_private_key(crypto.generate_rsa_key()).hex(), crypto.serialize_public_key(crypto.generate_rsa_key().public_key()).decode('utf-8')]
-        username='username'
+        username='test_generate_auth_challenge_failure_invalid_pubkey'
         for pubkey in pubkeys:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.generate_auth_challenge(username=username, pubkey=pubkey)
@@ -160,7 +162,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
 
     def test_generate_auth_challenge_failure_non_existent_user(self):
         ''' generate_auth_challenge should fail if user does not exist '''
-        username='username'
+        username='test_generate_auth_challenge_failure_non_existent_user'
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         with self.assertRaises(exceptions.UserNotFoundException) as cm:
             api.generate_auth_challenge(username=username, pubkey=pubkey)
@@ -194,7 +196,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
 
     def test_validate_auth_challenge_failure_invalid_username(self):
         ''' validate_auth_challenge should fail if username is invalid '''
-        usernames=[None, 3423423243, 2.2, {'a':'dict'},['a','list'],uuid.uuid4(),('a','tuple'),{'set'},'with_ñññ']
+        usernames=[None, 3423423243, 2.2, {'a':'dict'},['a','list'],('a','tuple'),{'set'},'with_ñññ', uuid.uuid1()]
         pubkey='whatakey'
         challenge_hash='adsfasdf'
         signature='asdfasdfasdf'
@@ -205,7 +207,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
 
     def test_validate_auth_challenge_failure_invalid_pubkey(self):
         ''' validate_auth_challenge should fail if pubkey is invalid '''
-        username='username'
+        username='test_validate_auth_challenge_failure_invalid_pubkey'
         pubkeys=[None, 3423423243, 2.2, {'a':'dict'},['a','list'],uuid.uuid4(),('a','tuple'),{'set'},'with_ñññ', crypto.generate_rsa_key(), crypto.serialize_private_key(crypto.generate_rsa_key()), crypto.generate_rsa_key().public_key()]
         challenge_hash='adsfasdf'
         signature='asdfasdfasdf'
@@ -216,7 +218,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
 
     def test_validate_auth_challenge_failure_invalid_challenge_hash(self):
         ''' validate_auth_challenge should fail if challenge_hash is invalid '''
-        username='username'
+        username='test_validate_auth_challenge_failure_invalid_challenge_hash'
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         challenges=[None, 3423423243, 2.2, 'string',{'a':'dict'},['a','list'],uuid.uuid4(),('a','tuple'),{'set'}, crypto.generate_rsa_key(), crypto.serialize_private_key(crypto.generate_rsa_key()).hex(), crypto.generate_rsa_key().public_key()]
         signature=b'asdfasdfasdf'
@@ -227,7 +229,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
 
     def test_validate_auth_challenge_failure_invalid_signature(self):
         ''' validate_auth_challenge should fail if signature is invalid '''
-        username='username'
+        username='test_validate_auth_challenge_failure_invalid_signature'
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         signatures=[None, 3423423243, 2.2, 'string', {'a':'dict'},['a','list'],uuid.uuid4(),('a','tuple'),{'set'}, crypto.generate_rsa_key(), crypto.serialize_private_key(crypto.generate_rsa_key()).hex(), crypto.generate_rsa_key().public_key()]
         ch=b'asdfasdfasdf'
@@ -238,7 +240,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
 
     def test_validate_auth_challenge_failure_non_existent_user(self):
         ''' validate_auth_challenge should fail if user does not exist '''
-        username='username'
+        username='test_validate_auth_challenge_failure_non_existent_user'
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         challenge_hash=b'adsfasdf'
         signature=b'asdfasdfasdf'

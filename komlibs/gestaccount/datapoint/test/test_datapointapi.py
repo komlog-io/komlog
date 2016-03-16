@@ -22,9 +22,12 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         password='password'
         email='test_gestaccount.datapoint.api_user@komlog.org'
         try:
-            self.user=userapi.get_user_config(username=username)
+            uid=userapi.get_uid(username=username)
         except Exception:
-            self.user=userapi.create_user(username=username, password=password, email=email)
+            user=userapi.create_user(username=username, password=password, email=email)
+            uid=user['uid']
+        finally:
+            self.user=userapi.get_user_config(uid=uid)
         agentname='test_gestaccount.datapoint.api_agent'
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'

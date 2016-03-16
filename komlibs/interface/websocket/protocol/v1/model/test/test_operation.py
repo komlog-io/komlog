@@ -4,7 +4,8 @@ import uuid
 import json
 from komfig import logger
 from komlibs.interface.websocket.protocol.v1 import errors, exceptions
-from komlibs.interface.websocket.protocol.v1.model import operation, types
+from komlibs.interface.websocket.protocol.v1.model import operation
+from komlibs.interface.websocket.protocol.v1.model.types import Operation
 
 
 class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
@@ -23,7 +24,7 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         did=uuid.uuid4()
         op=operation.NewDatasourceOperation(uid, aid=aid, did=did)
         self.assertTrue(isinstance(op, operation.NewDatasourceOperation))
-        self.assertEqual(op.oid, types.OPERATION_NEW_DATASOURCE)
+        self.assertEqual(op.oid, Operation.NEW_DATASOURCE)
         self.assertEqual(op.uid, uid)
         self.assertEqual(op.aid, aid)
         self.assertEqual(op.did, did)
@@ -68,7 +69,7 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         did=uuid.uuid4()
         op=operation.NewDatasourceOperation(uid, aid=aid, did=did)
         self.assertTrue(isinstance(op, operation.NewDatasourceOperation))
-        self.assertEqual(op.oid, types.OPERATION_NEW_DATASOURCE)
+        self.assertEqual(op.oid, Operation.NEW_DATASOURCE)
         self.assertEqual(op.uid, uid)
         self.assertEqual(op.aid, aid)
         self.assertEqual(op.did, did)
@@ -84,7 +85,7 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         did=uuid.uuid4()
         op=operation.NewDatasourceOperation(uid, aid=aid, did=did)
         self.assertTrue(isinstance(op, operation.NewDatasourceOperation))
-        self.assertEqual(op.oid, types.OPERATION_NEW_DATASOURCE)
+        self.assertEqual(op.oid, Operation.NEW_DATASOURCE)
         self.assertEqual(op.uid, uid)
         self.assertEqual(op.aid, aid)
         self.assertEqual(op.did, did)

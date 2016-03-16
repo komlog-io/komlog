@@ -324,7 +324,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, did=did, datasource_config=datasource_config, datapoints_config=datapoints_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids)
-        self.assertTrue(authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did, ii=interval_init, ie=interval_end))
+        self.assertIsNone(authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did, ii=interval_init, ie=interval_end))
 
     def test_authorize_get_datapoint_data_failure_invalid_uid(self):
         ''' authorize_get_datapoint_data should fail if uid is invalid '''
@@ -620,7 +620,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids)
-        self.assertTrue(authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid, ii=interval_init, ie=interval_end))
+        self.assertIsNone(authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid, ii=interval_init, ie=interval_end))
 
     def test_authorize_get_snapshot_config_failure_invalid_uid(self):
         ''' authorize_get_snapshot_config should fail if uid is invalid '''
@@ -796,5 +796,5 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid1, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widgetname, creation_date=creation_date, pid=pid, datapoint_config=datapoint_config)
         self.assertTrue(snapshotapi.new_snapshot(snapshot=snapshot))
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids)
-        self.assertTrue(authorization.authorize_get_snapshot_config(uid=uid2, tid=tid['tid'], nid=nid))
+        self.assertIsNone(authorization.authorize_get_snapshot_config(uid=uid2, tid=tid['tid'], nid=nid))
 

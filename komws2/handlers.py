@@ -32,13 +32,13 @@ class AgentsHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=agent.new_agent_request(username=self.user, agentname=agentname, pubkey=pubkey, version=version)
+            response=agent.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
     @auth.authenticated
     def get(self):
-        response=agent.get_agents_config_request(username=self.user)
+        response=agent.get_agents_config_request(passport=self.passport)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -46,7 +46,7 @@ class AgentConfigHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self,aid):
-        response=agent.get_agent_config_request(username=self.user, aid=aid)
+        response=agent.get_agent_config_request(passport=self.passport, aid=aid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -58,13 +58,13 @@ class AgentConfigHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=agent.update_agent_config_request(username=self.user, aid=aid, data=data)
+            response=agent.update_agent_config_request(passport=self.passport, aid=aid, data=data)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, aid):
-        response=agent.delete_agent_request(username=self.user, aid=aid)
+        response=agent.delete_agent_request(passport=self.passport, aid=aid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -79,7 +79,7 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=datasource.get_datasource_data_request(username=self.user, did=did, seq=seq, tid=tid)
+            response=datasource.get_datasource_data_request(passport=self.passport, did=did, seq=seq, tid=tid)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -95,7 +95,7 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             if ctype.find('application/json')>=0:
-                response=datasource.upload_datasource_data_request(username=self.user, aid=aid, did=did, content=content, destination=dest_dir)
+                response=datasource.upload_datasource_data_request(passport=self.passport, aid=aid, did=did, content=content, destination=dest_dir)
                 self.set_status(response.status)
                 self.write(json.dumps(response.data))
             else:
@@ -106,7 +106,7 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self,did):
-        response=datasource.get_datasource_config_request(username=self.user, did=did)
+        response=datasource.get_datasource_config_request(passport=self.passport, did=did)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -118,34 +118,21 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=datasource.update_datasource_config_request(username=self.user, did=did, content=content)
+            response=datasource.update_datasource_config_request(passport=self.passport, did=did, content=content)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, did):
-        response=datasource.delete_datasource_request(username=self.user, did=did)
+        response=datasource.delete_datasource_request(passport=self.passport, did=did)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
 class DatasourcesHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
-    def post(self):
-        try:
-            data=json_decode(self.request.body)
-            datasourcename=data['datasourcename']
-        except Exception:
-            self.set_status(400)
-            self.write(json.dumps({'message':'Bad parameters'}))
-        else:
-            response=datasource.new_datasource_request(username=self.user, aid=self.agent, datasourcename=datasourcename)
-            self.set_status(response.status)
-            self.write(json.dumps(response.data))
-
-    @auth.authenticated
     def get(self):
-        response=datasource.get_datasources_config_request(username=self.user)
+        response=datasource.get_datasources_config_request(passport=self.passport)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -153,7 +140,7 @@ class UsersHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self):
-        response=user.get_user_config_request(username=self.user)
+        response=user.get_user_config_request(passport=self.passport)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -184,7 +171,7 @@ class DatapointDataHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=datapoint.get_datapoint_data_request(username=self.user, pid=pid, start_date=start_date, end_date=end_date,tid=tid)
+            response=datapoint.get_datapoint_data_request(passport=self.passport, pid=pid, start_date=start_date, end_date=end_date,tid=tid)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -192,7 +179,7 @@ class DatapointConfigHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self,pid):
-        response=datapoint.get_datapoint_config_request(username=self.user, pid=pid)
+        response=datapoint.get_datapoint_config_request(passport=self.passport, pid=pid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -204,13 +191,13 @@ class DatapointConfigHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad Parameters'}))
         else:
-            response=datapoint.update_datapoint_config_request(username=self.user, pid=pid, data=data)
+            response=datapoint.update_datapoint_config_request(passport=self.passport, pid=pid, data=data)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, pid):
-        response=datapoint.delete_datapoint_request(username=self.user, pid=pid)
+        response=datapoint.delete_datapoint_request(passport=self.passport, pid=pid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -229,7 +216,7 @@ class DatapointsHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=datapoint.new_datapoint_request(username=self.user, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+            response=datapoint.new_datapoint_request(passport=self.passport, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -246,7 +233,7 @@ class DatapointPositivesHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=datapoint.mark_positive_variable_request(username=self.user, pid=pid, sequence=sequence, position=position, length=length)
+            response=datapoint.mark_positive_variable_request(passport=self.passport, pid=pid, sequence=sequence, position=position, length=length)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -263,7 +250,7 @@ class DatapointNegativesHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=datapoint.mark_negative_variable_request(username=self.user, pid=pid, sequence=sequence, position=position, length=length)
+            response=datapoint.mark_negative_variable_request(passport=self.passport, pid=pid, sequence=sequence, position=position, length=length)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -271,7 +258,7 @@ class UserConfigHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self):
-        response=user.get_user_config_request(username=self.user)
+        response=user.get_user_config_request(passport=self.passport)
         self.render('config.html',userdata=response.data,page_title='Komlog')
 
     @auth.authenticated
@@ -282,13 +269,13 @@ class UserConfigHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=user.update_user_config_request(username=self.user, data=data)
+            response=user.update_user_config_request(passport=self.passport, data=data)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self):
-        response=user.delete_user_request(username=self.user)
+        response=user.delete_user_request(passport=self.passport)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -337,7 +324,7 @@ class WidgetsHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self):
-        response=widget.get_widgets_config_request(username=self.user)
+        response=widget.get_widgets_config_request(passport=self.passport)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -349,7 +336,7 @@ class WidgetsHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=widget.new_widget_request(username=self.user, data=data)
+            response=widget.new_widget_request(passport=self.passport, data=data)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -357,7 +344,7 @@ class WidgetConfigHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self,wid):
-        response=widget.get_widget_config_request(username=self.user, wid=wid)
+        response=widget.get_widget_config_request(passport=self.passport, wid=wid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -369,13 +356,13 @@ class WidgetConfigHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad Parameters'}))
         else:
-            response=widget.update_widget_config_request(username=self.user, wid=wid, data=data)
+            response=widget.update_widget_config_request(passport=self.passport, wid=wid, data=data)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, wid):
-        response=widget.delete_widget_request(username=self.user, wid=wid)
+        response=widget.delete_widget_request(passport=self.passport, wid=wid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -383,13 +370,13 @@ class WidgetDatapointsHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def post(self, wid, pid):
-        response=widget.add_datapoint_request(username=self.user, wid=wid, pid=pid)
+        response=widget.add_datapoint_request(passport=self.passport, wid=wid, pid=pid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, wid, pid):
-        response=widget.delete_datapoint_request(username=self.user, wid=wid, pid=pid)
+        response=widget.delete_datapoint_request(passport=self.passport, wid=wid, pid=pid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -397,12 +384,12 @@ class WidgetRelatedHandler(tornado.web.RequestHandler):
     
     @auth.authenticated
     def get(self, wid):
-        response=widget.get_related_widgets_request(username=self.user, wid=wid)
+        response=widget.get_related_widgets_request(passport=self.passport, wid=wid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
 class WidgetSnapshotsHandler(tornado.web.RequestHandler):
-    
+
     @auth.authenticated
     def post(self, wid):
         try:
@@ -416,7 +403,7 @@ class WidgetSnapshotsHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=snapshot.new_snapshot_request(username=self.user, wid=wid, user_list=user_list, cid_list=cid_list, its=its, ets=ets, seq=seq)
+            response=snapshot.new_snapshot_request(passport=self.passport, wid=wid, user_list=user_list, cid_list=cid_list, its=its, ets=ets, seq=seq)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -424,7 +411,7 @@ class DashboardsHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self):
-        response=dashboard.get_dashboards_config_request(username=self.user)
+        response=dashboard.get_dashboards_config_request(passport=self.passport)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -436,7 +423,7 @@ class DashboardsHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=dashboard.new_dashboard_request(username=self.user, data=data)
+            response=dashboard.new_dashboard_request(passport=self.passport, data=data)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -444,7 +431,7 @@ class DashboardConfigHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self,bid):
-        response=dashboard.get_dashboard_config_request(username=self.user, bid=bid)
+        response=dashboard.get_dashboard_config_request(passport=self.passport, bid=bid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -456,13 +443,13 @@ class DashboardConfigHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad Parameters'}))
         else:
-            response=dashboard.update_dashboard_config_request(username=self.user, bid=bid, data=data)
+            response=dashboard.update_dashboard_config_request(passport=self.passport, bid=bid, data=data)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, bid):
-        response=dashboard.delete_dashboard_request(username=self.user, bid=bid)
+        response=dashboard.delete_dashboard_request(passport=self.passport, bid=bid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -470,13 +457,13 @@ class DashboardWidgetsHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def post(self, bid, wid):
-        response=dashboard.add_widget_request(username=self.user, bid=bid, wid=wid)
+        response=dashboard.add_widget_request(passport=self.passport, bid=bid, wid=wid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, bid, wid):
-        response=dashboard.delete_widget_request(username=self.user, bid=bid, wid=wid)
+        response=dashboard.delete_widget_request(passport=self.passport, bid=bid, wid=wid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -490,13 +477,13 @@ class SnapshotConfigHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=snapshot.get_snapshot_config_request(username=self.user, nid=nid, tid=tid)
+            response=snapshot.get_snapshot_config_request(passport=self.passport, nid=nid, tid=tid)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, nid):
-        response=snapshot.delete_snapshot_request(username=self.user, nid=nid)
+        response=snapshot.delete_snapshot_request(passport=self.passport, nid=nid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -512,13 +499,13 @@ class CirclesHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=circle.new_circle_request(username=self.user, circlename=circlename, members_list=members)
+            response=circle.new_circle_request(passport=self.passport, circlename=circlename, members_list=members)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
     @auth.authenticated
     def get(self):
-        response=circle.get_users_circles_config_request(username=self.user)
+        response=circle.get_users_circles_config_request(passport=self.passport)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -526,7 +513,7 @@ class CircleConfigHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self, cid):
-        response=circle.get_users_circle_config_request(username=self.user, cid=cid)
+        response=circle.get_users_circle_config_request(passport=self.passport, cid=cid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -538,13 +525,13 @@ class CircleConfigHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=circle.update_circle_request(username=self.user, cid=cid, data=data)
+            response=circle.update_circle_request(passport=self.passport, cid=cid, data=data)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, cid):
-        response=circle.delete_circle_request(username=self.user, cid=cid)
+        response=circle.delete_circle_request(passport=self.passport, cid=cid)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -552,13 +539,13 @@ class CircleMembersHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def post(self, cid, member):
-        response=circle.add_user_to_circle_request(username=self.user, cid=cid, member=member)
+        response=circle.add_user_to_circle_request(passport=self.passport, cid=cid, member=member)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, cid, member):
-        response=circle.delete_user_from_circle_request(username=self.user, cid=cid, member=member)
+        response=circle.delete_user_from_circle_request(passport=self.passport, cid=cid, member=member)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -572,7 +559,7 @@ class UriHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=uri.get_uri_request(username=self.user, uri=req_uri)
+            response=uri.get_uri_request(passport=self.passport, uri=req_uri)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -587,7 +574,7 @@ class UserEventsHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=events.get_user_events_request(username=self.user, ets=ets, its=its)
+            response=events.get_user_events_request(passport=self.passport, ets=ets, its=its)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -601,13 +588,13 @@ class UserEventsResponsesHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=events.event_response_request(username=self.user, seq=seq, data=req_data)
+            response=events.event_response_request(passport=self.passport, seq=seq, data=req_data)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, seq):
-        response=events.disable_event_request(username=self.user, seq=seq)
+        response=events.disable_event_request(passport=self.passport, seq=seq)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 

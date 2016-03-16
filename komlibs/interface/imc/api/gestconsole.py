@@ -209,11 +209,11 @@ def process_message_NEWDPW(message):
 def process_message_DELUSER(message):
     ''' this message deletes a user from the system '''
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
-    username=message.username
-    if args.is_valid_username(username):
-        user=userapi.get_user_config(username=username)
-        agents=agentapi.get_agents_config(username=username)
-        deleteapi.delete_user(username=username)
+    uid=message.uid
+    if args.is_valid_uuid(uid):
+        user=userapi.get_user_config(uid=uid)
+        agents=agentapi.get_agents_config(uid=uid)
+        deleteapi.delete_user(uid=uid)
         #operation=weboperations.DeleteUserOperation(uid=user['uid'],aids=[agent['aid'] for agent in agents])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()

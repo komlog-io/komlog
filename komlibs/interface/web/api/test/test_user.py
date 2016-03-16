@@ -1,14 +1,18 @@
 import unittest
 import uuid
 import json
+from komlibs.auth import errors as autherrors
+from komlibs.auth import passport
+from komlibs.gestaccount import errors as gesterrors
 from komlibs.gestaccount.user import api as gestuserapi
-from komlibs.gestaccount.user import states as userstates
+from komlibs.gestaccount.user.states import *
 from komlibs.interface.web.api import user as userapi 
 from komlibs.interface.web.model import webmodel
 from komlibs.interface.web import status, errors
 from komlibs.interface.web import exceptions
 from komlibs.interface.imc.model import messages
 from komlibs.general.validation import arguments as args
+from komlibs.general.time import timeuuid
 from komimc import bus, routing
 from komimc import api as msgapi
 
@@ -25,12 +29,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        response2 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
-        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -55,12 +61,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        response2 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
-        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -136,12 +144,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        response2 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
-        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -167,12 +177,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        response2 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
-        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -220,12 +232,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response2=userapi.confirm_user_request(email=msg.email, code=msg.code)
         self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
-        response3 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response3 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response3.data['uid'])
         self.assertEqual(username,response3.data['username'])
         self.assertEqual(email,response3.data['email'])
-        self.assertEqual(userstates.ACTIVE,response3.data['state'])
+        self.assertEqual(UserStates.ACTIVE,response3.data['state'])
 
     def test_confirm_user_request_failure_invalid_email(self):
         ''' new_user_request should fail if email is invalid/malformed'''
@@ -326,12 +340,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response2=userapi.confirm_user_request(email=msg.email, code=msg.code)
         self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
-        response3 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response3 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response3.data['uid'])
         self.assertEqual(username,response3.data['username'])
         self.assertEqual(email,response3.data['email'])
-        self.assertEqual(userstates.ACTIVE,response3.data['state'])
+        self.assertEqual(UserStates.ACTIVE,response3.data['state'])
         response4=userapi.confirm_user_request(email=email, code=msg.code)
         self.assertTrue(isinstance(response4, webmodel.WebInterfaceResponse))
         self.assertEqual(response4.status, status.WEB_STATUS_INTERNAL_ERROR)
@@ -344,24 +360,27 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        response2 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
 
-    def test_get_user_config_request_failure_invalid_username(self):
-        ''' get_user_config_request should fail if username is invalid'''
-        usernames = [None, 23423424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','/asdfa','my user']
-        for username in usernames:
-            response=userapi.get_user_config_request(username=username)
+    def test_get_user_config_request_failure_invalid_passport(self):
+        ''' get_user_config_request should fail if passport is invalid'''
+        passports = [None, 23423424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','/asdfa','my user']
+        for psp in passports:
+            response=userapi.get_user_config_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_user_config_request_failure_non_existent_user(self):
         ''' get_user_config_request should return an error if user does not exists '''
-        username = 'test_get_user_config_request_failure_non_existent_user'
-        response = userapi.get_user_config_request(username=username)
+        psp = passport.Passport(uid=uuid.uuid4())
+        response = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GUA_GUC_UNF)
 
     def test_update_user_config_request_success(self):
         ''' update_user_config_request should succeed if user exists, parameters are allowed and authorization succeeds '''
@@ -370,64 +389,66 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
         new_email=username+'2@komlog.org'
         old_password=password
         new_password='password2'
         data={'email':new_email, 'old_password':old_password, 'new_password':new_password}
-        response2 = userapi.update_user_config_request(username=username, data=data)
+        response2 = userapi.update_user_config_request(passport=psp, data=data)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
-        response3 = userapi.get_user_config_request(username=username)
+        response3 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response3.data['uid'])
         self.assertEqual(username,response3.data['username'])
         self.assertEqual(new_email,response3.data['email'])
 
-    def test_update_user_config_request_failure_invalid_username(self):
+    def test_update_user_config_request_failure_invalid_passport(self):
         ''' update_user_config_request should fail if username is invalid '''
-        users=['Invalid User','invalidUser',None, 23423423, 'user@user',{'a':'dict'},['a','list'],json.dumps('username')]
+        passports=['Invalid User','invalidUser',None, 23423423, 'user@user',{'a':'dict'},['a','list'],json.dumps('username')]
         data={}
-        for username in users:
-            response=userapi.update_user_config_request(username=username, data=data)
+        for psp in passports:
+            response=userapi.update_user_config_request(passport=psp, data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_invalid_data(self):
         ''' update_user_config_request should fail if data is invalid '''
         datas=['Invalid User','invalidUser',None, 23423423, 'user@user','validuser',['a','list'],json.dumps('username')]
-        username='username'
+        psp = passport.Passport(uid=uuid.uuid4())
         for data in datas:
-            response=userapi.update_user_config_request(username=username, data=data)
+            response=userapi.update_user_config_request(passport=psp, data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_invalid_email(self):
         ''' update_user_config_request should fail if email is invalid '''
         data={}
-        username='username'
+        psp = passport.Passport(uid=uuid.uuid4())
         emails=['Wrong@email.com','.@mail.com','invalid@email@email.com','@|invalid.email@email.com',json.dumps('valid@email.com'),{'a':'dict'},['a','list'],None,23423423423,23423.23234]
         for email in emails:
             data['email']=email
-            response=userapi.update_user_config_request(username=username, data=data)
+            response=userapi.update_user_config_request(passport=psp, data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_invalid_new_password(self):
         ''' update_user_config_request should fail if new_password is invalid '''
         data={}
-        username='username'
+        psp = passport.Passport(uid=uuid.uuid4())
         passwords=[{'a':'dict'},['a','list'],None,23423423423,23423.23234,'short']
         data['old_password']='validpassword'
         for password in passwords:
             data['new_password']=password
-            response=userapi.update_user_config_request(username=username, data=data)
+            response=userapi.update_user_config_request(passport=psp, data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_invalid_old_password(self):
         ''' update_user_config_request should fail if old_password is invalid '''
         data={}
-        username='username'
+        psp = passport.Passport(uid=uuid.uuid4())
         passwords=[{'a':'dict'},['a','list'],None,23423423423,23423.23234,'short']
         data['new_password']='validpassword'
         for password in passwords:
             data['old_password']=password
-            response=userapi.update_user_config_request(username=username, data=data)
+            response=userapi.update_user_config_request(passport=psp, data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_old_password_authorization_error(self):
@@ -437,10 +458,12 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
         data={}
         data['old_password']='validpassword'
         data['new_password']=password
-        response2 = userapi.update_user_config_request(username=username, data=data)
+        response2 = userapi.update_user_config_request(passport=psp, data=data)
         self.assertEqual(response2.status, status.WEB_STATUS_ACCESS_DENIED)
 
     def test_update_user_config_request_failure_only_old_password(self):
@@ -450,9 +473,11 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
         data={}
         data['old_password']=password
-        response2 = userapi.update_user_config_request(username=username, data=data)
+        response2 = userapi.update_user_config_request(passport=psp, data=data)
         self.assertEqual(response2.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_only_new_password(self):
@@ -462,9 +487,11 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
         data={}
         data['new_password']=password
-        response2 = userapi.update_user_config_request(username=username, data=data)
+        response2 = userapi.update_user_config_request(passport=psp, data=data)
         self.assertEqual(response2.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_update_user_config_request_failure_new_password_same_as_old_password(self):
@@ -474,16 +501,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
         data={}
         data['new_password']=password
-        response2 = userapi.update_user_config_request(username=username, data=data)
+        response2 = userapi.update_user_config_request(passport=psp, data=data)
         self.assertEqual(response2.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_delete_user_request_failure_invalid_username(self):
-        ''' delete_user_request should fail if username is invalid '''
-        usernames=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
-        for username in usernames:
-            response=userapi.delete_user_request(username=username)
+    def test_delete_user_request_failure_invalid_passport(self):
+        ''' delete_user_request should fail if passport is invalid '''
+        passports=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        for psp in passports:
+            response=userapi.delete_user_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_register_invitation_request_failure_invalid_email(self):
@@ -536,12 +565,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        response2 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
-        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -646,12 +677,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        response2 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
-        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -692,12 +725,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        response2 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
-        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -753,12 +788,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        response2 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
-        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -806,12 +843,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        response2 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
-        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -882,12 +921,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        response2 = userapi.get_user_config_request(username=username)
+        cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['uid'],response2.data['uid'])
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
-        self.assertEqual(userstates.PREACTIVE,response2.data['state'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:

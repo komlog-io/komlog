@@ -32,26 +32,26 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         password = 'test_password'
         email = username+'@komlog.org'
         try:
-            self.user=userapi.get_user_config(username=username)
+            uid=userapi.get_uid(username=username)
         except Exception:
             user=userapi.create_user(username=username, password=password, email=email)
-            self.assertTrue(userapi.confirm_user(email=email, code=user['code']))
-            self.user=userapi.get_user_config(username=username)
-            self.assertIsNotNone(self.user)
+            uid=user['uid']
+        finally:
+            self.user=userapi.get_user_config(uid=uid)
 
-    def test_delete_user_failure_invalid_username(self):
+    def test_delete_user_failure_invalid_uid(self):
         ''' delete_user should fail if username is invalid '''
-        usernames=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4(), uuid.uuid1()]
-        for username in usernames:
+        uids=[None, '123123',234234,2342.2342,{'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid1(),timeuuid.uuid1(), uuid.uuid4().hex]
+        for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                deleteapi.delete_user(username=username)
+                deleteapi.delete_user(uid=uid)
             self.assertEqual(cm.exception.error, errors.E_GCD_DU_IU)
 
     def test_delete_user_failure_non_existent_username(self):
         ''' delete_user should fail if username does not exist '''
-        username='test_delete_user_failure_non_existent_username'
+        uid=uuid.uuid4()
         with self.assertRaises(exceptions.UserNotFoundException) as cm:
-            deleteapi.delete_user(username=username)
+            deleteapi.delete_user(uid=uid)
         self.assertEqual(cm.exception.error, errors.E_GCD_DU_UNF)
 
     def test_delete_user_success(self):
@@ -64,7 +64,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertTrue(userapi.confirm_user(email=email, code=user['code']))
         self.assertIsNotNone(cassapiuser.get_user(username=username))
         self.assertIsNotNone(cassapiuser.get_signup_info(username=username))
-        self.assertTrue(deleteapi.delete_user(username=username))
+        self.assertTrue(deleteapi.delete_user(uid=user['uid']))
         self.assertIsNone(cassapiuser.get_user(username=username))
         self.assertIsNone(cassapiuser.get_signup_info(username=username))
 

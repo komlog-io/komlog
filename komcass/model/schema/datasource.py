@@ -20,7 +20,6 @@ MST_DATASOURCE='''
             aid uuid,
             uid uuid,
             datasourcename text,
-            state int,
             creation_date timeuuid,
             PRIMARY KEY (did)
         );

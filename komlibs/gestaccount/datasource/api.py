@@ -23,7 +23,6 @@ from komcass.model.orm import datasource as ormdatasource
 from komfs import api as fsapi
 from komlibs.ai.decisiontree import api as dtreeapi
 from komlibs.ai.svm import api as svmapi
-from komlibs.gestaccount.datasource import states
 from komlibs.gestaccount import exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
@@ -48,9 +47,9 @@ def create_datasource(uid,aid,datasourcename):
         raise exceptions.AgentNotFoundException(error=errors.E_GDA_CRD_ANF)
     if not graphuri.new_datasource_uri(uid=uid, uri=datasourcename, did=did):
         raise exceptions.DatasourceCreationException(error=errors.E_GDA_CRD_ADU)
-    datasource=ormdatasource.Datasource(did=did,aid=aid,uid=uid,datasourcename=datasourcename,state=states.ACTIVE,creation_date=now)
+    datasource=ormdatasource.Datasource(did=did,aid=aid,uid=uid,datasourcename=datasourcename,creation_date=now)
     if cassapidatasource.new_datasource(datasource=datasource):
-        return {'did':datasource.did, 'datasourcename':datasource.datasourcename, 'uid': datasource.uid, 'aid':datasource.aid, 'state':datasource.state}
+        return {'did':datasource.did, 'datasourcename':datasource.datasourcename, 'uid': datasource.uid, 'aid':datasource.aid}
     else:
         graphuri.dissociate_vertex(ido=did)
         raise exceptions.DatasourceCreationException(error=errors.E_GDA_CRD_IDE)

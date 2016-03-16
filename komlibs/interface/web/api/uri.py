@@ -6,6 +6,8 @@ This file defines the logic associated with uri web interface operations
 
 import uuid
 from komlibs.auth import authorization
+from komlibs.auth.requests import Requests
+from komlibs.auth.passport import Passport
 from komlibs.gestaccount.user import api as userapi
 from komlibs.general.validation import arguments as args
 from komlibs.graph.api import uri as graphuri
@@ -27,15 +29,15 @@ def get_node_info(ido,uri,counter):
         return {'id':ido.hex,'name':uri,'type':id_info['type'],'children':children_info}
 
 @exceptions.ExceptionHandler
-def get_uri_request(username, uri=None):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWAUR_GUR_IU)
+def get_uri_request(passport, uri=None):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWAUR_GUR_IPSP)
     if uri is not None:
         if uri=='':
             uri=None
         elif not args.is_valid_relative_uri(uri):
             raise exceptions.BadParametersException(error=errors.E_IWAUR_GUR_IUR)
-    uid=userapi.get_uid(username=username)
+    authorization.authorize_request(request=Requests.GET_URI,passport=passport)
     response_data={'v':[],'e':[]}
     adjacents_pending=set()
     ids_retrieved=set()
@@ -45,13 +47,13 @@ def get_uri_request(username, uri=None):
     max_ids_to_retrieve=10
     if uri is not None:
         base_uri=graphuri.get_joined_uri(base=uri)
-        uri_id=graphuri.get_id(ido=uid, uri=base_uri)
+        uri_id=graphuri.get_id(ido=passport.uid, uri=base_uri)
         if not uri_id:
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND)
         else:
             root_id=uri_id['id']
     else:
-        root_id=uid
+        root_id=passport.uid
         base_uri=''
     node_info=get_node_info(ido=root_id,uri=base_uri,counter=5)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=node_info)

@@ -1,8 +1,8 @@
 from komlibs.general.validation import arguments as args
 from komlibs.interface.websocket.protocol.v1 import errors, exceptions
-from komlibs.interface.websocket.protocol.v1.model import types
+from komlibs.interface.websocket.protocol.v1.model.types import Message
 
-class PostDatasourceDataMessage:
+class SendDsDataMessage:
     def __init__(self, message):
         self._action=None
         self._v=None
@@ -15,7 +15,7 @@ class PostDatasourceDataMessage:
             self.action=message['action']
             self.payload=message['payload']
         else:
-            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_PDDM_IMT)
+            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_SDDM_IMT)
 
     @property
     def action(self):
@@ -23,11 +23,10 @@ class PostDatasourceDataMessage:
 
     @action.setter
     def action(self, value):
-        if args.is_valid_int(value)\
-            and value==types.MESSAGE_POST_DATASOURCE_DATA:
+        if args.is_valid_string(value) and value==Message.SEND_DS_DATA:
             self._action=value
         else:
-            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_PDDM_IA)
+            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_SDDM_IA)
 
     @property
     def v(self):
@@ -35,11 +34,10 @@ class PostDatasourceDataMessage:
 
     @v.setter
     def v(self, value):
-        if args.is_valid_int(value)\
-            and value==1:
+        if args.is_valid_int(value) and value==1:
             self._v=value
         else:
-            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_PDDM_IV)
+            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_SDDM_IV)
 
     @property
     def payload(self):
@@ -60,5 +58,5 @@ class PostDatasourceDataMessage:
                 'content':value['content']
             }
         else:
-            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_PDDM_IPL)
+            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_SDDM_IPL)
 

@@ -7,8 +7,10 @@ This file defines the logic associated with web interface operations
 import uuid
 from komfig import logger
 from komimc import api as msgapi
-from komlibs.auth import authorization, requests
+from komlibs.auth import authorization
 from komlibs.auth import update as authupdate
+from komlibs.auth.requests import Requests
+from komlibs.auth.passport import Passport
 from komlibs.auth.tickets import provision as ticketprov
 from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount.user import api as userapi
@@ -24,11 +26,11 @@ from komlibs.general.time import timeuuid
 
 
 @exceptions.ExceptionHandler
-def get_snapshots_config_request(username):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_GSNSCR_IU)
-    uid=userapi.get_uid(username=username)
-    data=snapshotapi.get_snapshots_config(uid=uid)
+def get_snapshots_config_request(passport):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWASN_GSNSCR_IPSP)
+    authorization.authorize_request(request=Requests.GET_SNAPSHOTS_CONFIG,passport=passport)
+    data=snapshotapi.get_snapshots_config(uid=passport.uid)
     response_data=[]
     for snapshot in data:
         reg={}
@@ -75,17 +77,16 @@ def get_snapshots_config_request(username):
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
-def get_snapshot_config_request(username, nid, tid=None):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_GSNCR_IU)
+def get_snapshot_config_request(passport, nid, tid=None):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWASN_GSNCR_IPSP)
     if not args.is_valid_hex_uuid(nid):
         raise exceptions.BadParametersException(error=errors.E_IWASN_GSNCR_IN)
     if tid and not args.is_valid_hex_uuid(tid):
         raise exceptions.BadParametersException(error=errors.E_IWASN_GSNCR_IT)
     nid=uuid.UUID(nid)
-    uid=userapi.get_uid(username=username)
     tid=uuid.UUID(tid) if tid else None
-    authorization.authorize_request(request=requests.GET_SNAPSHOT_CONFIG,uid=uid,nid=nid, tid=tid)
+    authorization.authorize_request(request=Requests.GET_SNAPSHOT_CONFIG,passport=passport,nid=nid, tid=tid)
     data=snapshotapi.get_snapshot_config(nid=nid)
     snapshot={'nid':nid.hex}
     snapshot['type']=data['type']
@@ -129,21 +130,20 @@ def get_snapshot_config_request(username, nid, tid=None):
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=snapshot)
 
 @exceptions.ExceptionHandler
-def delete_snapshot_request(username, nid):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_DSNR_IU)
+def delete_snapshot_request(passport, nid):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWASN_DSNR_IPSP)
     if not args.is_valid_hex_uuid(nid):
         raise exceptions.BadParametersException(error=errors.E_IWASN_DSNR_IN)
     nid=uuid.UUID(nid)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.DELETE_SNAPSHOT,uid=uid,nid=nid)
+    authorization.authorize_request(request=Requests.DELETE_SNAPSHOT,passport=passport,nid=nid)
     deleteapi.delete_snapshot(nid=nid)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
-def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None, ets=None, seq=None):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_IU)
+def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None, ets=None, seq=None):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_IPSP)
     if not args.is_valid_hex_uuid(wid):
         raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_IW)
     if user_list and not args.is_valid_list(user_list):
@@ -179,19 +179,18 @@ def new_snapshot_request(username, wid, user_list=None, cid_list=None, its=None,
         interval_end=timeuuid.uuid1(seconds=ets)
     else:
         raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_NSNTS)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.NEW_SNAPSHOT, uid=uid, wid=wid)
-    snapshot=snapshotapi.new_snapshot(uid=uid,wid=wid,interval_init=interval_init,interval_end=interval_end)
+    authorization.authorize_request(request=Requests.NEW_SNAPSHOT,passport=passport, wid=wid)
+    snapshot=snapshotapi.new_snapshot(uid=passport.uid,wid=wid,interval_init=interval_init,interval_end=interval_end)
     if snapshot:
-        ticket=ticketprov.new_snapshot_ticket(uid=uid,nid=snapshot['nid'],allowed_uids=uids, allowed_cids=cids)
+        ticket=ticketprov.new_snapshot_ticket(uid=passport.uid,nid=snapshot['nid'],allowed_uids=uids, allowed_cids=cids)
         if ticket:
-            operation=weboperations.NewSnapshotOperation(uid=snapshot['uid'], nid=snapshot['nid'],wid=snapshot['wid'])
+            operation=weboperations.NewSnapshotOperation(uid=passport.uid, nid=snapshot['nid'],wid=wid)
             auth_op=operation.get_auth_operation()
             params=operation.get_params()
             if authupdate.update_resources(operation=auth_op, params=params):
                 message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
                 msgapi.send_message(message)
-                message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
+                message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
                 msgapi.send_message(message)
                 return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
             else:

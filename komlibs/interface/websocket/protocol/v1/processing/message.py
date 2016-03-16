@@ -8,7 +8,8 @@ protocol
 import uuid
 import json
 from komfig import logger, config, options
-from komlibs.auth import authorization, requests
+from komlibs.auth import authorization
+from komlibs.auth.requests import Requests
 from komlibs.gestaccount.agent import api as agentapi
 from komlibs.gestaccount.common import delete as deleteapi
 from komlibs.gestaccount.datasource import api as datasourceapi
@@ -19,53 +20,47 @@ from komlibs.graph.relations import vertex
 from komlibs.interface.websocket.protocol.v1 import status, errors, exceptions
 from komlibs.interface.websocket.protocol.v1.processing import operation
 from komlibs.interface.websocket.protocol.v1.model import message as modmsg
-from komlibs.interface.websocket.protocol.v1.model import response as modresp
 from komlibs.interface.websocket.protocol.v1.model import operation as modop
+from komlibs.interface.websocket.protocol.v1.model.response import Response
 
 
-def _process_post_datasource_data(username, aid, message):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWSPV1PM_PPDD_IU)
-    if not args.is_valid_hex_uuid(aid):
-        raise exceptions.BadParametersException(error=errors.E_IWSPV1PM_PPDD_IHAID)
-    message = modmsg.PostDatasourceDataMessage(message=message)
-    uid=userapi.get_uid(username=username)
-    aid=uuid.UUID(aid)
+
+def _process_send_ds_data(passport, message):
+    message = modmsg.SendDsDataMessage(message=message)
     did=None
     new_datasource=False
-    agent=agentapi.get_agent_config(aid=aid)
-    uri_info=graphuri.get_id(ido=uid, uri=message.payload['uri'])
+    uri_info=graphuri.get_id(ido=passport.uid, uri=message.payload['uri'])
     if not uri_info or uri_info['type']==vertex.VOID:
-        authorization.authorize_request(request=requests.NEW_DATASOURCE,uid=uid,aid=aid)
-        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=message.payload['uri'])
+        authorization.authorize_request(request=Requests.NEW_DATASOURCE,passport=passport)
+        datasource=datasourceapi.create_datasource(uid=passport.uid, aid=passport.aid, datasourcename=message.payload['uri'])
         if datasource:
             new_datasource = True
             did=datasource['did']
         else:
-            return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=errors.E_IWSPV1PM_PPDD_ECDS)
+            return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=errors.E_IWSPV1PM_PSDD_ECDS)
     elif uri_info['type']==vertex.DATASOURCE:
         did=uri_info['id']
-        authorization.authorize_request(request=requests.POST_DATASOURCE_DATA,uid=uid,aid=aid,did=did)
+        authorization.authorize_request(request=Requests.POST_DATASOURCE_DATA,passport=passport,did=did)
     else:
-        return modresp.Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datasource', error=errors.E_IWSPV1PM_PPDD_IURI)
+        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datasource', error=errors.E_IWSPV1PM_PSDD_IURI)
     try:
         dest_dir=config.get(options.SAMPLES_RECEIVED_PATH)
         datasourceapi.upload_datasource_data(did=did, content=json.dumps({'content':message.payload['content'],'ts':message.payload['ts']}),dest_dir=dest_dir)
     except Exception:
         if new_datasource:
             deleteapi.delete_datasource(did=datasource['did'])
-        return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=errors.E_IWSPV1PM_PPDD_EUR)
+        return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=errors.E_IWSPV1PM_PSDD_EUR)
     else:
         if new_datasource:
             try:
-                op=modop.NewDatasourceOperation(uid=uid,aid=aid,did=datasource['did'])
+                op=modop.NewDatasourceOperation(uid=passport.uid,aid=passport.aid,did=datasource['did'])
                 op_result=operation.process_operation(op)
-            except Exception:
+            except Exception as e:
                 deleteapi.delete_datasource(did=datasource['did'])
-                return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=errors.E_IWSPV1PM_PPDD_EUR)
+                return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=errors.E_IWSPV1PM_PSDD_EUR)
             else:
                 if op_result == False:
                     deleteapi.delete_datasource(did=datasource['did'])
-                    return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=errors.E_IWSPV1PM_PPDD_FUR)
-        return modresp.Response(status=status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+                    return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=errors.E_IWSPV1PM_PSDD_FUR)
+        return Response(status=status.MESSAGE_ACCEPTED_FOR_PROCESSING)
 

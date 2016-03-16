@@ -7,7 +7,9 @@ This file defines the logic associated with web interface operations
 import uuid
 from komfig import logger
 from komimc import api as msgapi
-from komlibs.auth import authorization, requests
+from komlibs.auth import authorization
+from komlibs.auth.requests import Requests
+from komlibs.auth.passport import Passport
 from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount import exceptions as gestexcept
 from komlibs.gestaccount.user import api as userapi
@@ -22,9 +24,9 @@ from komlibs.general.time import timeuuid
 
 
 @exceptions.ExceptionHandler
-def get_datapoint_data_request(username, pid, start_date, end_date, tid=None):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADP_GDPDR_IU)
+def get_datapoint_data_request(passport, pid, start_date, end_date, tid=None):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADP_GDPDR_IPSP)
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_IWADP_GDPDR_IP)
     if start_date and not args.is_valid_string_float(start_date):
@@ -39,8 +41,7 @@ def get_datapoint_data_request(username, pid, start_date, end_date, tid=None):
     ii=timeuuid.max_uuid_from_time(timestamp=float(start_date)) if tid and start_date else None
     ie=timeuuid.min_uuid_from_time(timestamp=float(end_date)) if tid and end_date else None
     tid=uuid.UUID(tid) if tid else None
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.GET_DATAPOINT_DATA,uid=uid,pid=pid,ii=ii,ie=ie,tid=tid)
+    authorization.authorize_request(request=Requests.GET_DATAPOINT_DATA,passport=passport,pid=pid,ii=ii,ie=ie,tid=tid)
     ii=timeuuid.min_uuid_from_time(timestamp=float(start_date)) if start_date else None
     ie=timeuuid.max_uuid_from_time(timestamp=float(end_date)) if end_date else None
     data=datapointapi.get_datapoint_data(pid, fromdate=ii, todate=ie, count=300) #300 regs max
@@ -52,14 +53,13 @@ def get_datapoint_data_request(username, pid, start_date, end_date, tid=None):
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
-def get_datapoint_config_request(username, pid):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADP_GDPCR_IU)
+def get_datapoint_config_request(passport, pid):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADP_GDPCR_IPSP)
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_IWADP_GDPCR_IP)
     pid=uuid.UUID(pid)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.GET_DATAPOINT_CONFIG,uid=uid,pid=pid)
+    authorization.authorize_request(request=Requests.GET_DATAPOINT_CONFIG,passport=passport,pid=pid)
     data=datapointapi.get_datapoint_config(pid=pid)
     datapoint={}
     datapoint['did']=data['did'].hex
@@ -73,9 +73,9 @@ def get_datapoint_config_request(username, pid):
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datapoint)
 
 @exceptions.ExceptionHandler
-def update_datapoint_config_request(username, pid, data):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADP_UDPCR_IU)
+def update_datapoint_config_request(passport, pid, data):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADP_UDPCR_IPSP)
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_IWADP_UDPCR_IP)
     if not args.is_valid_dict(data):
@@ -89,15 +89,14 @@ def update_datapoint_config_request(username, pid, data):
     datapointname=data['datapointname'] if 'datapointname' in data else None
     color=data['color'] if 'color' in data else None
     pid=uuid.UUID(pid)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.UPDATE_DATAPOINT_CONFIG,uid=uid,pid=pid)
+    authorization.authorize_request(request=Requests.UPDATE_DATAPOINT_CONFIG,passport=passport,pid=pid)
     datapointapi.update_datapoint_config(pid=pid,datapointname=datapointname, color=color)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
-def new_datapoint_request(username, did, sequence, position, length, datapointname):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADP_NDPR_IU)
+def new_datapoint_request(passport, did, sequence, position, length, datapointname):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADP_NDPR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_IWADP_NDPR_ID)
     if not args.is_valid_sequence(sequence):
@@ -109,17 +108,16 @@ def new_datapoint_request(username, did, sequence, position, length, datapointna
     if not args.is_valid_datapointname(datapointname):
         raise exceptions.BadParametersException(error=errors.E_IWADP_NDPR_IDN)
     did=uuid.UUID(did)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.NEW_DATAPOINT,uid=uid,did=did)
+    authorization.authorize_request(request=Requests.NEW_DATAPOINT,passport=passport,did=did)
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
-    message=messages.MonitorVariableMessage(uid=uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
+    message=messages.MonitorVariableMessage(uid=passport.uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
     msgapi.send_message(message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 
 @exceptions.ExceptionHandler
-def mark_positive_variable_request(username, pid, sequence, position, length):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADP_MPVR_IU)
+def mark_positive_variable_request(passport, pid, sequence, position, length):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADP_MPVR_IPSP)
     if not args.is_valid_sequence(sequence):
         raise exceptions.BadParametersException(error=errors.E_IWADP_MPVR_IS)
     if not args.is_valid_int(position):
@@ -129,8 +127,7 @@ def mark_positive_variable_request(username, pid, sequence, position, length):
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_IWADP_MPVR_IP)
     pid=uuid.UUID(pid)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.MARK_POSITIVE_VARIABLE,uid=uid,pid=pid)
+    authorization.authorize_request(request=Requests.MARK_POSITIVE_VARIABLE,passport=passport,pid=pid)
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
     datapoints_to_update=datapointapi.mark_positive_variable(pid=pid, date=date, position=position, length=length)
     if datapoints_to_update!=None:
@@ -142,9 +139,9 @@ def mark_positive_variable_request(username, pid, sequence, position, length):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
 
 @exceptions.ExceptionHandler
-def mark_negative_variable_request(username, pid, sequence, position, length):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADP_MNVR_IU)
+def mark_negative_variable_request(passport, pid, sequence, position, length):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADP_MNVR_IPSP)
     if not args.is_valid_sequence(sequence):
         raise exceptions.BadParametersException(error=errors.E_IWADP_MNVR_IS)
     if not args.is_valid_int(position):
@@ -154,8 +151,7 @@ def mark_negative_variable_request(username, pid, sequence, position, length):
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_IWADP_MNVR_IP)
     pid=uuid.UUID(pid)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.MARK_NEGATIVE_VARIABLE,uid=uid,pid=pid)
+    authorization.authorize_request(request=Requests.MARK_NEGATIVE_VARIABLE,passport=passport,pid=pid)
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
     datapoints_to_update=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
     if datapoints_to_update!=None:
@@ -167,14 +163,13 @@ def mark_negative_variable_request(username, pid, sequence, position, length):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
 
 @exceptions.ExceptionHandler
-def delete_datapoint_request(username, pid):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADP_DDPR_IU)
+def delete_datapoint_request(passport, pid):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADP_DDPR_IPSP)
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=errors.E_IWADP_DDPR_IP)
     pid=uuid.UUID(pid)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.DELETE_DATAPOINT,uid=uid,pid=pid)
+    authorization.authorize_request(request=Requests.DELETE_DATAPOINT,passport=passport,pid=pid)
     message=messages.DeleteDatapointMessage(pid=pid)
     msgapi.send_message(msg=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)

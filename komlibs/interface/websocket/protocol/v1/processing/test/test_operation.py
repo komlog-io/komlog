@@ -7,7 +7,6 @@ from komlibs.interface.imc.model import messages
 from komlibs.interface.websocket.protocol.v1 import errors, exceptions
 from komlibs.interface.websocket.protocol.v1.processing import operation
 from komlibs.interface.websocket.protocol.v1.model import operation as modop
-from komlibs.interface.websocket.protocol.v1.model import types
 
 
 class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):

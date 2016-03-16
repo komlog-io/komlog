@@ -13,14 +13,14 @@ class WSConnectionHandler(websocket.WebSocketHandler):
     def open(self):
         pass
 
-    @auth.authenticated
+    @auth.agent_authenticated
     def on_message(self, message):
         try:
             message=json.loads(message)
         except Exception:
             self.close()
         else:
-            response=wsapi.process_message(username=self.user, aid=self.agent, message=message)
+            response=wsapi.process_message(passport=self.passport, message=message)
             self.write_message(json.dumps({'status':response.status,'reason':response.reason,'error':response.error}))
 
     def on_close(self):

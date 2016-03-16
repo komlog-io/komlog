@@ -2,7 +2,7 @@ import unittest
 import uuid
 from komlibs.general.validation import arguments as args
 from komlibs.gestaccount.user import api as userapi
-from komlibs.gestaccount.user import states
+from komlibs.gestaccount.user.states import *
 from komlibs.gestaccount import exceptions, errors
 from komcass.api import user as cassapiuser
 
@@ -14,11 +14,12 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.password = 'test_password'
         self.email = self.username+'@komlog.org'
         try:
-            self.userinfo=userapi.get_user_config(username=self.username)
+            uid=userapi.get_uid(username=self.username)
         except Exception:
-            userapi.create_user(username=self.username, password=self.password, email=self.email)
-            self.userinfo=userapi.get_user_config(username=self.username)
-        code = 'RANDOMCODE'
+            user=userapi.create_user(username=self.username, password=self.password, email=self.email)
+            uid=user['uid']
+        finally:
+            self.userinfo=userapi.get_user_config(uid=uid)
 
     def test_create_user(self):
         ''' create_user should insert the user in the database '''
@@ -75,23 +76,23 @@ class GestaccountUserApiTest(unittest.TestCase):
 
     def test_update_user_config_no_params(self):
         ''' update_user_config shoud fail if no params is passed'''
-        self.assertRaises(exceptions.BadParametersException, userapi.update_user_config, username=self.username)
+        self.assertRaises(exceptions.BadParametersException, userapi.update_user_config, uid=self.userinfo['uid'])
 
     def test_update_user_config_empty_only_old_password_param(self):
         ''' update_user_config shoud fail if only old_password is passed '''
         old_password=self.password
-        self.assertRaises(exceptions.BadParametersException, userapi.update_user_config, username=self.username, old_password=old_password)
+        self.assertRaises(exceptions.BadParametersException, userapi.update_user_config,uid=self.userinfo['uid'], old_password=old_password)
 
     def test_update_user_config_empty_only_new_password_param(self):
         ''' update_user_config shoud fail if only new_password is received '''
         new_password='new_password'
-        self.assertRaises(exceptions.BadParametersException, userapi.update_user_config, username=self.username, new_password=new_password)
+        self.assertRaises(exceptions.BadParametersException, userapi.update_user_config, uid=self.userinfo['uid'], new_password=new_password)
 
     def test_update_user_config_same_passwords(self):
         ''' update_user_config shoud fail if old_password is equal to new_password '''
         old_password=self.password
         new_password=self.password
-        self.assertRaises(exceptions.BadParametersException, userapi.update_user_config, username=self.username, old_password=old_password, new_password=new_password)
+        self.assertRaises(exceptions.BadParametersException, userapi.update_user_config, uid=self.userinfo['uid'], old_password=old_password, new_password=new_password)
 
     def test_update_user_config_already_existing_email(self):
         ''' update_user_config shoud fail if email is already on system '''
@@ -100,25 +101,25 @@ class GestaccountUserApiTest(unittest.TestCase):
         email2='test_update_user_config_already_existing_email@komlog.org'
         user2 = userapi.create_user(username=username2,password=password2,email=email2)
         email=email2
-        self.assertRaises(exceptions.EmailAlreadyExistsException, userapi.update_user_config, username=self.username, new_email=email)
+        self.assertRaises(exceptions.EmailAlreadyExistsException, userapi.update_user_config, uid=self.userinfo['uid'], new_email=email)
 
     def test_update_user_config_success_different_passwords(self):
         ''' update_user_config shoud succeed if old_password is different to new_password and old_password is correct'''
         old_password=self.password
         new_password='the_new_pass'
-        self.assertTrue(userapi.update_user_config(username=self.username, old_password=old_password, new_password=new_password))
+        self.assertTrue(userapi.update_user_config(uid=self.userinfo['uid'], old_password=old_password, new_password=new_password))
 
     def test_get_user_config_success(self):
         ''' get_user_config should return user data '''
-        data=userapi.get_user_config(username=self.username)
+        data=userapi.get_user_config(uid=self.userinfo['uid'])
         self.assertIsNotNone(data)
         self.assertEqual(self.username, data['username'])
         self.assertEqual(self.email, data['email'])
 
     def test_get_user_config_non_existing_username(self):
         ''' get_user_config should fail if username does not exist '''
-        username='test_get_user_config_non_existing_username_user'
-        self.assertRaises(exceptions.UserNotFoundException, userapi.get_user_config, username=username)
+        uid=uuid.uuid4()
+        self.assertRaises(exceptions.UserNotFoundException, userapi.get_user_config,uid=uid)
 
     def test_get_uid_failure_invalid_username(self):
         ''' get_uid should fail if username is invalid '''
@@ -286,7 +287,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
         found=False
         for reg in invitation_info:
-            if reg.state==states.INVITATION_USING and reg.tran_id==tran_id:
+            if reg.state==InvitationStates.USING and reg.tran_id==tran_id:
                 found=True
         self.assertTrue(found)
 
@@ -348,7 +349,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
         self.assertEqual(len(invitation_info),3)
         for reg in invitation_info:
-            if reg.state==states.INVITATION_USING:
+            if reg.state==InvitationStates.USING:
                 cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
@@ -428,7 +429,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertTrue(userapi.initialize_invitation(inv_id=inv_id))
         invitation_info_2=cassapiuser.get_invitation_info(inv_id=inv_id)
         self.assertEqual(len(invitation_info_2),1)
-        self.assertEqual(invitation_info_2[0].state, states.INVITATION_UNUSED)
+        self.assertEqual(invitation_info_2[0].state, InvitationStates.UNUSED)
 
     def test_check_unused_invitation_failure_invalid_invitation_id(self):
         ''' check_unused_invitation should fail if inv_id is invalid '''
@@ -471,9 +472,9 @@ class GestaccountUserApiTest(unittest.TestCase):
         invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
         self.assertEqual(len(invitation_info),1)
         for reg in invitation_info:
-            if reg.state==states.INVITATION_UNUSED:
+            if reg.state==InvitationStates.UNUSED:
                 cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
-                reg.state=states.INVITATION_USING
+                reg.state=InvitationStates.USING
                 cassapiuser.insert_invitation_info(reg)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.check_unused_invitation(inv_id=inv_id)
@@ -589,7 +590,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertEqual(forget_request['email'], email)
         self.assertEqual(forget_request['uid'],userinfo['uid'])
         code=forget_request['code']
-        self.assertTrue(cassapiuser.update_forget_request_state(code=code, new_state=states.FORGET_REQUEST_USED))
+        self.assertTrue(cassapiuser.update_forget_request_state(code=code, new_state=ForgetRequestStates.USED))
         with self.assertRaises(exceptions.ForgetRequestException) as cm:
             userapi.check_unused_forget_code(code=code)
         self.assertEqual(cm.exception.error, errors.E_GUA_CUFC_CODEAU)

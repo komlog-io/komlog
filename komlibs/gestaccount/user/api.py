@@ -15,7 +15,8 @@ from komcass.api import dashboard as cassapidashboard
 from komcass.api import circle as cassapicircle
 from komcass.api import snapshot as cassapisnapshot
 from komcass.model.orm import user as ormuser
-from komlibs.gestaccount.user import states, segments
+from komlibs.gestaccount.user import segments
+from komlibs.gestaccount.user.states import *
 from komlibs.gestaccount import exceptions, errors
 from komlibs.general.validation import arguments as args
 from komlibs.general.time import timeuuid
@@ -52,7 +53,7 @@ def create_user(username, password, email):
         raise exceptions.BadParametersException(error=errors.E_GUA_CRU_HPNF)
     now=timeuuid.uuid1()
     segment=segments.FREE
-    user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.FREE, creation_date=now, state=states.PREACTIVE)
+    user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.FREE, creation_date=now, state=UserStates.PREACTIVE)
     if cassapiuser.new_user(user=user):
         code=crypto.get_random_string(size=32)
         signup_info=ormuser.SignUp(username=user.username, code=code, email=user.email, creation_date=user.creation_date)
@@ -81,21 +82,21 @@ def confirm_user(email, code):
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GUA_COU_UNF)
     signup_info.utilization_date=timeuuid.uuid1()
-    user.state=states.ACTIVE
+    user.state=UserStates.ACTIVE
     if not cassapiuser.insert_user(user=user):
         raise exceptions.UserConfirmationException(error=errors.E_GUA_COU_IUE)
     cassapiuser.insert_signup_info(signup_info=signup_info)
     return True
 
-def update_user_config(username, new_email=None, old_password=None, new_password=None):
+def update_user_config(uid, new_email=None, old_password=None, new_password=None):
     ''' This function is used to update user configuration parameters.
     Parameters supported:
         - password
         - email
     '''
-    if not args.is_valid_username(username):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GUA_UUC_IU)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GUA_UUC_UNF)
     user_bck=user
@@ -129,10 +130,10 @@ def update_user_config(username, new_email=None, old_password=None, new_password
     else:
         return False
 
-def get_user_config(username):
-    if not args.is_valid_username(username):
+def get_user_config(uid):
+    if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=errors.E_GUA_GUC_IU)
-    user=cassapiuser.get_user(username=username)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=errors.E_GUA_GUC_UNF)
     data={}
@@ -159,7 +160,7 @@ def register_invitation_request(email):
     request=cassapiuser.get_invitation_request(email=email)
     if request is None:
         now=timeuuid.uuid1()
-        request=ormuser.InvitationRequest(email=email, date=now, state=states.INVITATION_REQUEST_REGISTERED)
+        request=ormuser.InvitationRequest(email=email, date=now, state=InvitationRequestStates.REGISTERED)
         return cassapiuser.insert_invitation_request(invitation_request=request)
     else:
         return True # request already registered
@@ -182,27 +183,27 @@ def generate_user_invitations(email=None, num=1):
     generated=[]
     regs=[]
     if num>1 or (num==1 and email is None):
-        requests=cassapiuser.get_invitation_requests(state=states.INVITATION_REQUEST_REGISTERED,num=num)
+        requests=cassapiuser.get_invitation_requests(state=InvitationRequestStates.REGISTERED,num=num)
         for request in requests:
             regs.append(request)
     elif email is not None:
         request=cassapiuser.get_invitation_request(email=email)
         if not request:
-            request=ormuser.InvitationRequest(email=email, date=timeuuid.uuid1(), state=states.INVITATION_REQUEST_REGISTERED)
+            request=ormuser.InvitationRequest(email=email, date=timeuuid.uuid1(), state=InvitationRequestStates.REGISTERED)
             if cassapiuser.insert_invitation_request(request):
                 regs.append(request)
         else:
             regs.append(request)
     for request in regs:
-        invitation=ormuser.Invitation(inv_id=uuid.uuid4(), date=timeuuid.uuid1(),state=states.INVITATION_UNUSED)
+        invitation=ormuser.Invitation(inv_id=uuid.uuid4(), date=timeuuid.uuid1(),state=InvitationStates.UNUSED)
         request.inv_id=invitation.inv_id
-        request.state=states.INVITATION_REQUEST_ASSOCIATED
+        request.state=InvitationRequestStates.ASSOCIATED
         if cassapiuser.insert_invitation_request(request) and cassapiuser.insert_invitation_info(invitation):
             generated.append({'email':request.email,'inv_id':request.inv_id})
         else:
             cassapiuser.delete_invitation_info(inv_id=invitation.inv_id, date=invitation.date)
             request.inv_id=None
-            request.state=states.INVITATION_REQUEST_REGISTERED
+            request.state=InvitationRequestStates.REGISTERED
             cassapiuser.insert_invitation_request(request)
     return generated
 
@@ -233,10 +234,10 @@ def start_invitation_process(inv_id):
         raise exceptions.InvitationNotFoundException(error=errors.E_GUA_SIP_INVNF)
     elif len(invitation_info)>1:
         raise exceptions.InvitationProcessException(error=errors.E_GUA_SIP_INVAU)
-    elif invitation_info[0].state == states.INVITATION_UNUSED and invitation_info[0].tran_id == None:
+    elif invitation_info[0].state == InvitationStates.UNUSED and invitation_info[0].tran_id == None:
         now=timeuuid.uuid1()
         tran_id=uuid.uuid4()
-        new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=states.INVITATION_USING, tran_id=tran_id)
+        new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=InvitationStates.USING, tran_id=tran_id)
         if not cassapiuser.insert_invitation_info(invitation_info=new_info):
             raise exceptions.InvitationProcessException(error=errors.E_GUA_SIP_EIII)
         return tran_id
@@ -256,7 +257,7 @@ def end_invitation_process(inv_id, tran_id):
     else:
         using_found=False
         for reg in invitation_info:
-            if reg.state==states.INVITATION_USING:
+            if reg.state==InvitationStates.USING:
                 if reg.tran_id != tran_id:
                     raise exceptions.InvitationProcessException(error=errors.E_GUA_EIP_RCF)
                 else:
@@ -265,7 +266,7 @@ def end_invitation_process(inv_id, tran_id):
             raise exceptions.InvitationProcessException(error=errors.E_GUA_EIP_SNF)
         else:
             now=timeuuid.uuid1()
-            new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=states.INVITATION_USED, tran_id=tran_id)
+            new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=InvitationStates.USED, tran_id=tran_id)
             if not cassapiuser.insert_invitation_info(invitation_info=new_info):
                 raise exceptions.InvitationProcessException(error=errors.E_GUA_EIP_EIII)
         return True
@@ -292,7 +293,7 @@ def initialize_invitation(inv_id):
     for reg in invitation_info:
         cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
     now=timeuuid.uuid1()
-    new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=states.INVITATION_UNUSED)
+    new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=InvitationStates.UNUSED)
     if not cassapiuser.insert_invitation_info(invitation_info=new_info):
         raise exceptions.InvitationProcessException(error=errors.E_GUA_II_EIII)
     return True
@@ -305,7 +306,7 @@ def check_unused_invitation(inv_id):
         raise exceptions.InvitationNotFoundException(error=errors.E_GUA_CUI_INVNF)
     elif len(invitation_info)>1:
         raise exceptions.InvitationProcessException(error=errors.E_GUA_CUI_INVAU)
-    elif len(invitation_info)==1 and invitation_info[0].state==states.INVITATION_UNUSED:
+    elif len(invitation_info)==1 and invitation_info[0].state==InvitationStates.UNUSED:
         return True
     else:
         raise exceptions.InvitationProcessException(error=errors.E_GUA_CUI_INVIS)
@@ -325,7 +326,7 @@ def register_forget_request(username=None, email=None):
     if user:
         code=uuid.uuid4()
         now=timeuuid.uuid1()
-        request=ormuser.ForgetRequest(code=code, date=now, state=states.FORGET_REQUEST_UNUSED, uid=user.uid)
+        request=ormuser.ForgetRequest(code=code, date=now, state=ForgetRequestStates.UNUSED, uid=user.uid)
         if cassapiuser.insert_forget_request(forget_request=request):
             return {'code':code,'username':user.username, 'email':user.email, 'uid':user.uid}
         else:
@@ -339,7 +340,7 @@ def check_unused_forget_code(code):
     request=cassapiuser.get_forget_request(code=code)
     if not request:
         raise exceptions.ForgetRequestNotFoundException(error=errors.E_GUA_CUFC_CNF)
-    elif request.state != states.FORGET_REQUEST_UNUSED:
+    elif request.state != ForgetRequestStates.UNUSED:
         raise exceptions.ForgetRequestException(error=errors.E_GUA_CUFC_CODEAU)
     else:
         return True
@@ -352,7 +353,7 @@ def reset_password(code, password):
     request=cassapiuser.get_forget_request(code=code)
     if not request:
         raise exceptions.ForgetRequestNotFoundException(error=errors.E_GUA_RP_CNF)
-    elif request.state != states.FORGET_REQUEST_UNUSED:
+    elif request.state != ForgetRequestStates.UNUSED:
         raise exceptions.ForgetRequestException(error=errors.E_GUA_RP_CODEAU)
     user=cassapiuser.get_user(uid=request.uid)
     if not user:
@@ -360,7 +361,7 @@ def reset_password(code, password):
     new_password=crypto.get_hashed_password(password, user.uid.bytes)
     if new_password:
         if cassapiuser.update_user_password(username=user.username, password=new_password):
-            cassapiuser.update_forget_request_state(code=code, new_state=states.FORGET_REQUEST_USED)
+            cassapiuser.update_forget_request_state(code=code, new_state=ForgetRequestStates.USED)
             return True
         else:
             raise exceptions.ForgetRequestException(error=errors.E_GUA_RP_EUDB)

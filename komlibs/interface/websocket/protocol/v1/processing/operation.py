@@ -20,7 +20,7 @@ from komlibs.interface.imc.model import messages
 from komlibs.events.model import types as eventstypes
 from komlibs.interface.websocket.protocol.v1 import errors, exceptions
 from komlibs.interface.websocket.protocol.v1.model import operation as modop
-from komlibs.interface.websocket.protocol.v1.model import types
+from komlibs.interface.websocket.protocol.v1.model.types import Operation
 
 def process_operation(operation):
     if not isinstance(operation, modop.WSIFaceOperation):
@@ -42,6 +42,6 @@ def _process_operation_new_datasource(operation):
         return False
 
 _operation_funcs = {
-    types.OPERATION_NEW_DATASOURCE:_process_operation_new_datasource,
+    Operation.NEW_DATASOURCE:_process_operation_new_datasource,
 }
 

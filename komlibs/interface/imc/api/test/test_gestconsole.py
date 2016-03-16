@@ -60,8 +60,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
 
     def test_process_message_DELUSER_failure_non_existent_user(self):
         ''' process_message_DELUSER should fail if user does not exist '''
-        username='test_process_messsage_deluser_failure_non_existent_user'
-        message=messages.DeleteUserMessage(username=username)
+        uid=uuid.uuid4()
+        message=messages.DeleteUserMessage(uid=uid)
         response=gestconsole.process_message_DELUSER(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
 

@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 This file is the entry point of authorization mechanisms
 
@@ -7,371 +6,267 @@ This file is the entry point of authorization mechanisms
 
 '''
 
-import sys
 from komlibs.auth.quotes import authorization as quoauth
 from komlibs.auth.resources import authorization as resauth
 from komlibs.auth.tickets import authorization as ticketsauth
-from komlibs.auth import exceptions as authexcept
-from komlibs.auth import requests, errors
+from komlibs.auth import exceptions, errors
+from komlibs.auth.requests import Requests
+from komlibs.gestaccount.user.states import UserStates
+from komlibs.gestaccount.agent.states import AgentStates
 from komcass.api import user as cassapiuser
+from komcass.api import agent as cassapiagent
 from komfig import logger
 
-func_requests={
-               requests.NEW_AGENT:'authorize_new_agent_creation',
-               requests.GET_AGENT_CONFIG:'authorize_get_agent_config',
-               requests.UPDATE_AGENT_CONFIG:'authorize_agent_update_configuration',
-               requests.DELETE_AGENT:'authorize_delete_agent',
-               requests.NEW_DATASOURCE:'authorize_new_datasource_creation',
-               requests.POST_DATASOURCE_DATA:'authorize_post_datasource_data',
-               requests.GET_DATASOURCE_DATA:'authorize_get_datasource_data',
-               requests.GET_DATASOURCE_CONFIG:'authorize_get_datasource_config',
-               requests.UPDATE_DATASOURCE_CONFIG:'authorize_datasource_update_configuration',
-               requests.DELETE_DATASOURCE:'authorize_delete_datasource',
-               requests.NEW_DATAPOINT:'authorize_new_datapoint_creation',
-               requests.GET_DATAPOINT_DATA:'authorize_get_datapoint_data',
-               requests.GET_DATAPOINT_CONFIG:'authorize_get_datapoint_config',
-               requests.UPDATE_DATAPOINT_CONFIG:'authorize_datapoint_update_configuration',
-               requests.MARK_POSITIVE_VARIABLE:'authorize_mark_positive_variable',
-               requests.MARK_NEGATIVE_VARIABLE:'authorize_mark_negative_variable',
-               requests.DELETE_DATAPOINT:'authorize_delete_datapoint',
-               requests.NEW_WIDGET:'authorize_new_widget_creation',
-               requests.GET_WIDGET_CONFIG:'authorize_get_widget_config',
-               requests.UPDATE_WIDGET_CONFIG:'authorize_widget_update_configuration',
-               requests.DELETE_WIDGET:'authorize_delete_widget',
-               requests.ADD_DATAPOINT_TO_WIDGET:'authorize_add_datapoint_to_widget',
-               requests.DELETE_DATAPOINT_FROM_WIDGET:'authorize_delete_datapoint_from_widget',
-               requests.NEW_DASHBOARD:'authorize_new_dashboard_creation',
-               requests.GET_DASHBOARD_CONFIG:'authorize_get_dashboard_config',
-               requests.UPDATE_DASHBOARD_CONFIG:'authorize_dashboard_update_configuration',
-               requests.ADD_WIDGET_TO_DASHBOARD:'authorize_add_widget_to_dashboard',
-               requests.DELETE_WIDGET_FROM_DASHBOARD:'authorize_delete_widget_from_dashboard',
-               requests.DELETE_DASHBOARD:'authorize_delete_dashboard',
-               requests.NEW_SNAPSHOT:'authorize_new_snapshot_creation',
-               requests.GET_SNAPSHOT_DATA:'authorize_get_snapshot_data',
-               requests.GET_SNAPSHOT_CONFIG:'authorize_get_snapshot_config',
-               requests.DELETE_SNAPSHOT:'authorize_delete_snapshot',
-               requests.NEW_CIRCLE:'authorize_new_circle_creation',
-               requests.GET_CIRCLE_CONFIG:'authorize_get_circle_config',
-               requests.UPDATE_CIRCLE_CONFIG:'authorize_update_circle_config',
-               requests.DELETE_CIRCLE:'authorize_delete_circle',
-               requests.ADD_MEMBER_TO_CIRCLE:'authorize_add_member_to_circle',
-               requests.DELETE_MEMBER_FROM_CIRCLE:'authorize_delete_member_from_circle',
-               }
-
-def authorize_request(request,uid,aid=None,did=None,pid=None,gid=None,wid=None,bid=None,nid=None,cid=None,ii=None,ie=None, tid=None):
-    user=cassapiuser.get_user(uid=uid)
-    if not user:
-        raise authexcept.UserNotFoundException(error=errors.E_AA_AR_UNF)
-    params={'aid':aid,'did':did,'uid':uid,'pid':pid,'wid':wid,'bid':bid,'nid':nid,'cid':cid,'ii':ii,'ie':ie,'tid':tid}
+def authorize_request(*args, **kwargs):
+    if len(args)>0:
+        kwargs['request']=args[0]
+    if len(args)>1:
+        kwargs['passport']=args[1]
+    request=kwargs.pop('request',None)
+    if not request:
+        raise exceptions.BadParametersException(error=errors.E_AA_AR_BP)
     try:
-        getattr(sys.modules[__name__],func_requests[request])(params)
+        func_requests[request](**kwargs)
     except KeyError as e:
-        logger.logger.error('REQUEST NOT FOUND: '+str(request))
-        logger.logger.debug(str(e))
-        raise authexcept.RequestNotFoundException(error=errors.E_AA_AR_RNF)
+        logger.logger.error('Request not found: '+str(request))
+        logger.logger.debug(str(type(e))+str(e))
+        raise exceptions.RequestNotFoundException(error=errors.E_AA_AR_RNF)
+    except (SyntaxError, TypeError) as e:
+        logger.logger.error('Request call error: '+str(request))
+        logger.logger.debug(str(type(e))+str(e))
+        raise exceptions.BadParametersException(error=errors.E_AA_AR_FBP)
 
-def authorize_new_agent_creation(params):
-    uid=params['uid']
-    if not quoauth.authorize_new_agent(uid=uid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANAC_QE)
-    if not resauth.authorize_new_agent(uid=uid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANAC_RE)
+def authorize_new_agent_creation(passport):
+    quoauth.authorize_new_agent(uid=passport.uid)
 
-def authorize_get_agent_config(params):
-    uid=params['uid']
-    aid=params['aid']
-    if not quoauth.authorize_get_agent_config(uid=uid,aid=aid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGAC_QE)
-    if not resauth.authorize_get_agent_config(uid=uid,aid=aid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGAC_RE)
+def authorize_get_agent_config(passport, aid):
+    resauth.authorize_get_agent_config(uid=passport.uid, aid=aid)
 
-def authorize_get_datasource_data(params):
-    uid=params['uid']
-    did=params['did']
-    ii=params['ii']
-    ie=params['ie']
-    tid=params['tid']
-    if not quoauth.authorize_get_datasource_data(uid=uid,did=did):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGDSD_QE)
-    if not resauth.authorize_get_datasource_data(uid=uid,did=did):
+def authorize_get_agents_config(passport):
+    pass
+
+def authorize_get_datasource_data(passport, did, ii, ie, tid):
+    try:
+        resauth.authorize_get_datasource_data(uid=passport.uid,did=did)
+    except Exception as e:
         if ii and ie and tid:
-            if not ticketsauth.authorize_get_datasource_data(uid=uid, did=did, ii=ii, ie=ie, tid=tid):
-                raise authexcept.AuthorizationException(error=errors.E_AA_AGDSD_TE)
+            ticketsauth.authorize_get_datasource_data(uid=passport.uid, did=did, ii=ii, ie=ie, tid=tid)
         else:
-            raise authexcept.AuthorizationException(error=errors.E_AA_AGDSD_RE)
+            raise e
 
-def authorize_post_datasource_data(params):
-    uid=params['uid']
-    did=params['did']
-    aid=params['aid']
-    if not quoauth.authorize_post_datasource_data(uid=uid,aid=aid,did=did):
-        raise authexcept.AuthorizationException(error=errors.E_AA_APDSD_QE)
-    if not resauth.authorize_post_datasource_data(uid=uid,aid=aid,did=did):
-        raise authexcept.AuthorizationException(error=errors.E_AA_APDSD_RE)
+def authorize_post_datasource_data(passport, did):
+    resauth.authorize_post_datasource_data(uid=passport.uid,aid=passport.aid,did=did)
 
-def authorize_get_datasource_config(params):
-    uid=params['uid']
-    did=params['did']
-    if not quoauth.authorize_get_datasource_config(uid=uid,did=did):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGDSC_QE)
-    if not resauth.authorize_get_datasource_config(uid=uid,did=did):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGDSC_RE)
+def authorize_get_datasource_config(passport, did):
+    resauth.authorize_get_datasource_config(uid=passport.uid,did=did)
 
-def authorize_datasource_update_configuration(params):
-    uid=params['uid']
-    did=params['did']
-    if not resauth.authorize_put_datasource_config(uid=uid,did=did):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADSUC_RE)
+def authorize_get_datasources_config(passport):
+    pass
 
-def authorize_new_datasource_creation(params):
-    uid=params['uid']
-    aid=params['aid']
-    if not quoauth.authorize_new_datasource(uid=uid,aid=aid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANDSC_QE)
-    if not resauth.authorize_new_datasource(uid=uid,aid=aid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANDSC_RE)
+def authorize_update_datasource_config(passport, did):
+    resauth.authorize_put_datasource_config(uid=passport.uid,did=did)
 
-def authorize_get_datapoint_data(params):
-    uid=params['uid']
-    pid=params['pid']
-    ii=params['ii']
-    ie=params['ie']
-    tid=params['tid']
-    if not quoauth.authorize_get_datapoint_data(uid,pid=pid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGDPD_QE)
-    if not resauth.authorize_get_datapoint_data(uid,pid=pid):
+def authorize_new_datasource_creation(passport):
+    quoauth.authorize_new_datasource(uid=passport.uid,aid=passport.aid)
+    resauth.authorize_new_datasource(uid=passport.uid,aid=passport.aid)
+
+def authorize_get_datapoint_data(passport, pid, ii, ie, tid):
+    try:
+        resauth.authorize_get_datapoint_data(uid=passport.uid,pid=pid)
+    except Exception as e:
         if ii and ie and tid:
-            if not ticketsauth.authorize_get_datapoint_data(uid=uid, pid=pid, ii=ii, ie=ie, tid=tid):
-                raise authexcept.AuthorizationException(error=errors.E_AA_AGDPD_TE)
+            ticketsauth.authorize_get_datapoint_data(uid=passport.uid, pid=pid, ii=ii, ie=ie, tid=tid)
         else:
-            raise authexcept.AuthorizationException(error=errors.E_AA_AGDPD_RE)
+            raise e
 
-def authorize_get_datapoint_config(params):
-    uid=params['uid']
-    pid=params['pid']
-    if not quoauth.authorize_get_datapoint_config(uid=uid,pid=pid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGDPC_QE)
-    if not resauth.authorize_get_datapoint_config(uid=uid,pid=pid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGDPC_RE)
+def authorize_get_datapoint_config(passport, pid):
+    resauth.authorize_get_datapoint_config(uid=passport.uid,pid=pid)
 
-def authorize_new_datapoint_creation(params):
-    uid=params['uid']
-    did=params['did']
-    if not quoauth.authorize_new_datapoint(uid=uid,did=did):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANDPC_QE)
-    if not resauth.authorize_new_datapoint(uid=uid,did=did):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANDPC_RE)
+def authorize_new_datapoint_creation(passport, did):
+    quoauth.authorize_new_datapoint(uid=passport.uid,did=did)
+    resauth.authorize_new_datapoint(uid=passport.uid,did=did)
 
-def authorize_datapoint_update_configuration(params):
-    uid=params['uid']
-    pid=params['pid']
-    if not resauth.authorize_put_datapoint_config(uid=uid,pid=pid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADPUC_RE)
+def authorize_update_datapoint_config(passport, pid):
+    resauth.authorize_put_datapoint_config(uid=passport.uid,pid=pid)
 
-def authorize_uid_update_configuration(params):
+def authorize_update_user_config(passport):
     #If uid authentication was successfull, authorization to its own uid config is granted
     pass
 
-def authorize_uid_update_profile(params):
-    #If uid authentication was successfull, authorization to its own uid profile is granted
+def authorize_update_agent_config(passport, aid):
+    resauth.authorize_put_agent_config(uid=passport.uid,aid=aid)
+
+def authorize_get_widget_config(passport, wid):
+    resauth.authorize_get_widget_config(uid=passport.uid,wid=wid)
+
+def authorize_get_widgets_config(passport):
     pass
 
-def authorize_agent_update_configuration(params):
-    uid=params['uid']
-    aid=params['aid']
-    if not resauth.authorize_put_agent_config(uid=uid,aid=aid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AAGUC_RE)
+def authorize_update_widget_config(passport, wid):
+    resauth.authorize_put_widget_config(uid=passport.uid,wid=wid)
 
-def authorize_get_widget_config(params):
-    uid=params['uid']
-    wid=params['wid']
-    if not quoauth.authorize_get_widget_config(uid=uid,wid=wid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGWC_QE)
-    if not resauth.authorize_get_widget_config(uid=uid,wid=wid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGWC_RE)
+def authorize_new_widget_creation(passport):
+    quoauth.authorize_new_widget(uid=passport.uid)
 
-def authorize_widget_update_configuration(params):
-    uid=params['uid']
-    wid=params['wid']
-    if not resauth.authorize_put_widget_config(uid=uid,wid=wid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AWUC_RE)
+def authorize_get_dashboard_config(passport, bid):
+    resauth.authorize_get_dashboard_config(uid=passport.uid,bid=bid)
 
-def authorize_new_widget_creation(params):
-    uid=params['uid']
-    if not quoauth.authorize_new_widget(uid=uid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANWC_QE)
-    if not resauth.authorize_new_widget(uid=uid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANWC_RE)
+def authorize_get_dashboards_config(passport):
+    pass
 
-def authorize_get_dashboard_config(params):
-    uid=params['uid']
-    bid=params['bid']
-    if not quoauth.authorize_get_dashboard_config(uid=uid,bid=bid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGDBC_QE)
-    if not resauth.authorize_get_dashboard_config(uid=uid,bid=bid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGDBC_RE)
+def authorize_update_dashboard_config(passport, bid):
+    resauth.authorize_put_dashboard_config(uid=passport.uid,bid=bid)
 
-def authorize_dashboard_update_configuration(params):
-    uid=params['uid']
-    bid=params['bid']
-    if not resauth.authorize_put_dashboard_config(uid=uid,bid=bid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADBUC_RE)
+def authorize_new_dashboard_creation(passport):
+    quoauth.authorize_new_dashboard(uid=passport.uid)
 
-def authorize_new_dashboard_creation(params):
-    uid=params['uid']
-    if not quoauth.authorize_new_dashboard(uid=uid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANDBC_QE)
-    if not resauth.authorize_new_dashboard(uid=uid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANDBC_RE)
+def authorize_mark_positive_variable(passport, pid):
+    resauth.authorize_mark_positive_variable(uid=passport.uid,pid=pid)
 
-def authorize_mark_positive_variable(params):
-    uid=params['uid']
-    pid=params['pid']
-    if not quoauth.authorize_mark_positive_variable(uid,pid=pid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AMPV_QE)
-    if not resauth.authorize_mark_positive_variable(uid,pid=pid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AMPV_RE)
+def authorize_mark_negative_variable(passport, pid):
+    resauth.authorize_mark_negative_variable(uid=passport.uid,pid=pid)
 
-def authorize_mark_negative_variable(params):
-    uid=params['uid']
-    pid=params['pid']
-    if not quoauth.authorize_mark_negative_variable(uid,pid=pid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AMNV_QE)
-    if not resauth.authorize_mark_negative_variable(uid,pid=pid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AMNV_RE)
+def authorize_add_widget_to_dashboard(passport, bid, wid):
+    resauth.authorize_add_widget_to_dashboard(uid=passport.uid,bid=bid,wid=wid)
 
-def authorize_add_widget_to_dashboard(params):
-    uid=params['uid']
-    bid=params['bid']
-    wid=params['wid']
-    if not quoauth.authorize_add_widget_to_dashboard(uid=uid,bid=bid,wid=wid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AAWTDB_QE)
-    if not resauth.authorize_add_widget_to_dashboard(uid=uid,bid=bid,wid=wid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AAWTDB_RE)
+def authorize_delete_widget_from_dashboard(passport, bid):
+    resauth.authorize_delete_widget_from_dashboard(uid=passport.uid,bid=bid)
 
-def authorize_delete_widget_from_dashboard(params):
-    uid=params['uid']
-    bid=params['bid']
-    if not quoauth.authorize_delete_widget_from_dashboard(uid=uid,bid=bid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADWFDB_QE)
-    if not resauth.authorize_delete_widget_from_dashboard(uid=uid,bid=bid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADWFDB_RE)
+def authorize_delete_agent(passport, aid):
+    resauth.authorize_delete_agent(uid=passport.uid,aid=aid)
 
-def authorize_delete_agent(params):
-    uid=params['uid']
-    aid=params['aid']
-    if not resauth.authorize_delete_agent(uid,aid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADAG_RE)
+def authorize_delete_datasource(passport, did):
+    resauth.authorize_delete_datasource(uid=passport.uid,did=did)
 
-def authorize_delete_datasource(params):
-    uid=params['uid']
-    did=params['did']
-    if not resauth.authorize_delete_datasource(uid,did):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADDS_RE)
+def authorize_delete_datapoint(passport, pid):
+    resauth.authorize_delete_datapoint(uid=passport.uid,pid=pid)
 
-def authorize_delete_datapoint(params):
-    uid=params['uid']
-    pid=params['pid']
-    if not resauth.authorize_delete_datapoint(uid,pid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADDP_RE)
+def authorize_delete_widget(passport, wid):
+    resauth.authorize_delete_widget(uid=passport.uid,wid=wid)
 
-def authorize_delete_widget(params):
-    uid=params['uid']
-    wid=params['wid']
-    if not resauth.authorize_delete_widget(uid,wid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADW_RE)
+def authorize_delete_dashboard(passport, bid):
+    resauth.authorize_delete_dashboard(uid=passport.uid,bid=bid)
 
-def authorize_delete_dashboard(params):
-    uid=params['uid']
-    bid=params['bid']
-    if not resauth.authorize_delete_dashboard(uid,bid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADDB_RE)
+def authorize_add_datapoint_to_widget(passport, pid, wid):
+    resauth.authorize_add_datapoint_to_widget(uid=passport.uid, pid=pid, wid=wid)
 
-def authorize_add_datapoint_to_widget(params):
-    uid=params['uid']
-    pid=params['pid']
-    wid=params['wid']
-    if not quoauth.authorize_add_datapoint_to_widget(uid=uid, pid=pid, wid=wid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AADPTW_QE)
-    if not resauth.authorize_add_datapoint_to_widget(uid=uid, pid=pid, wid=wid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AADPTW_RE)
+def authorize_delete_datapoint_from_widget(passport, wid):
+    resauth.authorize_delete_datapoint_from_widget(uid=passport.uid, wid=wid)
 
-def authorize_delete_datapoint_from_widget(params):
-    uid=params['uid']
-    wid=params['wid']
-    if not quoauth.authorize_delete_datapoint_from_widget(uid=uid, wid=wid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADDPFW_QE)
-    if not resauth.authorize_delete_datapoint_from_widget(uid=uid, wid=wid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADDPFW_RE)
+def authorize_new_snapshot_creation(passport, wid):
+    quoauth.authorize_new_snapshot(uid=passport.uid)
+    resauth.authorize_new_snapshot(uid=passport.uid,wid=wid)
 
-def authorize_new_snapshot_creation(params):
-    uid=params['uid']
-    wid=params['wid']
-    if not quoauth.authorize_new_snapshot(uid=uid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANSCR_QE)
-    if not resauth.authorize_new_snapshot(uid=uid,wid=wid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANSCR_RE)
+def authorize_get_snapshot_data(passport, nid):
+    resauth.authorize_get_snapshot_data(uid=passport.uid,nid=nid)
 
-def authorize_get_snapshot_data(params):
-    uid=params['uid']
-    nid=params['nid']
-    if not quoauth.authorize_get_snapshot_data(uid,nid=nid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGSD_QE)
-    if not resauth.authorize_get_snapshot_data(uid,nid=nid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGSD_RE)
-
-def authorize_get_snapshot_config(params):
-    uid=params['uid']
-    nid=params['nid']
-    tid=params['tid']
-    if not quoauth.authorize_get_snapshot_config(uid=uid,nid=nid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AGSC_QE)
-    if not resauth.authorize_get_snapshot_config(uid=uid,nid=nid):
+def authorize_get_snapshot_config(passport, nid, tid):
+    try:
+        resauth.authorize_get_snapshot_config(uid=passport.uid,nid=nid)
+    except Exception as e:
         if not tid:
-            raise authexcept.AuthorizationException(error=errors.E_AA_AGSC_RE)
-        elif not ticketsauth.authorize_get_snapshot_config(uid=uid, nid=nid, tid=tid):
-            raise authexcept.AuthorizationException(error=errors.E_AA_AGSC_TE)
+            raise e
+        else:
+            ticketsauth.authorize_get_snapshot_config(uid=passport.uid, nid=nid, tid=tid)
 
-def authorize_delete_snapshot(params):
-    uid=params['uid']
-    nid=params['nid']
-    if not resauth.authorize_delete_snapshot(uid,nid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADS_RE)
+def authorize_get_snapshots_config(passport):
+    pass
 
-def authorize_new_circle_creation(params):
-    uid=params['uid']
-    if not quoauth.authorize_new_circle(uid=uid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ANCCR_QE)
+def authorize_delete_snapshot(passport, nid):
+    resauth.authorize_delete_snapshot(uid=passport.uid,nid=nid)
 
-def authorize_get_circle_config(params):
-    uid=params['uid']
-    cid=params['cid']
-    if not resauth.authorize_get_circle_config(uid=uid,cid=cid):
-            raise authexcept.AuthorizationException(error=errors.E_AA_AGCC_RE)
+def authorize_new_circle_creation(passport):
+    quoauth.authorize_new_circle(uid=passport.uid)
 
-def authorize_update_circle_config(params):
-    uid=params['uid']
-    cid=params['cid']
-    if not resauth.authorize_update_circle_config(uid=uid,cid=cid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AUCC_RE)
+def authorize_get_circle_config(passport, cid):
+    resauth.authorize_get_circle_config(uid=passport.uid,cid=cid)
 
-def authorize_delete_circle(params):
-    uid=params['uid']
-    cid=params['cid']
-    if not resauth.authorize_delete_circle(uid,cid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADCR_RE)
+def authorize_get_circles_config(passport):
+    pass
 
-def authorize_add_member_to_circle(params):
-    uid=params['uid']
-    cid=params['cid']
-    if not quoauth.authorize_add_member_to_circle(uid=uid, cid=cid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AAMTC_QE)
-    if not resauth.authorize_add_member_to_circle(uid=uid, cid=cid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_AAMTC_RE)
+def authorize_update_circle_config(passport, cid):
+    resauth.authorize_update_circle_config(uid=passport.uid,cid=cid)
 
-def authorize_delete_member_from_circle(params):
-    uid=params['uid']
-    cid=params['cid']
-    if not resauth.authorize_delete_member_from_circle(uid=uid, cid=cid):
-        raise authexcept.AuthorizationException(error=errors.E_AA_ADMFC_RE)
+def authorize_delete_circle(passport, cid):
+    resauth.authorize_delete_circle(uid=passport.uid,cid=cid)
+
+def authorize_add_member_to_circle(passport, cid):
+    quoauth.authorize_add_member_to_circle(uid=passport.uid, cid=cid)
+    resauth.authorize_add_member_to_circle(uid=passport.uid, cid=cid)
+
+def authorize_delete_member_from_circle(passport, cid):
+    resauth.authorize_delete_member_from_circle(uid=passport.uid, cid=cid)
+
+def authorize_delete_user(passport):
+    pass
+
+def authorize_get_user_config(passport):
+    pass
+
+def authorize_get_user_events(passport):
+    pass
+
+def authorize_disable_event(passport):
+    pass
+
+def authorize_response_event(passport):
+    pass
+
+def authorize_get_uri(passport):
+    pass
+
+func_requests={
+    Requests.ADD_DATAPOINT_TO_WIDGET:authorize_add_datapoint_to_widget,
+    Requests.ADD_MEMBER_TO_CIRCLE:authorize_add_member_to_circle,
+    Requests.ADD_WIDGET_TO_DASHBOARD:authorize_add_widget_to_dashboard,
+    Requests.DELETE_AGENT:authorize_delete_agent,
+    Requests.DELETE_CIRCLE:authorize_delete_circle,
+    Requests.DELETE_DASHBOARD:authorize_delete_dashboard,
+    Requests.DELETE_DATAPOINT:authorize_delete_datapoint,
+    Requests.DELETE_DATAPOINT_FROM_WIDGET:authorize_delete_datapoint_from_widget,
+    Requests.DELETE_DATASOURCE:authorize_delete_datasource,
+    Requests.DELETE_MEMBER_FROM_CIRCLE:authorize_delete_member_from_circle,
+    Requests.DELETE_SNAPSHOT:authorize_delete_snapshot,
+    Requests.DELETE_USER:authorize_delete_user,
+    Requests.DELETE_WIDGET:authorize_delete_widget,
+    Requests.DELETE_WIDGET_FROM_DASHBOARD:authorize_delete_widget_from_dashboard,
+    Requests.DISABLE_EVENT:authorize_disable_event,
+    Requests.GET_AGENT_CONFIG:authorize_get_agent_config,
+    Requests.GET_AGENTS_CONFIG:authorize_get_agents_config,
+    Requests.GET_CIRCLE_CONFIG:authorize_get_circle_config,
+    Requests.GET_CIRCLES_CONFIG:authorize_get_circles_config,
+    Requests.GET_DASHBOARD_CONFIG:authorize_get_dashboard_config,
+    Requests.GET_DASHBOARDS_CONFIG:authorize_get_dashboards_config,
+    Requests.GET_DATAPOINT_CONFIG:authorize_get_datapoint_config,
+    Requests.GET_DATAPOINT_DATA:authorize_get_datapoint_data,
+    Requests.GET_DATASOURCE_CONFIG:authorize_get_datasource_config,
+    Requests.GET_DATASOURCES_CONFIG:authorize_get_datasources_config,
+    Requests.GET_DATASOURCE_DATA:authorize_get_datasource_data,
+    Requests.GET_SNAPSHOT_CONFIG:authorize_get_snapshot_config,
+    Requests.GET_SNAPSHOTS_CONFIG:authorize_get_snapshots_config,
+    Requests.GET_SNAPSHOT_DATA:authorize_get_snapshot_data,
+    Requests.GET_URI:authorize_get_uri,
+    Requests.GET_USER_CONFIG:authorize_get_user_config,
+    Requests.GET_USER_EVENTS:authorize_get_user_events,
+    Requests.GET_WIDGET_CONFIG:authorize_get_widget_config,
+    Requests.GET_WIDGETS_CONFIG:authorize_get_widgets_config,
+    Requests.MARK_NEGATIVE_VARIABLE:authorize_mark_negative_variable,
+    Requests.MARK_POSITIVE_VARIABLE:authorize_mark_positive_variable,
+    Requests.NEW_AGENT:authorize_new_agent_creation,
+    Requests.NEW_CIRCLE:authorize_new_circle_creation,
+    Requests.NEW_DASHBOARD:authorize_new_dashboard_creation,
+    Requests.NEW_DATAPOINT:authorize_new_datapoint_creation,
+    Requests.NEW_DATASOURCE:authorize_new_datasource_creation,
+    Requests.NEW_SNAPSHOT:authorize_new_snapshot_creation,
+    Requests.NEW_WIDGET:authorize_new_widget_creation,
+    Requests.UPDATE_AGENT_CONFIG:authorize_update_agent_config,
+    Requests.UPDATE_CIRCLE_CONFIG:authorize_update_circle_config,
+    Requests.UPDATE_DASHBOARD_CONFIG:authorize_update_dashboard_config,
+    Requests.UPDATE_DATAPOINT_CONFIG:authorize_update_datapoint_config,
+    Requests.UPDATE_DATASOURCE_CONFIG:authorize_update_datasource_config,
+    Requests.UPDATE_USER_CONFIG:authorize_update_user_config,
+    Requests.UPDATE_WIDGET_CONFIG:authorize_update_widget_config,
+    Requests.POST_DATASOURCE_DATA:authorize_post_datasource_data,
+    Requests.RESPONSE_EVENT:authorize_response_event,
+}
 

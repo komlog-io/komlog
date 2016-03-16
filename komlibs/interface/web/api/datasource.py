@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 
 This file defines the logic associated with web interface operations
@@ -7,7 +6,9 @@ This file defines the logic associated with web interface operations
 import uuid
 from komfig import logger
 from komimc import api as msgapi
-from komlibs.auth import authorization, requests
+from komlibs.auth import authorization
+from komlibs.auth.requests import Requests
+from komlibs.auth.passport import Passport
 from komlibs.auth import update as authupdate
 from komlibs.events.model import types as eventstypes
 from komlibs.gestaccount import exceptions as gestexcept
@@ -24,9 +25,9 @@ from komlibs.general.time import timeuuid
 
 
 @exceptions.ExceptionHandler
-def get_datasource_data_request(username, did, seq=None, tid=None):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSDR_IU)
+def get_datasource_data_request(passport, did, seq=None, tid=None):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSDR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_IWADS_GDSDR_ID)
     if seq and not args.is_valid_sequence(seq):
@@ -41,8 +42,7 @@ def get_datasource_data_request(username, did, seq=None, tid=None):
         ii=None
         ie=None
     tid=uuid.UUID(tid) if tid else None
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.GET_DATASOURCE_DATA,uid=uid,did=did,ii=ii,ie=ie, tid=tid)
+    authorization.authorize_request(request=Requests.GET_DATASOURCE_DATA,passport=passport,did=did,ii=ii,ie=ie, tid=tid)
     if ii:
         data=datasourceapi.get_datasource_data(did,date=ii)
     else:
@@ -59,44 +59,39 @@ def get_datasource_data_request(username, did, seq=None, tid=None):
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datasource)
 
 @exceptions.ExceptionHandler
-def upload_datasource_data_request(username, aid, did, content, destination):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSDR_IU)
-    if not args.is_valid_hex_uuid(aid):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSDR_IA)
+def upload_datasource_data_request(passport, did, content, destination):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSDR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_IWADS_UDSDR_ID)
     if not args.is_valid_datasource_content(content):
         raise exceptions.BadParametersException(error=errors.E_IWADS_UDSDR_IDC)
     if not args.is_valid_string(destination):
         raise exceptions.BadParametersException(error=errors.E_IWADS_UDSDR_IDST)
-    aid=uuid.UUID(aid)
     did=uuid.UUID(did)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.POST_DATASOURCE_DATA,uid=uid,aid=aid,did=did)
+    authorization.authorize_request(request=Requests.POST_DATASOURCE_DATA,passport=passport,did=did)
     destfile=datasourceapi.upload_datasource_data(did,content,destination)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 
 @exceptions.ExceptionHandler
-def get_datasources_config_request(username):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSSCR_IU)
-    uid=userapi.get_uid(username=username)
-    data=datasourceapi.get_datasources_config(uid=uid)
+def get_datasources_config_request(passport):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSSCR_IPSP)
+    authorization.authorize_request(request=Requests.GET_DATASOURCES_CONFIG,passport=passport)
+    data=datasourceapi.get_datasources_config(uid=passport.uid)
     response_data=[]
     for datasource in data:
         response_data.append({'did':datasource['did'].hex, 'aid':datasource['aid'].hex, 'datasourcename':datasource['datasourcename']})
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
-def get_datasource_config_request(username, did):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSCR_IU)
+def get_datasource_config_request(passport, did):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSCR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_IWADS_GDSCR_ID)
     did=uuid.UUID(did)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.GET_DATASOURCE_CONFIG,uid=uid,did=did)
+    authorization.authorize_request(request=Requests.GET_DATASOURCE_CONFIG,passport=passport,did=did)
     data=datasourceapi.get_datasource_config(did)
     datasource={}
     datasource['did']=data['did'].hex
@@ -109,9 +104,9 @@ def get_datasource_config_request(username, did):
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datasource)
 
 @exceptions.ExceptionHandler
-def update_datasource_config_request(username, did, data):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSCR_IU)
+def update_datasource_config_request(passport, did, data):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSCR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_IWADS_UDSCR_ID)
     if not args.is_valid_dict(data):
@@ -119,33 +114,28 @@ def update_datasource_config_request(username, did, data):
     if 'datasourcename' not in data or not args.is_valid_datasourcename(data['datasourcename']):
         raise exceptions.BadParametersException(error=errors.E_IWADS_UDSCR_IDN)
     did=uuid.UUID(did)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.UPDATE_DATASOURCE_CONFIG,uid=uid,did=did)
+    authorization.authorize_request(request=Requests.UPDATE_DATASOURCE_CONFIG,passport=passport,did=did)
     datasourceapi.update_datasource_config(did=did,datasourcename=data['datasourcename'])
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
-def new_datasource_request(username, aid, datasourcename):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_NDSR_IU)
-    if not args.is_valid_hex_uuid(aid):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_NDSR_IA)
+def new_datasource_request(passport, datasourcename):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADS_NDSR_IPSP)
     if not args.is_valid_datasourcename(datasourcename):
         raise exceptions.BadParametersException(error=errors.E_IWADS_NDSR_IDN)
-    aid=uuid.UUID(aid)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.NEW_DATASOURCE,uid=uid,aid=aid)
-    datasource=datasourceapi.create_datasource(uid=uid,aid=aid,datasourcename=datasourcename)
+    authorization.authorize_request(request=Requests.NEW_DATASOURCE,passport=passport)
+    datasource=datasourceapi.create_datasource(uid=passport.uid,aid=passport.aid,datasourcename=datasourcename)
     if datasource:
-        operation=weboperations.NewDatasourceOperation(uid=uid,aid=aid,did=datasource['did'])
+        operation=weboperations.NewDatasourceOperation(uid=passport.uid,aid=passport.aid,did=datasource['did'])
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
         if authupdate.update_resources(operation=auth_op, params=params):
             message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
             msgapi.send_message(message)
-            message=messages.NewDSWidgetMessage(uid=uid, did=datasource['did'])
+            message=messages.NewDSWidgetMessage(uid=passport.uid, did=datasource['did'])
             msgapi.send_message(message)
-            message=messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':datasource['did'].hex})
+            message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':datasource['did'].hex})
             msgapi.send_message(message)
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
         else:
@@ -153,14 +143,13 @@ def new_datasource_request(username, aid, datasourcename):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=errors.E_IWADS_NDSR_AUTHERR)
 
 @exceptions.ExceptionHandler
-def delete_datasource_request(username, did):
-    if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_DDSR_IU)
+def delete_datasource_request(passport, did):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=errors.E_IWADS_DDSR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=errors.E_IWADS_DDSR_ID)
     did=uuid.UUID(did)
-    uid=userapi.get_uid(username=username)
-    authorization.authorize_request(request=requests.DELETE_DATASOURCE,uid=uid,did=did)
+    authorization.authorize_request(request=Requests.DELETE_DATASOURCE,passport=passport,did=did)
     message=messages.DeleteDatasourceMessage(did=did)
     msgapi.send_message(msg=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)

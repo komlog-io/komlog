@@ -1,4 +1,3 @@
-#coding:utf-8
 
 '''
 This library implements authorization mechanisms based on user quotas
@@ -8,11 +7,12 @@ This library implements authorization mechanisms based on user quotas
 @date: 2013/12/08
 '''
 
-from komlibs.auth.quotes import deny
 from komcass.api import datasource as cassapidatasource
 from komcass.api import interface as cassapiiface
-from komlibs.auth import exceptions as authexcept
+from komlibs.auth import exceptions
 from komlibs.auth import errors
+from komlibs.auth.quotes import deny
+from komlibs.general.validation import arguments as args
 
 
 def authorize_new_agent(uid):
@@ -20,144 +20,62 @@ def authorize_new_agent(uid):
     interfaces.append(deny.interfaces['User_AgentCreation'])
     for iface in interfaces:
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
-            return False
-    return True
-
-def authorize_get_agent_config(uid,aid):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_get_datasource_data(uid,did):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_post_datasource_data(uid,aid,did):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_get_datasource_config(uid,did):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_put_datasource_config(uid,aid,did):
-    ''' Not quotes authorization needed '''
-    return True
+            raise exceptions.AuthorizationException(error=errors.E_AQA_ANA_QE)
 
 def authorize_new_datasource(uid,aid):
+    if not args.is_valid_uuid(aid):
+        raise exceptions.AuthorizationException(error=errors.E_AQA_ANDS_IA)
     interfaces=[]
     interfaces.append(deny.interfaces['User_DatasourceCreation'])
     interfaces.append(deny.interfaces['Agent_DatasourceCreation']+aid.hex)
     for iface in interfaces:
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
-            return False
-    return True
-
-def authorize_get_datapoint_data(uid,pid):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_get_datapoint_config(uid,pid):
-    ''' Not quotes authorization needed '''
-    return True
+            raise exceptions.AuthorizationException(error=errors.E_AQA_ANDS_QE)
 
 def authorize_new_datapoint(uid,did):
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
-        raise authexcept.DatasourceNotFoundException(error=errors.E_AQA_ANDP_DSNF)
+        raise exceptions.DatasourceNotFoundException(error=errors.E_AQA_ANDP_DSNF)
     interfaces=[]
     interfaces.append(deny.interfaces['User_DatapointCreation'])
     interfaces.append(deny.interfaces['Agent_DatapointCreation']+datasource.aid.hex)
     interfaces.append(deny.interfaces['Datasource_DatapointCreation']+did.hex)
     for iface in interfaces:
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
-            return False
-    return True
+            raise exceptions.AuthorizationException(error=errors.E_AQA_ANDP_QE)
 
 def authorize_new_widget(uid):
     interfaces=[]
     interfaces.append(deny.interfaces['User_WidgetCreation'])
     for iface in interfaces:
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
-            return False
-    return True
-
-def authorize_get_widget_config(uid,wid):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_put_widget_config(uid,wid):
-    ''' Not quotes authorization needed '''
-    return True
+            raise exceptions.AuthorizationException(error=errors.E_AQA_ANW_QE)
 
 def authorize_new_dashboard(uid):
     interfaces=[]
     interfaces.append(deny.interfaces['User_DashboardCreation'])
     for iface in interfaces:
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
-            return False
-    return True
-
-def authorize_get_dashboard_config(uid,bid):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_put_dashboard_config(uid,bid):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_mark_negative_variable(uid,pid):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_mark_positive_variable(uid,pid):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_add_widget_to_dashboard(uid,bid,wid):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_delete_widget_from_dashboard(uid,bid):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_add_datapoint_to_widget(uid, pid, wid):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_delete_datapoint_from_widget(uid, wid):
-    ''' Not quotes authorization needed '''
-    return True
+            raise exceptions.AuthorizationException(error=errors.E_AQA_ANDB_QE)
 
 def authorize_new_snapshot(uid):
     interfaces=[]
     interfaces.append(deny.interfaces['User_SnapshotCreation'])
     for iface in interfaces:
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
-            return False
-    return True
-
-def authorize_get_snapshot_data(uid,nid):
-    ''' Not quotes authorization needed '''
-    return True
-
-def authorize_get_snapshot_config(uid,nid):
-    ''' Not quotes authorization needed '''
-    return True
+            raise exceptions.AuthorizationException(error=errors.E_AQA_ANS_QE)
 
 def authorize_new_circle(uid):
     interfaces=[]
     interfaces.append(deny.interfaces['User_CircleCreation'])
     for iface in interfaces:
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
-            return False
-    return True
+            raise exceptions.AuthorizationException(error=errors.E_AQA_ANC_QE)
 
 def authorize_add_member_to_circle(uid, cid):
     interfaces=[]
     interfaces.append(deny.interfaces['User_AddMemberToCircle']+cid.hex)
     for iface in interfaces:
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
-            return False
-    return True
+            raise exceptions.AuthorizationException(error=errors.E_AQA_AAMTC_QE)
 

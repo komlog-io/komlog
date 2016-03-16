@@ -11,7 +11,8 @@ class AuthQuotesDenyTest(unittest.TestCase):
         password='password'
         email='test_auth.quotes.user@komlog.org'
         try:
-            self.user=userapi.get_user_config(username=username)
+            uid = userapi.get_uid(username=username)
+            self.user=userapi.get_user_config(uid=uid)
         except Exception:
             self.user=userapi.create_user(username=username, password=password, email=email)
 
