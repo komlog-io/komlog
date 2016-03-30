@@ -164,7 +164,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         ''' generate_auth_challenge should fail if user does not exist '''
         username='test_generate_auth_challenge_failure_non_existent_user'
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+        with self.assertRaises(exceptions.ChallengeGenerationException) as cm:
             api.generate_auth_challenge(username=username, pubkey=pubkey)
         self.assertEqual(cm.exception.error, errors.E_GAA_GAC_UNF)
 
@@ -175,7 +175,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        with self.assertRaises(exceptions.AgentNotFoundException) as cm:
+        with self.assertRaises(exceptions.ChallengeGenerationException) as cm:
             api.generate_auth_challenge(username=username, pubkey=pubkey)
         self.assertEqual(cm.exception.error, errors.E_GAA_GAC_ANF)
 
@@ -244,7 +244,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         challenge_hash=b'adsfasdf'
         signature=b'asdfasdfasdf'
-        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+        with self.assertRaises(exceptions.ChallengeValidationException) as cm:
             api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
         self.assertEqual(cm.exception.error, errors.E_GAA_VAC_UNF)
 
@@ -257,7 +257,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         challenge_hash=b'adsfasdf'
         signature=b'asdfasdfasdf'
-        with self.assertRaises(exceptions.AgentNotFoundException) as cm:
+        with self.assertRaises(exceptions.ChallengeValidationException) as cm:
             api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
         self.assertEqual(cm.exception.error, errors.E_GAA_VAC_ANF)
 

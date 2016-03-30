@@ -117,7 +117,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         response, cookie = loginapi.login_request(username, pubkey=pubkey)
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
-        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_GAC_UNF)
 
     def test_agent_login_generate_challenge_request_failure_non_existent_agent(self):
@@ -130,7 +130,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         response, cookie = loginapi.login_request(username, pubkey=pubkey)
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
-        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_GAC_ANF)
 
     def test_agent_login_generate_challenge_request_success(self):
@@ -212,7 +212,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
-        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_VAC_UNF)
 
     def test_agent_login_validate_challenge_request_failure_non_existent_agent(self):
@@ -227,7 +227,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
-        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_VAC_ANF)
 
     def test_agent_login_validate_challenge_request_failure_non_existent_challenge(self):

@@ -24,6 +24,7 @@ ACCESS_DENIED_STATUS_EXCEPTION_LIST=(
     gestexcept.AgentAlreadyExistsException,
     gestexcept.InvalidPasswordException,
     gestexcept.ChallengeValidationException,
+    gestexcept.ChallengeGenerationException,
 )
 
 NOT_FOUND_STATUS_EXCEPTION_LIST=(
@@ -56,7 +57,6 @@ INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
     gestexcept.CircleAddMemberException,
     gestexcept.CircleDeleteMemberException,
     eventexcept.UserEventCreationException,
-    gestexcept.ChallengeGenerationException,
 )
 
 NOT_ALLOWED_STATUS_EXCEPTION_LIST=(

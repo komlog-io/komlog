@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ -f /tmp/komwebagent.pid ]
+then
+    kill $(cat /tmp/komwebagent.pid)
+fi
+
 if [ -f /tmp/komweb.pid ]
 then
     kill $(cat /tmp/komweb.pid)

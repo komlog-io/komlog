@@ -15,4 +15,6 @@ nohup komlogs/bin/komanom.py &
 echo $! > /tmp/komanom.pid
 nohup komlogs/bin/komweb.py &
 echo $! > /tmp/komweb.pid
+nohup komlogs/bin/komwebagent.py &
+echo $! > /tmp/komwebagent.pid
 

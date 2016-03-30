@@ -2,6 +2,7 @@ import os
 import uuid
 import json
 import tornado.web
+from tornado.escape import json_decode
 from tornado.template import Template
 from komlibs.interface.web.api import agent
 from komlibs.interface.web.api import user
@@ -297,7 +298,7 @@ class LoginHandler(tornado.web.RequestHandler):
             pubkey=self.get_argument('k',None)
             challenge=self.get_argument('c',None)
             signature=self.get_argument('s',None)
-        except Exception as e:
+        except Exception:
             self.redirect(self.get_login_url())
         else:
             response,cookie=login.login_request(username=username, password=password, pubkey=pubkey, challenge=challenge, signature=signature)
@@ -309,6 +310,7 @@ class LoginHandler(tornado.web.RequestHandler):
                 if pubkey is not None:
                     self.set_status(response.status)
                     self.write(json.dumps(response.data))
+                    self.set_header('Content-Type','application/json; charset="utf-8"')
                 else:
                     self.render('login.html',page_title='Komlog', response=response)
 

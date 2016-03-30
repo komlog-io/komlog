@@ -29,10 +29,10 @@ def generate_auth_challenge(username, pubkey):
         raise exceptions.BadParametersException(error=errors.E_GAA_GAC_IPK)
     user=cassapiuser.get_user(username=username)
     if not user:
-        raise exceptions.UserNotFoundException(error=errors.E_GAA_GAC_UNF)
+        raise exceptions.ChallengeGenerationException(error=errors.E_GAA_GAC_UNF)
     agent_pubkey=cassapiagent.get_agent_pubkey(uid=user.uid, pubkey=pubkey)
     if not agent_pubkey:
-        raise exceptions.AgentNotFoundException(errors.E_GAA_GAC_ANF)
+        raise exceptions.ChallengeGenerationException(error=errors.E_GAA_GAC_ANF)
     challenge=crypto.get_random_sequence(size=64)
     ch_enc=crypto.encrypt(key=agent_pubkey.pubkey, plaintext=challenge)
     ch_hash=crypto.get_hash(message=challenge)
@@ -55,10 +55,10 @@ def validate_auth_challenge(username, pubkey, challenge_hash, signature):
         raise exceptions.BadParametersException(error=errors.E_GAA_VAC_ISG)
     user=cassapiuser.get_user(username=username)
     if not user:
-        raise exceptions.UserNotFoundException(error=errors.E_GAA_VAC_UNF)
+        raise exceptions.ChallengeValidationException(error=errors.E_GAA_VAC_UNF)
     agent_pubkey=cassapiagent.get_agent_pubkey(uid=user.uid, pubkey=pubkey)
     if not agent_pubkey:
-        raise exceptions.AgentNotFoundException(errors.E_GAA_VAC_ANF)
+        raise exceptions.ChallengeValidationException(error=errors.E_GAA_VAC_ANF)
     agent_challenge=cassapiagent.get_agent_challenge(aid=agent_pubkey.aid, challenge=challenge_hash)
     if not agent_challenge:
         raise exceptions.ChallengeValidationException(error=errors.E_GAA_VAC_CHNF)
