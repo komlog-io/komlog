@@ -103,11 +103,13 @@ def create_database(ip_list, keyspace=None, replication=None):
 
 def drop_database(ip_list, keyspace):
     Session=connection.Session(ip_list)
-    logger.logger.debug('dropping  keyspace: '+str(keyspace))
+    logger.logger.debug('dropping keyspace: '+str(keyspace))
     try:
-        Session.session.execute('''drop keyspace '''+keyspace)
+        Session.session.execute('drop keyspace '+keyspace, timeout=None)
     except Exception as e:
-        logger.logger.debug('Exception in drop keyspace: '+str(e))
+        logger.logger.debug('Exception dropping keyspace')
+        logger.logger.debug(str(e))
+        logger.logger.debug(str(type(e)))
         return False
     else:
         logger.logger.debug('keyspace deleted successfully')
