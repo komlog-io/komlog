@@ -5,8 +5,8 @@ Created on 24/02/2012
 @author: jcazor
 '''
 
-from komapp import komapp
-from komapp.modules import tester
+from komlog.komapp import komapp
+from komlog.komapp.modules import tester
 import os
 
 def main():

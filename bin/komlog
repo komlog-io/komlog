@@ -1,0 +1,21 @@
+#!/usr/bin/python3
+'''
+Created on 2016/04/01
+
+@author: Komlog Crew
+'''
+
+from komlog.komapp import komapp
+from komlog.komapp.modules import textmining,anomalies,storing,validation,events,gestconsole,rescontrol,websocketserver,webserver
+import os
+
+def main():
+    HOME = os.path.expanduser('~')
+    cfg_file = '.komlog/komlog.cfg'
+    program_name = 'komlog'
+    app = komapp.Komapp(os.path.join(HOME,cfg_file), program_name)
+    app.start()
+    
+
+if __name__ == "__main__":
+    main() 

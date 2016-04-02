@@ -7,8 +7,8 @@ Created on 30/09/2013
 @author: jcazor
 '''
 
-from komapp import komapp
-from komapp.modules import rescontrol
+from komlog.komapp import komapp
+from komlog.komapp.modules import rescontrol
 import os
 
 def main():

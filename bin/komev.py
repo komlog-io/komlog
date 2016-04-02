@@ -5,8 +5,8 @@ Created on 12/07/2015
 @author: jcazor
 '''
 
-from komapp import komapp
-from komapp.modules import events
+from komlog.komapp import komapp
+from komlog.komapp.modules import events
 import os
 
 def main():

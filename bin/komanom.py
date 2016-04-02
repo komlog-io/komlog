@@ -5,8 +5,8 @@ Created on 03/08/2015
 @author: jcazor
 '''
 
-from komapp import komapp
-from komapp.modules import anomalies
+from komlog.komapp import komapp
+from komlog.komapp.modules import anomalies
 import os
 
 def main():

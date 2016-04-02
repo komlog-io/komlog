@@ -5,8 +5,8 @@ Created on 29/02/2016
 @author: jcazor
 '''
 
-from komapp import komapp
-from komapp.modules import websocketserver
+from komlog.komapp import komapp
+from komlog.komapp.modules import websocketserver
 import os
 
 def main():

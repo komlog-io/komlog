@@ -5,8 +5,8 @@ Created on 26/12/2012
 @author: jcazor
 '''
 
-from komapp import komapp
-from komapp.modules import storing, validation
+from komlog.komapp import komapp
+from komlog.komapp.modules import storing, validation
 import os
 
 def main():

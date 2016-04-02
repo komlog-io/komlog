@@ -5,8 +5,8 @@ Created on 01/11/2014
 @author: jcazor
 '''
 
-from komapp import komapp
-from komapp.modules import webserver
+from komlog.komapp import komapp
+from komlog.komapp.modules import webserver
 import os
 
 def main():

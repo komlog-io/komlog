@@ -1,20 +1,20 @@
 #!/bin/bash
 
 cd $HOME
-nohup komlogs/bin/komai.py &
+nohup komai.py &
 echo $! > /tmp/komai.pid
-nohup komlogs/bin/komges.py &
+nohup komges.py &
 echo $! > /tmp/komges.pid
-nohup komlogs/bin/komdc.py &
+nohup komdc.py &
 echo $! > /tmp/komdc.pid
-nohup komlogs/bin/komrc.py &
+nohup komrc.py &
 echo $! > /tmp/komrc.pid
-nohup komlogs/bin/komev.py &
+nohup komev.py &
 echo $! > /tmp/komev.pid
-nohup komlogs/bin/komanom.py &
+nohup komanom.py &
 echo $! > /tmp/komanom.pid
-nohup komlogs/bin/komweb.py &
+nohup komweb.py &
 echo $! > /tmp/komweb.pid
-nohup komlogs/bin/komwebagent.py &
+nohup komwebagent.py &
 echo $! > /tmp/komwebagent.pid
 

@@ -1,5 +1,14 @@
-*.pyc
 *~
+lib/komlog/komws2/static/3p/
+build
+dist
+__pycache__/
+*.py[cod]
 *.swp
-komws2/static/3p/
+*.swo
+*.mo
+*.egg-info
+*.egg
+*.EGG
+*.EGG-INFO
 
