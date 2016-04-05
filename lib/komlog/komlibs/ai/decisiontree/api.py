@@ -34,6 +34,7 @@ def _learn_tree(rows, attributes, parent_id=1):
         return [decisiontree.DecisionTreeNode(attribute='', value=1, node_id=next_node_id, parent_id=parent_id, end_node=True, result=False)]
     else:
         if len(attributes)==0:
+            ''' No more atts to compare, should generate more relations for comparing '''
             return [decisiontree.DecisionTreeNode(attribute='', value=1, node_id=next_node_id, parent_id=parent_id, end_node=True, result=False)]
         next_att=_get_attribute(rows,attributes)
         attributes.remove(next_att)
@@ -65,11 +66,8 @@ def _get_attribute(rows, attributes):
     att=''
     for attribute in attributes:
         gain[attribute]=__G(rows,attribute)
-    maxgain=0.0
-    for key,value in gain.items():
-        if maxgain<=value:
-            maxgain=value
-            att=key
+    ordered = sorted(gain.items(), key= lambda x: (-x[1],int(x[0].split('_')[-1])))
+    att = ordered[0][0]
     return att
 
 def __G(rows, attribute):

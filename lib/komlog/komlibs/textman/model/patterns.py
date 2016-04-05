@@ -15,9 +15,10 @@ VAR_PREFIX_SEPARATOR_WITH_COMMA_REGEXP='(?<=[, \n\t/\|\(\[;:\*%$#"=])'
 VAR_SUFIX_SEPARATOR_WITH_COMMA_REGEXP='(?=[, \n\t/\|\(\];:\*%$#"])'
 
 SEPARATOR_REGEXP='([ ]+|[\n\t/\|\(\)\[\];:\*\.%\$\#"=])'
-WORD_REGEXP='([A-Za-z0-9_/]+)'
+WORD_REGEXP='([A-Za-z0-9_]+)'
 NUMBER_REGEXP='([0-9]+)'
 SPACES_REGEXP='([ ]+)'
+NEWLINE_REGEXP='(\n)'
 ANYTHING_REGEXP='(.{1})'
 
 FLOAT_LEFT_TO_RIGHT_WITH_THOUSAND_SEPARATOR_AND_DECSEP_COMMA='([-+]?[0-9]{1,3}(\.[0-9][0-9][0-9])+[,][0-9]+)'
@@ -99,6 +100,7 @@ ro_var_regex_14=re.compile(FLOAT_LEFT_TO_RIGHT_CSV_FORMATTED)
 ro_hash=re.compile(SEPARATOR_REGEXP+'|'+WORD_REGEXP+'|'+NUMBER_REGEXP+'|'+ANYTHING_REGEXP)
 ro_number=re.compile(NUMBER_REGEXP)
 ro_spaces=re.compile(SPACES_REGEXP)
+ro_newline=re.compile(NEWLINE_REGEXP)
 
 VAR_REGEXP_OBJECTS=[ro_var_regex_0,
                     ro_var_regex_1,

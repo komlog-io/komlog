@@ -12,6 +12,7 @@ DEFAULT_BOF_HASH=1
 DEFAULT_EOF_HASH=2
 DEFAULT_NUMBER_HASH=3
 DEFAULT_SPACES_HASH=4
+DEFAULT_NEWLINE_HASH = 5
 
 def get_variables_from_text(text_content):
     string=text_content
@@ -82,39 +83,57 @@ def get_ambiguous_variables(variable_list):
     return variables.VariableList(variables=list(ambiguous))
 
 def get_hash_sequence(content, left_position, right_position, sequence_deep):
+    num_lines = len(content.splitlines())
+    multiple_lines = True if num_lines > 1 else False
     items_found=0
     sequence={}
     if len(content)>right_position:
+        new_line_reached = False
         for i,item in enumerate(patterns.ro_hash.finditer(content[right_position:])):
             key='r_'+str(i+1)
             if patterns.ro_number.search(item.group()) and patterns.ro_number.search(item.group()).group()==item.group():
                 value=DEFAULT_NUMBER_HASH
             elif patterns.ro_spaces.search(item.group()) and patterns.ro_spaces.search(item.group()).group()==item.group():
                 value=DEFAULT_SPACES_HASH
+            elif patterns.ro_newline.search(item.group()) and patterns.ro_newline.search(item.group()).group()==item.group():
+                value=DEFAULT_NEWLINE_HASH
+                new_line_reached = True
             else:
                 value=zlib.adler32(bytes(item.group(),'utf-8'),0xffffffff)
             sequence[key]=value
             items_found+=1
-            if items_found==sequence_deep:
-                break
+            if items_found>=sequence_deep:
+                if multiple_lines:
+                    if new_line_reached:
+                        break
+                else:
+                    break
     if items_found<sequence_deep:
         key='r_'+str(items_found+1)
         value=DEFAULT_EOF_HASH
         sequence[key]=value
     items_found=0
     if left_position>=1:
+        new_line_reached = False
         for i,item in enumerate(patterns.ro_hash.finditer(content[left_position-1::-1])):
             key='l_'+str(i+1)
             if patterns.ro_number.search(item.group()) and patterns.ro_number.search(item.group()).group()==item.group():
                 value=DEFAULT_NUMBER_HASH
             elif patterns.ro_spaces.search(item.group()) and patterns.ro_spaces.search(item.group()).group()==item.group():
                 value=DEFAULT_SPACES_HASH
+            elif patterns.ro_newline.search(item.group()) and patterns.ro_newline.search(item.group()).group()==item.group():
+                value=DEFAULT_NEWLINE_HASH
+                new_line_reached = True
             else:
                 value=zlib.adler32(bytes(item.group(),'utf-8'),0xffffffff)
             sequence[key]=value
             items_found+=1
-            if items_found==sequence_deep:
-                break
+            if items_found>=sequence_deep:
+                if multiple_lines:
+                    if new_line_reached:
+                        break
+                else:
+                    break
     if items_found<sequence_deep:
         key='l_'+str(items_found+1)
         value=DEFAULT_BOF_HASH
