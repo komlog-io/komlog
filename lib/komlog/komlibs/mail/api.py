@@ -1,4 +1,4 @@
-from komlog.komfig import config, logger, options
+from komlog.komfig import logging, config, options
 from komlog.komlibs.general.validation import arguments
 from komlog.komlibs.mail import connection
 from komlog.komlibs.mail import types as mailtypes

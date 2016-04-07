@@ -3,7 +3,7 @@ import time
 from komlog.komws2 import webapp
 from komlog.komcass import connection as casscon
 from komlog.komapp.modules import modules
-from komlog.komfig import logger, config, options
+from komlog.komfig import logging, config, options
 from komlog.komimc import bus as msgbus
 from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
@@ -17,25 +17,25 @@ class Webserver(modules.Module):
 
     def signal_handler(self, signum, frame):
         if signum == signal.SIGTERM:
-            logger.logger.info('SIGTERM received, terminating')
+            logging.logger.info('SIGTERM received, terminating')
             now=time.time()
             self.ioloop.add_timeout(now+2,self.shutdown_ioloop)
         else:
-            logger.logger.info('signal '+str(signum)+' received, ignoring')
+            logging.logger.info('signal '+str(signum)+' received, ignoring')
 
     def start(self):
         signal.signal(signal.SIGTERM,self.signal_handler)
-        if not logger.initialize_logger(self.name+'_'+str(self.instance_number)):
+        if not logging.initialize_logging(self.name+'_'+str(self.instance_number)):
             exit()
-        logger.logger.info('Module started')
+        logging.logger.info('Module started')
         if not casscon.initialize_session():
-            logger.logger.error('Error initializing cassandra session')
+            logging.logger.error('Error initializing cassandra session')
             exit()
         if not msgbus.initialize_msgbus(self.name, self.instance_number, self.hostname):
-            logger.logger.error('Error initializing broker session')
+            logging.logger.error('Error initializing broker session')
             exit()
         if not self.params['http_listen_port']:
-            logger.logger.error('Key '+options.HTTP_LISTEN_PORT+' not found')
+            logging.logger.error('Key '+options.HTTP_LISTEN_PORT+' not found')
             exit()
         self.loop()
         self.terminate()
@@ -48,20 +48,20 @@ class Webserver(modules.Module):
         self.ioloop.start()
 
     def shutdown_ioloop(self):
-        logger.logger.info('Stopping HTTP server')
+        logging.logger.info('Stopping HTTP server')
         self.http_server.stop()
         deadline = time.time() + 60
         def stop_loop():
             now = time.time()
-            logger.logger.info('waiting for ioloop finishing requests')
+            logging.logger.info('waiting for ioloop finishing requests')
             if now < deadline and self.ioloop._callbacks:
                 self.ioloop.add_timeout(now+1, stop_loop)
             elif not self.ioloop._callbacks:
                 self.ioloop.stop()
-                logger.logger.info('ioloop stopped')
+                logging.logger.info('ioloop stopped')
             elif now > deadline:
-                logger.logger.info('Timeout expired waiting for ioloop shutdown, forcing it')
+                logging.logger.info('Timeout expired waiting for ioloop shutdown, forcing it')
                 self.ioloop.stop()
-                logger.logger.info('ioloop stopped')
+                logging.logger.info('ioloop stopped')
         stop_loop()
 

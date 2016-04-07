@@ -1,7 +1,7 @@
 import uuid
 import json
 from tornado import websocket
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komwebsock import auth
 from komlog.komlibs.interface.websocket import api as wsapi
 
@@ -24,7 +24,7 @@ class WSConnectionHandler(websocket.WebSocketHandler):
             self.write_message(json.dumps({'status':response.status,'reason':response.reason,'error':response.error}))
 
     def on_close(self):
-        logger.logger.debug('session closed')
+        logging.logger.debug('session closed')
 
 HANDLERS = [
             (r'/', WSConnectionHandler),

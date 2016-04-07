@@ -1,6 +1,6 @@
 import unittest
 import uuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.gestaccount.agent import api
 from komlog.komlibs.gestaccount.agent.states import *
 from komlog.komlibs.gestaccount.user import api as userapi

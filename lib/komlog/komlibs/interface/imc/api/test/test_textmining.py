@@ -1,6 +1,6 @@
 import unittest
 import uuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.interface.imc.api import textmining
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc import status, exceptions

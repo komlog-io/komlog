@@ -7,7 +7,7 @@ This file implement some cryptographic methods used in komlog
 '''
 
 import os
-from komlog.komfig import logger
+from komlog.komfig import logging
 from base64 import b64encode, b64decode, urlsafe_b64encode
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization

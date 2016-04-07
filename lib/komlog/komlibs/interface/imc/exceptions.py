@@ -1,4 +1,4 @@
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.events import exceptions as eventexcept
@@ -75,6 +75,6 @@ class ExceptionHandler(object):
         except INTERNAL_ERROR_STATUS_EXCEPTION_LIST as e:
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR,error=e.error)
         except Exception as e:
-            logger.logger.debug('IMC Response Exception: '+str(e))
+            logging.logger.debug('IMC Response Exception: '+str(e))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR)
 

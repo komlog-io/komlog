@@ -12,7 +12,7 @@ import uuid
 import json
 import os
 import pickle
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
 from komlog.komcass.api import datasource as cassapidatasource

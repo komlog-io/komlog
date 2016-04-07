@@ -6,7 +6,7 @@ Created on 31/12/2012
 import os
 import signal
 import time
-from komlog.komfig import config, logger, options
+from komlog.komfig import config, logging, options
 from komlog.komapp.modules import modules
 from multiprocessing import Process
 
@@ -20,16 +20,16 @@ class Komapp(object):
 
     def signal_handler(self, signum, frame):
         if signum == signal.SIGTERM:
-            logger.logger.info('SIGTERM received, terminating')
+            logging.logger.info('SIGTERM received, terminating')
             self.run = False
         else:
-            logger.logger.info('signal '+str(signum)+' received, ignoring')
+            logging.logger.info('signal '+str(signum)+' received, ignoring')
 
     def start(self):
         signal.signal(signal.SIGTERM,self.signal_handler)
         self.load_conf_file()
-        if logger.initialize_logger(self._program_name):
-            logger.logger.info('Configuration file loaded successfully')
+        if logging.initialize_logging(self._program_name):
+            logging.logger.info('Configuration file loaded successfully')
         self.load_modules()
         self.start_modules()
         self.loop()
@@ -71,14 +71,14 @@ class Komapp(object):
                                 modules_enabled.append(modobj)
                                 modobj = None
                 except NameError as e:
-                    logger.logger.exception('Module not found: '+str(e))
+                    logging.logger.exception('Module not found: '+str(e))
         self.modules = modules_enabled
 
     def start_modules(self, module=None):
         if not module:
             for i,module in enumerate(self.modules):
                 p = Process(target=module[0].start,name=module[0].__class__.__name__+'-'+str(module[1]))
-                logger.logger.info('Starting module: '+str(p))
+                logging.logger.info('Starting module: '+str(p))
                 p.start()
                 self.processes.insert(i,p)
         else:
@@ -86,21 +86,21 @@ class Komapp(object):
             if not self.processes[i].is_alive():
                 p = Process(target=module[0].start,name=module[0].__class__.__name__+'-'+str(module[1]))
                 p.start()
-                logger.logger.info('Starting module: '+str(p))
+                logging.logger.info('Starting module: '+str(p))
                 self.processes.pop(i)
                 self.processes.insert(i,p)
             else:
-                logger.logger.error('Trying to start an already running module')
+                logging.logger.error('Trying to start an already running module')
 
     def loop(self):
         while self.run:
             time.sleep(5)
             for i, process in enumerate(self.processes):
-                logger.logger.debug('Checking Module: '+str(i))
+                logging.logger.debug('Checking Module: '+str(i))
                 if not process.is_alive():
-                    logger.logger.error('Module death detected: '+str(process.pid))
+                    logging.logger.error('Module death detected: '+str(process.pid))
                     if not str(config.get(options.RESTART_MODULES)).lower() == 'no':
-                        logger.logger.error('Starting module: '+str(process.pid))
+                        logging.logger.error('Starting module: '+str(process.pid))
                         self.start_modules(self.modules[i])
                     else:
                         self.processes.pop(i)
@@ -110,12 +110,12 @@ class Komapp(object):
 
     def terminate(self):
         for process in self.processes:
-            logger.logger.info('Sending process SIGTERM signal: '+str(process))
+            logging.logger.info('Sending process SIGTERM signal: '+str(process))
             process.terminate()
         for process in self.processes:
-            logger.logger.info('Waiting process '+str(process)+' end...')
+            logging.logger.info('Waiting process '+str(process)+' end...')
             process.join()
-            logger.logger.info('OK')
-        logger.logger.info('Exiting')
+            logging.logger.info('OK')
+        logging.logger.info('Exiting')
 
 

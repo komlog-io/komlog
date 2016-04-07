@@ -5,7 +5,7 @@ Resource Control message definitions
 
 '''
 
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.auth import update
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.interface.imc.model import messages, responses
@@ -20,7 +20,7 @@ def process_message_UPDQUO(message):
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_INTERNAL_ERROR
-        logger.logger.debug('Quote update failed: '+str(operation))
+        logging.logger.debug('Quote update failed: '+str(operation))
     return response
 
 def process_message_RESAUTH(message):
@@ -31,6 +31,6 @@ def process_message_RESAUTH(message):
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_INTERNAL_ERROR
-        logger.logger.debug('Resource authorization update failed: '+str(operation))
+        logging.logger.debug('Resource authorization update failed: '+str(operation))
     return response
 

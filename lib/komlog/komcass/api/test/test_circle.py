@@ -3,7 +3,7 @@ import uuid
 from komlog.komlibs.general.time import timeuuid
 from komlog.komcass.api import circle as circleapi
 from komlog.komcass.model.orm import circle as ormcircle
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 
 class KomcassApiCircleTest(unittest.TestCase):

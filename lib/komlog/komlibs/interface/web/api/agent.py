@@ -1,6 +1,6 @@
 import uuid
 from base64 import b64decode
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth.requests import Requests

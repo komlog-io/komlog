@@ -20,7 +20,7 @@ from komlog.komlibs.gestaccount.snapshot import api as snapshotapi
 from komlog.komlibs.events.api import summary
 from komlog.komlibs.events.model import types, priorities
 from komlog.komlibs.events import exceptions, errors
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class EventsApiSummaryTest(unittest.TestCase):
     ''' komlibs.events.api.summary tests '''

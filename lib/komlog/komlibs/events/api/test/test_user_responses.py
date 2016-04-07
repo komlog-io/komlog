@@ -15,7 +15,7 @@ from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.widget import api as widgetapi
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class EventsApiUserResponsesTest(unittest.TestCase):
     ''' komlibs.events.api.user_responses tests '''

@@ -1,4 +1,4 @@
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.auth.quotes import update as quoup
 from komlog.komlibs.auth.quotes import compare as quocmp
 from komlog.komlibs.auth.quotes import deny as quodeny
@@ -26,9 +26,9 @@ def update_quotes(operation, params):
                 quote_deny_funcs[update_func]=getattr(quodeny,update_func)
                 qvalue=quote_update_funcs[update_func](params=params)
             except Exception as e:
-                logger.logger.exception('Exception getting quote funcions: '+update_func+' '+str(e))
+                logging.logger.exception('Exception getting quote funcions: '+update_func+' '+str(e))
         except Exception as e:
-            logger.logger.exception('Exception in quote update function: '+update_func+' '+str(e))
+            logging.logger.exception('Exception in quote update function: '+update_func+' '+str(e))
         if qvalue is not None:
             ''' quote updated successfully, the return value is the quota value updated'''
             ''' now determine if quota is aproaching limits and should block interface'''
@@ -38,9 +38,9 @@ def update_quotes(operation, params):
                 if quote_deny_funcs[update_func](params=params,deny=deny):
                     num_success+=1
             except Exception as e:
-                logger.logger.exception('Exception evaluating quote denial: '+update_func+' '+str(e))
+                logging.logger.exception('Exception evaluating quote denial: '+update_func+' '+str(e))
         else:
-            logger.logger.error('Error updating quote: '+update_func)
+            logging.logger.error('Error updating quote: '+update_func)
     if num_success==num_updates:
         return True
     else:
@@ -61,14 +61,14 @@ def update_resources(operation, params):
                 resource_update_funcs[update_func]=getattr(resup,update_func)
                 avalue=resource_update_funcs[update_func](params=params)
             except Exception as e:
-                logger.logger.exception('Exception getting authorization functions: '+update_func+' '+str(e))
+                logging.logger.exception('Exception getting authorization functions: '+update_func+' '+str(e))
         except Exception as e:
-            logger.logger.exception('Exception in authorization update function: '+update_func+' '+str(e))
+            logging.logger.exception('Exception in authorization update function: '+update_func+' '+str(e))
         if avalue:
             ''' auth updated successfully'''
             num_success+=1
         else:
-            logger.logger.error('Error updating authorization: '+update_func+' '+str(params))
+            logging.logger.error('Error updating authorization: '+update_func+' '+str(params))
     if num_success==num_updates:
         return True
     else:

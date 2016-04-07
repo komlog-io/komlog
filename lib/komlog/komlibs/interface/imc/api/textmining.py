@@ -5,7 +5,7 @@ Textmining message definitions
 '''
 
 import json
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
@@ -76,7 +76,7 @@ def process_message_GENTEXTSUMMARY(message):
     if not args.is_valid_uuid(did) or not args.is_valid_date(date):
         raise exceptions.BadParametersException()
     if datasourceapi.generate_datasource_text_summary(did=did, date=date):
-        logger.logger.debug('GENTEXTSUMMARY Success'+str(message.__dict__))
+        logging.logger.debug('GENTEXTSUMMARY Success'+str(message.__dict__))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_INTERNAL_ERROR

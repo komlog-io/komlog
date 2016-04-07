@@ -9,7 +9,7 @@ bus.py: Messages Bus implementation
 '''
 
 import redis
-from komlog.komfig import config, logger, options
+from komlog.komfig import logging, config, options
 from komlog.komimc import routing
 
 msgbus=None
@@ -23,9 +23,9 @@ class MessageBus:
         self.addr_list = routing.get_mod_address(module_id,module_instance,running_host)
         try:
             self.connection = redis.StrictRedis(host=self.broker)
-            logger.logger.debug('Session established with Redis Server: '+self.broker)
+            logging.logger.debug('Session established with Redis Server: '+self.broker)
         except Exception as e:
-            logger.logger.debug('Exception establishing connection with Redis Server: '+str(e))
+            logging.logger.debug('Exception establishing connection with Redis Server: '+str(e))
             raise e
     
     def sendMessage(self, komlog_message):
@@ -34,10 +34,10 @@ class MessageBus:
             if addr:
                 self.connection.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
             else:
-                logger.logger.error('Could not determine message destination address: '+komlog_message.type)
+                logging.logger.error('Could not determine message destination address: '+komlog_message.type)
                 return False
         except Exception as e:
-            logger.logger.exception('Exception sending message: '+str(e))
+            logging.logger.exception('Exception sending message: '+str(e))
             return False
         return True
     
@@ -49,15 +49,15 @@ class MessageBus:
             else:
                 return None
         except Exception as e:
-            logger.logger.debug('Exception retrieving messages (timeout='+str(timeout)+') address_list: '+str(self.addr_list))
-            logger.logger.exception('Exception retrieveing message: '+str(e))
+            logging.logger.debug('Exception retrieving messages (timeout='+str(timeout)+') address_list: '+str(self.addr_list))
+            logging.logger.exception('Exception retrieveing message: '+str(e))
             return None
     
     def send_message_to(self, addr, komlog_message):
         try:
             self.connection.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
         except Exception as e:
-            logger.logger.exception('Exception sending message: '+str(e))
+            logging.logger.exception('Exception sending message: '+str(e))
             return False
         return True
     
@@ -69,8 +69,8 @@ class MessageBus:
             else:
                 return None
         except Exception as e:
-            logger.logger.debug('Exception retrieving messages (timeout='+str(timeout)+') address_list: '+str(addr))
-            logger.logger.exception('Exception retrieveing message: '+str(e))
+            logging.logger.debug('Exception retrieving messages (timeout='+str(timeout)+') address_list: '+str(addr))
+            logging.logger.exception('Exception retrieveing message: '+str(e))
             return None
     
 def initialize_msgbus(module_name, module_instance, hostname):

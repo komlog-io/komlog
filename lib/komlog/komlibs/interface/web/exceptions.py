@@ -1,4 +1,4 @@
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.events import exceptions as eventexcept
@@ -87,7 +87,7 @@ class ExceptionHandler(object):
             data={'error':e.error}
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=e.error)
         except Exception as e:
-            logger.logger.debug('WEB Response non treated Exception: '+str(type(e))+str(e))
+            logging.logger.debug('WEB Response non treated Exception: '+str(type(e))+str(e))
             error=getattr(e,'error',-1)
             data={'error':error}
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=-1)

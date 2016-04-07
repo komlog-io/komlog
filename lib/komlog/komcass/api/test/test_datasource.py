@@ -4,7 +4,7 @@ import uuid
 from komlog.komlibs.general.time import timeuuid
 from komlog.komcass.api import datasource as datasourceapi
 from komlog.komcass.model.orm import datasource as ormdatasource
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 
 class KomcassApiDatasourceTest(unittest.TestCase):

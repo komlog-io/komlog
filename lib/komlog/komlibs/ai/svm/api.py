@@ -6,7 +6,7 @@ This file implements some useful methods related with support vector machine alg
 
 import numpy as np
 from sklearn import svm
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.ai.svm.model import novelty_detection as ndmodel
 
 def generate_novelty_detector_for_datasource(samples):

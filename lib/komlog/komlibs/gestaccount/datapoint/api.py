@@ -21,7 +21,7 @@ from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general import colors
 from komlog.komlibs.textman.api import variables as textmanvar
 from komlog.komlibs.ai.decisiontree import api as dtreeapi
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.graph.api import uri as graphuri
 
 def get_datapoint_data(pid, fromdate=None, todate=None, count=None):
@@ -135,24 +135,24 @@ def mark_negative_variable(pid, date, position, length):
     try:
         value=dsmapvars[position]
         if not value==length:
-            logger.logger.debug('Received length doesnt match stored value: '+str(datapoint.did)+' '+str(date)+' position: '+str(position)+' length: '+str(length))
+            logging.logger.debug('Received length doesnt match stored value: '+str(datapoint.did)+' '+str(date)+' position: '+str(position)+' length: '+str(length))
             raise exceptions.DatasourceVariableNotFoundException(error=errors.E_GPA_MNV_VLNF)
     except KeyError:
-        logger.logger.debug('Variable not found: '+str(datapoint.did)+' '+str(date)+' position: '+str(position)+' length: '+str(length))
+        logging.logger.debug('Variable not found: '+str(datapoint.did)+' '+str(date)+' position: '+str(position)+' length: '+str(length))
         raise exceptions.DatasourceVariableNotFoundException(error=errors.E_GPA_MNV_VPNF)
     #en este punto hemos comprobado que la muestra y variable existen, falta añadirla al listado de negativos
     if not cassapidatapoint.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length):
-        logger.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
+        logging.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
         return None
     #y eliminarla de los positivos si coincidiese con la que marcamos como negativo
     positive=cassapidatapoint.get_datapoint_dtree_positives_at(pid=pid, date=date)
     if positive and positive.position==position and positive.length==length:
         if not cassapidatapoint.delete_datapoint_dtree_positive_at(pid=pid, date=date):
-            logger.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
+            logging.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
             return None
     #y eliminarla de los datapoints del datasourcemap si estuviese
     if not cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid):
-        logger.logger.error('Error deleting datapoint from datasource map')
+        logging.logger.error('Error deleting datapoint from datasource map')
     generate_decision_tree(pid=pid)
     generate_inverse_decision_tree(pid=pid)
     datapoints_to_update=[]
@@ -179,7 +179,7 @@ def mark_positive_variable(pid, date, position, length, replace=True):
         raise exceptions.DatapointNotFoundException(error=errors.E_GPA_MPV_DNF)
     dsmap = cassapidatasource.get_datasource_map(did=datapoint.did, date=date)
     if not dsmap:
-        logger.logger.debug('DSMAP NOT FOUND EXCEPTION: date: '+date.hex+' did: '+datapoint.did.hex)
+        logging.logger.debug('DSMAP NOT FOUND EXCEPTION: date: '+date.hex+' did: '+datapoint.did.hex)
         raise exceptions.DatasourceMapNotFoundException(error=errors.E_GPA_MPV_DMNF)
     did=datapoint.did
     try:
@@ -211,13 +211,13 @@ def mark_positive_variable(pid, date, position, length, replace=True):
                     raise exceptions.VariableMatchesExistingDatapointException(error=errors.E_GPA_MPV_VAE)
     ''' establecemos la variable como positiva para este datapoint '''
     if not cassapidatapoint.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length):
-        logger.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
+        logging.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
         return None
     if not cassapidatapoint.delete_datapoint_dtree_negative_at(pid=pid, date=date, position=position):
-        logger.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
+        logging.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
         return None
     if not cassapidatasource.add_datapoint_to_datasource_map(did=did, date=date, pid=pid, position=position):
-        logger.logger.error('Error updating datasource map ')
+        logging.logger.error('Error updating datasource map ')
     generate_decision_tree(pid=pid)
     generate_inverse_decision_tree(pid=pid)
     return datapoints_to_update
@@ -240,15 +240,15 @@ def mark_missing_datapoint(pid, date):
         raise exceptions.DatasourceMapNotFoundException(error=errors.E_GPA_MMDP_DMNF)
     for position,length in dsmapvars.items():
         if not cassapidatapoint.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length):
-            logger.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
+            logging.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
             return None
     #y eliminarla de los positivos si estuviese
     if not cassapidatapoint.delete_datapoint_dtree_positive_at(pid=pid, date=date):
-        logger.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
+        logging.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
         return None
     #y eliminarla de los datapoints del datasourcemap si estuviese
     if not cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid):
-        logger.logger.error('Error deleting datapoint from datasource map')
+        logging.logger.error('Error deleting datapoint from datasource map')
     generate_decision_tree(pid=pid)
     generate_inverse_decision_tree(pid=pid)
     datapoints_to_update=[]
@@ -390,7 +390,7 @@ def monitor_new_datapoint(did, date, position, length, datapointname):
         if 'pid' in datapoint:
             cassapidatapoint.delete_datapoint(pid=datapoint['pid'])
             graphuri.dissociate_vertex(ido=datapoint['pid'])
-        logger.logger.debug('Exception monitoring new datapoint: '+str(e))
+        logging.logger.debug('Exception monitoring new datapoint: '+str(e))
         raise e
 
 def store_datapoint_values(pid, date, store_newer=True):
@@ -511,7 +511,7 @@ def store_datasource_values(did, date):
                     loop_pids.remove(pid)
                     break
                 else:
-                    logger.logger.error('Error inserting datapoint data. pid: %s, dsmap.date: %s.' %(pid.hex,date.hex))
+                    logging.logger.error('Error inserting datapoint data. pid: %s, dsmap.date: %s.' %(pid.hex,date.hex))
                     break
     return {'dp_not_found':loop_pids}
 

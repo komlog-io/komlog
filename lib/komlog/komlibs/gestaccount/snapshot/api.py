@@ -20,7 +20,7 @@ from komlog.komlibs.gestaccount.widget import types
 from komlog.komlibs.gestaccount import exceptions, errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 def get_snapshot_config(nid):
     if not args.is_valid_uuid(nid):

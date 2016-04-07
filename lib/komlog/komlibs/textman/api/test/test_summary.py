@@ -2,7 +2,7 @@ import unittest
 import uuid
 from komlog.komlibs.textman.api import summary as summaryapi
 from komlog.komlibs.textman.model import summary as summarymodel
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class TextmanApiSummaryTest(unittest.TestCase):
     ''' komlibs.textman.api.summary tests '''

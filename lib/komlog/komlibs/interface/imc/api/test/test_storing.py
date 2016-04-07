@@ -3,7 +3,7 @@ import uuid
 import json
 import time
 import os
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komfs import api as fsapi
 from komlog.komlibs.interface.imc.api import storing
 from komlog.komlibs.interface.imc.model import messages

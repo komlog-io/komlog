@@ -3,7 +3,7 @@ import uuid
 from komlog.komlibs.graph.api import kin as graphkin
 from komlog.komlibs.graph.relations import edge, vertex
 from komlog.komlibs.general.time import timeuuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class GraphApiKinTest(unittest.TestCase):
     ''' komlog.graph.api.kin tests '''

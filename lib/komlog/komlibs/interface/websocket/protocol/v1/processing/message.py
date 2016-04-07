@@ -7,7 +7,7 @@ protocol
 
 import uuid
 import json
-from komlog.komfig import logger, config, options
+from komlog.komfig import logging, config, options
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth.requests import Requests
 from komlog.komlibs.gestaccount.agent import api as agentapi

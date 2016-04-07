@@ -1,4 +1,4 @@
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.events import exceptions as eventexcept
@@ -67,7 +67,7 @@ class ExceptionHandler:
         except MESSAGE_EXECUTION_ERROR_STATUS_EXCEPTION_LIST as e:
             return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, reason='msg exec error', error=e.error)
         except Exception as e:
-            logger.logger.debug('WEBSOCKET Response non treated Exception: '+str(e))
+            logging.logger.debug('WEBSOCKET Response non treated Exception: '+str(e))
             error=getattr(e,'error',-1)
             return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, error=error)
 

@@ -11,7 +11,7 @@ update user resource utilization and control access based on this
 
 import json
 import uuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import operations as authoperations
 from komlog.komlibs.auth import update as authupdate

@@ -10,7 +10,7 @@ This file contains funcions and classes related with email connections and its o
 '''
 
 import smtplib
-from komlog.komfig import config, logger, options
+from komlog.komfig import logging, config, options
 
 mailer=None
 
@@ -40,29 +40,29 @@ class Mailer(object):
         mailer.send([msg1, msg2, msg3])
         """
         try:
-            logger.logger.debug('Creating SMTP Server to: '+self.host)
+            logging.logger.debug('Creating SMTP Server to: '+self.host)
             #server = smtplib.SMTP(self.host)
             server = smtplib.SMTP_SSL(self.host,465)
-            logger.logger.debug('EHLO')
+            logging.logger.debug('EHLO')
             server.ehlo()
             #server.starttls()
             server.ehlo()
 
             if self._usr and self._pwd:
-                logger.logger.debug('SMTP LOGIN usr: '+self._usr)
+                logging.logger.debug('SMTP LOGIN usr: '+self._usr)
                 server.login(self._usr, self._pwd)
 
             try:
                 for m in msg:
-                    logger.logger.debug('SMTP sending message: '+m)
+                    logging.logger.debug('SMTP sending message: '+m)
                     self._send(server, m)
             except TypeError:
                 self._send(server, msg)
             server.quit()
-            logger.logger.debug('SMTP message sent OK')
+            logging.logger.debug('SMTP message sent OK')
             return True
         except Exception as e:
-            logger.logger.debug('Exception: '+str(e))
+            logging.logger.debug('Exception: '+str(e))
             return False
 
     def _send(self, server, msg):
@@ -80,11 +80,11 @@ def initialize_mailer():
     user=config.get(options.MAIL_USER)
     password=config.get(options.MAIL_PASSWORD)
     if not server or not user or not password:
-        logger.logger.error('Error loading mail server parameters')
+        logging.logger.error('Error loading mail server parameters')
         return False
     mailer=Mailer(server)
     mailer.login(user, password)
-    logger.logger.debug('Mail connection initialized successfully')
+    logging.logger.debug('Mail connection initialized successfully')
     return True
 
 def terminate_mailer():

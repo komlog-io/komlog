@@ -2,7 +2,7 @@ import unittest
 import uuid
 import json
 from base64 import b64encode, b64decode
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.auth import errors as autherrors
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto 

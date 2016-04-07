@@ -7,7 +7,7 @@ messages api
 
 '''
 
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komimc import bus as msgbus
 from komlog.komlibs.interface.imc import api as imcapi
 from komlog.komlibs.interface.imc import status
@@ -29,7 +29,7 @@ def retrieve_message(timeout=0):
             message=getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[mtype])(serialized_message=s_message)
             return message
         except Exception as e:
-            logger.logger.exception('Cannot map message.type to message Class: '+str(e))
+            logging.logger.exception('Cannot map message.type to message Class: '+str(e))
             return None
     else:
         return None
@@ -39,7 +39,7 @@ def process_message(message):
 
 def process_msg_result(msg_result):
     if msg_result.status==status.IMC_STATUS_INTERNAL_ERROR:
-        logger.logger.error('Error processing message '+str(msg_result.message_type)+': '+str(msg_result.error))
+        logging.logger.error('Error processing message '+str(msg_result.message_type)+': '+str(msg_result.error))
     for msg in msg_result.get_msg_originated():
         send_message(msg)
     return True
@@ -59,7 +59,7 @@ def retrieve_message_from(addr, timeout=0):
             message=getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[mtype])(serialized_message=s_message)
             return message
         except Exception as e:
-            logger.logger.exception('Cannot map message.type to message Class: '+str(e))
+            logging.logger.exception('Cannot map message.type to message Class: '+str(e))
             return None
     else:
         return None

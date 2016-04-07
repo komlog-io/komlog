@@ -1,7 +1,7 @@
 import math
 import copy
 from komlog.komlibs.ai.decisiontree.model import decisiontree
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 
 def generate_decision_tree(training_set):

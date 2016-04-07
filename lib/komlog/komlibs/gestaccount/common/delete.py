@@ -5,7 +5,7 @@ This file implement delete operations of gestaccount elements.
 
 '''
 
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
 from komlog.komcass.api import datasource as cassapidatasource

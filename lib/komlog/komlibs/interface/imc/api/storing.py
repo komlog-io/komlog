@@ -8,7 +8,7 @@ Storing message definitions
 import os
 import json
 import uuid
-from komlog.komfig import config, logger, options
+from komlog.komfig import logging, config, options
 from komlog.komfs import api as fsapi
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.validation import arguments as args
@@ -27,17 +27,17 @@ def process_message_STOSMP(message):
     try:
         os.rename(f,f[:-5]+'.wspl')
     except OSError:
-        logger.logger.error('Error renaming file before starting to process it: '+f)
+        logging.logger.error('Error renaming file before starting to process it: '+f)
         response.status=status.IMC_STATUS_INTERNAL_ERROR
     else:
         filename = f[:-5]+'.wspl'
         file_content=fsapi.get_file_content(filename)
         if not file_content:
-            logger.logger.error('Error loading file content. File is empty: '+f)
+            logging.logger.error('Error loading file content. File is empty: '+f)
             try:
                 os.rename(filename[:-5]+'.wspl',filename[:-5]+'.xspl')
             except Exception as e:
-                logger.logger.debug('Error renaming file after failing loading its content: '+str(e))
+                logging.logger.debug('Error renaming file after failing loading its content: '+str(e))
             response.status=status.IMC_STATUS_INTERNAL_ERROR
             return response
         try:
@@ -45,11 +45,11 @@ def process_message_STOSMP(message):
             if not isinstance(metainfo,dict):
                 raise TypeError
         except Exception as e:
-            logger.logger.error('Error loading json content from file: '+f+' '+str(e))
+            logging.logger.error('Error loading json content from file: '+f+' '+str(e))
             try:
                 os.rename(filename[:-5]+'.wspl',filename[:-5]+'.xspl')
             except Exception as e:
-                logger.logger.debug('Error renaming file after failing loading json content: '+str(e))
+                logging.logger.debug('Error renaming file after failing loading json content: '+str(e))
             response.status=status.IMC_STATUS_BAD_PARAMETERS
             return response
         str_did=metainfo['did'] if 'did' in metainfo else None
@@ -57,12 +57,12 @@ def process_message_STOSMP(message):
         content=sampledata['content'] if 'content' in sampledata else None
         timestamp=sampledata['ts'] if 'ts' in sampledata else None
         if not args.is_valid_datasource_content(content) or not args.is_valid_timestamp(timestamp) or not args.is_valid_hex_uuid(str_did):
-            logger.logger.debug('Error validating file content ('+filename+'): content('+str(args.is_valid_datasource_content(content))+\
+            logging.logger.debug('Error validating file content ('+filename+'): content('+str(args.is_valid_datasource_content(content))+\
             '), timestamp('+str(args.is_valid_timestamp(timestamp))+'), did('+str(args.is_valid_hex_uuid(str_did))+')')
             try:
                 os.rename(filename[:-5]+'.wspl',filename[:-5]+'.xspl')
             except Exception as e:
-                logger.logger.debug('Error renaming file after failing checking its content: '+str(e))
+                logging.logger.debug('Error renaming file after failing checking its content: '+str(e))
             response.status=status.IMC_STATUS_BAD_PARAMETERS
             return response
         did=uuid.UUID(str_did)
@@ -71,23 +71,23 @@ def process_message_STOSMP(message):
         if result:
             stored_path=config.get(options.SAMPLES_STORED_PATH)
             if not stored_path:
-                logger.logger.debug('Error. SAMPLES_STORED_PATH configuration key not set.')
+                logging.logger.debug('Error. SAMPLES_STORED_PATH configuration key not set.')
                 stored_path=os.path.dirname(filename)
             fo = os.path.join(stored_path,os.path.basename(filename)[:-5]+'.sspl')
             try:
                 os.rename(filename,fo)
             except Exception as e:
-                logger.logger.debug('Error moving processed file to stored path: '+str(e))
+                logging.logger.debug('Error moving processed file to stored path: '+str(e))
             response.add_msg_originated(messages.GenerateTextSummaryMessage(did=did,date=date))
             response.add_msg_originated(messages.MapVarsMessage(did=did,date=date))
             response.status=status.IMC_STATUS_OK
         else:
-            logger.logger.debug('Error storing sample. did: '+did.hex+' date:'+ds_date.hex)
+            logging.logger.debug('Error storing sample. did: '+did.hex+' date:'+ds_date.hex)
             fo = filename[:-5]+'.xspl'
             try:
                 os.rename(filename,fo)
             except Exception as e:
-                logger.logger.debug('Error renaming file after failing proccessing it: '+str(e))
+                logging.logger.debug('Error renaming file after failing proccessing it: '+str(e))
             response.status=status.IMC_STATUS_INTERNAL_ERROR
     return response
 

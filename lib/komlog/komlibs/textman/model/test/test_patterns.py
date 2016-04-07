@@ -2,7 +2,7 @@ import unittest
 import uuid
 from decimal import Decimal
 from komlog.komlibs.textman.model import patterns
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class TextmanModelPatternsTest(unittest.TestCase):
     ''' komlibs.textman.model.patterns tests '''

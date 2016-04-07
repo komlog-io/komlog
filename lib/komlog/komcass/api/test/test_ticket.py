@@ -7,7 +7,7 @@ from komlog.komcass.api import ticket as ticketapi
 from komlog.komcass.model.orm import ticket as ormticket
 from komlog.komcass.model.statement import ticket as stmtticket
 from komlog.komcass import connection
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 
 class KomcassApiTicketTest(unittest.TestCase):

@@ -7,7 +7,7 @@ from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.auth import exceptions, permissions, errors
 from komlog.komlibs.gestaccount.user import api as gestuserapi
 from komlog.komlibs.general.time import timeuuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class AuthAuthorizationTest(unittest.TestCase):
     ''' komlog.auth.authorization tests '''
@@ -50,7 +50,7 @@ class AuthAuthorizationTest(unittest.TestCase):
             try:
                 f = authorization.func_requests[req]
             except KeyError:
-                logger.logger.debug('Request associated function not found :'+str(req))
+                logging.logger.debug('Request associated function not found :'+str(req))
                 f = None
             finally:
                 self.assertIsNotNone(f)
@@ -61,7 +61,7 @@ class AuthAuthorizationTest(unittest.TestCase):
             try:
                 pos=inspect.getargspec(func).args.index('passport')
             except Exception:
-                logger.logger.debug('passport argument not found in '+str(func.__name__))
+                logging.logger.debug('passport argument not found in '+str(func.__name__))
                 pos=-1
             finally:
                 self.assertEqual(pos,0)

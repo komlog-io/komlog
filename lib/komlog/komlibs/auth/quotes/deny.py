@@ -11,7 +11,7 @@ This file implements functions to deny access to resourcess because of quotes co
 '''
 
 from komlog.komcass.api import interface as cassapiiface
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 interfaces={'User_AgentCreation':'/user/agentcreation/',
             'User_GraphCreation':'/user/graphcreation/',

@@ -3,7 +3,7 @@ import uuid
 from komlog.komlibs.general.time import timeuuid
 from komlog.komcass.api import graph as graphapi
 from komlog.komcass.model.orm import graph as ormgraph
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class KomcassApiGraphTest(unittest.TestCase):
     ''' komlog.komcass.api.graph tests '''

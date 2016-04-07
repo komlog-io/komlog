@@ -4,7 +4,7 @@ This file defines the logic associated with web interface operations
 
 '''
 
-from komlog.komfig import logger
+from komlog.komfig import logging
 from base64 import b64encode, b64decode
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth.requests import Requests

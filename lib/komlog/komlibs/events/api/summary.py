@@ -5,7 +5,7 @@ Methods for generating Event Summaries
 '''
 
 import uuid, json
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komcass.api import events as cassapievents
 from komlog.komcass.api import datasource as cassapidatasource
 from komlog.komcass.api import datapoint as cassapidatapoint
@@ -29,7 +29,7 @@ def generate_user_event_graph_summary_data(event_type, parameters):
     try:
         return _generate_user_event_graph_summary_data_funcs[event_type](parameters)
     except Exception as e:
-        logger.logger.debug('Exception generating summary: '+str(e))
+        logging.logger.debug('Exception generating summary: '+str(e))
         return None
 
 def _generate_graph_summary_data_UENNSS(parameters):

@@ -7,7 +7,7 @@ This file implements some methods for agent authentication
 
 import functools, json
 from komlog.komlibs.auth import passport
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 def agent_authenticated(method):
     @functools.wraps(method)

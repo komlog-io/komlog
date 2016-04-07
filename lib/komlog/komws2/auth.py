@@ -8,7 +8,7 @@ jcazor
 
 import functools, json
 from komlog.komlibs.auth import passport
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 def authenticated(method):
     @functools.wraps(method)

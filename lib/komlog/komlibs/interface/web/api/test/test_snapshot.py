@@ -25,7 +25,7 @@ from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc.api import rescontrol, gestconsole
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 
 class InterfaceWebApiSnapshotTest(unittest.TestCase):

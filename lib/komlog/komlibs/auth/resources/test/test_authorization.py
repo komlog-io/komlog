@@ -4,7 +4,7 @@ from komlog.komlibs.auth import permissions, exceptions, errors
 from komlog.komlibs.auth.resources import authorization
 from komlog.komcass.api import permission as cassapiperm
 from komlog.komlibs.gestaccount.user import api as userapi
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 
 class AuthResourcesAuthorizationTest(unittest.TestCase):

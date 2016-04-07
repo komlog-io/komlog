@@ -21,7 +21,7 @@ from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc.api import rescontrol
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 
 class InterfaceWebApiDatapointTest(unittest.TestCase):
@@ -328,7 +328,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                     if msgresult:
                         msgapi.process_msg_result(msgresult)
                 except Exception as e:
-                    logger.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
+                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
                     pass
             else:
                 break
@@ -381,7 +381,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                     if msgresult:
                         msgapi.process_msg_result(msgresult)
                 except Exception as e:
-                    logger.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
+                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
                     pass
             else:
                 break
@@ -434,7 +434,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                     if msgresult:
                         msgapi.process_msg_result(msgresult)
                 except Exception as e:
-                    logger.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
+                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
                     pass
             else:
                 break
@@ -488,7 +488,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                     if msgresult:
                         msgapi.process_msg_result(msgresult)
                 except Exception as e:
-                    logger.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
+                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
                     pass
             else:
                 break

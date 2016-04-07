@@ -5,7 +5,7 @@ Created on 01/10/2014
 @author: komlog crew
 '''
 
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komcass.model.orm import user as ormuser
 from komlog.komcass.model.statement import user as stmtuser
 from komlog.komcass.exception import user as excpuser

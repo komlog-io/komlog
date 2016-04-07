@@ -11,3 +11,7 @@ LOG_ROTATION=True
 LOG_MAX_BYTES=10000
 LOG_BACKUP_COUNT=3
 LOG_FORMAT='%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s'
+COUNTERS_LOG_FORMAT='%(processName)s %(message)s'
+COUNTERS_LOG_HOST='localhost'
+COUNTERS_LOG_PORT=514
+COUNTERS_LOG_FACILITY='local7'

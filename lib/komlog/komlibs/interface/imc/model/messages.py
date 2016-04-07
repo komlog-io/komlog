@@ -12,7 +12,7 @@ import uuid
 import json
 from komlog.komlibs.interface.imc import exceptions
 from komlog.komlibs.general.validation import arguments as args
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 
 #MESSAGE LIST

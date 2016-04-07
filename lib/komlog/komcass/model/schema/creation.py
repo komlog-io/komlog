@@ -1,4 +1,4 @@
-from komlog.komfig import logger
+from komlog.komfig import logging
 from cassandra import AlreadyExists
 from komlog.komcass.model.schema.keyspace import KEYSPACE, REPLICATION
 from komlog.komcass.model.schema import user
@@ -20,19 +20,19 @@ from komlog.komcass.model.schema import ticket
 from komlog.komcass import connection
 
 def create_keyspace(session, keyspace, replication):
-    logger.logger.debug('Creating keyspace: '+str(keyspace)+' with replication: '+str(replication))
+    logging.logger.debug('Creating keyspace: '+str(keyspace)+' with replication: '+str(replication))
     try:
         session.execute('''create keyspace '''+keyspace\
         +''' WITH REPLICATION = '''+str(replication)+''';''')
     except AlreadyExists as e:
-        logger.logger.debug('Keyspace Already exists, aborting')
+        logging.logger.debug('Keyspace Already exists, aborting')
         return False
     else:
-        logger.logger.debug('keyspace created successfully')
+        logging.logger.debug('keyspace created successfully')
         return True
 
 def create_schema(session):
-    logger.logger.debug('Creating database schema')
+    logging.logger.debug('Creating database schema')
     query=None
     try:
         for obj in user.OBJECTS:
@@ -81,11 +81,11 @@ def create_schema(session):
             query=getattr(ticket,obj)
             session.execute(query)
     except Exception as e:
-        logger.logger.debug('Error creating schema '+str(e))
-        logger.logger.debug(query)
+        logging.logger.debug('Error creating schema '+str(e))
+        logging.logger.debug(query)
         return False
     else:
-        logger.logger.debug('Schema created successfully')
+        logging.logger.debug('Schema created successfully')
         return True
 
 def create_database(ip_list, keyspace=None, replication=None):
@@ -103,15 +103,15 @@ def create_database(ip_list, keyspace=None, replication=None):
 
 def drop_database(ip_list, keyspace):
     Session=connection.Session(ip_list)
-    logger.logger.debug('dropping keyspace: '+str(keyspace))
+    logging.logger.debug('dropping keyspace: '+str(keyspace))
     try:
         Session.session.execute('drop keyspace '+keyspace, timeout=None)
     except Exception as e:
-        logger.logger.debug('Exception dropping keyspace')
-        logger.logger.debug(str(e))
-        logger.logger.debug(str(type(e)))
+        logging.logger.debug('Exception dropping keyspace')
+        logging.logger.debug(str(e))
+        logging.logger.debug(str(type(e)))
         return False
     else:
-        logger.logger.debug('keyspace deleted successfully')
+        logging.logger.debug('keyspace deleted successfully')
         return True
 

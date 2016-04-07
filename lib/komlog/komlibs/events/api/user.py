@@ -4,7 +4,7 @@ Methods for manipulating User Events
 
 '''
 
-from komlog.komfig import logger
+from komlog.komfig import logging
 import uuid
 from komlog.komcass.api import events as cassapievents
 from komlog.komcass.api import user as cassapiuser

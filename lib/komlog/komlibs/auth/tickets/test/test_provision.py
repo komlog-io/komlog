@@ -8,7 +8,7 @@ from komlog.komcass.api import ticket as ticketapi
 from komlog.komlibs.auth.tickets import provision
 from komlog.komlibs.auth.tickets.types import share
 from komlog.komlibs.auth import exceptions, errors, permissions
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 
 class AuthTicketsProvisionTest(unittest.TestCase):

@@ -7,7 +7,7 @@ Created on 01/10/2014
 from cassandra.cluster import Cluster
 from cassandra.query import dict_factory
 from komlog.komcass.model import statement
-from komlog.komfig import config, logger, options
+from komlog.komfig import logging, config, options
 
 session = None
 
@@ -27,7 +27,7 @@ class Session:
             row = self.execute(stmt,parameters)
             return row
         except Exception as e:
-            logger.logger.exception('Exception in cassandra session: '+str(e))
+            logging.logger.exception('Exception in cassandra session: '+str(e))
             return None
 
 def initialize_session():
@@ -37,10 +37,10 @@ def initialize_session():
     cluster = list(host for host in cluster.split(',') if len(host)>0) if cluster else None
     if cluster and keyspace:
         session = Session(cluster,keyspace)
-        logger.logger.info('Cassandra session opened successfully to cluster: '+str(cluster)+', keyspace: '+str(keyspace))
+        logging.logger.info('Cassandra session opened successfully to cluster: '+str(cluster)+', keyspace: '+str(keyspace))
         return True
     else:
-        logger.logger.error('Cassandra parameters not found. Cluster: '+str(cluster)+' keyspace: '+str(keyspace))
+        logging.logger.error('Cassandra parameters not found. Cluster: '+str(cluster)+' keyspace: '+str(keyspace))
         return None
 
 def terminate_session():

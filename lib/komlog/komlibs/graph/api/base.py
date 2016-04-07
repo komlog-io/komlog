@@ -12,7 +12,7 @@ from komlog.komcass.model.orm import graph as ormgraph
 from komlog.komlibs.graph.relations import edge, vertex
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 def gen_get_outgoing_relations_from(ido, edge_type_list=edge.ALL, path_edge_type_list=edge.ALL, depth_level=-1):
     ''' generator '''
@@ -140,17 +140,17 @@ def replace_vertex(actual_vertex, new_vertex, new_vertex_type, edge_type_list):
         for actual_rel in incoming_relations:
             if rel.ido==actual_rel.ido and type(rel)==type(actual_rel):
                 #conflict detected
-                logger.logger.debug('conflict detected: same ido')
+                logging.logger.debug('conflict detected: same ido')
                 return False
     for rel in gen_get_outgoing_relations_from(ido=new_vertex, edge_type_list=edge_type_list, path_edge_type_list=edge_type_list, depth_level=1):
         for actual_rel in outgoing_relations:
             if (rel.idd==actual_rel.idd and type(rel)==type(actual_rel)):
                 #conflict detected
-                logger.logger.debug('conflict detected: same idd')
+                logging.logger.debug('conflict detected: same idd')
                 return False
             elif (isinstance(rel,ormgraph.UriRelation) and isinstance(actual_rel,ormgraph.UriRelation) and rel.uri==actual_rel.uri):
                 #conflict detected
-                logger.logger.debug('conflict detected: same outgoing uri')
+                logging.logger.debug('conflict detected: same outgoing uri')
                 return False
     for rel in incoming_relations:
         if isinstance(rel, ormgraph.UriRelation):

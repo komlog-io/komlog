@@ -2,7 +2,7 @@ import unittest
 import time
 import uuid
 import json
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.interface.websocket.protocol.v1 import errors, exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.model import operation
 from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operation

@@ -17,7 +17,7 @@ from komlog.komlibs.interface.web.api import uri
 from komlog.komlibs.interface.web.api import events
 from komlog.komlibs.interface.web import status
 from komlog.komlibs.general.time import timeuuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komws2 import auth
 
 class AgentsHandler(tornado.web.RequestHandler):

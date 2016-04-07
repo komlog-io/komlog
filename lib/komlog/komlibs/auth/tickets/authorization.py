@@ -11,7 +11,7 @@ from komlog.komcass.model.orm import ticket as ormticket
 from komlog.komlibs.auth import exceptions, errors, permissions
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 def authorize_get_datasource_data(uid, tid, did, ii, ie):
     if not args.is_valid_uuid(uid):

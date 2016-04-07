@@ -7,7 +7,7 @@ from komlog.komcass.model.orm import events as ormevents
 from komlog.komcass.model.parametrization.events import types
 from komlog.komcass.model.statement import events as stmtevents
 from komlog.komcass import connection
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 
 def get_user_event(uid, date):

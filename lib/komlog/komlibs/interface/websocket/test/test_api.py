@@ -1,7 +1,7 @@
 import unittest
 import time
 import uuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.gestaccount import errors as gesterrors
 from komlog.komlibs.interface.websocket import api

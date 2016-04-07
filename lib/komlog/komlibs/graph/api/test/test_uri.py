@@ -3,7 +3,7 @@ import uuid
 from komlog.komlibs.graph.api import uri as graphuri
 from komlog.komlibs.graph.relations import edge, vertex
 from komlog.komlibs.general.time import timeuuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class GraphApiUriTest(unittest.TestCase):
     ''' komlog.graph.api.uri tests '''

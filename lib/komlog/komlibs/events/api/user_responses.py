@@ -4,7 +4,7 @@ Methods for manipulating User Events Responses
 
 '''
 
-from komlog.komfig import logger
+from komlog.komfig import logging
 import uuid, json
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid

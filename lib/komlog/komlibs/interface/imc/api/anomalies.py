@@ -5,7 +5,7 @@ Anomalies message definitions
 '''
 
 import uuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi

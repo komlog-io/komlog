@@ -1,7 +1,7 @@
 import unittest
 import uuid
 import time
-from komlog.komfig import logger, options
+from komlog.komfig import logging, options
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import exceptions as authexcept

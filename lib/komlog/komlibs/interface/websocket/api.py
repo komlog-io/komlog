@@ -5,7 +5,7 @@ websocket interface
 
 '''
 
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.interface.websocket.protocol.v1 import api as apiv1
@@ -21,7 +21,7 @@ def process_message(passport, message):
         or not 'action' in message\
         or not args.is_valid_int(message['v'])\
         or not args.is_valid_string(message['action']):
-        logger.logger.debug('invalid msg received: '+str(message))
+        logging.logger.debug('invalid msg received: '+str(message))
         return responsev1.Response(status=statusv1.PROTOCOL_ERROR, reason='Send a valid version and action', error=errorsv1.E_IWSA_PM_IVA)
     if message['v']==1:
         return apiv1.process_message(passport, message)

@@ -10,7 +10,7 @@ from komlog.komlibs.auth import exceptions, errors
 from komlog.komlibs.gestaccount.user.states import UserStates
 from komlog.komlibs.gestaccount.agent.states import AgentStates
 from komlog.komlibs.general.time import timeuuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class AuthPassportTest(unittest.TestCase):
     ''' komlog.auth.passport tests '''

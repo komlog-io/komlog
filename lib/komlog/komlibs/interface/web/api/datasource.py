@@ -4,7 +4,7 @@ This file defines the logic associated with web interface operations
 
 '''
 import uuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth.requests import Requests

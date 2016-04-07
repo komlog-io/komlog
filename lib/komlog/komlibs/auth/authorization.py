@@ -15,7 +15,7 @@ from komlog.komlibs.gestaccount.user.states import UserStates
 from komlog.komlibs.gestaccount.agent.states import AgentStates
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 def authorize_request(*args, **kwargs):
     if len(args)>0:
@@ -28,12 +28,12 @@ def authorize_request(*args, **kwargs):
     try:
         func_requests[request](**kwargs)
     except KeyError as e:
-        logger.logger.error('Request not found: '+str(request))
-        logger.logger.debug(str(type(e))+str(e))
+        logging.logger.error('Request not found: '+str(request))
+        logging.logger.debug(str(type(e))+str(e))
         raise exceptions.RequestNotFoundException(error=errors.E_AA_AR_RNF)
     except (SyntaxError, TypeError) as e:
-        logger.logger.error('Request call error: '+str(request))
-        logger.logger.debug(str(type(e))+str(e))
+        logging.logger.error('Request call error: '+str(request))
+        logging.logger.debug(str(type(e))+str(e))
         raise exceptions.BadParametersException(error=errors.E_AA_AR_FBP)
 
 def authorize_new_agent_creation(passport):

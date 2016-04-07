@@ -6,7 +6,7 @@ author: jcazor@komlog.org
 import zlib
 from decimal import Decimal
 from komlog.komlibs.textman.model import variables, patterns
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 DEFAULT_BOF_HASH=1
 DEFAULT_EOF_HASH=2

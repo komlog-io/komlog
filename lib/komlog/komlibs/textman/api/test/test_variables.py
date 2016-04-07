@@ -3,7 +3,7 @@ import uuid
 from decimal import Decimal
 from komlog.komlibs.textman.api import variables as varapi
 from komlog.komlibs.textman.model import variables as varmodel
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class TextmanApiVariablesTest(unittest.TestCase):
     ''' komlibs.textman.api.variables tests '''

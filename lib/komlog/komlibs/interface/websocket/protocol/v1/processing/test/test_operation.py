@@ -1,6 +1,6 @@
 import unittest
 import uuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
 from komlog.komlibs.interface.imc.model import messages

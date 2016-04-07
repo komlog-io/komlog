@@ -4,7 +4,7 @@ Gestconsole message definitions
 
 '''
 
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount.common import delete as deleteapi
@@ -50,7 +50,7 @@ def process_message_MONVAR(message):
             response.add_msg_originated(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':datapoint['pid'].hex}))
             response.status=status.IMC_STATUS_OK
         else:
-            logger.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position)+' length: '+str(length))
+            logging.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position)+' length: '+str(length))
             response.status=status.IMC_STATUS_INTERNAL_ERROR
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -116,7 +116,7 @@ def process_message_NEWUSR(message):
         if mailapi.send_welcome_mail(usermail=usermail, code=code):
             response.status=status.IMC_STATUS_OK
         else:
-            logger.logger.error('Error sending new user welcome mail to: '+usermail)
+            logging.logger.error('Error sending new user welcome mail to: '+usermail)
             response.status=status.IMC_STATUS_INTERNAL_ERROR
             response.error=999999
     else:
@@ -136,7 +136,7 @@ def process_message_NEWINV(message):
         if mailapi.send_invitation_mail(to=email, inv_id=inv_id):
             response.status=status.IMC_STATUS_OK
         else:
-            logger.logger.error('Error sending invitation mail to: '+email)
+            logging.logger.error('Error sending invitation mail to: '+email)
             response.status=status.IMC_STATUS_INTERNAL_ERROR
             response.error=999999
     else:
@@ -156,7 +156,7 @@ def process_message_FORGETMAIL(message):
         if mailapi.send_forget_mail(to=email, code=code):
             response.status=status.IMC_STATUS_OK
         else:
-            logger.logger.error('Error sending forget mail to: '+email)
+            logging.logger.error('Error sending forget mail to: '+email)
             response.status=status.IMC_STATUS_INTERNAL_ERROR
             response.error=999999
     else:

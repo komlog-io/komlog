@@ -1,5 +1,5 @@
 import json
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class DecisionTreeNode:
     def __init__(self, attribute=None, value=None, node_id=None, parent_id=None, end_node=False, result=False, serialization=None):

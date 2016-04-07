@@ -5,7 +5,7 @@ Events message definitions
 '''
 
 import uuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.events.api import user as usereventsapi
 from komlog.komlibs.events.api import user_responses as userrespeventsapi

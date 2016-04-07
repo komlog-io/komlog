@@ -20,7 +20,7 @@ from komlog.komlibs.gestaccount.agent.states import *
 from komlog.komlibs.gestaccount import errors as gesterrors
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 
 class InterfaceWebApiAgentTest(unittest.TestCase):

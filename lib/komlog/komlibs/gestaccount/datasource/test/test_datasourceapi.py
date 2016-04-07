@@ -1,7 +1,7 @@
 import unittest
 import uuid
 import random
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.widget import api as widgetapi
@@ -580,9 +580,9 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         self.assertTrue(api.generate_datasource_map(did=datasource['did'], date=new_date))
         self.assertTrue(api.generate_datasource_text_summary(did=datasource['did'],date=new_date))
         self.assertTrue(datapointapi.store_datasource_values(did=datasource['did'],date=new_date))
-        logger.logger.debug('PID del TEST: '+str(datapoint['pid']))
+        logging.logger.debug('PID del TEST: '+str(datapoint['pid']))
         result=api.classify_missing_datapoints_in_sample(did=datasource['did'], date=new_date)
-        logger.logger.debug('Result: '+str(result))
+        logging.logger.debug('Result: '+str(result))
         self.assertTrue(isinstance(result,dict))
         self.assertEqual(result['discarded'],[])
         self.assertEqual(result['doubts'],[datapoint['pid']])

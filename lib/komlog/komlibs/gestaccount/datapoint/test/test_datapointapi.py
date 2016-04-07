@@ -12,7 +12,7 @@ from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.widget import api as widgetapi
 from komlog.komlibs.gestaccount.datapoint import api
 from komlog.komlibs.gestaccount import exceptions, errors
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 class GestaccountDatapointApiTest(unittest.TestCase):
     ''' komlog.gestaccount.datapoint.api tests '''

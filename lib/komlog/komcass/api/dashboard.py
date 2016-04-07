@@ -5,7 +5,7 @@ Created on 01/10/2014
 @author: komlog crew
 '''
 
-from komlog.komfig import logger
+from komlog.komfig import logging
 from komlog.komcass.model.orm import dashboard as ormdashboard
 from komlog.komcass.model.statement import dashboard as stmtdashboard
 from komlog.komcass.exception import dashboard as excpdashboard

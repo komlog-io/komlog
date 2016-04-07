@@ -16,7 +16,7 @@ from komlog.komlibs.gestaccount.circle import types
 from komlog.komlibs.gestaccount import exceptions, errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 def get_users_circle_config(cid):
     if not args.is_valid_uuid(cid):

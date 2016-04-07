@@ -13,7 +13,7 @@ from komlog.komlibs.auth import exceptions, errors
 from komlog.komlibs.auth.tickets.types import permission, share
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
-from komlog.komfig import logger
+from komlog.komfig import logging
 
 def new_snapshot_ticket(uid, nid, allowed_uids=None, allowed_cids=None, expires=False, share_type=None):
     if not args.is_valid_uuid(uid):
