@@ -20,7 +20,8 @@ from komlog.komlibs.gestaccount.dashboard import api as dashboardapi
 from komlog.komlibs.gestaccount.snapshot import api as snapshotapi
 from komlog.komlibs.gestaccount.circle import api as circleapi
 from komlog.komlibs.gestaccount.common import delete as deleteapi
-from komlog.komlibs.gestaccount import exceptions, errors
+from komlog.komlibs.gestaccount import exceptions
+from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komlibs.graph.api import uri as graphuri
 from komlog.komlibs.graph.api import kin as graphkin
 
@@ -45,14 +46,14 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 deleteapi.delete_user(uid=uid)
-            self.assertEqual(cm.exception.error, errors.E_GCD_DU_IU)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DU_IU)
 
     def test_delete_user_failure_non_existent_username(self):
         ''' delete_user should fail if username does not exist '''
         uid=uuid.uuid4()
         with self.assertRaises(exceptions.UserNotFoundException) as cm:
             deleteapi.delete_user(uid=uid)
-        self.assertEqual(cm.exception.error, errors.E_GCD_DU_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_GCD_DU_UNF)
 
     def test_delete_user_success(self):
         ''' delete_user should succeed if username exists and delete its info'''
@@ -74,7 +75,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         for aid in aids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 deleteapi.delete_agent(aid=aid)
-            self.assertEqual(cm.exception.error, errors.E_GCD_DA_IA)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DA_IA)
 
     def test_delete_agent_non_existent_aid(self):
         ''' delete_agent should return True if delete where requested on the DB event if aid does not exist '''
@@ -98,7 +99,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         for did in dids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 deleteapi.delete_datasource(did=did)
-            self.assertEqual(cm.exception.error, errors.E_GCD_DDS_ID)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DDS_ID)
 
     def test_delete_datasource_non_existent_did(self):
         ''' delete_datasource should return True if deletes where executed successfully even if did does not exist '''
@@ -147,7 +148,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         for pid in pids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 deleteapi.delete_datapoint(pid=pid)
-            self.assertEqual(cm.exception.error, errors.E_GCD_DDP_IP)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DDP_IP)
 
     def test_delete_datapoint_non_existent_datapoint(self):
         ''' delete_datapoint should return True if deletes where launched against DB, even if datapoint does not exist '''
@@ -237,7 +238,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         for wid in wids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 deleteapi.delete_widget(wid=wid)
-            self.assertEqual(cm.exception.error, errors.E_GCD_DW_IW)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DW_IW)
 
     def test_delete_widget_non_existent_widget(self):
         ''' delete_widget should return True if deletes where executed over DB,even if widget is not in system '''
@@ -296,7 +297,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         for bid in bids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 deleteapi.delete_dashboard(bid=bid)
-            self.assertEqual(cm.exception.error, errors.E_GCD_DDB_IB)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DDB_IB)
 
     def test_delete_dashboard_non_existent_bid(self):
         ''' delete_dashboard should return True if deletes where launched over DB, even if bid does not exist '''
@@ -319,7 +320,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         for cid in cids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 deleteapi.delete_circle(cid=cid)
-            self.assertEqual(cm.exception.error, errors.E_GCD_DC_IC)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DC_IC)
 
     def test_delete_circle_non_existent_circle(self):
         ''' delete_circle should return True if deletes where launched over DB, even if cid does not exist '''
@@ -348,7 +349,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         for nid in nids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 deleteapi.delete_snapshot(nid=nid)
-            self.assertEqual(cm.exception.error, errors.E_GCD_DN_IN)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DN_IN)
 
     def test_delete_snapshot_non_existent_snapshot(self):
         ''' delete_snapshot should return True if deletes where launched over DB, even if nid did not exist '''

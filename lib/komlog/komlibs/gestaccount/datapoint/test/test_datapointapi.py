@@ -11,7 +11,8 @@ from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.widget import api as widgetapi
 from komlog.komlibs.gestaccount.datapoint import api
-from komlog.komlibs.gestaccount import exceptions, errors
+from komlog.komlibs.gestaccount import exceptions
+from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komfig import logging
 
 class GestaccountDatapointApiTest(unittest.TestCase):
@@ -316,7 +317,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         length=1
         with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
             api.mark_missing_datapoint(pid=pid, date=date)
-        self.assertEqual(cm.exception.error, errors.E_GPA_MMDP_DNF)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MMDP_DNF)
 
     def test_mark_missing_datapoint_failure_no_variables_in_datasource_map(self):
         ''' mark_missing_datapoint should fail if datasource map has no variables '''
@@ -329,7 +330,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         length=1
         with self.assertRaises(exceptions.DatasourceMapNotFoundException) as cm:
             api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
-        self.assertEqual(cm.exception.error, errors.E_GPA_MMDP_DMNF)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MMDP_DMNF)
 
     def test_generate_decision_tree_failure_invalid_pid(self):
         ''' generate_tree should fail if pid does not exists '''
@@ -337,7 +338,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         for pid in pids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.generate_decision_tree(pid=pid)
-            self.assertEqual(cm.exception.error, errors.E_GPA_GDT_IP)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_GDT_IP)
 
     def test_generate_decision_tree_failure_non_existent_datapoint(self):
         ''' generate_decision_tree should fail if pid does not exists '''
@@ -388,14 +389,14 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         for pid in pids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.generate_inverse_decision_tree(pid=pid)
-            self.assertEqual(cm.exception.error, errors.E_GPA_GIDT_IP)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_GIDT_IP)
 
     def test_generate_inverse_decision_tree_failure_non_existent_datapoint(self):
         ''' generate_decision_tree should fail if pid does not exists '''
         pid=uuid.uuid4()
         with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
             api.generate_inverse_decision_tree(pid=pid)
-        self.assertEqual(cm.exception.error, errors.E_GPA_GIDT_DNF)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GIDT_DNF)
 
     def test_generate_inverse_decision_tree_failure_no_training_set_found(self):
         ''' generate_inverse_decision_tree should fail if pid does not have a training set of positive and/or negative samples '''
@@ -408,7 +409,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         pid=datapoint['pid']
         with self.assertRaises(exceptions.DatapointDTreeTrainingSetEmptyException) as cm:
             api.generate_inverse_decision_tree(pid=pid)
-        self.assertEqual(cm.exception.error, errors.E_GPA_GIDT_ETS)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GIDT_ETS)
 
     def test_generate_inverse_decision_tree_success(self):
         ''' generate_decision_tree should succeed if pid exists and has training set '''
@@ -605,7 +606,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         for pid in pids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.should_datapoint_match_any_sample_variable(pid=pid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_GPA_SDMSV_IP)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_SDMSV_IP)
 
     def test_should_datapoint_match_any_sample_variable_failure_invalid_date(self):
         ''' should datapoint_match_any_sample_variable should fail if date is invalid '''
@@ -614,7 +615,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.should_datapoint_match_any_sample_variable(pid=pid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_GPA_SDMSV_IDT)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_SDMSV_IDT)
 
     def test_should_datapoint_match_any_sample_variable_failure_non_existent_pid(self):
         ''' should datapoint_match_any_sample_variable should fail if pid does not exist '''
@@ -622,7 +623,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         date=timeuuid.uuid1()
         with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
             api.should_datapoint_match_any_sample_variable(pid=pid, date=date)
-        self.assertEqual(cm.exception.error, errors.E_GPA_SDMSV_DNF)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_SDMSV_DNF)
 
     def test_should_datapoint_match_any_sample_variable_failure_no_datapoint_data(self):
         ''' should_datapoint_match_any_sample_variable should fail if datapoint has no data '''
@@ -636,7 +637,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(datapoint['datapointname'],datapointname)
         with self.assertRaises(exceptions.DatapointDTreeTrainingSetEmptyException) as cm:
             api.should_datapoint_match_any_sample_variable(pid=datapoint['pid'], date=date)
-        self.assertEqual(cm.exception.error, errors.E_GPA_GDT_ETS)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GDT_ETS)
 
     def test_should_datapoint_match_any_sample_variable_failure_datasource_map_not_found(self):
         ''' should_datapoint_match_any_sample_variable should fail if datasource map does not exist '''
@@ -658,7 +659,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         new_date=timeuuid.uuid1()
         with self.assertRaises(exceptions.DatasourceMapNotFoundException) as cm:
             api.should_datapoint_match_any_sample_variable(pid=datapoint['pid'], date=new_date)
-        self.assertEqual(cm.exception.error, errors.E_GPA_SDMSV_DSMNF)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_SDMSV_DSMNF)
 
     def test_should_datapoint_match_any_sample_variable_success_already_detected_pid(self):
         ''' should_datapoint_match_any_sample_variable should succeed if pid already was detected in sample '''

@@ -3,7 +3,8 @@ import time
 import uuid
 import json
 from komlog.komfig import logging
-from komlog.komlibs.interface.websocket.protocol.v1 import errors, exceptions
+from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model import operation
 from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operation
 
@@ -15,7 +16,7 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         ''' the instantiation of a WSIfaceOperation object is disallowed '''
         with self.assertRaises(exceptions.OperationValidationException) as cm:
             operation.WSIFaceOperation(uid=1)
-        self.assertEqual(cm.exception.error, errors.E_IWSPV1MO_WSIO_IC)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_WSIO_IC)
 
     def test_modify_oid_in_WSIFaceOperation_failure_non_allowed(self):
         ''' the modification of the params property in a WSIfaceOperation object is disallowed '''
@@ -30,7 +31,7 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         self.assertEqual(op.did, did)
         with self.assertRaises(exceptions.OperationValidationException) as cm:
             op.oid=4
-        self.assertEqual(cm.exception.error, errors.E_IWSPV1MO_WSIO_OIDAI)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_WSIO_OIDAI)
 
     def test_new_NewDatasourceOperation_failure_invalid_uid_type(self):
         ''' the creation of a NewDatasourceOperation object should fail if uid is not a UUID4 '''
@@ -40,7 +41,7 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.OperationValidationException) as cm:
                 operation.NewDatasourceOperation(uid=uid, aid=aid, did=did)
-            self.assertEqual(cm.exception.error, errors.E_IWSPV1MO_NDSO_IUT)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_NDSO_IUT)
 
     def test_new_NewDatasourceOperation_failure_invalid_aid_type(self):
         ''' the creation of a NewDatasourceOperation object should fail if aid is not a UUID4 '''
@@ -50,7 +51,7 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         for aid in aids:
             with self.assertRaises(exceptions.OperationValidationException) as cm:
                 operation.NewDatasourceOperation(uid=uid, aid=aid, did=did)
-            self.assertEqual(cm.exception.error, errors.E_IWSPV1MO_NDSO_IAT)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_NDSO_IAT)
 
     def test_new_NewDatasourceOperation_failure_invalid_did_type(self):
         ''' the creation of a NewDatasourceOperation object should fail if did is not a UUID4 '''
@@ -60,7 +61,7 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         for did in dids:
             with self.assertRaises(exceptions.OperationValidationException) as cm:
                 operation.NewDatasourceOperation(uid=uid, aid=aid, did=did)
-            self.assertEqual(cm.exception.error, errors.E_IWSPV1MO_NDSO_IDT)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_NDSO_IDT)
 
     def test_new_NewDatasourceOperation_success_cannot_modify_params_property(self):
         ''' the creation of a NewDatasourceOperation object should succeed and params property cannot be modified directly'''
@@ -76,7 +77,7 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         self.assertEqual(op.params, {'uid':uid, 'aid':aid, 'did':did})
         with self.assertRaises(exceptions.OperationValidationException) as cm:
             op.params={'uid':uuid.uuid4(),'what':'yes','number':3}
-        self.assertEqual(cm.exception.error, errors.E_IWSPV1MO_WSIO_PMNA)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_WSIO_PMNA)
 
     def test_new_NewDatasourceOperation_success(self):
         ''' the creation of a NewDatasourceOperation object should succeed '''

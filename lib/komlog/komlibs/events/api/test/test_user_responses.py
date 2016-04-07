@@ -7,9 +7,10 @@ from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.events.api import user_responses
 from komlog.komlibs.events.api import user
 from komlog.komlibs.events.model import types, priorities
-from komlog.komlibs.events import exceptions, errors
-from komlog.komlibs.gestaccount import errors as gesterrors
+from komlog.komlibs.events import exceptions
+from komlog.komlibs.events.errors import Errors
 from komlog.komlibs.gestaccount import exceptions as gestexcept
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
@@ -28,7 +29,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user_responses.process_event_response(uid=uid, date=date, response_data=response_data)
-            self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRP_IUID)
+            self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRP_IUID)
 
     def test_process_event_response_failure_invalid_date(self):
         ''' process_event_response should fail if date is invalid '''
@@ -38,7 +39,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user_responses.process_event_response(uid=uid, date=date, response_data=response_data)
-            self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRP_IDT)
+            self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRP_IDT)
 
     def test_process_event_response_failure_invalid_response_data(self):
         ''' process_event_response should fail if response_data is invalid '''
@@ -48,7 +49,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         for response_data in response_datas:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user_responses.process_event_response(uid=uid, date=date, response_data=response_data)
-            self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRP_IDAT)
+            self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRP_IDAT)
 
     def test_process_event_response_failure_non_existent_event(self):
         ''' process_event_response should fail if event does not exist '''
@@ -57,7 +58,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         response_data={}
         with self.assertRaises(exceptions.EventNotFoundException) as cm:
             user_responses.process_event_response(uid=uid, date=date, response_data=response_data)
-        self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRP_EVNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRP_EVNF)
 
     def test_process_event_response_failure_non_supported_event(self):
         ''' process_event_response should fail if event type is not supported '''
@@ -101,7 +102,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         for response in responses:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user_responses._process_event_response_user_event_intervention_datapoint_identification(event=event, response_data=response)
-            self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRPUEIDI_IRD)
+            self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRPUEIDI_IRD)
 
     def test__process_event_response_user_event_intervention_datapoint_identification_failure_invalid_response_data_content_identified(self):
         ''' _process_event_response_user_event_intervention_datapoint_identification should fail if response_data parameter is invalid  '''
@@ -121,7 +122,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         for response_data in response_datas:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user_responses._process_event_response_user_event_intervention_datapoint_identification(event=event, response_data=response_data)
-            self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRPUEIDI_IIDP)
+            self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRPUEIDI_IIDP)
 
     def test__process_event_response_user_event_intervention_datapoint_identification_failure_invalid_response_data_content_missing(self):
         ''' _process_event_response_user_event_intervention_datapoint_identification should fail if response_data parameter is invalid  '''
@@ -141,7 +142,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         for response_data in response_datas:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user_responses._process_event_response_user_event_intervention_datapoint_identification(event, response_data)
-            self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRPUEIDI_IMSP)
+            self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRPUEIDI_IMSP)
 
     def test__process_event_response_user_event_intervention_datapoint_identification_failure_invalid_response_data_content_identified_item_type(self):
         ''' _process_event_response_user_event_intervention_datapoint_identification should fail if response_data parameter is invalid  '''
@@ -161,7 +162,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         for response_data in response_datas:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user_responses._process_event_response_user_event_intervention_datapoint_identification(event, response_data)
-            self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRPUEIDI_IIDI)
+            self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRPUEIDI_IIDI)
 
     def test__process_event_response_user_event_intervention_datapoint_identification_failure_invalid_response_data_content_identified_item_dp(self):
         ''' _process_event_response_user_event_intervention_datapoint_identification should fail if response_data parameter is invalid  '''
@@ -181,7 +182,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         for response_data in response_datas:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user_responses._process_event_response_user_event_intervention_datapoint_identification(event, response_data)
-            self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRPUEIDI_IDPI)
+            self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRPUEIDI_IDPI)
 
     def test__process_event_response_user_event_intervention_datapoint_identification_failure_invalid_response_data_content_identified_item_p(self):
         ''' _process_event_response_user_event_intervention_datapoint_identification should fail if response_data parameter is invalid  '''
@@ -201,7 +202,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         for response_data in response_datas:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user_responses._process_event_response_user_event_intervention_datapoint_identification(event, response_data)
-            self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRPUEIDI_IPI)
+            self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRPUEIDI_IPI)
 
     def test__process_event_response_user_event_intervention_datapoint_identification_failure_invalid_response_data_content_identified_item_l(self):
         ''' _process_event_response_user_event_intervention_datapoint_identification should fail if response_data parameter is invalid  '''
@@ -221,7 +222,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         for response_data in response_datas:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user_responses._process_event_response_user_event_intervention_datapoint_identification(event, response_data)
-            self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRPUEIDI_ILI)
+            self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRPUEIDI_ILI)
 
     def test__process_event_response_user_event_intervention_datapoint_identification_failure_invalid_response_data_content_missing_item_type(self):
         ''' _process_event_response_user_event_intervention_datapoint_identification should fail if response_data parameter is invalid  '''
@@ -241,7 +242,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         for response_data in response_datas:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 user_responses._process_event_response_user_event_intervention_datapoint_identification(event, response_data)
-            self.assertEqual(cm.exception.error, errors.E_EAUR_PEVRPUEIDI_IMSI)
+            self.assertEqual(cm.exception.error, Errors.E_EAUR_PEVRPUEIDI_IMSI)
 
     def test__process_event_response_user_event_intervention_datapoint_identification_failure_datasource_not_found(self):
         ''' _process_event_response_user_event_intervention_datapoint_identification should fail if response_data parameter is invalid  '''

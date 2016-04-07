@@ -16,7 +16,8 @@ from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.widget import api as widgetapi
 from komlog.komlibs.gestaccount.common import delete as deleteapi
-from komlog.komlibs.interface.web import status, exceptions, errors
+from komlog.komlibs.interface.web import status, exceptions
+from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.interface.web.model import webmodel
 from komlog.komlibs.interface.web.operations import weboperations
 from komlog.komlibs.interface.imc.model import messages
@@ -27,13 +28,13 @@ from komlog.komlibs.general.time import timeuuid
 @exceptions.ExceptionHandler
 def get_datasource_data_request(passport, did, seq=None, tid=None):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSDR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_IPSP)
     if not args.is_valid_hex_uuid(did):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSDR_ID)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_ID)
     if seq and not args.is_valid_sequence(seq):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSDR_IS)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_IS)
     if tid and not args.is_valid_hex_uuid(tid):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSDR_IT)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_IT)
     did=uuid.UUID(did)
     if seq:
         ii=timeuuid.get_uuid1_from_custom_sequence(seq)
@@ -61,13 +62,13 @@ def get_datasource_data_request(passport, did, seq=None, tid=None):
 @exceptions.ExceptionHandler
 def upload_datasource_data_request(passport, did, content, destination):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSDR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSDR_IPSP)
     if not args.is_valid_hex_uuid(did):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSDR_ID)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSDR_ID)
     if not args.is_valid_datasource_content(content):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSDR_IDC)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSDR_IDC)
     if not args.is_valid_string(destination):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSDR_IDST)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSDR_IDST)
     did=uuid.UUID(did)
     authorization.authorize_request(request=Requests.POST_DATASOURCE_DATA,passport=passport,did=did)
     destfile=datasourceapi.upload_datasource_data(did,content,destination)
@@ -76,7 +77,7 @@ def upload_datasource_data_request(passport, did, content, destination):
 @exceptions.ExceptionHandler
 def get_datasources_config_request(passport):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSSCR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSSCR_IPSP)
     authorization.authorize_request(request=Requests.GET_DATASOURCES_CONFIG,passport=passport)
     data=datasourceapi.get_datasources_config(uid=passport.uid)
     response_data=[]
@@ -87,9 +88,9 @@ def get_datasources_config_request(passport):
 @exceptions.ExceptionHandler
 def get_datasource_config_request(passport, did):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSCR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSCR_IPSP)
     if not args.is_valid_hex_uuid(did):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_GDSCR_ID)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSCR_ID)
     did=uuid.UUID(did)
     authorization.authorize_request(request=Requests.GET_DATASOURCE_CONFIG,passport=passport,did=did)
     data=datasourceapi.get_datasource_config(did)
@@ -106,13 +107,13 @@ def get_datasource_config_request(passport, did):
 @exceptions.ExceptionHandler
 def update_datasource_config_request(passport, did, data):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSCR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSCR_IPSP)
     if not args.is_valid_hex_uuid(did):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSCR_ID)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSCR_ID)
     if not args.is_valid_dict(data):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSCR_IDA)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSCR_IDA)
     if 'datasourcename' not in data or not args.is_valid_datasourcename(data['datasourcename']):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_UDSCR_IDN)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSCR_IDN)
     did=uuid.UUID(did)
     authorization.authorize_request(request=Requests.UPDATE_DATASOURCE_CONFIG,passport=passport,did=did)
     datasourceapi.update_datasource_config(did=did,datasourcename=data['datasourcename'])
@@ -121,9 +122,9 @@ def update_datasource_config_request(passport, did, data):
 @exceptions.ExceptionHandler
 def new_datasource_request(passport, datasourcename):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_NDSR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_NDSR_IPSP)
     if not args.is_valid_datasourcename(datasourcename):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_NDSR_IDN)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_NDSR_IDN)
     authorization.authorize_request(request=Requests.NEW_DATASOURCE,passport=passport)
     datasource=datasourceapi.create_datasource(uid=passport.uid,aid=passport.aid,datasourcename=datasourcename)
     if datasource:
@@ -140,14 +141,14 @@ def new_datasource_request(passport, datasourcename):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
         else:
             deleteapi.delete_datasource(did=datasource['did'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=errors.E_IWADS_NDSR_AUTHERR)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADS_NDSR_AUTHERR)
 
 @exceptions.ExceptionHandler
 def delete_datasource_request(passport, did):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_DDSR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_DDSR_IPSP)
     if not args.is_valid_hex_uuid(did):
-        raise exceptions.BadParametersException(error=errors.E_IWADS_DDSR_ID)
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_DDSR_ID)
     did=uuid.UUID(did)
     authorization.authorize_request(request=Requests.DELETE_DATASOURCE,passport=passport,did=did)
     message=messages.DeleteDatasourceMessage(did=did)

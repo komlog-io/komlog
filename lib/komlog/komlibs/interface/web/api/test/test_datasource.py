@@ -4,15 +4,16 @@ import json
 from base64 import b64decode, b64encode
 from komlog.komlibs.auth import operations
 from komlog.komlibs.auth import passport
-from komlog.komlibs.auth import errors as autherrors
-from komlog.komlibs.gestaccount import errors as gesterrors
+from komlog.komlibs.auth.errors import Errors as autherrors
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.datasource import api as gestdatasourceapi
 from komlog.komlibs.interface.web.api import login as loginapi 
 from komlog.komlibs.interface.web.api import user as userapi 
 from komlog.komlibs.interface.web.api import agent as agentapi 
 from komlog.komlibs.interface.web.api import datasource as datasourceapi 
 from komlog.komlibs.interface.web.model import webmodel
-from komlog.komlibs.interface.web import status, exceptions, errors
+from komlog.komlibs.interface.web import status, exceptions
+from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
@@ -609,7 +610,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         for tid in tids:
             response=datasourceapi.get_datasource_data_request(passport=psp, did=did, tid=tid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWADS_GDSDR_IT)
+            self.assertEqual(response.error, Errors.E_IWADS_GDSDR_IT)
 
     def test_get_datasource_data_request_failure_non_existent_datasource(self):
         ''' get_datasource_data_request should fail if datasource does not exist '''

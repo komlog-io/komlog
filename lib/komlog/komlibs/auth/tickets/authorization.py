@@ -8,30 +8,31 @@ import uuid
 from komlog.komcass.api import ticket as ticketapi
 from komlog.komcass.api import circle as circleapi
 from komlog.komcass.model.orm import ticket as ormticket
-from komlog.komlibs.auth import exceptions, errors, permissions
+from komlog.komlibs.auth import exceptions, permissions
+from komlog.komlibs.auth.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komfig import logging
 
 def authorize_get_datasource_data(uid, tid, did, ii, ie):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGDSD_IUID)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGDSD_IUID)
     if not args.is_valid_uuid(tid):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGDSD_ITID)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGDSD_ITID)
     if not args.is_valid_uuid(did):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGDSD_IDID)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGDSD_IDID)
     if not args.is_valid_date(ii):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGDSD_III)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGDSD_III)
     if not args.is_valid_date(ie):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGDSD_IIE)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGDSD_IIE)
     now=timeuuid.uuid1()
     ticket=ticketapi.get_ticket(tid=tid)
     if not ticket:
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGDSD_TNF)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDSD_TNF)
     if timeuuid.get_unix_timestamp(ticket.expires)<timeuuid.get_unix_timestamp(now):
         ticketapi.insert_expired_ticket(ticket=ticket)
         ticketapi.delete_ticket(tid=ticket.tid)
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGDSD_EXPT)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDSD_EXPT)
     if not uid in ticket.allowed_uids:
         uid_in_circles=False
         sharing_user_circles=circleapi.get_circles(uid=ticket.uid)
@@ -40,37 +41,37 @@ def authorize_get_datasource_data(uid, tid, did, ii, ie):
                 uid_in_circles=True
                 break;
         if not uid_in_circles:
-            raise exceptions.AuthorizationException(error=errors.E_ATA_AGDSD_UNA)
+            raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDSD_UNA)
     if not did in ticket.resources:
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGDSD_DNA)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDSD_DNA)
     permissions_needed=permissions.CAN_READ_DATA
     if did in ticket.permissions and permissions_needed & ticket.permissions[did]:
         if ii>=ticket.interval_init and ii<=ticket.interval_end and ie>= ticket.interval_init and ie<=ticket.interval_end:
             return
         else:
-            raise exceptions.AuthorizationException(error=errors.E_ATA_AGDSD_IINT)
+            raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDSD_IINT)
     else:
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGDSD_INSP)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDSD_INSP)
 
 def authorize_get_datapoint_data(uid, tid, pid, ii, ie):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGDPD_IUID)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGDPD_IUID)
     if not args.is_valid_uuid(tid):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGDPD_ITID)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGDPD_ITID)
     if not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGDPD_IPID)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGDPD_IPID)
     if not args.is_valid_date(ii):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGDPD_III)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGDPD_III)
     if not args.is_valid_date(ie):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGDPD_IIE)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGDPD_IIE)
     now=timeuuid.uuid1()
     ticket=ticketapi.get_ticket(tid=tid)
     if not ticket:
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGDPD_TNF)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDPD_TNF)
     if timeuuid.get_unix_timestamp(ticket.expires)<timeuuid.get_unix_timestamp(now):
         ticketapi.insert_expired_ticket(ticket=ticket)
         ticketapi.delete_ticket(tid=ticket.tid)
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGDPD_EXPT)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDPD_EXPT)
     if not uid in ticket.allowed_uids:
         uid_in_circles=False
         sharing_user_circles=circleapi.get_circles(uid=ticket.uid)
@@ -79,33 +80,33 @@ def authorize_get_datapoint_data(uid, tid, pid, ii, ie):
                 uid_in_circles=True
                 break;
         if not uid_in_circles:
-            raise exceptions.AuthorizationException(error=errors.E_ATA_AGDPD_UNA)
+            raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDPD_UNA)
     if not pid in ticket.resources:
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGDPD_DNA)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDPD_DNA)
     permissions_needed=permissions.CAN_READ_DATA
     if pid in ticket.permissions and permissions_needed & ticket.permissions[pid]:
         if ii>=ticket.interval_init and ii<=ticket.interval_end and ie>=ticket.interval_init and ie<=ticket.interval_end:
             return
         else:
-            raise exceptions.AuthorizationException(error=errors.E_ATA_AGDPD_IINT)
+            raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDPD_IINT)
     else:
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGDPD_INSP)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDPD_INSP)
 
 def authorize_get_snapshot_config(uid, tid, nid):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGSNC_IUID)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGSNC_IUID)
     if not args.is_valid_uuid(tid):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGSNC_ITID)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGSNC_ITID)
     if not args.is_valid_uuid(nid):
-        raise exceptions.BadParametersException(error=errors.E_ATA_AGSNC_INID)
+        raise exceptions.BadParametersException(error=Errors.E_ATA_AGSNC_INID)
     now=timeuuid.uuid1()
     ticket=ticketapi.get_ticket(tid=tid)
     if not ticket:
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGSNC_TNF)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGSNC_TNF)
     if timeuuid.get_unix_timestamp(ticket.expires)<timeuuid.get_unix_timestamp(now):
         ticketapi.insert_expired_ticket(ticket=ticket)
         ticketapi.delete_ticket(tid=ticket.tid)
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGSNC_EXPT)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGSNC_EXPT)
     if not uid in ticket.allowed_uids:
         uid_in_circles=False
         sharing_user_circles=circleapi.get_circles(uid=ticket.uid)
@@ -114,12 +115,12 @@ def authorize_get_snapshot_config(uid, tid, nid):
                 uid_in_circles=True
                 break;
         if not uid_in_circles:
-            raise exceptions.AuthorizationException(error=errors.E_ATA_AGSNC_UNA)
+            raise exceptions.AuthorizationException(error=Errors.E_ATA_AGSNC_UNA)
     if not nid in ticket.resources:
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGSNC_DNA)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGSNC_DNA)
     permissions_needed=permissions.CAN_READ_CONFIG
     if nid in ticket.permissions and permissions_needed & ticket.permissions[nid]:
         return
     else:
-        raise exceptions.AuthorizationException(error=errors.E_ATA_AGSNC_INSP)
+        raise exceptions.AuthorizationException(error=Errors.E_ATA_AGSNC_INSP)
 

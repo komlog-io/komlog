@@ -3,9 +3,9 @@ import uuid
 import json
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
-from komlog.komlibs.auth import errors as autherrors
+from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.auth import passport
-from komlog.komlibs.gestaccount import errors as gesterrors
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.web.api import login as loginapi 
 from komlog.komlibs.interface.web.api import user as userapi 

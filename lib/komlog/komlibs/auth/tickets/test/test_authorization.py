@@ -10,7 +10,8 @@ from komlog.komcass.api import circle as circleapi
 from komlog.komlibs.auth.tickets import provision
 from komlog.komlibs.auth.tickets import authorization
 from komlog.komlibs.auth.tickets.types import share
-from komlog.komlibs.auth import exceptions, errors, permissions
+from komlog.komlibs.auth import exceptions, permissions
+from komlog.komlibs.auth.errors import Errors
 from komlog.komfig import logging
 
 
@@ -30,7 +31,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_datasource_data(uid=uid, tid=tid, did=did, ii=ii, ie=ie)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_IUID)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_IUID)
 
     def test_authorize_get_datasource_data_failure_invalid_tid(self):
         ''' authorize_get_datasource_data should fail if tid is invalid '''
@@ -42,7 +43,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for tid in tids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_datasource_data(uid=uid, tid=tid, did=did, ii=ii, ie=ie)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_ITID)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_ITID)
 
     def test_authorize_get_datasource_data_failure_invalid_did(self):
         ''' authorize_get_datasource_data should fail if did is invalid '''
@@ -54,7 +55,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for did in dids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_datasource_data(uid=uid, tid=tid, did=did, ii=ii, ie=ie)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_IDID)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_IDID)
 
     def test_authorize_get_datasource_data_failure_invalid_ii(self):
         ''' authorize_get_datasource_data should fail if ii is invalid '''
@@ -66,7 +67,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for ii in iis:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_datasource_data(uid=uid, tid=tid, did=did, ii=ii, ie=ie)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_III)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_III)
 
     def test_authorize_get_datasource_data_failure_invalid_ie(self):
         ''' authorize_get_datasource_data should fail if ie is invalid '''
@@ -78,7 +79,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for ie in ies:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_datasource_data(uid=uid, tid=tid, did=did, ii=ii, ie=ie)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_IIE)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_IIE)
 
     def test_authorize_get_datasource_data_failure_non_existent_ticket(self):
         ''' authorize_get_datasource_data should fail if ticket does not exist '''
@@ -89,7 +90,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         ie=timeuuid.uuid1()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid, tid=tid, did=did, ii=ii, ie=ie)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_TNF)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_TNF)
 
     def test_authorize_get_datasource_data_failure_expired_ticket(self):
         ''' authorize_get_datasource_data should fail if ticket has expired '''
@@ -112,10 +113,10 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, expires=expires, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_EXPT)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_EXPT)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_TNF)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_TNF)
 
     def test_authorize_get_datasource_data_failure_not_shared_with_uid(self):
         ''' authorize_get_datasource_data should fail if uid is not allowed in ticket '''
@@ -137,7 +138,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, allowed_uids={uuid.uuid4()})
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_UNA)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_UNA)
 
     def test_authorize_get_datasource_data_failure_shared_with_uid_but_invalid_did(self):
         ''' authorize_get_datasource_data should fail if uid is listed in ticket allowed uids, but did is different '''
@@ -160,7 +161,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did2=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did2, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_DNA)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_DNA)
 
     def test_authorize_get_datasource_data_failure_shared_with_cid_but_invalid_did(self):
         ''' authorize_get_datasource_data should fail if uid belongs to a listed ticket allowed cids, but did is different '''
@@ -186,7 +187,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         did2=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did2, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_DNA)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_DNA)
 
     def test_authorize_get_datasource_data_failure_interval_init_out_of_bounds(self):
         ''' authorize_get_datasource_data should fail if interval_init is out of allowed interval '''
@@ -209,7 +210,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         new_interval_init=timeuuid.uuid1(seconds=999)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did, ii=new_interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_IINT)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_IINT)
 
     def test_authorize_get_datasource_data_failure_interval_init_out_of_bounds_2(self):
         ''' authorize_get_datasource_data should fail if interval_init is out of allowed interval '''
@@ -232,7 +233,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         new_interval_init=timeuuid.uuid1(seconds=2001)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did, ii=new_interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_IINT)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_IINT)
 
     def test_authorize_get_datasource_data_failure_interval_end_out_of_bounds(self):
         ''' authorize_get_datasource_data should fail if interval_end is out of allowed interval '''
@@ -255,7 +256,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         new_interval_end=timeuuid.uuid1(seconds=999)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did, ii=interval_init, ie=new_interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_IINT)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_IINT)
 
     def test_authorize_get_datasource_data_failure_interval_end_out_of_bounds_2(self):
         ''' authorize_get_datasource_data should fail if interval_end is out of allowed interval '''
@@ -278,7 +279,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         new_interval_end=timeuuid.uuid1(seconds=2001)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did, ii=interval_init, ie=new_interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_IINT)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_IINT)
 
     def test_authorize_get_datasource_data_failure_insufficient_privileges(self):
         ''' authorize_get_datasource_data should fail if user has insufficient privileges to acomplish requested operation '''
@@ -304,7 +305,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         self.assertTrue(ticketapi.insert_ticket(ticket=ticket))
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid2, tid=tid['tid'], did=did, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDSD_INSP)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDSD_INSP)
 
     def test_authorize_get_datasource_data_success(self):
         ''' authorize_get_datasource_data should succeed '''
@@ -336,7 +337,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_datapoint_data(uid=uid, tid=tid, pid=pid, ii=ii, ie=ie)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_IUID)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_IUID)
 
     def test_authorize_get_datapoint_data_failure_invalid_tid(self):
         ''' authorize_get_datapoint_data should fail if tid is invalid '''
@@ -348,7 +349,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for tid in tids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_datapoint_data(uid=uid, tid=tid, pid=pid, ii=ii, ie=ie)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_ITID)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_ITID)
 
     def test_authorize_get_datapoint_data_failure_invalid_pid(self):
         ''' authorize_get_datapoint_data should fail if pid is invalid '''
@@ -360,7 +361,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for pid in pids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_datapoint_data(uid=uid, tid=tid, pid=pid, ii=ii, ie=ie)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_IPID)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_IPID)
 
     def test_authorize_get_datapoint_data_failure_invalid_ii(self):
         ''' authorize_get_datapoint_data should fail if ii is invalid '''
@@ -372,7 +373,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for ii in iis:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_datapoint_data(uid=uid, tid=tid, pid=pid, ii=ii, ie=ie)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_III)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_III)
 
     def test_authorize_get_datapoint_data_failure_invalid_ie(self):
         ''' authorize_get_datapoint_data should fail if ie is invalid '''
@@ -384,7 +385,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for ie in ies:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_datapoint_data(uid=uid, tid=tid, pid=pid, ii=ii, ie=ie)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_IIE)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_IIE)
 
     def test_authorize_get_datapoint_data_failure_non_existent_ticket(self):
         ''' authorize_get_datapoint_data should fail if ticket does not exist '''
@@ -395,7 +396,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         ie=timeuuid.uuid1()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid, tid=tid, pid=pid, ii=ii, ie=ie)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_TNF)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_TNF)
 
     def test_authorize_get_datapoint_data_failure_expired_ticket(self):
         ''' authorize_get_datapoint_data should fail if ticket has expired '''
@@ -417,10 +418,10 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, expires=expires, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_EXPT)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_EXPT)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_TNF)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_TNF)
 
     def test_authorize_get_datapoint_data_failure_not_shared_with_uid(self):
         ''' authorize_get_datapoint_data should fail if uid is not allowed in ticket '''
@@ -441,7 +442,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, allowed_uids={uuid.uuid4()}, allowed_cids=shared_with_cids)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_UNA)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_UNA)
 
     def test_authorize_get_datapoint_data_failure_shared_with_uid_but_invalid_pid(self):
         ''' authorize_get_datapoint_data should fail if uid is listed in ticket allowed uids, but pid is different '''
@@ -463,7 +464,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid2=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid2, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_DNA)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_DNA)
 
     def test_authorize_get_datapoint_data_failure_shared_with_cid_but_invalid_pid(self):
         ''' authorize_get_datapoint_data should fail if uid belongs to a listed ticket allowed cids, but pid is different '''
@@ -488,7 +489,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         pid2=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid2, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_DNA)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_DNA)
 
     def test_authorize_get_datapoint_data_failure_interval_init_out_of_bounds(self):
         ''' authorize_get_datapoint_data should fail if interval_init is out of allowed interval '''
@@ -510,7 +511,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         new_interval_init=timeuuid.uuid1(seconds=999)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid, ii=new_interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_IINT)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_IINT)
 
     def test_authorize_get_datapoint_data_failure_interval_init_out_of_bounds_2(self):
         ''' authorize_get_datapoint_data should fail if interval_init is out of allowed interval '''
@@ -532,7 +533,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         new_interval_init=timeuuid.uuid1(seconds=2001)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid, ii=new_interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_IINT)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_IINT)
 
     def test_authorize_get_datapoint_data_failure_interval_end_out_of_bounds(self):
         ''' authorize_get_datapoint_data should fail if interval_end is out of allowed interval '''
@@ -554,7 +555,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         new_interval_end=timeuuid.uuid1(seconds=999)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid, ii=interval_init, ie=new_interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_IINT)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_IINT)
 
     def test_authorize_get_datapoint_data_failure_interval_end_out_of_bounds_2(self):
         ''' authorize_get_datapoint_data should fail if interval_end is out of allowed interval '''
@@ -576,7 +577,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         new_interval_end=timeuuid.uuid1(seconds=2001)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid, ii=interval_init, ie=new_interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_IINT)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_IINT)
 
     def test_authorize_get_datapoint_data_failure_insufficient_privileges(self):
         ''' authorize_get_datapoint_data should fail if user has insufficient privileges to acomplish requested operation '''
@@ -601,7 +602,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         self.assertTrue(ticketapi.insert_ticket(ticket=ticket))
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid2, tid=tid['tid'], pid=pid, ii=interval_init, ie=interval_end)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGDPD_INSP)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGDPD_INSP)
 
     def test_authorize_get_datapoint_data_success(self):
         ''' authorize_get_datapoint_data should succeed '''
@@ -630,7 +631,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_snapshot_config(uid=uid, tid=tid, nid=nid)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGSNC_IUID)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGSNC_IUID)
 
     def test_authorize_get_snapshot_config_failure_invalid_tid(self):
         ''' authorize_get_snapshot_config should fail if tid is invalid '''
@@ -640,7 +641,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for tid in tids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_snapshot_config(uid=uid, tid=tid, nid=nid)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGSNC_ITID)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGSNC_ITID)
 
     def test_authorize_get_snapshot_config_failure_invalid_nid(self):
         ''' authorize_get_snapshot_config should fail if nid is invalid '''
@@ -650,7 +651,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         for nid in nids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 authorization.authorize_get_snapshot_config(uid=uid, tid=tid, nid=nid)
-            self.assertEqual(cm.exception.error, errors.E_ATA_AGSNC_INID)
+            self.assertEqual(cm.exception.error, Errors.E_ATA_AGSNC_INID)
 
     def test_authorize_get_snapshot_config_failure_non_existent_ticket(self):
         ''' authorize_get_snapshot_config should fail if ticket does not exist '''
@@ -659,7 +660,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_snapshot_config(uid=uid, tid=tid, nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGSNC_TNF)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGSNC_TNF)
 
     def test_authorize_get_snapshot_config_failure_expired_ticket(self):
         ''' authorize_get_snapshot_config should fail if ticket has expired '''
@@ -681,10 +682,10 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, expires=expires,allowed_uids=shared_with_uids, allowed_cids=shared_with_cids)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_snapshot_config(uid=uid2, tid=tid['tid'], nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGSNC_EXPT)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGSNC_EXPT)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_snapshot_config(uid=uid2, tid=tid['tid'], nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGSNC_TNF)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGSNC_TNF)
 
     def test_authorize_get_snapshot_config_failure_not_shared_with_uid(self):
         ''' authorize_get_snapshot_config should fail if uid is not allowed in ticket '''
@@ -705,7 +706,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         tid=provision.new_snapshot_ticket(uid=uid1, nid=nid, allowed_uids=shared_with_uids, allowed_cids=shared_with_cids)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_snapshot_config(uid=uid2, tid=tid['tid'], nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGSNC_UNA)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGSNC_UNA)
 
     def test_authorize_get_snapshot_config_failure_shared_with_uid_but_invalid_nid(self):
         ''' authorize_get_snapshot_config should fail if uid is listed in ticket allowed uids, but nid is different '''
@@ -727,7 +728,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         nid2=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_snapshot_config(uid=uid2, tid=tid['tid'], nid=nid2)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGSNC_DNA)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGSNC_DNA)
 
     def test_authorize_get_snapshot_config_failure_shared_with_cid_but_invalid_nid(self):
         ''' authorize_get_snapshot_config should fail if uid belongs to a listed ticket allowed cids, but nid is different '''
@@ -752,7 +753,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         nid2=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_snapshot_config(uid=uid2, tid=tid['tid'], nid=nid2)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGSNC_DNA)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGSNC_DNA)
 
     def test_authorize_get_snapshot_config_failure_insufficient_privileges(self):
         ''' authorize_get_snapshot_config should fail if user has insufficient privileges to acomplish requested operation '''
@@ -777,7 +778,7 @@ class AuthTicketsAuthorizationTest(unittest.TestCase):
         self.assertTrue(ticketapi.insert_ticket(ticket=ticket))
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_snapshot_config(uid=uid2, tid=tid['tid'], nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ATA_AGSNC_INSP)
+        self.assertEqual(cm.exception.error, Errors.E_ATA_AGSNC_INSP)
 
     def test_authorize_get_snapshot_config_success(self):
         ''' authorize_get_snapshot_config should succeed '''

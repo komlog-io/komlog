@@ -4,7 +4,8 @@ from komlog.komfig import logging
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
 from komlog.komlibs.interface.imc.model import messages
-from komlog.komlibs.interface.websocket.protocol.v1 import errors, exceptions
+from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.processing import operation
 from komlog.komlibs.interface.websocket.protocol.v1.model import operation as modop
 
@@ -18,7 +19,7 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
         for op in operations:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 resp=operation.process_operation(operation=op)
-            self.assertEqual(cm.exception.error, errors.E_IWSPV1PO_ROA_IOT)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1PO_ROA_IOT)
 
     def test_process_operation_failure_operation_ID_not_found(self):
         ''' the process_operation should fail if operation parameter is not a valid object '''
@@ -30,7 +31,7 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
         operation._operation_funcs={}
         with self.assertRaises(exceptions.OperationValidationException) as cm:
             resp=operation.process_operation(operation=op)
-        self.assertEqual(cm.exception.error, errors.E_IWSPV1PO_ROA_ONF)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1PO_ROA_ONF)
         operation._operation_funcs=original_funcs
 
     def test_process_operation_new_datasource_success(self):

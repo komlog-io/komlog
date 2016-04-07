@@ -7,7 +7,8 @@ from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.widget import api as widgetapi
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.datasource import api
-from komlog.komlibs.gestaccount import exceptions, errors
+from komlog.komlibs.gestaccount import exceptions
+from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
 
@@ -195,7 +196,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         for did in dids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.generate_datasource_text_summary(did=did, date=date)
-            self.assertEqual(cm.exception.error, errors.E_GDA_GDTS_ID)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GDTS_ID)
 
     def test_generate_datasource_text_summary_failure_invalid_date(self):
         ''' generate_datasource_text_summary should fail if date is not valid '''
@@ -204,7 +205,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.generate_datasource_text_summary(did=did, date=date)
-            self.assertEqual(cm.exception.error, errors.E_GDA_GDTS_IDT)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GDTS_IDT)
 
     def test_generate_datasource_text_summary_non_existent_datasource(self):
         ''' generate_datasource_text_summary should fail if did does not exist '''
@@ -212,7 +213,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         date=timeuuid.uuid1()
         with self.assertRaises(exceptions.DatasourceDataNotFoundException) as cm:
             api.generate_datasource_text_summary(did=did, date=date)
-        self.assertEqual(cm.exception.error, errors.E_GDA_GDTS_DDNF)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_GDTS_DDNF)
 
     def test_generate_datasource_text_summary_non_existent_data_at_given_timeuuid(self):
         ''' generate_datasource_text_summary should fail if did has no sample at given timeuuid '''
@@ -223,7 +224,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         date=timeuuid.uuid1()
         with self.assertRaises(exceptions.DatasourceDataNotFoundException) as cm:
             api.generate_datasource_text_summary(did=datasource['did'],date=date)
-        self.assertEqual(cm.exception.error, errors.E_GDA_GDTS_DDNF)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_GDTS_DDNF)
 
     def test_generate_datasource_text_summary_success(self):
         ''' generate_datasource_text_summary should generate and store the summary successfully '''
@@ -244,14 +245,14 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         for pid in pids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.generate_datasource_novelty_detector_for_datapoint(pid=pid)
-            self.assertEqual(cm.exception.error, errors.E_GDA_GDNDFD_IP)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GDNDFD_IP)
 
     def test_generate_datasource_novelty_detector_for_datapoint_failure_non_existent_pid(self):
         ''' generate_datasource_novelty_detector_for_datapoint should fail if pid does not exist '''
         pid=uuid.uuid4()
         with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
             api.generate_datasource_novelty_detector_for_datapoint(pid=pid)
-        self.assertEqual(cm.exception.error, errors.E_GDA_GDNDFD_DNF)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_GDNDFD_DNF)
 
     def test_generate_datasource_novelty_detector_for_datapoint_failure_non_datasource_data(self):
         ''' generate_datasource_novelty_detector_for_datapoint should fail if no datasource data is found '''
@@ -263,7 +264,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
         with self.assertRaises(exceptions.DatasourceDataNotFoundException) as cm:
             api.generate_datasource_novelty_detector_for_datapoint(pid=datapoint['pid'])
-        self.assertEqual(cm.exception.error, errors.E_GDA_GDNDFD_DSDNF)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_GDNDFD_DSDNF)
 
     def test_generate_datasource_novelty_detector_for_datapoint_failure_no_text_summaries_found(self):
         ''' generate_datasource_novelty_detector_for_datapoint should fail if no text summary is found, raising an error when generating de novelty detector '''
@@ -284,7 +285,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         self.assertTrue(datapointapi.store_datasource_values(did=datasource['did'],date=date))
         with self.assertRaises(exceptions.DatasourceNoveltyDetectorException) as cm:
             api.generate_datasource_novelty_detector_for_datapoint(pid=datapoint['pid'])
-        self.assertEqual(cm.exception.error, errors.E_GDA_GDNDFD_NDF)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_GDNDFD_NDF)
 
     def test_generate_datasource_novelty_detector_for_datapoint_success(self):
         ''' generate_datasource_novelty_detector_for_datapoint should succeed '''
@@ -312,7 +313,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         for pid in pids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.should_datapoint_appear_in_sample(pid=pid,date=date)
-            self.assertEqual(cm.exception.error, errors.E_GDA_SDAIS_IP)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_SDAIS_IP)
 
     def test_should_datapoint_appear_in_sample_failure_invalid_date(self):
         ''' should_datapoint_appear_in_sample should fail if date is invalid '''
@@ -321,7 +322,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.should_datapoint_appear_in_sample(pid=pid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_GDA_SDAIS_IDT)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_SDAIS_IDT)
 
     def test_should_datapoint_appear_in_sample_failure_non_existent_datapoint(self):
         ''' should_datapoint_appear_in_sample should fail if pid does not exist '''
@@ -329,7 +330,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         date=timeuuid.uuid1()
         with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
             api.should_datapoint_appear_in_sample(pid=pid, date=date)
-        self.assertEqual(cm.exception.error, errors.E_GDA_SDAIS_DNF)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_SDAIS_DNF)
 
     def test_should_datapoint_appear_in_sample_failure_no_novelty_detector_found(self):
         ''' should_datapoint_appear_in_sample should fail if no novelty_detector is found '''
@@ -350,7 +351,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         self.assertTrue(datapointapi.store_datasource_values(did=datasource['did'],date=date))
         with self.assertRaises(exceptions.DatasourceNoveltyDetectorException) as cm:
             api.should_datapoint_appear_in_sample(pid=datapoint['pid'],date=date)
-        self.assertEqual(cm.exception.error, errors.E_GDA_GDNDFD_NDF)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_GDNDFD_NDF)
 
     def test_should_datapoint_appear_in_sample_failure_no_text_summary_found(self):
         ''' should_datapoint_appear_in_sample should fail if no text summary is found '''
@@ -373,7 +374,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         new_date=timeuuid.uuid1()
         with self.assertRaises(exceptions.DatasourceDataNotFoundException) as cm:
             api.should_datapoint_appear_in_sample(pid=datapoint['pid'],date=new_date)
-        self.assertEqual(cm.exception.error, errors.E_GDA_GDTS_DDNF)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_GDTS_DDNF)
 
     def test_should_datapoint_appear_in_sample_success_result_false(self):
         ''' should_datapoint_appear_in_sample should succeed and the result should be false '''
@@ -444,7 +445,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         for did in dids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.classify_missing_datapoints_in_sample(did=did,date=date)
-            self.assertEqual(cm.exception.error, errors.E_GDA_CMDIS_ID)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_CMDIS_ID)
 
     def test_classify_missing_datapoints_in_sample_failure_invalid_date(self):
         ''' classify_missing_datapoints_in_sample should fail if date is invalid '''
@@ -453,7 +454,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.classify_missing_datapoints_in_sample(did=did,date=date)
-            self.assertEqual(cm.exception.error, errors.E_GDA_CMDIS_IDT)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_CMDIS_IDT)
 
     def test_classify_missing_datapoints_in_sample_failure_dsmap_not_found(self):
         ''' classify_missing_datapoints_in_sample should fail if dsmap is not found '''
@@ -461,7 +462,7 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         did=uuid.uuid4()
         with self.assertRaises(exceptions.DatasourceMapNotFoundException) as cm:
             api.classify_missing_datapoints_in_sample(did=did,date=date)
-        self.assertEqual(cm.exception.error, errors.E_GDA_CMDIS_DSMNF)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_CMDIS_DSMNF)
 
     def test_classify_missing_datapoints_in_sample_success_no_datapoint_left_to_classify(self):
         ''' classify_missing_datapoints_in_sample should succeed if no datapoint is left to classify, and return a dictionary with empty categories '''

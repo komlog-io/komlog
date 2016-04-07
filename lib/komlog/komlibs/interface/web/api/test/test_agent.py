@@ -4,7 +4,7 @@ import json
 from base64 import b64encode, b64decode
 from komlog.komlibs.auth import operations
 from komlog.komlibs.auth import passport
-from komlog.komlibs.auth import errors as autherrors
+from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.interface.web.api import login as loginapi 
 from komlog.komlibs.interface.web.api import user as userapi 
 from komlog.komlibs.interface.web.api import agent as agentapi 
@@ -17,7 +17,7 @@ from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.gestaccount.agent.states import *
-from komlog.komlibs.gestaccount import errors as gesterrors
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
 from komlog.komfig import logging

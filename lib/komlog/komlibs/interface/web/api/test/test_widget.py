@@ -4,8 +4,8 @@ import json
 from base64 import b64encode, b64decode
 from komlog.komlibs.auth import operations
 from komlog.komlibs.auth import passport
-from komlog.komlibs.auth import errors as autherrors
-from komlog.komlibs.gestaccount import errors as gesterrors
+from komlog.komlibs.auth.errors import Errors as autherrors
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.widget import types
 from komlog.komlibs.gestaccount.widget import visualization_types as vistypes
 from komlog.komlibs.gestaccount.datasource import api as gestdatasourceapi

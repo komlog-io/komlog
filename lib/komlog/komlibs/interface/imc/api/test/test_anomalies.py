@@ -5,7 +5,7 @@ from komlog.komlibs.interface.imc.api import anomalies
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc import status, exceptions
 from komlog.komlibs.general.time import timeuuid
-from komlog.komlibs.gestaccount import errors as gesterrors
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 
 
 class InterfaceImcApiAnomaliesTest(unittest.TestCase):

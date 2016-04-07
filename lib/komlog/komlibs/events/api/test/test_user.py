@@ -14,7 +14,8 @@ from komlog.komlibs.gestaccount.circle import api as circleapi
 from komlog.komlibs.gestaccount.snapshot import api as snapshotapi
 from komlog.komlibs.events.api import user as eventsuser
 from komlog.komlibs.events.model import types, priorities
-from komlog.komlibs.events import exceptions, errors
+from komlog.komlibs.events import exceptions
+from komlog.komlibs.events.errors import Errors
 from komlog.komfig import logging
 
 class EventsApiUserTest(unittest.TestCase):
@@ -27,7 +28,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.get_event(uid=uid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_EAU_GEV_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_GEV_IU)
 
     def test_get_event_failure_invalid_date(self):
         ''' get_event should fail if date is invalid '''
@@ -36,7 +37,7 @@ class EventsApiUserTest(unittest.TestCase):
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.get_event(uid=uid, date=date )
-            self.assertEqual(cm.exception.error, errors.E_EAU_GEV_IDT)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_GEV_IDT)
 
     def test_get_event_failure_non_existent_event(self):
         ''' get_event should fail event does not exist '''
@@ -44,7 +45,7 @@ class EventsApiUserTest(unittest.TestCase):
         date=timeuuid.uuid1()
         with self.assertRaises(exceptions.EventNotFoundException) as cm:
             eventsuser.get_event(uid=uid, date=date )
-        self.assertEqual(cm.exception.error, errors.E_EAU_GEV_EVNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_GEV_EVNF)
 
     def test_get_event_success_new_user(self):
         ''' get_event should succeed returning the event '''
@@ -353,7 +354,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.get_events(uid=uid)
-            self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_GEVS_IU)
 
     def test_get_events_failure_invalid_to_date(self):
         ''' get_events should fail if to_date is invalid '''
@@ -362,7 +363,7 @@ class EventsApiUserTest(unittest.TestCase):
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.get_events(uid=uid, to_date=date )
-            self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_ITD)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_GEVS_ITD)
 
     def test_get_events_failure_invalid_from_date(self):
         ''' get_events should fail if from_date is invalid '''
@@ -371,7 +372,7 @@ class EventsApiUserTest(unittest.TestCase):
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.get_events(uid=uid, from_date=date )
-            self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_IFD)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_GEVS_IFD)
 
     def test_get_events_failure_invalid_count(self):
         ''' get_events should fail if count is invalid '''
@@ -380,7 +381,7 @@ class EventsApiUserTest(unittest.TestCase):
         for count in counts:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.get_events(uid=uid, count=count)
-            self.assertEqual(cm.exception.error, errors.E_EAU_GEVS_ICNT)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_GEVS_ICNT)
 
     def test_get_events_success(self):
         ''' get_events should return the event list '''
@@ -406,7 +407,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.enable_event(uid=uid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_EAU_ENE_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_ENE_IU)
 
     def test_enable_event_failure_invalid_date(self):
         ''' enable_event should fail if date is invalid '''
@@ -415,7 +416,7 @@ class EventsApiUserTest(unittest.TestCase):
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.enable_event(uid=uid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_EAU_ENE_ID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_ENE_ID)
 
     def test_enable_event_failure_non_existent_event(self):
         ''' enable_event should fail if event does not exist '''
@@ -423,7 +424,7 @@ class EventsApiUserTest(unittest.TestCase):
         date=uuid.uuid1()
         with self.assertRaises(exceptions.EventNotFoundException) as cm:
             eventsuser.enable_event(uid=uid, date=date)
-        self.assertEqual(cm.exception.error, errors.E_EAU_ENE_EVNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_ENE_EVNF)
 
     def test_enable_event_success_event_enabled_previously(self):
         ''' enable_event should succeed if event is enabled previously '''
@@ -449,7 +450,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.disable_event(uid=uid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_EAU_DISE_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_DISE_IU)
 
     def test_disable_event_failure_invalid_date(self):
         ''' disable_event should fail if date is invalid '''
@@ -458,7 +459,7 @@ class EventsApiUserTest(unittest.TestCase):
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.disable_event(uid=uid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_EAU_DISE_ID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_DISE_ID)
 
     def test_disable_event_failure_non_existent_event(self):
         ''' disable_event should fail if event does not exist '''
@@ -466,7 +467,7 @@ class EventsApiUserTest(unittest.TestCase):
         date=uuid.uuid1()
         with self.assertRaises(exceptions.EventNotFoundException) as cm:
             eventsuser.disable_event(uid=uid, date=date)
-        self.assertEqual(cm.exception.error, errors.E_EAU_DISE_EVNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_DISE_EVNF)
 
     def test_disable_event_success_event_disabled_previously(self):
         ''' enable_event should succeed if event is enabled previously '''
@@ -510,7 +511,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.delete_events(uid=uid)
-            self.assertEqual(cm.exception.error, errors.E_EAU_DEV_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_DEV_IU)
 
     def test_delete_events_success(self):
         ''' delete_events should succeed '''
@@ -537,7 +538,7 @@ class EventsApiUserTest(unittest.TestCase):
         for event_type in event_types:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_IEVT)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_NEWE_IEVT)
 
     def test_new_event_failure_non_existent_event_type(self):
         ''' new_event should fail if type is invalid  '''
@@ -546,7 +547,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_NEWE_EVTNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_NEWE_EVTNF)
 
     def test_new_event_new_user_failure_invalid_uid(self):
         ''' new_event should fail if type is invalid  '''
@@ -556,7 +557,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNU_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNU_IU)
 
     def test_new_event_new_user_failure_non_existent_user(self):
         ''' new_event should fail if type is NEW_USER and no user does not exist '''
@@ -565,7 +566,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNU_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNU_UNF)
 
     def test_new_event_new_user_success(self):
         ''' new_event should succeed '''
@@ -585,7 +586,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNA_IU)
 
     def test_new_event_new_agent_failure_invalid_parameters_passed(self):
         ''' new_event should fail if event_type is NEW_AGENT and parameters is not a dict '''
@@ -595,7 +596,7 @@ class EventsApiUserTest(unittest.TestCase):
         for parameters in parameterss:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_IP)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNA_IP)
 
     def test_new_event_new_agent_failure_no_aid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_AGENT and no aid parameter is passed '''
@@ -604,7 +605,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_IPAID)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNA_IPAID)
 
     def test_new_event_new_agent_failure_invalid_aid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_AGENT and aid parameter is invalid '''
@@ -615,7 +616,7 @@ class EventsApiUserTest(unittest.TestCase):
             parameters={'aid':aid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_IPAID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNA_IPAID)
 
     def test_new_event_new_agent_failure_non_existent_user(self):
         ''' new_event should fail if event_type is NEW_AGENT and user does not exist '''
@@ -624,7 +625,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={'aid':uuid.uuid4().hex}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNA_UNF)
 
     def test_new_event_new_agent_failure_non_existent_agent(self):
         ''' new_event should fail if event_type is NEW_AGENT and agent does not exist '''
@@ -637,7 +638,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(user)
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNA_ANF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNA_ANF)
 
     def test_new_event_new_agent_success(self):
         ''' new_event should succeed '''
@@ -664,7 +665,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDS_IU)
 
     def test_new_event_new_datasource_failure_invalid_parameters_passed(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and parameters is not a dict '''
@@ -674,7 +675,7 @@ class EventsApiUserTest(unittest.TestCase):
         for parameters in parameterss:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_IP)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDS_IP)
 
     def test_new_event_new_datasource_failure_non_did_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and no did parameter is passed '''
@@ -683,7 +684,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_IPDID)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDS_IPDID)
 
     def test_new_event_new_datasource_failure_invalid_did_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and aid parameter is invalid '''
@@ -694,7 +695,7 @@ class EventsApiUserTest(unittest.TestCase):
             parameters={'aid':aid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_IPDID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDS_IPDID)
 
     def test_new_event_new_datasource_failure_non_existent_user(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and user does not exist '''
@@ -703,7 +704,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={'did':uuid.uuid4().hex}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDS_UNF)
 
     def test_new_event_new_datasource_failure_non_existent_datasource(self):
         ''' new_event should fail if event_type is NEW_DATASOURCE and datasource does not exist '''
@@ -716,7 +717,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(user)
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDS_DNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDS_DNF)
 
     def test_new_event_new_datasource_success(self):
         ''' new_event should succeed '''
@@ -746,7 +747,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDP_IU)
 
     def test_new_event_new_datapoint_failure_invalid_parameters_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and parameters is not a dict '''
@@ -756,7 +757,7 @@ class EventsApiUserTest(unittest.TestCase):
         for parameters in parameterss:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_IP)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDP_IP)
 
     def test_new_event_new_datapoint_failure_non_pid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and no pid parameter is passed '''
@@ -765,7 +766,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_IPPID)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDP_IPPID)
 
     def test_new_event_new_datapoint_failure_invalid_pid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and pid parameter is invalid '''
@@ -776,7 +777,7 @@ class EventsApiUserTest(unittest.TestCase):
             parameters={'pid':pid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_IPPID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDP_IPPID)
 
     def test_new_event_new_datapoint_failure_non_existent_user(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and user does not exist '''
@@ -785,7 +786,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={'pid':uuid.uuid4().hex}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDP_UNF)
 
     def test_new_event_new_datapoint_failure_non_existent_datapoint(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and datasource does not exist '''
@@ -798,7 +799,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(user)
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_PNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDP_PNF)
 
     def test_new_event_new_datapoint_failure_non_existent_datasource(self):
         ''' new_event should fail if event_type is NEW_DATAPOINT and datapoint does not exist '''
@@ -823,7 +824,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertTrue(cassapidatasource.delete_datasource(did=datasource['did']))
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDP_DNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDP_DNF)
 
     def test_new_event_new_datapoint_success(self):
         ''' new_event should succeed '''
@@ -856,7 +857,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNWG_IU)
 
     def test_new_event_new_widget_failure_invalid_parameters_passed(self):
         ''' new_event should fail if event_type is NEW_WIDGET and parameters is not a dict '''
@@ -866,7 +867,7 @@ class EventsApiUserTest(unittest.TestCase):
         for parameters in parameterss:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_IP)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNWG_IP)
 
     def test_new_event_new_widget_failure_non_wid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_WIDGET and no wid parameter is passed '''
@@ -875,7 +876,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_IPWID)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNWG_IPWID)
 
     def test_new_event_new_widget_failure_invalid_wid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_WIDGET and wid parameter is invalid '''
@@ -886,7 +887,7 @@ class EventsApiUserTest(unittest.TestCase):
             parameters={'wid':wid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_IPWID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNWG_IPWID)
 
     def test_new_event_new_widget_failure_non_existent_user(self):
         ''' new_event should fail if event_type is NEW_WIDGET and widget does not exist '''
@@ -896,7 +897,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={'wid':wid.hex}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNWG_UNF)
 
     def test_new_event_new_widget_failure_non_existent_widget(self):
         ''' new_event should fail if event_type is NEW_WIDGET and widget does not exist '''
@@ -909,7 +910,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(user)
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNWG_WNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNWG_WNF)
 
     def test_new_event_new_widget_success(self):
         ''' new_event should succeed '''
@@ -941,7 +942,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDB_IU)
 
     def test_new_event_new_dashboard_failure_invalid_parameters_passed(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and parameters is not a dict '''
@@ -951,7 +952,7 @@ class EventsApiUserTest(unittest.TestCase):
         for parameters in parameterss:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_IP)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDB_IP)
 
     def test_new_event_new_dashboard_failure_non_bid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and no bid parameter is passed '''
@@ -960,7 +961,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_IPBID)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDB_IPBID)
 
     def test_new_event_new_dashboard_failure_invalid_bid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and bid parameter is invalid '''
@@ -971,7 +972,7 @@ class EventsApiUserTest(unittest.TestCase):
             parameters={'bid':bid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_IPBID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDB_IPBID)
 
     def test_new_event_new_dashboard_failure_non_existent_user(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and user does not exist '''
@@ -981,7 +982,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={'bid':bid.hex}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDB_UNF)
 
     def test_new_event_new_dashboard_failure_non_existent_dashboard(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and dashboard does not exist '''
@@ -994,7 +995,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(user)
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNDB_BNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNDB_BNF)
 
     def test_new_event_new_dashboard_success(self):
         ''' new_event should succeed '''
@@ -1019,7 +1020,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNC_IU)
 
     def test_new_event_new_circle_failure_invalid_parameters_passed(self):
         ''' new_event should fail if event_type is NEW_CIRCLE and parameters is not a dict '''
@@ -1029,7 +1030,7 @@ class EventsApiUserTest(unittest.TestCase):
         for parameters in parameterss:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_IP)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNC_IP)
 
     def test_new_event_new_circle_failure_non_cid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_CIRCLE and no cid parameter is passed '''
@@ -1038,7 +1039,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_IPCID)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNC_IPCID)
 
     def test_new_event_new_circle_failure_invalid_cid_parameter_passed(self):
         ''' new_event should fail if event_type is NEW_DASHBOARD and cid parameter is invalid '''
@@ -1049,7 +1050,7 @@ class EventsApiUserTest(unittest.TestCase):
             parameters={'cid':cid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_IPCID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNC_IPCID)
 
     def test_new_event_new_circle_failure_non_existent_user(self):
         ''' new_event should fail if event_type is NEW_CIRCLE and user does not exist '''
@@ -1059,7 +1060,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={'cid':cid.hex}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNC_UNF)
 
     def test_new_event_new_circle_failure_non_existent_circle(self):
         ''' new_event should fail if event_type is NEW_CIRCLE and circle does not exist '''
@@ -1072,7 +1073,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(user)
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNC_CNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNC_CNF)
 
     def test_new_event_new_circle_success(self):
         ''' new_event should succeed '''
@@ -1097,7 +1098,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_IUID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_IUID)
 
     def test_new_event_intervention_datapoint_identification_failure_invalid_parameters_passed(self):
         ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and parameters is not a dict '''
@@ -1107,7 +1108,7 @@ class EventsApiUserTest(unittest.TestCase):
         for parameters in parameterss:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_IP)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_IP)
 
     def test_new_event_intervention_datapoint_identification_failure_no_did_parameter_passed(self):
         ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and no did parameter is passed '''
@@ -1116,7 +1117,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_IPDID)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_IPDID)
 
     def test_new_event_intervention_datapoint_identification_failure_invalid_did_parameter_passed(self):
         ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and did parameter is invalid '''
@@ -1127,7 +1128,7 @@ class EventsApiUserTest(unittest.TestCase):
             parameters={'did':did}
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_IPDID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_IPDID)
 
     def test_new_event_intervention_datapoint_identification_failure_non_existent_user(self):
         ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and user does not exist '''
@@ -1140,7 +1141,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={'did':did.hex,'date':date.hex,'doubts':doubts,'discarded':discarded}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_UNF)
 
     def test_new_event_intervention_datapoint_identification_failure_non_existent_datasource(self):
         ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and circle does not exist '''
@@ -1157,7 +1158,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(user)
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IEIDPI_DNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_DNF)
 
     def test_new_event_intervention_datapoint_identification_success(self):
         ''' new_event should succeed '''
@@ -1193,7 +1194,7 @@ class EventsApiUserTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IU)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNSS_IU)
 
     def test_new_event_notification_new_snapshot_shared_failure_invalid_parameters_passed(self):
         ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and parameters is not a dict '''
@@ -1203,7 +1204,7 @@ class EventsApiUserTest(unittest.TestCase):
         for parameters in parameterss:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IP)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNSS_IP)
 
     def test_new_event_notification_new_snapshot_shared_failure_no_nid_parameter_passed(self):
         ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and no nid parameter is passed '''
@@ -1212,7 +1213,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IPNID)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNSS_IPNID)
 
     def test_new_event_notification_new_snapshot_shared_failure_invalid_nid_parameter_passed(self):
         ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and nid parameter is invalid '''
@@ -1223,7 +1224,7 @@ class EventsApiUserTest(unittest.TestCase):
             parameters={'nid':nid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IPNID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNSS_IPNID)
 
     def test_new_event_notification_new_snapshot_shared_failure_no_tid_parameter_passed(self):
         ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and no tid parameter is passed '''
@@ -1232,7 +1233,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={'nid':uuid.uuid4().hex}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IPTID)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNSS_IPTID)
 
     def test_new_event_notification_new_snapshot_shared_failure_invalid_tid_parameter_passed(self):
         ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and tid parameter is invalid '''
@@ -1244,7 +1245,7 @@ class EventsApiUserTest(unittest.TestCase):
             parameters={'tid':tid,'nid':nid.hex}
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_IPTID)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IENNSS_IPTID)
 
     def test_new_event_notification_new_snapshot_shared_failure_user_not_found(self):
         ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and user does not exist '''
@@ -1255,7 +1256,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={'tid':tid.hex,'nid':nid.hex}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNSS_UNF)
 
     def test_new_event_notification_new_snapshot_shared_failure_snapshot_not_found(self):
         ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and user does not exist '''
@@ -1270,7 +1271,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={'tid':tid.hex,'nid':nid.hex}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_NNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNSS_NNF)
 
     def test_new_event_notification_new_snapshot_shared_failure_ticket_not_found(self):
         ''' new_event should fail if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and user does not exist '''
@@ -1297,7 +1298,7 @@ class EventsApiUserTest(unittest.TestCase):
         parameters={'tid':tid.hex,'nid':nid.hex}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAU_IENNSS_TNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IENNSS_TNF)
 
     def test_new_event_notification_new_snapshot_shared_success_insert_to_the_sharing_user_and_circles(self):
         ''' new_event should succeed if event_type is NOTIFICATION_NEW_SNAPSHOT_SHARED and insert the event in the sharing user only, because snapshot is not shared with anyone '''

@@ -18,15 +18,16 @@ from komlog.komlibs.auth import update as authupdate
 from komlog.komlibs.general.validation import arguments
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.events.model import types as eventstypes
-from komlog.komlibs.interface.websocket.protocol.v1 import errors, exceptions
+from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model import operation as modop
 from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operation
 
 def process_operation(operation):
     if not isinstance(operation, modop.WSIFaceOperation):
-        raise exceptions.BadParametersException(error=errors.E_IWSPV1PO_ROA_IOT)
+        raise exceptions.BadParametersException(error=Errors.E_IWSPV1PO_ROA_IOT)
     if operation.oid not in _operation_funcs:
-        raise exceptions.OperationValidationException(error=errors.E_IWSPV1PO_ROA_ONF)
+        raise exceptions.OperationValidationException(error=Errors.E_IWSPV1PO_ROA_ONF)
     return _operation_funcs[operation.oid](operation)
 
 def _process_operation_new_datasource(operation):

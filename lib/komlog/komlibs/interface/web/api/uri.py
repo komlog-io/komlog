@@ -11,7 +11,8 @@ from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.graph.api import uri as graphuri
-from komlog.komlibs.interface.web import status, exceptions, errors
+from komlog.komlibs.interface.web import status, exceptions
+from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.interface.web.model import webmodel
 
 def get_node_info(ido,uri,counter):
@@ -31,12 +32,12 @@ def get_node_info(ido,uri,counter):
 @exceptions.ExceptionHandler
 def get_uri_request(passport, uri=None):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWAUR_GUR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWAUR_GUR_IPSP)
     if uri is not None:
         if uri=='':
             uri=None
         elif not args.is_valid_relative_uri(uri):
-            raise exceptions.BadParametersException(error=errors.E_IWAUR_GUR_IUR)
+            raise exceptions.BadParametersException(error=Errors.E_IWAUR_GUR_IUR)
     authorization.authorize_request(request=Requests.GET_URI,passport=passport)
     response_data={'v':[],'e':[]}
     adjacents_pending=set()

@@ -1,14 +1,15 @@
 import unittest
 import uuid
 import json
-from komlog.komlibs.auth import errors as autherrors
+from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.auth import passport
-from komlog.komlibs.gestaccount import errors as gesterrors
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.user import api as gestuserapi
 from komlog.komlibs.gestaccount.user.states import *
 from komlog.komlibs.interface.web.api import user as userapi 
 from komlog.komlibs.interface.web.model import webmodel
-from komlog.komlibs.interface.web import status, errors
+from komlog.komlibs.interface.web import status
+from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.interface.web import exceptions
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.general.validation import arguments as args
@@ -521,7 +522,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         for email in emails:
             response=userapi.register_invitation_request(email=email)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAU_RIR_IEMAIL)
+            self.assertEqual(response.error, Errors.E_IWAU_RIR_IEMAIL)
 
     def test_register_invitation_request_success_non_previously_registered(self):
         ''' register_invitation_request should succeed if the request was not registered previously '''
@@ -546,14 +547,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         for invitation in invitations:
             response=userapi.check_invitation_request(invitation=invitation)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAU_CIR_IINV)
+            self.assertEqual(response.error, Errors.E_IWAU_CIR_IINV)
 
     def test_check_invitation_request_failure_invitation_not_found(self):
         ''' check_invitation_request should fail if invitation is not found'''
         invitation=uuid.uuid4().hex
         response=userapi.check_invitation_request(invitation=invitation)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, errors.E_IWAU_CIR_INVNF)
+        self.assertEqual(response.error, Errors.E_IWAU_CIR_INVNF)
 
     def test_check_invitation_request_failure_invitation_already_used(self):
         ''' check_invitation_request should fail if invitation is not found'''
@@ -589,7 +590,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(args.is_valid_code(msg.code))
         response=userapi.check_invitation_request(invitation=invitation)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, errors.E_IWAU_CIR_INVAU)
+        self.assertEqual(response.error, Errors.E_IWAU_CIR_INVAU)
 
     def test_check_invitation_request_success(self):
         ''' check_invitation_request should succeed if invitation exists and is unused '''
@@ -609,7 +610,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         for email in emails:
             response=userapi.send_invitation_request(email=email)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAU_SIR_IEMAIL)
+            self.assertEqual(response.error, Errors.E_IWAU_SIR_IEMAIL)
 
     def test_send_invitation_request_failure_invalid_num(self):
         ''' send_invitation_request should fail if num is invalid'''
@@ -618,7 +619,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         for num in nums:
             response=userapi.send_invitation_request(email=email, num=num)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAU_SIR_INUM)
+            self.assertEqual(response.error, Errors.E_IWAU_SIR_INUM)
 
     def test_send_invitation_request_success(self):
         ''' send_invitation_request should succeed and send the mail '''
@@ -652,21 +653,21 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         for account in accounts:
             response=userapi.register_forget_request(account=account)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAU_RFR_IACCOUNT)
+            self.assertEqual(response.error, Errors.E_IWAU_RFR_IACCOUNT)
 
     def test_register_forget_request_failure_non_existent_email(self):
         ''' register_forget_request should fail if email passed does not belong to any user '''
         email='test_register_forget_request_failure_non_existent_email@komlog.org'
         response=userapi.register_forget_request(account=email)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, errors.E_IWAU_RFR_UNF)
+        self.assertEqual(response.error, Errors.E_IWAU_RFR_UNF)
 
     def test_register_forget_request_failure_non_existent_username(self):
         ''' register_forget_request should fail if username passed does not belong to any user '''
         username='test_register_forget_request_failure_non_existent_email'
         response=userapi.register_forget_request(account=username)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, errors.E_IWAU_RFR_UNF)
+        self.assertEqual(response.error, Errors.E_IWAU_RFR_UNF)
 
     def test_register_forget_request_success_passing_user_email(self):
         ''' register_forget_request should succeed if we pass an existing email '''
@@ -770,14 +771,14 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         for code in codes:
             response=userapi.check_forget_code_request(code=code)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAU_CFR_ICODE)
+            self.assertEqual(response.error, Errors.E_IWAU_CFR_ICODE)
 
     def test_check_forget_code_request_failure_non_existent_code(self):
         ''' check_forget_code_request should fail if code is invalid '''
         code=uuid.uuid4().hex
         response=userapi.check_forget_code_request(code=code)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, errors.E_IWAU_CFR_CNF)
+        self.assertEqual(response.error, Errors.E_IWAU_CFR_CNF)
 
     def test_check_forget_code_request_failure_already_used_code(self):
         ''' check_forget_code_request should fail if code is already used '''
@@ -832,7 +833,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         response=userapi.check_forget_code_request(code=code)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, errors.E_IWAU_CFR_CODEAU)
+        self.assertEqual(response.error, Errors.E_IWAU_CFR_CODEAU)
 
     def test_check_forget_code_request_success(self):
         ''' check_forget_code_request should succeed '''
@@ -893,7 +894,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         for code in codes:
             response=userapi.reset_password_request(code=code, password=password)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAU_RPR_ICODE)
+            self.assertEqual(response.error, Errors.E_IWAU_RPR_ICODE)
 
     def test_reset_password_request_failure_invalid_password(self):
         ''' reset_password_request should fail if code is invalid '''
@@ -902,7 +903,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         for password in passwords:
             response=userapi.reset_password_request(code=code, password=password)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAU_RPR_IPWD)
+            self.assertEqual(response.error, Errors.E_IWAU_RPR_IPWD)
 
     def test_reset_password_request_failure_code_not_found(self):
         ''' reset_password_request should fail if code is not found '''
@@ -910,7 +911,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password='temporal'
         response=userapi.reset_password_request(code=code, password=password)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, errors.E_IWAU_RPR_CNF)
+        self.assertEqual(response.error, Errors.E_IWAU_RPR_CNF)
 
     def test_reset_password_request_failure_code_already_used(self):
         ''' reset_password_request should fail if code is already used'''
@@ -966,5 +967,5 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password='newpassword2'
         response=userapi.reset_password_request(code=code, password=password)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, errors.E_IWAU_RPR_CODEAU)
+        self.assertEqual(response.error, Errors.E_IWAU_RPR_CODEAU)
 

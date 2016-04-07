@@ -1,7 +1,8 @@
 
 from komlog.komlibs.auth import operations as authoperations
 from komlog.komlibs.general.validation import arguments as args
-from komlog.komlibs.interface.websocket.protocol.v1 import errors, exceptions
+from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operation
 
 
@@ -12,7 +13,7 @@ OPAUTHS={
 class WSIFaceOperation:
     def __new__(cls, *args, **kwargs):
         if cls is WSIFaceOperation:
-            raise exceptions.OperationValidationException(error=errors.E_IWSPV1MO_WSIO_IC)
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_WSIO_IC)
         return super(WSIFaceOperation, cls).__new__(cls)
 
     def __init__(self, oid):
@@ -26,11 +27,11 @@ class WSIFaceOperation:
     @oid.setter
     def oid(self, value):
         if self._oid:
-            raise exceptions.OperationValidationException(error=errors.E_IWSPV1MO_WSIO_OIDAI)
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_WSIO_OIDAI)
         if value in Operation:
             self._oid = value
         else:
-            raise exceptions.OperationValidationException(error=errors.E_IWSPV1MO_WSIO_IOID)
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_WSIO_IOID)
 
     @property
     def auth_operation(self):
@@ -56,7 +57,7 @@ class NewDatasourceOperation(WSIFaceOperation):
 
     @params.setter
     def params(self, value):
-        raise exceptions.OperationValidationException(error=errors.E_IWSPV1MO_WSIO_PMNA)
+        raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_WSIO_PMNA)
 
     @property
     def uid(self):
@@ -67,7 +68,7 @@ class NewDatasourceOperation(WSIFaceOperation):
         if args.is_valid_uuid(value):
             self._uid = value
         else:
-            raise exceptions.OperationValidationException(error=errors.E_IWSPV1MO_NDSO_IUT)
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_NDSO_IUT)
 
     @property
     def aid(self):
@@ -78,7 +79,7 @@ class NewDatasourceOperation(WSIFaceOperation):
         if args.is_valid_uuid(value):
             self._aid = value
         else:
-            raise exceptions.OperationValidationException(error=errors.E_IWSPV1MO_NDSO_IAT)
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_NDSO_IAT)
 
     @property
     def did(self):
@@ -89,5 +90,5 @@ class NewDatasourceOperation(WSIFaceOperation):
         if args.is_valid_uuid(value):
             self._did = value
         else:
-            raise exceptions.OperationValidationException(error=errors.E_IWSPV1MO_NDSO_IDT)
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_NDSO_IDT)
 

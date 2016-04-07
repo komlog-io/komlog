@@ -17,7 +17,8 @@ from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.snapshot import api as snapshotapi
 from komlog.komlibs.gestaccount.common import delete as deleteapi
 from komlog.komlibs.gestaccount.widget import types
-from komlog.komlibs.interface.web import status, exceptions, errors
+from komlog.komlibs.interface.web import status, exceptions
+from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.interface.web.model import webmodel
 from komlog.komlibs.interface.web.operations import weboperations
 from komlog.komlibs.interface.imc.model import messages
@@ -28,7 +29,7 @@ from komlog.komlibs.general.time import timeuuid
 @exceptions.ExceptionHandler
 def get_snapshots_config_request(passport):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_GSNSCR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_GSNSCR_IPSP)
     authorization.authorize_request(request=Requests.GET_SNAPSHOTS_CONFIG,passport=passport)
     data=snapshotapi.get_snapshots_config(uid=passport.uid)
     response_data=[]
@@ -79,11 +80,11 @@ def get_snapshots_config_request(passport):
 @exceptions.ExceptionHandler
 def get_snapshot_config_request(passport, nid, tid=None):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_GSNCR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_GSNCR_IPSP)
     if not args.is_valid_hex_uuid(nid):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_GSNCR_IN)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_GSNCR_IN)
     if tid and not args.is_valid_hex_uuid(tid):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_GSNCR_IT)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_GSNCR_IT)
     nid=uuid.UUID(nid)
     tid=uuid.UUID(tid) if tid else None
     authorization.authorize_request(request=Requests.GET_SNAPSHOT_CONFIG,passport=passport,nid=nid, tid=tid)
@@ -132,9 +133,9 @@ def get_snapshot_config_request(passport, nid, tid=None):
 @exceptions.ExceptionHandler
 def delete_snapshot_request(passport, nid):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_DSNR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_DSNR_IPSP)
     if not args.is_valid_hex_uuid(nid):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_DSNR_IN)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_DSNR_IN)
     nid=uuid.UUID(nid)
     authorization.authorize_request(request=Requests.DELETE_SNAPSHOT,passport=passport,nid=nid)
     deleteapi.delete_snapshot(nid=nid)
@@ -143,18 +144,18 @@ def delete_snapshot_request(passport, nid):
 @exceptions.ExceptionHandler
 def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None, ets=None, seq=None):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_IPSP)
     if not args.is_valid_hex_uuid(wid):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_IW)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_IW)
     if user_list and not args.is_valid_list(user_list):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_IUL)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_IUL)
     if cid_list and not args.is_valid_list(cid_list):
-        raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_ICL)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_ICL)
     uids=set()
     if user_list:
         for user in user_list:
             if not args.is_valid_username(user):
-                raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_IULE)
+                raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_IULE)
             else:
                 user_uid=userapi.get_uid(username=user)
                 if user_uid:
@@ -163,12 +164,12 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
     if cid_list:
         for cid in cid_list:
             if not args.is_valid_hex_uuid(cid):
-                raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_ICLE)
+                raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_ICLE)
             else:
                 cids.add(uuid.UUID(cid))
     wid=uuid.UUID(wid)
     if len(uids)+len(cids)==0:
-        raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_ESL)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_ESL)
     if seq and args.is_valid_sequence(seq):
         interval_init=timeuuid.get_uuid1_from_custom_sequence(seq)
         interval_end=interval_init
@@ -178,7 +179,7 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
         interval_init=timeuuid.uuid1(seconds=its)
         interval_end=timeuuid.uuid1(seconds=ets)
     else:
-        raise exceptions.BadParametersException(error=errors.E_IWASN_NSNR_NSNTS)
+        raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_NSNTS)
     authorization.authorize_request(request=Requests.NEW_SNAPSHOT,passport=passport, wid=wid)
     snapshot=snapshotapi.new_snapshot(uid=passport.uid,wid=wid,interval_init=interval_init,interval_end=interval_end)
     if snapshot:
@@ -195,9 +196,9 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
                 return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
             else:
                 deleteapi.delete_snapshot(nid=snapshot['nid'])
-                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=errors.E_IWASN_NSNR_AUTHERR)
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_AUTHERR)
         else:
             deleteapi.delete_snapshot(nid=snapshot['nid'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=errors.E_IWASN_NSNR_TCKCE)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=errors.E_IWASN_NSNR_SCE)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_TCKCE)
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_SCE)
 

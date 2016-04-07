@@ -9,7 +9,8 @@ This file is the entry point of authorization mechanisms
 from komlog.komlibs.auth.quotes import authorization as quoauth
 from komlog.komlibs.auth.resources import authorization as resauth
 from komlog.komlibs.auth.tickets import authorization as ticketsauth
-from komlog.komlibs.auth import exceptions, errors
+from komlog.komlibs.auth import exceptions
+from komlog.komlibs.auth.errors import Errors
 from komlog.komlibs.auth.requests import Requests
 from komlog.komlibs.gestaccount.user.states import UserStates
 from komlog.komlibs.gestaccount.agent.states import AgentStates
@@ -24,17 +25,17 @@ def authorize_request(*args, **kwargs):
         kwargs['passport']=args[1]
     request=kwargs.pop('request',None)
     if not request:
-        raise exceptions.BadParametersException(error=errors.E_AA_AR_BP)
+        raise exceptions.BadParametersException(error=Errors.E_AA_AR_BP)
     try:
         func_requests[request](**kwargs)
     except KeyError as e:
         logging.logger.error('Request not found: '+str(request))
         logging.logger.debug(str(type(e))+str(e))
-        raise exceptions.RequestNotFoundException(error=errors.E_AA_AR_RNF)
+        raise exceptions.RequestNotFoundException(error=Errors.E_AA_AR_RNF)
     except (SyntaxError, TypeError) as e:
         logging.logger.error('Request call error: '+str(request))
         logging.logger.debug(str(type(e))+str(e))
-        raise exceptions.BadParametersException(error=errors.E_AA_AR_FBP)
+        raise exceptions.BadParametersException(error=Errors.E_AA_AR_FBP)
 
 def authorize_new_agent_creation(passport):
     quoauth.authorize_new_agent(uid=passport.uid)

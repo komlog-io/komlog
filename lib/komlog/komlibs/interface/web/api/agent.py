@@ -10,7 +10,8 @@ from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.common import delete as deleteapi
-from komlog.komlibs.interface.web import status, exceptions, errors
+from komlog.komlibs.interface.web import status, exceptions
+from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.interface.web.model import webmodel
 from komlog.komlibs.interface.web.operations import weboperations
 from komlog.komlibs.interface.imc.model import messages
@@ -20,13 +21,13 @@ from komlog.komlibs.general.validation import arguments as args
 @exceptions.ExceptionHandler
 def new_agent_request(passport, agentname, pubkey, version):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_NAGR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_NAGR_IPSP)
     if not args.is_valid_agentname(agentname):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_NAGR_IAN)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_NAGR_IAN)
     if not args.is_valid_string(pubkey):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_NAGR_IPK)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_NAGR_IPK)
     if not args.is_valid_version(version):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_NAGR_IV)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_NAGR_IV)
     authorization.authorize_request(request=Requests.NEW_AGENT,passport=passport)
     pubkey=b64decode(pubkey.encode('utf-8'))
     agent=agentapi.create_agent(uid=passport.uid, agentname=agentname, pubkey=pubkey, version=version)
@@ -42,13 +43,13 @@ def new_agent_request(passport, agentname, pubkey, version):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'aid':agent['aid'].hex})
         else:
             deleteapi.delete_agent(aid=agent['aid'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=errors.E_IWAA_NAGR_AUTHERR)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAA_NAGR_AUTHERR)
 
 
 @exceptions.ExceptionHandler
 def get_agents_config_request(passport):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_GAGSCR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_GAGSCR_IPSP)
     authorization.authorize_request(request=Requests.GET_AGENTS_CONFIG, passport=passport)
     data=agentapi.get_agents_config(uid=passport.uid, dids_flag=True)
     response_data=[]
@@ -68,9 +69,9 @@ def get_agents_config_request(passport):
 @exceptions.ExceptionHandler
 def get_agent_config_request(passport, aid):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_GAGCR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_GAGCR_IPSP)
     if not args.is_valid_hex_uuid(aid):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_GAGCR_IA)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_GAGCR_IA)
     aid=uuid.UUID(aid)
     authorization.authorize_request(request=Requests.GET_AGENT_CONFIG,passport=passport,aid=aid)
     data=agentapi.get_agent_config(aid=aid,dids_flag=True)
@@ -88,14 +89,14 @@ def get_agent_config_request(passport, aid):
 @exceptions.ExceptionHandler
 def update_agent_config_request(passport, aid, data):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_UAGCR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_UAGCR_IPSP)
     if not args.is_valid_hex_uuid(aid):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_UAGCR_IA)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_UAGCR_IA)
     if not args.is_valid_dict(data):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_UAGCR_ID)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_UAGCR_ID)
     aid=uuid.UUID(aid)
     if not 'agentname' in data or not args.is_valid_agentname(data['agentname']):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_UAGCR_IAN)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_UAGCR_IAN)
     authorization.authorize_request(request=Requests.UPDATE_AGENT_CONFIG,passport=passport, aid=aid)
     if agentapi.update_agent_config(aid=aid, agentname=data['agentname']):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
@@ -103,9 +104,9 @@ def update_agent_config_request(passport, aid, data):
 @exceptions.ExceptionHandler
 def delete_agent_request(passport, aid):
     if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_DAGR_IPSP)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_DAGR_IPSP)
     if not args.is_valid_hex_uuid(aid):
-        raise exceptions.BadParametersException(error=errors.E_IWAA_DAGR_IA)
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_DAGR_IA)
     aid=uuid.UUID(aid)
     authorization.authorize_request(request=Requests.DELETE_AGENT, passport=passport, aid=aid)
     message=messages.DeleteAgentMessage(aid=aid)

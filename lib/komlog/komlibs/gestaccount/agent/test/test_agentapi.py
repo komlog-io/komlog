@@ -4,7 +4,8 @@ from komlog.komfig import logging
 from komlog.komlibs.gestaccount.agent import api
 from komlog.komlibs.gestaccount.agent.states import *
 from komlog.komlibs.gestaccount.user import api as userapi
-from komlog.komlibs.gestaccount import exceptions, errors
+from komlog.komlibs.gestaccount import exceptions
+from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komcass.api import agent as cassapiagent
 from komlog.komcass.model.orm import agent as ormagent
 from komlog.komlibs.general.crypto import crypto
@@ -77,7 +78,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         aid=uuid.uuid4()
         with self.assertRaises(exceptions.AgentNotFoundException) as cm:
             api.suspend_agent(aid=aid)
-        self.assertEqual(cm.exception.error, errors.E_GAA_SPA_ANF)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_SPA_ANF)
 
     def test_suspend_agent_success(self):
         ''' suspend_agent should succeed if agent exists '''
@@ -94,7 +95,9 @@ class GestaccountAgentApiTest(unittest.TestCase):
     def test_get_agent_config_non_existent_agent(self):
         ''' get_agent_config should fail if agent is not found in system '''
         aid=uuid.uuid4()
-        self.assertRaises(exceptions.AgentNotFoundException, api.get_agent_config,aid=aid) 
+        with self.assertRaises(exceptions.AgentNotFoundException) as cm:
+            api.get_agent_config(aid=aid)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_GACFG_ANF)
 
     def test_get_agent_config_success(self):
         ''' get_agent_config should succeed if agent exists in system '''
@@ -149,7 +152,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         for username in usernames:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.generate_auth_challenge(username=username, pubkey=pubkey)
-            self.assertEqual(cm.exception.error, errors.E_GAA_GAC_IU)
+            self.assertEqual(cm.exception.error, Errors.E_GAA_GAC_IU)
 
     def test_generate_auth_challenge_failure_invalid_pubkey(self):
         ''' generate_auth_challenge should fail if pubkey is invalid '''
@@ -158,7 +161,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         for pubkey in pubkeys:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.generate_auth_challenge(username=username, pubkey=pubkey)
-            self.assertEqual(cm.exception.error, errors.E_GAA_GAC_IPK)
+            self.assertEqual(cm.exception.error, Errors.E_GAA_GAC_IPK)
 
     def test_generate_auth_challenge_failure_non_existent_user(self):
         ''' generate_auth_challenge should fail if user does not exist '''
@@ -166,7 +169,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         with self.assertRaises(exceptions.ChallengeGenerationException) as cm:
             api.generate_auth_challenge(username=username, pubkey=pubkey)
-        self.assertEqual(cm.exception.error, errors.E_GAA_GAC_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_GAC_UNF)
 
     def test_generate_auth_challenge_failure_non_existent_pubkey(self):
         ''' generate_auth_challenge should fail if pubkey does not exist '''
@@ -177,7 +180,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         with self.assertRaises(exceptions.ChallengeGenerationException) as cm:
             api.generate_auth_challenge(username=username, pubkey=pubkey)
-        self.assertEqual(cm.exception.error, errors.E_GAA_GAC_ANF)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_GAC_ANF)
 
     def test_generate_auth_challenge_success(self):
         ''' generate_auth_challenge should succeed '''
@@ -203,7 +206,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         for username in usernames:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
-            self.assertEqual(cm.exception.error, errors.E_GAA_VAC_IU)
+            self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_IU)
 
     def test_validate_auth_challenge_failure_invalid_pubkey(self):
         ''' validate_auth_challenge should fail if pubkey is invalid '''
@@ -214,7 +217,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         for pubkey in pubkeys:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
-            self.assertEqual(cm.exception.error, errors.E_GAA_VAC_IPK)
+            self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_IPK)
 
     def test_validate_auth_challenge_failure_invalid_challenge_hash(self):
         ''' validate_auth_challenge should fail if challenge_hash is invalid '''
@@ -225,7 +228,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         for ch in challenges:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=ch, signature=signature)
-            self.assertEqual(cm.exception.error, errors.E_GAA_VAC_ICH)
+            self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_ICH)
 
     def test_validate_auth_challenge_failure_invalid_signature(self):
         ''' validate_auth_challenge should fail if signature is invalid '''
@@ -236,7 +239,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         for signature in signatures:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=ch, signature=signature)
-            self.assertEqual(cm.exception.error, errors.E_GAA_VAC_ISG)
+            self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_ISG)
 
     def test_validate_auth_challenge_failure_non_existent_user(self):
         ''' validate_auth_challenge should fail if user does not exist '''
@@ -246,7 +249,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         signature=b'asdfasdfasdf'
         with self.assertRaises(exceptions.ChallengeValidationException) as cm:
             api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
-        self.assertEqual(cm.exception.error, errors.E_GAA_VAC_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_UNF)
 
     def test_validate_auth_challenge_failure_non_existent_pubkey(self):
         ''' validate_auth_challenge should fail if pubkey does not exist '''
@@ -259,7 +262,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         signature=b'asdfasdfasdf'
         with self.assertRaises(exceptions.ChallengeValidationException) as cm:
             api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
-        self.assertEqual(cm.exception.error, errors.E_GAA_VAC_ANF)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_ANF)
 
     def test_validate_auth_challenge_failure_non_existent_challenge(self):
         ''' validate_auth_challenge should fail if challenge does not exist '''
@@ -276,7 +279,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         signature=b'asdfasdfasdf'
         with self.assertRaises(exceptions.ChallengeValidationException) as cm:
             api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
-        self.assertEqual(cm.exception.error, errors.E_GAA_VAC_CHNF)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_CHNF)
 
     def test_validate_auth_challenge_failure_error_verifying_signature(self):
         ''' validate_auth_challenge should fail if signature does not correspond to message '''
@@ -299,7 +302,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         signature=crypto.sign_message(key=crypto.serialize_private_key(key2), message=challenge_hash)
         with self.assertRaises(exceptions.ChallengeValidationException) as cm:
             api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
-        self.assertEqual(cm.exception.error, errors.E_GAA_VAC_EVS)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_EVS)
 
     def test_validate_auth_challenge_success(self):
         ''' validate_auth_challenge should succeed '''
@@ -344,7 +347,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         self.assertEqual(aid, agent['aid'])
         with self.assertRaises(exceptions.ChallengeValidationException) as cm:
             api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
-        self.assertEqual(cm.exception.error, errors.E_GAA_VAC_CHAU)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_CHAU)
 
     def test_validate_auth_challenge_failure_expired_challenge(self):
         ''' validate_auth_challenge should fail if challenge has expired '''
@@ -370,5 +373,5 @@ class GestaccountAgentApiTest(unittest.TestCase):
         signature=crypto.sign_message(key=crypto.serialize_private_key(key), message=challenge_hash)
         with self.assertRaises(exceptions.ChallengeValidationException) as cm:
             api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
-        self.assertEqual(cm.exception.error, errors.E_GAA_VAC_CHEX)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_CHEX)
 

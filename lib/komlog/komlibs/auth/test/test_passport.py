@@ -6,7 +6,8 @@ from komlog.komcass.api import agent as cassapiagent
 from komlog.komcass.model.orm import user as ormuser
 from komlog.komcass.model.orm import agent as ormagent
 from komlog.komlibs.auth import passport
-from komlog.komlibs.auth import exceptions, errors
+from komlog.komlibs.auth import exceptions
+from komlog.komlibs.auth.errors import Errors
 from komlog.komlibs.gestaccount.user.states import UserStates
 from komlog.komlibs.gestaccount.agent.states import AgentStates
 from komlog.komlibs.general.time import timeuuid
@@ -32,7 +33,7 @@ class AuthPassportTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.PassportException) as cm:
                 psp = passport.Passport(uid=uid, aid=aid)
-            self.assertEqual(cm.exception.error, errors.E_AP_PC_IU)
+            self.assertEqual(cm.exception.error, Errors.E_AP_PC_IU)
 
     def test_passport_creation_failure_invalid_aid(self):
         ''' a new passport instance should fail if aid is invalid '''
@@ -41,7 +42,7 @@ class AuthPassportTest(unittest.TestCase):
         for aid in aids:
             with self.assertRaises(exceptions.PassportException) as cm:
                 psp = passport.Passport(uid=uid, aid=aid)
-            self.assertEqual(cm.exception.error, errors.E_AP_PC_IA)
+            self.assertEqual(cm.exception.error, Errors.E_AP_PC_IA)
 
     def test_cookie_creation_failure_invalid_cookie(self):
         ''' a new cookie instance should fail if cookie is invalid '''
@@ -49,7 +50,7 @@ class AuthPassportTest(unittest.TestCase):
         for cookie in cookies:
             with self.assertRaises(exceptions.CookieException) as cm:
                 cookie = passport.Cookie(cookie)
-            self.assertEqual(cm.exception.error, errors.E_AP_CC_ID)
+            self.assertEqual(cm.exception.error, Errors.E_AP_CC_ID)
 
     def test_cookie_creation_failure_invalid_user(self):
         ''' a new cookie instance should fail if cookie user is invalid '''
@@ -59,7 +60,7 @@ class AuthPassportTest(unittest.TestCase):
             cookie['user']=user
             with self.assertRaises(exceptions.CookieException) as cm:
                 cookie = passport.Cookie(cookie)
-            self.assertEqual(cm.exception.error, errors.E_AP_CC_IU)
+            self.assertEqual(cm.exception.error, Errors.E_AP_CC_IU)
 
     def test_cookie_creation_failure_invalid_aid(self):
         ''' a new cookie instance should fail if cookie aid is invalid '''
@@ -69,7 +70,7 @@ class AuthPassportTest(unittest.TestCase):
             cookie['aid']=aid
             with self.assertRaises(exceptions.CookieException) as cm:
                 cookie = passport.Cookie(cookie)
-            self.assertEqual(cm.exception.error, errors.E_AP_CC_IA)
+            self.assertEqual(cm.exception.error, Errors.E_AP_CC_IA)
 
     def test_cookie_creation_failure_invalid_seq(self):
         ''' a new cookie instance should fail if cookie seq is invalid '''
@@ -79,7 +80,7 @@ class AuthPassportTest(unittest.TestCase):
             cookie['seq']=seq
             with self.assertRaises(exceptions.CookieException) as cm:
                 cookie = passport.Cookie(cookie)
-            self.assertEqual(cm.exception.error, errors.E_AP_CC_IS)
+            self.assertEqual(cm.exception.error, Errors.E_AP_CC_IS)
 
     def test_get_user_passport_failure_non_existing_user(self):
         ''' get_user_passport should fail if user does not exist '''
@@ -90,7 +91,7 @@ class AuthPassportTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.UserNotFoundException) as cm:
             psp=passport.get_user_passport(cookie)
-        self.assertEqual(cm.exception.error, errors.E_AP_GUP_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_AP_GUP_UNF)
 
     def test_get_user_passport_failure_invalid_user_state(self):
         ''' get_user_passport should fail if user state does not exist nor allow connection '''
@@ -106,7 +107,7 @@ class AuthPassportTest(unittest.TestCase):
         self.assertTrue(cassapiuser.new_user(user))
         with self.assertRaises(exceptions.AuthorizationExpiredException) as cm:
             psp=passport.get_user_passport(cookie)
-        self.assertEqual(cm.exception.error, errors.E_AP_GUP_IUS)
+        self.assertEqual(cm.exception.error, Errors.E_AP_GUP_IUS)
 
     def test_get_user_passport_success(self):
         ''' get_user_passport should succeed '''
@@ -135,7 +136,7 @@ class AuthPassportTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.CookieException) as cm:
             psp=passport.get_agent_passport(cookie)
-        self.assertEqual(cm.exception.error, errors.E_AP_GAP_CANF)
+        self.assertEqual(cm.exception.error, Errors.E_AP_GAP_CANF)
 
     def test_get_agent_passport_failure_agent_does_not_exist(self):
         ''' get_agent_passport should fail if agent does not exist '''
@@ -146,7 +147,7 @@ class AuthPassportTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.AgentNotFoundException) as cm:
             psp=passport.get_agent_passport(cookie)
-        self.assertEqual(cm.exception.error, errors.E_AP_GAP_ANF)
+        self.assertEqual(cm.exception.error, Errors.E_AP_GAP_ANF)
 
     def test_get_agent_passport_failure_agent_state_not_valid(self):
         ''' get_agent_passport should fail if agent has no state or is non valid '''
@@ -163,7 +164,7 @@ class AuthPassportTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.AuthorizationExpiredException) as cm:
             psp=passport.get_agent_passport(cookie)
-        self.assertEqual(cm.exception.error, errors.E_AP_GAP_IAS)
+        self.assertEqual(cm.exception.error, Errors.E_AP_GAP_IAS)
 
     def test_get_agent_passport_success(self):
         ''' get_agent_passport should succeed '''

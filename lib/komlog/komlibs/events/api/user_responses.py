@@ -10,21 +10,22 @@ from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
-from komlog.komlibs.events import errors, exceptions
+from komlog.komlibs.events import exceptions
+from komlog.komlibs.events.errors import Errors
 from komlog.komlibs.events.model import types
 from komlog.komcass.model.orm import events as ormevents
 from komlog.komcass.api import events as cassapievents
 
 def process_event_response(uid, date, response_data):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAUR_PEVRP_IUID)
+        raise exceptions.BadParametersException(error=Errors.E_EAUR_PEVRP_IUID)
     if not args.is_valid_date(date):
-        raise exceptions.BadParametersException(error=errors.E_EAUR_PEVRP_IDT)
+        raise exceptions.BadParametersException(error=Errors.E_EAUR_PEVRP_IDT)
     if not args.is_valid_dict(response_data):
-        raise exceptions.BadParametersException(error=errors.E_EAUR_PEVRP_IDAT)
+        raise exceptions.BadParametersException(error=Errors.E_EAUR_PEVRP_IDAT)
     event=cassapievents.get_user_event(uid=uid, date=date)
     if not event:
-        raise exceptions.EventNotFoundException(error=errors.E_EAUR_PEVRP_EVNF)
+        raise exceptions.EventNotFoundException(error=Errors.E_EAUR_PEVRP_EVNF)
     else:
         if event.type==types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:
             return _process_event_response_user_event_intervention_datapoint_identification(event=event, response_data=response_data)
@@ -35,23 +36,23 @@ def _process_event_response_user_event_intervention_datapoint_identification(eve
     if not isinstance(event, ormevents.UserEventInterventionDatapointIdentification):
         return False
     if not args.is_valid_dict(response_data):
-        raise exceptions.BadParametersException(error=errors.E_EAUR_PEVRPUEIDI_IRD)
+        raise exceptions.BadParametersException(error=Errors.E_EAUR_PEVRPUEIDI_IRD)
     if not 'identified' in response_data or not isinstance(response_data['identified'],list):
-        raise exceptions.BadParametersException(error=errors.E_EAUR_PEVRPUEIDI_IIDP)
+        raise exceptions.BadParametersException(error=Errors.E_EAUR_PEVRPUEIDI_IIDP)
     if not 'missing' in response_data or not isinstance(response_data['missing'],list):
-        raise exceptions.BadParametersException(error=errors.E_EAUR_PEVRPUEIDI_IMSP)
+        raise exceptions.BadParametersException(error=Errors.E_EAUR_PEVRPUEIDI_IMSP)
     for dp_info in response_data['identified']:
         if not args.is_valid_dict(dp_info):
-            raise exceptions.BadParametersException(error=errors.E_EAUR_PEVRPUEIDI_IIDI)
+            raise exceptions.BadParametersException(error=Errors.E_EAUR_PEVRPUEIDI_IIDI)
         if not 'pid' in dp_info or not args.is_valid_hex_uuid(dp_info['pid']):
-            raise exceptions.BadParametersException(error=errors.E_EAUR_PEVRPUEIDI_IDPI)
+            raise exceptions.BadParametersException(error=Errors.E_EAUR_PEVRPUEIDI_IDPI)
         if not 'p' in dp_info or not args.is_valid_int(dp_info['p']):
-            raise exceptions.BadParametersException(error=errors.E_EAUR_PEVRPUEIDI_IPI)
+            raise exceptions.BadParametersException(error=Errors.E_EAUR_PEVRPUEIDI_IPI)
         if not 'l' in dp_info or not args.is_valid_int(dp_info['l']):
-            raise exceptions.BadParametersException(error=errors.E_EAUR_PEVRPUEIDI_ILI)
+            raise exceptions.BadParametersException(error=Errors.E_EAUR_PEVRPUEIDI_ILI)
     for dp in response_data['missing']:
         if not args.is_valid_hex_uuid(dp):
-            raise exceptions.BadParametersException(error=errors.E_EAUR_PEVRPUEIDI_IMSI)
+            raise exceptions.BadParametersException(error=Errors.E_EAUR_PEVRPUEIDI_IMSI)
     did=event.did
     ds_date=event.ds_date
     datasource_config=datasourceapi.get_datasource_config(did=did, pids_flag=True)

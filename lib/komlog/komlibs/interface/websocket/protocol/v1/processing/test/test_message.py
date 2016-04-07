@@ -5,19 +5,20 @@ from komlog.komfig import logging, options
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import exceptions as authexcept
-from komlog.komlibs.auth import errors as autherrors
+from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.gestaccount import exceptions as gestexcept
-from komlog.komlibs.gestaccount import errors as gesterrors
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.graph.api import uri as graphuri
 from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.interface.imc.model import messages
-from komlog.komlibs.interface.websocket.protocol.v1 import errors, exceptions, status
+from komlog.komlibs.interface.websocket.protocol.v1 import exceptions, status
+from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.processing import message, operation
 from komlog.komlibs.interface.websocket.protocol.v1.model import message as modmsg
 from komlog.komlibs.interface.websocket.protocol.v1.model import response as modresp
@@ -33,7 +34,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         msg={'key':'a message malformed'}
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             message._process_send_ds_data(psp, msg)
-        self.assertEqual(cm.exception.error, errors.E_IWSPV1MM_SDDM_IMT)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDDM_IMT)
 
     def test__process_send_ds_data_failure_user_not_found(self):
         ''' _process_send_ds_data should fail if user does not exist '''
@@ -139,7 +140,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
-        self.assertEqual(resp.error, errors.E_IWSPV1PM_PSDD_IURI)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_IURI)
 
     def test__process_send_ds_data_failure_error_creating_ds(self):
         ''' _process_send_ds_data should fail if ds creationg fails '''
@@ -168,7 +169,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, errors.E_IWSPV1PM_PSDD_ECDS)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_ECDS)
         authorization.authorize_request = auth_req_bck
         datasourceapi.create_datasource = ds_creation_bck
 
@@ -198,7 +199,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, errors.E_IWSPV1PM_PSDD_EUR)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_EUR)
         authorization.authorize_request = auth_req_bck
         options.SAMPLES_RECEIVED_PATH=option_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
@@ -231,7 +232,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, errors.E_IWSPV1PM_PSDD_FUR)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_FUR)
         authorization.authorize_request = auth_req_bck
         operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
@@ -264,7 +265,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, errors.E_IWSPV1PM_PSDD_EUR)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_EUR)
         authorization.authorize_request = auth_req_bck
         operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])

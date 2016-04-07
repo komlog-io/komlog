@@ -19,30 +19,31 @@ from komlog.komcass.api import ticket as cassapiticket
 from komlog.komcass.model.orm import events as ormevents
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
-from komlog.komlibs.events import errors, exceptions
+from komlog.komlibs.events import exceptions
+from komlog.komlibs.events.errors import Errors
 from komlog.komlibs.events.api import summary
 from komlog.komlibs.events.model import types, priorities, templates
 
 def get_event(uid, date):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_GEV_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_GEV_IU)
     if not args.is_valid_date(date):
-        raise exceptions.BadParametersException(error=errors.E_EAU_GEV_IDT)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_GEV_IDT)
     event=cassapievents.get_user_event(uid=uid, date=date)
     if not event:
-        raise exceptions.EventNotFoundException(error=errors.E_EAU_GEV_EVNF)
+        raise exceptions.EventNotFoundException(error=Errors.E_EAU_GEV_EVNF)
     else:
         return _get_event_data(event)
 
 def get_events(uid, to_date=None, from_date=None, count=30, params_serializable=False, html_content=False):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_GEVS_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_GEVS_IU)
     if to_date and not args.is_valid_date(to_date):
-        raise exceptions.BadParametersException(error=errors.E_EAU_GEVS_ITD)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_GEVS_ITD)
     if from_date and not args.is_valid_date(from_date):
-        raise exceptions.BadParametersException(error=errors.E_EAU_GEVS_IFD)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_GEVS_IFD)
     if not args.is_valid_int(count):
-        raise exceptions.BadParametersException(error=errors.E_EAU_GEVS_ICNT)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_GEVS_ICNT)
     if not to_date and not from_date:
         to_date=timeuuid.uuid1()
         events=cassapievents.get_user_events(uid=uid, end_date=to_date, count=count)
@@ -66,7 +67,7 @@ def _get_event_data(event, params_serializable=False, html_content=False):
         try:
             event_data=get_event_data_funcs[event.type](event, params_serializable)
         except Exception:
-            raise exceptions.EventNotFoundException(error=errors.E_EAU_GEVD_EVNF)
+            raise exceptions.EventNotFoundException(error=Errors.E_EAU_GEVD_EVNF)
         else:
             if html_content and params_serializable:
                 event_data['html']=_get_event_html_template(event_type=event.type, parameters=event_data['parameters'])
@@ -139,9 +140,9 @@ def _get_event_html_template(event_type, parameters):
 
 def enable_event(uid, date):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_ENE_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_ENE_IU)
     if not args.is_valid_date(date):
-        raise exceptions.BadParametersException(error=errors.E_EAU_ENE_ID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_ENE_ID)
     event=cassapievents.get_disabled_user_event(uid=uid, date=date)
     if event:
         return cassapievents.enable_user_event(event=event)
@@ -150,13 +151,13 @@ def enable_event(uid, date):
         if event:
             return True
         else:
-            raise exceptions.EventNotFoundException(error=errors.E_EAU_ENE_EVNF)
+            raise exceptions.EventNotFoundException(error=Errors.E_EAU_ENE_EVNF)
 
 def disable_event(uid, date):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_DISE_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_DISE_IU)
     if not args.is_valid_date(date):
-        raise exceptions.BadParametersException(error=errors.E_EAU_DISE_ID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_DISE_ID)
     event=cassapievents.get_user_event(uid=uid, date=date)
     if event:
         return cassapievents.disable_user_event(event=event)
@@ -165,220 +166,220 @@ def disable_event(uid, date):
         if event:
             return True
         else:
-            raise exceptions.EventNotFoundException(error=errors.E_EAU_DISE_EVNF)
+            raise exceptions.EventNotFoundException(error=Errors.E_EAU_DISE_EVNF)
 
 def delete_events(uid):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_DEV_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_DEV_IU)
     return cassapievents.delete_user_events(uid=uid)
 
 def new_event(uid, event_type, parameters):
     if not event_type or not args.is_valid_int(event_type):
-        raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_IEVT)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_NEWE_IEVT)
     try:
         return insert_event_funcs[event_type](uid=uid, parameters=parameters)
     except KeyError:
-        raise exceptions.BadParametersException(error=errors.E_EAU_NEWE_EVTNF)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_NEWE_EVTNF)
 
 def _insert_event_notification_new_user(uid, parameters):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNU_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNU_IU)
     now=timeuuid.uuid1()
     user=cassapiuser.get_user(uid=uid)
     if not user:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNU_UNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNU_UNF)
     event=ormevents.UserEventNotificationNewUser(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_USER, username=user.username)
     if cassapievents.insert_user_event(event):
         return {'uid':uid, 'date':now}
     else:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNU_DBIE)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNU_DBIE)
 
 def _insert_event_notification_new_agent(uid, parameters):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNA_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNA_IU)
     if not args.is_valid_dict(parameters):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNA_IP)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNA_IP)
     if not 'aid' in parameters or not args.is_valid_hex_uuid(parameters['aid']):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNA_IPAID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNA_IPAID)
     now=timeuuid.uuid1()
     aid=uuid.UUID(parameters['aid'])
     user=cassapiuser.get_user(uid=uid)
     if not user:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNA_UNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNA_UNF)
     agent=cassapiagent.get_agent(aid=aid)
     if not agent:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNA_ANF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNA_ANF)
     event=ormevents.UserEventNotificationNewAgent(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_AGENT, aid=aid, agentname=agent.agentname)
     if cassapievents.insert_user_event(event):
         return {'uid':uid, 'date':now}
     else:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNA_DBIE)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNA_DBIE)
 
 def _insert_event_notification_new_datasource(uid, parameters):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNDS_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNDS_IU)
     if not args.is_valid_dict(parameters):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNDS_IP)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNDS_IP)
     if not 'did' in parameters or not args.is_valid_hex_uuid(parameters['did']):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNDS_IPDID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNDS_IPDID)
     now=timeuuid.uuid1()
     did=uuid.UUID(parameters['did'])
     user=cassapiuser.get_user(uid=uid)
     if not user:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNDS_UNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDS_UNF)
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNDS_DNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDS_DNF)
     event=ormevents.UserEventNotificationNewDatasource(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, aid=datasource.aid, did=did, datasourcename=datasource.datasourcename)
     if cassapievents.insert_user_event(event):
         return {'uid':uid, 'date':now}
     else:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNDS_DBIE)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDS_DBIE)
 
 def _insert_event_notification_new_datapoint(uid, parameters):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNDP_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNDP_IU)
     if not args.is_valid_dict(parameters):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNDP_IP)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNDP_IP)
     if not 'pid' in parameters or not args.is_valid_hex_uuid(parameters['pid']):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNDP_IPPID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNDP_IPPID)
     now=timeuuid.uuid1()
     pid=uuid.UUID(parameters['pid'])
     user=cassapiuser.get_user(uid=uid)
     if not user:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNDP_UNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDP_UNF)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNDP_PNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDP_PNF)
     datasource=cassapidatasource.get_datasource(did=datapoint.did)
     if not datasource:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNDP_DNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDP_DNF)
     event=ormevents.UserEventNotificationNewDatapoint(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, did=datapoint.did, pid=pid, datasourcename=datasource.datasourcename, datapointname=datapoint.datapointname)
     if cassapievents.insert_user_event(event):
         return {'uid':uid, 'date':now}
     else:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNDP_DBIE)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDP_DBIE)
 
 def _insert_event_notification_new_widget(uid, parameters):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNWG_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNWG_IU)
     if not args.is_valid_dict(parameters):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNWG_IP)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNWG_IP)
     if not 'wid' in parameters or not args.is_valid_hex_uuid(parameters['wid']):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNWG_IPWID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNWG_IPWID)
     now=timeuuid.uuid1()
     wid=uuid.UUID(parameters['wid'])
     user=cassapiuser.get_user(uid=uid)
     if not user:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNWG_UNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNWG_UNF)
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNWG_WNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNWG_WNF)
     event=ormevents.UserEventNotificationNewWidget(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_WIDGET, wid=wid, widgetname=widget.widgetname)
     if cassapievents.insert_user_event(event):
         return {'uid':uid, 'date':now}
     else:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNWG_DBIE)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNWG_DBIE)
 
 def _insert_event_notification_new_dashboard(uid, parameters):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNDB_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNDB_IU)
     if not args.is_valid_dict(parameters):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNDB_IP)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNDB_IP)
     if not 'bid' in parameters or not args.is_valid_hex_uuid(parameters['bid']):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNDB_IPBID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNDB_IPBID)
     now=timeuuid.uuid1()
     user=cassapiuser.get_user(uid=uid)
     if not user:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNDB_UNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDB_UNF)
     bid=uuid.UUID(parameters['bid'])
     dashboard=cassapidashboard.get_dashboard(bid=bid)
     if not dashboard:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNDB_BNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDB_BNF)
     event=ormevents.UserEventNotificationNewDashboard(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, bid=bid, dashboardname=dashboard.dashboardname)
     if cassapievents.insert_user_event(event):
         return {'uid':uid, 'date':now}
     else:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNDB_DBIE)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDB_DBIE)
 
 def _insert_event_notification_new_circle(uid, parameters):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNC_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNC_IU)
     if not args.is_valid_dict(parameters):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNC_IP)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNC_IP)
     if not 'cid' in parameters or not args.is_valid_hex_uuid(parameters['cid']):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNC_IPCID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNC_IPCID)
     now=timeuuid.uuid1()
     user=cassapiuser.get_user(uid=uid)
     if not user:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNC_UNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNC_UNF)
     cid=uuid.UUID(parameters['cid'])
     circle=cassapicircle.get_circle(cid=cid)
     if not circle:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNC_CNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNC_CNF)
     event=ormevents.UserEventNotificationNewCircle(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_CIRCLE, cid=cid, circlename=circle.circlename)
     if cassapievents.insert_user_event(event):
         return {'uid':uid, 'date':now}
     else:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNC_DBIE)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNC_DBIE)
 
 def _insert_event_intervention_datapoint_identification(uid, parameters):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IEIDPI_IUID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IUID)
     if not args.is_valid_dict(parameters):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IEIDPI_IP)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IP)
     if not 'did' in parameters or not args.is_valid_hex_uuid(parameters['did']):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IEIDPI_IPDID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IPDID)
     if not 'date' in parameters or not args.is_valid_hex_date(parameters['date']):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IEIDPI_IPDATE)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IPDATE)
     if not 'doubts' in parameters or not isinstance(parameters['doubts'],list):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IEIDPI_IPDBT)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IPDBT)
     if not 'discarded' in parameters or not isinstance(parameters['discarded'],list):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IEIDPI_IPDISC)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IPDISC)
     for pid in parameters['doubts']:
         if not args.is_valid_hex_uuid(pid):
-            raise exceptions.BadParametersException(error=errors.E_EAU_IEIDPI_IIDBT)
+            raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IIDBT)
     for pid in parameters['discarded']:
         if not args.is_valid_hex_uuid(pid):
-            raise exceptions.BadParametersException(error=errors.E_EAU_IEIDPI_IIDISC)
+            raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IIDISC)
     now=timeuuid.uuid1()
     user=cassapiuser.get_user(uid=uid)
     if not user:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IEIDPI_UNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_UNF)
     did=uuid.UUID(parameters['did'])
     ds_date=uuid.UUID(parameters['date'])
     datasource_map=cassapidatasource.get_datasource_map(did=did, date=ds_date)
     if not datasource_map:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IEIDPI_DNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_DNF)
     doubts=[uuid.UUID(pid) for pid in parameters['doubts']]
     discarded=[uuid.UUID(pid) for pid in parameters['discarded']]
     event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
     if cassapievents.insert_user_event(event):
         return {'uid':uid, 'date':now}
     else:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IEIDPI_DBIE)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_DBIE)
 
 def _insert_event_notification_new_snapshot_shared(uid, parameters):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNSS_IU)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNSS_IU)
     if not args.is_valid_dict(parameters):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNSS_IP)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNSS_IP)
     if not 'nid' in parameters or not args.is_valid_hex_uuid(parameters['nid']):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNSS_IPNID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNSS_IPNID)
     if not 'tid' in parameters or not args.is_valid_hex_uuid(parameters['tid']):
-        raise exceptions.BadParametersException(error=errors.E_EAU_IENNSS_IPTID)
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IENNSS_IPTID)
     now=timeuuid.uuid1()
     nid=uuid.UUID(parameters['nid'])
     tid=uuid.UUID(parameters['tid'])
     user=cassapiuser.get_user(uid=uid)
     if not user:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNSS_UNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNSS_UNF)
     snapshot=cassapisnapshot.get_snapshot(nid=nid)
     if not snapshot:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNSS_NNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNSS_NNF)
     ticket=cassapiticket.get_ticket(tid=tid)
     if not ticket:
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNSS_TNF)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNSS_TNF)
     shared_uids=set()
     users_info={}
     circles_info={}
@@ -418,7 +419,7 @@ def _insert_event_notification_new_snapshot_shared(uid, parameters):
     if op_failed:
         cassapievents.delete_user_event(event=shared_event)
         cassapievents.delete_user_event_graph_summary(uid=shared_event.uid, date=shared_event.date)
-        raise exceptions.UserEventCreationException(error=errors.E_EAU_IENNSS_DBPIE)
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNSS_DBPIE)
     else:
         return {'uid':uid, 'date':now}
 

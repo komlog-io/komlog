@@ -11,7 +11,7 @@ from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.interface.websocket.protocol.v1 import api as apiv1
 from komlog.komlibs.interface.websocket.protocol.v1.model import response as responsev1
 from komlog.komlibs.interface.websocket.protocol.v1 import status as statusv1
-from komlog.komlibs.interface.websocket.protocol.v1 import errors as errorsv1
+from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors as errorsv1
 
 def process_message(passport, message):
     if not isinstance(passport, Passport):

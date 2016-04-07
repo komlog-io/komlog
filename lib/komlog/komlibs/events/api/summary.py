@@ -10,7 +10,8 @@ from komlog.komcass.api import events as cassapievents
 from komlog.komcass.api import datasource as cassapidatasource
 from komlog.komcass.api import datapoint as cassapidatapoint
 from komlog.komcass.api import snapshot as cassapisnapshot
-from komlog.komlibs.events import errors, exceptions
+from komlog.komlibs.events import exceptions
+from komlog.komlibs.events.errors import Errors
 from komlog.komlibs.events.model import types
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
@@ -19,9 +20,9 @@ from komlog.komlibs.numeric import aggregate
 
 def get_user_event_graph_summary_data(uid, date):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_EAS_GUEGSD_IUID)
+        raise exceptions.BadParametersException(error=Errors.E_EAS_GUEGSD_IUID)
     if not args.is_valid_date(date):
-        raise exceptions.BadParametersException(error=errors.E_EAS_GUEGSD_IDATE)
+        raise exceptions.BadParametersException(error=Errors.E_EAS_GUEGSD_IDATE)
     summary=cassapievents.get_user_event_graph_summary(uid=uid, date=date)
     return summary.summary if summary else None
 
@@ -34,16 +35,16 @@ def generate_user_event_graph_summary_data(event_type, parameters):
 
 def _generate_graph_summary_data_UENNSS(parameters):
     if not 'nid' in parameters:
-        raise exceptions.BadParametersException(error=errors.E_EAS_GGSDUENNSS_NPNF)
+        raise exceptions.BadParametersException(error=Errors.E_EAS_GGSDUENNSS_NPNF)
     if args.is_valid_uuid(parameters['nid']):
         nid=parameters['nid']
     elif args.is_valid_hex_uuid(parameters['nid']):
         nid=uuid.UUID(parameters['nid'])
     else:
-        raise exceptions.BadParametersException(error=errors.E_EAS_GGSDUENNSS_INID)
+        raise exceptions.BadParametersException(error=Errors.E_EAS_GGSDUENNSS_INID)
     snapshot=cassapisnapshot.get_snapshot(nid=nid)
     if not snapshot:
-        raise exceptions.SummaryCreationException(error=errors.E_EAS_GGSDUENNSS_NIDNF)
+        raise exceptions.SummaryCreationException(error=Errors.E_EAS_GGSDUENNSS_NIDNF)
     if snapshot.type == widget_types.DATASOURCE:
         ds_data=cassapidatasource.get_datasource_data(did=snapshot.did, fromdate=snapshot.interval_init, todate=snapshot.interval_end, count=1)
         if len(ds_data)==1:

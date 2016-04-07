@@ -3,7 +3,7 @@ import uuid
 from base64 import b64encode, b64decode
 from komlog.komlibs.auth import operations
 from komlog.komlibs.auth import passport
-from komlog.komlibs.auth import errors as autherrors
+from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.interface.web.api import login as loginapi

@@ -3,7 +3,8 @@ import time
 import uuid
 import json
 from komlog.komfig import logging
-from komlog.komlibs.interface.websocket.protocol.v1 import errors, exceptions
+from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model import response
 
 
@@ -27,5 +28,5 @@ class InterfaceWebSocketProtocolV1ModelResponseTest(unittest.TestCase):
         for status in statuses:
             with self.assertRaises(exceptions.ResponseValidationException) as cm:
                 resp=response.Response(status=status)
-            self.assertEqual(cm.exception.error, errors.E_IWSPV1MR_RESP_IS)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MR_RESP_IS)
 

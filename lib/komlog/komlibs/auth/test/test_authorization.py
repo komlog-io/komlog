@@ -4,7 +4,8 @@ import inspect
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth.requests import Requests
 from komlog.komlibs.auth.passport import Passport
-from komlog.komlibs.auth import exceptions, permissions, errors
+from komlog.komlibs.auth import exceptions, permissions
+from komlog.komlibs.auth.errors import Errors
 from komlog.komlibs.gestaccount.user import api as gestuserapi
 from komlog.komlibs.general.time import timeuuid
 from komlog.komfig import logging
@@ -17,7 +18,7 @@ class AuthAuthorizationTest(unittest.TestCase):
         passport = Passport(uid=uuid.uuid4())
         with self.assertRaises(exceptions.BadParametersException) as cm:
             authorization.authorize_request(passport=passport)
-        self.assertEqual(cm.exception.error, errors.E_AA_AR_BP)
+        self.assertEqual(cm.exception.error, Errors.E_AA_AR_BP)
 
     def test_authorize_request_non_existent_request_in_kwargs(self):
         ''' authorize_request should fail if request does not exist '''
@@ -26,7 +27,7 @@ class AuthAuthorizationTest(unittest.TestCase):
         for request in requests:
             with self.assertRaises(exceptions.RequestNotFoundException) as cm:
                 authorization.authorize_request(request=request,passport=passport)
-            self.assertEqual(cm.exception.error, errors.E_AA_AR_RNF)
+            self.assertEqual(cm.exception.error, Errors.E_AA_AR_RNF)
 
     def test_authorize_request_non_existent_request_in_args(self):
         ''' authorize_request should fail if request does not exist '''
@@ -35,14 +36,14 @@ class AuthAuthorizationTest(unittest.TestCase):
         for request in requests:
             with self.assertRaises(exceptions.RequestNotFoundException) as cm:
                 authorization.authorize_request(request,passport)
-            self.assertEqual(cm.exception.error, errors.E_AA_AR_RNF)
+            self.assertEqual(cm.exception.error, Errors.E_AA_AR_RNF)
 
     def test_authorize_request_failure_missing_some_parameter_from_authorization_func(self):
         ''' authorize_request should fail some parameter is missing when calling the authorization function '''
         request=Requests.NEW_AGENT
         with self.assertRaises(exceptions.BadParametersException) as cm:
             authorization.authorize_request(request=request)
-        self.assertEqual(cm.exception.error, errors.E_AA_AR_FBP)
+        self.assertEqual(cm.exception.error, Errors.E_AA_AR_FBP)
 
     def test_requests_function_relations(self):
         ''' in this test we check that every defined request has is associated function '''

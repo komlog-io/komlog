@@ -4,8 +4,8 @@ import json
 from base64 import b64encode, b64decode
 from komlog.komlibs.auth import operations
 from komlog.komlibs.auth import passport
-from komlog.komlibs.auth import errors as autherrors
-from komlog.komlibs.gestaccount import errors as gesterrors
+from komlog.komlibs.auth.errors import Errors as autherrors
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.widget import types
 from komlog.komlibs.gestaccount.datasource import api as gestdatasourceapi
 from komlog.komlibs.interface.web.api import login as loginapi
@@ -17,7 +17,8 @@ from komlog.komlibs.interface.web.api import widget as widgetapi
 from komlog.komlibs.interface.web.api import snapshot as snapshotapi
 from komlog.komlibs.interface.web.api import circle as circleapi
 from komlog.komlibs.interface.web.model import webmodel
-from komlog.komlibs.interface.web import status, exceptions, errors
+from komlog.komlibs.interface.web import status, exceptions
+from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
@@ -118,7 +119,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         for psp in passports:
             response=snapshotapi.get_snapshot_config_request(passport=psp,nid=nid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWASN_GSNCR_IPSP)
+            self.assertEqual(response.error, Errors.E_IWASN_GSNCR_IPSP)
 
     def test_get_snapshot_config_request_failure_invalid_nid(self):
         ''' get_snapshot_config_request should fail if nid is invalid '''
@@ -127,7 +128,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         for nid in nids:
             response=snapshotapi.get_snapshot_config_request(passport=psp,nid=nid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWASN_GSNCR_IN)
+            self.assertEqual(response.error, Errors.E_IWASN_GSNCR_IN)
 
     def test_get_snapshot_config_request_failure_invalid_ticket(self):
         ''' get_snapshot_config_request should fail if username is invalid '''
@@ -137,7 +138,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         for ticket in tickets:
             response=snapshotapi.get_snapshot_config_request(passport=psp,nid=nid, tid=ticket)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWASN_GSNCR_IT)
+            self.assertEqual(response.error, Errors.E_IWASN_GSNCR_IT)
 
     def test_get_snapshot_config_request_failure_non_existent_nid(self):
         ''' get_snapshot_config_request should fail if nid does not exist '''

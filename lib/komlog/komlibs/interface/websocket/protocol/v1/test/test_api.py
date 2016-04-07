@@ -3,8 +3,8 @@ import time
 import uuid
 from komlog.komfig import logging
 from komlog.komlibs.auth.passport import Passport
-from komlog.komlibs.gestaccount import errors as gesterrors
-from komlog.komlibs.interface.websocket.protocol.v1 import errors, exceptions, status, api
+from komlog.komlibs.interface.websocket.protocol.v1 import exceptions, status, api
+from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.processing import operation, message
 from komlog.komlibs.interface.websocket.protocol.v1.model import message as modmsg
 from komlog.komlibs.interface.websocket.protocol.v1.model import response as modresp
@@ -23,7 +23,7 @@ class InterfaceWebSocketProtocolV1ApiTest(unittest.TestCase):
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, errors.E_IWSPV1A_PM_IA)
+        self.assertEqual(resp.error, Errors.E_IWSPV1A_PM_IA)
 
     def Notest_process_message_failure_message_without_action_field(self):
         ''' process_message should fail if message has no action field '''
@@ -32,7 +32,7 @@ class InterfaceWebSocketProtocolV1ApiTest(unittest.TestCase):
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, errors.E_IWSPV1A_PM_IA)
+        self.assertEqual(resp.error, Errors.E_IWSPV1A_PM_IA)
 
     def Notest_process_message_failure_invalid_message_payload(self):
         ''' process_message should fail if message payload is invalid '''
@@ -41,7 +41,7 @@ class InterfaceWebSocketProtocolV1ApiTest(unittest.TestCase):
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, errors.E_IWSPV1MM_SDDM_IPL)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDDM_IPL)
 
     def test_process_message_failure_username_not_found(self):
         ''' process_message should fail if username is not found '''

@@ -3,7 +3,8 @@ import uuid
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.user.states import *
-from komlog.komlibs.gestaccount import exceptions, errors
+from komlog.komlibs.gestaccount import exceptions
+from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komcass.api import user as cassapiuser
 
 class GestaccountUserApiTest(unittest.TestCase):
@@ -145,7 +146,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         for email in emails:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.register_invitation_request(email=email)
-            self.assertEqual(cm.exception.error,errors.E_GUA_RIR_IEMAIL)
+            self.assertEqual(cm.exception.error,Errors.E_GUA_RIR_IEMAIL)
 
     def test_register_invitation_request_success(self):
         ''' register_invitation_request should insert the request in db '''
@@ -158,7 +159,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         for email in emails:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.generate_user_invitations(email=email)
-            self.assertEqual(cm.exception.error, errors.E_GUA_GUI_IEMAIL)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_GUI_IEMAIL)
 
     def test_generate_user_invitations_success_non_requested_previously(self):
         ''' generate_user_invitations should succeed and generate the invitation even if the request was not registered previously '''
@@ -204,7 +205,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         inv_id=uuid.uuid4()
         with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
             userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_SIP_INVNF)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_INVNF)
 
     def test_create_user_by_invitation_success(self):
         username='test_create_user_by_invitation_success'
@@ -231,7 +232,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertTrue('code' in user_info)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_SIP_INVAU)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_INVAU)
 
     def test_start_invitation_process_failure_invalid_invitation_id(self):
         ''' start_invitation_process should fail if inv_id is invalid '''
@@ -239,14 +240,14 @@ class GestaccountUserApiTest(unittest.TestCase):
         for inv_id in inv_ids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.start_invitation_process(inv_id=inv_id)
-            self.assertEqual(cm.exception.error, errors.E_GUA_SIP_IINV)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_IINV)
 
     def test_start_invitation_process_failure_invitation_not_found(self):
         ''' start_invitation_process should fail if inv_id is not found '''
         inv_id=uuid.uuid4()
         with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
             userapi.start_invitation_process(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_SIP_INVNF)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_INVNF)
 
     def test_start_invitation_process_failure_already_used_invitation(self):
         username='test_start_invitation_process_failure_already_used_invitation'
@@ -261,7 +262,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertTrue('code' in user_info)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.start_invitation_process(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_SIP_INVAU)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_INVAU)
 
     def test_start_invitation_process_failure_invitation_state_not_expected(self):
         username='test_start_invitation_process_failure_already_used_invitation'
@@ -274,7 +275,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertTrue(cassapiuser.insert_invitation_info(invitation_info[0]))
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.start_invitation_process(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_SIP_ISNE)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_ISNE)
 
     def test_start_invitation_process_success(self):
         username='test_start_invitation_process_success'
@@ -298,7 +299,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         for inv_id in inv_ids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-            self.assertEqual(cm.exception.error, errors.E_GUA_EIP_IINV)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_IINV)
 
     def test_end_invitation_process_failure_invalid_transaction_id(self):
         ''' end_invitation_process should fail if transaction id is invalid '''
@@ -307,7 +308,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         for tran_id in tran_ids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-            self.assertEqual(cm.exception.error, errors.E_GUA_EIP_ITRN)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_ITRN)
 
     def test_end_invitation_process_failure_invitation_not_found(self):
         ''' end_invitation_process should fail if invitation does not exist '''
@@ -315,7 +316,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         inv_id=uuid.uuid4()
         with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
             userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_EIP_INVNF)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_INVNF)
 
     def test_end_invitation_process_failure_invitation_not_used(self):
         ''' end_invitation_process should fail if invitation is unused '''
@@ -325,7 +326,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         inv_id=invitations[0]['inv_id']
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_EIP_INUE)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_INUE)
 
     def test_end_invitation_process_failure_race_condition_found(self):
         ''' end_invitation_process should fail if invitation is being used already by other process '''
@@ -336,7 +337,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         other_transaction=userapi.start_invitation_process(inv_id=inv_id)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_EIP_RCF)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_RCF)
 
     def test_end_invitation_process_failure_no_using_state_found(self):
         ''' end_invitation_process should fail if invitation is inconsistent and no using state is found '''
@@ -353,7 +354,7 @@ class GestaccountUserApiTest(unittest.TestCase):
                 cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_EIP_SNF)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_SNF)
 
     def test_end_invitation_process_success(self):
         ''' end_invitation_process should succeed '''
@@ -370,7 +371,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         for inv_id in inv_ids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.undo_invitation_transactions(inv_id=inv_id,tran_id=tran_id)
-            self.assertEqual(cm.exception.error, errors.E_GUA_UIT_IINV)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_UIT_IINV)
 
     def test_undo_invitation_transactions_failure_invalid_transaction_id(self):
         ''' undo_invitation_transactions should fail if transaction id is invalid '''
@@ -379,7 +380,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         for tran_id in tran_ids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.undo_invitation_transactions(inv_id=inv_id,tran_id=tran_id)
-            self.assertEqual(cm.exception.error, errors.E_GUA_UIT_ITRN)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_UIT_ITRN)
 
     def test_undo_invitation_transaction_failure_invitation_info_not_found(self):
         ''' undo_invitation_transaction should fail if invitation info is not found '''
@@ -387,7 +388,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         inv_id=uuid.uuid4()
         with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
             userapi.undo_invitation_transactions(inv_id=inv_id,tran_id=tran_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_UIT_INVNF)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_UIT_INVNF)
 
     def test_undo_invitation_transactions_success(self):
         ''' undo_invitation_transactions should succeed '''
@@ -408,14 +409,14 @@ class GestaccountUserApiTest(unittest.TestCase):
         for inv_id in inv_ids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.initialize_invitation(inv_id=inv_id)
-            self.assertEqual(cm.exception.error, errors.E_GUA_II_IINV)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_II_IINV)
 
     def test_initialize_invitation_failure_invitation_info_not_found(self):
         ''' initialize_invitation should fail if invitation info is not found '''
         inv_id=uuid.uuid4()
         with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
             userapi.initialize_invitation(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_II_INVNF)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_II_INVNF)
 
     def test_initialize_invitation_success(self):
         ''' initialize_invitation should succeed '''
@@ -437,14 +438,14 @@ class GestaccountUserApiTest(unittest.TestCase):
         for inv_id in inv_ids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.check_unused_invitation(inv_id=inv_id)
-            self.assertEqual(cm.exception.error, errors.E_GUA_CUI_IINV)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_CUI_IINV)
 
     def test_check_unused_invitation_failure_invitation_not_found(self):
         ''' check_unused_invitation should fail if inv_id is not found '''
         inv_id=uuid.uuid4()
         with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
             userapi.check_unused_invitation(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_CUI_INVNF)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CUI_INVNF)
 
     def test_check_unused_invitation_failure_invitation_already_used(self):
         ''' check_unused_invitation should fail if inv_id is already used '''
@@ -460,7 +461,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertTrue('code' in user_info)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.check_unused_invitation(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_CUI_INVAU)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CUI_INVAU)
 
     def test_check_unused_invitation_failure_invitation_state_invalid(self):
         ''' check_unused_invitation should fail if invitation state is invalid '''
@@ -478,7 +479,7 @@ class GestaccountUserApiTest(unittest.TestCase):
                 cassapiuser.insert_invitation_info(reg)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.check_unused_invitation(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, errors.E_GUA_CUI_INVIS)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CUI_INVIS)
 
     def test_check_unused_invitation_success(self):
         ''' check_unused_invitation should succeed '''
@@ -495,7 +496,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         for username in usernames:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.register_forget_request(username=username)
-            self.assertEqual(cm.exception.error,errors.E_GUA_RFR_IU)
+            self.assertEqual(cm.exception.error,Errors.E_GUA_RFR_IU)
 
     def test_register_forget_request_failure_invalid_email(self):
         ''' register_forget_request should fail if email is invalid '''
@@ -503,20 +504,20 @@ class GestaccountUserApiTest(unittest.TestCase):
         for email in emails:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.register_forget_request(email=email)
-            self.assertEqual(cm.exception.error,errors.E_GUA_RFR_IEMAIL)
+            self.assertEqual(cm.exception.error,Errors.E_GUA_RFR_IEMAIL)
 
     def test_register_forget_request_failure_no_parameter_passed(self):
         ''' register_forget_request should fail if username and email are None '''
         with self.assertRaises(exceptions.BadParametersException) as cm:
             userapi.register_forget_request()
-        self.assertEqual(cm.exception.error,errors.E_GUA_RFR_NPP)
+        self.assertEqual(cm.exception.error,Errors.E_GUA_RFR_NPP)
 
     def test_register_forget_request_failure_non_existing_user(self):
         ''' register_forget_request should fail if user does not exist '''
         username='test_register_forget_request_failure_non_existing_user'
         with self.assertRaises(exceptions.UserNotFoundException) as cm:
             userapi.register_forget_request(username=username)
-        self.assertEqual(cm.exception.error,errors.E_GUA_RFR_UNF)
+        self.assertEqual(cm.exception.error,Errors.E_GUA_RFR_UNF)
 
     def test_register_forget_request_success_passing_username(self):
         ''' register_forget_request should succeed if we pass username '''
@@ -562,14 +563,14 @@ class GestaccountUserApiTest(unittest.TestCase):
         for code in codes:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.check_unused_forget_code(code=code)
-            self.assertEqual(cm.exception.error, errors.E_GUA_CUFC_ICODE)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_CUFC_ICODE)
 
     def test_check_unused_forget_code_failure_non_existent_code(self):
         ''' check_unused_forget_code should fail if code does not exist '''
         code=uuid.uuid4()
         with self.assertRaises(exceptions.ForgetRequestNotFoundException) as cm:
             userapi.check_unused_forget_code(code=code)
-        self.assertEqual(cm.exception.error, errors.E_GUA_CUFC_CNF)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CUFC_CNF)
 
     def test_check_unused_forget_code_failure_used_code(self):
         ''' check_unused_forget_code should fail if code is already used '''
@@ -593,7 +594,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertTrue(cassapiuser.update_forget_request_state(code=code, new_state=ForgetRequestStates.USED))
         with self.assertRaises(exceptions.ForgetRequestException) as cm:
             userapi.check_unused_forget_code(code=code)
-        self.assertEqual(cm.exception.error, errors.E_GUA_CUFC_CODEAU)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CUFC_CODEAU)
 
     def test_check_unused_forget_code_success(self):
         ''' check_unused_forget_code should succeed '''
@@ -623,7 +624,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         for code in codes:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.reset_password(code=code, password=password)
-            self.assertEqual(cm.exception.error, errors.E_GUA_RP_ICODE)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_RP_ICODE)
 
     def test_reset_password_failure_invalid_password(self):
         ''' reset_password should fail if password is not valid '''
@@ -632,7 +633,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         for password in passwords:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.reset_password(code=code, password=password)
-            self.assertEqual(cm.exception.error, errors.E_GUA_RP_IPWD)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_RP_IPWD)
 
     def test_reset_password_failure_code_not_found(self):
         ''' reset_password should fail if code does not exist on system '''
@@ -640,7 +641,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         password='temporal'
         with self.assertRaises(exceptions.ForgetRequestNotFoundException) as cm:
             userapi.reset_password(code=code, password=password)
-        self.assertEqual(cm.exception.error, errors.E_GUA_RP_CNF)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_RP_CNF)
 
     def test_reset_password_failure_code_already_used(self):
         ''' reset_password should fail if code is already used '''
@@ -667,7 +668,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         new_password='temporal3'
         with self.assertRaises(exceptions.ForgetRequestException) as cm:
             userapi.reset_password(code=code, password=new_password)
-        self.assertEqual(cm.exception.error, errors.E_GUA_RP_CODEAU)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_RP_CODEAU)
         self.assertFalse(userapi.auth_user(username, new_password))
 
     def test_reset_password_success(self):

@@ -6,7 +6,8 @@ from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.widget import api, types
 from komlog.komlibs.gestaccount.widget import visualization_types as vistypes
-from komlog.komlibs.gestaccount import exceptions, errors
+from komlog.komlibs.gestaccount import exceptions
+from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komcass.model.orm import widget as ormwidget
 from komlog.komlibs.general import colors as libcolors
 from komlog.komlibs.general.crypto import crypto
@@ -495,7 +496,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.new_widget_multidp(uid=uid, widgetname=widgetname)
-            self.assertEqual(cm.exception.error, errors.E_GWA_NWMP_IU)
+            self.assertEqual(cm.exception.error, Errors.E_GWA_NWMP_IU)
 
     def test_new_widget_multidp_failure_invalid_widgetname(self):
         ''' new_widget_multidp should fail if widgetname is invalid '''
@@ -504,7 +505,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for widgetname in widgetnames:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.new_widget_multidp(uid=uid, widgetname=widgetname)
-            self.assertEqual(cm.exception.error, errors.E_GWA_NWMP_IWN)
+            self.assertEqual(cm.exception.error, Errors.E_GWA_NWMP_IWN)
 
     def test_new_widget_multidp_failure_non_existent_user(self):
         ''' new_widget_multidp should fail if user does not exist '''
@@ -512,7 +513,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         widgetname='test_new_widget_failure_non_existent_user'
         with self.assertRaises(exceptions.UserNotFoundException) as cm:
             api.new_widget_multidp( uid=uid, widgetname=widgetname)
-        self.assertEqual(cm.exception.error, errors.E_GWA_NWMP_UNF)
+        self.assertEqual(cm.exception.error, Errors.E_GWA_NWMP_UNF)
 
     def test_new_widget_multidp_success(self):
         ''' new_widget_multidp should succeed if user exists '''
@@ -779,7 +780,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for wid in wids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.update_widget_config(wid=wid, widgetname=widgetname)
-            self.assertEqual(cm.exception.error, errors.E_GWA_UWC_IW)
+            self.assertEqual(cm.exception.error, Errors.E_GWA_UWC_IW)
 
     def test_update_widget_config_failure_invalid_widgetname(self):
         ''' update_widget_config_should fail if widgetname is invalid '''
@@ -788,7 +789,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for widgetname in widgetnames:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.update_widget_config(wid=wid, widgetname=widgetname)
-            self.assertEqual(cm.exception.error, errors.E_GWA_UWC_IWN)
+            self.assertEqual(cm.exception.error, Errors.E_GWA_UWC_IWN)
 
     def test_update_widget_config_failure_invalid_colors(self):
         ''' update_widget_config_should fail if colors is invalid '''
@@ -797,7 +798,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for colors in colores:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.update_widget_config(wid=wid,colors=colors)
-            self.assertEqual(cm.exception.error, errors.E_GWA_UWC_IC)
+            self.assertEqual(cm.exception.error, Errors.E_GWA_UWC_IC)
 
     def test_update_widget_config_failure_invalid_active_visualization(self):
         ''' update_widget_config_should fail if active_visualization is invalid '''
@@ -806,7 +807,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for active in actives:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.update_widget_config(wid=wid,active_visualization=active)
-            self.assertEqual(cm.exception.error, errors.E_GWA_UWC_IAV)
+            self.assertEqual(cm.exception.error, Errors.E_GWA_UWC_IAV)
 
     def test_update_widget_config_failure_widget_not_found(self):
         ''' update_widget_config_should fail if active_visualization is invalid '''
@@ -814,7 +815,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         widgetname='test_update_widget_config_failure_widget_not_found'
         with self.assertRaises(exceptions.WidgetNotFoundException) as cm:
             api.update_widget_config(wid=wid, widgetname=widgetname)
-        self.assertEqual(cm.exception.error, errors.E_GWA_UWC_WNF)
+        self.assertEqual(cm.exception.error, Errors.E_GWA_UWC_WNF)
 
     def test_update_widget_datasource_failure_invalid_wid(self):
         ''' update_widget_datasource should fail if wid is invalid '''
@@ -1565,7 +1566,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for wid in wids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.update_widget_multidp(wid=wid, widgetname=widgetname)
-            self.assertEqual(cm.exception.error, errors.E_GWA_UWMP_IW)
+            self.assertEqual(cm.exception.error, Errors.E_GWA_UWMP_IW)
 
     def test_update_widget_multidp_failure_invalid_widgetname(self):
         ''' update_widget_multidp should fail if widgetname is invalid '''
@@ -1574,7 +1575,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for widgetname in widgetnames:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.update_widget_multidp(wid=wid, widgetname=widgetname)
-            self.assertEqual(cm.exception.error, errors.E_GWA_UWMP_IWN)
+            self.assertEqual(cm.exception.error, Errors.E_GWA_UWMP_IWN)
 
     def test_update_widget_multidp_failure_invalid_colors(self):
         ''' update_widget_multidp should fail if colors is invalid '''
@@ -1584,7 +1585,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for visualization in actives:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.update_widget_multidp(wid=wid, widgetname=widgetname, active_visualization=visualization)
-            self.assertEqual(cm.exception.error, errors.E_GWA_UWMP_IAV)
+            self.assertEqual(cm.exception.error, Errors.E_GWA_UWMP_IAV)
 
     def test_update_widget_multidp_failure_non_existent_wid(self):
         ''' update_widget_multidp should fail if wid does not exist '''
@@ -1592,7 +1593,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         widgetname='test_update_widget_multidp_failure_non_existent_wid'
         with self.assertRaises(exceptions.WidgetNotFoundException) as cm:
             api.update_widget_multidp(wid=wid, widgetname=widgetname)
-        self.assertEqual(cm.exception.error, errors.E_GWA_UWMP_WNF)
+        self.assertEqual(cm.exception.error, Errors.E_GWA_UWMP_WNF)
 
     def test_update_widget_multidp_success(self):
         ''' update_widget_multidp should succeed if wid exists and data is correct '''
@@ -1667,7 +1668,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         new_visualization=11000000
         with self.assertRaises(exceptions.WidgetUnsupportedOperationException) as cm:
             api.update_widget_multidp(wid=widget['wid'], active_visualization=new_visualization)
-        self.assertEqual(cm.exception.error, errors.E_GWA_UWMP_IAVT)
+        self.assertEqual(cm.exception.error, Errors.E_GWA_UWMP_IAVT)
 
     def test_update_widget_multidp_success_only_widgetname(self):
         ''' update_widget_multidp should succeed if wid exists and data is correct '''
@@ -1752,7 +1753,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         for wid in wids: 
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.get_related_widgets(wid=wid)
-            self.assertEqual(cm.exception.error, errors.E_GWA_GRW_IW)
+            self.assertEqual(cm.exception.error, Errors.E_GWA_GRW_IW)
 
     def test_get_related_widgets_success(self):
         ''' get_related_widgets should return an array with the related widgets '''

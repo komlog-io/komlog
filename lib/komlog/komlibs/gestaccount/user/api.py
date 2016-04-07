@@ -17,7 +17,8 @@ from komlog.komcass.api import snapshot as cassapisnapshot
 from komlog.komcass.model.orm import user as ormuser
 from komlog.komlibs.gestaccount.user import segments
 from komlog.komlibs.gestaccount.user.states import *
-from komlog.komlibs.gestaccount import exceptions, errors
+from komlog.komlibs.gestaccount import exceptions
+from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
@@ -25,32 +26,32 @@ from komlog.komlibs.general.crypto import crypto
 
 def auth_user(username, password):
     if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_GUA_AUU_IU)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_AUU_IU)
     if not args.is_valid_password(password):
-        raise exceptions.BadParametersException(error=errors.E_GUA_AUU_IP)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_AUU_IP)
     user=cassapiuser.get_user(username=username)
     if not user:
-        raise exceptions.UserNotFoundException(error=errors.E_GUA_AUU_UNF)
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_AUU_UNF)
     return crypto.verify_password(password, user.password, user.uid.bytes)
 
 def create_user(username, password, email):
     '''This function creates a new user in the database'''
     if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_GUA_CRU_IU)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_IU)
     if not args.is_valid_password(password):
-        raise exceptions.BadParametersException(error=errors.E_GUA_CRU_IP)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_IP)
     if not args.is_valid_email(email):
-        raise exceptions.BadParametersException(error=errors.E_GUA_CRU_IE)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_IE)
     user=cassapiuser.get_user(username=username)
     if user:
-        raise exceptions.UserAlreadyExistsException(error=errors.E_GUA_CRU_UAEU)
+        raise exceptions.UserAlreadyExistsException(error=Errors.E_GUA_CRU_UAEU)
     user=cassapiuser.get_user(email=email)
     if user:
-        raise exceptions.UserAlreadyExistsException(error=errors.E_GUA_CRU_UAEE)
+        raise exceptions.UserAlreadyExistsException(error=Errors.E_GUA_CRU_UAEE)
     uid=uuid.uuid4()
     hpassword=crypto.get_hashed_password(password, uid.bytes)
     if not hpassword:
-        raise exceptions.BadParametersException(error=errors.E_GUA_CRU_HPNF)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_HPNF)
     now=timeuuid.uuid1()
     segment=segments.FREE
     user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.FREE, creation_date=now, state=UserStates.PREACTIVE)
@@ -68,23 +69,23 @@ def create_user(username, password, email):
 def confirm_user(email, code):
     '''This function confirm the user'''
     if not args.is_valid_email(email):
-        raise exceptions.BadParametersException(error=errors.E_GUA_COU_IE)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_COU_IE)
     if not args.is_valid_code(code):
-        raise exceptions.BadParametersException(error=errors.E_GUA_COU_IC)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_COU_IC)
     signup_info=cassapiuser.get_signup_info(email=email)
     if signup_info is None:
-        raise exceptions.UserNotFoundException(error=errors.E_GUA_COU_CNF)
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_COU_CNF)
     if signup_info.code!=code:
-        raise exceptions.UserConfirmationException(error=errors.E_GUA_COU_CMM)
+        raise exceptions.UserConfirmationException(error=Errors.E_GUA_COU_CMM)
     if signup_info.utilization_date:
-        raise exceptions.UserConfirmationException(error=errors.E_GUA_COU_CAU)
+        raise exceptions.UserConfirmationException(error=Errors.E_GUA_COU_CAU)
     user=cassapiuser.get_user(username=signup_info.username)
     if not user:
-        raise exceptions.UserNotFoundException(error=errors.E_GUA_COU_UNF)
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_COU_UNF)
     signup_info.utilization_date=timeuuid.uuid1()
     user.state=UserStates.ACTIVE
     if not cassapiuser.insert_user(user=user):
-        raise exceptions.UserConfirmationException(error=errors.E_GUA_COU_IUE)
+        raise exceptions.UserConfirmationException(error=Errors.E_GUA_COU_IUE)
     cassapiuser.insert_signup_info(signup_info=signup_info)
     return True
 
@@ -95,35 +96,35 @@ def update_user_config(uid, new_email=None, old_password=None, new_password=None
         - email
     '''
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_GUA_UUC_IU)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_UUC_IU)
     user=cassapiuser.get_user(uid=uid)
     if not user:
-        raise exceptions.UserNotFoundException(error=errors.E_GUA_UUC_UNF)
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_UUC_UNF)
     user_bck=user
     if new_email is None and old_password is None and new_password is None:
-        raise exceptions.BadParametersException(error=errors.E_GUA_UUC_EMP)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_UUC_EMP)
     if bool(old_password) ^ bool(new_password):
-        raise exceptions.BadParametersException(error=errors.E_GUA_UUC_ONP)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_UUC_ONP)
     if new_password and old_password:
         if not args.is_valid_password(new_password) or not args.is_valid_password(old_password):
-            raise exceptions.BadParametersException(error=errors.E_GUA_UUC_IP)
+            raise exceptions.BadParametersException(error=Errors.E_GUA_UUC_IP)
         if not crypto.verify_password(old_password, user.password, user.uid.bytes):
-            raise exceptions.InvalidPasswordException(error=errors.E_GUA_UUC_PNM)
+            raise exceptions.InvalidPasswordException(error=Errors.E_GUA_UUC_PNM)
         if new_password==old_password:
-            raise exceptions.BadParametersException(error=errors.E_GUA_UUC_EQP)
+            raise exceptions.BadParametersException(error=Errors.E_GUA_UUC_EQP)
         new_password=crypto.get_hashed_password(new_password, user.uid.bytes)
         if new_password:
             user.password=new_password
         else:
-            raise exceptions.BadParametersException(error=errors.E_GUA_UUC_HPNF)
+            raise exceptions.BadParametersException(error=Errors.E_GUA_UUC_HPNF)
     if new_email:
         if not args.is_valid_email(new_email):
-            raise exceptions.BadParametersException(error=errors.E_GUA_UUC_IE)
+            raise exceptions.BadParametersException(error=Errors.E_GUA_UUC_IE)
         if not new_email==user.email:
             user2=cassapiuser.get_user(email=new_email)
             if user2:
                 ''' Email already used'''
-                raise exceptions.EmailAlreadyExistsException(error=errors.E_GUA_UUC_EAE)
+                raise exceptions.EmailAlreadyExistsException(error=Errors.E_GUA_UUC_EAE)
             user.email=new_email
     if cassapiuser.insert_user(user=user):
         return True
@@ -132,10 +133,10 @@ def update_user_config(uid, new_email=None, old_password=None, new_password=None
 
 def get_user_config(uid):
     if not args.is_valid_uuid(uid):
-        raise exceptions.BadParametersException(error=errors.E_GUA_GUC_IU)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_GUC_IU)
     user=cassapiuser.get_user(uid=uid)
     if not user:
-        raise exceptions.UserNotFoundException(error=errors.E_GUA_GUC_UNF)
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_GUC_UNF)
     data={}
     data['email']=user.email if user.email else ''
     data['uid']=user.uid
@@ -145,10 +146,10 @@ def get_user_config(uid):
 
 def get_uid(username):
     if not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_GUA_GUID_IU)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_GUID_IU)
     uid=cassapiuser.get_uid(username=username)
     if not uid:
-        raise exceptions.UserNotFoundException(error=errors.E_GUA_GUID_UNF)
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_GUID_UNF)
     return uid
 
 def register_invitation_request(email):
@@ -156,7 +157,7 @@ def register_invitation_request(email):
         associated with an email provided by the user.
     '''
     if not args.is_valid_email(email):
-        raise exceptions.BadParametersException(error=errors.E_GUA_RIR_IEMAIL)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_RIR_IEMAIL)
     request=cassapiuser.get_invitation_request(email=email)
     if request is None:
         now=timeuuid.uuid1()
@@ -179,7 +180,7 @@ def generate_user_invitations(email=None, num=1):
         [{'email':'email@example.com','inv_id':uuid.UUID4() generated},...]
     '''
     if email is not None and not args.is_valid_email(email):
-        raise exceptions.BadParametersException(error=errors.E_GUA_GUI_IEMAIL)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_GUI_IEMAIL)
     generated=[]
     regs=[]
     if num>1 or (num==1 and email is None):
@@ -228,57 +229,57 @@ def create_user_by_invitation(username, password, email, inv_id):
 
 def start_invitation_process(inv_id):
     if not args.is_valid_uuid(inv_id):
-        raise exceptions.BadParametersException(error=errors.E_GUA_SIP_IINV)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_SIP_IINV)
     invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
     if len(invitation_info)==0:
-        raise exceptions.InvitationNotFoundException(error=errors.E_GUA_SIP_INVNF)
+        raise exceptions.InvitationNotFoundException(error=Errors.E_GUA_SIP_INVNF)
     elif len(invitation_info)>1:
-        raise exceptions.InvitationProcessException(error=errors.E_GUA_SIP_INVAU)
+        raise exceptions.InvitationProcessException(error=Errors.E_GUA_SIP_INVAU)
     elif invitation_info[0].state == InvitationStates.UNUSED and invitation_info[0].tran_id == None:
         now=timeuuid.uuid1()
         tran_id=uuid.uuid4()
         new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=InvitationStates.USING, tran_id=tran_id)
         if not cassapiuser.insert_invitation_info(invitation_info=new_info):
-            raise exceptions.InvitationProcessException(error=errors.E_GUA_SIP_EIII)
+            raise exceptions.InvitationProcessException(error=Errors.E_GUA_SIP_EIII)
         return tran_id
     else:
-        raise exceptions.InvitationProcessException(error=errors.E_GUA_SIP_ISNE)
+        raise exceptions.InvitationProcessException(error=Errors.E_GUA_SIP_ISNE)
 
 def end_invitation_process(inv_id, tran_id):
     if not args.is_valid_uuid(inv_id):
-        raise exceptions.BadParametersException(error=errors.E_GUA_EIP_IINV)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_EIP_IINV)
     if not args.is_valid_uuid(tran_id):
-        raise exceptions.BadParametersException(error=errors.E_GUA_EIP_ITRN)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_EIP_ITRN)
     invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
     if len(invitation_info)==0:
-        raise exceptions.InvitationNotFoundException(error=errors.E_GUA_EIP_INVNF)
+        raise exceptions.InvitationNotFoundException(error=Errors.E_GUA_EIP_INVNF)
     elif len(invitation_info)==1:
-        raise exceptions.InvitationProcessException(error=errors.E_GUA_EIP_INUE)
+        raise exceptions.InvitationProcessException(error=Errors.E_GUA_EIP_INUE)
     else:
         using_found=False
         for reg in invitation_info:
             if reg.state==InvitationStates.USING:
                 if reg.tran_id != tran_id:
-                    raise exceptions.InvitationProcessException(error=errors.E_GUA_EIP_RCF)
+                    raise exceptions.InvitationProcessException(error=Errors.E_GUA_EIP_RCF)
                 else:
                     using_found=True
         if not using_found:
-            raise exceptions.InvitationProcessException(error=errors.E_GUA_EIP_SNF)
+            raise exceptions.InvitationProcessException(error=Errors.E_GUA_EIP_SNF)
         else:
             now=timeuuid.uuid1()
             new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=InvitationStates.USED, tran_id=tran_id)
             if not cassapiuser.insert_invitation_info(invitation_info=new_info):
-                raise exceptions.InvitationProcessException(error=errors.E_GUA_EIP_EIII)
+                raise exceptions.InvitationProcessException(error=Errors.E_GUA_EIP_EIII)
         return True
 
 def undo_invitation_transactions(inv_id, tran_id):
     if not args.is_valid_uuid(inv_id):
-        raise exceptions.BadParametersException(error=errors.E_GUA_UIT_IINV)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_UIT_IINV)
     if not args.is_valid_uuid(tran_id):
-        raise exceptions.BadParametersException(error=errors.E_GUA_UIT_ITRN)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_UIT_ITRN)
     invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
     if len(invitation_info)==0:
-        raise exceptions.InvitationNotFoundException(error=errors.E_GUA_UIT_INVNF)
+        raise exceptions.InvitationNotFoundException(error=Errors.E_GUA_UIT_INVNF)
     for reg in invitation_info:
         if reg.tran_id==tran_id:
             cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
@@ -286,30 +287,30 @@ def undo_invitation_transactions(inv_id, tran_id):
 
 def initialize_invitation(inv_id):
     if not args.is_valid_uuid(inv_id):
-        raise exceptions.BadParametersException(error=errors.E_GUA_II_IINV)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_II_IINV)
     invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
     if len(invitation_info)==0:
-        raise exceptions.InvitationNotFoundException(error=errors.E_GUA_II_INVNF)
+        raise exceptions.InvitationNotFoundException(error=Errors.E_GUA_II_INVNF)
     for reg in invitation_info:
         cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
     now=timeuuid.uuid1()
     new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=InvitationStates.UNUSED)
     if not cassapiuser.insert_invitation_info(invitation_info=new_info):
-        raise exceptions.InvitationProcessException(error=errors.E_GUA_II_EIII)
+        raise exceptions.InvitationProcessException(error=Errors.E_GUA_II_EIII)
     return True
 
 def check_unused_invitation(inv_id):
     if not args.is_valid_uuid(inv_id):
-        raise exceptions.BadParametersException(error=errors.E_GUA_CUI_IINV)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_CUI_IINV)
     invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
     if len(invitation_info)==0:
-        raise exceptions.InvitationNotFoundException(error=errors.E_GUA_CUI_INVNF)
+        raise exceptions.InvitationNotFoundException(error=Errors.E_GUA_CUI_INVNF)
     elif len(invitation_info)>1:
-        raise exceptions.InvitationProcessException(error=errors.E_GUA_CUI_INVAU)
+        raise exceptions.InvitationProcessException(error=Errors.E_GUA_CUI_INVAU)
     elif len(invitation_info)==1 and invitation_info[0].state==InvitationStates.UNUSED:
         return True
     else:
-        raise exceptions.InvitationProcessException(error=errors.E_GUA_CUI_INVIS)
+        raise exceptions.InvitationProcessException(error=Errors.E_GUA_CUI_INVIS)
 
 def register_forget_request(username=None, email=None):
     ''' register_forget_request is used to store a request when a user wants to reset
@@ -317,11 +318,11 @@ def register_forget_request(username=None, email=None):
         we will register the request associated to her uid.
     '''
     if username is not None and not args.is_valid_username(username):
-        raise exceptions.BadParametersException(error=errors.E_GUA_RFR_IU)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_RFR_IU)
     if email is not None and not args.is_valid_email(email):
-        raise exceptions.BadParametersException(error=errors.E_GUA_RFR_IEMAIL)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_RFR_IEMAIL)
     if not username and not email:
-        raise exceptions.BadParametersException(error=errors.E_GUA_RFR_NPP)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_RFR_NPP)
     user=cassapiuser.get_user(username=username, email=email)
     if user:
         code=uuid.uuid4()
@@ -330,41 +331,41 @@ def register_forget_request(username=None, email=None):
         if cassapiuser.insert_forget_request(forget_request=request):
             return {'code':code,'username':user.username, 'email':user.email, 'uid':user.uid}
         else:
-            raise exceptions.ForgetRequestException(error=errors.E_GUA_RFR_DBE)
+            raise exceptions.ForgetRequestException(error=Errors.E_GUA_RFR_DBE)
     else:
-        raise exceptions.UserNotFoundException(error=errors.E_GUA_RFR_UNF)
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_RFR_UNF)
 
 def check_unused_forget_code(code):
     if not args.is_valid_uuid(code):
-        raise exceptions.BadParametersException(error=errors.E_GUA_CUFC_ICODE)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_CUFC_ICODE)
     request=cassapiuser.get_forget_request(code=code)
     if not request:
-        raise exceptions.ForgetRequestNotFoundException(error=errors.E_GUA_CUFC_CNF)
+        raise exceptions.ForgetRequestNotFoundException(error=Errors.E_GUA_CUFC_CNF)
     elif request.state != ForgetRequestStates.UNUSED:
-        raise exceptions.ForgetRequestException(error=errors.E_GUA_CUFC_CODEAU)
+        raise exceptions.ForgetRequestException(error=Errors.E_GUA_CUFC_CODEAU)
     else:
         return True
 
 def reset_password(code, password):
     if not args.is_valid_uuid(code):
-        raise exceptions.BadParametersException(error=errors.E_GUA_RP_ICODE)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_RP_ICODE)
     if not args.is_valid_password(password):
-        raise exceptions.BadParametersException(error=errors.E_GUA_RP_IPWD)
+        raise exceptions.BadParametersException(error=Errors.E_GUA_RP_IPWD)
     request=cassapiuser.get_forget_request(code=code)
     if not request:
-        raise exceptions.ForgetRequestNotFoundException(error=errors.E_GUA_RP_CNF)
+        raise exceptions.ForgetRequestNotFoundException(error=Errors.E_GUA_RP_CNF)
     elif request.state != ForgetRequestStates.UNUSED:
-        raise exceptions.ForgetRequestException(error=errors.E_GUA_RP_CODEAU)
+        raise exceptions.ForgetRequestException(error=Errors.E_GUA_RP_CODEAU)
     user=cassapiuser.get_user(uid=request.uid)
     if not user:
-        raise exceptions.UserNotFoundException(error=errors.E_GUA_RP_UNF)
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_RP_UNF)
     new_password=crypto.get_hashed_password(password, user.uid.bytes)
     if new_password:
         if cassapiuser.update_user_password(username=user.username, password=new_password):
             cassapiuser.update_forget_request_state(code=code, new_state=ForgetRequestStates.USED)
             return True
         else:
-            raise exceptions.ForgetRequestException(error=errors.E_GUA_RP_EUDB)
-    raise exceptions.ForgetRequestException(error=errors.E_GUA_RP_EGPWD)
+            raise exceptions.ForgetRequestException(error=Errors.E_GUA_RP_EUDB)
+    raise exceptions.ForgetRequestException(error=Errors.E_GUA_RP_EGPWD)
 
 

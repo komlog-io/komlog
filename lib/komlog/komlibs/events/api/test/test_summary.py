@@ -19,7 +19,8 @@ from komlog.komlibs.gestaccount.circle import api as circleapi
 from komlog.komlibs.gestaccount.snapshot import api as snapshotapi
 from komlog.komlibs.events.api import summary
 from komlog.komlibs.events.model import types, priorities
-from komlog.komlibs.events import exceptions, errors
+from komlog.komlibs.events import exceptions
+from komlog.komlibs.events.errors import Errors
 from komlog.komfig import logging
 
 class EventsApiSummaryTest(unittest.TestCase):
@@ -32,7 +33,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 summary.get_user_event_graph_summary_data(uid=uid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_EAS_GUEGSD_IUID)
+            self.assertEqual(cm.exception.error, Errors.E_EAS_GUEGSD_IUID)
 
     def test_get_user_event_graph_summary_data_failure_invalid_date(self):
         ''' get_user_event_graph_summary_data should fail if date is invalid '''
@@ -41,7 +42,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         for date in dates:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 summary.get_user_event_graph_summary_data(uid=uid, date=date)
-            self.assertEqual(cm.exception.error, errors.E_EAS_GUEGSD_IDATE)
+            self.assertEqual(cm.exception.error, Errors.E_EAS_GUEGSD_IDATE)
 
     def test_get_user_event_graph_summary_data_non_existent_event(self):
         ''' get_user_event_graph_summary_data return None if there is no summary for the event '''
@@ -101,7 +102,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             summary._generate_graph_summary_data_UENNSS(parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAS_GGSDUENNSS_NPNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAS_GGSDUENNSS_NPNF)
 
     def test__generate_graph_summary_data_UENNSS_failure_invalid_nid_parameter(self):
         ''' _generate_graph_summary_data_UENNSS should fail if nid parameter is not found '''
@@ -110,14 +111,14 @@ class EventsApiSummaryTest(unittest.TestCase):
             parameters={'nid':nid}
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 summary._generate_graph_summary_data_UENNSS(parameters=parameters)
-            self.assertEqual(cm.exception.error, errors.E_EAS_GGSDUENNSS_INID)
+            self.assertEqual(cm.exception.error, Errors.E_EAS_GGSDUENNSS_INID)
 
     def test__generate_graph_summary_data_UENNSS_failure_nid_not_found(self):
         ''' _generate_graph_summary_data_UENNSS should fail if snapshot does not exist '''
         parameters={'nid':uuid.uuid4()}
         with self.assertRaises(exceptions.SummaryCreationException) as cm:
             summary._generate_graph_summary_data_UENNSS(parameters=parameters)
-        self.assertEqual(cm.exception.error, errors.E_EAS_GGSDUENNSS_NIDNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAS_GGSDUENNSS_NIDNF)
 
     def test__generate_graph_summary_data_UENNSS_datasource_empty_no_data_found(self):
         ''' _generate_graph_summary_data_UENNSS should return None if no data is found '''

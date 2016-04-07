@@ -3,7 +3,7 @@ import uuid
 import json
 from komlog.komlibs.events.api import user as usereventsapi
 from komlog.komlibs.events.model import types as eventstypes
-from komlog.komlibs.events import errors as eventserrors
+from komlog.komlibs.events.errors import Errors as eventserrors
 from komlog.komlibs.interface.imc.api import events
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc import status

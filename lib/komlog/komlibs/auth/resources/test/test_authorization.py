@@ -1,6 +1,7 @@
 import unittest
 import uuid
-from komlog.komlibs.auth import permissions, exceptions, errors
+from komlog.komlibs.auth import permissions, exceptions
+from komlog.komlibs.auth.errors import Errors
 from komlog.komlibs.auth.resources import authorization
 from komlog.komcass.api import permission as cassapiperm
 from komlog.komlibs.gestaccount.user import api as userapi
@@ -35,7 +36,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         aid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_agent_config(uid=uid, aid=aid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGAC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGAC_RE)
 
     def test_authorize_get_datasource_config_success(self):
         ''' authorize_get_datasource_config should succeed if permission is granted'''
@@ -51,7 +52,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_config(uid=uid, did=did)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGDSC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGDSC_RE)
 
     def test_authorize_put_datasource_config_success(self):
         ''' authorize_put_datasource_config should succeed if permission is granted'''
@@ -67,7 +68,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_put_datasource_config(uid=uid, did=did)
-        self.assertEqual(cm.exception.error, errors.E_ARA_APDSC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_APDSC_RE)
 
     def test_authorize_get_datasource_data_success(self):
         ''' authorize_get_datasource_data should succeed if permission is granted'''
@@ -83,7 +84,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datasource_data(uid=uid, did=did)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGDSD_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGDSD_RE)
 
     def test_authorize_post_datasource_data_success(self):
         ''' authorize_post_datasource_data should succeed if permission is granted'''
@@ -102,7 +103,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ATDSD_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ATDSD_RE)
 
     def test_authorize_post_datasource_data_failure_no_user_agent_perm(self):
         ''' authorize_post_datasource_data should fail if not user_agent perm is found '''
@@ -113,7 +114,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ATDSD_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ATDSD_RE)
 
     def test_authorize_post_datasource_data_failure_no_user_datasource_perm(self):
         ''' authorize_post_datasource_data should succeed if permission is granted'''
@@ -124,7 +125,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ATDSD_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ATDSD_RE)
 
     def test_authorize_new_datasource_success(self):
         ''' authorize_new_datasource should succeed if permission is granted'''
@@ -140,7 +141,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         aid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_new_datasource(uid=uid, aid=aid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ANDS_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ANDS_RE)
 
     def test_authorize_get_datapoint_data_success(self):
         ''' authorize_get_datapoint_data should succeed if permission is granted'''
@@ -156,7 +157,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_data(uid=uid, pid=pid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGDPD_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGDPD_RE)
 
     def test_authorize_get_datapoint_config_success(self):
         ''' authorize_get_datapoint_config should succeed if permission is granted'''
@@ -172,7 +173,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_datapoint_config(uid=uid, pid=pid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGDPC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGDPC_RE)
 
     def test_authorize_put_datapoint_config_success(self):
         ''' authorize_put_datapoint_config should succeed if permission is granted'''
@@ -188,7 +189,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         pid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_put_datapoint_config(uid=uid, pid=pid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_APDPC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_APDPC_RE)
 
     def test_authorize_new_datapoint_success(self):
         ''' authorize_new_datapoint should succeed if permission is granted'''
@@ -204,7 +205,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_new_datapoint(uid=uid, did=did)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ANDP_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ANDP_RE)
 
     def test_authorize_put_agent_config_success(self):
         ''' authorize_put_agent_config should succeed if permission is granted'''
@@ -220,7 +221,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         aid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_put_agent_config(uid=uid, aid=aid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_APAC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_APAC_RE)
 
     def test_authorize_get_widget_config_success(self):
         ''' authorize_get_widget_config should succeed if permission is granted'''
@@ -236,7 +237,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         wid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_widget_config(uid=uid, wid=wid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGWC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGWC_RE)
 
     def test_authorize_put_widget_config_success(self):
         ''' authorize_put_widget_config should succeed if permission is granted'''
@@ -252,7 +253,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         wid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_put_widget_config(uid=uid, wid=wid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_APWC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_APWC_RE)
 
     def test_authorize_get_dashboard_config_success(self):
         ''' authorize_get_dashboard_config should succeed if permission is granted'''
@@ -268,7 +269,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         bid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_dashboard_config(uid=uid, bid=bid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGDBC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGDBC_RE)
 
     def test_authorize_put_dashboard_config_success(self):
         ''' authorize_put_dashboard_config should succeed if permission is granted'''
@@ -284,7 +285,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         bid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_put_dashboard_config(uid=uid, bid=bid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_APDBC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_APDBC_RE)
 
     def test_authorize_add_widget_to_dashboard_failure_no_bid(self):
         ''' authorize_add_widget_to_dashboard should fail if user has no permissions over bid '''
@@ -295,7 +296,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_add_widget_to_dashboard(uid=uid, bid=bid, wid=wid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AAWTDB_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AAWTDB_RE)
 
     def test_authorize_add_widget_to_dashboard_failure_no_bid_edit_perm(self):
         ''' authorize_add_widget_to_dashboard should fail if user has no edit permission over bid '''
@@ -307,7 +308,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_add_widget_to_dashboard(uid=uid, bid=bid, wid=wid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AAWTDB_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AAWTDB_RE)
 
     def test_authorize_add_widget_to_dashboard_failure_no_wid(self):
         ''' authorize_add_widget_to_dashboard should fail if user has no edit permission over wid '''
@@ -318,7 +319,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_add_widget_to_dashboard(uid=uid, bid=bid, wid=wid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AAWTDB_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AAWTDB_RE)
 
     def test_authorize_add_widget_to_dashboard_failure_no_wid_read_perm(self):
         ''' authorize_add_widget_to_dashboard should fail if user has no read permission over wid '''
@@ -330,7 +331,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_add_widget_to_dashboard(uid=uid, bid=bid, wid=wid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AAWTDB_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AAWTDB_RE)
 
     def test_authorize_add_widget_to_dashboard_success(self):
         ''' authorize_add_widget_to_dashboard should succeed '''
@@ -349,7 +350,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         bid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_widget_from_dashboard(uid=uid, bid=bid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADWFDB_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADWFDB_RE)
 
     def test_authorize_delete_widget_from_dashboard_failure_no_bid_edit_perm(self):
         ''' authorize_delete_widget_to_dashboard should fail if user has no edit permission over bid '''
@@ -359,7 +360,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_widget_from_dashboard(uid=uid, bid=bid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADWFDB_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADWFDB_RE)
 
     def test_authorize_delete_widget_from_dashboard_success(self):
         ''' authorize_delete_widget_from_dashboard should succeed '''
@@ -375,7 +376,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         bid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_dashboard(uid=uid, bid=bid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADDB_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADDB_RE)
 
     def test_authorize_delete_dashboard_failure_no_delete_perm(self):
         ''' authorize_delete_dashboard should fail if user has no delete perm over bid '''
@@ -385,7 +386,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_dashboard_perm(uid=uid, bid=bid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_dashboard(uid=uid, bid=bid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADDB_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADDB_RE)
 
     def test_authorize_delete_dashboard_success(self):
         ''' authorize_delete_dashboard should succeed if user has delete perm over bid '''
@@ -404,7 +405,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_add_datapoint_to_widget(uid=uid, wid=wid, pid=pid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AADPTW_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AADPTW_RE)
 
     def test_authorize_add_datapoint_to_widget_failure_no_edit_perm_over_wid(self):
         ''' authorize_add_datapoint_to_widget should fail if user has no edit perm over the wid '''
@@ -416,7 +417,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_add_datapoint_to_widget(uid=uid, wid=wid, pid=pid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AADPTW_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AADPTW_RE)
 
     def test_authorize_add_datapoint_to_widget_failure_non_existent_pid(self):
         ''' authorize_add_datapoint_to_widget should fail if user has no edit perm over the wid '''
@@ -427,7 +428,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_add_datapoint_to_widget(uid=uid, wid=wid, pid=pid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AADPTW_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AADPTW_RE)
 
     def test_authorize_add_datapoint_to_widget_failure_no_read_perm_over_pid(self):
         ''' authorize_add_datapoint_to_widget should fail if user has no edit perm over the wid '''
@@ -439,7 +440,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_add_datapoint_to_widget(uid=uid, wid=wid, pid=pid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AADPTW_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AADPTW_RE)
 
     def test_authorize_add_datapoint_to_widget_success(self):
         ''' authorize_add_datapoint_to_widget should succeed if user has permissions over pid and wid '''
@@ -458,7 +459,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         wid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_datapoint_from_widget(uid=uid, wid=wid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADDPFW_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADDPFW_RE)
 
     def test_authorize_delete_datapoint_from_widget_failure_no_edit_perm_over_wid(self):
         ''' authorize_delete_datapoint_from_widget should fail if user has not edit perm over the wid '''
@@ -468,7 +469,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_widget_perm(uid=uid, wid=wid, perm=perm)
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_datapoint_from_widget(uid=uid, wid=wid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADDPFW_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADDPFW_RE)
 
     def test_authorize_delete_datapoint_from_widget_success(self):
         ''' authorize_delete_datapoint_from_widget should succeed if user has permssion over the wid '''
@@ -487,7 +488,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         wid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_new_snapshot(uid=uid, wid=wid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ANS_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ANS_RE)
 
     def test_authorize_new_snapshot_failure_non_existent_uid(self):
         ''' authorize_new_snapshot should succeed if permission is granted'''
@@ -498,7 +499,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_new_snapshot(uid=uid, wid=wid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ANS_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ANS_RE)
 
     def test_authorize_new_snapshot_success(self):
         ''' authorize_new_snapshot should succeed if permission is granted'''
@@ -517,7 +518,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_snapshot_data(uid=uid, nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGSD_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGSD_RE)
 
     def test_authorize_get_snapshot_data_failure_non_existent_uid(self):
         ''' authorize_get_snapshot_data should fail if nid does not exist '''
@@ -528,7 +529,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_snapshot_data(uid=uid, nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGSD_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGSD_RE)
 
     def test_authorize_get_snapshot_data_success(self):
         ''' authorize_get_snapshot_data should succeed '''
@@ -547,7 +548,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_snapshot_config(uid=uid, nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGSC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGSC_RE)
 
     def test_authorize_get_snapshot_config_failure_non_existent_uid(self):
         ''' authorize_get_snapshot_config should fail if nid does not exist '''
@@ -558,7 +559,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_snapshot_config(uid=uid, nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGSC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGSC_RE)
 
     def test_authorize_get_snapshot_config_success(self):
         ''' authorize_get_snapshot_config should succeed '''
@@ -577,7 +578,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_snapshot(uid=uid, nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADS_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADS_RE)
 
     def test_authorize_delete_snapshot_failure_non_existent_nid(self):
         ''' authorize_delete_snapshot should fail if nid does not exist '''
@@ -588,7 +589,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         nid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_snapshot(uid=uid, nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADS_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADS_RE)
 
     def test_authorize_delete_snapshot_success(self):
         ''' authorize_delete_snapshot should succeed '''
@@ -607,7 +608,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_get_circle_config(uid=uid, cid=cid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AGCC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AGCC_RE)
 
     def test_authorize_get_circle_config_success(self):
         ''' authorize_get_circle_config should succeed '''
@@ -626,7 +627,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_circle(uid=uid, cid=cid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADC_RE)
 
     def test_authorize_delete_circle_failure_non_existent_cid(self):
         ''' authorize_delete_circle should fail if cid does not exist '''
@@ -637,7 +638,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_circle(uid=uid, cid=cid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADC_RE)
 
     def test_authorize_delete_circle_success(self):
         ''' authorize_delete_circle should succeed '''
@@ -656,7 +657,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_update_circle_config(uid=uid, cid=cid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AUCC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AUCC_RE)
 
     def test_authorize_update_circle_config_failure_non_existent_cid(self):
         ''' authorize_update_circle should fail if cid does not exist '''
@@ -667,7 +668,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_update_circle_config(uid=uid, cid=cid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AUCC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AUCC_RE)
 
     def test_authorize_update_circle_config_success(self):
         ''' authorize_update_circle should succeed '''
@@ -686,7 +687,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_add_member_to_circle(uid=uid, cid=cid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AAMTC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AAMTC_RE)
 
     def test_authorize_add_member_to_circle_failure_non_existent_cid(self):
         ''' authorize_add_member_to_circle should fail if cid does not exist '''
@@ -697,7 +698,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_add_member_to_circle(uid=uid, cid=cid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_AAMTC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AAMTC_RE)
 
     def test_authorize_add_member_to_circle_success(self):
         ''' authorize_add_member_to_circle should succeed '''
@@ -716,7 +717,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_member_from_circle(uid=uid, cid=cid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADMFC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADMFC_RE)
 
     def test_authorize_delete_member_from_circle_failure_non_existent_cid(self):
         ''' authorize_delete_member_from_circle should fail if cid does not exist '''
@@ -727,7 +728,7 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cid=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_delete_member_from_circle(uid=uid, cid=cid)
-        self.assertEqual(cm.exception.error, errors.E_ARA_ADMFC_RE)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADMFC_RE)
 
     def test_authorize_delete_member_from_circle_success(self):
         ''' authorize_delete_member_from_circle should succeed '''

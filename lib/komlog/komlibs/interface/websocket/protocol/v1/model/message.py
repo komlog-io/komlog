@@ -1,5 +1,6 @@
 from komlog.komlibs.general.validation import arguments as args
-from komlog.komlibs.interface.websocket.protocol.v1 import errors, exceptions
+from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model.types import Message
 
 class SendDsDataMessage:
@@ -15,7 +16,7 @@ class SendDsDataMessage:
             self.action=message['action']
             self.payload=message['payload']
         else:
-            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_SDDM_IMT)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDDM_IMT)
 
     @property
     def action(self):
@@ -26,7 +27,7 @@ class SendDsDataMessage:
         if args.is_valid_string(value) and value==Message.SEND_DS_DATA:
             self._action=value
         else:
-            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_SDDM_IA)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDDM_IA)
 
     @property
     def v(self):
@@ -37,7 +38,7 @@ class SendDsDataMessage:
         if args.is_valid_int(value) and value==1:
             self._v=value
         else:
-            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_SDDM_IV)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDDM_IV)
 
     @property
     def payload(self):
@@ -58,5 +59,5 @@ class SendDsDataMessage:
                 'content':value['content']
             }
         else:
-            raise exceptions.MessageValidationException(error=errors.E_IWSPV1MM_SDDM_IPL)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDDM_IPL)
 

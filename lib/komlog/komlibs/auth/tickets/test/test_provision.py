@@ -7,7 +7,8 @@ from komlog.komcass.api import snapshot as snapshotapi
 from komlog.komcass.api import ticket as ticketapi
 from komlog.komlibs.auth.tickets import provision
 from komlog.komlibs.auth.tickets.types import share
-from komlog.komlibs.auth import exceptions, errors, permissions
+from komlog.komlibs.auth import exceptions, permissions
+from komlog.komlibs.auth.errors import Errors
 from komlog.komfig import logging
 
 
@@ -24,7 +25,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         for uid in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 provision.new_snapshot_ticket(uid=uid, nid=nid)
-            self.assertEqual(cm.exception.error, errors.E_ATP_NST_IUID)
+            self.assertEqual(cm.exception.error, Errors.E_ATP_NST_IUID)
 
     def test_new_snapshot_ticket_failure_invalid_nid(self):
         ''' new_snapshot_ticket should fail if nid is invalid '''
@@ -33,7 +34,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         for nid in nids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 provision.new_snapshot_ticket(uid=uid, nid=nid)
-            self.assertEqual(cm.exception.error, errors.E_ATP_NST_INID)
+            self.assertEqual(cm.exception.error, Errors.E_ATP_NST_INID)
 
     def test_new_snapshot_ticket_failure_invalid_uids(self):
         ''' new_snapshot_ticket should fail if allowed_uids is invalid '''
@@ -43,7 +44,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         for uid_s in uids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=uid_s)
-            self.assertEqual(cm.exception.error, errors.E_ATP_NST_IUIDS)
+            self.assertEqual(cm.exception.error, Errors.E_ATP_NST_IUIDS)
 
     def test_new_snapshot_ticket_failure_invalid_uids_item(self):
         ''' new_snapshot_ticket should fail if an allowed_uids item is invalid '''
@@ -55,7 +56,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
             allowed_uids.add(item)
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=allowed_uids)
-            self.assertEqual(cm.exception.error, errors.E_ATP_NST_IUIDSI)
+            self.assertEqual(cm.exception.error, Errors.E_ATP_NST_IUIDSI)
 
     def test_new_snapshot_ticket_failure_invalid_cids(self):
         ''' new_snapshot_ticket should fail if allowed_cids is invalid '''
@@ -65,7 +66,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         for cid_s in cids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_cids=cid_s)
-            self.assertEqual(cm.exception.error, errors.E_ATP_NST_ICIDS)
+            self.assertEqual(cm.exception.error, Errors.E_ATP_NST_ICIDS)
 
     def test_new_snapshot_ticket_failure_invalid_cids_item(self):
         ''' new_snapshot_ticket should fail if an allowed_cids item is invalid '''
@@ -77,7 +78,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
             allowed_cids.add(item)
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_cids=allowed_cids)
-            self.assertEqual(cm.exception.error, errors.E_ATP_NST_ICIDSI)
+            self.assertEqual(cm.exception.error, Errors.E_ATP_NST_ICIDSI)
 
     def test_new_snapshot_ticket_failure_invalid_expires(self):
         ''' new_snapshot_ticket should fail if expires is invalid '''
@@ -87,7 +88,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         for expire in expires:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 provision.new_snapshot_ticket(uid=uid, nid=nid, expires=expire)
-            self.assertEqual(cm.exception.error, errors.E_ATP_NST_IEXP)
+            self.assertEqual(cm.exception.error, Errors.E_ATP_NST_IEXP)
 
     def test_new_snapshot_ticket_failure_invalid_share_type(self):
         ''' new_snapshot_ticket should fail if expires is invalid '''
@@ -98,7 +99,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         for share_type in share_types:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 provision.new_snapshot_ticket(uid=uid, nid=nid, expires=expires, share_type=share_type)
-            self.assertEqual(cm.exception.error, errors.E_ATP_NST_ISHT)
+            self.assertEqual(cm.exception.error, Errors.E_ATP_NST_ISHT)
 
     def test_new_snapshot_ticket_failure_no_items_to_share(self):
         ''' new_snapshot_ticket should fail if there are not items to share with '''
@@ -106,7 +107,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         nid=uuid.uuid4()
         with self.assertRaises(exceptions.BadParametersException) as cm:
             provision.new_snapshot_ticket(uid=uid, nid=nid)
-        self.assertEqual(cm.exception.error, errors.E_ATP_NST_NSL)
+        self.assertEqual(cm.exception.error, Errors.E_ATP_NST_NSL)
 
     def test_new_snapshot_ticket_failure_non_existent_snapshot(self):
         ''' new_snapshot_ticket should fail if snapshot does not exist '''
@@ -115,7 +116,7 @@ class AuthTicketsProvisionTest(unittest.TestCase):
         allowed_uids={uuid.uuid4()}
         with self.assertRaises(exceptions.TicketCreationException) as cm:
             provision.new_snapshot_ticket(uid=uid, nid=nid, allowed_uids=allowed_uids)
-        self.assertEqual(cm.exception.error, errors.E_ATP_NST_SNF)
+        self.assertEqual(cm.exception.error, Errors.E_ATP_NST_SNF)
 
     def test_new_snapshot_ticket_success_SnapshotDs(self):
         ''' new_snapshot_ticket should succeed if snapshot is a SnapshotDs object '''

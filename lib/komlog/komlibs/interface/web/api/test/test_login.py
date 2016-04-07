@@ -3,17 +3,18 @@ import uuid
 import json
 from base64 import b64encode, b64decode
 from komlog.komfig import logging
-from komlog.komlibs.auth import errors as autherrors
+from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto 
 from komlog.komlibs.general.validation import arguments as args
-from komlog.komlibs.gestaccount import errors as gesterrors
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komcass.api import agent as cassapiagent
 from komlog.komlibs.interface.web.api import login as loginapi
 from komlog.komlibs.interface.web.model import webmodel
 from komlog.komlibs.interface.web import status, errors
+from komlog.komlibs.interface.web.errors import Errors
 
 
 class InterfaceWebApiLoginTest(unittest.TestCase):
@@ -26,7 +27,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, errors.E_IWAL_LR_IPRM)
+        self.assertEqual(response.error, Errors.E_IWAL_LR_IPRM)
 
     def test_user_login_request_failure_invalid_username(self):
         ''' user_login_request should fail if username is invalid '''
@@ -37,7 +38,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAL_ULR_IU)
+            self.assertEqual(response.error, Errors.E_IWAL_ULR_IU)
 
     def test_user_login_request_failure_invalid_password(self):
         ''' user_login_request should fail if password is invalid '''
@@ -48,7 +49,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAL_ULR_IPWD)
+            self.assertEqual(response.error, Errors.E_IWAL_ULR_IPWD)
 
     def test_user_login_request_failure_non_existent_username(self):
         ''' user_login_request should fail if username does not exist '''
@@ -71,7 +72,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, errors.E_IWAL_ULR_AUTHERR)
+        self.assertEqual(response.error, Errors.E_IWAL_ULR_AUTHERR)
 
     def test_user_login_request_success(self):
         ''' user_login_request should succeed '''
@@ -97,7 +98,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAL_ALGCR_IU)
+            self.assertEqual(response.error, Errors.E_IWAL_ALGCR_IU)
 
     def test_agent_login_generate_challenge_request_failure_invalid_pubkey(self):
         ''' agent_login_generate_challenge_request should fail if pubkey is invalid '''
@@ -108,7 +109,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAL_ALGCR_IPK)
+            self.assertEqual(response.error, Errors.E_IWAL_ALGCR_IPK)
 
     def test_agent_login_generate_challenge_request_failure_non_existent_username(self):
         ''' agent_login_generate_challenge_request should fail if username does not exist '''
@@ -162,7 +163,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAL_ALVCR_IU)
+            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_IU)
 
     def test_agent_login_validate_challenge_request_failure_invalid_pubkey(self):
         ''' agent_login_validate_challenge_request should fail if username is invalid '''
@@ -175,7 +176,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAL_ALVCR_IPK)
+            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_IPK)
 
     def test_agent_login_validate_challenge_request_failure_invalid_challenge(self):
         ''' agent_login_validate_challenge_request should fail if challenge is invalid '''
@@ -188,7 +189,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAL_ALVCR_ICH)
+            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_ICH)
 
     def test_agent_login_validate_challenge_request_failure_invalid_signature(self):
         ''' agent_login_validate_challenge_request should fail if signature is invalid '''
@@ -201,7 +202,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, errors.E_IWAL_ALVCR_ISG)
+            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_ISG)
 
     def test_agent_login_validate_challenge_request_failure_non_existent_username(self):
         ''' agent_login_validate_challenge_request should fail if username does not exist '''
