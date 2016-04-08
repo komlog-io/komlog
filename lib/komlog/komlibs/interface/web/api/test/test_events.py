@@ -109,7 +109,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         for psp in passports:
             response=eventsapi.disable_event_request(passport=psp, seq=seq)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAEV_DEVR_IPSP)
+            self.assertEqual(response.error, Errors.E_IWAEV_DEVR_IPSP.value)
 
     def test_disable_event_request_failure_invalid_sequence(self):
         ''' disable_event_request should fail if sequence is invalid'''
@@ -118,7 +118,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         for seq in seqs:
             response=eventsapi.disable_event_request(passport=psp, seq=seq)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAEV_DEVR_ISEQ)
+            self.assertEqual(response.error, Errors.E_IWAEV_DEVR_ISEQ.value)
 
     def test_disable_event_request_failure_user_not_found(self):
         ''' disable_event_request should fail if username is not found '''
@@ -126,7 +126,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         seq=timeuuid.get_custom_sequence(timeuuid.uuid1())
         response=eventsapi.disable_event_request(passport=psp, seq=seq)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, eventerrors.E_EAU_DISE_EVNF)
+        self.assertEqual(response.error, eventerrors.E_EAU_DISE_EVNF.value)
 
     def test_disable_event_request_failure_sequence_not_found(self):
         ''' disable_event_request should fail if sequence is not found '''
@@ -134,7 +134,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         seq=timeuuid.get_custom_sequence(uuid.uuid1())
         response=eventsapi.disable_event_request(passport=psp, seq=seq)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, eventerrors.E_EAU_DISE_EVNF)
+        self.assertEqual(response.error, eventerrors.E_EAU_DISE_EVNF.value)
 
     def test_event_response_request_failure_invalid_passport(self):
         ''' event_response_request should fail if passport is invalid '''
@@ -144,7 +144,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         for psp in passports:
             response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IPSP)
+            self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IPSP.value)
 
     def test_event_response_request_failure_invalid_sequence(self):
         ''' event_response_request should fail if sequence is invalid '''
@@ -154,7 +154,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         for seq in seqs:
             response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_ISEQ)
+            self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_ISEQ.value)
 
     def test_event_response_request_failure_invalid_data(self):
         ''' event_response_request should fail if data is invalid '''
@@ -164,7 +164,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         for data in datas:
             response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IDAT)
+            self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IDAT.value)
 
     def test_event_response_request_failure_user_not_found(self):
         ''' event_response_request should fail if username is not found '''
@@ -173,7 +173,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         data={}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, eventerrors.E_EAU_GEV_EVNF)
+        self.assertEqual(response.error, eventerrors.E_EAU_GEV_EVNF.value)
 
     def test_event_response_request_failure_sequence_not_found(self):
         ''' event_response_request should fail if sequence is not found '''
@@ -182,7 +182,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         data={}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, eventerrors.E_EAU_GEV_EVNF)
+        self.assertEqual(response.error, eventerrors.E_EAU_GEV_EVNF.value)
 
     def test_event_response_request_failure_no_missing_parameter_found(self):
         ''' event_response_request should fail if no missing parameter is found '''
@@ -211,7 +211,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         data={}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IMSF)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IMSF.value)
 
     def test_event_response_request_failure_invalid_missing_parameter_type(self):
         ''' event_response_request should fail if no missing parameter is found '''
@@ -240,7 +240,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         data={'missing':23234}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IMSF)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IMSF.value)
 
     def test_event_response_request_failure_no_identified_parameter_found(self):
         ''' event_response_request should fail if no missing parameter is found '''
@@ -269,7 +269,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         data={'missing':[]}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDF)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDF.value)
 
     def test_event_response_request_failure_invalid_identified_parameter_type(self):
         ''' event_response_request should fail if no identified parameter is found '''
@@ -298,7 +298,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         data={'missing':[],'identified':23234}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDF)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDF.value)
 
     def test_event_response_request_failure_invalid_missing_item(self):
         ''' event_response_request should fail if missing items are invalid '''
@@ -327,7 +327,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         data={'missing':[uuid.uuid4()], 'identified':[]}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IMSIT)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IMSIT.value)
 
     def test_event_response_request_failure_invalid_identified_item(self):
         ''' event_response_request should fail if identified items are invalid '''
@@ -356,7 +356,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         data={'missing':[],'identified':[uuid.uuid4()]}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDIT)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDIT.value)
 
     def test_event_response_request_failure_non_supported_event_type(self):
         ''' event_response_request should succeed and send message '''
@@ -374,7 +374,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         data={}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IEVT)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IEVT.value)
 
     def test_event_response_request_success_message_sent(self):
         ''' event_response_request should succeed and send message '''

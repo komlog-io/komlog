@@ -20,9 +20,10 @@ The range reserved for Errors.in this module is 100000 - 150000
 from enum import Enum
 
 class Errors(Enum):
-#common to every Error class, to test for no errors
+#common to every Error class
 
     OK              = 0
+    UNKNOWN         = 1
 
 #interface web api user
 

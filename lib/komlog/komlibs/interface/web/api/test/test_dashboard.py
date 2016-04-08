@@ -61,7 +61,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         bid=uuid.uuid4().hex
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AGDBC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AGDBC_RE.value)
 
     def test_get_dashboard_config_request_success(self):
         ''' get_dashboard_config_request should return the dashboard info '''
@@ -230,7 +230,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         bid=uuid.uuid4().hex
         response=dashboardapi.delete_dashboard_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ADDB_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_ADDB_RE.value)
 
     def test_delete_dashboard_request_success(self):
         ''' delete_dashboard_request should delete the dashboard info '''
@@ -368,7 +368,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         data={'dashboardname':'new_dashboard_name'}
         response=dashboardapi.update_dashboard_config_request(passport=psp, bid=bid, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_APDBC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_APDBC_RE.value)
 
     def test_update_dashboard_config_request_success(self):
         ''' update_dashboard_config_request should succeed '''
@@ -437,7 +437,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         bid=uuid.uuid4().hex
         response=dashboardapi.add_widget_request(passport=psp, bid=bid, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AAWTDB_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AAWTDB_RE.value)
 
     def test_add_widget_request_failure_no_existing_bid(self):
         ''' add_widget_request should fail if user has no access over bid or wid '''
@@ -446,7 +446,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         bid=uuid.uuid4().hex
         response=dashboardapi.add_widget_request(passport=psp, bid=bid, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AAWTDB_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AAWTDB_RE.value)
 
     def test_add_widget_request_failure_no_existing_wid(self):
         ''' add_widget_request should fail if user has no access over bid or wid '''
@@ -474,7 +474,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         wid=uuid.uuid4().hex
         response=dashboardapi.add_widget_request(passport=psp, bid=bid, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AAWTDB_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AAWTDB_RE.value)
 
     def test_delete_widget_request_failure_invalid_passport(self):
         ''' delete_widget_request should fail if passport is invalid '''
@@ -510,7 +510,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         bid=uuid.uuid4().hex
         response=dashboardapi.delete_widget_request(passport=psp, bid=bid, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ADWFDB_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_ADWFDB_RE.value)
 
     def test_delete_widget_request_failure_no_existing_bid(self):
         ''' delete_widget_request should fail if user has no access over bid '''
@@ -519,7 +519,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         bid=uuid.uuid4().hex
         response=dashboardapi.delete_widget_request(passport=psp, bid=bid, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ADWFDB_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_ADWFDB_RE.value)
 
     def test_delete_widget_request_success_no_previous_widgets(self):
         ''' delete_widget_request should succeed even if dashboard has no previous widgets '''
@@ -578,7 +578,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         data={'dashboardname':dashboardname}
         response=dashboardapi.new_dashboard_request(passport=psp,data=data)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, gesterrors.E_GBA_CRD_UNF)
+        self.assertEqual(response.error, gesterrors.E_GBA_CRD_UNF.value)
 
     def test_new_dashboard_request_success(self):
         ''' new_dashboard_request should fail if user does not exist '''

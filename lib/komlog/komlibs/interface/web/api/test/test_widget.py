@@ -275,7 +275,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         wid=uuid.uuid4().hex
         response=widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AGWC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AGWC_RE.value)
 
     def test_get_widget_config_request_failure_non_existent_widget(self):
         ''' get_widget_config_request should fail if widget does not exist '''
@@ -283,7 +283,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         wid=uuid.uuid4().hex
         response=widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AGWC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AGWC_RE.value)
 
     def test_get_widget_config_request_failure_no_permission_over_this_widget(self):
         ''' get_widget_config_request should fail if user does not have permission over widget '''
@@ -372,7 +372,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         psp2 = passport.get_user_passport(cookie)
         widgetinfo = widgetapi.get_widget_config_request(passport=psp2, wid=wid)
         self.assertEqual(widgetinfo.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(widgetinfo.error,autherrors.E_ARA_AGWC_RE)
+        self.assertEqual(widgetinfo.error,autherrors.E_ARA_AGWC_RE.value)
 
     def test_get_widgets_config_request_success(self):
         ''' get_widgets_config_request should succeed if username exists and return the widgets config '''
@@ -457,7 +457,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         psp = passport.Passport(uid=uuid.uuid4())
         response=widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, gesterrors.E_GWA_GWSC_UNF)
+        self.assertEqual(response.error, gesterrors.E_GWA_GWSC_UNF.value)
 
     def test_get_widgets_config_request_success_no_widgets(self):
         ''' get_widgets_config_request should succeed but should return an empty array '''
@@ -718,7 +718,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         data={'type':'mp', 'widgetname':'widgetname'}
         response=widgetapi.new_widget_request(passport=psp, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, gesterrors.E_GWA_NWMP_UNF)
+        self.assertEqual(response.error, gesterrors.E_GWA_NWMP_UNF.value)
 
     def test_new_widget_request_failure_no_widget_type(self):
         psp = self.passport
@@ -870,7 +870,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         wid=uuid.uuid4().hex
         response=widgetapi.add_datapoint_request(passport=psp, wid=wid, pid=pid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AADPTW_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AADPTW_RE.value)
 
     def test_add_datapoint_request_success_widget_linegraph(self):
         ''' add_datapoint_request should add the datapoint to the linegraph widget successfully '''
@@ -1291,7 +1291,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         wid=uuid.uuid4().hex
         response=widgetapi.delete_datapoint_request(passport=psp, wid=wid, pid=pid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ADDPFW_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_ADDPFW_RE.value)
 
     def test_delete_datapoint_request_success_widget_linegraph(self):
         ''' delete_datapoint_request should delete the datapoint from the linegraph widget successfully '''
@@ -1747,7 +1747,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         wid=uuid.uuid4().hex
         response=widgetapi.update_widget_config_request(passport=psp, wid=wid, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_APWC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_APWC_RE.value)
 
     def test_update_widget_config_request_success_widget_histogram(self):
         ''' update_widget_config_request should update successfylly the widget configuration '''
@@ -1989,7 +1989,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         wid=uuid.uuid4().hex
         response=widgetapi.get_related_widgets_request(passport=psp, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AGWC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AGWC_RE.value)
 
     def test_get_related_widgets_request_failure_non_existent_widget(self):
         ''' get_related_widgets_request should fail if widget does not exist '''
@@ -1997,7 +1997,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         wid=uuid.uuid4().hex
         response=widgetapi.get_related_widgets_request(passport=psp, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AGWC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AGWC_RE.value)
 
     def test_get_related_widgets_request_failure_no_permission_over_this_widget(self):
         '''get_related_widgets_request should fail if user does not have permission over widget '''
@@ -2086,7 +2086,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         psp2 = passport.get_user_passport(cookie)
         widgetrelated = widgetapi.get_related_widgets_request(passport=psp2, wid=wid)
         self.assertEqual(widgetrelated.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(widgetrelated.error , autherrors.E_ARA_AGWC_RE)
+        self.assertEqual(widgetrelated.error , autherrors.E_ARA_AGWC_RE.value)
 
     def test_get_related_widgets_request_success(self):
         ''' get_releated_widgets_request should succeed '''

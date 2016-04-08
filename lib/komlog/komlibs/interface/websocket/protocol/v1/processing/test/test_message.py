@@ -140,7 +140,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
-        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_IURI)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_IURI.value)
 
     def test__process_send_ds_data_failure_error_creating_ds(self):
         ''' _process_send_ds_data should fail if ds creationg fails '''
@@ -169,7 +169,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_ECDS)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_ECDS.value)
         authorization.authorize_request = auth_req_bck
         datasourceapi.create_datasource = ds_creation_bck
 
@@ -199,7 +199,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_EUR)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_EUR.value)
         authorization.authorize_request = auth_req_bck
         options.SAMPLES_RECEIVED_PATH=option_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
@@ -232,7 +232,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_FUR)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_FUR.value)
         authorization.authorize_request = auth_req_bck
         operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
@@ -265,7 +265,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_EUR)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDD_EUR.value)
         authorization.authorize_request = auth_req_bck
         operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
@@ -298,7 +298,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
-        self.assertEqual(resp.error, None)
+        self.assertEqual(resp.error, Errors.OK.value)
         authorization.authorize_request = auth_req_bck
         operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
@@ -332,7 +332,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
-        self.assertEqual(resp.error, None)
+        self.assertEqual(resp.error, Errors.OK.value)
         authorization.authorize_request = auth_req_bck
         operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])

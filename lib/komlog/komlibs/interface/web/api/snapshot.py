@@ -196,9 +196,9 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
                 return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
             else:
                 deleteapi.delete_snapshot(nid=snapshot['nid'])
-                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_AUTHERR)
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_AUTHERR.value)
         else:
             deleteapi.delete_snapshot(nid=snapshot['nid'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_TCKCE)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_SCE)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_TCKCE.value)
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_SCE.value)
 

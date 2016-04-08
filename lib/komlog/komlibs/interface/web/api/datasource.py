@@ -141,7 +141,7 @@ def new_datasource_request(passport, datasourcename):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
         else:
             deleteapi.delete_datasource(did=datasource['did'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADS_NDSR_AUTHERR)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADS_NDSR_AUTHERR.value)
 
 @exceptions.ExceptionHandler
 def delete_datasource_request(passport, did):

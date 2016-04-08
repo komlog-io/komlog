@@ -17,7 +17,7 @@ def process_message(passport, message):
     try:
         return _processing_funcs[message['action']](passport, message)
     except KeyError:
-        return Response(status=status.PROTOCOL_ERROR, error=Errors.E_IWSPV1A_PM_IA, reason='unsupported action')
+        return Response(status=status.PROTOCOL_ERROR, error=Errors.E_IWSPV1A_PM_IA.value, reason='unsupported action')
 
 _processing_funcs = {
     Message.SEND_DS_DATA:procmsg._process_send_ds_data,

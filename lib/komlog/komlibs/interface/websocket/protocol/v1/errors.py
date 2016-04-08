@@ -20,9 +20,10 @@ The range reserved for Errors.in this module is 200000 - 250000
 from enum import Enum
 
 class Errors(Enum):
-#common to every Error class, to test for no errors
+#common to every Error class
 
     OK              = 0
+    UNKNOWN         = 1
 
 # interface websocket api (we use v1 by default in api entry point)
 

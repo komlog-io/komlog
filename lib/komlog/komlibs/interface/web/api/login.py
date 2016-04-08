@@ -34,7 +34,7 @@ def login_request(username, password=None, pubkey=None, challenge=None, signatur
             return _agent_login_generate_challenge_request(username=username, pubkey=pubkey)
         else:
             return _agent_login_validate_challenge_request(username=username, pubkey=pubkey, challenge=challenge, signature=signature)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, error=Errors.E_IWAL_LR_IPRM), None
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, error=Errors.E_IWAL_LR_IPRM.value), None
 
 def _user_login_request(username, password):
     if not args.is_valid_username(username):
@@ -42,7 +42,7 @@ def _user_login_request(username, password):
     if not args.is_valid_password(password):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ULR_IPWD)
     if not userapi.auth_user(username=username, password=password):
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, error=Errors.E_IWAL_ULR_AUTHERR), None
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, error=Errors.E_IWAL_ULR_AUTHERR.value), None
     else:
         data={'redirect':'/home'}
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data), {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}

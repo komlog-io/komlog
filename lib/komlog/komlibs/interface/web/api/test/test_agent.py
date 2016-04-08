@@ -114,7 +114,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         version='test library vX.XX'
         response=agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, gesterrors.E_GAA_CRA_UNF)
+        self.assertEqual(response.error, gesterrors.E_GAA_CRA_UNF.value)
 
     def test_new_agent_request_failure_agent_already_exists(self):
         ''' new_agent_request should succeed if arguments are valid and return the agent id '''
@@ -195,7 +195,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         aid=uuid.uuid4().hex
         response=agentapi.get_agent_config_request(passport=psp, aid=aid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AGAC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AGAC_RE.value)
 
     def test_get_agent_config_request_failure_non_existent_agent(self):
         ''' get_agent_config_request should fail if agent does not exist '''
@@ -203,7 +203,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         aid=uuid.uuid4().hex
         response=agentapi.get_agent_config_request(passport=psp, aid=aid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AGAC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AGAC_RE.value)
 
     def test_get_agent_config_request_failure_no_permission_over_this_agent(self):
         ''' get_agent_config_request should fail if user does not have permission over the agent '''
@@ -238,7 +238,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         psp2 = passport.get_user_passport(cookie)
         response3 = agentapi.get_agent_config_request(passport=psp2, aid=response.data['aid'])
         self.assertTrue(response3.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response3.error, autherrors.E_ARA_AGAC_RE)
+        self.assertEqual(response3.error, autherrors.E_ARA_AGAC_RE.value)
 
     def test_get_agents_config_request_success(self):
         ''' get_agents_config_request should succeed if username exists and return the agents config '''
@@ -314,7 +314,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         psp=passport.Passport(uid=uuid.uuid4())
         response=agentapi.get_agents_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, gesterrors.E_GAA_GASC_UNF)
+        self.assertEqual(response.error, gesterrors.E_GAA_GASC_UNF.value)
 
     def test_get_agents_config_request_success_no_agents(self):
         ''' get_agents_config_request should succeed but should return an empty array '''

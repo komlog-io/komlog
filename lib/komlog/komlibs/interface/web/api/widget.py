@@ -139,10 +139,9 @@ def new_widget_request(passport, data):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'wid':widget['wid'].hex})
         else:
             deleteapi.delete_widget(wid=widget['wid'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAW_NWR_AUTHERR)
-
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAW_NWR_AUTHERR.value)
     else:
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAW_NWR_WCE)
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAW_NWR_WCE.value)
 
 @exceptions.ExceptionHandler
 def add_datapoint_request(passport, wid, pid):

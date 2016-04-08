@@ -13,6 +13,7 @@ from komlog.komlibs.interface.web.api import datasource as datasourceapi
 from komlog.komlibs.interface.web.api import uri as uriapi 
 from komlog.komlibs.interface.web.model import webmodel
 from komlog.komlibs.interface.web import status, exceptions
+from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc.api import rescontrol
 from komlog.komimc import bus, routing
@@ -101,7 +102,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         psp = passport.Passport(uid=uuid.uuid4())
         response=uriapi.get_uri_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(response.error, None)
+        self.assertEqual(response.error, Errors.OK.value)
         self.assertEqual(response.data, {})
 
     def test_get_uri_request_failure_uri_not_found(self):

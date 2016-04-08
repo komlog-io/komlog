@@ -144,7 +144,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         did=uuid.uuid4().hex
         response=datasourceapi.get_datasource_config_request(passport=psp, did=did)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AGDSC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AGDSC_RE.value)
 
     def test_get_datasource_config_request_failure_non_existent_datasource(self):
         ''' get_datasource_config_request should fail if datasource does not exist '''
@@ -152,7 +152,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         did=uuid.uuid4().hex
         response=datasourceapi.get_datasource_config_request(passport=psp, did=did)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AGDSC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AGDSC_RE.value)
 
     def test_get_datasource_config_request_failure_no_permission_over_this_datasource(self):
         ''' get_datasource_config_request should fail if user does not have permission over datasource '''
@@ -167,7 +167,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         did = self.agents[0]['dids'][0]
         response= datasourceapi.get_datasource_config_request(passport=psp, did=did)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AGDSC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AGDSC_RE.value)
 
     def test_get_datasources_config_request_success(self):
         ''' get_datasources_config_request should succeed if username exists and return the datasources config '''
@@ -338,7 +338,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         destination='/tmp'
         response=datasourceapi.upload_datasource_data_request(passport=psp, did=did, content=content, destination=destination)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ATDSD_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_ATDSD_RE.value)
 
     def test_upload_datasource_data_request_failure_non_existent_agent(self):
         ''' upload_datasource_data should fail if agent does not exists '''
@@ -348,7 +348,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         destination='/tmp'
         response=datasourceapi.upload_datasource_data_request(passport=psp, did=did, content=content, destination=destination)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ATDSD_ANF)
+        self.assertEqual(response.error, autherrors.E_ARA_ATDSD_ANF.value)
 
     def test_upload_datasource_data_request_failure_non_existent_datasource(self):
         ''' upload_datasource_data should fail if datasource does not exists '''
@@ -361,7 +361,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         destination='/tmp'
         response=datasourceapi.upload_datasource_data_request(passport=psp, did=did, content=content, destination=destination)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ATDSD_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_ATDSD_RE.value)
 
     def test_upload_datasource_data_request_failure_user_no_permission_over_datasource(self):
         ''' upload_datasource_data should store content on a file and return a received status code '''
@@ -383,7 +383,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         destination='/tmp/'
         response=datasourceapi.upload_datasource_data_request(passport=agent_passport, did=did, content=content, destination=destination)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ATDSD_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_ATDSD_RE.value)
 
     def test_upload_datasource_data_request_success_different_agent_but_from_the_same_user(self):
         ''' upload_datasource_data should store content if the agent uploading data belongs to the datasource user '''
@@ -463,7 +463,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         data={'datasourcename':new_datasourcename}
         response=datasourceapi.update_datasource_config_request(passport=psp, did=did, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_APDSC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_APDSC_RE.value)
 
     def test_update_datasource_config_request_failure_non_existent_did(self):
         ''' update_datasource_config should succeed if user and did exists, user have permission and datasourcename parameter is passed '''
@@ -473,7 +473,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         data={'datasourcename':new_datasourcename}
         response=datasourceapi.update_datasource_config_request(passport=psp, did=did, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_APDSC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_APDSC_RE.value)
 
     def test_update_datasource_config_request_failure_no_permission_over_datasource(self):
         ''' update_datasource_config should succeed if user and did exists, user have permission and datasourcename parameter is passed '''
@@ -560,7 +560,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         datasourcename='test_new_datasource_request_failure'
         response=datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_AQA_ANDS_IA)
+        self.assertEqual(response.error, autherrors.E_AQA_ANDS_IA.value)
 
     def test_new_datasource_request_failure_invalid_datasourcename(self):
         ''' new_datasource_request should fail if datasourcename is invalid '''
@@ -584,7 +584,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         datasourcename='test_new_datasource_request_failure_no_permission_over_agent'
         response=datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ANDS_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_ANDS_RE.value)
 
     def test_get_datasource_data_request_failure_invalid_passport(self):
         ''' get_datasource_data_request should fail if username is invalid '''
@@ -610,7 +610,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         for tid in tids:
             response=datasourceapi.get_datasource_data_request(passport=psp, did=did, tid=tid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWADS_GDSDR_IT)
+            self.assertEqual(response.error, Errors.E_IWADS_GDSDR_IT.value)
 
     def test_get_datasource_data_request_failure_non_existent_datasource(self):
         ''' get_datasource_data_request should fail if datasource does not exist '''
@@ -625,7 +625,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         did=self.agents[0]['dids'][0]
         response=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_AGDSD_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_AGDSD_RE.value)
 
     def test_get_datasource_data_request_data_not_found(self):
         ''' get_datasource_data should return a 404 error indicating no data was found '''

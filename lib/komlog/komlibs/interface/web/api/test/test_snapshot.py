@@ -103,7 +103,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         psp = passport.Passport(uid=uuid.uuid4())
         response=snapshotapi.get_snapshots_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, gesterrors.E_GSA_GSSC_UNF)
+        self.assertEqual(response.error, gesterrors.E_GSA_GSSC_UNF.value)
 
     def test_get_snapshots_config_request_success_no_matter_how_much_snapshots(self):
         ''' get_snapshots_config_request should succeed and return a list '''
@@ -119,7 +119,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         for psp in passports:
             response=snapshotapi.get_snapshot_config_request(passport=psp,nid=nid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWASN_GSNCR_IPSP)
+            self.assertEqual(response.error, Errors.E_IWASN_GSNCR_IPSP.value)
 
     def test_get_snapshot_config_request_failure_invalid_nid(self):
         ''' get_snapshot_config_request should fail if nid is invalid '''
@@ -128,7 +128,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         for nid in nids:
             response=snapshotapi.get_snapshot_config_request(passport=psp,nid=nid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWASN_GSNCR_IN)
+            self.assertEqual(response.error, Errors.E_IWASN_GSNCR_IN.value)
 
     def test_get_snapshot_config_request_failure_invalid_ticket(self):
         ''' get_snapshot_config_request should fail if username is invalid '''
@@ -138,7 +138,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         for ticket in tickets:
             response=snapshotapi.get_snapshot_config_request(passport=psp,nid=nid, tid=ticket)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWASN_GSNCR_IT)
+            self.assertEqual(response.error, Errors.E_IWASN_GSNCR_IT.value)
 
     def test_get_snapshot_config_request_failure_non_existent_nid(self):
         ''' get_snapshot_config_request should fail if nid does not exist '''
@@ -924,7 +924,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         nid=uuid.uuid4().hex
         response=snapshotapi.delete_snapshot_request(passport=psp, nid=nid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ADS_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_ADS_RE.value)
 
     def test_delete_snapshot_request_failure_non_existent_nid(self):
         ''' delete_snapshot_request should fail if username does not exist '''
@@ -932,7 +932,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         nid=uuid.uuid4().hex
         response=snapshotapi.delete_snapshot_request(passport=psp, nid=nid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ADS_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_ADS_RE.value)
 
     def test_delete_snapshot_request_success_snapshot_linegraph(self):
         ''' delete_snapshot_request should succeed and delete the snapshot '''

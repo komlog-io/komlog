@@ -26,7 +26,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA)
+        self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA.value)
 
     def test_process_message_failure_message_without_action_field(self):
         ''' process_message should fail if message has no action field '''
@@ -37,7 +37,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA)
+        self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA.value)
 
     def test_process_message_failure_invalid_version(self):
         ''' process_message should fail if version is invalid '''
@@ -51,7 +51,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
             resp=api.process_message(passport=psp, message=msg)
             self.assertTrue(isinstance(resp, modresp.Response))
             self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-            self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA)
+            self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA.value)
 
     def test_process_message_failure_invalid_action(self):
         ''' process_message should fail if action is invalid '''
@@ -65,7 +65,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
             resp=api.process_message(passport=psp, message=msg)
             self.assertTrue(isinstance(resp, modresp.Response))
             self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-            self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA)
+            self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA.value)
 
     def test_process_message_failure_invalid_passport(self):
         ''' process_message should fail if passport is invalid '''
@@ -75,7 +75,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
             resp=api.process_message(passport=psp, message=msg)
             self.assertTrue(isinstance(resp, modresp.Response))
             self.assertEqual(resp.status, status.INTERNAL_ERROR)
-            self.assertEqual(resp.error, Errors.E_IWSA_PM_IPSP)
+            self.assertEqual(resp.error, Errors.E_IWSA_PM_IPSP.value)
 
     def test_process_message_failure_invalid_message_payload(self):
         ''' process_message should fail if message payload is invalid '''
@@ -86,7 +86,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDDM_IPL)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDDM_IPL.value)
 
     def test_process_message_failure_unsupported_protocol_version(self):
         ''' process_message should fail if protocol version is not known '''
@@ -97,5 +97,5 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSA_PM_UPV)
+        self.assertEqual(resp.error, Errors.E_IWSA_PM_UPV.value)
 

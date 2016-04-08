@@ -23,7 +23,7 @@
             <h2>Error...</h2>
             {% if response.status == status.WEB_STATUS_NOT_FOUND %}
             <h5>The invitation code requested does not exist. Please, request one <a href="/invite" >here</a>.</h5>
-            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == errors.E_IWAU_CIR_INVAU %}
+            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_CIR_INVAU.value %}
             <h5>The invitation code is already used. Please, request another one <a href="/invite" >here</a>.</h5>
             {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS %}
             <h5>The invitation code is not valid. Please, request a valid one <a href="/invite" >here</a>.</h5>

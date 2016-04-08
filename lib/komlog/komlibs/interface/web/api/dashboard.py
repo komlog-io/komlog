@@ -74,7 +74,7 @@ def new_dashboard_request(passport, data):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'bid':dashboard['bid'].hex})
         else:
             deleteapi.delete_dashboard(bid=dashboard['bid'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADB_NDBR_AUTHERR)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADB_NDBR_AUTHERR.value)
 
 @exceptions.ExceptionHandler
 def delete_dashboard_request(passport, bid):

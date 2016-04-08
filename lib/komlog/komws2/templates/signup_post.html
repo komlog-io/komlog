@@ -14,21 +14,21 @@
         {% else %}
         <div class="well">
             <h2>Error...</h2>
-            {% if response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == errors.E_IWAU_NUSR_IU %}
+            {% if response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_IU.value %}
             <h5>The username you used is not valid. Please, remember it can contain only letters, numbers and the '_' character.</h5>
-            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == errors.E_IWAU_NUSR_IP %}
+            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_IP.value %}
             <h5>The password you used is not valid.</h5>
-            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == errors.E_IWAU_NUSR_IE %}
+            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_IE.value %}
             <h5>The email you used is not valid. Please, introduce a valid one.</h5>
-            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == errors.E_IWAU_NUSR_IINV %}
+            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_IINV.value %}
             <h5>The invitation you used is not valid. Please, introduce a valid one or request a new one <a href="/invite">here</a>.</h5>
-            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == errors.E_IWAU_NUSR_INVNF %}
+            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_INVNF.value %}
             <h5>The invitation you used does not exist. Please, request a new one <a href="/invite">here</a>.</h5>
-            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == errors.E_IWAU_NUSR_INVAU %}
+            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_INVAU.value %}
             <h5>The invitation has already been used. Please, request a new one <a href="/invite">here</a>.</h5>
-            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == errors.E_IWAU_NUSR_UAEU %}
+            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_UAEU.value %}
             <h5>The username you chose already exists. Please, pick a different one.</h5>
-            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == errors.E_IWAU_NUSR_UAEE %}
+            {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_UAEE.value %}
             <h5>The email you chose already has an associated account. Please, use a different one.</h5>
             {% else %}
             <h5>Sorry, something went wrong (error code: {{ response.error }}). Please, try again later or request a new invitation <a href="/invite" >here</a>.</h5>

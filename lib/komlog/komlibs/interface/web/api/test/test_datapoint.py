@@ -222,7 +222,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         length=1
         response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ANDP_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_ANDP_RE.value)
 
     def test_new_datapoint_request_failure_no_permission_did_does_not_exist(self):
         ''' new_datapoint_request should fail if did does not exist '''
@@ -234,7 +234,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         length=1
         response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_AQA_ANDP_DSNF)
+        self.assertEqual(response.error, autherrors.E_AQA_ANDP_DSNF.value)
 
     def test_update_datapoint_config_request_failure_invalid_passport(self):
         ''' update_datapoint_config_request should fail if username is invalid '''
@@ -270,7 +270,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         data={'datapointname':'datapointname','color':'#FFAADD'}
         response=datapointapi.update_datapoint_config_request(passport=psp, pid=pid, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_APDPC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_APDPC_RE.value)
 
     def test_update_datapoint_config_request_failure_non_existent_username(self):
         ''' update_datapoint_config_request should fail if user does not exist '''
@@ -305,7 +305,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         data={'datapointname':'datapointname','color':'#FFAADD'}
         response=datapointapi.update_datapoint_config_request(passport=psp, pid=pid, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_APDPC_RE)
+        self.assertEqual(response.error, autherrors.E_ARA_APDPC_RE.value)
 
     def test_update_datapoint_config_request_success_new_datapointname(self):
         ''' update_datapoint_config_request should succeed, updating datapointname only '''

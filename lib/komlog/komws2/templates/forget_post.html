@@ -9,9 +9,9 @@
                 <div class="alert alert-danger" role="alert">
                     <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                     <span class="sr-only">Error:</span>
-                    {% if response.error == errors.E_IWAU_RFR_IACCOUNT %}
+                    {% if response.error == Errors.E_IWAU_RFR_IACCOUNT.value %}
                         Invalid account, please enter a valid one.
-                    {% elif response.error == errors.E_IWAU_RFR_UNF %}
+                    {% elif response.error == Errors.E_IWAU_RFR_UNF.value %}
                         We didn't find the account <strong>{{ response.data['account'] }}</strong> in the system. Please, enter a valid one.
                     {% else %}
                         Ups, we have some problems processing your request. Please, try again later.
@@ -40,7 +40,7 @@
                     Congratulations! Your password has been updated successfully.
                 </div>
                 <p><a class="btn btn-success" role="button" href="/login">Continue to Komlog</a></p>
-            {% elif response.error == errors.E_IWAU_RPR_IPWD %}
+            {% elif response.error == Errors.E_IWAU_RPR_IPWD.value %}
                 <div class="alert alert-danger" role="alert">
                     <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                     <span class="sr-only">Error: </span>
@@ -54,7 +54,7 @@
                   <input type="password" id="retype-password" name="retype-password" class="form-control" placeholder="retype password" required>
                   <button class="btn btn-success " type="submit">Set new password</button>
                 </form>
-            {% elif response.error == errors.E_IWAU_RPR_CODEAU %}
+            {% elif response.error == Errors.E_IWAU_RPR_CODEAU.value %}
                 <div class="alert alert-danger" role="alert">
                     <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
                     <span class="sr-only">Error: </span>

@@ -27,7 +27,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAL_LR_IPRM)
+        self.assertEqual(response.error, Errors.E_IWAL_LR_IPRM.value)
 
     def test_user_login_request_failure_invalid_username(self):
         ''' user_login_request should fail if username is invalid '''
@@ -38,7 +38,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAL_ULR_IU)
+            self.assertEqual(response.error, Errors.E_IWAL_ULR_IU.value)
 
     def test_user_login_request_failure_invalid_password(self):
         ''' user_login_request should fail if password is invalid '''
@@ -49,7 +49,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAL_ULR_IPWD)
+            self.assertEqual(response.error, Errors.E_IWAL_ULR_IPWD.value)
 
     def test_user_login_request_failure_non_existent_username(self):
         ''' user_login_request should fail if username does not exist '''
@@ -59,7 +59,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, gesterrors.E_GUA_AUU_UNF)
+        self.assertEqual(response.error, gesterrors.E_GUA_AUU_UNF.value)
 
     def test_user_login_request_failure_wrong_password(self):
         ''' user_login_request should fail if password is wrong '''
@@ -72,7 +72,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, Errors.E_IWAL_ULR_AUTHERR)
+        self.assertEqual(response.error, Errors.E_IWAL_ULR_AUTHERR.value)
 
     def test_user_login_request_success(self):
         ''' user_login_request should succeed '''
@@ -87,7 +87,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, {'redirect':'/home'})
-        self.assertEqual(response.error, None)
+        self.assertEqual(response.error, Errors.OK.value)
 
     def test_agent_login_generate_challenge_request_failure_invalid_username(self):
         ''' agent_login_generate_challenge_request should fail if username is invalid '''
@@ -98,7 +98,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAL_ALGCR_IU)
+            self.assertEqual(response.error, Errors.E_IWAL_ALGCR_IU.value)
 
     def test_agent_login_generate_challenge_request_failure_invalid_pubkey(self):
         ''' agent_login_generate_challenge_request should fail if pubkey is invalid '''
@@ -109,7 +109,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAL_ALGCR_IPK)
+            self.assertEqual(response.error, Errors.E_IWAL_ALGCR_IPK.value)
 
     def test_agent_login_generate_challenge_request_failure_non_existent_username(self):
         ''' agent_login_generate_challenge_request should fail if username does not exist '''
@@ -119,7 +119,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, gesterrors.E_GAA_GAC_UNF)
+        self.assertEqual(response.error, gesterrors.E_GAA_GAC_UNF.value)
 
     def test_agent_login_generate_challenge_request_failure_non_existent_agent(self):
         ''' agent_login_generate_challenge_request should fail if agent does not exist '''
@@ -132,7 +132,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, gesterrors.E_GAA_GAC_ANF)
+        self.assertEqual(response.error, gesterrors.E_GAA_GAC_ANF.value)
 
     def test_agent_login_generate_challenge_request_success(self):
         ''' agent_login_generate_challenge_request should succeed '''
@@ -150,7 +150,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('challenge' in response.data)
         self.assertTrue(isinstance(response.data['challenge'],str))
-        self.assertEqual(response.error, None)
+        self.assertEqual(response.error, Errors.OK.value)
 
     def test_agent_login_validate_challenge_request_failure_invalid_username(self):
         ''' agent_login_validate_challenge_request should fail if username is invalid '''
@@ -163,7 +163,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_IU)
+            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_IU.value)
 
     def test_agent_login_validate_challenge_request_failure_invalid_pubkey(self):
         ''' agent_login_validate_challenge_request should fail if username is invalid '''
@@ -176,7 +176,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_IPK)
+            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_IPK.value)
 
     def test_agent_login_validate_challenge_request_failure_invalid_challenge(self):
         ''' agent_login_validate_challenge_request should fail if challenge is invalid '''
@@ -189,7 +189,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_ICH)
+            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_ICH.value)
 
     def test_agent_login_validate_challenge_request_failure_invalid_signature(self):
         ''' agent_login_validate_challenge_request should fail if signature is invalid '''
@@ -202,7 +202,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
             self.assertEqual(cookie, None)
             self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_ISG)
+            self.assertEqual(response.error, Errors.E_IWAL_ALVCR_ISG.value)
 
     def test_agent_login_validate_challenge_request_failure_non_existent_username(self):
         ''' agent_login_validate_challenge_request should fail if username does not exist '''
@@ -214,7 +214,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, gesterrors.E_GAA_VAC_UNF)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_UNF.value)
 
     def test_agent_login_validate_challenge_request_failure_non_existent_agent(self):
         ''' agent_login_validate_challenge_request should fail if agent does not exist '''
@@ -229,7 +229,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, gesterrors.E_GAA_VAC_ANF)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_ANF.value)
 
     def test_agent_login_validate_challenge_request_failure_non_existent_challenge(self):
         ''' agent_login_validate_challenge_request should fail if challenge does not exist '''
@@ -248,7 +248,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHNF)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHNF.value)
 
     def test_agent_login_validate_challenge_request_failure_wrong_signature(self):
         ''' agent_login_validate_challenge_request should fail if signature is wrong '''
@@ -273,7 +273,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, gesterrors.E_GAA_VAC_EVS)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_EVS.value)
 
     def test_agent_login_validate_challenge_request_success(self):
         ''' agent_login_validate_challenge_request should succeed '''
@@ -300,7 +300,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertTrue(args.is_valid_sequence(cookie['seq']))
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(response.error, None)
+        self.assertEqual(response.error, Errors.OK.value)
 
     def test_agent_login_validate_challenge_request_failure_already_validated_challenge(self):
         ''' agent_login_validate_challenge_request should fail if challenge has been validated before'''
@@ -327,12 +327,12 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertTrue(args.is_valid_sequence(cookie['seq']))
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(response.error, None)
+        self.assertEqual(response.error, Errors.OK.value)
         response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHAU)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHAU.value)
 
     def test_agent_login_validate_challenge_request_failure_challenge_expired(self):
         ''' agent_login_validate_challenge_request should fail if challenge has expired '''
@@ -361,5 +361,5 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(cookie, None)
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHEX)
+        self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHEX.value)
 

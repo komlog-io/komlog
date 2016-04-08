@@ -137,7 +137,7 @@ def mark_positive_variable_request(passport, pid, sequence, position, length):
             msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     else:
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, errors=Errors.UNKNOWN.value)
 
 @exceptions.ExceptionHandler
 def mark_negative_variable_request(passport, pid, sequence, position, length):
@@ -161,7 +161,7 @@ def mark_negative_variable_request(passport, pid, sequence, position, length):
             msgapi.send_message(message)
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     else:
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
+        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, errors=Errors.UNKNOWN.value)
 
 @exceptions.ExceptionHandler
 def delete_datapoint_request(passport, pid):

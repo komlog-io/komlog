@@ -43,7 +43,7 @@ def new_agent_request(passport, agentname, pubkey, version):
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'aid':agent['aid'].hex})
         else:
             deleteapi.delete_agent(aid=agent['aid'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAA_NAGR_AUTHERR)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAA_NAGR_AUTHERR.value)
 
 
 @exceptions.ExceptionHandler

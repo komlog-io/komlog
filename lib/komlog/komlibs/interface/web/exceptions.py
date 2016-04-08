@@ -3,6 +3,7 @@ from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.events import exceptions as eventexcept
 from komlog.komlibs.interface.web import status
+from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.interface.web.model import webmodel
 
 class BadParametersException(Exception):
@@ -70,25 +71,25 @@ class ExceptionHandler(object):
     def __call__(self, *args, **kwargs):
         try:
             response=self.f(*args, **kwargs)
-            return response if response else webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR)
+            return response if response else webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN.value)
         except BAD_PARAMETERS_STATUS_EXCEPTION_LIST as e:
-            data={'error':e.error}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, data=data, error=e.error)
+            data={'error':e.error.value}
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, data=data, error=e.error.value)
         except ACCESS_DENIED_STATUS_EXCEPTION_LIST as e:
-            data={'error':e.error}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, data=data, error=e.error)
+            data={'error':e.error.value}
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, data=data, error=e.error.value)
         except NOT_FOUND_STATUS_EXCEPTION_LIST as e:
-            data={'error':e.error}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND, data=data, error=e.error)
+            data={'error':e.error.value}
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND, data=data, error=e.error.value)
         except NOT_ALLOWED_STATUS_EXCEPTION_LIST as e:
-            data={'error':e.error}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED, data=data, error=e.error)
+            data={'error':e.error.value}
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED, data=data, error=e.error.value)
         except INTERNAL_ERROR_STATUS_EXCEPTION_LIST as e:
-            data={'error':e.error}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=e.error)
+            data={'error':e.error.value}
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=e.error.value)
         except Exception as e:
             logging.logger.debug('WEB Response non treated Exception: '+str(type(e))+str(e))
-            error=getattr(e,'error',-1)
+            error=getattr(e,'error',Errors.UNKNOWN.value)
             data={'error':error}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=-1)
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=error)
 
