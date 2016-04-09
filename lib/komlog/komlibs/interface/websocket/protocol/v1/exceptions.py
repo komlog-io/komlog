@@ -1,3 +1,4 @@
+import time
 from komlog.komfig import logging
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
@@ -56,19 +57,32 @@ class ExceptionHandler:
         self.f=f
 
     def __call__(self, *args, **kwargs):
+        init=time.time()
         try:
             resp=self.f(*args, **kwargs)
-            return resp if resp else modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, error=Errors.UNKNOWN.value)
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__name__,Errors.OK.name,str(init),str(end))))
+            return resp
         except PROTOCOL_ERROR_STATUS_EXCEPTION_LIST as e:
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return modresp.Response(status=status.PROTOCOL_ERROR, reason='protocol error', error=e.error.value)
         except MESSAGE_EXECUTION_DENIED_STATUS_EXCEPTION_LIST as e:
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return modresp.Response(status=status.MESSAGE_EXECUTION_DENIED,reason='msg exec denied',  error=e.error.value)
         except RESOURCE_NOT_FOUND_STATUS_EXCEPTION_LIST as e:
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return modresp.Response(status=status.RESOURCE_NOT_FOUND, reason='resource not found', error=e.error.value)
         except MESSAGE_EXECUTION_ERROR_STATUS_EXCEPTION_LIST as e:
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, reason='msg exec error', error=e.error.value)
         except Exception as e:
             logging.logger.debug('WEBSOCKET Response non treated Exception: '+str(e))
-            error=getattr(e,'error',Errors.UNKNOWN.value)
-            return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, error=error)
+            error=getattr(e,'error',Errors.UNKNOWN)
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, error=error.value)
 

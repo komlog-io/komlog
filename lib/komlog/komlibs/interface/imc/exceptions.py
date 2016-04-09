@@ -1,8 +1,10 @@
+import time
 from komlog.komfig import logging
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.events import exceptions as eventexcept
 from komlog.komlibs.interface.imc import status
+from komlog.komlibs.interface.imc.errors import Errors
 from komlog.komlibs.interface.imc.model import responses
 
 class BadParametersException(Exception):
@@ -63,18 +65,31 @@ class ExceptionHandler(object):
         self.f=f
 
     def __call__(self, **kwargs):
+        init=time.time()
         try:
             response=self.f(**kwargs)
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__name__,Errors.OK.name,str(init),str(end))))
             return response
         except BAD_PARAMETERS_STATUS_EXCEPTION_LIST as e:
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_BAD_PARAMETERS,error=e.error)
         except ACCESS_DENIED_STATUS_EXCEPTION_LIST as e:
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_ACCESS_DENIED,error=e.error)
         except NOT_FOUND_STATUS_EXCEPTION_LIST as e:
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
         except INTERNAL_ERROR_STATUS_EXCEPTION_LIST as e:
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR,error=e.error)
         except Exception as e:
             logging.logger.debug('IMC Response Exception: '+str(e))
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,Errors.UNKNOWN.name,str(init),str(end))))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR)
 

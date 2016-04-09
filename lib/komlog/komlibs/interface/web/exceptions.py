@@ -1,3 +1,4 @@
+import time
 from komlog.komfig import logging
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
@@ -69,27 +70,47 @@ class ExceptionHandler(object):
         self.f=f
 
     def __call__(self, *args, **kwargs):
+        init=time.time()
         try:
             response=self.f(*args, **kwargs)
-            return response if response else webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN.value)
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__name__,Errors.OK.name,str(init),str(end))))
+            return response
         except BAD_PARAMETERS_STATUS_EXCEPTION_LIST as e:
-            data={'error':e.error.value}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, data=data, error=e.error.value)
+            error=e.error
+            data={'error':error.value}
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, data=data, error=error.value)
         except ACCESS_DENIED_STATUS_EXCEPTION_LIST as e:
-            data={'error':e.error.value}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, data=data, error=e.error.value)
+            error=e.error
+            data={'error':error.value}
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, data=data, error=error.value)
         except NOT_FOUND_STATUS_EXCEPTION_LIST as e:
-            data={'error':e.error.value}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND, data=data, error=e.error.value)
+            error=e.error
+            data={'error':error.value}
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND, data=data, error=error.value)
         except NOT_ALLOWED_STATUS_EXCEPTION_LIST as e:
-            data={'error':e.error.value}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED, data=data, error=e.error.value)
+            error=e.error
+            data={'error':error.value}
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED, data=data, error=error.value)
         except INTERNAL_ERROR_STATUS_EXCEPTION_LIST as e:
-            data={'error':e.error.value}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=e.error.value)
+            error=e.error
+            data={'error':error.value}
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=error.value)
         except Exception as e:
             logging.logger.debug('WEB Response non treated Exception: '+str(type(e))+str(e))
-            error=getattr(e,'error',Errors.UNKNOWN.value)
-            data={'error':error}
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=error)
+            error=getattr(e,'error',Errors.UNKNOWN)
+            data={'error':error.value}
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=error.value)
 
