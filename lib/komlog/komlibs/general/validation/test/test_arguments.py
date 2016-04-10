@@ -130,29 +130,76 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
 
     def test_is_valid_uri_invalid(self):
         ''' is_valid_code should fail if code is not valid '''
-        params=[None, 234234,'with spaces','withspecialcharacterslike\t','or\ncharacter',
-                ' spacesatbeggining',
-                'spacesatend ',
-                'Capitals',
-                'Two..consecutivepoints',
-                '.beginswithpoint',
-                'endswith.',
-                'containsspecialchar$',
-                'endswith\t',
-                '\nbeginwithnewline',
-                'endswith\n',
-                '',
-                ]
+        params=[None,
+            234234,
+            'with spaces',
+            'with_end_point.',
+            'withspecialcharacterslike\t',
+            'or\ncharacter',
+            ' spacesatbeggining',
+            'spacesatend ',
+            'two..consecutivepoints',
+            '.beginswithpoint',
+            'endswith.',
+            'containsspecialchar$',
+            'endswith\t',
+            '\nbeginwithnewline',
+            'endswith\n',
+            '',
+        ]
         for param in params:
             self.assertFalse(arguments.is_valid_uri(param)) 
 
     def test_is_valid_uri_valid(self):
         ''' is_valid_uri should succeed if uri is valid '''
-        params=['test_uri','uri.with.dots','uri_with_underscores','uri-with-dash',
-                   'uriwithnumbers007',
-                   'all.together.0.a-b_.99']
+        params=['test_uri',
+            'uri.with.dots',
+            'uri_with_underscores',
+            'uri-with-dash',
+            'uriwithnumbers007',
+            'Capitals',
+            'all.together.0.a-b_.99'
+        ]
         for param in params:
             self.assertTrue(arguments.is_valid_uri(param)) 
+
+    def test_is_valid_relative_uri_invalid(self):
+        ''' is_valid_relative_uri should fail if rel uri is not valid '''
+        params=[None,
+            234234,
+            '..with_beginning_points',
+            'with_end_point.',
+            'with_end_points..',
+            'with...three_points',
+            'with spaces',
+            'withspecialcharacterslike\t',
+            'or\ncharacter',
+            ' spacesatbeggining',
+            'spacesatend ',
+            '.beginswithpoint',
+            'endswith.',
+            'containsspecialchar$',
+            'endswith\t',
+            '\nbeginwithnewline',
+            'endswith\n',
+            '',
+        ]
+        for param in params:
+            self.assertFalse(arguments.is_valid_relative_uri(param)) 
+
+    def test_is_valid_relative_uri_valid(self):
+        ''' is_valid_relative_uri should succeed if relative uri is valid '''
+        params=['test_uri',
+            'uri.with.dots',
+            'uri.with..two.dots',
+            'uri_with_underscores',
+            'uri-with-dash',
+            'uriwithnumbers007',
+            'Capitals.and..two.dots',
+            'all.togetheR.0..a-b_.99'
+        ]
+        for param in params:
+            self.assertTrue(arguments.is_valid_relative_uri(param)) 
 
     def test_is_valid_pubkey_invalid(self):
         ''' is_valid_pubkey should fail if pubkey is not valid

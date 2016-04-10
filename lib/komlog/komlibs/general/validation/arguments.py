@@ -11,8 +11,8 @@ from komlog.komlibs.general.crypto import crypto
 
 KOMLOGID=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\n)$')
 KOMLOGDESC=re.compile('^[ a-zA-Z0-9\-\._@#!\(\):/$%&+=]+(?!\n)$')
-KOMLOGURI=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\n)$')
-KOMLOGRELURI=re.compile('^([a-z0-9\-_]+\.\.?)*[a-z0-9\-_]+(?!\n)$')
+KOMLOGURI=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\n)$')
+KOMLOGRELURI=re.compile('^([a-zA-Z0-9\-_]+\.\.?)*[a-zA-Z0-9\-_]+(?!\n)$')
 NOTVERSION=re.compile('[^ a-zA-Z0-9\-\+/:\._]')
 CODE=re.compile('^[a-zA-Z0-9]+$')
 WHITESPACES=re.compile(' ')
