@@ -62,7 +62,7 @@ def process_message_FILLDS(message):
     store_info=datapointapi.store_datasource_values(did=did, date=date)
     if store_info:
         response.status=status.IMC_STATUS_OK
-        if 'dp_not_found' in store_info and len(store_info['dp_not_found'])>0:
+        if isinstance(store_info,dict) and 'dp_not_found' in store_info and len(store_info['dp_not_found'])>0:
             response.add_msg_originated(messages.MissingDatapointMessage(did=did,date=date))
     else:
         response.status=status.IMC_STATUS_INTERNAL_ERROR
