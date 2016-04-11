@@ -9,6 +9,5 @@ SETTINGS = {
             'xsrf_cookies': False, #hay problemas con los procesos que se conecta por POST que no pertenecen al Frontal Web... hay que revisarlo
             'login_url': '/login',
             'ui_modules': web_modules.MODULES,
-            'debug': True
 }
 
