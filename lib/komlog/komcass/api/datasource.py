@@ -122,7 +122,7 @@ def insert_datasource_map(dsmapobj):
     if not isinstance(dsmapobj, ormdatasource.DatasourceMap):
         return False
     else:
-        connection.session.execute(stmtdatasource.I_A_DATDATASOURCEMAP_B_DID_DATE,(dsmapobj.did,dsmapobj.date,dsmapobj.content,dsmapobj.variables, dsmapobj.datapoints))
+        connection.session.execute(stmtdatasource.I_A_DATDATASOURCEMAP_B_DID_DATE,(dsmapobj.did,dsmapobj.date,dsmapobj.variables, dsmapobj.datapoints))
         return True
 
 def add_variable_to_datasource_map(did, date, position, length):
@@ -237,4 +237,33 @@ def delete_datasource_novelty_detector_for_datapoint(did, pid, date=None):
         connection.session.execute(stmtdatasource.D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID,(did,pid))
         return True
     return False
+
+def get_datasource_hash(did, date):
+    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_DATE,(did,date))
+    if not row:
+        return None
+    else:
+        return ormdatasource.DatasourceHash(**row[0])
+
+def get_datasource_hashes(did, fromdate, todate, count=None):
+    if not count:
+        row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
+    else:
+        row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE_COUNT,(did,fromdate,todate,count))
+    data=[]
+    if row:
+        for m in row:
+            data.append(ormdatasource.DatasourceHash(**m))
+    return data
+
+def insert_datasource_hash(obj):
+    if not isinstance(obj, ormdatasource.DatasourceHash):
+        return False
+    else:
+        connection.session.execute(stmtdatasource.I_A_DATDATASOURCEHASH,(obj.did,obj.date,obj.content))
+        return True
+
+def delete_datasource_hash(did, date):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCEHASH_B_DID_DATE,(did,date))
+    return True
 

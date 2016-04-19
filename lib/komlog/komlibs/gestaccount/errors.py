@@ -222,27 +222,27 @@ class Errors(Enum):
     E_GDA_DD_ID     = 4480
     E_GDA_DD_DNF    = 4481
 
-    E_GDA_GDTS_ID   = 4490
-    E_GDA_GDTS_IDT  = 4491
-    E_GDA_GDTS_DDNF = 4492
-
-    E_GDA_GDNDFD_IP     = 4500
-    E_GDA_GDNDFD_DNF    = 4501
-    E_GDA_GDNDFD_NDF    = 4502
-    E_GDA_GDNDFD_DSDNF  = 4503
-
-    E_GDA_SDAIS_IP      = 4510
-    E_GDA_SDAIS_IDT     = 4511
-    E_GDA_SDAIS_DNF     = 4512
-    E_GDA_SDAIS_DSNDNF  = 4513
-    E_GDA_SDAIS_DSTSNF  = 4514
-
-    E_GDA_CMDIS_ID      = 4510
-    E_GDA_CMDIS_IDT     = 4511
-    E_GDA_CMDIS_DSMNF   = 4512
-    E_GDA_CMDIS_DSTSNF  = 4513
-
 # gestaccount datapoint api
+
+    E_GPA_GDTS_ID   = 4490
+    E_GPA_GDTS_IDT  = 4491
+    E_GPA_GDTS_DDNF = 4492
+
+    E_GPA_GDNDFD_IP     = 4500
+    E_GPA_GDNDFD_DNF    = 4501
+    E_GPA_GDNDFD_NDF    = 4502
+    E_GPA_GDNDFD_DSDNF  = 4503
+
+    E_GPA_SDAIS_IP      = 4510
+    E_GPA_SDAIS_IDT     = 4511
+    E_GPA_SDAIS_DNF     = 4512
+    E_GPA_SDAIS_DSNDNF  = 4513
+    E_GPA_SDAIS_DSTSNF  = 4514
+
+    E_GPA_CMDIS_ID      = 4510
+    E_GPA_CMDIS_IDT     = 4511
+    E_GPA_CMDIS_DSMNF   = 4512
+    E_GPA_CMDIS_DSTSNF  = 4513
 
     E_GPA_GDD_IP    = 6600
     E_GPA_GDD_ITD   = 6601
@@ -324,6 +324,12 @@ class Errors(Enum):
     E_GPA_MMDP_IDT  = 6751
     E_GPA_MMDP_DNF  = 6752
     E_GPA_MMDP_DMNF = 6753
+
+    E_GPA_GDH_IDID  = 6760 #: generate_datasource_hash. invalid datasource id
+    E_GPA_GDH_IDT   = 6761 #: generate_datasource_hash. invalid date
+    E_GPA_GDH_DDNF  = 6762 #: generate_datasource_hash. datasource data not found
+    E_GPA_GDH_EIDB  = 6763 #: generate_datasource_hash. error inserting in database
+    E_GPA_GDH_NHO   = 6764 #: generate_datasource_hash. no hashed obtained
 
 # gestaccount widget api
 

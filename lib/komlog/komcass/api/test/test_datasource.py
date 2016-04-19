@@ -1,6 +1,7 @@
 import unittest
 import time
 import uuid
+import json
 from komlog.komlibs.general.time import timeuuid
 from komlog.komcass.api import datasource as datasourceapi
 from komlog.komcass.model.orm import datasource as ormdatasource
@@ -323,8 +324,7 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         ''' insert_datasource_map should succeed if a DatasourceMap object is passed'''
         did=uuid.uuid4()
         date=timeuuid.uuid1()
-        content='TEST_INSERT_DATASOURCE_MAP_SUCCESS'
-        datasourcemap=ormdatasource.DatasourceMap(did=did, date=date, content=content)
+        datasourcemap=ormdatasource.DatasourceMap(did=did, date=date, variables={})
         self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=datasourcemap))
 
     def test_insert_datasource_map_non_datasource_map_object(self):
@@ -366,13 +366,11 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         ''' get_datasource_map should return DatapointMap structure with the map '''
         did=uuid.uuid4()
         date=timeuuid.uuid1()
-        content='TEST_GET_DATASOURCE_MAP_SUCCESS'
-        dsmap=ormdatasource.DatasourceMap(did=did, date=date, content=content)
+        dsmap=ormdatasource.DatasourceMap(did=did, date=date, variables={1:1}, datapoints={uuid.uuid4():1})
         self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
         dsmap_db=datasourceapi.get_datasource_map(did=did, date=date)
         self.assertTrue(isinstance(dsmap_db,ormdatasource.DatasourceMap))
         self.assertEqual(dsmap.did, dsmap_db.did)
-        self.assertEqual(dsmap.content, dsmap_db.content)
         self.assertEqual(dsmap.variables, dsmap_db.variables)
         self.assertEqual(dsmap.datapoints, dsmap_db.datapoints)
 
@@ -389,12 +387,10 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         ''' get_datasource_maps should return a list with DatapointMap structures '''
         did=uuid.uuid4()
         fromdate=timeuuid.uuid1()
-        content='TEST_GET_DATASOURCE_MAPS_1_SUCCESS'
-        dsmap=ormdatasource.DatasourceMap(did=did, date=fromdate, content=content)
+        dsmap=ormdatasource.DatasourceMap(did=did, date=fromdate, variables={})
         self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
         todate=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(fromdate)+600)
-        content='TEST_GET_DATASOURCE_MAPS_2_SUCCESS'
-        dsmap=ormdatasource.DatasourceMap(did=did, date=todate, content=content)
+        dsmap=ormdatasource.DatasourceMap(did=did, date=todate, variables={})
         self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
         dsmaps_db=datasourceapi.get_datasource_maps(did=did, fromdate=fromdate, todate=todate)
         self.assertTrue(isinstance(dsmaps_db,list))
@@ -410,7 +406,7 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         init_subinterval=250
         end_subinterval=750
         for i in range(init_interval, end_interval):
-            data=ormdatasource.DatasourceMap(did=did, date=timeuuid.uuid1(seconds=i), content=str(i))
+            data=ormdatasource.DatasourceMap(did=did, date=timeuuid.uuid1(seconds=i), variables={1:1})
             self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=data))
         data=datasourceapi.get_datasource_maps(did=did, fromdate=timeuuid.uuid1(seconds=init_subinterval), todate=timeuuid.uuid1(seconds=end_subinterval))
         self.assertTrue(isinstance(data, list))
@@ -430,7 +426,7 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         for i in range(1,1000):
             date=timeuuid.uuid1(seconds=i)
             dates.append(date)
-            data=ormdatasource.DatasourceMap(did=did, date=date, content=str(i))
+            data=ormdatasource.DatasourceMap(did=did, date=date, variables={})
             self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=data))
         data=datasourceapi.get_datasource_map_dates(did=did, fromdate=dates[250], todate=dates[499])
         self.assertTrue(isinstance(data, list))
@@ -493,11 +489,14 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         ''' delete_datasource_map should return True if map exists '''
         did=uuid.uuid4()
         date=timeuuid.uuid1()
-        content='TEST_DELETE_DATASOURCE_MAP_SUCCESS'
-        datasourcemap=ormdatasource.DatasourceMap(did=did, date=date, content=content)
+        datasourcemap=ormdatasource.DatasourceMap(did=did, date=date, variables={})
         self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=datasourcemap))
         data=datasourceapi.get_datasource_map(did=did, date=date)
         self.assertTrue(isinstance(data, ormdatasource.DatasourceMap))
+        self.assertEqual(datasourcemap.did, data.did)
+        self.assertEqual(datasourcemap.date, data.date)
+        self.assertEqual(datasourcemap.variables, data.variables)
+        self.assertEqual(datasourcemap.datapoints, data.datapoints)
         self.assertTrue(datasourceapi.delete_datasource_map(did=did, date=date))
         self.assertIsNone(datasourceapi.get_datasource_map(did=did, date=date))
 
@@ -506,8 +505,7 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         did=uuid.uuid4()
         for i in range(0,100):
             date=timeuuid.uuid1()
-            content='TEST_DELETE_DATASOURCE_MAPS_SUCCESS_'+str(i)
-            datasourcemap=ormdatasource.DatasourceMap(did=did, date=date, content=content)
+            datasourcemap=ormdatasource.DatasourceMap(did=did, date=date, variables={})
             self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=datasourcemap))
             data=datasourceapi.get_datasource_map(did=did, date=date)
             self.assertTrue(isinstance(data, ormdatasource.DatasourceMap))
@@ -625,4 +623,78 @@ class KomcassApiDatasourceTest(unittest.TestCase):
             self.assertTrue(isinstance(data, ormdatasource.DatasourceTextSummary))
         self.assertTrue(datasourceapi.delete_datasource_text_summaries(did=did))
         self.assertEqual(datasourceapi.get_datasource_text_summaries(did=did, fromdate=timeuuid.uuid1(seconds=1), todate=timeuuid.uuid1()),[])
+
+    def test_get_datasource_hash_non_existent_datasource_hash(self):
+        ''' get_datasource_hash should return None if no datasource hash is found'''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertIsNone(datasourceapi.get_datasource_hash(did=did, date=date))
+
+    def test_get_datasource_hash_existent_datasource_hash(self):
+        ''' get_datasource_hash should return the DatasourceHash object '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        content=json.dumps({'key1':'value1','key2':{'key3':'value3','key4':4}})
+        obj=ormdatasource.DatasourceHash(did=did, date=date, content=content)
+        self.assertTrue(datasourceapi.insert_datasource_hash(obj=obj))
+        db_obj=datasourceapi.get_datasource_hash(did=did, date=date)
+        self.assertIsNotNone(db_obj)
+        self.assertEqual(db_obj.did, did)
+        self.assertEqual(db_obj.date, date)
+        self.assertEqual(db_obj.content, content)
+
+    def test_get_datasource_hashes_non_existent_hashes(self):
+        ''' get_datasource_hashes should return an empty list if no datasource hash is found '''
+        did=uuid.uuid4()
+        fromdate=timeuuid.uuid1(seconds=1)
+        todate=timeuuid.uuid1(seconds=1000)
+        self.assertEqual(datasourceapi.get_datasource_hashes(did=did, fromdate=fromdate, todate=todate), [])
+
+    def test_get_datasource_hashes_existent_hashes(self):
+        ''' get_datasource_hashes should return the hashes found in the interval '''
+        did=uuid.uuid4()
+        for i in range(1,1000):
+            content=json.dumps({'key1':i,'key2':{'key3':'value3','key4':4}})
+            date=timeuuid.uuid1(seconds=i)
+            obj=ormdatasource.DatasourceHash(did=did, date=date, content=content)
+            self.assertTrue(datasourceapi.insert_datasource_hash(obj=obj))
+        fromdate=timeuuid.uuid1(seconds=250.5)
+        todate=timeuuid.uuid1(seconds=500.5)
+        db_hashes=datasourceapi.get_datasource_hashes(did=did, fromdate=fromdate, todate=todate)
+        self.assertEqual(len(db_hashes),250)
+
+    def test_insert_datasource_hash_failure_invalid_object(self):
+        ''' insert_datasource_hash should fail if obj is not a DatasourceHash object'''
+        objs=[1,1.1,['a','list'],{'a':'dict'},('a','tuple'),{'set'},'text',uuid.uuid4(), timeuuid.uuid1()]
+        for obj in objs:
+            self.assertFalse(datasourceapi.insert_datasource_hash(obj))
+
+    def test_insert_datasource_hash_success(self):
+        ''' insert_datasource_hash should succeed '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        content=json.dumps({'key1':'value1','key2':{'key3':'value3','key4':4}})
+        obj=ormdatasource.DatasourceHash(did=did, date=date, content=content)
+        self.assertTrue(datasourceapi.insert_datasource_hash(obj=obj))
+        db_obj=datasourceapi.get_datasource_hash(did=did, date=date)
+        self.assertIsNotNone(db_obj)
+        self.assertEqual(db_obj.did, did)
+        self.assertEqual(db_obj.date, date)
+        self.assertEqual(db_obj.content, content)
+
+    def test_delete_datasource_hash_success(self):
+        ''' delete_datasource_hash should succeed '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        content=json.dumps({'key1':'value1','key2':{'key3':'value3','key4':4}})
+        obj=ormdatasource.DatasourceHash(did=did, date=date, content=content)
+        self.assertTrue(datasourceapi.insert_datasource_hash(obj=obj))
+        db_obj=datasourceapi.get_datasource_hash(did=did, date=date)
+        self.assertIsNotNone(db_obj)
+        self.assertEqual(db_obj.did, did)
+        self.assertEqual(db_obj.date, date)
+        self.assertEqual(db_obj.content, content)
+        self.assertTrue(datasourceapi.delete_datasource_hash(did=did, date=date))
+        self.assertIsNone(datasourceapi.get_datasource_hash(did=did, date=date))
+
 

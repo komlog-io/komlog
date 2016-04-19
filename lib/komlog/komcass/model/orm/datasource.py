@@ -29,12 +29,17 @@ class DatasourceData:
         return self.date.clock_seq
 
 class DatasourceMap:
-    def __init__(self, did, date, content=None, variables=None, datapoints=None):
+    def __init__(self, did, date, variables, datapoints=None):
+        self.did=did
+        self.date=date
+        self.variables=variables if variables else dict()
+        self.datapoints=datapoints if datapoints else dict()
+
+class DatasourceHash:
+    def __init__(self, did, date, content):
         self.did=did
         self.date=date
         self.content=content
-        self.variables=variables if variables else dict()
-        self.datapoints=datapoints if datapoints else dict()
 
 class DatasourceTextSummary:
     def __init__(self, did, date, content_length, num_lines, num_words, word_frecuency):

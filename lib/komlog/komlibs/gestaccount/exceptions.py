@@ -202,3 +202,7 @@ class ChallengeValidationException(GestaccountException):
     def __init__(self, error):
         super(ChallengeValidationException,self).__init__(error=error)
 
+class DatasourceHashGenerationException(GestaccountException):
+    def __init__(self, error):
+        super(DatasourceHashGenerationException,self).__init__(error=error)
+

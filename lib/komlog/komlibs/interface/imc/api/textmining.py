@@ -75,7 +75,7 @@ def process_message_GENTEXTSUMMARY(message):
     date=message.date
     if not args.is_valid_uuid(did) or not args.is_valid_date(date):
         raise exceptions.BadParametersException()
-    if datasourceapi.generate_datasource_text_summary(did=did, date=date):
+    if datapointapi.generate_datasource_text_summary(did=did, date=date):
         logging.logger.debug('GENTEXTSUMMARY Success'+str(message.__dict__))
         response.status=status.IMC_STATUS_OK
     else:

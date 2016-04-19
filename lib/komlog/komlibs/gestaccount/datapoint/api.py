@@ -10,20 +10,24 @@ author: jcazor
 
 import uuid
 import json
+import pickle
 from komlog.komcass.api import datasource as cassapidatasource
 from komlog.komcass.api import datapoint as cassapidatapoint
 from komlog.komcass.api import widget as cassapiwidget
 from komlog.komcass.api import dashboard as cassapidashboard
 from komlog.komcass.model.orm import datapoint as ormdatapoint
+from komlog.komcass.model.orm import datasource as ormdatasource
+from komlog.komlibs.ai.decisiontree import api as dtreeapi
+from komlog.komlibs.ai.svm import api as svmapi
 from komlog.komlibs.gestaccount import exceptions
 from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general import colors
 from komlog.komlibs.textman.api import variables as textmanvar
-from komlog.komlibs.ai.decisiontree import api as dtreeapi
-from komlog.komfig import logging
+from komlog.komlibs.textman.api import summary as textmansummary
 from komlog.komlibs.graph.api import uri as graphuri
+from komlog.komfig import logging
 
 def get_datapoint_data(pid, fromdate=None, todate=None, count=None):
     ''' como se ha pasado por las fases de autorización y autenticación, 
@@ -164,7 +168,7 @@ def mark_positive_variable(pid, date, position, length, replace=True):
     ''' Los pasos son los siguientes:
     - Comprobamos que la variable exista en el sample (ds en un dtdo momento)
     - Establecemos la variable como positiva
-    - Si algun otro datapoint valida la variable marcada, solicitamos la regeneracion del DTREE de dicho datapoint 
+    - Si algun otro datapoint valida la variable marcada, solicitamos la regeneracion del DTREE de dicho datapoint
     y mandamos un NEGVAR sobre esa variable y ese dtp
     '''
     if not args.is_valid_uuid(pid):
@@ -180,7 +184,6 @@ def mark_positive_variable(pid, date, position, length, replace=True):
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_MPV_DNF)
     dsmap = cassapidatasource.get_datasource_map(did=datapoint.did, date=date)
     if not dsmap:
-        logging.logger.debug('DSMAP NOT FOUND EXCEPTION: date: '+date.hex+' did: '+datapoint.did.hex)
         raise exceptions.DatasourceMapNotFoundException(error=Errors.E_GPA_MPV_DMNF)
     did=datapoint.did
     try:
@@ -192,7 +195,11 @@ def mark_positive_variable(pid, date, position, length, replace=True):
     ''' en este punto hemos comprobado que la muestra y variable existen y dtp pertenece a did indicado.
     Comprobamos que no haya otros datapoints que validen esa variable, en caso contrario
     solicitaremos que esa variable se marque como negativa en ellos '''
-    variable=textmanvar.get_variable_from_serialized_list(serialization=dsmap.content, position=position)
+    dshash=cassapidatasource.get_datasource_hash(did=datapoint.did,date=date)
+    if not dshash:
+        dshash=generate_datasource_hash(did=datapoint.did, date=date)
+    text_hash=json.loads(dshash.content)
+    variable_atts=textmanvar.get_variable_atts(text_hash=text_hash, text_pos=position)
     pids=cassapidatapoint.get_datapoints_pids(did=did)
     response={}
     datapoints_to_update=[]
@@ -204,7 +211,7 @@ def mark_positive_variable(pid, date, position, length, replace=True):
                 generate_decision_tree(pid=a_pid)
                 datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=a_pid)
             dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
-            if dtree.evaluate_row(variable.hash_sequence):
+            if dtree.evaluate_row(variable_atts):
                 if replace:
                     datapoints_to_update.append(a_pid)
                     mark_negative_variable(pid=a_pid, date=date, position=position, length=length)
@@ -286,24 +293,27 @@ def generate_decision_tree(pid):
             negative_samples[dtp_negative.date]=dtp_negative.coordinates
             dates_to_get.append(dtp_negative.date)
     dates_to_get=sorted(set(dates_to_get))
-    dsmaps=[]
+    dshashes=[]
     for date in dates_to_get:
-        dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
-        variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
+        dshash=cassapidatasource.get_datasource_hash(did=did, date=date)
+        if not dshash:
+            dshash=generate_datasource_hash(did=did, date=date)
+        text_hash=json.loads(dshash.content)
+        variable_list=textmanvar.get_variables_atts(text_hash=text_hash)
         if date in positive_samples:
             position,length=positive_samples[date]
             for var in variable_list:
-                if var.position==position:
-                    var.hash_sequence['result']=True
+                if var['text_pos']==position:
+                    var['atts']['result']=True
                 else:
-                    var.hash_sequence['result']=False
-                dtree_training_set.append(var.hash_sequence)
+                    var['atts']['result']=False
+                dtree_training_set.append(var['atts'])
         if date in negative_samples and date not in positive_samples:
             negative_coordinates=negative_samples[date]
             for var in variable_list:
-                if var.position in iter(negative_coordinates.keys()):
-                    var.hash_sequence['result']=False
-                    dtree_training_set.append(var.hash_sequence)
+                if var['text_pos'] in iter(negative_coordinates.keys()):
+                    var['atts']['result']=False
+                    dtree_training_set.append(var['atts'])
     if len(dtree_training_set)>0:
         dtree=dtreeapi.generate_decision_tree(training_set=dtree_training_set)
         if cassapidatapoint.set_datapoint_dtree(pid=pid, dtree=dtree.serialize()):
@@ -343,24 +353,26 @@ def generate_inverse_decision_tree(pid):
             negative_samples[dtp_negative.date]=dtp_negative.coordinates
             dates_to_get.append(dtp_negative.date)
     dates_to_get=sorted(set(dates_to_get))
-    dsmaps=[]
     for date in dates_to_get:
-        dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
-        variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
+        dshash=cassapidatasource.get_datasource_hash(did=did, date=date)
+        if not dshash:
+            dshash=cassapidatasource.generate_datasource_hash(did=did, date=date)
+        text_hash=json.loads(dshash.content)
+        variable_list=textmanvar.get_variables_atts(text_hash=text_hash)
         if date in positive_samples:
             position,length=positive_samples[date]
             for var in variable_list:
-                if var.position==position:
-                    var.hash_sequence['result']=False
+                if var['text_pos']==position:
+                    var['atts']['result']=False
                 else:
-                    var.hash_sequence['result']=True
-                dtree_training_set.append(var.hash_sequence)
+                    var['atts']['result']=True
+                dtree_training_set.append(var['atts'])
         if date in negative_samples and date not in positive_samples:
             negative_coordinates=negative_samples[date]
             for var in variable_list:
-                if var.position in iter(negative_coordinates.keys()):
-                    var.hash_sequence['result']=True
-                    dtree_training_set.append(var.hash_sequence)
+                if var['text_pos'] in iter(negative_coordinates.keys()):
+                    var['atts']['result']=True
+                    dtree_training_set.append(var['atts'])
     if len(dtree_training_set)>0:
         dtree=dtreeapi.generate_decision_tree(training_set=dtree_training_set)
         return cassapidatapoint.set_datapoint_dtree_inv(pid=pid, dtree=dtree.serialize())
@@ -432,19 +444,25 @@ def store_datapoint_values(pid, date, store_newer=True):
     for dsmap in dsmaps:
         cassapidatasource.delete_datapoint_from_datasource_map(did=did, date=dsmap.date, pid=datapoint.pid)
         cassapidatapoint.delete_datapoint_data_at(pid=datapoint.pid, date=dsmap.date)
-        variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
-        for var in variable_list:
-            if dtree.evaluate_row(var.hash_sequence):
-                value=textmanvar.get_numeric_value(var)
-                if cassapidatapoint.insert_datapoint_data(pid=datapoint.pid, date=dsmap.date, value=value):
-                    cassapidatasource.add_datapoint_to_datasource_map(did=did,date=dsmap.date,pid=datapoint.pid,position=var.position)
-                    if datapoint_stats.decimal_separator!=var.decimal_separator:
-                        cassapidatapoint.set_datapoint_decimal_separator(pid=datapoint.pid, decimal_separator=var.decimal_separator)
-                    if datapoint_stats.last_received==None or timeuuid.get_unix_timestamp(datapoint_stats.last_received) < timeuuid.get_unix_timestamp(dsmap.date):
-                        cassapidatapoint.set_datapoint_last_received(pid=datapoint.pid, last_received=dsmap.date)
-                    break
-                else:
-                    raise exceptions.DatapointStoreValueException(error=Errors.E_GPA_SDPV_IDDE)
+        dshash=cassapidatasource.get_datasource_hash(did=did, date=dsmap.date)
+        if not dshash:
+            dshash=generate_datasource_hash(did=did, date=dsmap.date)
+        text_hash=json.loads(dshash.content)
+        variable_list=textmanvar.get_variables_atts(text_hash=text_hash)
+        for element in text_hash['elements']:
+            if 'type' in element and element['type']=='var':
+                var_atts=textmanvar.get_variable_atts(text_hash=text_hash, text_pos=element['text_pos'])
+                if dtree.evaluate_row(var_atts):
+                    value=textmanvar.get_numeric_value(element)
+                    if cassapidatapoint.insert_datapoint_data(pid=datapoint.pid, date=dsmap.date, value=value):
+                        cassapidatasource.add_datapoint_to_datasource_map(did=did,date=dsmap.date,pid=datapoint.pid,position=element['text_pos'])
+                        if datapoint_stats.decimal_separator!=element['decsep']:
+                            cassapidatapoint.set_datapoint_decimal_separator(pid=datapoint.pid, decimal_separator=element['decsep'])
+                        if datapoint_stats.last_received==None or timeuuid.get_unix_timestamp(datapoint_stats.last_received) < timeuuid.get_unix_timestamp(dsmap.date):
+                            cassapidatapoint.set_datapoint_last_received(pid=datapoint.pid, last_received=dshash.date)
+                        break
+                    else:
+                        raise exceptions.DatapointStoreValueException(error=Errors.E_GPA_SDPV_IDDE)
     return True
 
 def store_datasource_values(did, date):
@@ -463,9 +481,9 @@ def store_datasource_values(did, date):
         raise exceptions.BadParametersException(error=Errors.E_GPA_SDSV_ID)
     if not args.is_valid_date(date):
         raise exceptions.BadParametersException(error=Errors.E_GPA_SDSV_IDT)
-    dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
-    if dsmap==None:
-        raise exceptions.DatasourceMapNotFoundException(error=Errors.E_GPA_SDSV_DMNF)
+    dshash=cassapidatasource.get_datasource_hash(did=did, date=date)
+    if dshash==None:
+        dshash=generate_datasource_hash(did=did, date=date)
     pids=cassapidatapoint.get_datapoints_pids(did=did)
     if pids==[]:
         return True
@@ -473,47 +491,46 @@ def store_datasource_values(did, date):
     for pid in pids:
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
         if datapoint_stats and datapoint_stats.dtree:
-            #dtree=decisiontree.DecisionTree(jsontree=datapoint_stats.dtree)
             dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
             if dtree:
-                datapoints_info[pid]={'dtree':dtree,
-                                      'decimal_separator':datapoint_stats.decimal_separator,
-                                      'last_received':datapoint_stats.last_received}
+                datapoints_info[pid]={
+                    'dtree':dtree,
+                    'decsep':datapoint_stats.decimal_separator,
+                    'last_received':datapoint_stats.last_received
+                }
         else:
             generate_decision_tree(pid=pid)
             datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
             if datapoint_stats and datapoint_stats.dtree:
-                #dtree=decisiontree.DecisionTree(jsontree=datapoint_stats.dtree)
                 dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
                 if dtree:
-                    datapoints_info[pid]={'dtree':dtree,
-                                          'decimal_separator':datapoint_stats.decimal_separator,
-                                          'last_received':datapoint_stats.last_received}
-    #varlist=variables.get_varlist(jsoncontent=dsmap.content)
-    variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
+                    datapoints_info[pid]={
+                        'dtree':dtree,
+                        'decimal_separator':datapoint_stats.decimal_separator,
+                        'last_received':datapoint_stats.last_received
+                    }
+    text_hash=json.loads(dshash.content)
     loop_pids=list(datapoints_info.keys())
-    #for var in varlist:
-    for var in variable_list:
-        for pid in loop_pids:
-            dtree=datapoints_info[pid]['dtree']
-            decimal_separator=datapoints_info[pid]['decimal_separator']
-            last_received=datapoints_info[pid]['last_received']
-            #if dtree.evaluate_row(var.h):
-            if dtree.evaluate_row(var.hash_sequence):
-                #value,separator=variables.get_numericvalueandseparator(decimal_separator,varlist,var)
-                value=textmanvar.get_numeric_value(variable=var)
-                if cassapidatapoint.insert_datapoint_data(pid=pid, date=dsmap.date, value=value):
-                    #cassapidatasource.add_datapoint_to_datasource_map(did=dsmap.did,date=dsmap.date,pid=pid,position=var.s)
-                    cassapidatasource.add_datapoint_to_datasource_map(did=dsmap.did,date=dsmap.date,pid=pid,position=var.position)
-                    if decimal_separator==None or decimal_separator!=var.decimal_separator:
-                        cassapidatapoint.set_datapoint_decimal_separator(pid=pid, decimal_separator=var.decimal_separator)
-                    if last_received==None or timeuuid.get_unix_timestamp(last_received)< timeuuid.get_unix_timestamp(dsmap.date):
-                        cassapidatapoint.set_datapoint_last_received(pid=pid, last_received=dsmap.date)
-                    loop_pids.remove(pid)
-                    break
-                else:
-                    logging.logger.error('Error inserting datapoint data. pid: %s, dsmap.date: %s.' %(pid.hex,date.hex))
-                    break
+    for element in text_hash['elements']:
+        if 'type' in element and element['type']=='var':
+            var_atts=textmanvar.get_variable_atts(text_hash=text_hash, text_pos=element['text_pos'])
+            for pid in loop_pids:
+                dtree=datapoints_info[pid]['dtree']
+                decimal_separator=datapoints_info[pid]['decsep']
+                last_received=datapoints_info[pid]['last_received']
+                if dtree.evaluate_row(var_atts):
+                    value=textmanvar.get_numeric_value(variable=element)
+                    if cassapidatapoint.insert_datapoint_data(pid=pid, date=dshash.date, value=value):
+                        cassapidatasource.add_datapoint_to_datasource_map(did=dshash.did,date=dshash.date,pid=pid,position=element['text_pos'])
+                        if decimal_separator==None or decimal_separator!=element['decsep']:
+                            cassapidatapoint.set_datapoint_decimal_separator(pid=pid, decimal_separator=element['decsep'])
+                        if last_received==None or timeuuid.get_unix_timestamp(last_received)< timeuuid.get_unix_timestamp(dshash.date):
+                            cassapidatapoint.set_datapoint_last_received(pid=pid, last_received=dshash.date)
+                        loop_pids.remove(pid)
+                        break
+                    else:
+                        logging.logger.error('Error inserting datapoint data. pid: %s, dsmap.date: %s.' %(pid.hex,date.hex))
+                        break
     return {'dp_not_found':loop_pids}
 
 def should_datapoint_match_any_sample_variable(pid, date):
@@ -543,10 +560,157 @@ def should_datapoint_match_any_sample_variable(pid, date):
     #evaluamos el DTREE sobre las variables (en teoria todas evaluaran a false, pero si alguna evalua a true devolvemos true). Después evaluamos el DTREE INVERSO sobre ellas (si hay alguna que no da FALSE entonces devolvemos un TRUE, indicando que hay candidatas a que sean matchs)
     dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
     dtree_inv=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree_inv)
-    variable_list=textmanvar.get_variables_from_serialized_list(serialization=dsmap.content)
-
+    dshash=cassapidatasource.get_datasource_hash(did=datapoint.did, date=date)
+    if not dshash:
+        dshash=generate_datasource_hash(did=datapoint.did, date=date)
+    text_hash=json.loads(dshash.content)
+    variable_list=textmanvar.get_variables_atts(text_hash=text_hash)
     for var in variable_list:
-        if not var.position in dsmap.datapoints.values() and (dtree.evaluate_row(var.hash_sequence) or not dtree_inv.evaluate_row(var.hash_sequence)):
+        if not var['text_pos'] in dsmap.datapoints.values() and (dtree.evaluate_row(var['atts']) or not dtree_inv.evaluate_row(var['atts'])):
             return True
     return False
+
+def generate_datasource_hash(did, date):
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_GDH_IDID)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_GDH_IDT)
+    dsdata=cassapidatasource.get_datasource_data_at(did=did, date=date)
+    if not dsdata:
+        raise exceptions.DatasourceDataNotFoundException(error=Errors.E_GPA_GDH_DDNF)
+    text_hash = textmanvar.get_hashed_text(text=dsdata.content)
+    if text_hash:
+        hashobj = ormdatasource.DatasourceHash(did=did,date=date,content=json.dumps(text_hash))
+        if cassapidatasource.insert_datasource_hash(obj=hashobj):
+            return hashobj
+        else:
+            raise exceptions.DatasourceHashGenerationException(error=Errors.E_GPA_GDH_EIDB)
+    else:
+        raise exceptions.DatasourceHashGenerationException(error=Errors.E_GPA_GDH_NHO)
+
+def generate_datasource_text_summary(did, date):
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_GDTS_ID)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_GDTS_IDT)
+    dsdata=cassapidatasource.get_datasource_data_at(did=did, date=date)
+    if dsdata:
+        summary=textmansummary.get_summary_from_text(text=dsdata.content)
+        obj=ormdatasource.DatasourceTextSummary(did=did,date=date,content_length=summary.content_length, num_lines=summary.num_lines, num_words=summary.num_words, word_frecuency=summary.word_frecuency)
+        if cassapidatasource.insert_datasource_text_summary(dstextsummaryobj=obj):
+            return True
+        return False
+    else:
+        raise exceptions.DatasourceDataNotFoundException(error=Errors.E_GPA_GDTS_DDNF)
+
+def generate_datasource_novelty_detector_for_datapoint(pid):
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_GDNDFD_IP)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    if not datapoint:
+        raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_GDNDFD_DNF)
+    inline_dates=[]
+    for sample in cassapidatapoint.get_datapoint_dtree_positives(pid=pid):
+        inline_dates.append(sample.date)
+    init_date=timeuuid.uuid1(seconds=1)
+    end_date=timeuuid.uuid1()
+    count=1000
+    for reg in cassapidatapoint.get_datapoint_data(pid=pid, fromdate=init_date, todate=end_date, count=count):
+        inline_dates.append(reg['date'])
+    inline_dates=sorted(list(set(inline_dates)))
+    if len(inline_dates)==0:
+        raise exceptions.DatasourceDataNotFoundException(error=Errors.E_GPA_GDNDFD_DSDNF)
+    samples=[]
+    for date in inline_dates:
+        textsumm=cassapidatasource.get_datasource_text_summary(did=datapoint.did, date=date)
+        if textsumm:
+            samples.append(textsumm.word_frecuency)
+    nd=svmapi.generate_novelty_detector_for_datasource(samples=samples)
+    if not nd:
+        raise exceptions.DatasourceNoveltyDetectorException(error=Errors.E_GPA_GDNDFD_NDF)
+    datasource_novelty_detector=ormdatasource.DatasourceNoveltyDetector(did=datapoint.did, pid=pid, date=timeuuid.uuid1(), nd=pickle.dumps(nd.novelty_detector), features=nd.features)
+    return cassapidatasource.insert_datasource_novelty_detector_for_datapoint(obj=datasource_novelty_detector)
+
+def should_datapoint_appear_in_sample(pid, date):
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_SDAIS_IP)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_SDAIS_IDT)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    if not datapoint:
+        raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_SDAIS_DNF)
+    #obtenemos las caracteristicas de los datasources en los que aparece el datapoint, si no lo calculamos
+    ds_nd=cassapidatasource.get_last_datasource_novelty_detector_for_datapoint(did=datapoint.did,pid=pid)
+    if not ds_nd:
+        generate_datasource_novelty_detector_for_datapoint(pid=pid)
+        ds_nd=cassapidatasource.get_last_datasource_novelty_detector_for_datapoint(did=datapoint.did,pid=pid)
+        if not ds_nd:
+            raise exceptions.DatasourceNoveltyDetectorException(error=Errors.E_GPA_SDAIS_DSNDNF)
+    #una vez obtenido, obtenemos el summary de la muestra en cuestion, si no existe la calculamos
+    ds_summary=cassapidatasource.get_datasource_text_summary(did=datapoint.did, date=date)
+    if not ds_summary:
+        generate_datasource_text_summary(did=datapoint.did, date=date)
+        ds_summary=cassapidatasource.get_datasource_text_summary(did=datapoint.did, date=date)
+        if not ds_summary:
+            raise exceptions.DatasourceTextSummaryException(error=Errors.E_GPA_SDAIS_DSTSNF)
+    #una vez obtenidos ambos, los comparamos y si el resultado es muy diferente devolvemos false. Si el resultado es similar, devolvemos True
+    nd=pickle.loads(ds_nd.nd)
+    sample_values=[]
+    for feature in ds_nd.features:
+        sample_values.append(ds_summary.word_frecuency[feature]) if feature in ds_summary.word_frecuency else sample_values.append(0)
+    result=svmapi.is_row_novel(novelty_detector=nd, row=sample_values)
+    return True if result is not None and result[0]>0 else False
+
+def classify_missing_datapoints_in_sample(did, date):
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_CMDIS_ID)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_CMDIS_IDT)
+    dsmap=cassapidatasource.get_datasource_map(did=did, date=date)
+    if not dsmap:
+        raise exceptions.DatasourceMapNotFoundException(error=Errors.E_GPA_CMDIS_DSMNF)
+    dshash=cassapidatasource.get_datasource_hash(did=did, date=dsmap.date)
+    if not dshash:
+        dshash=generate_datasource_hash(did=did, date=dsmap.date)
+    text_hash=json.loads(dshash.content)
+    variable_list=textmanvar.get_variables_atts(text_hash=text_hash)
+    ds_summary=cassapidatasource.get_datasource_text_summary(did=did, date=date)
+    if not ds_summary:
+        generate_datasource_text_summary(did=did, date=date)
+        ds_summary=cassapidatasource.get_datasource_text_summary(did=did, date=date)
+        if not ds_summary:
+            raise exceptions.DatasourceTextSummaryException(error=Errors.E_GPA_CMDIS_DSTSNF)
+    ds_pids=cassapidatapoint.get_datapoints_pids(did=did)
+    pids_to_classify=set(ds_pids)-set(dsmap.datapoints.keys())
+    response={'doubts':[],'discarded':[]}
+    for pid in pids_to_classify:
+        ds_nd=cassapidatasource.get_last_datasource_novelty_detector_for_datapoint(did=did,pid=pid)
+        if not ds_nd:
+            generate_datasource_novelty_detector_for_datapoint(pid=pid)
+            ds_nd=cassapidatasource.get_last_datasource_novelty_detector_for_datapoint(did=did,pid=pid)
+            if not ds_nd:
+                response['doubts'].append(pid)
+                continue
+        nd=pickle.loads(ds_nd.nd)
+        sample_values=[]
+        for feature in ds_nd.features:
+            sample_values.append(ds_summary.word_frecuency[feature]) if feature in ds_summary.word_frecuency else sample_values.append(0)
+        result=svmapi.is_row_novel(novelty_detector=nd, row=sample_values)
+        if result is None or result[0]<0:
+            response['discarded'].append(pid)
+            continue
+        datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
+        if not datapoint_stats or not datapoint_stats.dtree_inv:
+            response['doubts'].append(pid)
+            continue
+        dtree_inv=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree_inv)
+        doubt=False
+        for element in text_hash['elements']:
+            if 'type' in element and element['type']=='var' and not element['text_pos'] in dsmap.datapoints.values():
+                var_atts=textmanvar.get_variable_atts(text_hash=text_hash, text_pos=element['text_pos'])
+                if not dtree_inv.evaluate_row(var_atts):
+                    doubt=True
+                    break
+        response['doubts'].append(pid) if doubt else response['discarded'].append(pid)
+    return response
 

@@ -4,15 +4,17 @@ This file defines the cassandra statements for the creation of datasource relate
 '''
 from komlog.komcass.model.schema import keyspace
 
-OBJECTS=['MST_DATASOURCE',
-         'MST_DATASOURCE_INDEX_01',
-         'MST_DATASOURCE_INDEX_02',
-         'MST_DATASOURCE_STATS',
-         'DAT_DATASOURCE',
-         'DAT_DATASOURCE_MAP',
-         'DAT_DATASOURCE_TEXT_SUMMARY',
-         'DAT_DATASOURCE_NOVELTY_DETECTOR_DATAPOINT',
-        ]
+OBJECTS=[
+    'MST_DATASOURCE',
+    'MST_DATASOURCE_INDEX_01',
+    'MST_DATASOURCE_INDEX_02',
+    'MST_DATASOURCE_STATS',
+    'DAT_DATASOURCE',
+    'DAT_DATASOURCE_MAP',
+    'DAT_DATASOURCE_HASH',
+    'DAT_DATASOURCE_TEXT_SUMMARY',
+    'DAT_DATASOURCE_NOVELTY_DETECTOR_DATAPOINT',
+]
 
 MST_DATASOURCE='''
         CREATE TABLE mst_datasource (
@@ -55,9 +57,17 @@ DAT_DATASOURCE_MAP='''
         CREATE TABLE dat_datasource_map (
             did uuid,
             date timeuuid,
-            content text,
             variables map<int,int>,
             datapoints map<uuid,int>,
+            PRIMARY KEY (did,date)
+        );
+    '''
+
+DAT_DATASOURCE_HASH='''
+        CREATE TABLE dat_datasource_hash (
+            did uuid,
+            date timeuuid,
+            content text,
             PRIMARY KEY (did,date)
         );
     '''
