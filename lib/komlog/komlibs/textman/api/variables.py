@@ -60,13 +60,8 @@ def get_hashed_text(text):
          variables.DECIMAL_SEPARATOR_NONE:0,
          variables.DECIMAL_SEPARATOR_UNKNOWN:0,
     }
-    hashed_intervals=[(text_length,0)]
-    line_ends={1:text_length-1}
+    hashed_intervals=[(text_length,text_length)]
     elements=[]
-    for i,element in enumerate(patterns.ro_newline.finditer(text)):
-        start,end=element.span()
-        line_ends[i+1]=end
-    sorted_line_ends=sorted(line_ends.items(), key=lambda x:x[0])
     string=text
     for i,r_object in enumerate(patterns.VAR_REGEXP_OBJECTS):
         for element in r_object.finditer(string):
@@ -74,13 +69,6 @@ def get_hashed_text(text):
             length=end-start
             content=element.group()
             string=string[:start]+'X'*length+string[end:]
-            for lineno,line_end in sorted_line_ends:
-                if start>line_end:
-                    continue
-                else:
-                    my_lineno = lineno
-                    my_linepos = start if lineno==1 else start-line_ends[lineno-1]
-                    break
             if i in (0,2,3,4,5,6):
                 separators_detected[variables.DECIMAL_SEPARATOR_COMMA]+=1
                 decimal_separator=variables.DECIMAL_SEPARATOR_COMMA
@@ -98,8 +86,6 @@ def get_hashed_text(text):
                 decimal_separator=variables.DECIMAL_SEPARATOR_DOT
             elements.append({
                 'type':'var',
-                'line':my_lineno,
-                'line_pos':my_linepos,
                 'text_pos':start,
                 'content':content,
                 'length':length,
@@ -114,19 +100,8 @@ def get_hashed_text(text):
                 variable['decsep']=guessed_separator
     interval_init=0
     for interval in sorted(hashed_intervals, key=lambda x:x[0]):
-        if interval[0]<text_length and interval[0]>interval_init:
+        if interval[0]>interval_init:
             substring=text[interval_init:interval[0]]
-            interval_line=1
-            interval_line_offset=0
-            acumm_offset = 0
-            new_line_reached = False
-            for lineno,line_end in sorted_line_ends:
-                if interval_init>line_end-1:
-                    continue
-                else:
-                    interval_line=lineno
-                    interval_line_offset=interval_init if lineno==1 else interval_init-line_ends[lineno-1]
-                    break
             for element in patterns.ro_hash.finditer(substring):
                 start,end=element.span()
                 length=end-start
@@ -135,43 +110,40 @@ def get_hashed_text(text):
                     hash_value=variables.DEFAULT_SPACES_HASH
                 elif patterns.ro_newline.search(content) and patterns.ro_newline.search(content).group()==content:
                     hash_value=variables.DEFAULT_NEWLINE_HASH
-                    new_line_reached = True
                 elif patterns.ro_number.search(content) and patterns.ro_number.search(content).group()==content:
                     hash_value=variables.DEFAULT_NUMBER_HASH
                 else:
                     hash_value=zlib.adler32(bytes(element.group(),'utf-8'),0xffffffff)
-                my_lineno = interval_line
-                my_linepos = start+interval_line_offset-acumm_offset
                 text_pos = start+interval_init
                 elements.append({
-                    'line':my_lineno,
-                    'line_pos':my_linepos,
                     'text_pos':text_pos,
                     'length':length,
                     'hash':hash_value,
                 })
-                if new_line_reached:
-                    interval_line+=1
-                    interval_line_offset=0
-                    acumm_offset = end
-                    new_line_reached = False
         interval_init=interval[1]
     sorted_list=sorted(elements, key=lambda x:x['text_pos'])
+    line=1
+    line_ends={0:0}
     for i,element in enumerate(sorted_list):
         element['order']=i+1
+        element['line']=line
+        element['line_pos']=element['text_pos']-line_ends[line-1]
+        line_ends[line]=element['text_pos']+element['length']
+        if element['hash']==variables.DEFAULT_NEWLINE_HASH:
+            line+=1
     header_lines=[]
-    for lineno,end in sorted_line_ends:
+    for lineno in line_ends.keys():
         header_line=True
+        num_elements=0
         for element in sorted_list:
-            if element['line']<lineno:
-                continue
-            elif element['line']==lineno:
+            if element['line']==lineno:
+                num_elements+=1
                 if 'type' in element and element['type']=='var':
                     header_line=False
                     break
             elif element['line']>lineno:
                 break
-        if header_line:
+        if header_line and num_elements>0:
             header_lines.append(lineno)
     hashlist['elements']=sorted_list
     hashlist['header_lines']=sorted(header_lines)
