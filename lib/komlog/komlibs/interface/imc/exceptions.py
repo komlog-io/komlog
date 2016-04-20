@@ -65,10 +65,10 @@ class ExceptionHandler(object):
     def __init__(self, f):
         self.f=f
 
-    def __call__(self, **kwargs):
+    def __call__(self, *args, **kwargs):
         init=time.time()
         try:
-            response=self.f(**kwargs)
+            response=self.f(*args, **kwargs)
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__name__,Errors.OK.name,str(init),str(end))))
             return response
