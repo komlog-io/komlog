@@ -93,7 +93,8 @@ def _get_attribute(rows, attributes):
         else:
             break;
     try:
-        att = sorted(candidates, key=lambda x: (ATT_PRIORITY[x.split('_')[0]],x.split('_')[1]))[0]
+        scores= sorted(candidates, key=lambda x: (ATT_PRIORITY[x.split('_')[0]],abs(int(x.split('_')[1]))))
+        att = scores[0]
     except Exception:
         att = ''
     return att
