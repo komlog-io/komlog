@@ -506,7 +506,7 @@ def store_datasource_values(did, date):
                 if dtree:
                     datapoints_info[pid]={
                         'dtree':dtree,
-                        'decimal_separator':datapoint_stats.decimal_separator,
+                        'decsep':datapoint_stats.decimal_separator,
                         'last_received':datapoint_stats.last_received
                     }
     text_hash=json.loads(dshash.content)
