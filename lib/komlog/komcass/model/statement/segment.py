@@ -11,37 +11,35 @@ def get_statement(num):
         return None
 
 
-STATEMENTS={110000:'select * from prm_user_segment where sid=?',
-            115000:'insert into prm_user_segment (sid,segmentname,params) values (?,?,?)',
-            115001:'insert into prm_user_segment (sid,params) values (?,?)',
-            117000:'delete params [?] from prm_user_segment where sid=?',
-            117001:'delete from prm_user_segment where sid=?',
-            119000:'update prm_user_segment set params [?] = ? where sid=?'
-           }
+STATEMENTS={
+    110000:'select * from prm_user_segment_quo where sid=?',
+    110001:'select * from prm_user_segment_quo where sid=? and quote=?',
+    115000:'insert into prm_user_segment_quo (sid,quote,value) values (?,?,?)',
+    117000:'delete from prm_user_segment_quo where sid=?',
+    117001:'delete from prm_user_segment_quo where sid=? and quote=?',
+}
 
 # selects (110000 - 114999)
 
-# prm_user_segment
+# prm_user_segment_quo
 
-S_A_PRMUSERSEGMENT_B_SID=110000
+S_A_PRMUSERSEGMENTQUO_B_SID=110000
+S_A_PRMUSERSEGMENTQUO_B_SID_QUOTE=110001
 
 # inserts (115000 - 116999)
 
-# prm_user_segment
+# prm_user_segment_quo
 
-I_A_PRMUSERSEGMENT=115000
-I_PARAMS_PRMUSERSEGMENT_B_PARAMS_SID=115001
+I_A_PRMUSERSEGMENTQUO=115000
 
 # deletes (117000 - 118999)
 
-# prm_user_segment
+# prm_user_segment_quo
 
-D_PARAM_PRMUSERSEGMENT_B_PARAM_SID=117000
-D_A_PRMUSERSEGMENT_B_SID=117001
+D_A_PRMUSERSEGMENTQUO_B_SID=117000
+D_QUOTE_PRMUSERSEGMENTQUO_B_SID_QUOTE=117001
 
 # updates (119000 - 119999)
 
-# prm_user_segment
-
-U_PARAM_PRMUSERSEGMENT_B_PARAM_SID=119000
+# prm_user_segment_quo
 

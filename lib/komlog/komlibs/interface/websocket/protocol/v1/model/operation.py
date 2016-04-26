@@ -1,5 +1,5 @@
 
-from komlog.komlibs.auth import operations as authoperations
+from komlog.komlibs.auth.model.operations import Operations as authoperations
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors

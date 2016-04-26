@@ -5,48 +5,45 @@ Created on 01/10/2014
 @author: komlog crew
 '''
 
-class Quote(object):
-    def __init__(self, quotes):
-        self.quotes=quotes
-
-    def get_quote(self, quote):
-        if self.quotes and quote in self.quotes:
-            return self.quotes[quote]
-        else:
-            return None
-
-class UserQuo(Quote):
-    def __init__(self,uid, quotes):
+class UserQuo:
+    def __init__(self,uid, quote, value):
         self.uid=uid
-        super(UserQuo,self).__init__(quotes)
+        self.quote=quote
+        self.value=value
 
-class AgentQuo(Quote):
-    def __init__(self,aid, quotes):
+class AgentQuo:
+    def __init__(self,aid, quote, value):
         self.aid=aid
-        super(AgentQuo,self).__init__(quotes)
+        self.quote=quote
+        self.value=value
 
-class DatasourceQuo(Quote):
-    def __init__(self,did, quotes):
+class DatasourceQuo:
+    def __init__(self,did, quote, value):
         self.did=did
-        super(DatasourceQuo,self).__init__(quotes)
+        self.quote=quote
+        self.value=value
 
-class DatapointQuo(Quote):
-    def __init__(self,pid, quotes):
+class DatapointQuo:
+    def __init__(self,pid, quote, value):
         self.pid=pid
-        super(DatapointQuo,self).__init__(quotes)
+        self.quote=quote
+        self.value=value
 
-class WidgetQuo(Quote):
-    def __init__(self,wid, quotes):
+class WidgetQuo:
+    def __init__(self,wid, quote, value):
         self.wid=wid
-        super(WidgetQuo,self).__init__(quotes)
+        self.quote=quote
+        self.value=value
 
-class DashboardQuo(Quote):
-    def __init__(self,bid, quotes):
+class DashboardQuo:
+    def __init__(self,bid, quote, value):
         self.bid=bid
-        super(DashboardQuo,self).__init__(quotes)
+        self.quote=quote
+        self.value=value
 
-class CircleQuo(Quote):
-    def __init__(self,cid, quotes):
+class CircleQuo:
+    def __init__(self,cid, quote, value):
         self.cid=cid
-        super(CircleQuo,self).__init__(quotes)
+        self.quote=quote
+        self.value=value
 

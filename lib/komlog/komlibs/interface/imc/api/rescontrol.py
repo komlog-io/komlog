@@ -7,6 +7,7 @@ Resource Control message definitions
 
 from komlog.komfig import logging
 from komlog.komlibs.auth import update
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.interface.imc.model import messages, responses
 from komlog.komlibs.interface.imc import status, exceptions
@@ -15,7 +16,7 @@ from komlog.komlibs.interface.imc import status, exceptions
 @exceptions.ExceptionHandler
 def process_message_UPDQUO(message):
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
-    operation=message.operation
+    operation=Operations(message.operation)
     params=message.params
     if update.update_quotes(operation=operation, params=params):
         response.status=status.IMC_STATUS_OK
@@ -27,7 +28,7 @@ def process_message_UPDQUO(message):
 @exceptions.ExceptionHandler
 def process_message_RESAUTH(message):
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
-    operation=message.operation
+    operation=Operations(message.operation)
     params=message.params
     if update.update_resources(operation=operation, params=params):
         response.status=status.IMC_STATUS_OK

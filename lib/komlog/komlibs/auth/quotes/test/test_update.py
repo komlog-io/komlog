@@ -1,6 +1,7 @@
 import unittest
 import uuid
-from komlog.komlibs.auth import operations
+from komlog.komlibs.auth.model.operations import Operations
+from komlog.komlibs.auth.model.quotes import Quotes
 from komlog.komlibs.auth.quotes import update
 from komlog.komcass.api import quote as cassapiquote
 from komlog.komcass.api import circle as cassapicircle
@@ -13,7 +14,7 @@ class AuthQuotesUpdateTest(unittest.TestCase):
     
     def test_get_update_funcs_success(self):
         ''' test_update_funcs should return a list of functions '''
-        operation=operations.NEW_AGENT
+        operation=Operations.NEW_AGENT
         update_funcs=update.get_update_funcs(operation=operation)
         self.assertTrue(isinstance(update_funcs, list))
 
@@ -34,8 +35,9 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         uid=uuid.uuid4()
         params={'uid':uid}
         result=update.quo_static_user_total_agents(params)
-        user_quotes=cassapiquote.get_user_quotes(uid=uid)
-        self.assertEqual(user_quotes.get_quote('quo_static_user_total_agents'),result)
+        quote=Quotes.quo_static_user_total_agents.name
+        user_quote=cassapiquote.get_user_quote(uid=uid, quote=quote)
+        self.assertEqual(user_quote.value,result)
 
     def test_quo_static_user_total_datasources_no_uid(self):
         ''' quo_static_user_total_datasources should fail if no uid is passed '''
@@ -47,8 +49,9 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         uid=uuid.uuid4()
         params={'uid':uid}
         result=update.quo_static_user_total_datasources(params)
-        user_quotes=cassapiquote.get_user_quotes(uid=uid)
-        self.assertEqual(user_quotes.get_quote('quo_static_user_total_datasources'),result)
+        quote=Quotes.quo_static_user_total_datasources.name
+        user_quote=cassapiquote.get_user_quote(uid=uid, quote=quote)
+        self.assertEqual(user_quote.value,result)
 
     def test_quo_static_user_total_datapoints_no_uid(self):
         ''' quo_static_user_total_datapoints should fail if no uid is passed '''
@@ -60,8 +63,9 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         uid=uuid.uuid4()
         params={'uid':uid}
         result=update.quo_static_user_total_datapoints(params)
-        user_quotes=cassapiquote.get_user_quotes(uid=uid)
-        self.assertEqual(user_quotes.get_quote('quo_static_user_total_datapoints'),result)
+        quote=Quotes.quo_static_user_total_datapoints.name
+        user_quote=cassapiquote.get_user_quote(uid=uid, quote=quote)
+        self.assertEqual(user_quote.value,result)
 
     def test_quo_static_user_total_widgets_no_uid(self):
         ''' quo_static_user_total_widgets should fail if no uid is passed '''
@@ -73,8 +77,9 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         uid=uuid.uuid4()
         params={'uid':uid}
         result=update.quo_static_user_total_widgets(params)
-        user_quotes=cassapiquote.get_user_quotes(uid=uid)
-        self.assertEqual(user_quotes.get_quote('quo_static_user_total_widgets'),result)
+        quote=Quotes.quo_static_user_total_widgets.name
+        user_quote=cassapiquote.get_user_quote(uid=uid, quote=quote)
+        self.assertEqual(user_quote.value,result)
 
     def test_quo_static_user_total_dashboards_no_uid(self):
         ''' quo_static_user_total_dashboards should fail if no uid is passed '''
@@ -86,8 +91,9 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         uid=uuid.uuid4()
         params={'uid':uid}
         result=update.quo_static_user_total_dashboards(params)
-        user_quotes=cassapiquote.get_user_quotes(uid=uid)
-        self.assertEqual(user_quotes.get_quote('quo_static_user_total_dashboards'),result)
+        quote=Quotes.quo_static_user_total_dashboards.name
+        user_quote=cassapiquote.get_user_quote(uid=uid, quote=quote)
+        self.assertEqual(user_quote.value,result)
 
     def test_quo_static_agent_total_datasources_no_aid(self):
         ''' quo_static_agent_total_datasources should fail if no aid is passed '''
@@ -99,8 +105,9 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         aid=uuid.uuid4()
         params={'aid':aid}
         result=update.quo_static_agent_total_datasources(params)
-        agent_quotes=cassapiquote.get_agent_quotes(aid=aid)
-        self.assertEqual(agent_quotes.get_quote('quo_static_agent_total_datasources'),result)
+        quote=Quotes.quo_static_agent_total_datasources.name
+        agent_quote=cassapiquote.get_agent_quote(aid=aid, quote=quote)
+        self.assertEqual(agent_quote.value,result)
 
     def test_quo_static_agent_total_datapoints_no_aid(self):
         ''' quo_static_agent_total_datapoints should fail if no aid is passed '''
@@ -112,8 +119,9 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         aid=uuid.uuid4()
         params={'aid':aid}
         result=update.quo_static_agent_total_datapoints(params)
-        agent_quotes=cassapiquote.get_agent_quotes(aid=aid)
-        self.assertEqual(agent_quotes.get_quote('quo_static_agent_total_datapoints'),result)
+        quote=Quotes.quo_static_agent_total_datapoints.name
+        agent_quote=cassapiquote.get_agent_quote(aid=aid, quote=quote)
+        self.assertEqual(agent_quote.value,result)
 
     def test_quo_static_datasource_total_datapoints_no_did(self):
         ''' quo_static_datasource_total_datapoints should fail if no did is passed '''
@@ -125,8 +133,9 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         did=uuid.uuid4()
         params={'did':did}
         result=update.quo_static_datasource_total_datapoints(params)
-        datasource_quotes=cassapiquote.get_datasource_quotes(did=did)
-        self.assertEqual(datasource_quotes.get_quote('quo_static_datasource_total_datapoints'),result)
+        quote=Quotes.quo_static_datasource_total_datapoints.name
+        datasource_quote=cassapiquote.get_datasource_quote(did=did, quote=quote)
+        self.assertEqual(datasource_quote.value,result)
 
     def test_quo_static_user_total_snapshots_no_uid(self):
         ''' quo_static_user_total_snapshots should fail if no uid is passed '''
@@ -138,8 +147,9 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         uid=uuid.uuid4()
         params={'uid':uid}
         result=update.quo_static_user_total_snapshots(params)
-        user_quotes=cassapiquote.get_user_quotes(uid=uid)
-        self.assertEqual(user_quotes.get_quote('quo_static_user_total_snapshots'),result)
+        quote=Quotes.quo_static_user_total_snapshots.name
+        user_quote=cassapiquote.get_user_quote(uid=uid, quote=quote)
+        self.assertEqual(user_quote.value,result)
 
     def test_quo_static_user_total_circles_no_uid(self):
         ''' quo_static_user_total_circles should fail if no uid is passed '''
@@ -151,8 +161,9 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         uid=uuid.uuid4()
         params={'uid':uid}
         result=update.quo_static_user_total_circles(params)
-        user_quotes=cassapiquote.get_user_quotes(uid=uid)
-        self.assertEqual(user_quotes.get_quote('quo_static_user_total_circles'),result)
+        quote=Quotes.quo_static_user_total_circles.name
+        user_quote=cassapiquote.get_user_quote(uid=uid, quote=quote)
+        self.assertEqual(user_quote.value,result)
 
     def test_quo_static_circle_total_members_no_cid(self):
         ''' quo_static_circle_total_members should fail if no cid is passed '''
@@ -177,7 +188,8 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         cassapicircle.insert_circle(circle)
         params={'cid':cid}
         result=update.quo_static_circle_total_members(params)
-        self.assertEqual(result,'1')
-        circle_quotes=cassapiquote.get_circle_quotes(cid=cid)
-        self.assertEqual(circle_quotes.get_quote('quo_static_circle_total_members'),result)
+        self.assertEqual(result,1)
+        quote=Quotes.quo_static_circle_total_members.name
+        circle_quote=cassapiquote.get_circle_quote(cid=cid, quote=quote)
+        self.assertEqual(circle_quote.value,result)
 

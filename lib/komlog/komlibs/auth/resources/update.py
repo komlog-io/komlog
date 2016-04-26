@@ -9,7 +9,8 @@ This file implements functions to update authorization to resources
 
 '''
 
-from komlog.komlibs.auth import operations, permissions
+from komlog.komlibs.auth import permissions
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
 from komlog.komcass.api import datasource as cassapidatasource
@@ -21,22 +22,22 @@ from komlog.komcass.api import circle as cassapicircle
 from komlog.komcass.api import permission as cassapiperm
 
 update_funcs = {
-                operations.NEW_AGENT: ['new_agent'],
-                operations.NEW_DATASOURCE: ['new_datasource'],
-                operations.NEW_DATAPOINT: ['new_datapoint'],
-                operations.NEW_WIDGET: ['new_widget'],
-                operations.NEW_DASHBOARD: ['new_dashboard'],
-                operations.NEW_WIDGET_SYSTEM: ['new_widget_system'],
-                operations.NEW_SNAPSHOT: ['new_snapshot'],
-                operations.NEW_CIRCLE: ['new_circle'],
-                operations.DELETE_USER: ['delete_user'],
-                operations.DELETE_AGENT: ['delete_agent'],
-                operations.DELETE_DATASOURCE: ['delete_datasource'],
-                operations.DELETE_DATAPOINT: ['delete_datapoint'],
-                operations.DELETE_WIDGET: ['delete_widget'],
-                operations.DELETE_DASHBOARD: ['delete_dashboard'],
-                operations.DELETE_SNAPSHOT: ['delete_snapshot'],
-                operations.DELETE_CIRCLE: ['delete_circle'],
+                Operations.NEW_AGENT: ['new_agent'],
+                Operations.NEW_DATASOURCE: ['new_datasource'],
+                Operations.NEW_DATAPOINT: ['new_datapoint'],
+                Operations.NEW_WIDGET: ['new_widget'],
+                Operations.NEW_DASHBOARD: ['new_dashboard'],
+                Operations.NEW_WIDGET_SYSTEM: ['new_widget_system'],
+                Operations.NEW_SNAPSHOT: ['new_snapshot'],
+                Operations.NEW_CIRCLE: ['new_circle'],
+                Operations.DELETE_USER: ['delete_user'],
+                Operations.DELETE_AGENT: ['delete_agent'],
+                Operations.DELETE_DATASOURCE: ['delete_datasource'],
+                Operations.DELETE_DATAPOINT: ['delete_datapoint'],
+                Operations.DELETE_WIDGET: ['delete_widget'],
+                Operations.DELETE_DASHBOARD: ['delete_dashboard'],
+                Operations.DELETE_SNAPSHOT: ['delete_snapshot'],
+                Operations.DELETE_CIRCLE: ['delete_circle'],
 }
 
 def get_update_funcs(operation):

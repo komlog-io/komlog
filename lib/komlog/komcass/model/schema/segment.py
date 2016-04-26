@@ -4,19 +4,15 @@ This file defines the cassandra statements for the creation of segments related 
 
 '''
 
-OBJECTS=['PRM_USER_SEGMENT',
-         'PRM_USER_SEGMENT_INDEX_01'
-        ]
+OBJECTS=[
+    'PRM_USER_SEGMENT_QUO',
+]
 
-PRM_USER_SEGMENT='''
-        CREATE TABLE prm_user_segment (
-            sid int,
-            segmentname text,
-            params map<text,text>,
-            PRIMARY KEY (sid)
-        );
-    '''
-
-PRM_USER_SEGMENT_INDEX_01='''
-        CREATE INDEX ON prm_user_segment (segmentname);
-    '''
+PRM_USER_SEGMENT_QUO='''
+    CREATE TABLE prm_user_segment_quo (
+        sid int,
+        quote text,
+        value int,
+        PRIMARY KEY (sid,quote)
+    );
+'''

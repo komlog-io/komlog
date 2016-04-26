@@ -2,7 +2,7 @@ import unittest
 import uuid
 import json
 from base64 import b64encode, b64decode
-from komlog.komlibs.auth import operations
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.auth import passport
 from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.gestaccount.errors import Errors as gesterrors
@@ -313,7 +313,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE.value or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -328,7 +328,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if not msg:
                 break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid:
+            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==psp.uid:
                 rescontrol.process_message_UPDQUO(message=msg)
             else:
                 msgapi.send_message(msg)
@@ -340,7 +340,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if not msg:
                 break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid: 
+            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==psp.uid: 
                 rescontrol.process_message_RESAUTH(message=msg)
             else:
                 msgapi.send_message(msg)
@@ -402,7 +402,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE.value or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -417,7 +417,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
             if not msg:
                 break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid:
+            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==psp.uid:
                 rescontrol.process_message_UPDQUO(msg)
             else:
                 msgapi.send_message(msg)
@@ -429,7 +429,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
             if not msg:
                 break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid: 
+            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==psp.uid: 
                 rescontrol.process_message_RESAUTH(msg)
             else:
                 msgapi.send_message(msg)
@@ -2027,7 +2027,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE.value or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -2042,7 +2042,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if not msg:
                 break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid:
+            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==psp.uid:
                 rescontrol.process_message_UPDQUO(message=msg)
             else:
                 msgapi.send_message(msg)
@@ -2054,7 +2054,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if not msg:
                 break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid: 
+            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==psp.uid: 
                 rescontrol.process_message_RESAUTH(message=msg)
             else:
                 msgapi.send_message(msg)

@@ -2,7 +2,7 @@ import unittest
 import uuid
 import json
 from base64 import b64encode, b64decode
-from komlog.komlibs.auth import operations
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.auth import passport
 from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.interface.web.api import login as loginapi 
@@ -56,7 +56,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==self.passport.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==self.passport.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -129,7 +129,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -157,7 +157,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -218,7 +218,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -255,7 +255,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response1.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response1.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -276,7 +276,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response2.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response2.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -345,7 +345,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:

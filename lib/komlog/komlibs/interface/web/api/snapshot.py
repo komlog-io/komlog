@@ -189,7 +189,7 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
             auth_op=operation.get_auth_operation()
             params=operation.get_params()
             if authupdate.update_resources(operation=auth_op, params=params):
-                message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
+                message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
                 msgapi.send_message(message)
                 message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
                 msgapi.send_message(message)

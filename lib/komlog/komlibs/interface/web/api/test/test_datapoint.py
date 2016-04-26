@@ -2,7 +2,7 @@ import unittest
 import uuid
 import json
 from base64 import b64encode, b64decode
-from komlog.komlibs.auth import operations
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.auth import passport
 from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.gestaccount.datasource import api as gestdatasourceapi
@@ -51,7 +51,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             while True:
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
                 self.assertIsNotNone(msg)
-                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_AGENT or not (msg.params['uid']==self.passport.uid and msg.params['aid']==self.agent_passport.aid):
+                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==self.passport.uid and msg.params['aid']==self.agent_passport.aid):
                     msgapi.send_message(msg)
                     count+=1
                     if count>=1000:
@@ -70,7 +70,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             while True:
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
                 self.assertIsNotNone(msg)
-                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==operations.NEW_DATASOURCE or not (msg.params['uid']==self.agent_passport.uid and msg.params['aid']==self.agent_passport.aid and msg.params['did']==uuid.UUID(response.data['did'])):
+                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE.value or not (msg.params['uid']==self.agent_passport.uid and msg.params['aid']==self.agent_passport.aid and msg.params['did']==uuid.UUID(response.data['did'])):
                     msgapi.send_message(msg)
                     count+=1
                     if count>=1000:
@@ -85,7 +85,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 if not msg:
                     break
-                if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==self.agent_passport.uid:
+                if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==self.agent_passport.uid:
                     rescontrol.process_message_UPDQUO(msg)
                 else:
                     msgapi.send_message(msg)
@@ -97,7 +97,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 if not msg:
                     break
-                if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==operations.NEW_WIDGET_SYSTEM and msg.params['uid']==self.agent_passport.uid: 
+                if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==self.agent_passport.uid: 
                     rescontrol.process_message_RESAUTH(message=msg)
                 else:
                     msgapi.send_message(msg)

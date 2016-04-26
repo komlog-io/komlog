@@ -11,22 +11,51 @@ from komlog.komcass.exception import quote as excpquote
 from komlog.komcass import connection
 
 def get_user_quotes(uid):
-    row=connection.session.execute(stmtquote.S_A_QUOUSER_B_UID,(uid,))
-    if not row:
-        return None
-    else:
-        return ormquote.UserQuo(**row[0])
+    quotes=[]
+    rows=connection.session.execute(stmtquote.S_A_QUOUSER_B_UID,(uid,))
+    if rows:
+        for r in rows:
+            quotes.append(ormquote.UserQuo(**r))
+    return quotes
 
-def set_user_quotes(uid, quotes):
-    connection.session.execute(stmtquote.I_A_QUOUSER,(uid,quotes))
-    return True
+def get_user_quote(uid, quote):
+    row=connection.session.execute(stmtquote.S_A_QUOUSER_B_UID_QUOTE,(uid,quote))
+    if row:
+        return ormquote.UserQuo(**row[0])
+    else:
+        return None
 
 def set_user_quote(uid, quote, value):
-    connection.session.execute(stmtquote.U_QUOTE_QUOUSER_B_UID,(quote,value,uid))
+    connection.session.execute(stmtquote.I_A_QUOUSER,(uid,quote,value))
     return True
 
+def increment_user_quote(uid, quote, value):
+    ''' we use lightweight transactions to increment quote values '''
+    resp=connection.session.execute(stmtquote.I_A_QUOUSER_INE,(uid, quote, value))
+    if not resp:
+        return False
+    elif resp[0]['[applied]'] is True:
+        return True
+    else:
+        cur_val = resp[0]['value']
+        n_val=cur_val + value
+        applied = False
+        retries=0
+        while applied != True:
+            resp=connection.session.execute(stmtquote.U_VALUE_QUOUSER_I_VALUE,(n_val,uid,quote,cur_val))
+            if not resp:
+                return False
+            applied=resp[0]['[applied]']
+            if not applied:
+                if retries>100:
+                    return False
+                retries+=1
+                cur_val=resp[0]['value']
+                n_val=cur_val+value
+        return True
+
 def delete_user_quote(uid, quote):
-    connection.session.execute(stmtquote.D_Q_QUOUSER_B_UID,(quote,uid))
+    connection.session.execute(stmtquote.D_A_QUOUSER_B_UID_QUOTE,(uid,quote))
     return True
 
 def delete_user_quotes(uid):
@@ -34,22 +63,51 @@ def delete_user_quotes(uid):
     return True
 
 def get_agent_quotes(aid):
-    row=connection.session.execute(stmtquote.S_A_QUOAGENT_B_AID,(aid,))
-    if not row:
-        return None
-    else:
-        return ormquote.AgentQuo(**row[0])
+    quotes=[]
+    rows=connection.session.execute(stmtquote.S_A_QUOAGENT_B_AID,(aid,))
+    if rows:
+        for r in rows:
+            quotes.append(ormquote.AgentQuo(**r))
+    return quotes
 
-def set_agent_quotes(aid, quotes):
-    connection.session.execute(stmtquote.I_A_QUOAGENT,(aid,quotes))
-    return True
+def get_agent_quote(aid, quote):
+    row=connection.session.execute(stmtquote.S_A_QUOAGENT_B_AID_QUOTE,(aid,quote))
+    if row:
+        return ormquote.AgentQuo(**row[0])
+    else:
+        return None
 
 def set_agent_quote(aid, quote, value):
-    connection.session.execute(stmtquote.U_QUOTE_QUOAGENT_B_AID,(quote,value,aid))
+    connection.session.execute(stmtquote.I_A_QUOAGENT,(aid,quote,value))
     return True
 
+def increment_agent_quote(aid, quote, value):
+    ''' we use lightweight transactions to increment quote values '''
+    resp=connection.session.execute(stmtquote.I_A_QUOAGENT_INE,(aid, quote, value))
+    if not resp:
+        return False
+    elif resp[0]['[applied]'] is True:
+        return True
+    else:
+        cur_val = resp[0]['value']
+        n_val=cur_val + value
+        applied = False
+        retries=0
+        while applied != True:
+            resp=connection.session.execute(stmtquote.U_VALUE_QUOAGENT_I_VALUE,(n_val,aid,quote,cur_val))
+            if not resp:
+                return False
+            applied=resp[0]['[applied]']
+            if not applied:
+                if retries>100:
+                    return False
+                retries+=1
+                cur_val=resp[0]['value']
+                n_val=cur_val+value
+        return True
+
 def delete_agent_quote(aid, quote):
-    connection.session.execute(stmtquote.D_Q_QUOAGENT_B_AID,(quote,aid))
+    connection.session.execute(stmtquote.D_A_QUOAGENT_B_AID_QUOTE,(aid,quote))
     return True
 
 def delete_agent_quotes(aid):
@@ -57,22 +115,51 @@ def delete_agent_quotes(aid):
     return True
 
 def get_datasource_quotes(did):
-    row=connection.session.execute(stmtquote.S_A_QUODATASOURCE_B_DID,(did,))
-    if not row:
-        return None
-    else:
-        return ormquote.DatasourceQuo(**row[0])
+    quotes=[]
+    rows=connection.session.execute(stmtquote.S_A_QUODATASOURCE_B_DID,(did,))
+    if rows:
+        for r in rows:
+            quotes.append(ormquote.DatasourceQuo(**r))
+    return quotes
 
-def set_datasource_quotes(did, quotes):
-    connection.session.execute(stmtquote.I_A_QUODATASOURCE,(did,quotes))
-    return True
+def get_datasource_quote(did, quote):
+    row=connection.session.execute(stmtquote.S_A_QUODATASOURCE_B_DID_QUOTE,(did,quote))
+    if row:
+        return ormquote.DatasourceQuo(**row[0])
+    else:
+        return None
 
 def set_datasource_quote(did, quote, value):
-    connection.session.execute(stmtquote.U_QUOTE_QUODATASOURCE_B_DID,(quote,value,did))
+    connection.session.execute(stmtquote.I_A_QUODATASOURCE,(did,quote,value))
     return True
 
+def increment_datasource_quote(did, quote, value):
+    ''' we use lightweight transactions to increment quote values '''
+    resp=connection.session.execute(stmtquote.I_A_QUODATASOURCE_INE,(did, quote, value))
+    if not resp:
+        return False
+    elif resp[0]['[applied]'] is True:
+        return True
+    else:
+        cur_val = resp[0]['value']
+        n_val=cur_val + value
+        applied = False
+        retries=0
+        while applied != True:
+            resp=connection.session.execute(stmtquote.U_VALUE_QUODATASOURCE_I_VALUE,(n_val,did,quote,cur_val))
+            if not resp:
+                return False
+            applied=resp[0]['[applied]']
+            if not applied:
+                if retries>100:
+                    return False
+                retries+=1
+                cur_val=resp[0]['value']
+                n_val=cur_val+value
+        return True
+
 def delete_datasource_quote(did, quote):
-    connection.session.execute(stmtquote.D_Q_QUODATASOURCE_B_DID,(quote,did))
+    connection.session.execute(stmtquote.D_A_QUODATASOURCE_B_DID_QUOTE,(did,quote))
     return True
 
 def delete_datasource_quotes(did):
@@ -80,22 +167,51 @@ def delete_datasource_quotes(did):
     return True
 
 def get_datapoint_quotes(pid):
-    row=connection.session.execute(stmtquote.S_A_QUODATAPOINT_B_PID,(pid,))
-    if not row:
-        return None
-    else:
-        return ormquote.DatapointQuo(**row[0])
+    quotes=[]
+    rows=connection.session.execute(stmtquote.S_A_QUODATAPOINT_B_PID,(pid,))
+    if rows:
+        for r in rows:
+            quotes.append(ormquote.DatapointQuo(**r))
+    return quotes
 
-def set_datapoint_quotes(pid, quotes):
-    connection.session.execute(stmtquote.I_A_QUODATAPOINT,(pid,quotes))
-    return True
+def get_datapoint_quote(pid, quote):
+    row=connection.session.execute(stmtquote.S_A_QUODATAPOINT_B_PID_QUOTE,(pid,quote))
+    if row:
+        return ormquote.DatapointQuo(**row[0])
+    else:
+        return None
 
 def set_datapoint_quote(pid, quote, value):
-    connection.session.execute(stmtquote.U_QUOTE_QUODATAPOINT_B_PID,(quote,value,pid))
+    connection.session.execute(stmtquote.I_A_QUODATAPOINT,(pid,quote,value))
     return True
 
+def increment_datapoint_quote(pid, quote, value):
+    ''' we use lightweight transactions to increment quote values '''
+    resp=connection.session.execute(stmtquote.I_A_QUODATAPOINT_INE,(pid, quote, value))
+    if not resp:
+        return False
+    elif resp[0]['[applied]'] is True:
+        return True
+    else:
+        cur_val = resp[0]['value']
+        n_val=cur_val + value
+        applied = False
+        retries=0
+        while applied != True:
+            resp=connection.session.execute(stmtquote.U_VALUE_QUODATAPOINT_I_VALUE,(n_val,pid,quote,cur_val))
+            if not resp:
+                return False
+            applied=resp[0]['[applied]']
+            if not applied:
+                if retries>100:
+                    return False
+                retries+=1
+                cur_val=resp[0]['value']
+                n_val=cur_val+value
+        return True
+
 def delete_datapoint_quote(pid, quote):
-    connection.session.execute(stmtquote.D_Q_QUODATAPOINT_B_PID,(quote,pid))
+    connection.session.execute(stmtquote.D_A_QUODATAPOINT_B_PID_QUOTE,(pid,quote))
     return True
 
 def delete_datapoint_quotes(pid):
@@ -103,22 +219,51 @@ def delete_datapoint_quotes(pid):
     return True
 
 def get_widget_quotes(wid):
-    row=connection.session.execute(stmtquote.S_A_QUOWIDGET_B_WID,(wid,))
-    if not row:
-        return None
-    else:
-        return ormquote.WidgetQuo(**row[0])
+    quotes=[]
+    rows=connection.session.execute(stmtquote.S_A_QUOWIDGET_B_WID,(wid,))
+    if rows:
+        for r in rows:
+            quotes.append(ormquote.WidgetQuo(**r))
+    return quotes
 
-def set_widget_quotes(wid, quotes):
-    connection.session.execute(stmtquote.I_A_QUOWIDGET,(wid,quotes))
-    return True
+def get_widget_quote(wid, quote):
+    row=connection.session.execute(stmtquote.S_A_QUOWIDGET_B_WID_QUOTE,(wid,quote))
+    if row:
+        return ormquote.WidgetQuo(**row[0])
+    else:
+        return None
 
 def set_widget_quote(wid, quote, value):
-    connection.session.execute(stmtquote.U_QUOTE_QUOWIDGET_B_WID,(quote,value,wid))
+    connection.session.execute(stmtquote.I_A_QUOWIDGET,(wid,quote,value))
     return True
 
+def increment_widget_quote(wid, quote, value):
+    ''' we use lightweight transactions to increment quote values '''
+    resp=connection.session.execute(stmtquote.I_A_QUOWIDGET_INE,(wid, quote, value))
+    if not resp:
+        return False
+    elif resp[0]['[applied]'] is True:
+        return True
+    else:
+        cur_val = resp[0]['value']
+        n_val=cur_val + value
+        applied = False
+        retries=0
+        while applied != True:
+            resp=connection.session.execute(stmtquote.U_VALUE_QUOWIDGET_I_VALUE,(n_val,wid,quote,cur_val))
+            if not resp:
+                return False
+            applied=resp[0]['[applied]']
+            if not applied:
+                if retries>100:
+                    return False
+                retries+=1
+                cur_val=resp[0]['value']
+                n_val=cur_val+value
+        return True
+
 def delete_widget_quote(wid, quote):
-    connection.session.execute(stmtquote.D_Q_QUOWIDGET_B_WID,(quote,wid))
+    connection.session.execute(stmtquote.D_A_QUOWIDGET_B_WID_QUOTE,(wid,quote))
     return True
 
 def delete_widget_quotes(wid):
@@ -126,22 +271,51 @@ def delete_widget_quotes(wid):
     return True
 
 def get_dashboard_quotes(bid):
-    row=connection.session.execute(stmtquote.S_A_QUODASHBOARD_B_BID,(bid,))
-    if not row:
-        return None
-    else:
-        return ormquote.DashboardQuo(**row[0])
+    quotes=[]
+    rows=connection.session.execute(stmtquote.S_A_QUODASHBOARD_B_BID,(bid,))
+    if rows:
+        for r in rows:
+            quotes.append(ormquote.DashboardQuo(**r))
+    return quotes
 
-def set_dashboard_quotes(bid, quotes):
-    connection.session.execute(stmtquote.I_A_QUODASHBOARD,(bid,quotes))
-    return True
+def get_dashboard_quote(bid, quote):
+    row=connection.session.execute(stmtquote.S_A_QUODASHBOARD_B_BID_QUOTE,(bid,quote))
+    if row:
+        return ormquote.DashboardQuo(**row[0])
+    else:
+        return None
 
 def set_dashboard_quote(bid, quote, value):
-    connection.session.execute(stmtquote.U_QUOTE_QUODASHBOARD_B_BID,(quote,value,bid))
+    connection.session.execute(stmtquote.I_A_QUODASHBOARD,(bid,quote,value))
     return True
 
+def increment_dashboard_quote(bid, quote, value):
+    ''' we use lightweight transactions to increment quote values '''
+    resp=connection.session.execute(stmtquote.I_A_QUODASHBOARD_INE,(bid, quote, value))
+    if not resp:
+        return False
+    elif resp[0]['[applied]'] is True:
+        return True
+    else:
+        cur_val = resp[0]['value']
+        n_val=cur_val + value
+        applied = False
+        retries=0
+        while applied != True:
+            resp=connection.session.execute(stmtquote.U_VALUE_QUODASHBOARD_I_VALUE,(n_val,bid,quote,cur_val))
+            if not resp:
+                return False
+            applied=resp[0]['[applied]']
+            if not applied:
+                if retries>100:
+                    return False
+                retries+=1
+                cur_val=resp[0]['value']
+                n_val=cur_val+value
+        return True
+
 def delete_dashboard_quote(bid, quote):
-    connection.session.execute(stmtquote.D_Q_QUODASHBOARD_B_BID,(quote,bid))
+    connection.session.execute(stmtquote.D_A_QUODASHBOARD_B_BID_QUOTE,(bid,quote))
     return True
 
 def delete_dashboard_quotes(bid):
@@ -149,22 +323,51 @@ def delete_dashboard_quotes(bid):
     return True
 
 def get_circle_quotes(cid):
-    row=connection.session.execute(stmtquote.S_A_QUOCIRCLE_B_CID,(cid,))
-    if not row:
-        return None
-    else:
-        return ormquote.CircleQuo(**row[0])
+    quotes=[]
+    rows=connection.session.execute(stmtquote.S_A_QUOCIRCLE_B_CID,(cid,))
+    if rows:
+        for r in rows:
+            quotes.append(ormquote.CircleQuo(**r))
+    return quotes
 
-def set_circle_quotes(cid, quotes):
-    connection.session.execute(stmtquote.I_A_QUOCIRCLE,(cid,quotes))
-    return True
+def get_circle_quote(cid, quote):
+    row=connection.session.execute(stmtquote.S_A_QUOCIRCLE_B_CID_QUOTE,(cid,quote))
+    if row:
+        return ormquote.CircleQuo(**row[0])
+    else:
+        return None
 
 def set_circle_quote(cid, quote, value):
-    connection.session.execute(stmtquote.U_QUOTE_QUOCIRCLE_B_CID,(quote,value,cid))
+    connection.session.execute(stmtquote.I_A_QUOCIRCLE,(cid,quote,value))
     return True
 
+def increment_circle_quote(cid, quote, value):
+    ''' we use lightweight transactions to increment quote values '''
+    resp=connection.session.execute(stmtquote.I_A_QUOCIRCLE_INE,(cid, quote, value))
+    if not resp:
+        return False
+    elif resp[0]['[applied]'] is True:
+        return True
+    else:
+        cur_val = resp[0]['value']
+        n_val=cur_val + value
+        applied = False
+        retries=0
+        while applied != True:
+            resp=connection.session.execute(stmtquote.U_VALUE_QUOCIRCLE_I_VALUE,(n_val,cid,quote,cur_val))
+            if not resp:
+                return False
+            applied=resp[0]['[applied]']
+            if not applied:
+                if retries>100:
+                    return False
+                retries+=1
+                cur_val=resp[0]['value']
+                n_val=cur_val+value
+        return True
+
 def delete_circle_quote(cid, quote):
-    connection.session.execute(stmtquote.D_Q_QUOCIRCLE_B_CID,(quote,cid))
+    connection.session.execute(stmtquote.D_A_QUOCIRCLE_B_CID_QUOTE,(cid,quote))
     return True
 
 def delete_circle_quotes(cid):

@@ -132,7 +132,7 @@ def new_datasource_request(passport, datasourcename):
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
         if authupdate.update_resources(operation=auth_op, params=params):
-            message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
+            message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
             msgapi.send_message(message)
             message=messages.NewDSWidgetMessage(uid=passport.uid, did=datasource['did'])
             msgapi.send_message(message)

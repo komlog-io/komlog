@@ -13,7 +13,6 @@ import json
 import uuid
 from komlog.komfig import logging
 from komlog.komimc import api as msgapi
-from komlog.komlibs.auth import operations as authoperations
 from komlog.komlibs.auth import update as authupdate
 from komlog.komlibs.general.validation import arguments
 from komlog.komlibs.interface.imc.model import messages
@@ -32,7 +31,7 @@ def process_operation(operation):
 
 def _process_operation_new_datasource(operation):
     if authupdate.update_resources(operation=operation.auth_operation, params=operation.params):
-        message=messages.UpdateQuotesMessage(operation=operation.auth_operation, params=operation.params)
+        message=messages.UpdateQuotesMessage(operation=operation.auth_operation.value, params=operation.params)
         msgapi.send_message(message)
         message=messages.NewDSWidgetMessage(uid=operation.uid,did=operation.did)
         msgapi.send_message(message)

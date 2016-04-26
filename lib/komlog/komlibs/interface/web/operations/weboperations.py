@@ -11,7 +11,7 @@ update user resource utilization and control access based on this
 import json
 import uuid
 from komlog.komlibs.general.validation import arguments
-from komlog.komlibs.auth import operations
+from komlog.komlibs.auth.model.operations import Operations
 
 NEW_AGENT             = 0
 NEW_DATASOURCE        = 1
@@ -32,23 +32,23 @@ DELETE_CIRCLE         = 15
 UPDATE_CIRCLE_MEMBERS = 16
 
 
-OPAUTHS={NEW_AGENT:operations.NEW_AGENT,
-         NEW_DATASOURCE:operations.NEW_DATASOURCE,
-         NEW_DATAPOINT:operations.NEW_DATAPOINT,
-         NEW_WIDGET:operations.NEW_WIDGET,
-         NEW_DASHBOARD:operations.NEW_DASHBOARD,
-         NEW_WIDGET_SYSTEM:operations.NEW_WIDGET_SYSTEM,
-         NEW_SNAPSHOT:operations.NEW_SNAPSHOT,
-         NEW_CIRCLE:operations.NEW_CIRCLE,
-         DELETE_USER: operations.DELETE_USER,
-         DELETE_AGENT: operations.DELETE_AGENT,
-         DELETE_DATASOURCE: operations.DELETE_DATASOURCE,
-         DELETE_DATAPOINT: operations.DELETE_DATAPOINT,
-         DELETE_WIDGET: operations.DELETE_WIDGET,
-         DELETE_DASHBOARD: operations.DELETE_DASHBOARD,
-         DELETE_SNAPSHOT:operations.DELETE_SNAPSHOT,
-         DELETE_CIRCLE:operations.DELETE_CIRCLE,
-         UPDATE_CIRCLE_MEMBERS:operations.UPDATE_CIRCLE_MEMBERS,
+OPAUTHS={NEW_AGENT:Operations.NEW_AGENT,
+         NEW_DATASOURCE:Operations.NEW_DATASOURCE,
+         NEW_DATAPOINT:Operations.NEW_DATAPOINT,
+         NEW_WIDGET:Operations.NEW_WIDGET,
+         NEW_DASHBOARD:Operations.NEW_DASHBOARD,
+         NEW_WIDGET_SYSTEM:Operations.NEW_WIDGET_SYSTEM,
+         NEW_SNAPSHOT:Operations.NEW_SNAPSHOT,
+         NEW_CIRCLE:Operations.NEW_CIRCLE,
+         DELETE_USER: Operations.DELETE_USER,
+         DELETE_AGENT: Operations.DELETE_AGENT,
+         DELETE_DATASOURCE: Operations.DELETE_DATASOURCE,
+         DELETE_DATAPOINT: Operations.DELETE_DATAPOINT,
+         DELETE_WIDGET: Operations.DELETE_WIDGET,
+         DELETE_DASHBOARD: Operations.DELETE_DASHBOARD,
+         DELETE_SNAPSHOT:Operations.DELETE_SNAPSHOT,
+         DELETE_CIRCLE:Operations.DELETE_CIRCLE,
+         UPDATE_CIRCLE_MEMBERS:Operations.UPDATE_CIRCLE_MEMBERS,
          }
 
 class WIFaceOperation:

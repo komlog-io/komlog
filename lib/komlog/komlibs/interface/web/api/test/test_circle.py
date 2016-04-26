@@ -1,7 +1,6 @@
 import unittest
 import uuid
 import json
-from komlog.komlibs.auth import operations
 from komlog.komlibs.auth import passport
 from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.gestaccount.errors import Errors as gesterrors

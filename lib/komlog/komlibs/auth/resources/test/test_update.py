@@ -1,7 +1,8 @@
 import unittest
 import uuid
-from komlog.komlibs.auth import operations, permissions
+from komlog.komlibs.auth import permissions
 from komlog.komlibs.auth.resources import update
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komcass.api import permission as cassapiperm
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
@@ -24,7 +25,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
     
     def test_get_update_funcs_success(self):
         ''' test_update_funcs should return a list of functions '''
-        operation=operations.NEW_AGENT
+        operation=Operations.NEW_AGENT
         update_funcs=update.get_update_funcs(operation=operation)
         self.assertTrue(isinstance(update_funcs, list))
 

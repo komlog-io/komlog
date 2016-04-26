@@ -15,7 +15,7 @@ class InterfaceImcApiRescontrolTest(unittest.TestCase):
         operation=weboperations.NewAgentOperation(uid=uuid.uuid4(), aid=uuid.uuid4())
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
-        message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
+        message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
         response=rescontrol.process_message_UPDQUO(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
 
@@ -24,7 +24,7 @@ class InterfaceImcApiRescontrolTest(unittest.TestCase):
         operation=weboperations.NewAgentOperation(uid=uuid.uuid4(), aid=uuid.uuid4())
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
-        message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
+        message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params)
         response=rescontrol.process_message_RESAUTH(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
 

@@ -43,8 +43,8 @@ def process_message_MONVAR(message):
             operation=weboperations.NewDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=datapoint['pid'])
             auth_op=operation.get_auth_operation()
             params=operation.get_params()
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
             response.add_msg_originated(messages.FillDatapointMessage(pid=datapoint['pid'],date=date))
             response.add_msg_originated(messages.NewDPWidgetMessage(uid=uid,pid=datapoint['pid']))
             response.add_msg_originated(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':datapoint['pid'].hex}))
@@ -175,8 +175,8 @@ def process_message_NEWDSW(message):
             operation=weboperations.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
             auth_op=operation.get_auth_operation()
             params=operation.get_params()
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
             response.status=status.IMC_STATUS_OK
         else:
             response.status=status.IMC_STATUS_INTERNAL_ERROR
@@ -196,8 +196,8 @@ def process_message_NEWDPW(message):
             operation=weboperations.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
             auth_op=operation.get_auth_operation()
             params=operation.get_params()
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
             response.status=status.IMC_STATUS_OK
         else:
             response.status=status.IMC_STATUS_INTERNAL_ERROR
@@ -217,8 +217,8 @@ def process_message_DELUSER(message):
         #operation=weboperations.DeleteUserOperation(uid=user['uid'],aids=[agent['aid'] for agent in agents])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -235,8 +235,8 @@ def process_message_DELAGENT(message):
         #operation=weboperations.DeleteAgentOperation(aid=aid,uid=agent['uid'])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -253,8 +253,8 @@ def process_message_DELDS(message):
         #operation=weboperations.DeleteDatasourceOperation(did=did,aid=datasource['aid'],uid=datasource['uid'],pids=datasource['pids'])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -272,8 +272,8 @@ def process_message_DELDP(message):
         #operation=weboperations.DeleteDatapointOperation(pid=pid,aid=datasource['aid'],uid=datasource['uid'])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -290,8 +290,8 @@ def process_message_DELWIDGET(message):
         #operation=weboperations.DeleteWidgetOperation(wid=wid,uid=widget['uid'])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -308,8 +308,8 @@ def process_message_DELDASHB(message):
         #operation=weboperations.DeleteDashboardOperation(bid=bid,uid=dashboard['uid'])
         #auth_op=operation.get_auth_operation()
         #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params))
+        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
+        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS

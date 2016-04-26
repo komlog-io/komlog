@@ -36,7 +36,7 @@ def new_agent_request(passport, agentname, pubkey, version):
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
         if authupdate.update_resources(operation=auth_op, params=params):
-            message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
+            message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
             msgapi.send_message(message)
             message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_AGENT, parameters={'aid':agent['aid'].hex})
             msgapi.send_message(message)
