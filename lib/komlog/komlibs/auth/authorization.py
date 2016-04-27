@@ -11,7 +11,7 @@ from komlog.komlibs.auth.resources import authorization as resauth
 from komlog.komlibs.auth.tickets import authorization as ticketsauth
 from komlog.komlibs.auth import exceptions
 from komlog.komlibs.auth.errors import Errors
-from komlog.komlibs.auth.requests import Requests
+from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.gestaccount.user.states import UserStates
 from komlog.komlibs.gestaccount.agent.states import AgentStates
 from komlog.komcass.api import user as cassapiuser

@@ -8,7 +8,7 @@
 
 '''
 
-from komlog.komlibs.auth.operations import Operations
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.auth.model.quotes import Quotes
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent

@@ -3,9 +3,9 @@ from base64 import b64decode
 from komlog.komfig import logging
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
-from komlog.komlibs.auth.requests import Requests
-from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.auth import update as authupdate
+from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi

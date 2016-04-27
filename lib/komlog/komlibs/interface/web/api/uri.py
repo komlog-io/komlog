@@ -6,8 +6,8 @@ This file defines the logic associated with uri web interface operations
 
 import uuid
 from komlog.komlibs.auth import authorization
-from komlog.komlibs.auth.requests import Requests
 from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.graph.api import uri as graphuri

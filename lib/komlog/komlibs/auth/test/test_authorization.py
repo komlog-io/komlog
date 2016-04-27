@@ -2,10 +2,10 @@ import unittest
 import uuid
 import inspect
 from komlog.komlibs.auth import authorization
-from komlog.komlibs.auth.requests import Requests
-from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.auth import exceptions, permissions
+from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.auth.errors import Errors
+from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.gestaccount.user import api as gestuserapi
 from komlog.komlibs.general.time import timeuuid
 from komlog.komfig import logging

@@ -8,8 +8,8 @@ import uuid
 from komlog.komfig import logging
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
-from komlog.komlibs.auth.requests import Requests
 from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.gestaccount.errors import Errors as gesterrors

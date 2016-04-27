@@ -9,7 +9,7 @@ import uuid
 import json
 from komlog.komfig import logging, config, options
 from komlog.komlibs.auth import authorization
-from komlog.komlibs.auth.requests import Requests
+from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.common import delete as deleteapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
