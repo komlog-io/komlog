@@ -1,8 +1,11 @@
 import unittest
 import uuid
 import json
+from komlog.komcass.api import quote as cassapiquote
 from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.auth import passport
+from komlog.komlibs.auth.model.relations import operation_quotes
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.user import api as gestuserapi
 from komlog.komlibs.gestaccount.user.states import *
@@ -52,6 +55,23 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 break
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
+        auth_op=Operations.NEW_USER
+        for quote in operation_quotes[auth_op]:
+            user_quo=cassapiquote.get_user_quote(uid=psp.uid, quote=quote.name)
+            self.assertIsNotNone(user_quo)
+            self.assertEqual(user_quo.value,0)
 
     def test_new_user_request_failure_already_existing_user(self):
         ''' new_user_request should succeed if arguments are valid and return the user uid '''
@@ -84,6 +104,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 break
         self.assertEqual(msg.email,email)
         self.assertTrue(args.is_valid_code(msg.code))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         response3 = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response3, webmodel.WebInterfaceResponse))
         self.assertEqual(response3.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -167,6 +199,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 break
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
 
     def test_new_user_request_failure_already_used_invitation(self):
         ''' new_user_request should fail if invitation passed is already used '''
@@ -200,6 +244,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 break
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         username = 'test_new_user_request_failure_already_used_invitation_2'
         password = 'password'
         email = username+'@komlog.org'
@@ -216,6 +272,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -267,6 +335,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -310,6 +390,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 break
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         response2=userapi.confirm_user_request(email=email, code='CUSTOMCODE')
         self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_INTERNAL_ERROR)
@@ -324,6 +416,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
         while True:
@@ -588,6 +692,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 break
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         response=userapi.check_invitation_request(invitation=invitation)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
         self.assertEqual(response.error, Errors.E_IWAU_CIR_INVAU.value)
@@ -700,6 +816,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 break
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         response3=userapi.register_forget_request(account=email)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
@@ -748,6 +876,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 break
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         response3=userapi.register_forget_request(account=username)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
@@ -811,6 +951,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 break
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         response3=userapi.register_forget_request(account=username)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
@@ -866,6 +1018,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 break
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         response3=userapi.register_forget_request(account=username)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
@@ -944,6 +1108,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 break
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
         response3=userapi.register_forget_request(account=username)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)

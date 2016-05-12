@@ -30,26 +30,30 @@ DELETE_DASHBOARD      = 13
 DELETE_SNAPSHOT       = 14
 DELETE_CIRCLE         = 15
 UPDATE_CIRCLE_MEMBERS = 16
+#DATASOURCE_DATA_STORED    = 17
+NEW_USER              = 18
 
 
-OPAUTHS={NEW_AGENT:Operations.NEW_AGENT,
-         NEW_DATASOURCE:Operations.NEW_DATASOURCE,
-         NEW_DATAPOINT:Operations.NEW_DATAPOINT,
-         NEW_WIDGET:Operations.NEW_WIDGET,
-         NEW_DASHBOARD:Operations.NEW_DASHBOARD,
-         NEW_WIDGET_SYSTEM:Operations.NEW_WIDGET_SYSTEM,
-         NEW_SNAPSHOT:Operations.NEW_SNAPSHOT,
-         NEW_CIRCLE:Operations.NEW_CIRCLE,
-         DELETE_USER: Operations.DELETE_USER,
-         DELETE_AGENT: Operations.DELETE_AGENT,
-         DELETE_DATASOURCE: Operations.DELETE_DATASOURCE,
-         DELETE_DATAPOINT: Operations.DELETE_DATAPOINT,
-         DELETE_WIDGET: Operations.DELETE_WIDGET,
-         DELETE_DASHBOARD: Operations.DELETE_DASHBOARD,
-         DELETE_SNAPSHOT:Operations.DELETE_SNAPSHOT,
-         DELETE_CIRCLE:Operations.DELETE_CIRCLE,
-         UPDATE_CIRCLE_MEMBERS:Operations.UPDATE_CIRCLE_MEMBERS,
-         }
+OPAUTHS={
+    NEW_USER:Operations.NEW_USER,
+    NEW_AGENT:Operations.NEW_AGENT,
+    NEW_DATASOURCE:Operations.NEW_DATASOURCE,
+    NEW_DATAPOINT:Operations.NEW_DATAPOINT,
+    NEW_WIDGET:Operations.NEW_WIDGET,
+    NEW_DASHBOARD:Operations.NEW_DASHBOARD,
+    NEW_WIDGET_SYSTEM:Operations.NEW_WIDGET_SYSTEM,
+    NEW_SNAPSHOT:Operations.NEW_SNAPSHOT,
+    NEW_CIRCLE:Operations.NEW_CIRCLE,
+    DELETE_USER: Operations.DELETE_USER,
+    DELETE_AGENT: Operations.DELETE_AGENT,
+    DELETE_DATASOURCE: Operations.DELETE_DATASOURCE,
+    DELETE_DATAPOINT: Operations.DELETE_DATAPOINT,
+    DELETE_WIDGET: Operations.DELETE_WIDGET,
+    DELETE_DASHBOARD: Operations.DELETE_DASHBOARD,
+    DELETE_SNAPSHOT:Operations.DELETE_SNAPSHOT,
+    DELETE_CIRCLE:Operations.DELETE_CIRCLE,
+    UPDATE_CIRCLE_MEMBERS:Operations.UPDATE_CIRCLE_MEMBERS,
+}
 
 class WIFaceOperation:
     def __init__(self):
@@ -63,6 +67,12 @@ class WIFaceOperation:
 
     def get_params(self):
         return self.params
+
+class NewUserOperation(WIFaceOperation):
+    def __init__(self, uid):
+        self.oid=NEW_USER
+        self.params={}
+        self.params['uid']=uid
 
 class NewAgentOperation(WIFaceOperation):
     def __init__(self, uid, aid):

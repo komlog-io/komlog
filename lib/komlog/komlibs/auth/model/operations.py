@@ -28,4 +28,5 @@ class Operations(Enum):
     DELETE_CIRCLE             = 15
     UPDATE_CIRCLE_MEMBERS     = 16
     DATASOURCE_DATA_STORED    = 17
+    NEW_USER                  = 18
 

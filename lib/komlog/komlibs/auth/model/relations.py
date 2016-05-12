@@ -3,6 +3,15 @@ from komlog.komlibs.auth.model.quotes import Quotes
 
 
 operation_quotes = {
+    Operations.NEW_USER: [
+        Quotes.quo_user_total_agents,
+        Quotes.quo_user_total_datasources,
+        Quotes.quo_user_total_datapoints,
+        Quotes.quo_user_total_widgets,
+        Quotes.quo_user_total_dashboards,
+        Quotes.quo_user_total_snapshots,
+        Quotes.quo_user_total_circles,
+    ],
     Operations.NEW_AGENT: [
         Quotes.quo_user_total_agents
     ],
