@@ -27,17 +27,17 @@ def get_update_funcs(operation):
     except KeyError:
         return []
 
-def quo_static_user_total_agents(params):
+def quo_user_total_agents(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     num_agents=cassapiagent.get_number_of_agents_by_uid(uid=uid)
-    quote=Quotes.quo_static_user_total_agents.name
+    quote=Quotes.quo_user_total_agents.name
     if cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_agents):
         return num_agents
     return None
 
-def quo_static_user_total_datasources(params):
+def quo_user_total_datasources(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
@@ -46,12 +46,12 @@ def quo_static_user_total_datasources(params):
     for aid in aids:
         agent_datasources=cassapidatasource.get_number_of_datasources_by_aid(aid=aid)
         total_datasources+=int(agent_datasources)
-    quote=Quotes.quo_static_user_total_datasources.name
+    quote=Quotes.quo_user_total_datasources.name
     if cassapiquote.set_user_quote(uid=uid, quote=quote, value=total_datasources):
         return total_datasources
     return None
 
-def quo_static_user_total_datapoints(params):
+def quo_user_total_datapoints(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
@@ -62,42 +62,42 @@ def quo_static_user_total_datapoints(params):
         for did in dids:
             datasource_datapoints=cassapidatapoint.get_number_of_datapoints_by_did(did=did)
             total_datapoints+=int(datasource_datapoints)
-    quote=Quotes.quo_static_user_total_datapoints.name
+    quote=Quotes.quo_user_total_datapoints.name
     if cassapiquote.set_user_quote(uid=uid, quote=quote, value=total_datapoints):
         return total_datapoints
     return None
 
-def quo_static_user_total_widgets(params):
+def quo_user_total_widgets(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     num_widgets=cassapiwidget.get_number_of_widgets_by_uid(uid=uid)
-    quote=Quotes.quo_static_user_total_widgets.name
+    quote=Quotes.quo_user_total_widgets.name
     if cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_widgets):
         return num_widgets
     return None
 
-def quo_static_user_total_dashboards(params):
+def quo_user_total_dashboards(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     num_dashboards=cassapidashboard.get_number_of_dashboards_by_uid(uid=uid)
-    quote=Quotes.quo_static_user_total_dashboards.name
+    quote=Quotes.quo_user_total_dashboards.name
     if cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_dashboards):
         return num_dashboards
     return None
 
-def quo_static_agent_total_datasources(params):
+def quo_agent_total_datasources(params):
     if 'aid' not in params:
         return None
     aid=params['aid']
     num_datasources=cassapidatasource.get_number_of_datasources_by_aid(aid=aid)
-    quote=Quotes.quo_static_agent_total_datasources.name
+    quote=Quotes.quo_agent_total_datasources.name
     if cassapiquote.set_agent_quote(aid=aid, quote=quote, value=num_datasources):
         return num_datasources
     return None
 
-def quo_static_agent_total_datapoints(params):
+def quo_agent_total_datapoints(params):
     if 'aid' not in params:
         return None
     aid=params['aid']
@@ -106,42 +106,42 @@ def quo_static_agent_total_datapoints(params):
     for did in dids:
         num_datapoints=cassapidatapoint.get_number_of_datapoints_by_did(did=did)
         total_datapoints+=int(num_datapoints)
-    quote=Quotes.quo_static_agent_total_datapoints.name
+    quote=Quotes.quo_agent_total_datapoints.name
     if cassapiquote.set_agent_quote(aid=aid, quote=quote, value=total_datapoints):
         return total_datapoints
     return None
 
-def quo_static_datasource_total_datapoints(params):
+def quo_datasource_total_datapoints(params):
     if 'did' not in params:
         return None
     did=params['did']
     total_datapoints=cassapidatapoint.get_number_of_datapoints_by_did(did=did)
-    quote=Quotes.quo_static_datasource_total_datapoints.name
+    quote=Quotes.quo_datasource_total_datapoints.name
     if cassapiquote.set_datasource_quote(did=did, quote=quote, value=total_datapoints):
         return total_datapoints
     return None
 
-def quo_static_user_total_snapshots(params):
+def quo_user_total_snapshots(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     num_snapshots=cassapisnapshot.get_number_of_snapshots(uid=uid)
-    quote=Quotes.quo_static_user_total_snapshots.name
+    quote=Quotes.quo_user_total_snapshots.name
     if cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_snapshots):
         return num_snapshots
     return None
 
-def quo_static_user_total_circles(params):
+def quo_user_total_circles(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     num_circles=cassapicircle.get_number_of_circles(uid=uid)
-    quote=Quotes.quo_static_user_total_circles.name
+    quote=Quotes.quo_user_total_circles.name
     if cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_circles):
         return num_circles
     return None
 
-def quo_static_circle_total_members(params):
+def quo_circle_total_members(params):
     if 'cid' not in params:
         return None
     cid=params['cid']
@@ -149,7 +149,7 @@ def quo_static_circle_total_members(params):
     if not circle:
         return '0'
     num_members=len(circle.members)
-    quote=Quotes.quo_static_circle_total_members.name
+    quote=Quotes.quo_circle_total_members.name
     if cassapiquote.set_circle_quote(cid=cid, quote=quote, value=num_members):
         return num_members
     return None
@@ -186,7 +186,7 @@ def quo_daily_user_datasources_occupation(params):
     else:
         return None
 
-def quo_total_user_occupation(params):
+def quo_user_total_occupation(params):
     ''' 
         We calculate the total occupation user data. This quote is calculated once hourly at most.
         Right now, we only measure the datasources occupation.
@@ -198,7 +198,7 @@ def quo_total_user_occupation(params):
     if not dsinfo or not dsinfo.uid:
         return None
     uid=dsinfo.uid
-    quote=Quotes.quo_total_user_occupation.name
+    quote=Quotes.quo_user_total_occupation.name
     ts=timeuuid.get_hour_timestamp(timeuuid.uuid1())
     value=0
     if cassapiquote.new_user_ts_quote(uid=uid, quote=quote, ts=ts, value=value):
@@ -212,18 +212,18 @@ def quo_total_user_occupation(params):
 quote_funcs = {
     Quotes.quo_daily_datasource_occupation:quo_daily_datasource_occupation,
     Quotes.quo_daily_user_datasources_occupation:quo_daily_user_datasources_occupation,
-    Quotes.quo_static_agent_total_datapoints:quo_static_agent_total_datapoints,
-    Quotes.quo_static_agent_total_datasources:quo_static_agent_total_datasources,
-    Quotes.quo_static_circle_total_members:quo_static_circle_total_members,
-    Quotes.quo_static_circle_total_members:quo_static_circle_total_members,
-    Quotes.quo_static_datasource_total_datapoints:quo_static_datasource_total_datapoints,
-    Quotes.quo_static_user_total_agents:quo_static_user_total_agents,
-    Quotes.quo_static_user_total_circles:quo_static_user_total_circles,
-    Quotes.quo_static_user_total_dashboards:quo_static_user_total_dashboards,
-    Quotes.quo_static_user_total_datapoints:quo_static_user_total_datapoints,
-    Quotes.quo_static_user_total_datasources:quo_static_user_total_datasources,
-    Quotes.quo_static_user_total_snapshots:quo_static_user_total_snapshots,
-    Quotes.quo_static_user_total_widgets:quo_static_user_total_widgets,
-    Quotes.quo_total_user_occupation:quo_total_user_occupation,
+    Quotes.quo_agent_total_datapoints:quo_agent_total_datapoints,
+    Quotes.quo_agent_total_datasources:quo_agent_total_datasources,
+    Quotes.quo_circle_total_members:quo_circle_total_members,
+    Quotes.quo_circle_total_members:quo_circle_total_members,
+    Quotes.quo_datasource_total_datapoints:quo_datasource_total_datapoints,
+    Quotes.quo_user_total_agents:quo_user_total_agents,
+    Quotes.quo_user_total_circles:quo_user_total_circles,
+    Quotes.quo_user_total_dashboards:quo_user_total_dashboards,
+    Quotes.quo_user_total_datapoints:quo_user_total_datapoints,
+    Quotes.quo_user_total_datasources:quo_user_total_datasources,
+    Quotes.quo_user_total_snapshots:quo_user_total_snapshots,
+    Quotes.quo_user_total_widgets:quo_user_total_widgets,
+    Quotes.quo_user_total_occupation:quo_user_total_occupation,
 }
 

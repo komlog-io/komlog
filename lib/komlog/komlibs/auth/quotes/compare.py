@@ -16,106 +16,113 @@ from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import segment as cassapisegment
 from komlog.komcass.api import datasource as cassapidatasource
 
-def quo_static_user_total_agents(params):
+def quo_user_total_agents(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_static_user_max_agents.name)
-    userquo=cassapiquote.get_user_quote(uid=uid, quote=Quotes.quo_static_user_total_agents.name)
+    quote=Quotes.quo_user_total_agents.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
+    userquo=cassapiquote.get_user_quote(uid=uid, quote=quote)
     if userquo and segmentquo:
         if userquo.value>segmentquo.value:
             return True
     return False
 
 
-def quo_static_user_total_datasources(params):
+def quo_user_total_datasources(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_static_user_max_datasources.name)
-    userquo=cassapiquote.get_user_quote(uid=uid, quote=Quotes.quo_static_user_total_datasources.name)
+    quote=Quotes.quo_user_total_datasources.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
+    userquo=cassapiquote.get_user_quote(uid=uid, quote=quote)
     if userquo and segmentquo:
         if userquo.value>segmentquo.value:
             return True
     return False
 
-def quo_static_user_total_datapoints(params):
+def quo_user_total_datapoints(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_static_user_max_datapoints.name)
-    userquo=cassapiquote.get_user_quote(uid=uid, quote=Quotes.quo_static_user_total_datapoints.name)
+    quote=Quotes.quo_user_total_datapoints.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
+    userquo=cassapiquote.get_user_quote(uid=uid, quote=quote)
     if userquo and segmentquo:
         if userquo.value>segmentquo.value:
             return True
     return False
 
-def quo_static_user_total_widgets(params):
+def quo_user_total_widgets(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_static_user_max_widgets.name)
-    userquo=cassapiquote.get_user_quote(uid=uid, quote=Quotes.quo_static_user_total_widgets.name)
+    quote=Quotes.quo_user_total_widgets.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
+    userquo=cassapiquote.get_user_quote(uid=uid, quote=quote)
     if userquo and segmentquo:
         if userquo.value>segmentquo.value:
             return True
     return False
 
-def quo_static_user_total_dashboards(params):
+def quo_user_total_dashboards(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_static_user_max_dashboards.name)
-    userquo=cassapiquote.get_user_quote(uid=uid, quote=Quotes.quo_static_user_total_dashboards.name)
+    quote=Quotes.quo_user_total_dashboards.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
+    userquo=cassapiquote.get_user_quote(uid=uid, quote=quote)
     if userquo and segmentquo:
         if userquo.value>segmentquo.value:
             return True
     return False
 
-def quo_static_user_total_snapshots(params):
+def quo_user_total_snapshots(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_static_user_max_snapshots.name)
-    userquo=cassapiquote.get_user_quote(uid=uid, quote=Quotes.quo_static_user_total_snapshots.name)
+    quote=Quotes.quo_user_total_snapshots.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
+    userquo=cassapiquote.get_user_quote(uid=uid, quote=quote)
     if userquo and segmentquo:
         if userquo.value>segmentquo.value:
             return True
     return False
 
-def quo_static_user_total_circles(params):
+def quo_user_total_circles(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_static_user_max_circles.name)
-    userquo=cassapiquote.get_user_quote(uid=uid, quote=Quotes.quo_static_user_total_circles.name)
+    quote=Quotes.quo_user_total_circles.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
+    userquo=cassapiquote.get_user_quote(uid=uid, quote=quote)
     if userquo and segmentquo:
         if userquo.value>segmentquo.value:
             return True
     return False
 
-def quo_static_agent_total_datasources(params):
+def quo_agent_total_datasources(params):
     if 'aid' not in params or 'uid' not in params:
         return None
     uid=params['uid']
@@ -123,14 +130,15 @@ def quo_static_agent_total_datasources(params):
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_static_agent_max_datasources.name)
-    agentquo=cassapiquote.get_agent_quote(aid=aid, quote=Quotes.quo_static_agent_total_datasources.name)
+    quote=Quotes.quo_agent_total_datasources.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
+    agentquo=cassapiquote.get_agent_quote(aid=aid, quote=quote)
     if agentquo and segmentquo:
         if agentquo.value>segmentquo.value:
             return True
     return False
 
-def quo_static_agent_total_datapoints(params):
+def quo_agent_total_datapoints(params):
     if 'aid' not in params or 'uid' not in params:
         return None
     uid=params['uid']
@@ -138,14 +146,15 @@ def quo_static_agent_total_datapoints(params):
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_static_agent_max_datapoints.name)
-    agentquo=cassapiquote.get_agent_quote(aid=aid, quote=Quotes.quo_static_agent_total_datapoints.name)
+    quote=Quotes.quo_agent_total_datapoints.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
+    agentquo=cassapiquote.get_agent_quote(aid=aid, quote=quote)
     if agentquo and segmentquo:
         if agentquo.value>segmentquo.value:
             return True
     return False
 
-def quo_static_datasource_total_datapoints(params):
+def quo_datasource_total_datapoints(params):
     if 'did' not in params or 'uid' not in params:
         return None
     uid=params['uid']
@@ -153,14 +162,15 @@ def quo_static_datasource_total_datapoints(params):
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_static_datasource_max_datapoints.name)
-    dsquo=cassapiquote.get_datasource_quote(did=did, quote=Quotes.quo_static_datasource_total_datapoints.name)
+    quote=Quotes.quo_datasource_total_datapoints.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
+    dsquo=cassapiquote.get_datasource_quote(did=did, quote=quote)
     if dsquo and segmentquo:
         if dsquo.value>segmentquo.value:
             return True
     return False
 
-def quo_static_circle_total_members(params):
+def quo_circle_total_members(params):
     if 'uid' not in params or 'cid' not in params:
         return None
     uid=params['uid']
@@ -168,8 +178,9 @@ def quo_static_circle_total_members(params):
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_static_circle_max_members.name)
-    cquo=cassapiquote.get_circle_quote(cid=cid, quote=Quotes.quo_static_circle_total_members.name)
+    quote=Quotes.quo_circle_total_members.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
+    cquo=cassapiquote.get_circle_quote(cid=cid, quote=quote)
     if cquo and segmentquo:
         if cquo.value>segmentquo.value:
             return True
@@ -187,11 +198,12 @@ def quo_daily_datasource_occupation(params):
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_daily_datasource_occupation.name)
+    quote=Quotes.quo_daily_datasource_occupation.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
     ts=timeuuid.get_day_timestamp(date)
-    quo=cassapiquote.get_datasource_ts_quote(did=did, quote=Quotes.quo_daily_datasource_occupation.name, ts=ts)
-    if segmentquo and quo:
-        if quo.value>segmentquo.value:
+    dsquo=cassapiquote.get_datasource_ts_quote(did=did, quote=quote, ts=ts)
+    if segmentquo and dsquo:
+        if dsquo.value>segmentquo.value:
             return True
     return False
 
@@ -207,15 +219,16 @@ def quo_daily_user_datasources_occupation(params):
     user=cassapiuser.get_user(uid=uid)
     if not user:
         return None
-    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=Quotes.quo_daily_user_datasources_occupation.name)
+    quote=Quotes.quo_daily_user_datasources_occupation.name
+    segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
     ts=timeuuid.get_day_timestamp(date)
-    quo=cassapiquote.get_user_ts_quote(uid=uid, quote=Quotes.quo_daily_user_datasources_occupation.name, ts=ts)
-    if segmentquo and quo:
-        if quo.value>segmentquo.value:
+    userquo=cassapiquote.get_user_ts_quote(uid=uid, quote=quote, ts=ts)
+    if segmentquo and userquo:
+        if userquo.value>segmentquo.value:
             return True
     return False
 
-def quo_total_user_occupation(params):
+def quo_user_total_occupation(params):
     '''
         Compare total occupation value with segment. If limit is surpassed, then deny the interface.
         If limit is not surpassed, delete the deny interface.
@@ -231,29 +244,28 @@ def quo_total_user_occupation(params):
     if not user:
         return None
     uid=user.uid
-    quote=Quotes.quo_total_user_occupation.name
+    quote=Quotes.quo_user_total_occupation.name
     segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
-    quo=cassapiquote.get_user_ts_quotes(uid=uid, quote=quote, count=1)
-    if segmentquo and quo and quo[0].value>segmentquo.value:
+    userquo=cassapiquote.get_user_ts_quotes(uid=uid, quote=quote, count=1)
+    if segmentquo and userquo and userquo[0].value>segmentquo.value:
         return True
-    else:
-        return False
+    return False
 
 quote_funcs = {
     Quotes.quo_daily_datasource_occupation:quo_daily_datasource_occupation,
     Quotes.quo_daily_user_datasources_occupation:quo_daily_user_datasources_occupation,
-    Quotes.quo_static_agent_total_datapoints:quo_static_agent_total_datapoints,
-    Quotes.quo_static_agent_total_datasources:quo_static_agent_total_datasources,
-    Quotes.quo_static_circle_total_members:quo_static_circle_total_members,
-    Quotes.quo_static_circle_total_members:quo_static_circle_total_members,
-    Quotes.quo_static_datasource_total_datapoints:quo_static_datasource_total_datapoints,
-    Quotes.quo_static_user_total_agents:quo_static_user_total_agents,
-    Quotes.quo_static_user_total_circles:quo_static_user_total_circles,
-    Quotes.quo_static_user_total_dashboards:quo_static_user_total_dashboards,
-    Quotes.quo_static_user_total_datapoints:quo_static_user_total_datapoints,
-    Quotes.quo_static_user_total_datasources:quo_static_user_total_datasources,
-    Quotes.quo_static_user_total_snapshots:quo_static_user_total_snapshots,
-    Quotes.quo_static_user_total_widgets:quo_static_user_total_widgets,
-    Quotes.quo_total_user_occupation:quo_total_user_occupation,
+    Quotes.quo_agent_total_datapoints:quo_agent_total_datapoints,
+    Quotes.quo_agent_total_datasources:quo_agent_total_datasources,
+    Quotes.quo_circle_total_members:quo_circle_total_members,
+    Quotes.quo_circle_total_members:quo_circle_total_members,
+    Quotes.quo_datasource_total_datapoints:quo_datasource_total_datapoints,
+    Quotes.quo_user_total_agents:quo_user_total_agents,
+    Quotes.quo_user_total_circles:quo_user_total_circles,
+    Quotes.quo_user_total_dashboards:quo_user_total_dashboards,
+    Quotes.quo_user_total_datapoints:quo_user_total_datapoints,
+    Quotes.quo_user_total_datasources:quo_user_total_datasources,
+    Quotes.quo_user_total_snapshots:quo_user_total_snapshots,
+    Quotes.quo_user_total_widgets:quo_user_total_widgets,
+    Quotes.quo_user_total_occupation:quo_user_total_occupation,
 }
 

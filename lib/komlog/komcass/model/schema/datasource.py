@@ -77,7 +77,7 @@ DAT_DATASOURCE_TEXT_SUMMARY='''
         CREATE TABLE dat_datasource_text_summary (
             did uuid,
             date timeuuid,
-            content_length int,
+            content_length varint,
             num_lines int,
             num_words int,
             word_frecuency map<text,int>,
@@ -100,7 +100,7 @@ DAT_DATASOURCE_METADATA='''
         CREATE TABLE dat_datasource_metadata (
             did uuid,
             date timeuuid,
-            size int,
+            size varint,
             PRIMARY KEY (did,date)
         ) WITH CLUSTERING ORDER BY (date desc);
     '''

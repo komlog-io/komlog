@@ -12,7 +12,7 @@ PRM_USER_SEGMENT_QUO='''
     CREATE TABLE prm_user_segment_quo (
         sid int,
         quote text,
-        value int,
+        value varint,
         PRIMARY KEY (sid,quote)
     );
 '''

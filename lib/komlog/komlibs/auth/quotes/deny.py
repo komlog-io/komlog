@@ -22,7 +22,7 @@ from komlog.komfig import logging
 
 DEFAULT_PERM='A'
 
-def quo_static_user_total_agents(params,deny):
+def quo_user_total_agents(params,deny):
     if 'uid' not in params:
         return False
     uid=params['uid']
@@ -35,7 +35,7 @@ def quo_static_user_total_agents(params,deny):
             return True
     return False
 
-def quo_static_user_total_datasources(params,deny):
+def quo_user_total_datasources(params,deny):
     if 'uid' not in params:
         return False
     uid=params['uid']
@@ -48,7 +48,7 @@ def quo_static_user_total_datasources(params,deny):
             return True
     return False
 
-def quo_static_user_total_datapoints(params,deny):
+def quo_user_total_datapoints(params,deny):
     if 'uid' not in params:
         return False
     uid=params['uid']
@@ -61,7 +61,7 @@ def quo_static_user_total_datapoints(params,deny):
             return True
     return False
 
-def quo_static_user_total_widgets(params,deny):
+def quo_user_total_widgets(params,deny):
     if 'uid' not in params:
         return False
     uid=params['uid']
@@ -74,7 +74,7 @@ def quo_static_user_total_widgets(params,deny):
             return True
     return False
 
-def quo_static_user_total_dashboards(params,deny):
+def quo_user_total_dashboards(params,deny):
     if 'uid' not in params:
         return False
     uid=params['uid']
@@ -87,7 +87,7 @@ def quo_static_user_total_dashboards(params,deny):
             return True
     return False
 
-def quo_static_user_total_circles(params,deny):
+def quo_user_total_circles(params,deny):
     if 'uid' not in params:
         return False
     uid=params['uid']
@@ -100,7 +100,7 @@ def quo_static_user_total_circles(params,deny):
             return True
     return False
 
-def quo_static_agent_total_datasources(params,deny):
+def quo_agent_total_datasources(params,deny):
     if 'aid' not in params or 'uid' not in params:
         return False
     aid=params['aid']
@@ -114,7 +114,7 @@ def quo_static_agent_total_datasources(params,deny):
             return True
     return False
 
-def quo_static_agent_total_datapoints(params,deny):
+def quo_agent_total_datapoints(params,deny):
     if 'aid' not in params or 'uid' not in params:
         return False
     aid=params['aid']
@@ -129,7 +129,7 @@ def quo_static_agent_total_datapoints(params,deny):
             return True
     return False
 
-def quo_static_datasource_total_datapoints(params,deny):
+def quo_datasource_total_datapoints(params,deny):
     if 'did' not in params or 'uid' not in params:
         return False
     did=params['did']
@@ -143,7 +143,7 @@ def quo_static_datasource_total_datapoints(params,deny):
             return True
     return False
 
-def quo_static_user_total_snapshots(params,deny):
+def quo_user_total_snapshots(params,deny):
     if 'uid' not in params:
         return False
     uid=params['uid']
@@ -156,7 +156,7 @@ def quo_static_user_total_snapshots(params,deny):
             return True
     return False
 
-def quo_static_circle_total_members(params,deny):
+def quo_circle_total_members(params,deny):
     if 'uid' not in params or 'cid' not in params:
         return False
     uid=params['uid']
@@ -208,7 +208,7 @@ def quo_daily_user_datasources_occupation(params, deny):
             return True
     return False
 
-def quo_total_user_occupation(params, deny):
+def quo_user_total_occupation(params, deny):
     ''' In this case, if we receive True, calculate the min timestamp where the occupation
         equals segment limit.
         if we received a False flag, the remove the deny interface.
@@ -223,7 +223,7 @@ def quo_total_user_occupation(params, deny):
     if not user:
         return False
     uid=user.uid
-    quote=Quotes.quo_total_user_occupation.name
+    quote=Quotes.quo_user_total_occupation.name
     iface=interfaces.User_DataRetrievalMinTimestamp().value
     if deny:
         segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
@@ -252,18 +252,18 @@ def quo_total_user_occupation(params, deny):
 quote_funcs = {
     Quotes.quo_daily_datasource_occupation:quo_daily_datasource_occupation,
     Quotes.quo_daily_user_datasources_occupation:quo_daily_user_datasources_occupation,
-    Quotes.quo_static_agent_total_datapoints:quo_static_agent_total_datapoints,
-    Quotes.quo_static_agent_total_datasources:quo_static_agent_total_datasources,
-    Quotes.quo_static_circle_total_members:quo_static_circle_total_members,
-    Quotes.quo_static_circle_total_members:quo_static_circle_total_members,
-    Quotes.quo_static_datasource_total_datapoints:quo_static_datasource_total_datapoints,
-    Quotes.quo_static_user_total_agents:quo_static_user_total_agents,
-    Quotes.quo_static_user_total_circles:quo_static_user_total_circles,
-    Quotes.quo_static_user_total_dashboards:quo_static_user_total_dashboards,
-    Quotes.quo_static_user_total_datapoints:quo_static_user_total_datapoints,
-    Quotes.quo_static_user_total_datasources:quo_static_user_total_datasources,
-    Quotes.quo_static_user_total_snapshots:quo_static_user_total_snapshots,
-    Quotes.quo_static_user_total_widgets:quo_static_user_total_widgets,
-    Quotes.quo_total_user_occupation:quo_total_user_occupation,
+    Quotes.quo_agent_total_datapoints:quo_agent_total_datapoints,
+    Quotes.quo_agent_total_datasources:quo_agent_total_datasources,
+    Quotes.quo_circle_total_members:quo_circle_total_members,
+    Quotes.quo_circle_total_members:quo_circle_total_members,
+    Quotes.quo_datasource_total_datapoints:quo_datasource_total_datapoints,
+    Quotes.quo_user_total_agents:quo_user_total_agents,
+    Quotes.quo_user_total_circles:quo_user_total_circles,
+    Quotes.quo_user_total_dashboards:quo_user_total_dashboards,
+    Quotes.quo_user_total_datapoints:quo_user_total_datapoints,
+    Quotes.quo_user_total_datasources:quo_user_total_datasources,
+    Quotes.quo_user_total_snapshots:quo_user_total_snapshots,
+    Quotes.quo_user_total_widgets:quo_user_total_widgets,
+    Quotes.quo_user_total_occupation:quo_user_total_occupation,
 }
 

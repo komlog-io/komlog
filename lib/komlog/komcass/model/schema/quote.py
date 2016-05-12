@@ -20,7 +20,7 @@ QUO_USER='''
     CREATE TABLE quo_user (
         uid uuid,
         quote text,
-        value int,
+        value varint,
         PRIMARY KEY (uid,quote)
     );
 '''
@@ -29,7 +29,7 @@ QUO_AGENT='''
     CREATE TABLE quo_agent (
         aid uuid,
         quote text,
-        value int,
+        value varint,
         PRIMARY KEY (aid,quote)
     );
 '''
@@ -38,7 +38,7 @@ QUO_DATASOURCE='''
     CREATE TABLE quo_datasource (
         did uuid,
         quote text,
-        value int,
+        value varint,
         PRIMARY KEY (did,quote)
     );
 '''
@@ -47,7 +47,7 @@ QUO_DATAPOINT='''
     CREATE TABLE quo_datapoint (
         pid uuid,
         quote text,
-        value int,
+        value varint,
         PRIMARY KEY (pid,quote)
     );
 '''
@@ -56,7 +56,7 @@ QUO_WIDGET='''
     CREATE TABLE quo_widget (
         wid uuid,
         quote text,
-        value int,
+        value varint,
         PRIMARY KEY (wid,quote)
     );
 '''
@@ -65,7 +65,7 @@ QUO_DASHBOARD='''
     CREATE TABLE quo_dashboard (
         bid uuid,
         quote text,
-        value int,
+        value varint,
         PRIMARY KEY (bid,quote)
     );
 '''
@@ -74,7 +74,7 @@ QUO_CIRCLE='''
     CREATE TABLE quo_circle (
         cid uuid,
         quote text,
-        value int,
+        value varint,
         PRIMARY KEY (cid,quote)
     );
 '''
@@ -84,7 +84,7 @@ QUO_TS_USER='''
         uid uuid,
         quote text,
         ts int,
-        value int,
+        value varint,
         PRIMARY KEY (uid,quote,ts)
     ) WITH CLUSTERING ORDER BY (quote asc, ts desc);
 '''
@@ -94,7 +94,7 @@ QUO_TS_DATASOURCE='''
         did uuid,
         quote text,
         ts int,
-        value int,
+        value varint,
         PRIMARY KEY (did,quote,ts)
     ) WITH CLUSTERING ORDER BY (quote asc, ts desc);
 '''

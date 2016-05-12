@@ -16,6 +16,7 @@ from komlog.komcass.model.schema import graph
 from komlog.komcass.model.schema import circle
 from komlog.komcass.model.schema import events
 from komlog.komcass.model.schema import ticket
+from komlog.komcass.model.population.segment import STATEMENTS as segmentpop
 
 from komlog.komcass import connection
 
@@ -96,10 +97,9 @@ def create_database(ip_list, keyspace=None, replication=None):
         replication=REPLICATION
     if create_keyspace(Session.session, keyspace, replication):
         Session=connection.Session(ip_list,keyspace)
-        create_schema(Session.session)
-        return True
-    else:
-        return False
+        if create_schema(Session.session):
+            return populate_database(Session.session)
+    return False
 
 def drop_database(ip_list, keyspace):
     Session=connection.Session(ip_list)
@@ -113,5 +113,19 @@ def drop_database(ip_list, keyspace):
         return False
     else:
         logging.logger.debug('keyspace deleted successfully')
+        return True
+
+def populate_database(session):
+    logging.logger.debug('Populating database')
+    stmt=None
+    try:
+        for stmt in segmentpop:
+            session.execute(stmt)
+    except Exception as e:
+        logging.logger.debug('Error populating database. '+str(e))
+        logging.logger.debug(str(stmt))
+        return False
+    else:
+        logging.logger.debug('Database Populated successfully')
         return True
 
