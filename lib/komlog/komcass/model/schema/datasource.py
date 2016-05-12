@@ -51,7 +51,7 @@ DAT_DATASOURCE='''
             date timeuuid,
             content text,
             PRIMARY KEY (did,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_DATASOURCE_MAP='''
@@ -61,7 +61,7 @@ DAT_DATASOURCE_MAP='''
             variables map<int,int>,
             datapoints map<uuid,int>,
             PRIMARY KEY (did,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_DATASOURCE_HASH='''
@@ -70,7 +70,7 @@ DAT_DATASOURCE_HASH='''
             date timeuuid,
             content text,
             PRIMARY KEY (did,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_DATASOURCE_TEXT_SUMMARY='''
@@ -82,7 +82,7 @@ DAT_DATASOURCE_TEXT_SUMMARY='''
             num_words int,
             word_frecuency map<text,int>,
             PRIMARY KEY (did,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_DATASOURCE_NOVELTY_DETECTOR_DATAPOINT='''
@@ -93,7 +93,7 @@ DAT_DATASOURCE_NOVELTY_DETECTOR_DATAPOINT='''
             nd blob,
             features set<text>,
             PRIMARY KEY ((did,pid),date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_DATASOURCE_METADATA='''
@@ -102,6 +102,6 @@ DAT_DATASOURCE_METADATA='''
             date timeuuid,
             size int,
             PRIMARY KEY (did,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 

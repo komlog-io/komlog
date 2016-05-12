@@ -5,22 +5,22 @@ This file defines the cassandra statements for the creation of datasource relate
 from komlog.komcass.model.schema import keyspace
 
 OBJECTS=[
-         'DAT_USER_EVENTS',
-         'DAT_USER_EVENTS_DISABLED',
-         'DAT_USER_EVENTS_GRAPH_SUMMARY',
-         'DAT_UE_NOTIF_NWUS',
-         'DAT_UE_NOTIF_NWAG',
-         'DAT_UE_NOTIF_NWDS',
-         'DAT_UE_NOTIF_NWDP',
-         'DAT_UE_NOTIF_NWWG',
-         'DAT_UE_NOTIF_NWDB',
-         'DAT_UE_NOTIF_NWCI',
-         'DAT_UE_NOTIF_NWSNS',
-         'DAT_UE_NOTIF_NWSNSWM',
-         'DAT_UE_INTERV_DPID', 
-         'DAT_UER_INTERV_DPID',
-         'DAT_UER_INTERV_DPID_INDEX_01',
-        ]
+    'DAT_USER_EVENTS',
+    'DAT_USER_EVENTS_DISABLED',
+    'DAT_USER_EVENTS_GRAPH_SUMMARY',
+    'DAT_UE_NOTIF_NWUS',
+    'DAT_UE_NOTIF_NWAG',
+    'DAT_UE_NOTIF_NWDS',
+    'DAT_UE_NOTIF_NWDP',
+    'DAT_UE_NOTIF_NWWG',
+    'DAT_UE_NOTIF_NWDB',
+    'DAT_UE_NOTIF_NWCI',
+    'DAT_UE_NOTIF_NWSNS',
+    'DAT_UE_NOTIF_NWSNSWM',
+    'DAT_UE_INTERV_DPID', 
+    'DAT_UER_INTERV_DPID',
+    'DAT_UER_INTERV_DPID_INDEX_01',
+]
 
 DAT_USER_EVENTS='''
         CREATE TABLE dat_user_events (
@@ -29,7 +29,7 @@ DAT_USER_EVENTS='''
             priority int,
             type int,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_USER_EVENTS_DISABLED='''
@@ -39,7 +39,7 @@ DAT_USER_EVENTS_DISABLED='''
             priority int,
             type int,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_USER_EVENTS_GRAPH_SUMMARY='''
@@ -48,7 +48,7 @@ DAT_USER_EVENTS_GRAPH_SUMMARY='''
             date timeuuid,
             summary text,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_UE_NOTIF_NWUS='''
@@ -57,7 +57,7 @@ DAT_UE_NOTIF_NWUS='''
             date timeuuid,
             username text,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_UE_NOTIF_NWAG='''
@@ -67,7 +67,7 @@ DAT_UE_NOTIF_NWAG='''
             aid uuid,
             agentname text,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_UE_NOTIF_NWDS='''
@@ -78,7 +78,7 @@ DAT_UE_NOTIF_NWDS='''
             did uuid,
             datasourcename text,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_UE_NOTIF_NWDP='''
@@ -90,7 +90,7 @@ DAT_UE_NOTIF_NWDP='''
             datasourcename text,
             datapointname text,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_UE_NOTIF_NWWG='''
@@ -100,7 +100,7 @@ DAT_UE_NOTIF_NWWG='''
             wid uuid,
             widgetname text,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_UE_NOTIF_NWDB='''
@@ -110,7 +110,7 @@ DAT_UE_NOTIF_NWDB='''
             bid uuid,
             dashboardname text,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_UE_NOTIF_NWCI='''
@@ -120,7 +120,7 @@ DAT_UE_NOTIF_NWCI='''
             cid uuid,
             circlename text,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_UE_NOTIF_NWSNS='''
@@ -133,7 +133,7 @@ DAT_UE_NOTIF_NWSNS='''
             shared_with_users map<uuid,text>,
             shared_with_circles map<uuid,text>,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_UE_NOTIF_NWSNSWM='''
@@ -145,7 +145,7 @@ DAT_UE_NOTIF_NWSNSWM='''
             username text,
             widgetname text,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_UE_INTERV_DPID='''
@@ -157,7 +157,7 @@ DAT_UE_INTERV_DPID='''
             doubts set<uuid>,
             discarded set<uuid>,
             PRIMARY KEY (uid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_UER_INTERV_DPID='''
@@ -174,6 +174,7 @@ DAT_UER_INTERV_DPID='''
             PRIMARY KEY ((uid,date),response_date)
         );
     '''
+
 DAT_UER_INTERV_DPID_INDEX_01='''
         CREATE INDEX ON dat_uer_interv_dp_identification (uid);
     '''

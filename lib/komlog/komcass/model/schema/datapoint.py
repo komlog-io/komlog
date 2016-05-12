@@ -44,7 +44,7 @@ DAT_DATAPOINT='''
             date timeuuid,
             value decimal,
             PRIMARY KEY (pid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_DATAPOINT_DTREE_POSITIVES='''
@@ -54,7 +54,7 @@ DAT_DATAPOINT_DTREE_POSITIVES='''
             position int,
             length int,
             PRIMARY KEY (pid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_DATAPOINT_DTREE_NEGATIVES='''
@@ -63,6 +63,6 @@ DAT_DATAPOINT_DTREE_NEGATIVES='''
             date timeuuid,
             coordinates map<int,int>,
             PRIMARY KEY (pid,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 

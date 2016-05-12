@@ -63,7 +63,7 @@ DAT_INVITATION='''
             state int,
             tran_id uuid,
             PRIMARY KEY (inv_id,date)
-        );
+        ) WITH CLUSTERING ORDER BY (date desc);
     '''
 
 DAT_INVITATION_REQUEST='''
