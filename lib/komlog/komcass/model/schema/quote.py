@@ -12,6 +12,8 @@ OBJECTS=[
     'QUO_WIDGET',
     'QUO_DASHBOARD',
     'QUO_CIRCLE',
+    'QUO_TS_USER',
+    'QUO_TS_DATASOURCE',
 ]
 
 QUO_USER='''
@@ -75,5 +77,25 @@ QUO_CIRCLE='''
         value int,
         PRIMARY KEY (cid,quote)
     );
+'''
+
+QUO_TS_USER='''
+    CREATE TABLE quo_ts_user (
+        uid uuid,
+        quote text,
+        ts int,
+        value int,
+        PRIMARY KEY (uid,quote,ts)
+    ) WITH CLUSTERING ORDER BY (quote asc, ts desc);
+'''
+
+QUO_TS_DATASOURCE='''
+    CREATE TABLE quo_ts_datasource (
+        did uuid,
+        quote text,
+        ts int,
+        value int,
+        PRIMARY KEY (did,quote,ts)
+    ) WITH CLUSTERING ORDER BY (quote asc, ts desc);
 '''
 

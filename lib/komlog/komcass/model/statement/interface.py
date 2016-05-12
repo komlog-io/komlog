@@ -10,12 +10,23 @@ def get_statement(num):
         return None
 
 
-STATEMENTS={70000:'select * from if_user_deny where uid=?',
-            70001:'select * from if_user_deny where uid=? and interface=?',
-            75000:'insert into if_user_deny (uid,interface,perm) values (?,?,?)',
-            77000:'delete from if_user_deny where uid=? and interface=?',
-            77001:'delete from if_user_deny where uid=?'
-           }
+STATEMENTS={
+    70000:'select * from if_user_deny where uid=?',
+    70001:'select * from if_user_deny where uid=? and interface=?',
+    70100:'select * from if_ts_user_deny where uid=?',
+    70101:'select * from if_ts_user_deny where uid=? and interface=?',
+    70102:'select * from if_ts_user_deny where uid=? and interface=? and ts=?',
+    70103:'select * from if_ts_user_deny where uid=? and interface=? and ts>=? and ts<=?',
+    75000:'insert into if_user_deny (uid,interface,perm) values (?,?,?)',
+    75100:'insert into if_ts_user_deny (uid,interface,ts,perm) values (?,?,?,?)',
+    75101:'insert into if_ts_user_deny (uid,interface,ts,perm) values (?,?,?,?) if not exists',
+    77000:'delete from if_user_deny where uid=? and interface=?',
+    77001:'delete from if_user_deny where uid=?',
+    77100:'delete from if_ts_user_deny where uid=?',
+    77101:'delete from if_ts_user_deny where uid=? and interface=?',
+    77102:'delete from if_ts_user_deny where uid=? and interface=? and ts=?',
+    77103:'delete from if_ts_user_deny where uid=? and interface=? and ts>=? and ts<=?',
+}
 
 # selects (70000 - 74999)
 
@@ -24,11 +35,23 @@ STATEMENTS={70000:'select * from if_user_deny where uid=?',
 S_A_IFUSERDENY_B_UID=70000
 S_A_IFUSERDENY_B_UID_INTERFACE=70001
 
+# if_ts_user_deny
+
+S_A_IFTSUSERDENY_B_UID=70100
+S_A_IFTSUSERDENY_B_UID_INTERFACE=70101
+S_A_IFTSUSERDENY_B_UID_INTERFACE_TS=70102
+S_A_IFTSUSERDENY_B_UID_INTERFACE_ITS_ETS=70103
+
 # Inserts (75000 - 76999)
 
 # if_user_deny
 
 I_A_IFUSERDENY=75000
+
+# if_ts_user_deny
+
+I_A_IFTSUSERDENY=75100
+I_A_IFTSUSERDENY_INE=75101
 
 # Deletes (77000 - 78999)
 
@@ -37,7 +60,16 @@ I_A_IFUSERDENY=75000
 D_I_IFUSERDENY_B_UID_IFACE=77000
 D_I_IFUSERDENY_B_UID=77001
 
+# if_ts_user_deny
+
+D_A_IFTSUSERDENY_B_UID=77100
+D_A_IFTSUSERDENY_B_UID_INTERFACE=77101
+D_A_IFTSUSERDENY_B_UID_INTERFACE_TS=77102
+D_A_IFTSUSERDENY_B_UID_INTERFACE_ITS_ETS=77103
+
 # Updates (79000 - 79999)
 
 # if_user_deny
+
+# if_ts_user_deny
 

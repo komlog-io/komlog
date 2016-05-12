@@ -1,10 +1,13 @@
 import unittest
 import uuid
 import json
+from komlog.komfig import logging
 from base64 import b64decode, b64encode
-from komlog.komlibs.auth.model.operations import Operations
+from komlog.komcass.api import interface as cassapiiface
 from komlog.komlibs.auth import passport
+from komlog.komlibs.auth.model import interfaces
 from komlog.komlibs.auth.errors import Errors as autherrors
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.datasource import api as gestdatasourceapi
 from komlog.komlibs.interface.web.api import login as loginapi 
@@ -650,19 +653,104 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         self.assertEqual(response.data['content'],content)
         self.assertEqual(response.data['datapoints'],[])
 
-    def Notest_delete_datasource_request_failure_invalid_passport(self):
+    def test_get_datasource_data_request_failure_date_requested_less_than_interval_bound_limit(self):
+        ''' get_datasource_data_request should fail if date requested is less than the date set
+            in the deny interface '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        content='get_datasource_data content 4 5 6'
+        date=timeuuid.uuid1(seconds=1000)
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date, content=content))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date))
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.uuid1(seconds=1001)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(psp.uid, iface, minTs.hex))
+        seq=timeuuid.get_custom_sequence(date)
+        response=datasourceapi.get_datasource_data_request(passport=psp, did=did, seq=seq)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_ALLOWED)
+        self.assertEqual(response.error, autherrors.E_AQA_AGDSD_IBE.value)
+        self.assertEqual(response.data, {'error':autherrors.E_AQA_AGDSD_IBE.value})
+        self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
+
+    def test_get_datasource_data_request_failure_date_requested_empty_but_last_processed_less_than_interval_bound_limit(self):
+        ''' get_datasource_data_request should fail if date requested is less than the date set
+            in the deny interface '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        content='get_datasource_data content 4 5 6'
+        date=timeuuid.uuid1()
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date, content=content))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date))
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.HIGHEST_TIME_UUID
+        self.assertTrue(cassapiiface.insert_user_iface_deny(psp.uid, iface, minTs.hex))
+        response=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_ALLOWED)
+        self.assertEqual(response.error, Errors.E_IWADS_GDSDR_LDBL.value)
+        self.assertEqual(response.data, {'error':Errors.E_IWADS_GDSDR_LDBL.value})
+        self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
+
+    def test_get_datasource_data_request_success_date_requested_empty_but_last_processed_after_than_interval_bound_limit(self):
+        ''' get_datasource_data_request should succeed if date requested is empty and date retrieved is after than the date set in the deny interface '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        content='get_datasource_data content 4 5 6'
+        date=timeuuid.uuid1()
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date, content=content))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date))
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.uuid1(seconds=100)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(psp.uid, iface, minTs.hex))
+        response=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
+
+    def test_get_datasource_data_request_failure_interval_bound_set_and_data_requested_after_limit_does_not_exist(self):
+        ''' get_datasource_data_request should fail if date requested is after limit, but does not exist '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        content='get_datasource_data content 4 5 6'
+        date=timeuuid.uuid1(seconds=5000)
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.uuid1(seconds=4000)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(psp.uid, iface, minTs.hex))
+        seq=timeuuid.get_custom_sequence(date)
+        response=datasourceapi.get_datasource_data_request(passport=psp, did=did, seq=seq)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GDA_GDD_DDNF.value)
+        self.assertEqual(response.data, {'error':gesterrors.E_GDA_GDD_DDNF.value})
+        self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
+
+    def test_get_datasource_data_request_success_interval_bound_set_and_data_requested_after_limit_does_exist(self):
+        ''' get_datasource_data_request should succeed if date requested is after limit, and data exists '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        content='get_datasource_data content 4 5 6'
+        date=timeuuid.uuid1(seconds=5000)
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date, content=content))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date))
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.uuid1(seconds=4000)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(psp.uid, iface, minTs.hex))
+        response=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
+
+    def test_delete_datasource_request_failure_invalid_passport(self):
         ''' delete_datasource_request should fail if passport is invalid '''
         passports=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
         did=uuid.uuid4().hex
         for psp in passports:
             response=datasourceapi.delete_datasource_request(passport=psp, did=did)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWADS_DDSR_IPSP.value)
 
-    def Notest_delete_datasource_request_failure_invalid_did(self):
+    def test_delete_datasource_request_failure_invalid_did(self):
         ''' delete_datasource_request should fail if did is invalid '''
         dids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
         psp = passport.Passport(uid=uuid.uuid4())
         for did in dids:
             response=datasourceapi.delete_datasource_request(passport=psp, did=did)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWADS_DDSR_ID.value)
 

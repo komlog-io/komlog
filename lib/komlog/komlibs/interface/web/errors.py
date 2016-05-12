@@ -95,10 +95,11 @@ class Errors(Enum):
 
 #interface web api datasource
 
-    E_IWADS_GDSDR_IPSP=100400
-    E_IWADS_GDSDR_ID=100401
-    E_IWADS_GDSDR_IS=100402
-    E_IWADS_GDSDR_IT=100403
+    E_IWADS_GDSDR_IPSP = 100400
+    E_IWADS_GDSDR_ID   = 100401
+    E_IWADS_GDSDR_IS   = 100402
+    E_IWADS_GDSDR_IT   = 100403
+    E_IWADS_GDSDR_LDBL = 100403  #: get_datasource_data_request. Last date retrieved is before allowed limit.
 
     E_IWADS_UDSDR_IPSP=100410
     E_IWADS_UDSDR_IA=100411

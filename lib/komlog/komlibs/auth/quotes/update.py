@@ -8,8 +8,7 @@
 
 '''
 
-from komlog.komlibs.auth.model.operations import Operations
-from komlog.komlibs.auth.model.quotes import Quotes
+from komlog.komfig import logging
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
 from komlog.komcass.api import datasource as cassapidatasource
@@ -19,18 +18,8 @@ from komlog.komcass.api import dashboard as cassapidashboard
 from komlog.komcass.api import snapshot as cassapisnapshot
 from komlog.komcass.api import circle as cassapicircle
 from komlog.komcass.api import quote as cassapiquote
-
-update_funcs = {
-                Operations.NEW_AGENT: ['quo_static_user_total_agents'],
-                Operations.NEW_DATASOURCE: ['quo_static_agent_total_datasources','quo_static_user_total_datasources'],
-                Operations.NEW_DATAPOINT: ['quo_static_datasource_total_datapoints','quo_static_agent_total_datapoints','quo_static_user_total_datapoints'],
-                Operations.NEW_WIDGET: ['quo_static_user_total_widgets'],
-                Operations.NEW_DASHBOARD: ['quo_static_user_total_dashboards'],
-                Operations.NEW_WIDGET_SYSTEM: ['quo_static_user_total_widgets'],
-                Operations.NEW_SNAPSHOT: ['quo_static_user_total_snapshots'],
-                Operations.NEW_CIRCLE: ['quo_static_user_total_circles','quo_static_circle_total_members'],
-                Operations.UPDATE_CIRCLE_MEMBERS: ['quo_static_circle_total_members'],
-}
+from komlog.komlibs.auth.model.quotes import Quotes
+from komlog.komlibs.general.time import timeuuid
 
 def get_update_funcs(operation):
     try:
@@ -164,4 +153,77 @@ def quo_static_circle_total_members(params):
     if cassapiquote.set_circle_quote(cid=cid, quote=quote, value=num_members):
         return num_members
     return None
+
+def quo_daily_datasource_occupation(params):
+    if not 'did' in params or not 'date' in params:
+        return None
+    did=params['did']
+    date=params['date']
+    size=cassapidatasource.get_datasource_metadata_size_at(did=did,date=date)
+    if size is not None:
+        ts=timeuuid.get_day_timestamp(date)
+        quote=Quotes.quo_daily_datasource_occupation.name
+        new_size=cassapiquote.increment_datasource_ts_quote(did=did, quote=quote, ts=ts, value=size)
+        return new_size
+    else:
+        return None
+
+def quo_daily_user_datasources_occupation(params):
+    if not 'did' in params or not 'date' in params:
+        return None
+    did=params['did']
+    date=params['date']
+    dsinfo=cassapidatasource.get_datasource(did=did)
+    if not dsinfo or not dsinfo.uid:
+        return None
+    uid=dsinfo.uid
+    size=cassapidatasource.get_datasource_metadata_size_at(did=did,date=date)
+    if size is not None:
+        ts=timeuuid.get_day_timestamp(date)
+        quote=Quotes.quo_daily_user_datasources_occupation.name
+        new_size=cassapiquote.increment_user_ts_quote(uid=uid, quote=quote, ts=ts, value=size)
+        return new_size
+    else:
+        return None
+
+def quo_total_user_occupation(params):
+    ''' 
+        We calculate the total occupation user data. This quote is calculated once hourly at most.
+        Right now, we only measure the datasources occupation.
+    '''
+    if not 'did' in params:
+        return None
+    did=params['did']
+    dsinfo=cassapidatasource.get_datasource(did=did)
+    if not dsinfo or not dsinfo.uid:
+        return None
+    uid=dsinfo.uid
+    quote=Quotes.quo_total_user_occupation.name
+    ts=timeuuid.get_hour_timestamp(timeuuid.uuid1())
+    value=0
+    if cassapiquote.new_user_ts_quote(uid=uid, quote=quote, ts=ts, value=value):
+        dsquote=Quotes.quo_daily_user_datasources_occupation.name
+        value=cassapiquote.get_user_ts_quote_value_sum(uid=uid, quote=dsquote)
+        n_val=cassapiquote.increment_user_ts_quote(uid=uid,quote=quote,ts=ts,value=value)
+        if n_val is not None:
+            return n_val
+    return None
+
+quote_funcs = {
+    Quotes.quo_daily_datasource_occupation:quo_daily_datasource_occupation,
+    Quotes.quo_daily_user_datasources_occupation:quo_daily_user_datasources_occupation,
+    Quotes.quo_static_agent_total_datapoints:quo_static_agent_total_datapoints,
+    Quotes.quo_static_agent_total_datasources:quo_static_agent_total_datasources,
+    Quotes.quo_static_circle_total_members:quo_static_circle_total_members,
+    Quotes.quo_static_circle_total_members:quo_static_circle_total_members,
+    Quotes.quo_static_datasource_total_datapoints:quo_static_datasource_total_datapoints,
+    Quotes.quo_static_user_total_agents:quo_static_user_total_agents,
+    Quotes.quo_static_user_total_circles:quo_static_user_total_circles,
+    Quotes.quo_static_user_total_dashboards:quo_static_user_total_dashboards,
+    Quotes.quo_static_user_total_datapoints:quo_static_user_total_datapoints,
+    Quotes.quo_static_user_total_datasources:quo_static_user_total_datasources,
+    Quotes.quo_static_user_total_snapshots:quo_static_user_total_snapshots,
+    Quotes.quo_static_user_total_widgets:quo_static_user_total_widgets,
+    Quotes.quo_total_user_occupation:quo_total_user_occupation,
+}
 

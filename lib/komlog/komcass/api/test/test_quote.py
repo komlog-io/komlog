@@ -1302,3 +1302,534 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(db_quote.quote,quote)
         self.assertEqual(db_quote.value,value+inc_value)
 
+    def test_get_user_ts_quotes_none_found(self):
+        ''' get_user_ts_quotes should return an empty array if no quote is found '''
+        uid=uuid.uuid4()
+        self.assertEqual(quoteapi.get_user_ts_quotes(uid=uid),[])
+
+    def test_get_user_ts_quotes_none_found_with_that_quote_name(self):
+        ''' get_user_ts_quotes should return an empty array if no quote is found '''
+        uid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=1
+        self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, ts, value))
+        quotedb=quoteapi.get_user_ts_quotes(uid=uid, quote=quote)
+        self.assertEqual(len(quotedb),1)
+        self.assertEqual(quotedb[0].uid, uid)
+        self.assertEqual(quotedb[0].quote,quote)
+        self.assertEqual(quotedb[0].ts,ts)
+        self.assertEqual(quotedb[0].value,value)
+        quote='quote2'
+        self.assertEqual(quoteapi.get_user_ts_quotes(uid=uid, quote=quote),[])
+
+    def test_get_user_ts_quotes_only_retrieve_last_one(self):
+        ''' get_user_ts_quotes should retrieve the last ts of a quote if count is 1 '''
+        uid=uuid.uuid4()
+        quote='quote'
+        for i in range(1,1001):
+            self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, i,i))
+        for i in range(2000,1001,-1):
+            self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, i,i))
+        db_quote=quoteapi.get_user_ts_quotes(uid=uid, quote=quote, count=1)
+        self.assertEqual(len(db_quote),1)
+        self.assertEqual(db_quote[0].uid,uid)
+        self.assertEqual(db_quote[0].quote,quote)
+        self.assertEqual(db_quote[0].ts,2000)
+        self.assertEqual(db_quote[0].value,2000)
+
+    def test_get_user_ts_quote_none_found(self):
+        ''' get_user_ts_quote should return None if no quote is found '''
+        uid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, ts, value))
+        self.assertIsNotNone(quoteapi.get_user_ts_quote(uid=uid, quote=quote, ts=ts))
+        self.assertIsNone(quoteapi.get_user_ts_quote(uid=uuid.uuid4(), quote=quote, ts=ts))
+        self.assertIsNone(quoteapi.get_user_ts_quote(uid=uid, quote='quote2', ts=ts))
+        self.assertIsNone(quoteapi.get_user_ts_quote(uid=uid, quote=quote, ts=2))
+
+    def test_get_user_ts_quote_found(self):
+        ''' get_user_ts_quote should return the quote object '''
+        uid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, ts, value))
+        quotedb=quoteapi.get_user_ts_quote(uid=uid, quote=quote, ts=ts)
+        self.assertTrue(isinstance(quotedb, ormquote.UserTsQuo))
+        self.assertEqual(quotedb.uid, uid)
+        self.assertEqual(quotedb.quote,quote)
+        self.assertEqual(quotedb.ts,ts)
+        self.assertEqual(quotedb.value,value)
+
+    def test_get_user_ts_quote_interval_none_found(self):
+        ''' get_user_ts_quotes should return an empty array if no quote is found '''
+        uid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, ts, value))
+        self.assertNotEqual(quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=50,ets=60),[])
+        self.assertEqual(quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=101, ets=200),[])
+        self.assertEqual(quoteapi.get_user_ts_quote_interval(uid=uuid.uuid4(), quote=quote, its=10, ets=20),[])
+        self.assertEqual(quoteapi.get_user_ts_quote_interval(uid=uid, quote='quote2', its=10, ets=20),[])
+        self.assertEqual(quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=50, ets=10),[])
+
+    def test_get_user_ts_quote_interval_found(self):
+        ''' get_user_ts_quotes should return an empty array if no quote is found '''
+        uid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, ts, value))
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=11)
+        self.assertEqual(len(db_quotes),2)
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=1, ets=1000)
+        self.assertEqual(len(db_quotes),90)
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=10)
+        self.assertEqual(len(db_quotes),1)
+
+    def test_get_user_ts_quote_value_sum_no_uid_found(self):
+        ''' get_user_ts_quote_value_sum should return 0 if uid is not found '''
+        uid=uuid.uuid4()
+        quote='quote'
+        self.assertEqual(quoteapi.get_user_ts_quote_value_sum(uid=uid, quote=quote), 0)
+
+    def test_get_user_ts_quote_value_sum_no_quote_found(self):
+        ''' get_user_ts_quote_value_sum should return 0 if quote is not found '''
+        uid=uuid.uuid4()
+        quote='quote'
+        for i in range(1,100):
+            self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, i,i))
+        quote='non_existent'
+        self.assertEqual(quoteapi.get_user_ts_quote_value_sum(uid=uid, quote=quote), 0)
+
+    def test_get_user_ts_quote_value_sum_found(self):
+        ''' get_user_ts_quote_value_sum should return the sum of the selected rows value '''
+        uid=uuid.uuid4()
+        quote='quote'
+        value=1
+        for i in range(1,101):
+            self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, i,value))
+        self.assertEqual(quoteapi.get_user_ts_quote_value_sum(uid=uid, quote=quote), 100)
+
+    def test_insert_user_ts_quote_success(self):
+        ''' insert_user_ts_quote should succeed and insert the quote '''
+        uid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.insert_user_ts_quote(uid=uid, quote=quote, ts=ts, value=value))
+        db_quote=quoteapi.get_user_ts_quote(uid=uid, quote=quote, ts=ts)
+        self.assertTrue(isinstance(db_quote,ormquote.UserTsQuo))
+        self.assertEqual(db_quote.uid, uid)
+        self.assertEqual(db_quote.quote,quote)
+        self.assertEqual(db_quote.ts,ts)
+        self.assertEqual(db_quote.value,value)
+
+    def test_new_user_ts_quote_success(self):
+        ''' new_user_ts_quote should succeed if quote didnt exist previously '''
+        uid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.new_user_ts_quote(uid=uid, quote=quote, ts=ts, value=value))
+        db_quote=quoteapi.get_user_ts_quote(uid=uid, quote=quote, ts=ts)
+        self.assertTrue(isinstance(db_quote,ormquote.UserTsQuo))
+        self.assertEqual(db_quote.uid, uid)
+        self.assertEqual(db_quote.quote,quote)
+        self.assertEqual(db_quote.ts,ts)
+        self.assertEqual(db_quote.value,value)
+
+    def test_new_user_ts_quote_failed(self):
+        ''' new_user_ts_quote should fail if quote did exist previously '''
+        uid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.new_user_ts_quote(uid=uid, quote=quote, ts=ts, value=value))
+        db_quote=quoteapi.get_user_ts_quote(uid=uid, quote=quote, ts=ts)
+        self.assertTrue(isinstance(db_quote,ormquote.UserTsQuo))
+        self.assertEqual(db_quote.uid, uid)
+        self.assertEqual(db_quote.quote,quote)
+        self.assertEqual(db_quote.ts,ts)
+        self.assertEqual(db_quote.value,value)
+        self.assertFalse(quoteapi.new_user_ts_quote(uid=uid, quote=quote, ts=ts, value=value))
+
+    def test_delete_user_ts_quotes_no_previous_quotes(self):
+        ''' delete_user_ts_quotes should succeed even if no quote existed '''
+        uid=uuid.uuid4()
+        self.assertTrue(quoteapi.delete_user_ts_quotes(uid=uid))
+
+    def test_delete_user_ts_quotes_previous_existing_quotes(self):
+        ''' delete_user_ts_quotes should delete all uid ts quotes '''
+        uid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, ts, value))
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        self.assertTrue(quoteapi.delete_user_ts_quotes(uid=uid))
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),0)
+
+    def test_delete_user_ts_quote_no_previous_quote(self):
+        ''' delete_user_ts_quote should succeed even if no quote existed '''
+        uid=uuid.uuid4()
+        quote='quote'
+        ts=1
+        self.assertTrue(quoteapi.delete_user_ts_quote(uid=uid, quote=quote))
+        self.assertTrue(quoteapi.delete_user_ts_quote(uid=uid, quote=quote, ts=ts))
+
+    def test_delete_user_ts_quote_previous_existing_quote(self):
+        ''' delete_user_ts_quote should delete the quote '''
+        uid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, ts, value))
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        self.assertTrue(quoteapi.delete_user_ts_quote(uid=uid, quote=quote, ts=10))
+        self.assertIsNone(quoteapi.get_user_ts_quote(uid=uid, quote=quote, ts=10))
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),89)
+        self.assertTrue(quoteapi.delete_user_ts_quote(uid=uid, quote=quote))
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),0)
+
+    def test_delete_user_ts_quote_interval_no_previous_quote(self):
+        ''' delete_user_ts_quote_interval should succeed even if no quote existed '''
+        uid=uuid.uuid4()
+        quote='quote'
+        its=1
+        ets=1000
+        self.assertTrue(quoteapi.delete_user_ts_quote_interval(uid=uid, quote=quote, its=its, ets=ets))
+
+    def test_delete_user_ts_quote_interval_previously_existing_quote(self):
+        ''' delete_user_ts_quote_interval should delete the quote interval '''
+        uid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_user_ts_quote(uid, quote, ts, value))
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        self.assertTrue(quoteapi.delete_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=19))
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),80)
+        self.assertTrue(quoteapi.delete_user_ts_quote_interval(uid=uid, quote=quote, its=100, ets=190))
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),80)
+        self.assertTrue(quoteapi.delete_user_ts_quote_interval(uid=uid, quote=quote, its=0, ets=190))
+        db_quotes=quoteapi.get_user_ts_quote_interval(uid=uid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),0)
+
+    def test_increment_user_ts_quote_non_existent_quote(self):
+        ''' increment_user_ts_quote should set the quote value if the quote did not exist previously '''
+        uid = uuid.uuid4()
+        quote='quote'
+        ts=1000
+        value=5000
+        value_set=quoteapi.increment_user_ts_quote(uid=uid, quote=quote, ts=ts, value=value)
+        self.assertEqual(value_set, value)
+        quote_db=quoteapi.get_user_ts_quote(uid=uid, quote=quote, ts=1000)
+        self.assertEqual(quote_db.uid, uid)
+        self.assertEqual(quote_db.quote,quote)
+        self.assertEqual(quote_db.ts,ts)
+        self.assertEqual(quote_db.value,value)
+
+    def test_increment_user_ts_quote_previously_existent_quote(self):
+        ''' increment_user_ts_quote should add the value to the actual quote value '''
+        uid = uuid.uuid4()
+        quote='quote'
+        ts=1000
+        value=5000
+        value_set=quoteapi.increment_user_ts_quote(uid=uid, quote=quote, ts=ts, value=value)
+        self.assertEqual(value_set, value)
+        quote_db=quoteapi.get_user_ts_quote(uid=uid, quote=quote, ts=1000)
+        self.assertEqual(quote_db.uid, uid)
+        self.assertEqual(quote_db.quote,quote)
+        self.assertEqual(quote_db.ts,ts)
+        self.assertEqual(quote_db.value,value)
+        for i in range(0,100):
+            value_set=quoteapi.increment_user_ts_quote(uid=uid, quote=quote, ts=ts, value=value)
+        self.assertEqual(value_set, value+100*value)
+        quote_db=quoteapi.get_user_ts_quote(uid=uid, quote=quote, ts=1000)
+        self.assertEqual(quote_db.uid, uid)
+        self.assertEqual(quote_db.quote,quote)
+        self.assertEqual(quote_db.ts,ts)
+        self.assertEqual(quote_db.value,value+100*value)
+
+    def test_get_datasource_ts_quotes_none_found(self):
+        ''' get_datasource_ts_quotes should return an empty array if no quote is found '''
+        did=uuid.uuid4()
+        self.assertEqual(quoteapi.get_datasource_ts_quotes(did=did),[])
+
+    def test_get_datasource_ts_quotes_none_found_with_that_quote_name(self):
+        ''' get_datasource_ts_quotes should return an empty array if no quote is found '''
+        did=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=1
+        self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, ts, value))
+        quotedb=quoteapi.get_datasource_ts_quotes(did=did, quote=quote)
+        self.assertEqual(len(quotedb),1)
+        self.assertEqual(quotedb[0].did, did)
+        self.assertEqual(quotedb[0].quote,quote)
+        self.assertEqual(quotedb[0].ts,ts)
+        self.assertEqual(quotedb[0].value,value)
+        quote='quote2'
+        self.assertEqual(quoteapi.get_datasource_ts_quotes(did=did, quote=quote),[])
+
+    def test_get_datasource_ts_quotes_only_retrieve_last_one(self):
+        ''' get_datasource_ts_quotes should retrieve the last ts of a quote if count is 1 
+            because quo_ts_datasource table is created WITH CLUSTERING ORDER BY (quote asc,ts desc)
+        '''
+        did=uuid.uuid4()
+        quote='quote'
+        for i in range(1,1001):
+            self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, i,i))
+        for i in range(2000,1001,-1):
+            self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, i,i))
+        db_quote=quoteapi.get_datasource_ts_quotes(did=did, quote=quote, count=1)
+        self.assertEqual(len(db_quote),1)
+        self.assertEqual(db_quote[0].did,did)
+        self.assertEqual(db_quote[0].quote,quote)
+        self.assertEqual(db_quote[0].ts,2000)
+        self.assertEqual(db_quote[0].value,2000)
+
+    def test_get_datasource_ts_quote_none_found(self):
+        ''' get_datasource_ts_quote should return None if no quote is found '''
+        did=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, ts, value))
+        self.assertIsNotNone(quoteapi.get_datasource_ts_quote(did=did, quote=quote, ts=ts))
+        self.assertIsNone(quoteapi.get_datasource_ts_quote(did=uuid.uuid4(), quote=quote, ts=ts))
+        self.assertIsNone(quoteapi.get_datasource_ts_quote(did=did, quote='quote2', ts=ts))
+        self.assertIsNone(quoteapi.get_datasource_ts_quote(did=did, quote=quote, ts=2))
+
+    def test_get_datasource_ts_quote_found(self):
+        ''' get_datasource_ts_quote should return the quote object '''
+        did=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, ts, value))
+        quotedb=quoteapi.get_datasource_ts_quote(did=did, quote=quote, ts=ts)
+        self.assertTrue(isinstance(quotedb, ormquote.DatasourceTsQuo))
+        self.assertEqual(quotedb.did, did)
+        self.assertEqual(quotedb.quote,quote)
+        self.assertEqual(quotedb.ts,ts)
+        self.assertEqual(quotedb.value,value)
+
+    def test_get_datasource_ts_quote_interval_none_found(self):
+        ''' get_datasource_ts_quotes should return an empty array if no quote is found '''
+        did=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, ts, value))
+        self.assertNotEqual(quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=50,ets=60),[])
+        self.assertEqual(quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=101, ets=200),[])
+        self.assertEqual(quoteapi.get_datasource_ts_quote_interval(did=uuid.uuid4(), quote=quote, its=10, ets=20),[])
+        self.assertEqual(quoteapi.get_datasource_ts_quote_interval(did=did, quote='quote2', its=10, ets=20),[])
+        self.assertEqual(quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=50, ets=10),[])
+
+    def test_get_datasource_ts_quote_interval_found(self):
+        ''' get_datasource_ts_quotes should return an empty array if no quote is found '''
+        did=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, ts, value))
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=11)
+        self.assertEqual(len(db_quotes),2)
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=1, ets=1000)
+        self.assertEqual(len(db_quotes),90)
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=10)
+        self.assertEqual(len(db_quotes),1)
+
+    def test_get_datasource_ts_quote_value_sum_no_did_found(self):
+        ''' get_datasource_ts_quote_value_sum should return 0 if did is not found '''
+        did=uuid.uuid4()
+        quote='quote'
+        self.assertEqual(quoteapi.get_datasource_ts_quote_value_sum(did=did, quote=quote), 0)
+
+    def test_get_datasource_ts_quote_value_sum_no_quote_found(self):
+        ''' get_datasource_ts_quote_value_sum should return 0 if quote is not found '''
+        did=uuid.uuid4()
+        quote='quote'
+        for i in range(1,100):
+            self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, i,i))
+        quote='non_existent'
+        self.assertEqual(quoteapi.get_datasource_ts_quote_value_sum(did=did, quote=quote), 0)
+
+    def test_insert_datasource_ts_quote_success(self):
+        ''' insert_datasource_ts_quote should succeed and insert the quote '''
+        did=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.insert_datasource_ts_quote(did=did, quote=quote, ts=ts, value=value))
+        db_quote=quoteapi.get_datasource_ts_quote(did=did, quote=quote, ts=ts)
+        self.assertTrue(isinstance(db_quote,ormquote.DatasourceTsQuo))
+        self.assertEqual(db_quote.did, did)
+        self.assertEqual(db_quote.quote,quote)
+        self.assertEqual(db_quote.ts,ts)
+        self.assertEqual(db_quote.value,value)
+
+    def test_new_datasource_ts_quote_success(self):
+        ''' new_datasource_ts_quote should succeed if quote didnt exist previously '''
+        did=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.new_datasource_ts_quote(did=did, quote=quote, ts=ts, value=value))
+        db_quote=quoteapi.get_datasource_ts_quote(did=did, quote=quote, ts=ts)
+        self.assertTrue(isinstance(db_quote,ormquote.DatasourceTsQuo))
+        self.assertEqual(db_quote.did, did)
+        self.assertEqual(db_quote.quote,quote)
+        self.assertEqual(db_quote.ts,ts)
+        self.assertEqual(db_quote.value,value)
+
+    def test_new_datasource_ts_quote_failed(self):
+        ''' new_datasource_ts_quote should fail if quote did exist previously '''
+        did=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.new_datasource_ts_quote(did=did, quote=quote, ts=ts, value=value))
+        db_quote=quoteapi.get_datasource_ts_quote(did=did, quote=quote, ts=ts)
+        self.assertTrue(isinstance(db_quote,ormquote.DatasourceTsQuo))
+        self.assertEqual(db_quote.did, did)
+        self.assertEqual(db_quote.quote,quote)
+        self.assertEqual(db_quote.ts,ts)
+        self.assertEqual(db_quote.value,value)
+        self.assertFalse(quoteapi.new_datasource_ts_quote(did=did, quote=quote, ts=ts, value=value))
+
+    def test_delete_datasource_ts_quotes_no_previous_quotes(self):
+        ''' delete_datasource_ts_quotes should succeed even if no quote existed '''
+        did=uuid.uuid4()
+        self.assertTrue(quoteapi.delete_datasource_ts_quotes(did=did))
+
+    def test_delete_datasource_ts_quotes_previous_existing_quotes(self):
+        ''' delete_datasource_ts_quotes should delete all did ts quotes '''
+        did=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, ts, value))
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        self.assertTrue(quoteapi.delete_datasource_ts_quotes(did=did))
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),0)
+
+    def test_delete_datasource_ts_quote_no_previous_quote(self):
+        ''' delete_datasource_ts_quote should succeed even if no quote existed '''
+        did=uuid.uuid4()
+        quote='quote'
+        ts=1
+        self.assertTrue(quoteapi.delete_datasource_ts_quote(did=did, quote=quote))
+        self.assertTrue(quoteapi.delete_datasource_ts_quote(did=did, quote=quote, ts=ts))
+
+    def test_delete_datasource_ts_quote_previous_existing_quote(self):
+        ''' delete_datasource_ts_quote should delete the quote '''
+        did=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, ts, value))
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        self.assertTrue(quoteapi.delete_datasource_ts_quote(did=did, quote=quote, ts=10))
+        self.assertIsNone(quoteapi.get_datasource_ts_quote(did=did, quote=quote, ts=10))
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),89)
+        self.assertTrue(quoteapi.delete_datasource_ts_quote(did=did, quote=quote))
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),0)
+
+    def test_delete_datasource_ts_quote_interval_no_previous_quote(self):
+        ''' delete_datasource_ts_quote_interval should succeed even if no quote existed '''
+        did=uuid.uuid4()
+        quote='quote'
+        its=1
+        ets=1000
+        self.assertTrue(quoteapi.delete_datasource_ts_quote_interval(did=did, quote=quote, its=its, ets=ets))
+
+    def test_delete_datasource_ts_quote_interval_previously_existing_quote(self):
+        ''' delete_datasource_ts_quote_interval should delete the quote interval '''
+        did=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, ts, value))
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        self.assertTrue(quoteapi.delete_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=19))
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),80)
+        self.assertTrue(quoteapi.delete_datasource_ts_quote_interval(did=did, quote=quote, its=100, ets=190))
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),80)
+        self.assertTrue(quoteapi.delete_datasource_ts_quote_interval(did=did, quote=quote, its=0, ets=190))
+        db_quotes=quoteapi.get_datasource_ts_quote_interval(did=did, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),0)
+
+    def test_increment_datasource_ts_quote_non_existent_quote(self):
+        ''' increment_datasource_ts_quote should set the quote value if the quote did not exist previously '''
+        did = uuid.uuid4()
+        quote='quote'
+        ts=1000
+        value=5000
+        value_set=quoteapi.increment_datasource_ts_quote(did=did, quote=quote, ts=ts, value=value)
+        self.assertEqual(value_set, value)
+        quote_db=quoteapi.get_datasource_ts_quote(did=did, quote=quote, ts=1000)
+        self.assertEqual(quote_db.did, did)
+        self.assertEqual(quote_db.quote,quote)
+        self.assertEqual(quote_db.ts,ts)
+        self.assertEqual(quote_db.value,value)
+
+    def test_increment_datasource_ts_quote_previously_existent_quote(self):
+        ''' increment_datasource_ts_quote should add the value to the actual quote value '''
+        did = uuid.uuid4()
+        quote='quote'
+        ts=1000
+        value=5000
+        value_set=quoteapi.increment_datasource_ts_quote(did=did, quote=quote, ts=ts, value=value)
+        self.assertEqual(value_set, value)
+        quote_db=quoteapi.get_datasource_ts_quote(did=did, quote=quote, ts=1000)
+        self.assertEqual(quote_db.did, did)
+        self.assertEqual(quote_db.quote,quote)
+        self.assertEqual(quote_db.ts,ts)
+        self.assertEqual(quote_db.value,value)
+        for i in range(0,100):
+            value_set=quoteapi.increment_datasource_ts_quote(did=did, quote=quote, ts=ts, value=value)
+        self.assertEqual(value_set, value+100*value)
+        quote_db=quoteapi.get_datasource_ts_quote(did=did, quote=quote, ts=1000)
+        self.assertEqual(quote_db.did, did)
+        self.assertEqual(quote_db.quote,quote)
+        self.assertEqual(quote_db.ts,ts)
+        self.assertEqual(quote_db.value,value+100*value)
+

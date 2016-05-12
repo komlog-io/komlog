@@ -43,6 +43,12 @@ class Errors(Enum):
     E_AQA_ANS_QE    = 51060      #: authorize_new_snapshot quotes exception
     E_AQA_ANC_QE    = 51070      #: authorize_new_circle quotes exception
     E_AQA_AAMTC_QE  = 51080      #: authorize_add_member_to_circle quotes exception
+    E_AQA_APDSD_QE  = 51090      #: authorize_post_datasource_data quotes exception
+    E_AQA_AGDSD_DSNF= 51100      #: authorize_get_datasource_data datasource not found exception
+    E_AQA_AGDSD_IBE = 51101      #: authorize_get_datasource_data interval bounds exception
+    E_AQA_AGDPD_DPNF= 51110      #: authorize_get_datapoint_data datapoint not found exception
+    E_AQA_AGDPD_DSNF= 51111      #: authorize_get_datapoint_data datasource not found exception
+    E_AQA_AGDPD_IBE = 51112      #: authorize_get_datapoint_data interval bounds exception
 
 
 # auth.resources.authorization

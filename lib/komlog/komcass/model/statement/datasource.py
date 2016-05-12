@@ -33,6 +33,10 @@ STATEMENTS={20000:'select * from mst_datasource where did=?',
             20600:'select * from dat_datasource_hash where did=? and date=?',
             20601:'select * from dat_datasource_hash where did=? and date>=? and date<=? order by date desc',
             20602:'select * from dat_datasource_hash where did=? and date>=? and date<=? order by date desc limit ?',
+            20700:'select * from dat_datasource_metadata where did=? and date=?',
+            20701:'select size from dat_datasource_metadata where did=? and date=?',
+            20702:'select * from dat_datasource_metadata where did=? and date>=? and date<=? order by date desc',
+            20703:'select * from dat_datasource_metadata where did=? and date>=? and date<=? order by date desc limit ?',
             25000:'insert into mst_datasource (did,aid,uid,datasourcename,creation_date) values (?,?,?,?,?)',
             25001:'insert into mst_datasource (did,aid,uid,datasourcename,creation_date) values (?,?,?,?,?) if not exists',
             25100:'insert into mst_datasource_stats (did,last_received) values (?,?)',
@@ -42,6 +46,7 @@ STATEMENTS={20000:'select * from mst_datasource where did=?',
             25400:'insert into dat_datasource_text_summary (did,date,content_length,num_lines, num_words, word_frecuency) values (?,?,?,?,?,?)',
             25500:'insert into dat_datasource_novelty_detector_datapoint (did,pid,date,nd,features) values (?,?,?,?,?)',
             25600:'insert into dat_datasource_hash (did,date,content) values (?,?,?)',
+            25700:'insert into dat_datasource_metadata (did,date,size) values (?,?,?)',
             27000:'delete from mst_datasource where did=?',
             27100:'delete from mst_datasource_stats where did=?',
             27200:'delete from dat_datasource where did=?',
@@ -52,9 +57,11 @@ STATEMENTS={20000:'select * from mst_datasource where did=?',
             27400:'delete from dat_datasource_text_summary where did=?',
             27401:'delete from dat_datasource_text_summary where did=? and date=?',
             27500:'delete from dat_datasource_novelty_detector_datapoint where did=?',
-            27600:'delete from dat_datasource_hash where did=? and date=?',
             27501:'delete from dat_datasource_novelty_detector_datapoint where did=? and pid=?',
             27502:'delete from dat_datasource_novelty_detector_datapoint where did=? and pid=? and date=?',
+            27600:'delete from dat_datasource_hash where did=? and date=?',
+            27700:'delete from dat_datasource_metadata where did=?',
+            27701:'delete from dat_datasource_metadata where did=? and date=?',
             29300:'update dat_datasource_map set variables[?]=? where did=? and date=?',
             29301:'update dat_datasource_map set datapoints[?]=? where did=? and date=?'
            }
@@ -106,6 +113,13 @@ S_A_DATDATASOURCEHASH_B_DID_DATE=20600
 S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE=20601
 S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE_COUNT=20602
 
+# dat_datasource_metadata
+
+S_A_DATDATASOURCEMETADATA_B_DID_DATE=20700
+S_SIZE_DATDATASOURCEMETADATA_B_DID_DATE=20701
+S_A_DATDATASOURCEMETADATA_B_DID_INITDATE_ENDDATE=20702
+S_A_DATDATASOURCEMETADATA_B_DID_INITDATE_ENDDATE_COUNT=20703
+
 # Inserts (25000 - 26999)
 
 # mst_datasource
@@ -137,6 +151,10 @@ I_A_DATDATASOURCENOVELTYDETECTORDATAPOINT=25500
 # dat_datasource_hash
 
 I_A_DATDATASOURCEHASH=25600
+
+# dat_datasource_metadata
+
+I_A_DATDATASOURCEMETADATA=25700
 
 # Deletes (27000 - 28999)
 
@@ -174,6 +192,11 @@ D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID_DATE=27502
 
 D_A_DATDATASOURCEHASH_B_DID_DATE=27600
 
+# dat_datasource_metadata
+
+D_A_DATDATASOURCEMETADATA_B_DID=27700
+D_A_DATDATASOURCEMETADATA_B_DID_DATE=27701
+
 # Updates (29000 - 29999)
 
 # mst_datasource
@@ -190,4 +213,8 @@ U_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE=29301
 # dat_datasource_text_summary
 
 # dat_datasource_novelty_detector_datapoint
+
+# dat_datasource_hash
+
+# dat_datasource_metadata
 

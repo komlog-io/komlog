@@ -47,3 +47,17 @@ class CircleQuo:
         self.quote=quote
         self.value=value
 
+class UserTsQuo:
+    def __init__(self,uid, quote, ts, value):
+        self.uid=uid
+        self.quote=quote
+        self.ts=ts
+        self.value=value
+
+class DatasourceTsQuo:
+    def __init__(self,did, quote, ts, value):
+        self.did=did
+        self.quote=quote
+        self.ts=ts
+        self.value=value
+

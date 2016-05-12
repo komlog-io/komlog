@@ -4,8 +4,10 @@ This file defines the cassandra statements for the creation of interface related
 
 '''
 
-OBJECTS=['IF_USER_DENY'
-        ]
+OBJECTS=[
+    'IF_USER_DENY',
+    'IF_TS_USER_DENY'
+]
 
 IF_USER_DENY='''
         CREATE TABLE if_user_deny (
@@ -15,4 +17,14 @@ IF_USER_DENY='''
             PRIMARY KEY (uid,interface)
         );
     '''
+
+IF_TS_USER_DENY='''
+    CREATE TABLE if_ts_user_deny (
+        uid uuid,
+        interface text,
+        ts int,
+        perm text,
+        PRIMARY KEY (uid,interface,ts)
+    ) WITH CLUSTERING ORDER BY (interface asc, ts desc);
+'''
 

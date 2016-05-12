@@ -1,5 +1,6 @@
 import uuid
 import time
+from datetime import datetime, timezone
 from cassandra import util
 
 node=0x010000000000
@@ -34,4 +35,27 @@ def max_uuid_from_time(timestamp):
 
 def min_uuid_from_time(timestamp):
     return util.min_uuid_from_time(timestamp)
+
+def get_day_timestamp(u):
+    ''' this function extracts the day from the date passed as argument (uuid1)
+        and returns the truncated timestamp at 00:00:00h in seconds.
+        Because the date milliseconds is set to 0, the returned value
+        is of type int '''
+    ts=get_unix_timestamp(u)
+    date=datetime.fromtimestamp(ts)
+    date=date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+    timestamp=date.timestamp()
+    return int(timestamp)
+
+def get_hour_timestamp(u):
+    ''' this function extracts the hour from the date passed as argument (uuid1)
+        and returns the truncated timestamp at 00min:00s in seconds.
+        Because the date milliseconds is set to 0, the returned value
+        is of type int '''
+    ts=get_unix_timestamp(u)
+    date=datetime.fromtimestamp(ts)
+    date=date.replace(minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+    timestamp=date.timestamp()
+    return int(timestamp)
+
 

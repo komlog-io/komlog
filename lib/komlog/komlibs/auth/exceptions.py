@@ -10,8 +10,9 @@ Authorization Exceptions
 '''
 
 class AuthException(Exception):
-    def __init__(self, error):
+    def __init__(self, error, data=None):
         self.error=error
+        self.data=data
 
 class AuthorizationException(AuthException):
     def __init__(self, error):
@@ -41,6 +42,10 @@ class DatasourceNotFoundException(AuthException):
     def __init__(self, error):
         super(DatasourceNotFoundException,self).__init__(error=error)
 
+class DatapointNotFoundException(AuthException):
+    def __init__(self, error):
+        super(DatapointNotFoundException,self).__init__(error=error)
+
 class TicketCreationException(AuthException):
     def __init__(self, error):
         super(TicketCreationException, self).__init__(error=error)
@@ -52,4 +57,8 @@ class CookieException(AuthException):
 class PassportException(AuthException):
     def __init__(self, error):
         super(PassportException, self).__init__(error=error)
+
+class IntervalBoundsException(AuthException):
+    def __init__(self, error, data):
+        super(IntervalBoundsException, self).__init__(error=error, data=data)
 

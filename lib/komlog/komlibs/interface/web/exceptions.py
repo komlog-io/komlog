@@ -21,6 +21,11 @@ BAD_PARAMETERS_STATUS_EXCEPTION_LIST=(
     eventexcept.BadParametersException,
 )
 
+NOT_ALLOWED_STATUS_EXCEPTION_LIST=(
+    gestexcept.WidgetUnsupportedOperationException,
+    authexcept.IntervalBoundsException,
+)
+
 ACCESS_DENIED_STATUS_EXCEPTION_LIST=(
     authexcept.AuthException,
     gestexcept.UserAlreadyExistsException,
@@ -62,10 +67,6 @@ INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
     eventexcept.UserEventCreationException,
 )
 
-NOT_ALLOWED_STATUS_EXCEPTION_LIST=(
-    gestexcept.WidgetUnsupportedOperationException,
-)
-
 class ExceptionHandler(object):
     def __init__(self, f):
         self.f=f
@@ -83,6 +84,12 @@ class ExceptionHandler(object):
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, data=data, error=error.value)
+        except NOT_ALLOWED_STATUS_EXCEPTION_LIST as e:
+            error=e.error
+            data={'error':error.value}
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED, data=data, error=error.value)
         except ACCESS_DENIED_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
@@ -95,12 +102,6 @@ class ExceptionHandler(object):
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND, data=data, error=error.value)
-        except NOT_ALLOWED_STATUS_EXCEPTION_LIST as e:
-            error=e.error
-            data={'error':error.value}
-            end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED, data=data, error=error.value)
         except INTERNAL_ERROR_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}

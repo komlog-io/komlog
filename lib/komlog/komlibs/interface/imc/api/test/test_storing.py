@@ -5,9 +5,12 @@ import time
 import os
 from komlog.komfig import logging
 from komlog.komfs import api as fsapi
+from komlog.komlibs.auth.model.operations import Operations
+from komlog.komlibs.interface.imc import api as imcapi
 from komlog.komlibs.interface.imc.api import storing
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc import status, exceptions
+from komlog.komlibs.general.time import timeuuid
 
 
 class InterfaceImcApiStoringTest(unittest.TestCase):
@@ -16,19 +19,29 @@ class InterfaceImcApiStoringTest(unittest.TestCase):
     def test_process_message_STOSMP_success(self):
         ''' process_message_STOSMP should succeed because this message does not check if uid or aid exist '''
         did=uuid.uuid4()
-        file_content=json.dumps({'did':did.hex, 'json_content':json.dumps({'content':'Datasource Content 1 2 3 4 5','ts':time.time()})})
+        ts=1000.5
+        file_content=json.dumps({'did':did.hex, 'json_content':json.dumps({'content':'Datasource Content 1 2 3 4 5','ts':ts})})
         filename='/tmp/test_process_message_STOSMP_success.pspl'
         fsapi.create_sample(filename=filename, data=file_content)
         message=messages.StoreSampleMessage(sample_file=filename)
         response=storing.process_message_STOSMP(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
-        self.assertEqual(len(response.get_msg_originated()),2)
-        message_types=[messages.MAP_VARS_MESSAGE,messages.GENERATE_TEXT_SUMMARY_MESSAGE]
-        self.assertTrue(response.get_msg_originated()[0].type in message_types)
-        self.assertEqual(response.get_msg_originated()[0].did,did)
-        message_types.remove(response.get_msg_originated()[0].type)
-        self.assertTrue(response.get_msg_originated()[1].type in message_types)
-        self.assertEqual(response.get_msg_originated()[1].did,did)
+        self.assertEqual(len(response.get_msg_originated()),3)
+        message_types=[messages.MAP_VARS_MESSAGE,messages.GENERATE_TEXT_SUMMARY_MESSAGE,messages.UPDATE_QUOTES_MESSAGE]
+        for message in response.get_msg_originated():
+            self.assertTrue(message.type in message_types)
+            if message.type == messages.MAP_VARS_MESSAGE:
+                self.assertEqual(message.did,did)
+                self.assertEqual(timeuuid.get_unix_timestamp(message.date),ts)
+            elif message.type == messages.GENERATE_TEXT_SUMMARY_MESSAGE:
+                self.assertEqual(message.did,did)
+                self.assertEqual(timeuuid.get_unix_timestamp(message.date),ts)
+            elif message.type == messages.UPDATE_QUOTES_MESSAGE:
+                self.assertEqual(message.operation,Operations.DATASOURCE_DATA_STORED.value)
+                self.assertEqual(message.params['did'],did)
+                self.assertEqual(timeuuid.get_unix_timestamp(message.params['date']),ts)
+            imcapi.process_message(message)
+            message_types.remove(message.type)
         os.remove(filename[:-5]+'.sspl')
 
     def test_process_message_STOSMP_failure_invalid_filename(self):

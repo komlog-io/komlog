@@ -1,50 +1,29 @@
 from komlog.komfig import logging
+from komlog.komlibs.auth.model import relations
 from komlog.komlibs.auth.quotes import update as quoup
 from komlog.komlibs.auth.quotes import compare as quocmp
 from komlog.komlibs.auth.quotes import deny as quodeny
 from komlog.komlibs.auth.resources import update as resup
 
-quote_update_funcs={}
-quote_compare_funcs={}
-quote_deny_funcs={}
 resource_update_funcs={}
 
 def update_quotes(operation, params):
-    update_funcs=quoup.get_update_funcs(operation=operation)
-    if update_funcs==[]:
-        return True
-    num_updates=len(update_funcs)
+    quotes=relations.operation_quotes[operation]
+    num_updates=len(quotes)
     num_success=0
-    for update_func in update_funcs:
-        qvalue=None
-        try:
-            qvalue=quote_update_funcs[update_func](params=params)
-        except KeyError:
-            try:
-                quote_update_funcs[update_func]=getattr(quoup,update_func)
-                quote_compare_funcs[update_func]=getattr(quocmp,update_func)
-                quote_deny_funcs[update_func]=getattr(quodeny,update_func)
-                qvalue=quote_update_funcs[update_func](params=params)
-            except Exception as e:
-                logging.logger.exception('Exception getting quote funcions: '+update_func+' '+str(e))
-        except Exception as e:
-            logging.logger.exception('Exception in quote update function: '+update_func+' '+str(e))
+    for quo in quotes:
+        qvalue=quoup.quote_funcs[quo](params=params)
         if qvalue is not None:
-            ''' quote updated successfully, the return value is the quota value updated'''
-            ''' now determine if quota is aproaching limits and should block interface'''
-            try:
-                should_block=quote_compare_funcs[update_func](params=params)
+            should_block=quocmp.quote_funcs[quo](params=params)
+            if should_block is not None:
                 deny=True if should_block else False
-                if quote_deny_funcs[update_func](params=params,deny=deny):
+                if quodeny.quote_funcs[quo](params=params,deny=deny):
                     num_success+=1
-            except Exception as e:
-                logging.logger.exception('Exception evaluating quote denial: '+update_func+' '+str(e))
+            else:
+                logging.logger.error('quote compare returned None. quote: '+quo.name)
         else:
-            logging.logger.error('Error updating quote: '+update_func)
-    if num_success==num_updates:
-        return True
-    else:
-        return False
+            logging.logger.error('quote update returned None. quote: '+quo.name)
+    return True if num_success==num_updates else False
 
 def update_resources(operation, params):
     update_funcs=resup.get_update_funcs(operation=operation)

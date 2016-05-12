@@ -29,7 +29,7 @@ def authorize_get_datasource_data(uid, tid, did, ii, ie):
     ticket=ticketapi.get_ticket(tid=tid)
     if not ticket:
         raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDSD_TNF)
-    if timeuuid.get_unix_timestamp(ticket.expires)<timeuuid.get_unix_timestamp(now):
+    if ticket.expires.time<now.time:
         ticketapi.insert_expired_ticket(ticket=ticket)
         ticketapi.delete_ticket(tid=ticket.tid)
         raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDSD_EXPT)
@@ -46,7 +46,7 @@ def authorize_get_datasource_data(uid, tid, did, ii, ie):
         raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDSD_DNA)
     permissions_needed=permissions.CAN_READ_DATA
     if did in ticket.permissions and permissions_needed & ticket.permissions[did]:
-        if ii>=ticket.interval_init and ii<=ticket.interval_end and ie>= ticket.interval_init and ie<=ticket.interval_end:
+        if ii.time>=ticket.interval_init.time and ii.time<=ticket.interval_end.time and ie.time>= ticket.interval_init.time and ie.time<=ticket.interval_end.time:
             return
         else:
             raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDSD_IINT)
@@ -68,7 +68,7 @@ def authorize_get_datapoint_data(uid, tid, pid, ii, ie):
     ticket=ticketapi.get_ticket(tid=tid)
     if not ticket:
         raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDPD_TNF)
-    if timeuuid.get_unix_timestamp(ticket.expires)<timeuuid.get_unix_timestamp(now):
+    if ticket.expires.time<now.time:
         ticketapi.insert_expired_ticket(ticket=ticket)
         ticketapi.delete_ticket(tid=ticket.tid)
         raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDPD_EXPT)
@@ -85,7 +85,7 @@ def authorize_get_datapoint_data(uid, tid, pid, ii, ie):
         raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDPD_DNA)
     permissions_needed=permissions.CAN_READ_DATA
     if pid in ticket.permissions and permissions_needed & ticket.permissions[pid]:
-        if ii>=ticket.interval_init and ii<=ticket.interval_end and ie>=ticket.interval_init and ie<=ticket.interval_end:
+        if ii.time>=ticket.interval_init.time and ii.time<=ticket.interval_end.time and ie.time>=ticket.interval_init.time and ie.time<=ticket.interval_end.time:
             return
         else:
             raise exceptions.AuthorizationException(error=Errors.E_ATA_AGDPD_IINT)
@@ -103,7 +103,7 @@ def authorize_get_snapshot_config(uid, tid, nid):
     ticket=ticketapi.get_ticket(tid=tid)
     if not ticket:
         raise exceptions.AuthorizationException(error=Errors.E_ATA_AGSNC_TNF)
-    if timeuuid.get_unix_timestamp(ticket.expires)<timeuuid.get_unix_timestamp(now):
+    if ticket.expires.time<now.time:
         ticketapi.insert_expired_ticket(ticket=ticket)
         ticketapi.delete_ticket(tid=ticket.tid)
         raise exceptions.AuthorizationException(error=Errors.E_ATA_AGSNC_EXPT)

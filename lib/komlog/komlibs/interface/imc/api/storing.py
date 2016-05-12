@@ -10,6 +10,7 @@ import json
 import uuid
 from komlog.komfig import logging, config, options
 from komlog.komfs import api as fsapi
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
@@ -67,8 +68,7 @@ def process_message_STOSMP(message):
             return response
         did=uuid.UUID(str_did)
         date=timeuuid.uuid1(seconds=timestamp)
-        result=datasourceapi.store_datasource_data(did=did, date=date, content=content)
-        if result:
+        if datasourceapi.store_datasource_data(did=did, date=date, content=content):
             stored_path=config.get(options.SAMPLES_STORED_PATH)
             if not stored_path:
                 logging.logger.debug('Error. SAMPLES_STORED_PATH configuration key not set.')
@@ -78,6 +78,9 @@ def process_message_STOSMP(message):
                 os.rename(filename,fo)
             except Exception as e:
                 logging.logger.debug('Error moving processed file to stored path: '+str(e))
+            auth_op=Operations.DATASOURCE_DATA_STORED
+            params={'did':did, 'date':date}
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
             response.add_msg_originated(messages.GenerateTextSummaryMessage(did=did,date=date))
             response.add_msg_originated(messages.MapVarsMessage(did=did,date=date))
             response.status=status.IMC_STATUS_OK

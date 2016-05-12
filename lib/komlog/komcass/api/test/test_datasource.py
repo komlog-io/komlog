@@ -697,4 +697,125 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertTrue(datasourceapi.delete_datasource_hash(did=did, date=date))
         self.assertIsNone(datasourceapi.get_datasource_hash(did=did, date=date))
 
+    def test_get_datasource_metadata_none_found(self):
+        ''' get_datasource_metadata should return an empty array if no data is found '''
+        did=uuid.uuid4()
+        init=timeuuid.uuid1(seconds=1)
+        end=timeuuid.uuid1()
+        self.assertEqual(datasourceapi.get_datasource_metadata(did=did,fromdate=init,todate=end),[])
+
+    def get_datasource_metadata_success_some_data_found(self):
+        ''' get_datasource_metadata should return an array with the metadata '''
+        did=uuid.uuid4()
+        for i in range(2,1000):
+            date=timeuuid.uuid1(seconds=i)
+            size=i
+            obj=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+            self.assertTrue(datasourceapi.insert_datasource_metadata(obj=obj))
+        init=timeuuid.uuid1(seconds=1)
+        end=timeuuid.uuid1(seconds=1001)
+        db_metadata=datasourceapi.get_datasource_metadata(did=did, fromdate=init, todate=end)
+        self.assertEqual(len(db_metadata),998)
+        for el in db_metadata:
+            self.assertTrue(isinstance(el,ormdatasource.DatasourceMetadata))
+
+    def test_get_datasource_metadata_at_none_found(self):
+        ''' get_datasource_metadata_at should return None if none is found '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertIsNone(datasourceapi.get_datasource_metadata_at(did=did, date=date))
+
+    def test_get_datasource_metadata_at_found(self):
+        ''' get_datasource_metadata_at should return the DatasourceMetadata object '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        size=100
+        obj=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+        self.assertTrue(datasourceapi.insert_datasource_metadata(obj=obj))
+        db_obj=datasourceapi.get_datasource_metadata_at(did=did, date=date)
+        self.assertIsNotNone(db_obj)
+        self.assertTrue(isinstance(db_obj,ormdatasource.DatasourceMetadata))
+        self.assertEqual(did, db_obj.did)
+        self.assertEqual(date, db_obj.date)
+        self.assertEqual(size, db_obj.size)
+
+    def test_get_datasource_metadata_size_at_none_found(self):
+        ''' get_datasource_metadata_size_at should return None if none is found '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertIsNone(datasourceapi.get_datasource_metadata_size_at(did=did, date=date))
+
+    def test_get_datasource_metadata_size_at_found(self):
+        ''' get_datasource_metadata_size_at should return the size value '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        size=100
+        obj=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+        self.assertTrue(datasourceapi.insert_datasource_metadata(obj=obj))
+        db_size=datasourceapi.get_datasource_metadata_size_at(did=did, date=date)
+        self.assertEqual(size, db_size)
+
+    def test_insert_datasource_metadata_failure_invalid_object(self):
+        ''' insert_datasource_metadata should fail if argument is not a DatasourceMetadata object '''
+        objs=[1,1.1,['a','list'],{'a':'dict'},('a','tuple'),{'set'},'text',uuid.uuid4(), timeuuid.uuid1()]
+        for obj in objs:
+            self.assertFalse(datasourceapi.insert_datasource_metadata(obj))
+
+    def test_insert_datasource_metadata_success(self):
+        ''' insert_datasource_metadata should succeed '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        size=100
+        obj=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+        self.assertTrue(datasourceapi.insert_datasource_metadata(obj=obj))
+        db_obj=datasourceapi.get_datasource_metadata_at(did=did, date=date)
+        self.assertIsNotNone(db_obj)
+        self.assertTrue(isinstance(db_obj,ormdatasource.DatasourceMetadata))
+        self.assertEqual(did, db_obj.did)
+        self.assertEqual(date, db_obj.date)
+        self.assertEqual(size, db_obj.size)
+
+    def delete_datasource_metadata_success_none_found(self):
+        ''' delete_datasource_metadata should succeed even if no data exists '''
+        did=uuid.uuid4()
+        self.assertTrue(datasourceapi.delete_datasource_metadata(did=did))
+
+    def delete_datasource_metadata_success_some_data_found(self):
+        ''' delete_datasource_metadata should succeed and delete all did metadata '''
+        did=uuid.uuid4()
+        for i in range(1,1001):
+            date=timeuuid.uuid1()
+            size=i
+            obj=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+            self.assertTrue(datasourceapi.insert_datasource_metadata(obj=obj))
+        init=timeuuid.uuid1(seconds=1)
+        end=timeuuid.uuid1()
+        db_metadata=datasourceapi.get_datasource_metadata(did=did, fromdate=init, todate=end)
+        self.assertEqual(len(db_metadata),1000)
+        self.assertTrue(datasourceapi.delete_datasource_metadata(did=did))
+        db_metadata=datasourceapi.get_datasource_metadata(did=did, fromdate=init, todate=end)
+        self.assertEqual(len(db_metadata),0)
+
+    def delete_datasource_metadata_at_success_none_found(self):
+        ''' delete_datasource_metadata_at should succeed even if no data exists '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.delete_datasource_metadata_at(did=did, date=date))
+
+    def delete_datasource_metadata_at_success_some_data_found(self):
+        ''' delete_datasource_metadata_at should succeed and delete all did metadata '''
+        did=uuid.uuid4()
+        for i in range(1,1001):
+            date=timeuuid.uuid1()
+            size=i
+            obj=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+            self.assertTrue(datasourceapi.insert_datasource_metadata(obj=obj))
+        init=timeuuid.uuid1(seconds=1)
+        end=timeuuid.uuid1()
+        db_metadata=datasourceapi.get_datasource_metadata(did=did, fromdate=init, todate=end)
+        self.assertEqual(len(db_metadata),1000)
+        el=db_metadata[0]
+        self.assertTrue(datasourceapi.delete_datasource_metadata_at(did=el.did, date=el.date))
+        db_metadata=datasourceapi.get_datasource_metadata(did=did, fromdate=init, todate=end)
+        self.assertEqual(len(db_metadata),999)
 

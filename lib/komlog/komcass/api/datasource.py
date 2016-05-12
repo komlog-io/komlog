@@ -49,7 +49,7 @@ def get_number_of_datasources_by_aid(aid):
     return row[0]['count'] if row else 0
 
 def new_datasource(datasource):
-    if not datasource:
+    if not isinstance(datasource, ormdatasource.Datasource):
         return False
     else:
         resp=connection.session.execute(stmtdatasource.I_A_MSTDATASOURCE_INE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.creation_date))
@@ -265,5 +265,42 @@ def insert_datasource_hash(obj):
 
 def delete_datasource_hash(did, date):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCEHASH_B_DID_DATE,(did,date))
+    return True
+
+def get_datasource_metadata(did, fromdate, todate, count=None):
+    data=[]
+    if count is None:
+        row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMETADATA_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
+    else:
+        row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMETADATA_B_DID_INITDATE_ENDDATE_COUNT,(did,fromdate,todate, count))
+    if row:
+        for d in row:
+            data.append(ormdatasource.DatasourceMetadata(**d))
+    return data
+
+def get_datasource_metadata_at(did,date):
+    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMETADATA_B_DID_DATE,(did,date))
+    if not row:
+        return None
+    else:
+        return ormdatasource.DatasourceMetadata(**row[0])
+
+def get_datasource_metadata_size_at(did, date):
+    row=connection.session.execute(stmtdatasource.S_SIZE_DATDATASOURCEMETADATA_B_DID_DATE,(did,date))
+    return row[0]['size'] if row else None
+
+def insert_datasource_metadata(obj):
+    if not isinstance(obj, ormdatasource.DatasourceMetadata):
+        return False
+    else:
+        connection.session.execute(stmtdatasource.I_A_DATDATASOURCEMETADATA,(obj.did,obj.date,obj.size))
+        return True
+
+def delete_datasource_metadata(did):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMETADATA_B_DID,(did,))
+    return True
+
+def delete_datasource_metadata_at(did, date):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMETADATA_B_DID_DATE,(did,date))
     return True
 

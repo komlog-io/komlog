@@ -2,11 +2,14 @@ import unittest
 import uuid
 import json
 from base64 import b64encode, b64decode
+from komlog.komcass.api import interface as cassapiiface
+from komlog.komlibs.auth.model import interfaces
 from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.auth import passport
 from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.gestaccount.datasource import api as gestdatasourceapi
 from komlog.komlibs.gestaccount.datapoint import api as gestdatapointapi
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.interface.web.api import login as loginapi 
 from komlog.komlibs.interface.web.api import user as userapi 
 from komlog.komlibs.interface.web.api import agent as agentapi 
@@ -14,6 +17,7 @@ from komlog.komlibs.interface.web.api import datasource as datasourceapi
 from komlog.komlibs.interface.web.api import datapoint as datapointapi 
 from komlog.komlibs.interface.web.model import webmodel
 from komlog.komlibs.interface.web import status, exceptions
+from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
@@ -110,7 +114,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         response = agentapi.get_agents_config_request(passport=self.passport)
         self.agents = response.data
         did=self.agents[0]['dids'][0]
-        content='DATAPOINT TESTS CONTENT 0 1 2 3 4 5 6 7 8'
+        content='DATAPOINT TESTS CONTENT 0 1 2 3 4 5 6 7 8 9 10 11 12'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date, content=content))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date))
@@ -561,7 +565,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             response=datapointapi.mark_positive_variable_request(passport=psp, pid=pid, sequence=sequence, position=position, length=length)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def Notest_mark_positive_variable_request_failure_invalid_pid(self):
+    def test_mark_positive_variable_request_failure_invalid_pid(self):
         ''' mark_positive_variable_request should fail if pid is invalid '''
         pids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
         psp = self.passport
@@ -572,7 +576,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             response=datapointapi.mark_positive_variable_request(passport=psp, pid=pid, sequence=sequence, position=position, length=length)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def Notest_mark_positive_variable_request_failure_invalid_sequence(self):
+    def test_mark_positive_variable_request_failure_invalid_sequence(self):
         ''' mark_positive_variable_request should fail if sequence is invalid '''
         sequences=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
         psp = self.passport
@@ -583,7 +587,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             response=datapointapi.mark_positive_variable_request(passport=psp, pid=pid, sequence=sequence, position=position, length=length)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def Notest_mark_positive_variable_request_failure_invalid_position(self):
+    def test_mark_positive_variable_request_failure_invalid_position(self):
         ''' mark_positive_variable_request should fail if position is invalid '''
         positions=['Username','userñame',None, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
         psp = self.passport
@@ -594,7 +598,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             response=datapointapi.mark_positive_variable_request(passport=psp, pid=pid, sequence=sequence, position=position, length=length)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def Notest_mark_positive_variable_request_failure_invalid_length(self):
+    def test_mark_positive_variable_request_failure_invalid_length(self):
         ''' mark_positive_variable_request should fail if length is invalid '''
         lengths=['Username','userñame',None, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
         psp = self.passport
@@ -659,4 +663,327 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         for length in lengths:
             response=datapointapi.mark_negative_variable_request(passport=psp, pid=pid, sequence=sequence, position=position, length=length)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_get_datapoint_data_request_failure_invalid_passport(self):
+        ''' get_datapoint_data_request should fail if passport is invalid '''
+        passports=[None, 233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
+        pid=uuid.uuid4().hex
+        start_date='33'
+        end_date='43'
+        for psp in passports:
+            response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error,Errors.E_IWADP_GDPDR_IPSP.value)
+
+    def test_get_datapoint_data_request_failure_invalid_pid(self):
+        ''' get_datapoint_data_request should fail if pid is invalid '''
+        psp = self.passport
+        pids=[None, 233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
+        start_date='33'
+        end_date='43'
+        for pid in pids:
+            response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error,Errors.E_IWADP_GDPDR_IP.value)
+
+    def test_get_datapoint_data_request_failure_invalid_start_date(self):
+        ''' get_datapoint_data_request should fail if start_date is invalid '''
+        start_dates=[233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
+        psp = self.passport
+        pid = uuid.uuid4().hex
+        end_date='43'
+        for start_date in start_dates:
+            response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error,Errors.E_IWADP_GDPDR_ISD.value)
+
+    def test_get_datapoint_data_request_failure_invalid_end_date(self):
+        ''' get_datapoint_data_request should fail if end_date is invalid '''
+        end_dates=[233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
+        psp = self.passport
+        pid = uuid.uuid4().hex
+        start_date='43'
+        for end_date in end_dates:
+            response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error,Errors.E_IWADP_GDPDR_IED.value)
+
+    def test_get_datapoint_data_request_failure_invalid_tid(self):
+        ''' get_datapoint_data_request should fail if tid is invalid '''
+        tids=[233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
+        psp = self.passport
+        pid = uuid.uuid4().hex
+        start_date='33'
+        end_date='43'
+        for tid in tids:
+            response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date, tid=tid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error,Errors.E_IWADP_GDPDR_IT.value)
+
+    def test_get_datapoint_data_request_failure_non_existent_datapoint(self):
+        ''' get_datapoint_data_request should fail if pid does not exist '''
+        psp = self.passport
+        pid = uuid.uuid4().hex
+        start_date=None
+        end_date=None
+        response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.error,autherrors.E_ARA_AGDPD_RE.value)
+
+    def test_get_datapoint_data_request_failure_datapoint_data_not_found(self):
+        ''' get_datapoint_data_request should fail if there is no data found '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        datapointname='test_get_datapoint_data_request_failure_datapoint_data_not_found'
+        datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
+        sequence=datasourcedata.data['seq']
+        position,length=datasourcedata.data['variables'][6]
+        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception as e:
+                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
+                    pass
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
+        datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        pid=None
+        for datapoint in datasourceinfo.data['datapoints']:
+            if datapoint['index']==position:
+                pid=datapoint['pid']
+        self.assertIsNotNone(pid)
+        start_date='10'
+        end_date='20'
+        response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.error,gesterrors.E_GPA_GDD_DDNF.value)
+
+    def test_get_datapoint_data_request_success_datapoint_data_found(self):
+        ''' get_datapoint_data_request should succeed and return the data found '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        datapointname='test_get_datapoint_data_request_success_datapoint_data_found'
+        datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
+        sequence=datasourcedata.data['seq']
+        position,length=datasourcedata.data['variables'][7]
+        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception as e:
+                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
+                    pass
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.FILL_DATAPOINT_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
+        datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        pid=None
+        for datapoint in datasourceinfo.data['datapoints']:
+            if datapoint['index']==position:
+                pid=datapoint['pid']
+        self.assertIsNotNone(pid)
+        start_date='1'
+        end_date=None
+        response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertEqual(len(response.data),1)
+        self.assertEqual(response.data[0]['value'],7)
+
+    def test_get_datapoint_data_request_failure_date_requested_before_interval_bounds_limit(self):
+        ''' get_datapoint_data_request should fail if data requested interval is before
+            min interval ts allowed '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        datapointname='test_get_datapoint_data_request_failure_datapoint_data_requested_before_interval_bounds_limit'
+        datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
+        sequence=datasourcedata.data['seq']
+        position,length=datasourcedata.data['variables'][8]
+        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception as e:
+                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
+                    pass
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.FILL_DATAPOINT_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
+        datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        pid=None
+        for datapoint in datasourceinfo.data['datapoints']:
+            if datapoint['index']==position:
+                pid=datapoint['pid']
+        self.assertIsNotNone(pid)
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.HIGHEST_TIME_UUID
+        self.assertTrue(cassapiiface.insert_user_iface_deny(psp.uid, iface, minTs.hex))
+        start_date=None
+        end_date='100'
+        response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_ALLOWED)
+        self.assertEqual(response.error, autherrors.E_AQA_AGDPD_IBE.value)
+        self.assertEqual(response.data, {'error':autherrors.E_AQA_AGDPD_IBE.value})
+        self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
+
+    def test_get_datapoint_data_request_success_date_requested_after_interval_bounds_limit(self):
+        ''' get_datapoint_data_request should succeed if data requested interval is after
+            min interval ts allowed. '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        datapointname='test_get_datapoint_data_request_success_datapoint_data_requested_after_interval_bounds_limit'
+        datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
+        sequence=datasourcedata.data['seq']
+        position,length=datasourcedata.data['variables'][9]
+        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception as e:
+                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
+                    pass
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
+        msg_addr=routing.get_address(type=messages.FILL_DATAPOINT_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                try:
+                    msgresult=msgapi.process_message(msg)
+                    if msgresult:
+                        msgapi.process_msg_result(msgresult)
+                except Exception:
+                    pass
+            else:
+                break
+        datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        pid=None
+        for datapoint in datasourceinfo.data['datapoints']:
+            if datapoint['index']==position:
+                pid=datapoint['pid']
+        self.assertIsNotNone(pid)
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.uuid1(seconds=500)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(psp.uid, iface, minTs.hex))
+        start_date='100'
+        end_date=str(timeuuid.get_unix_timestamp(timeuuid.uuid1()))
+        response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertEqual(len(response.data),1)
+        self.assertEqual(response.data[0]['value'],9)
+        #the same query without setting start_date
+        response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=None, end_date=end_date)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertEqual(len(response.data),1)
+        self.assertEqual(response.data[0]['value'],9)
+        self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
 

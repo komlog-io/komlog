@@ -14,6 +14,7 @@ OBJECTS=[
     'DAT_DATASOURCE_HASH',
     'DAT_DATASOURCE_TEXT_SUMMARY',
     'DAT_DATASOURCE_NOVELTY_DETECTOR_DATAPOINT',
+    'DAT_DATASOURCE_METADATA',
 ]
 
 MST_DATASOURCE='''
@@ -92,6 +93,15 @@ DAT_DATASOURCE_NOVELTY_DETECTOR_DATAPOINT='''
             nd blob,
             features set<text>,
             PRIMARY KEY ((did,pid),date)
+        );
+    '''
+
+DAT_DATASOURCE_METADATA='''
+        CREATE TABLE dat_datasource_metadata (
+            did uuid,
+            date timeuuid,
+            size int,
+            PRIMARY KEY (did,date)
         );
     '''
 

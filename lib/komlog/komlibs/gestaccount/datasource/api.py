@@ -121,10 +121,17 @@ def get_datasource_data(did, date):
 def store_datasource_data(did, date, content):
     if not args.is_valid_uuid(did) or not args.is_valid_datasource_content(content) or not args.is_valid_date(date):
         return False
+    size=len(content.encode('utf-8'))
     dsdobj=ormdatasource.DatasourceData(did=did,date=date,content=content)
+    metobj=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
     if cassapidatasource.insert_datasource_data(dsdobj=dsdobj):
-        if cassapidatasource.set_last_received(did=did, last_received=date):
-            return True
+        if cassapidatasource.insert_datasource_metadata(obj=metobj):
+            if cassapidatasource.set_last_received(did=did, last_received=date):
+                return True
+            else:
+                cassapidatasource.delete_datasource_data_at(did=did, date=date)
+                cassapidatasource.delete_datasource_metadata_at(did=did, date=date)
+                return False
         else:
             cassapidatasource.delete_datasource_data_at(did=did, date=date)
             return False

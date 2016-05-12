@@ -58,3 +58,9 @@ class DatasourceNoveltyDetector:
         self.nd=nd
         self.features=features
 
+class DatasourceMetadata:
+    def __init__(self, did, date, size):
+        self.did=did
+        self.date=date
+        self.size=size
+

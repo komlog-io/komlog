@@ -8,6 +8,7 @@ import uuid
 from komlog.komfig import logging
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
+from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
@@ -39,18 +40,27 @@ def get_datapoint_data_request(passport, pid, start_date, end_date, tid=None):
     pid=uuid.UUID(pid)
     if start_date and end_date and start_date>end_date:
         start_date,end_date=end_date,start_date
-    ii=timeuuid.max_uuid_from_time(timestamp=float(start_date)) if tid and start_date else None
-    ie=timeuuid.min_uuid_from_time(timestamp=float(end_date)) if tid and end_date else None
-    tid=uuid.UUID(tid) if tid else None
-    authorization.authorize_request(request=Requests.GET_DATAPOINT_DATA,passport=passport,pid=pid,ii=ii,ie=ie,tid=tid)
     ii=timeuuid.min_uuid_from_time(timestamp=float(start_date)) if start_date else None
     ie=timeuuid.max_uuid_from_time(timestamp=float(end_date)) if end_date else None
+    tid=uuid.UUID(tid) if tid else None
+    try:
+        authorization.authorize_request(request=Requests.GET_DATAPOINT_DATA,passport=passport,pid=pid,ii=ii,ie=ie,tid=tid)
+    except authexcept.IntervalBoundsException as e:
+        if ie and ie.time<e.data['date'].time:
+            raise e
+        else:
+            ie=timeuuid.max_uuid_from_time(timestamp=float(end_date)) if end_date else None
+        if not ii:
+            ii=e.data['date']
+        elif ii and ii.time<e.data['date'].time:
+            ii=e.data['date']
     data=datapointapi.get_datapoint_data(pid, fromdate=ii, todate=ie, count=300) #300 regs max
     response_data=[]
     for point in data:
-        response_data.append({'ts':timeuuid.get_unix_timestamp(point['date']),
-                              'value':int(point['value']) if point['value']%1==0 else float(point['value'])
-                             })
+        response_data.append({
+            'ts':timeuuid.get_unix_timestamp(point['date']),
+            'value':int(point['value']) if point['value']%1==0 else float(point['value'])
+        })
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler

@@ -12,3 +12,11 @@ class UserIfaceDeny:
         self.interface=interface
         self.perm=perm
 
+class UserIfaceTsDeny:
+    ''' This class is used to register interfaces whose access is denied to user requests in different time intervals '''
+    def __init__(self, uid, interface, ts, perm):
+        self.uid=uid
+        self.interface=interface
+        self.ts=ts
+        self.perm=perm
+

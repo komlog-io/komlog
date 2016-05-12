@@ -25,6 +25,18 @@ STATEMENTS={
     60501:'select * from quo_dashboard where bid=? and quote=?',
     60600:'select * from quo_circle where cid=?',
     60601:'select * from quo_circle where cid=? and quote=?',
+    60700:'select * from quo_ts_user where uid=?',
+    60701:'select * from quo_ts_user where uid=? and quote=?',
+    60702:'select * from quo_ts_user where uid=? and quote=? and ts=?',
+    60703:'select * from quo_ts_user where uid=? and quote=? and ts>=? and ts<=?',
+    60704:'select * from quo_ts_user where uid=? and quote=? limit ?',
+    60705:'select sum(value) from quo_ts_user where uid=? and quote=?',
+    60800:'select * from quo_ts_datasource where did=?',
+    60801:'select * from quo_ts_datasource where did=? and quote=?',
+    60802:'select * from quo_ts_datasource where did=? and quote=? and ts=?',
+    60803:'select * from quo_ts_datasource where did=? and quote=? and ts>=? and ts<=?',
+    60804:'select * from quo_ts_datasource where did=? and quote=? limit ?',
+    60805:'select sum(value) from quo_ts_datasource where did=? and quote=?',
     65000:'insert into quo_user (uid,quote,value) values (?,?,?)',
     65001:'insert into quo_user (uid,quote,value) values (?,?,?) if not exists',
     65100:'insert into quo_agent (aid,quote,value) values (?,?,?)',
@@ -39,6 +51,10 @@ STATEMENTS={
     65501:'insert into quo_dashboard (bid,quote,value) values (?,?,?) if not exists',
     65600:'insert into quo_circle (cid,quote,value) values (?,?,?)',
     65601:'insert into quo_circle (cid,quote,value) values (?,?,?) if not exists',
+    65700:'insert into quo_ts_user (uid,quote,ts,value) values (?,?,?,?)',
+    65701:'insert into quo_ts_user (uid,quote,ts,value) values (?,?,?,?) if not exists',
+    65800:'insert into quo_ts_datasource (did,quote,ts,value) values (?,?,?,?)',
+    65801:'insert into quo_ts_datasource (did,quote,ts,value) values (?,?,?,?) if not exists',
     67000:'delete from quo_user where uid=?',
     67001:'delete from quo_user where uid=? and quote=?',
     67100:'delete from quo_agent where aid=?',
@@ -53,6 +69,14 @@ STATEMENTS={
     67501:'delete from quo_dashboard where bid=? and quote=?',
     67600:'delete from quo_circle where cid=?',
     67601:'delete from quo_circle where cid=? and quote=?',
+    67700:'delete from quo_ts_user where uid=?',
+    67701:'delete from quo_ts_user where uid=? and quote=?',
+    67702:'delete from quo_ts_user where uid=? and quote=? and ts=?',
+    67703:'delete from quo_ts_user where uid=? and quote=? and ts>=? and ts<=?',
+    67800:'delete from quo_ts_datasource where did=?',
+    67801:'delete from quo_ts_datasource where did=? and quote=?',
+    67802:'delete from quo_ts_datasource where did=? and quote=? and ts=?',
+    67803:'delete from quo_ts_datasource where did=? and quote=? and ts>=? and ts<=?',
     69000:'update quo_user set value=? where uid=? and quote=? if value=?',
     69100:'update quo_agent set value=? where aid=? and quote=? if value=?',
     69200:'update quo_datasource set value=? where did=? and quote=? if value=?',
@@ -60,6 +84,8 @@ STATEMENTS={
     69400:'update quo_widget set value=? where wid=? and quote=? if value=?',
     69500:'update quo_dashboard set value=? where bid=? and quote=? if value=?',
     69600:'update quo_circle set value=? where cid=? and quote=? if value=?',
+    69700:'update quo_ts_user set value=? where uid=? and quote=? and ts=? if value=?',
+    69800:'update quo_ts_datasource set value=? where did=? and quote=? and ts=? if value=?',
 }
 
 # selects (60000 - 64999)
@@ -99,6 +125,24 @@ S_A_QUODASHBOARD_B_BID_QUOTE=60501
 S_A_QUOCIRCLE_B_CID=60600
 S_A_QUOCIRCLE_B_CID_QUOTE=60601
 
+# quo_ts_user
+
+S_A_QUOTSUSER_B_UID=60700
+S_A_QUOTSUSER_B_UID_QUOTE=60701
+S_A_QUOTSUSER_B_UID_QUOTE_TS=60702
+S_A_QUOTSUSER_B_UID_QUOTE_ITS_ETS=60703
+S_A_QUOTSUSER_B_UID_QUOTE_COUNT=60704
+S_SUMVALUE_QUOTSUSER_B_UID_QUOTE=60705
+
+# quo_ts_datasource
+
+S_A_QUOTSDATASOURCE_B_DID=60800
+S_A_QUOTSDATASOURCE_B_DID_QUOTE=60801
+S_A_QUOTSDATASOURCE_B_DID_QUOTE_TS=60802
+S_A_QUOTSDATASOURCE_B_DID_QUOTE_ITS_ETS=60803
+S_A_QUOTSDATASOURCE_B_DID_QUOTE_COUNT=60804
+S_SUMVALUE_QUOTSDATASOURCE_B_DID_QUOTE=60805
+
 # Inserts (65000 - 66999)
 
 
@@ -136,6 +180,17 @@ I_A_QUODASHBOARD_INE=65501
 
 I_A_QUOCIRCLE=65600
 I_A_QUOCIRCLE_INE=65601
+
+# quo_ts_user
+
+I_A_QUOTSUSER=65700
+I_A_QUOTSUSER_INE=65701
+
+# quo_ts_datasource
+
+I_A_QUOTSDATASOURCE=65800
+I_A_QUOTSDATASOURCE_INE=65801
+
 
 # Deletes (67000 - 68999)
 
@@ -175,6 +230,20 @@ D_A_QUODASHBOARD_B_BID_QUOTE=67501
 D_A_QUOCIRCLE_B_CID=67600
 D_A_QUOCIRCLE_B_CID_QUOTE=67601
 
+# quo_ts_user
+
+D_A_QUOTSUSER_B_UID=67700
+D_A_QUOTSUSER_B_UID_QUOTE=67701
+D_A_QUOTSUSER_B_UID_QUOTE_TS=67702
+D_A_QUOTSUSER_B_UID_QUOTE_ITS_ETS=67703
+
+# quo_ts_datasource
+
+D_A_QUOTSDATASOURCE_B_DID=67800
+D_A_QUOTSDATASOURCE_B_DID_QUOTE=67801
+D_A_QUOTSDATASOURCE_B_DID_QUOTE_TS=67802
+D_A_QUOTSDATASOURCE_B_DID_QUOTE_ITS_ETS=67803
+
 # Updates (69000 - 69999)
 
 
@@ -205,4 +274,12 @@ U_VALUE_QUODASHBOARD_I_VALUE=69500
 # quo_circle
 
 U_VALUE_QUOCIRCLE_I_VALUE=69600
+
+# quo_ts_user
+
+U_VALUE_QUOTSUSER_I_VALUE=69700
+
+# quo_ts_datasource
+
+U_VALUE_QUOTSDATASOURCE_I_VALUE=69800
 

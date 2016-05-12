@@ -64,6 +64,7 @@ def delete_datasource(did):
     cassapidatasource.delete_datasource(did=did)
     cassapidatasource.delete_datasource_stats(did=did)
     cassapidatasource.delete_datasource_data(did=did)
+    cassapidatasource.delete_datasource_metadata(did=did)
     cassapidatasource.delete_datasource_maps(did=did)
     cassapidatasource.delete_datasource_text_summaries(did=did)
     for pid in pids:

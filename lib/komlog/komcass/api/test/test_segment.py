@@ -8,12 +8,12 @@ class KomcassApiSegmentTest(unittest.TestCase):
 
     def test_get_user_segment_quotes_non_existing_sid(self):
         ''' get_user_segment_quotes should return an empty array if sid does not exist '''
-        sid=0
+        sid=1000
         self.assertEqual(segmentapi.get_user_segment_quotes(sid=sid), [])
 
     def test_get_user_segment_quotes_existing_segment(self):
         ''' get_user_segment_quotes should return an array with UserSegmentQuo objects '''
-        sid=1
+        sid=1001
         quotes={'quote1':1, 'quote2':2, 'quote3':3}
         for quote,value in quotes.items():
             self.assertTrue(segmentapi.insert_user_segment_quote(sid,quote,value))
@@ -29,7 +29,7 @@ class KomcassApiSegmentTest(unittest.TestCase):
 
     def test_get_user_segment_quote_existing_quote(self):
         ''' get_user_segment_quotes should return the UserSegmentQuo objects if quote exists '''
-        sid=2
+        sid=1002
         quotes={'quote1':1, 'quote2':2, 'quote3':3}
         for quote,value in quotes.items():
             self.assertTrue(segmentapi.insert_user_segment_quote(sid,quote,value))
@@ -41,7 +41,7 @@ class KomcassApiSegmentTest(unittest.TestCase):
 
     def test_get_user_segment_quote_non_existing_quote(self):
         ''' get_user_segment_quotes should return None if quote does not exist '''
-        sid=3
+        sid=1003
         quotes={'quote1':1, 'quote2':2, 'quote3':3}
         for quote,value in quotes.items():
             self.assertTrue(segmentapi.insert_user_segment_quote(sid,quote,value))
@@ -50,7 +50,7 @@ class KomcassApiSegmentTest(unittest.TestCase):
 
     def test_insert_user_segment_quote_non_previously_existing_quote(self):
         ''' insert_user_segment_quote should insert the quote if it did not exist previously '''
-        sid=4
+        sid=1004
         quotes={'quote1':1, 'quote2':2, 'quote3':3}
         self.assertEqual(segmentapi.get_user_segment_quotes(sid),[])
         for quote,value in quotes.items():
@@ -63,7 +63,7 @@ class KomcassApiSegmentTest(unittest.TestCase):
 
     def test_insert_user_segment_quote_previously_existing_quote(self):
         ''' insert_user_segment_quote should update the quote if it did exist previously '''
-        sid=5
+        sid=1005
         quote='quote1'
         value=1
         self.assertEqual(segmentapi.get_user_segment_quotes(sid),[])
@@ -83,7 +83,7 @@ class KomcassApiSegmentTest(unittest.TestCase):
 
     def test_delete_user_segment_quote_already_existing_quote(self):
         ''' delete_user_segment_quote should return True and delete the Segment quote if exists '''
-        sid=6
+        sid=1006
         quote='quote'
         value=1
         self.assertTrue(segmentapi.insert_user_segment_quote(sid,quote,value))
@@ -97,7 +97,7 @@ class KomcassApiSegmentTest(unittest.TestCase):
 
     def test_delete_user_segment_quote_non_existing_quote(self):
         ''' delete_user_segment_quote should return True even if quote does not exist '''
-        sid=7
+        sid=1007
         quote='quote'
         value=1
         self.assertTrue(segmentapi.insert_user_segment_quote(sid,quote,value))
@@ -113,7 +113,7 @@ class KomcassApiSegmentTest(unittest.TestCase):
 
     def test_delete_user_segment_quote_non_existing_segment(self):
         ''' delete_user_segment_quote should return True '''
-        sid=8
+        sid=1008
         quote='quote'
         value=1
         self.assertEqual(segmentapi.get_user_segment_quotes(sid),[] )
@@ -123,7 +123,7 @@ class KomcassApiSegmentTest(unittest.TestCase):
 
     def test_delete_user_segment_quotes_already_existing_quotes(self):
         ''' delete_user_segment_quotes should return True and delete the Segment quotes if exist '''
-        sid=9
+        sid=1009
         quotes={'quote1':1, 'quote2':2, 'quote3':3}
         for quote,value in quotes.items():
             self.assertTrue(segmentapi.insert_user_segment_quote(sid,quote,value))
@@ -134,7 +134,7 @@ class KomcassApiSegmentTest(unittest.TestCase):
 
     def test_delete_user_segment_quotes_non_existing_quotes(self):
         ''' delete_user_segment_quotes should return True and delete the Segment quotes if exist '''
-        sid=10
+        sid=1010
         self.assertEqual(segmentapi.get_user_segment_quotes(sid),[])
         self.assertTrue(segmentapi.delete_user_segment_quotes(sid))
         self.assertEqual(segmentapi.get_user_segment_quotes(sid),[])

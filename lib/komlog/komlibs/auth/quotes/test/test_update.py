@@ -4,7 +4,9 @@ from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.auth.model.quotes import Quotes
 from komlog.komlibs.auth.quotes import update
 from komlog.komcass.api import quote as cassapiquote
+from komlog.komcass.api import datasource as cassapidatasource
 from komlog.komcass.api import circle as cassapicircle
+from komlog.komcass.model.orm import datasource as ormdatasource
 from komlog.komcass.model.orm import circle as ormcircle
 from komlog.komlibs.general.time import timeuuid
 
@@ -12,19 +14,6 @@ from komlog.komlibs.general.time import timeuuid
 class AuthQuotesUpdateTest(unittest.TestCase):
     ''' komlog.auth.quotes.update tests '''
     
-    def test_get_update_funcs_success(self):
-        ''' test_update_funcs should return a list of functions '''
-        operation=Operations.NEW_AGENT
-        update_funcs=update.get_update_funcs(operation=operation)
-        self.assertTrue(isinstance(update_funcs, list))
-
-    def test_get_update_funcs_success_empty_list(self):
-        '''test_update_funcs should return an empty list of functions if operation does not exist'''
-        operation='234234234'
-        update_funcs=update.get_update_funcs(operation=operation)
-        self.assertTrue(isinstance(update_funcs, list))
-        self.assertEqual(update_funcs, [])
-
     def test_quo_static_user_total_agents_no_uid(self):
         ''' quo_static_user_total_agents should fail if no uid is passed '''
         params={}
@@ -193,3 +182,230 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         circle_quote=cassapiquote.get_circle_quote(cid=cid, quote=quote)
         self.assertEqual(circle_quote.value,result)
 
+    def test_quo_daily_datasource_occupation_no_did(self):
+        ''' quo_daily_datasource_occupation should return None if did is not found in parameters '''
+        params={'date':timeuuid.uuid1()}
+        self.assertIsNone(update.quo_daily_datasource_occupation(params))
+
+    def test_quo_daily_datasource_occupation_no_date(self):
+        ''' quo_daily_datasource_occupation should return None if date is not found in parameters '''
+        params={'did':uuid.uuid4()}
+        self.assertIsNone(update.quo_daily_datasource_occupation(params))
+
+    def test_quo_daily_datasource_occupation_no_datasource_found(self):
+        ''' quo_daily_datasource_occupation should return None if no datasource is found '''
+        params={'did':uuid.uuid4(), 'date':timeuuid.uuid1()}
+        self.assertIsNone(update.quo_daily_datasource_occupation(params))
+
+    def test_quo_daily_datasource_occupation_first_sample_added(self):
+        ''' quo_daily_datasource_ocuppation should set the sample size if this sample is the one
+            who creates the quote '''
+        did=uuid.uuid4()
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        size=100
+        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename='datasourcename', creation_date=date)
+        self.assertTrue(cassapidatasource.new_datasource(datasource=datasource))
+        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
+        params={'did':did, 'date':date}
+        result=update.quo_daily_datasource_occupation(params)
+        self.assertEqual(result,size)
+        quote=Quotes.quo_daily_datasource_occupation.name
+        ts=timeuuid.get_day_timestamp(date)
+        quotes=cassapiquote.get_datasource_ts_quotes(did=did, quote=quote)
+        self.assertEqual(len(quotes),1)
+        self.assertEqual(quotes[0].did,did)
+        self.assertEqual(quotes[0].quote,quote)
+        self.assertEqual(quotes[0].ts,ts)
+        self.assertEqual(quotes[0].value,100)
+
+
+    def test_quo_daily_datasource_occupation_non_first_sample_added(self):
+        ''' quo_daily_datasource_ocuppation should add the sample size to the existing value '''
+        did=uuid.uuid4()
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        size=100
+        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename='datasourcename', creation_date=date)
+        self.assertTrue(cassapidatasource.new_datasource(datasource=datasource))
+        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
+        params={'did':did, 'date':date}
+        result=update.quo_daily_datasource_occupation(params)
+        self.assertEqual(result,size)
+        date=timeuuid.uuid1()
+        size=300
+        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
+        params={'did':did, 'date':date}
+        result=update.quo_daily_datasource_occupation(params)
+        self.assertEqual(result, 400)
+        quote=Quotes.quo_daily_datasource_occupation.name
+        ts=timeuuid.get_day_timestamp(date)
+        quotes=cassapiquote.get_datasource_ts_quotes(did=did, quote=quote)
+        self.assertEqual(len(quotes),1)
+        self.assertEqual(quotes[0].did,did)
+        self.assertEqual(quotes[0].quote,quote)
+        self.assertEqual(quotes[0].ts,ts)
+        self.assertEqual(quotes[0].value,400)
+
+    def test_quo_daily_user_datasources_occupation_no_did(self):
+        ''' quo_daily_user_datasources_occupation should return None if did is not found in parameters '''
+        params={'date':timeuuid.uuid1()}
+        self.assertIsNone(update.quo_daily_user_datasources_occupation(params))
+
+    def test_quo_daily_user_datasources_occupation_no_date(self):
+        ''' quo_daily_user_datasources_occupation should return None if date is not found in parameters '''
+        params={'did':uuid.uuid4()}
+        self.assertIsNone(update.quo_daily_user_datasources_occupation(params))
+
+    def test_quo_daily_user_datasources_occupation_no_datasource_found(self):
+        ''' quo_daily_user_datasources_occupation should return None if no datasource is found '''
+        params={'did':uuid.uuid4(), 'date':timeuuid.uuid1()}
+        self.assertIsNone(update.quo_daily_user_datasources_occupation(params))
+
+    def test_quo_daily_user_datasources_occupation_first_sample_added(self):
+        ''' quo_daily_user_datasources_ocuppation should set the sample size if this sample is the one
+            who creates the quote '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        aid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        size=100
+        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename='datasourcename', creation_date=date)
+        self.assertTrue(cassapidatasource.new_datasource(datasource=datasource))
+        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
+        params={'did':did, 'date':date}
+        result=update.quo_daily_user_datasources_occupation(params)
+        self.assertEqual(result,size)
+        quote=Quotes.quo_daily_user_datasources_occupation.name
+        ts=timeuuid.get_day_timestamp(date)
+        quotes=cassapiquote.get_user_ts_quotes(uid=uid, quote=quote)
+        self.assertEqual(len(quotes),1)
+        self.assertEqual(quotes[0].uid,uid)
+        self.assertEqual(quotes[0].quote,quote)
+        self.assertEqual(quotes[0].ts,ts)
+        self.assertEqual(quotes[0].value,100)
+
+    def test_quo_daily_user_occupation_non_first_sample_added(self):
+        ''' quo_daily_user_ocuppation should add the sample size to the existing value '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        aid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        size=100
+        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename='datasourcename', creation_date=date)
+        self.assertTrue(cassapidatasource.new_datasource(datasource=datasource))
+        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
+        params={'did':did, 'date':date}
+        result=update.quo_daily_user_datasources_occupation(params)
+        self.assertEqual(result,size)
+        date=timeuuid.uuid1()
+        size=300
+        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
+        params={'did':did, 'date':date}
+        result=update.quo_daily_user_datasources_occupation(params)
+        self.assertEqual(result, 400)
+        quote=Quotes.quo_daily_user_datasources_occupation.name
+        ts=timeuuid.get_day_timestamp(date)
+        quotes=cassapiquote.get_user_ts_quotes(uid=uid, quote=quote)
+        self.assertEqual(len(quotes),1)
+        self.assertEqual(quotes[0].uid,uid)
+        self.assertEqual(quotes[0].quote,quote)
+        self.assertEqual(quotes[0].ts,ts)
+        self.assertEqual(quotes[0].value,400)
+
+    def test_quo_total_user_occupation_did_not_found(self):
+        ''' quo_total_user_occupation should return None if params has no did parameter '''
+        params={}
+        self.assertIsNone(update.quo_total_user_occupation(params))
+
+    def test_quo_total_user_occupation_datasource_not_found(self):
+        ''' quo_total_user_occupation should return None if datasource does not exist '''
+        did=uuid.uuid4()
+        params={'did':did}
+        self.assertIsNone(update.quo_total_user_occupation(params))
+
+    def test_quo_total_user_occupation_no_quotes_found_first_exec(self):
+        ''' quo_total_user_ocuppation should return 0 if there is no quote found, and set the total occupation to 0 '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        aid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename='datasourcename', creation_date=date)
+        self.assertTrue(cassapidatasource.new_datasource(datasource=datasource))
+        params={'did':did}
+        result=update.quo_total_user_occupation(params)
+        self.assertEqual(result,0)
+        quote=Quotes.quo_total_user_occupation.name
+        ts=timeuuid.get_hour_timestamp(date)
+        quotes=cassapiquote.get_user_ts_quotes(uid=uid, quote=quote)
+        self.assertEqual(len(quotes),1)
+        self.assertEqual(quotes[0].uid,uid)
+        self.assertEqual(quotes[0].quote,quote)
+        self.assertEqual(quotes[0].ts,ts)
+        self.assertEqual(quotes[0].value,0)
+
+    def test_quo_total_user_occupation_no_quotes_found_not_first_exec(self):
+        ''' quo_total_user_ocuppation should return None if the hourly execution of the quote has already been done '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        aid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename='datasourcename', creation_date=date)
+        self.assertTrue(cassapidatasource.new_datasource(datasource=datasource))
+        params={'did':did}
+        result=update.quo_total_user_occupation(params)
+        self.assertEqual(result,0)
+        quote=Quotes.quo_total_user_occupation.name
+        ts=timeuuid.get_hour_timestamp(date)
+        quotes=cassapiquote.get_user_ts_quotes(uid=uid, quote=quote)
+        self.assertEqual(len(quotes),1)
+        self.assertEqual(quotes[0].uid,uid)
+        self.assertEqual(quotes[0].quote,quote)
+        self.assertEqual(quotes[0].ts,ts)
+        self.assertEqual(quotes[0].value,0)
+        result=update.quo_total_user_occupation(params)
+        self.assertEqual(result, None)
+
+    def test_quo_total_user_occupation_quotes_found_first_exec(self):
+        ''' quo_daily_user_ocuppation should add the sample size to the existing value '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        aid=uuid.uuid4()
+        date=timeuuid.uuid1(seconds=1)
+        size=100
+        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename='datasourcename', creation_date=date)
+        self.assertTrue(cassapidatasource.new_datasource(datasource=datasource))
+        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
+        params={'did':did, 'date':date}
+        result=update.quo_daily_user_datasources_occupation(params)
+        self.assertEqual(result,size)
+        date=timeuuid.uuid1(seconds=100000)
+        size=300
+        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
+        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
+        params={'did':did, 'date':date}
+        result=update.quo_daily_user_datasources_occupation(params)
+        self.assertEqual(result, 300)
+        quote=Quotes.quo_daily_user_datasources_occupation.name
+        quotes=cassapiquote.get_user_ts_quotes(uid=uid, quote=quote)
+        self.assertEqual(len(quotes),2)
+        params={'did':did}
+        result=update.quo_total_user_occupation(params)
+        self.assertEqual(result,400)
+        quote=Quotes.quo_total_user_occupation.name
+        ts=timeuuid.get_hour_timestamp(timeuuid.uuid1())
+        quotes=cassapiquote.get_user_ts_quotes(uid=uid, quote=quote)
+        self.assertEqual(len(quotes),1)
+        self.assertEqual(quotes[0].uid,uid)
+        self.assertEqual(quotes[0].quote,quote)
+        self.assertEqual(quotes[0].ts,ts)
+        self.assertEqual(quotes[0].value,400)

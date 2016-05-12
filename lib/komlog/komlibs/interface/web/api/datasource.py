@@ -4,10 +4,10 @@ This file defines the logic associated with web interface operations
 
 '''
 import uuid
-from komlog.komfig import logging
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
+from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
@@ -43,11 +43,23 @@ def get_datasource_data_request(passport, did, seq=None, tid=None):
         ii=None
         ie=None
     tid=uuid.UUID(tid) if tid else None
-    authorization.authorize_request(request=Requests.GET_DATASOURCE_DATA,passport=passport,did=did,ii=ii,ie=ie, tid=tid)
-    if ii:
-        data=datasourceapi.get_datasource_data(did,date=ii)
+    try:
+        authorization.authorize_request(request=Requests.GET_DATASOURCE_DATA,passport=passport,did=did,ii=ii,ie=ie, tid=tid)
+    except authexcept.IntervalBoundsException as e:
+        if ii and ii.time<e.data['date'].time:
+            raise e
+        elif ii:
+            data=datasourceapi.get_datasource_data(did,date=ii)
+        else:
+            data=datasourceapi.get_last_processed_datasource_data(did)
+            if data['date'].time<e.data['date'].time:
+                e.error=Errors.E_IWADS_GDSDR_LDBL
+                raise e
     else:
-        data=datasourceapi.get_last_processed_datasource_data(did)
+        if ii:
+            data=datasourceapi.get_datasource_data(did,date=ii)
+        else:
+            data=datasourceapi.get_last_processed_datasource_data(did)
     datasource={}
     datasource['did']=data['did'].hex
     datasource['ts']=timeuuid.get_unix_timestamp(data['date'])

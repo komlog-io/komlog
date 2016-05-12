@@ -54,9 +54,11 @@ def authorize_get_datasource_data(passport, did, ii, ie, tid):
             ticketsauth.authorize_get_datasource_data(uid=passport.uid, did=did, ii=ii, ie=ie, tid=tid)
         else:
             raise e
+    quoauth.authorize_get_datasource_data(did=did, ii=ii, ie=ie)
 
 def authorize_post_datasource_data(passport, did):
     resauth.authorize_post_datasource_data(uid=passport.uid,aid=passport.aid,did=did)
+    quoauth.authorize_post_datasource_data(uid=passport.uid,did=did)
 
 def authorize_get_datasource_config(passport, did):
     resauth.authorize_get_datasource_config(uid=passport.uid,did=did)
@@ -79,6 +81,7 @@ def authorize_get_datapoint_data(passport, pid, ii, ie, tid):
             ticketsauth.authorize_get_datapoint_data(uid=passport.uid, pid=pid, ii=ii, ie=ie, tid=tid)
         else:
             raise e
+    quoauth.authorize_get_datapoint_data(pid=pid, ii=ii, ie=ie)
 
 def authorize_get_datapoint_config(passport, pid):
     resauth.authorize_get_datapoint_config(uid=passport.uid,pid=pid)

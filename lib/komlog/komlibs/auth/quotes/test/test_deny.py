@@ -1,7 +1,17 @@
 import unittest
 import uuid
+from komlog.komcass.api import user as cassapiuser
+from komlog.komcass.api import interface as cassapiiface
+from komlog.komcass.api import datasource as cassapidatasource
+from komlog.komcass.api import quote as cassapiquote
+from komlog.komcass.api import segment as cassapisegment
+from komlog.komcass.model.orm import user as ormuser
+from komlog.komcass.model.orm import datasource as ormdatasource
 from komlog.komlibs.auth.quotes import deny
+from komlog.komlibs.auth.model import interfaces
+from komlog.komlibs.auth.model.quotes import Quotes
 from komlog.komlibs.gestaccount.user import api as userapi
+from komlog.komlibs.general.time import timeuuid
 
 class AuthQuotesDenyTest(unittest.TestCase):
     ''' komlog.auth.quotes.deny tests '''
@@ -26,13 +36,22 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_static_user_total_agents should succeed if deny flag is True and UID is set'''
         params={'uid':self.user['uid']}
         flag=True
+        iface=interfaces.User_AgentCreation().value
         self.assertTrue(deny.quo_static_user_total_agents(params,flag))
+        db_iface=cassapiiface.get_user_iface_deny(uid=params['uid'],iface=iface)
+        self.assertIsNotNone(db_iface)
+        self.assertEqual(db_iface.interface,interfaces.User_AgentCreation().value)
+        self.assertEqual(db_iface.perm,deny.DEFAULT_PERM)
+        self.assertEqual(db_iface.uid,params['uid'])
 
     def test_quo_static_user_total_agents_unsuccess(self):
         ''' quo_static_user_total_agents should succeed if deny flag is False and UID is set'''
         params={'uid':self.user['uid']}
         flag=False
         self.assertTrue(deny.quo_static_user_total_agents(params,flag))
+        iface=interfaces.User_AgentCreation().value
+        db_iface=cassapiiface.get_user_iface_deny(uid=params['uid'],iface=iface)
+        self.assertIsNone(db_iface)
 
     def test_quo_static_user_total_datasources_no_uid(self):
         ''' quo_static_user_total_datasources should fail if no uid is passed '''
@@ -237,4 +256,288 @@ class AuthQuotesDenyTest(unittest.TestCase):
         params={'uid':self.user['uid'],'cid':uuid.uuid4()}
         flag=False
         self.assertTrue(deny.quo_static_circle_total_members(params,flag))
+
+    def test_quo_daily_datasource_occupation_failure_no_did(self):  
+        ''' quo_daily_datasource_occupation should return False if params has no did '''
+        params={'date':timeuuid.uuid1()}
+        flag=True
+        self.assertFalse(deny.quo_daily_datasource_occupation(params,flag))
+
+    def test_quo_daily_datasource_occupation_failure_no_date(self):  
+        ''' quo_daily_datasource_occupation should return False if params has no date '''
+        params={'did':uuid.uuid4()}
+        flag=True
+        self.assertFalse(deny.quo_daily_datasource_occupation(params,flag))
+
+    def test_quo_daily_datasource_occupation_failure_non_existing_datasource(self):  
+        ''' quo_daily_datasource_occupation should return False if datasource does not exist '''
+        params={'did':uuid.uuid4(), 'date':timeuuid.uuid1()}
+        flag=True
+        self.assertFalse(deny.quo_daily_datasource_occupation(params,flag))
+
+    def test_quo_daily_datasource_occupation_success_deny_true(self):  
+        ''' quo_daily_datasource_occupation should return True and set the deny interface '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        datasourcename='test_quo_daily_datasource_occupation_success_deny_true'
+        datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
+        self.assertTrue(cassapidatasource.new_datasource(datasource))
+        params={'did':did, 'date':date}
+        flag=True
+        self.assertTrue(deny.quo_daily_datasource_occupation(params,flag))
+        iface=interfaces.User_PostDatasourceDataDaily(did=did).value
+        ts=timeuuid.get_day_timestamp(date)
+        db_iface=cassapiiface.get_user_ts_iface_deny(uid=uid, iface=iface, ts=ts)
+        self.assertIsNotNone(db_iface)
+        self.assertEqual(db_iface.uid, uid)
+        self.assertEqual(db_iface.interface,iface)
+        self.assertEqual(db_iface.ts,ts)
+        self.assertEqual(db_iface.perm,deny.DEFAULT_PERM)
+
+    def test_quo_daily_datasource_occupation_success_deny_false(self):  
+        ''' quo_daily_datasource_occupation should return True and delete the deny interface '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        datasourcename='test_quo_daily_datasource_occupation_success_deny_false'
+        datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
+        self.assertTrue(cassapidatasource.new_datasource(datasource))
+        params={'did':did, 'date':date}
+        flag=False
+        self.assertTrue(deny.quo_daily_datasource_occupation(params,flag))
+        iface=interfaces.User_PostDatasourceDataDaily(did=did).value
+        ts=timeuuid.get_day_timestamp(date)
+        db_iface=cassapiiface.get_user_ts_iface_deny(uid=uid, iface=iface, ts=ts)
+        self.assertIsNone(db_iface)
+
+    def test_quo_daily_user_datasources_occupation_failure_no_did(self):  
+        ''' quo_daily_user_datasources_occupation should return False if params has no did '''
+        params={'date':timeuuid.uuid1()}
+        flag=True
+        self.assertFalse(deny.quo_daily_user_datasources_occupation(params,flag))
+
+    def test_quo_daily_user_datasources_occupation_failure_no_did(self):  
+        ''' quo_daily_user_datasources_occupation should return False if params has no date '''
+        params={'did':uuid.uuid4()}
+        flag=True
+        self.assertFalse(deny.quo_daily_user_datasources_occupation(params,flag))
+
+    def test_quo_daily_user_datasources_occupation_failure_non_existing_datasource(self):  
+        ''' quo_daily_user_datasources_occupation should return False if datasource does not exist '''
+        params={'did':uuid.uuid4(), 'date':timeuuid.uuid1()}
+        flag=True
+        self.assertFalse(deny.quo_daily_user_datasources_occupation(params,flag))
+
+    def test_quo_daily_user_datasources_occupation_success_deny_true(self):  
+        ''' quo_daily_user_datasources_occupation should return True and set the deny interface '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        datasourcename='test_quo_daily_user_datasources_occupation_success_deny_true'
+        datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
+        self.assertTrue(cassapidatasource.new_datasource(datasource))
+        params={'did':did, 'date':date}
+        flag=True
+        self.assertTrue(deny.quo_daily_user_datasources_occupation(params,flag))
+        iface=interfaces.User_PostDatasourceDataDaily().value
+        ts=timeuuid.get_day_timestamp(date)
+        db_iface=cassapiiface.get_user_ts_iface_deny(uid=uid, iface=iface, ts=ts)
+        self.assertIsNotNone(db_iface)
+        self.assertEqual(db_iface.uid, uid)
+        self.assertEqual(db_iface.interface,iface)
+        self.assertEqual(db_iface.ts,ts)
+        self.assertEqual(db_iface.perm,deny.DEFAULT_PERM)
+
+    def test_quo_daily_user_datasources_occupation_success_deny_false(self):  
+        ''' quo_daily_user_datasources_occupation should return True and delete the deny interface '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        datasourcename='test_quo_daily_user_datasources_occupation_success_deny_false'
+        datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
+        self.assertTrue(cassapidatasource.new_datasource(datasource))
+        params={'did':did, 'date':date}
+        flag=False
+        self.assertTrue(deny.quo_daily_user_datasources_occupation(params,flag))
+        iface=interfaces.User_PostDatasourceDataDaily().value
+        ts=timeuuid.get_day_timestamp(date)
+        db_iface=cassapiiface.get_user_ts_iface_deny(uid=uid, iface=iface, ts=ts)
+        self.assertIsNone(db_iface)
+
+    def test_quo_total_user_occupation_no_did_in_params(self):
+        ''' quo_total_user_occupation should return False if no did parameter is passed '''
+        params={}
+        flag=False
+        self.assertFalse(deny.quo_total_user_occupation(params, flag))
+
+    def test_quo_total_user_occupation_no_datasource_found(self):
+        ''' quo_total_user_occupation should return False if datasource does not exist '''
+        did=uuid.uuid4()
+        params={'did':did}
+        flag=False
+        self.assertFalse(deny.quo_total_user_occupation(params, flag))
+
+    def test_quo_total_user_occupation_no_user_found(self):
+        ''' quo_total_user_occupation should return False if user does not exist '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        datasourcename='datasource'
+        datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
+        self.assertTrue(cassapidatasource.new_datasource(datasource))
+        params={'did':did}
+        flag=False
+        self.assertFalse(deny.quo_total_user_occupation(params,flag))
+
+    def test_quo_total_user_occupation_success_deny_false(self):
+        ''' quo_total_user_occupation should return True and delete the interface '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        username='test_quo_total_user_occupation_success_deny_false'
+        email=username+'@komlog.org'
+        password=b'password'
+        segment=0
+        state=0
+        user=ormuser.User(username=username, uid=uid, password=password, email=email, segment=segment, creation_date=timeuuid.uuid1(), state=state)
+        self.assertTrue(cassapiuser.insert_user(user))
+        datasourcename='datasource'
+        datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
+        self.assertTrue(cassapidatasource.new_datasource(datasource))
+        params={'did':did}
+        flag=False
+        self.assertTrue(deny.quo_total_user_occupation(params,flag))
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        db_iface=cassapiiface.get_user_iface_deny(uid=uid, iface=iface)
+        self.assertIsNone(db_iface)
+
+    def test_quo_total_user_occupation_failure_deny_true_but_no_segment_quote_stablished(self):
+        ''' quo_total_user_occupation should return False if we want to set the deny interface 
+            but the segment quote is not set
+        '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        username='test_quo_total_user_occupation_failure_deny_true_but_no_segment_quote_set'
+        email=username+'@komlog.org'
+        password=b'password'
+        segment=0
+        state=0
+        user=ormuser.User(username=username, uid=uid, password=password, email=email, segment=segment, creation_date=timeuuid.uuid1(), state=state)
+        self.assertTrue(cassapiuser.insert_user(user))
+        datasourcename='datasource'
+        datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
+        self.assertTrue(cassapidatasource.new_datasource(datasource))
+        params={'did':did}
+        flag=True
+        self.assertFalse(deny.quo_total_user_occupation(params,flag))
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        db_iface=cassapiiface.get_user_iface_deny(uid=uid, iface=iface)
+        self.assertIsNone(db_iface)
+
+    def test_quo_total_user_occupation_success_deny_true_but_no_min_ts_found(self):
+        ''' quo_total_user_occupation should return True if we try to set the deny interface
+            but the function does not find the minimal timestamp when it tries to calculate it
+            because the sum of quotes does not surpasses the segment limit.'''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        username='test_quo_total_user_occupation_failure_deny_true_but_no_min_ts_found'
+        email=username+'@komlog.org'
+        password=b'password'
+        segment=0
+        state=0
+        user=ormuser.User(username=username, uid=uid, password=password, email=email, segment=segment, creation_date=timeuuid.uuid1(), state=state)
+        self.assertTrue(cassapiuser.insert_user(user))
+        datasourcename='datasource'
+        datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
+        self.assertTrue(cassapidatasource.new_datasource(datasource))
+        quote=Quotes.quo_total_user_occupation.name
+        self.assertTrue(cassapisegment.insert_user_segment_quote(sid=segment,quote=quote,value=1))
+        params={'did':did}
+        flag=True
+        self.assertTrue(deny.quo_total_user_occupation(params,flag))
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        db_iface=cassapiiface.get_user_iface_deny(uid=uid, iface=iface)
+        self.assertIsNone(db_iface)
+
+    def test_quo_total_user_occupation_success_deny_true_min_ts_found(self):
+        ''' quo_total_user_occupation should return True and set the deny interface
+            if the sum of quotes surpasses the segment limit.'''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        username='test_quo_total_user_occupation_failure_deny_true_but_no_min_ts_found'
+        email=username+'@komlog.org'
+        password=b'password'
+        segment=0
+        state=0
+        user=ormuser.User(username=username, uid=uid, password=password, email=email, segment=segment, creation_date=timeuuid.uuid1(), state=state)
+        self.assertTrue(cassapiuser.insert_user(user))
+        datasourcename='datasource'
+        datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
+        self.assertTrue(cassapidatasource.new_datasource(datasource))
+        quote=Quotes.quo_total_user_occupation.name
+        self.assertTrue(cassapisegment.insert_user_segment_quote(sid=segment,quote=quote,value=1))
+        quote=Quotes.quo_daily_user_datasources_occupation.name
+        ts=1000
+        value=100
+        n_val=cassapiquote.new_user_ts_quote(uid=uid,quote=quote,ts=ts,value=value)
+        params={'did':did}
+        flag=True
+        self.assertTrue(deny.quo_total_user_occupation(params,flag))
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        db_iface=cassapiiface.get_user_iface_deny(uid=uid, iface=iface)
+        self.assertIsNotNone(db_iface)
+        self.assertEqual(db_iface.uid, uid)
+        self.assertEqual(db_iface.interface,iface)
+        self.assertEqual(db_iface.perm, timeuuid.min_uuid_from_time(ts).hex)
+
+    def test_quo_total_user_occupation_success_deny_true_min_ts_found_on_second_occupation_value(self):
+        ''' quo_total_user_occupation should return True and set the deny interface
+            if the sum of quotes surpasses the segment limit. In this case, after the first quote
+            value.
+        '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        username='test_quo_total_user_occupation_failure_deny_true_but_no_min_ts_found'
+        email=username+'@komlog.org'
+        password=b'password'
+        segment=0
+        state=0
+        user=ormuser.User(username=username, uid=uid, password=password, email=email, segment=segment, creation_date=timeuuid.uuid1(), state=state)
+        self.assertTrue(cassapiuser.insert_user(user))
+        datasourcename='datasource'
+        datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
+        self.assertTrue(cassapidatasource.new_datasource(datasource))
+        quote=Quotes.quo_total_user_occupation.name
+        self.assertTrue(cassapisegment.insert_user_segment_quote(sid=segment,quote=quote,value=1))
+        quote=Quotes.quo_daily_user_datasources_occupation.name
+        ts=1000
+        value=1
+        n_val=cassapiquote.new_user_ts_quote(uid=uid,quote=quote,ts=ts,value=value)
+        ts=999
+        value=1
+        n_val=cassapiquote.new_user_ts_quote(uid=uid,quote=quote,ts=ts,value=value)
+        params={'did':did}
+        flag=True
+        self.assertTrue(deny.quo_total_user_occupation(params,flag))
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        db_iface=cassapiiface.get_user_iface_deny(uid=uid, iface=iface)
+        self.assertIsNotNone(db_iface)
+        self.assertEqual(db_iface.uid, uid)
+        self.assertEqual(db_iface.interface,iface)
+        self.assertEqual(db_iface.perm, timeuuid.min_uuid_from_time(ts).hex)
 

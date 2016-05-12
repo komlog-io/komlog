@@ -13,6 +13,8 @@ class AutoEnum(Enum):
         return obj
 
 class Quotes(AutoEnum):
+    quo_daily_datasource_occupation          = ()
+    quo_daily_user_datasources_occupation    = ()
     quo_static_agent_max_datapoints          = ()
     quo_static_agent_max_datasources         = ()
     quo_static_agent_total_datapoints        = ()
@@ -35,3 +37,5 @@ class Quotes(AutoEnum):
     quo_static_user_total_datasources        = ()
     quo_static_user_total_snapshots          = ()
     quo_static_user_total_widgets            = ()
+    quo_total_user_occupation                = ()
+

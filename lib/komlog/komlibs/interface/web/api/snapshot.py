@@ -176,8 +176,8 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
     elif its and ets and args.is_valid_timestamp(its) and args.is_valid_timestamp(ets):
         if its>ets:
             its,ets=ets,its
-        interval_init=timeuuid.uuid1(seconds=its)
-        interval_end=timeuuid.uuid1(seconds=ets)
+        interval_init=timeuuid.min_uuid_from_time(its)
+        interval_end=timeuuid.max_uuid_from_time(ets)
     else:
         raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_NSNTS)
     authorization.authorize_request(request=Requests.NEW_SNAPSHOT,passport=passport, wid=wid)

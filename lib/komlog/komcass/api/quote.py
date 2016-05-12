@@ -5,6 +5,7 @@ Created on 01/10/2014
 @author: komlog crew
 '''
 
+from komlog.komfig import logging
 from komlog.komcass.model.orm import quote as ormquote
 from komlog.komcass.model.statement import quote as stmtquote
 from komlog.komcass.exception import quote as excpquote
@@ -373,4 +374,172 @@ def delete_circle_quote(cid, quote):
 def delete_circle_quotes(cid):
     connection.session.execute(stmtquote.D_A_QUOCIRCLE_B_CID,(cid,))
     return True
+
+def get_user_ts_quotes(uid, quote=None, count=None):
+    data=[]
+    if quote:
+        if count:
+            rows=connection.session.execute(stmtquote.S_A_QUOTSUSER_B_UID_QUOTE_COUNT, (uid, quote, count))
+        else:
+            rows=connection.session.execute(stmtquote.S_A_QUOTSUSER_B_UID_QUOTE, (uid, quote))
+    else:
+        rows=connection.session.execute(stmtquote.S_A_QUOTSUSER_B_UID, (uid,))
+    if rows:
+        for row in rows:
+            data.append(ormquote.UserTsQuo(**row))
+    return data
+
+def get_user_ts_quote(uid, quote, ts):
+    row=connection.session.execute(stmtquote.S_A_QUOTSUSER_B_UID_QUOTE_TS, (uid, quote, ts))
+    if row:
+        return ormquote.UserTsQuo(**row[0])
+    else:
+        return None
+
+def get_user_ts_quote_interval(uid, quote, its, ets):
+    data=[]
+    rows=connection.session.execute(stmtquote.S_A_QUOTSUSER_B_UID_QUOTE_ITS_ETS, (uid, quote, its, ets))
+    if rows:
+        for row in rows:
+            data.append(ormquote.UserTsQuo(**row))
+    return data
+
+def get_user_ts_quote_value_sum(uid, quote):
+    resp=connection.session.execute(stmtquote.S_SUMVALUE_QUOTSUSER_B_UID_QUOTE, (uid, quote))
+    return resp[0]['system.sum(value)'] if resp else None
+
+def insert_user_ts_quote(uid, quote, ts, value):
+    connection.session.execute(stmtquote.I_A_QUOTSUSER, (uid, quote, ts, value))
+    return True
+
+def new_user_ts_quote(uid, quote, ts, value):
+    resp=connection.session.execute(stmtquote.I_A_QUOTSUSER_INE, (uid, quote, ts, value))
+    if not resp:
+        return False
+    else:
+        return resp[0]['[applied]']
+
+def delete_user_ts_quotes(uid):
+    connection.session.execute(stmtquote.D_A_QUOTSUSER_B_UID, (uid,))
+    return True
+
+def delete_user_ts_quote(uid, quote, ts=None):
+    if ts:
+        connection.session.execute(stmtquote.D_A_QUOTSUSER_B_UID_QUOTE_TS, (uid, quote, ts))
+    else:
+        connection.session.execute(stmtquote.D_A_QUOTSUSER_B_UID_QUOTE, (uid, quote))
+    return True
+
+def delete_user_ts_quote_interval(uid, quote, its, ets):
+    connection.session.execute(stmtquote.D_A_QUOTSUSER_B_UID_QUOTE_ITS_ETS, (uid, quote, its, ets))
+    return True
+
+def increment_user_ts_quote(uid, quote, ts, value):
+    ''' we use lightweight transactions to increment quote values '''
+    resp=connection.session.execute(stmtquote.I_A_QUOTSUSER_INE,(uid, quote, ts, value))
+    if not resp:
+        return None
+    elif resp[0]['[applied]'] is True:
+        return value
+    else:
+        cur_val = resp[0]['value']
+        n_val=cur_val + value
+        applied = False
+        retries=0
+        while applied != True:
+            resp=connection.session.execute(stmtquote.U_VALUE_QUOTSUSER_I_VALUE,(n_val,uid,quote,ts,cur_val))
+            if not resp:
+                return None
+            applied=resp[0]['[applied]']
+            if not applied:
+                if retries>100:
+                    return None
+                retries+=1
+                cur_val=resp[0]['value']
+                n_val=cur_val+value
+        return n_val
+
+def get_datasource_ts_quotes(did, quote=None, count=None):
+    data=[]
+    if quote:
+        if count:
+            rows=connection.session.execute(stmtquote.S_A_QUOTSDATASOURCE_B_DID_QUOTE_COUNT, (did, quote, count))
+        else:
+            rows=connection.session.execute(stmtquote.S_A_QUOTSDATASOURCE_B_DID_QUOTE, (did, quote))
+    else:
+        rows=connection.session.execute(stmtquote.S_A_QUOTSDATASOURCE_B_DID, (did,))
+    if rows:
+        for row in rows:
+            data.append(ormquote.DatasourceTsQuo(**row))
+    return data
+
+def get_datasource_ts_quote(did, quote, ts):
+    row=connection.session.execute(stmtquote.S_A_QUOTSDATASOURCE_B_DID_QUOTE_TS, (did, quote, ts))
+    if row:
+        return ormquote.DatasourceTsQuo(**row[0])
+    else:
+        return None
+
+def get_datasource_ts_quote_interval(did, quote, its, ets):
+    data=[]
+    rows=connection.session.execute(stmtquote.S_A_QUOTSDATASOURCE_B_DID_QUOTE_ITS_ETS, (did, quote, its, ets))
+    if rows:
+        for row in rows:
+            data.append(ormquote.DatasourceTsQuo(**row))
+    return data
+
+def get_datasource_ts_quote_value_sum(did, quote):
+    resp=connection.session.execute(stmtquote.S_SUMVALUE_QUOTSDATASOURCE_B_DID_QUOTE, (did, quote))
+    return resp[0]['system.sum(value)'] if resp else None
+
+def insert_datasource_ts_quote(did, quote, ts, value):
+    connection.session.execute(stmtquote.I_A_QUOTSDATASOURCE, (did, quote, ts, value))
+    return True
+
+def new_datasource_ts_quote(did, quote, ts, value):
+    resp=connection.session.execute(stmtquote.I_A_QUOTSDATASOURCE_INE, (did, quote, ts, value))
+    if not resp:
+        return False
+    else:
+        return resp[0]['[applied]']
+
+def delete_datasource_ts_quotes(did):
+    connection.session.execute(stmtquote.D_A_QUOTSDATASOURCE_B_DID, (did,))
+    return True
+
+def delete_datasource_ts_quote(did, quote, ts=None):
+    if ts:
+        connection.session.execute(stmtquote.D_A_QUOTSDATASOURCE_B_DID_QUOTE_TS, (did, quote, ts))
+    else:
+        connection.session.execute(stmtquote.D_A_QUOTSDATASOURCE_B_DID_QUOTE, (did, quote))
+    return True
+
+def delete_datasource_ts_quote_interval(did, quote, its, ets):
+    connection.session.execute(stmtquote.D_A_QUOTSDATASOURCE_B_DID_QUOTE_ITS_ETS, (did, quote, its, ets))
+    return True
+
+def increment_datasource_ts_quote(did, quote, ts, value):
+    ''' we use lightweight transactions to increment quote values '''
+    resp=connection.session.execute(stmtquote.I_A_QUOTSDATASOURCE_INE,(did, quote, ts, value))
+    if not resp:
+        return None
+    elif resp[0]['[applied]'] is True:
+        return value
+    else:
+        cur_val = resp[0]['value']
+        n_val=cur_val + value
+        applied = False
+        retries=0
+        while applied != True:
+            resp=connection.session.execute(stmtquote.U_VALUE_QUOTSDATASOURCE_I_VALUE,(n_val,did,quote,ts,cur_val))
+            if not resp:
+                return None
+            applied=resp[0]['[applied]']
+            if not applied:
+                if retries>100:
+                    return None
+                retries+=1
+                cur_val=resp[0]['value']
+                n_val=cur_val+value
+        return n_val
 
