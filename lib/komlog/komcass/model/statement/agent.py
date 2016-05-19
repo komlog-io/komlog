@@ -26,6 +26,7 @@ STATEMENTS={10000:'select * from mst_agent where aid=?',
             17000:'delete from mst_agent where aid=?',
             17100:'delete from mst_agent_pubkey where uid=? and pubkey=?',
             17200:'delete from mst_agent_challenge where aid=? and challenge=?',
+            17201:'delete from mst_agent_challenge where aid=?',
            }
 
 # selects (10000 - 14999)
@@ -74,7 +75,8 @@ D_A_MSTAGENTPUBKEY=17100
 
 # mst_agent_challenge
 
-D_A_MSTAGENTCHALLENGE=17200
+D_A_MSTAGENTCHALLENGE_B_AID_CHALLENGE=17200
+D_A_MSTAGENTCHALLENGE_B_AID=17201
 
 # Update (19000 - 19999)
 

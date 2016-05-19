@@ -47,6 +47,30 @@ operation_quotes = {
         Quotes.quo_daily_datasource_occupation,
         Quotes.quo_daily_user_datasources_occupation,
         Quotes.quo_user_total_occupation,
-    ]
+    ],
+    Operations.DELETE_AGENT: [
+        Quotes.quo_user_total_agents
+    ],
+    Operations.DELETE_DATASOURCE: [
+        Quotes.quo_agent_total_datasources,
+        Quotes.quo_user_total_datasources
+    ],
+    Operations.DELETE_DATAPOINT: [
+        Quotes.quo_datasource_total_datapoints,
+        Quotes.quo_agent_total_datapoints,
+        Quotes.quo_user_total_datapoints
+    ],
+    Operations.DELETE_WIDGET: [
+        Quotes.quo_user_total_widgets
+    ],
+    Operations.DELETE_DASHBOARD: [
+        Quotes.quo_user_total_dashboards
+    ],
+    Operations.DELETE_SNAPSHOT: [
+        Quotes.quo_user_total_snapshots
+    ],
+    Operations.DELETE_CIRCLE: [
+        Quotes.quo_user_total_circles,
+    ],
 }
 

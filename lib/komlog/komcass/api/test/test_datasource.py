@@ -697,6 +697,24 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertTrue(datasourceapi.delete_datasource_hash(did=did, date=date))
         self.assertIsNone(datasourceapi.get_datasource_hash(did=did, date=date))
 
+    def test_delete_datasource_hashes_success(self):
+        ''' delete_datasource_hashes should succeed '''
+        did=uuid.uuid4()
+        dates=[]
+        for i in range(1,1001):
+            date=timeuuid.uuid1()
+            content=json.dumps({'key1':'value1','key2':{'key3':'value3','key4':4}})
+            obj=ormdatasource.DatasourceHash(did=did, date=date, content=content)
+            self.assertTrue(datasourceapi.insert_datasource_hash(obj=obj))
+            dates.append(date)
+        for date in dates:
+            db_obj=datasourceapi.get_datasource_hash(did=did, date=date)
+            self.assertIsNotNone(db_obj)
+        self.assertTrue(datasourceapi.delete_datasource_hashes(did=did))
+        for date in dates:
+            db_obj=datasourceapi.get_datasource_hash(did=did, date=date)
+            self.assertIsNone(db_obj)
+
     def test_get_datasource_metadata_none_found(self):
         ''' get_datasource_metadata should return an empty array if no data is found '''
         did=uuid.uuid4()

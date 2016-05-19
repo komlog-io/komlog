@@ -26,7 +26,7 @@ class GestaccountDashboardApiTest(unittest.TestCase):
         result=dashboardapi.create_dashboard(uid=user['uid'], dashboardname=dashboardname)
         bid=result['bid']
         config=dashboardapi.get_dashboard_config(bid=bid)
-        self.assertEqual(config, {'bid':bid,'dashboardname':dashboardname,'wids':[]})
+        self.assertEqual(config, {'uid':user['uid'],'bid':bid,'dashboardname':dashboardname,'wids':[]})
 
     def test_get_dashboards_config_failure_invalid_username(self):
         ''' get_dashboards_config should fail if username is not valid '''
@@ -200,5 +200,5 @@ class GestaccountDashboardApiTest(unittest.TestCase):
         wid=uuid.uuid4()
         self.assertTrue(dashboardapi.delete_widget_from_dashboard(bid=bid, wid=wid))
         config=dashboardapi.get_dashboard_config(bid=bid)
-        self.assertEqual(config, {'bid':bid, 'dashboardname':dashboardname,'wids':[]})
+        self.assertEqual(config, {'uid':user['uid'], 'bid':bid, 'dashboardname':dashboardname,'wids':[]})
 

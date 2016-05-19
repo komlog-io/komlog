@@ -24,6 +24,7 @@ STATEMENTS={0:'select * from mst_user where username=?',
             400:'select * from dat_forget_request where code=?',
             401:'select * from dat_forget_request where state=?',
             402:'select * from dat_forget_request where state=? limit ?',
+            403:'select * from dat_forget_request where uid=?',
             5000:'insert into mst_user (username,uid,password,email,state,segment,creation_date) values (?,?,?,?,?,?,?)',
             5001:'insert into mst_user (username,uid,password,email,state,segment,creation_date) values (?,?,?,?,?,?,?) if not exists',
             5100:'insert into mst_signup (username,code,email,creation_date,utilization_date) values (?,?,?,?,?)',
@@ -33,6 +34,7 @@ STATEMENTS={0:'select * from mst_user where username=?',
             7000:'delete from mst_user where username=?',
             7100:'delete from mst_signup where username=?',
             7200:'delete from dat_invitation where inv_id=? and date=?',
+            7201:'delete from dat_invitation where inv_id=?',
             7300:'delete from dat_invitation_request where email=?',
             7400:'delete from dat_forget_request where code=?',
             9000:'update mst_user set password=? where username=? if exists',
@@ -70,6 +72,7 @@ S_A_DATINVITATIONREQUEST_B_STATE_NUM=302
 S_A_DATFORGETREQUEST_B_CODE=400
 S_A_DATFORGETREQUEST_B_STATE=401
 S_A_DATFORGETREQUEST_B_STATE_NUM=402
+S_A_DATFORGETREQUEST_B_UID=403
 
 # Inserts (5000 - 6999)
 
@@ -107,6 +110,7 @@ D_A_MSTSIGNUP_B_USERNAME=7100
 # dat_invitation
 
 D_A_DATINVITATION_B_INVID_DATE=7200
+D_A_DATINVITATION_B_INVID=7201
 
 # dat_invitation_request
 

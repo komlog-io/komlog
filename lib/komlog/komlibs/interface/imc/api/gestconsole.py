@@ -5,6 +5,7 @@ Gestconsole message definitions
 '''
 
 from komlog.komfig import logging
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount.common import delete as deleteapi
@@ -214,11 +215,7 @@ def process_message_DELUSER(message):
         user=userapi.get_user_config(uid=uid)
         agents=agentapi.get_agents_config(uid=uid)
         deleteapi.delete_user(uid=uid)
-        #operation=weboperations.DeleteUserOperation(uid=user['uid'],aids=[agent['aid'] for agent in agents])
-        #auth_op=operation.get_auth_operation()
-        #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
+        #TODO: Enviar email de despedida
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -232,11 +229,9 @@ def process_message_DELAGENT(message):
     if args.is_valid_uuid(aid):
         agent=agentapi.get_agent_config(aid=aid, dids_flag=True)
         deleteapi.delete_agent(aid=agent['aid'])
-        #operation=weboperations.DeleteAgentOperation(aid=aid,uid=agent['uid'])
-        #auth_op=operation.get_auth_operation()
-        #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
+        op_id=Operations.DELETE_AGENT.value
+        op_params={'uid':agent['uid']}
+        response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -250,11 +245,9 @@ def process_message_DELDS(message):
     if args.is_valid_uuid(did):
         datasource=datasourceapi.get_datasource_config(did=did)
         deleteapi.delete_datasource(did=did)
-        #operation=weboperations.DeleteDatasourceOperation(did=did,aid=datasource['aid'],uid=datasource['uid'],pids=datasource['pids'])
-        #auth_op=operation.get_auth_operation()
-        #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
+        op_id=Operations.DELETE_DATASOURCE.value
+        op_params={'uid':datasource['uid'],'aid':datasource['aid']}
+        response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -269,11 +262,9 @@ def process_message_DELDP(message):
         datapoint=datapointapi.get_datapoint_config(pid=pid)
         datasource=datasourceapi.get_datasource_config(did=datapoint['did'])
         deleteapi.delete_datapoint(pid=pid)
-        #operation=weboperations.DeleteDatapointOperation(pid=pid,aid=datasource['aid'],uid=datasource['uid'])
-        #auth_op=operation.get_auth_operation()
-        #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
+        op_id=Operations.DELETE_DATAPOINT.value
+        op_params={'uid':datasource['uid'],'aid':datasource['aid'],'did':datapoint['did']}
+        response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -287,11 +278,9 @@ def process_message_DELWIDGET(message):
     if args.is_valid_uuid(wid):
         widget=widgetapi.get_widget_config(wid=wid)
         deleteapi.delete_widget(wid=wid)
-        #operation=weboperations.DeleteWidgetOperation(wid=wid,uid=widget['uid'])
-        #auth_op=operation.get_auth_operation()
-        #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
+        op_id=Operations.DELETE_WIDGET.value
+        op_params={'uid':widget['uid']}
+        response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS
@@ -305,11 +294,9 @@ def process_message_DELDASHB(message):
     if args.is_valid_uuid(bid):
         dashboard=dashboardapi.get_dashboard_config(bid=bid)
         deleteapi.delete_dashboard(bid=bid)
-        #operation=weboperations.DeleteDashboardOperation(bid=bid,uid=dashboard['uid'])
-        #auth_op=operation.get_auth_operation()
-        #params=operation.get_params()
-        #response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
-        #response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
+        op_id=Operations.DELETE_DASHBOARD.value
+        op_params={'uid':dashboard['uid']}
+        response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS

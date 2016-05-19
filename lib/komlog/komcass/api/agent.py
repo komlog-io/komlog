@@ -104,6 +104,10 @@ def insert_agent_challenge(obj):
         return True
 
 def delete_agent_challenge(aid, challenge):
-    connection.session.execute(stmtagent.D_A_MSTAGENTCHALLENGE,(aid,challenge))
+    connection.session.execute(stmtagent.D_A_MSTAGENTCHALLENGE_B_AID_CHALLENGE,(aid,challenge))
+    return True
+
+def delete_agent_challenges(aid):
+    connection.session.execute(stmtagent.D_A_MSTAGENTCHALLENGE_B_AID,(aid,))
     return True
 

@@ -292,6 +292,18 @@ class KomcassApiUserTest(unittest.TestCase):
         info_found=userapi.get_invitation_info(inv_id=info2.inv_id)
         self.assertEqual(len(info_found),0)
 
+    def test_delete_invitation_info_success_all_inv_id_deleted(self):
+        ''' delete_invitation_info should delete the info successfully '''
+        inv_id=uuid.uuid4()
+        for i in range(1,101):
+            info=ormuser.Invitation(inv_id=inv_id,date=timeuuid.uuid1(),state=i)
+            self.assertTrue(userapi.insert_invitation_info(info))
+        info_found=userapi.get_invitation_info(inv_id=inv_id)
+        self.assertEqual(len(info_found),100)
+        self.assertTrue(userapi.delete_invitation_info(inv_id=inv_id))
+        info_found=userapi.get_invitation_info(inv_id=inv_id)
+        self.assertEqual(len(info_found),0)
+
     def test_delete_invitation_info_success_even_if_does_not_exist(self):
         ''' delete_invitation_info should delete the info successfully even if it does not exist '''
         inv_id=uuid.uuid4()
@@ -440,6 +452,18 @@ class KomcassApiUserTest(unittest.TestCase):
         requests_found=userapi.get_forget_requests(state=1)
         self.assertTrue(len(requests_found)>1)
         requests_found=userapi.get_forget_requests(state=200)
+        self.assertEqual(len(requests_found),0)
+
+    def test_get_forget_requests_by_uid_success(self):
+        ''' get_forget_requests_by_uid should return the uid forget requests '''
+        uid=uuid.uuid4()
+        for i in range(1,101):
+            request=ormuser.ForgetRequest(code=uuid.uuid4(),date=timeuuid.uuid1(),state=0,uid=uid)
+            self.assertTrue(userapi.insert_forget_request(forget_request=request))
+        requests_found=userapi.get_forget_requests_by_uid(uid=uid)
+        self.assertTrue(len(requests_found),100)
+        uid=uuid.uuid4()
+        requests_found=userapi.get_forget_requests_by_uid(uid=uid)
         self.assertEqual(len(requests_found),0)
 
     def test_insert_forget_request_success(self):

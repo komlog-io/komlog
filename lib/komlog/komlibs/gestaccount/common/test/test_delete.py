@@ -78,9 +78,9 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
             self.assertEqual(cm.exception.error, Errors.E_GCD_DA_IA)
 
     def test_delete_agent_non_existent_aid(self):
-        ''' delete_agent should return True if delete where requested on the DB event if aid does not exist '''
+        ''' delete_agent should return False if delete where requested on the DB event if aid does not exist '''
         aid=uuid.uuid4()
-        self.assertTrue(deleteapi.delete_agent(aid=aid))
+        self.assertFalse(deleteapi.delete_agent(aid=aid))
 
     def test_delete_agent_success(self):
         ''' delete_agent should succeed and delete agent from db '''

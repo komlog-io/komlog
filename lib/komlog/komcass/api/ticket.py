@@ -16,12 +16,28 @@ def get_ticket(tid):
     else:
         return None
 
+def get_tickets_by_uid(uid):
+    row=connection.session.execute(stmtticket.S_A_AUTHTICKET_B_UID,(uid,))
+    data=[]
+    if row:
+        for r in row:
+            data.append(ormticket.Ticket(**r))
+    return data
+
 def get_expired_ticket(tid):
     row=connection.session.execute(stmtticket.S_A_AUTHTICKETEXPIRED_B_TID,(tid,))
     if row:
         return ormticket.Ticket(**row[0])
     else:
         return None
+
+def get_expired_tickets_by_uid(uid):
+    row=connection.session.execute(stmtticket.S_A_AUTHTICKETEXPIRED_B_UID,(uid,))
+    data=[]
+    if row:
+        for r in row:
+            data.append(ormticket.Ticket(**r))
+    return data
 
 def new_ticket(ticket):
     if not isinstance(ticket, ormticket.Ticket):

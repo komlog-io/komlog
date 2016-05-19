@@ -40,7 +40,7 @@ def get_dashboard_config(bid):
     dashboard=cassapidashboard.get_dashboard(bid=bid)
     if dashboard:
         wids=[wid for wid in dashboard.widgets] if dashboard.widgets else []
-        data={'bid':dashboard.bid,'dashboardname':dashboard.dashboardname,'wids':wids}
+        data={'uid':dashboard.uid, 'bid':dashboard.bid,'dashboardname':dashboard.dashboardname,'wids':wids}
         return data
     else:
         raise exceptions.DashboardNotFoundException(error=Errors.E_GBA_GDC_DNF)

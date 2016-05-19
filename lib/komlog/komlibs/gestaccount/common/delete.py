@@ -14,6 +14,11 @@ from komlog.komcass.api import widget as cassapiwidget
 from komlog.komcass.api import dashboard as cassapidashboard
 from komlog.komcass.api import snapshot as cassapisnapshot
 from komlog.komcass.api import circle as cassapicircle
+from komlog.komcass.api import events as cassapievents
+from komlog.komcass.api import interface as cassapiiface
+from komlog.komcass.api import quote as cassapiquote
+from komlog.komcass.api import ticket as cassapiticket
+from komlog.komcass.api import permission as cassapiperm
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.gestaccount.widget import types as widgettypes
@@ -48,12 +53,44 @@ def delete_user(uid):
         delete_datasource(did=did)
     cassapiuser.delete_user(username=user.username)
     cassapiuser.delete_signup_info(username=user.username)
+    inv_req=cassapiuser.get_invitation_request(email=user.email)
+    if inv_req:
+        cassapiuser.delete_invitation_request(email=user.email)
+        cassapiuser.delete_invitation_info(inv_id=inv_req.inv_id)
+    forget_req=cassapiuser.get_forget_requests_by_uid(uid=uid)
+    for req in forget_req:
+        cassapiuser.delete_forget_request(code=req.code)
+    tickets=cassapiticket.get_tickets_by_uid(uid=uid)
+    for ticket in tickets:
+        cassapiticket.delete_ticket(ticket.tid)
+    tickets=cassapiticket.get_expired_tickets_by_uid(uid=uid)
+    for ticket in tickets:
+        cassapiticket.delete_expired_ticket(ticket.tid)
+    cassapievents.delete_user_events(uid=uid)
+    cassapiiface.delete_user_ifaces_deny(uid=uid)
+    cassapiiface.delete_user_ts_ifaces_deny(uid=uid)
+    cassapiperm.delete_user_agents_perm(uid=uid)
+    cassapiperm.delete_user_datasources_perm(uid=uid)
+    cassapiperm.delete_user_datapoints_perm(uid=uid)
+    cassapiperm.delete_user_widgets_perm(uid=uid)
+    cassapiperm.delete_user_dashboards_perm(uid=uid)
+    cassapiperm.delete_user_snapshots_perm(uid=uid)
+    cassapiperm.delete_user_circles_perm(uid=uid)
+    cassapiquote.delete_user_quotes(uid=uid)
+    cassapiquote.delete_user_ts_quotes(uid=uid)
     return True
 
 def delete_agent(aid):
     if not args.is_valid_uuid(aid):
         raise exceptions.BadParametersException(error=Errors.E_GCD_DA_IA)
-    return True if cassapiagent.delete_agent(aid=aid) else False
+    agent=cassapiagent.get_agent(aid=aid)
+    if not agent:
+        return False
+    cassapiagent.delete_agent(aid=aid)
+    cassapiagent.delete_agent_pubkey(uid=agent.uid, pubkey=agent.pubkey)
+    cassapiagent.delete_agent_challenges(aid=aid)
+    cassapiquote.delete_agent_quotes(aid=aid)
+    return True
 
 def delete_datasource(did):
     ''' Delete all datasource config and data, related widgets, and datapoints too '''
@@ -66,7 +103,10 @@ def delete_datasource(did):
     cassapidatasource.delete_datasource_data(did=did)
     cassapidatasource.delete_datasource_metadata(did=did)
     cassapidatasource.delete_datasource_maps(did=did)
+    cassapidatasource.delete_datasource_hashes(did=did)
     cassapidatasource.delete_datasource_text_summaries(did=did)
+    cassapiquote.delete_datasource_quotes(did=did)
+    cassapiquote.delete_datasource_ts_quotes(did=did)
     for pid in pids:
         delete_datapoint(pid=pid)
     if widget:
@@ -100,6 +140,7 @@ def delete_datapoint(pid):
     cassapidatapoint.delete_datapoint_dtree_positives(pid=pid)
     cassapidatapoint.delete_datapoint_dtree_negatives(pid=pid)
     cassapidatapoint.delete_datapoint_data(pid=pid)
+    cassapiquote.delete_datapoint_quotes(pid=pid)
     graphuri.dissociate_vertex(ido=pid)
     return True
 
@@ -113,22 +154,27 @@ def delete_widget(wid):
             cassapidashboard.delete_widget_from_dashboard(bid=bid, wid=wid)
     nids=cassapisnapshot.get_snapshots_nids(wid=wid)
     for nid in nids:
-        cassapisnapshot.delete_snapshot(nid=nid)
+        delete_snapshot(nid=nid)
     kin_widgets=graphkin.get_kin_widgets(ido=wid)
     for kin_widget in kin_widgets:
         graphkin.unkin_widgets(ido=wid, idd=kin_widget['wid'])
     cassapiwidget.delete_widget(wid=wid)
+    cassapiquote.delete_widget_quotes(wid=wid)
     return True
 
 def delete_dashboard(bid):
     if not args.is_valid_uuid(bid):
         raise exceptions.BadParametersException(error=Errors.E_GCD_DDB_IB)
-    return True if cassapidashboard.delete_dashboard(bid=bid) else False
+    cassapidashboard.delete_dashboard(bid=bid)
+    cassapiquote.delete_dashboard_quotes(bid=bid)
+    return True
 
 def delete_circle(cid):
     if not args.is_valid_uuid(cid):
         raise exceptions.BadParametersException(error=Errors.E_GCD_DC_IC)
-    return True if cassapicircle.delete_circle(cid=cid) else False
+    cassapicircle.delete_circle(cid=cid)
+    cassapiquote.delete_circle_quotes(cid=cid)
+    return True
 
 def delete_snapshot(nid):
     if not args.is_valid_uuid(nid):

@@ -60,6 +60,7 @@ STATEMENTS={20000:'select * from mst_datasource where did=?',
             27501:'delete from dat_datasource_novelty_detector_datapoint where did=? and pid=?',
             27502:'delete from dat_datasource_novelty_detector_datapoint where did=? and pid=? and date=?',
             27600:'delete from dat_datasource_hash where did=? and date=?',
+            27601:'delete from dat_datasource_hash where did=?',
             27700:'delete from dat_datasource_metadata where did=?',
             27701:'delete from dat_datasource_metadata where did=? and date=?',
             29300:'update dat_datasource_map set variables[?]=? where did=? and date=?',
@@ -191,6 +192,7 @@ D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID_DATE=27502
 # dat_datasource_hash
 
 D_A_DATDATASOURCEHASH_B_DID_DATE=27600
+D_A_DATDATASOURCEHASH_B_DID=27601
 
 # dat_datasource_metadata
 

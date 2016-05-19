@@ -267,6 +267,10 @@ def delete_datasource_hash(did, date):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCEHASH_B_DID_DATE,(did,date))
     return True
 
+def delete_datasource_hashes(did):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCEHASH_B_DID,(did,))
+    return True
+
 def get_datasource_metadata(did, fromdate, todate, count=None):
     data=[]
     if count is None:

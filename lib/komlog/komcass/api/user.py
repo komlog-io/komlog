@@ -116,8 +116,11 @@ def insert_invitation_info(invitation_info):
         connection.session.execute(stmtuser.I_A_DATINVITATION,(invitation_info.inv_id,invitation_info.date,invitation_info.state,invitation_info.tran_id))
         return True
 
-def delete_invitation_info(inv_id, date):
-    connection.session.execute(stmtuser.D_A_DATINVITATION_B_INVID_DATE,(inv_id,date))
+def delete_invitation_info(inv_id, date=None):
+    if date:
+        connection.session.execute(stmtuser.D_A_DATINVITATION_B_INVID_DATE,(inv_id,date))
+    else:
+        connection.session.execute(stmtuser.D_A_DATINVITATION_B_INVID,(inv_id,))
     return True
 
 def get_invitation_request(email):
@@ -159,6 +162,14 @@ def get_forget_requests(state, num=0):
         row=connection.session.execute(stmtuser.S_A_DATFORGETREQUEST_B_STATE,(state,))
     else:
         row=connection.session.execute(stmtuser.S_A_DATFORGETREQUEST_B_STATE_NUM,(state,num))
+    data=[]
+    if row:
+        for d in row:
+            data.append(ormuser.ForgetRequest(**d))
+    return data
+
+def get_forget_requests_by_uid(uid):
+    row=connection.session.execute(stmtuser.S_A_DATFORGETREQUEST_B_UID,(uid,))
     data=[]
     if row:
         for d in row:

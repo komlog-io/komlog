@@ -359,3 +359,27 @@ class KomcassApiAgentTest(unittest.TestCase):
         self.assertTrue(agentapi.delete_agent_challenge(aid=aid, challenge=challenge))
         self.assertIsNone(agentapi.get_agent_challenge(aid=aid, challenge=challenge))
 
+    def test_delete_agent_challenges(self):
+        ''' delete_agent_challenges should succeed even if agent has no challenges '''
+        aid=uuid.uuid4()
+        self.assertTrue(agentapi.delete_agent_challenges(aid=aid))
+
+    def test_delete_agent_challenges_success(self):
+        ''' delete_agent_challenges should succeed '''
+        aid=uuid.uuid4()
+        challenges=[]
+        for i in range(1,1001):
+            challenge=os.urandom(64)
+            generated = timeuuid.uuid1()
+            validated = None
+            agent_ch = ormagent.AgentChallenge(aid=aid, challenge=challenge, generated=generated)
+            self.assertTrue(agentapi.insert_agent_challenge(obj=agent_ch))
+            challenges.append(challenge)
+        for challenge in challenges:
+            db_ch = agentapi.get_agent_challenge(aid=aid, challenge=challenge)
+            self.assertTrue(isinstance(db_ch, ormagent.AgentChallenge))
+        self.assertTrue(agentapi.delete_agent_challenges(aid=aid))
+        for challenge in challenges:
+            db_ch = agentapi.get_agent_challenge(aid=aid, challenge=challenge)
+            self.assertIsNone(db_ch)
+

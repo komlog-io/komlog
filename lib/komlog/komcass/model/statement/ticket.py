@@ -10,24 +10,29 @@ def get_statement(num):
         return None
 
 
-STATEMENTS={160000:'select * from auth_ticket where tid=?',
-            160100:'select * from auth_ticket_expired where tid=?',
-            165000:'insert into auth_ticket (tid,date,uid,expires,allowed_uids,allowed_cids,resources,permissions,interval_init,interval_end) values (?,?,?,?,?,?,?,?,?,?)',
-            165001:'insert into auth_ticket (tid,date,uid,expires,allowed_uids,allowed_cids,resources,permissions,interval_init,interval_end) values (?,?,?,?,?,?,?,?,?,?) if not exists',
-            165100:'insert into auth_ticket_expired (tid,date,uid,expires,allowed_uids,allowed_cids,resources,permissions,interval_init,interval_end) values (?,?,?,?,?,?,?,?,?,?)',
-            167000:'delete from auth_ticket where tid=?',
-            167100:'delete from auth_ticket_expired where tid=?',
-           }
+STATEMENTS={
+    160000:'select * from auth_ticket where tid=?',
+    160001:'select * from auth_ticket where uid=?',
+    160100:'select * from auth_ticket_expired where tid=?',
+    160101:'select * from auth_ticket_expired where uid=?',
+    165000:'insert into auth_ticket (tid,date,uid,expires,allowed_uids,allowed_cids,resources,permissions,interval_init,interval_end) values (?,?,?,?,?,?,?,?,?,?)',
+    165001:'insert into auth_ticket (tid,date,uid,expires,allowed_uids,allowed_cids,resources,permissions,interval_init,interval_end) values (?,?,?,?,?,?,?,?,?,?) if not exists',
+    165100:'insert into auth_ticket_expired (tid,date,uid,expires,allowed_uids,allowed_cids,resources,permissions,interval_init,interval_end) values (?,?,?,?,?,?,?,?,?,?)',
+    167000:'delete from auth_ticket where tid=?',
+    167100:'delete from auth_ticket_expired where tid=?',
+}
 
 # selects (160000-164999)
 
 # dat_auth_ticket
 
 S_A_AUTHTICKET_B_TID=160000
+S_A_AUTHTICKET_B_UID=160001
 
 # dat_auth_ticket_expired
 
 S_A_AUTHTICKETEXPIRED_B_TID=160100
+S_A_AUTHTICKETEXPIRED_B_UID=160101
 
 # Inserts (165000 - 166999)
 

@@ -3,18 +3,20 @@ This file defines the cassandra statements for the creation of user related tabl
 
 '''
 
-OBJECTS=['MST_USER',
-         'MST_USER_INDEX_01',
-         'MST_USER_INDEX_02',
-         'MST_SIGNUP',
-         'MST_SIGNUP_INDEX_01',
-         'MST_SIGNUP_INDEX_02',
-         'DAT_INVITATION',
-         'DAT_INVITATION_REQUEST',
-         'DAT_INVITATION_REQUEST_INDEX_01',
-         'DAT_FORGET_REQUEST',
-         'DAT_FORGET_REQUEST_INDEX_01',
-        ]
+OBJECTS=[
+    'MST_USER',
+    'MST_USER_INDEX_01',
+    'MST_USER_INDEX_02',
+    'MST_SIGNUP',
+    'MST_SIGNUP_INDEX_01',
+    'MST_SIGNUP_INDEX_02',
+    'DAT_INVITATION',
+    'DAT_INVITATION_REQUEST',
+    'DAT_INVITATION_REQUEST_INDEX_01',
+    'DAT_FORGET_REQUEST',
+    'DAT_FORGET_REQUEST_INDEX_01',
+    'DAT_FORGET_REQUEST_INDEX_02',
+]
 
 MST_USER='''
         CREATE TABLE mst_user (
@@ -92,5 +94,9 @@ DAT_FORGET_REQUEST='''
 
 DAT_FORGET_REQUEST_INDEX_01='''
         CREATE INDEX ON dat_forget_request (state);
+    '''
+
+DAT_FORGET_REQUEST_INDEX_02='''
+        CREATE INDEX ON dat_forget_request (uid);
     '''
 

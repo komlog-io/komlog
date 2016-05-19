@@ -47,13 +47,36 @@ class KomcassApiTicketTest(unittest.TestCase):
         self.assertEqual(db_ticket.interval_init,ticket.interval_init)
         self.assertEqual(db_ticket.interval_end,ticket.interval_end)
 
+    def test_get_tickets_by_uid_non_existing_tickets(self):
+        ''' get_tickets_by_uid should return an empty array if no tickets exist '''
+        uid=uuid.uuid4()
+        self.assertEqual(ticketapi.get_tickets_by_uid(uid=uid),[])
+
+    def test_get_tickets_by_uid_success(self):
+        ''' get_tickets_by_uid should return an array with the Ticket objects '''
+        uid=uuid.uuid4()
+        for i in range(1,100):
+            tid=uuid.uuid4()
+            date=uuid.uuid1()
+            expires=uuid.uuid1()
+            allowed_uids={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+            allowed_cids={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+            resources={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+            permissions={uuid.uuid4():0,uuid.uuid4():3,uuid.uuid4():6}
+            interval_init=uuid.uuid1()
+            interval_end=uuid.uuid1()
+            ticket=ormticket.Ticket(tid=tid,date=date,uid=uid,expires=expires,allowed_uids=allowed_uids,allowed_cids=allowed_cids,resources=resources,permissions=permissions,interval_init=interval_init,interval_end=interval_end)
+            self.assertTrue(ticketapi.insert_ticket(ticket=ticket))
+        db_tickets=ticketapi.get_tickets_by_uid(uid=uid)
+        self.assertEqual(len(db_tickets),99)
+
     def test_get_expired_ticket_non_existing_tid(self):
         ''' get_expired_ticket should return None if tid does not exist '''
         tid=uuid.uuid4()
         self.assertIsNone(ticketapi.get_expired_ticket(tid=tid))
 
-    def test_get_ticket_success(self):
-        ''' get_ticket should return a Ticket object '''
+    def test_get_expired_ticket_success(self):
+        ''' get_expired_ticket should return a Ticket object '''
         tid=uuid.uuid4()
         date=uuid.uuid1()
         uid=uuid.uuid4()
@@ -77,6 +100,29 @@ class KomcassApiTicketTest(unittest.TestCase):
         self.assertEqual(db_ticket.permissions,ticket.permissions)
         self.assertEqual(db_ticket.interval_init,ticket.interval_init)
         self.assertEqual(db_ticket.interval_end,ticket.interval_end)
+
+    def test_get_expired_tickets_by_uid_non_existing_tickets(self):
+        ''' get_expired_tickets_by_uid should return an empty array if no tickets exist '''
+        uid=uuid.uuid4()
+        self.assertEqual(ticketapi.get_expired_tickets_by_uid(uid=uid),[])
+
+    def test_get_expired_tickets_by_uid_success(self):
+        ''' get_tickets_by_uid should return an array with the Ticket objects '''
+        uid=uuid.uuid4()
+        for i in range(1,100):
+            tid=uuid.uuid4()
+            date=uuid.uuid1()
+            expires=uuid.uuid1()
+            allowed_uids={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+            allowed_cids={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+            resources={uuid.uuid4(),uuid.uuid4(),uuid.uuid4()}
+            permissions={uuid.uuid4():0,uuid.uuid4():3,uuid.uuid4():6}
+            interval_init=uuid.uuid1()
+            interval_end=uuid.uuid1()
+            ticket=ormticket.Ticket(tid=tid,date=date,uid=uid,expires=expires,allowed_uids=allowed_uids,allowed_cids=allowed_cids,resources=resources,permissions=permissions,interval_init=interval_init,interval_end=interval_end)
+            self.assertTrue(ticketapi.insert_expired_ticket(ticket=ticket))
+        db_tickets=ticketapi.get_expired_tickets_by_uid(uid=uid)
+        self.assertEqual(len(db_tickets),99)
 
     def test_new_ticket_failure_no_ticket_object(self):
         ''' new_ticket should return False if argument is not a Ticket object '''
