@@ -17,7 +17,7 @@
 </p>
 <p style="margin-bottom: 0cm; line-height: 100%">Thank you for joining
 Komlog. To confirm your account, please click 
-<a href="http://localhost:8000/confirm?c=${code}&e=${to_address}">here</a>.
+<a href="http://www.komlog.org/confirm?c=${code}&e=${to_address}">here</a>.
 </p>
 <p style="margin-bottom: 0cm; line-height: 100%"><br/>
 
