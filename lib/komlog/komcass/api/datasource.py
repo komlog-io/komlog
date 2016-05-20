@@ -7,10 +7,10 @@ Created on 01/10/2014
 from komlog.komlibs.general.time import timeuuid
 from komlog.komcass.model.orm import datasource as ormdatasource
 from komlog.komcass.model.statement import datasource as stmtdatasource
-from komlog.komcass.exception import datasource as excpdatasource
-from komlog.komcass import connection
+from komlog.komcass import connection, exceptions
 
 
+@exceptions.ExceptionHandler
 def get_datasource(did):
     row=connection.session.execute(stmtdatasource.S_A_MSTDATASOURCE_B_DID,(did,))
     if not row:
@@ -18,6 +18,7 @@ def get_datasource(did):
     else:
         return ormdatasource.Datasource(**row[0])
 
+@exceptions.ExceptionHandler
 def get_datasources(aid=None, uid=None):
     datasources=[]
     if aid:
@@ -31,6 +32,7 @@ def get_datasources(aid=None, uid=None):
             datasources.append(ormdatasource.Datasource(**r))
     return datasources
 
+@exceptions.ExceptionHandler
 def get_datasources_dids(aid=None, uid=None):
     dids=[]
     if aid:
@@ -44,10 +46,12 @@ def get_datasources_dids(aid=None, uid=None):
             dids.append(r['did'])
     return dids
 
+@exceptions.ExceptionHandler
 def get_number_of_datasources_by_aid(aid):
     row=connection.session.execute(stmtdatasource.S_COUNT_MSTDATASOURCE_B_AID,(aid,))
     return row[0]['count'] if row else 0
 
+@exceptions.ExceptionHandler
 def new_datasource(datasource):
     if not isinstance(datasource, ormdatasource.Datasource):
         return False
@@ -55,6 +59,7 @@ def new_datasource(datasource):
         resp=connection.session.execute(stmtdatasource.I_A_MSTDATASOURCE_INE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.creation_date))
         return resp[0]['[applied]'] if resp else False
 
+@exceptions.ExceptionHandler
 def insert_datasource(datasource):
     if not isinstance(datasource, ormdatasource.Datasource):
         return False
@@ -62,10 +67,12 @@ def insert_datasource(datasource):
         connection.session.execute(stmtdatasource.I_A_MSTDATASOURCE,(datasource.did,datasource.aid,datasource.uid,datasource.datasourcename,datasource.creation_date))
         return True
 
+@exceptions.ExceptionHandler
 def delete_datasource(did):
     connection.session.execute(stmtdatasource.D_A_MSTDATASOURCE_B_DID,(did,))
     return True
 
+@exceptions.ExceptionHandler
 def get_datasource_stats(did):
     row=connection.session.execute(stmtdatasource.S_A_MSTDATASOURCESTATS_B_DID,(did,))
     if not row:
@@ -73,18 +80,22 @@ def get_datasource_stats(did):
     else:
         return ormdatasource.DatasourceStats(**row[0])
 
+@exceptions.ExceptionHandler
 def set_last_received(did, last_received):
     connection.session.execute(stmtdatasource.I_LASTRECEIVED_MSTDATASOURCESTATS_B_DID,(did,last_received))
     return True
 
+@exceptions.ExceptionHandler
 def set_last_mapped(did, last_mapped):
     connection.session.execute(stmtdatasource.I_LASTMAPPED_MSTDATASOURCESTATS_B_DID,(did,last_mapped))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datasource_stats(did):
     connection.session.execute(stmtdatasource.D_A_MSTDATASOURCESTATS_B_DID,(did,))
     return True
 
+@exceptions.ExceptionHandler
 def get_datasource_data_at(did, date):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCE_B_DID_DATE,(did,date))
     if not row:
@@ -92,6 +103,7 @@ def get_datasource_data_at(did, date):
     else:
         return ormdatasource.DatasourceData(**row[0])
 
+@exceptions.ExceptionHandler
 def get_datasource_data(did, fromdate, todate, count=None):
     data=[]
     if count is None:
@@ -103,6 +115,7 @@ def get_datasource_data(did, fromdate, todate, count=None):
             data.append(ormdatasource.DatasourceData(**d))
     return data
 
+@exceptions.ExceptionHandler
 def insert_datasource_data(dsdobj):
     if not isinstance(dsdobj, ormdatasource.DatasourceData):
         return False
@@ -110,14 +123,17 @@ def insert_datasource_data(dsdobj):
         connection.session.execute(stmtdatasource.I_A_DATDATASOURCE_B_DID_DATE,(dsdobj.did,dsdobj.date,dsdobj.content))
         return True
 
+@exceptions.ExceptionHandler
 def delete_datasource_data_at(did, date):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCE_B_DID_DATE,(did,date))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datasource_data(did):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCE_B_DID,(did,))
     return True
 
+@exceptions.ExceptionHandler
 def insert_datasource_map(dsmapobj):
     if not isinstance(dsmapobj, ormdatasource.DatasourceMap):
         return False
@@ -125,18 +141,22 @@ def insert_datasource_map(dsmapobj):
         connection.session.execute(stmtdatasource.I_A_DATDATASOURCEMAP_B_DID_DATE,(dsmapobj.did,dsmapobj.date,dsmapobj.variables, dsmapobj.datapoints))
         return True
 
+@exceptions.ExceptionHandler
 def add_variable_to_datasource_map(did, date, position, length):
     connection.session.execute(stmtdatasource.U_VARIABLES_DATDATASOURCEMAP_B_DID_DATE,(position,length,did,date))
     return True
 
+@exceptions.ExceptionHandler
 def add_datapoint_to_datasource_map(did, date, pid, position):
     connection.session.execute(stmtdatasource.U_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE,(pid, position, did,date))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datapoint_from_datasource_map(did, date, pid):
     connection.session.execute(stmtdatasource.D_DATAPOINT_DATDATASOURCEMAP_B_PID_DID_DATE,(pid, did, date))
     return True
 
+@exceptions.ExceptionHandler
 def get_datasource_map(did, date):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMAP_B_DID_DATE,(did,date))
     if not row:
@@ -144,6 +164,7 @@ def get_datasource_map(did, date):
     else:
         return ormdatasource.DatasourceMap(**row[0])
 
+@exceptions.ExceptionHandler
 def get_datasource_maps(did, fromdate, todate, count=None):
     if not count:
         row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
@@ -155,6 +176,7 @@ def get_datasource_maps(did, fromdate, todate, count=None):
             data.append(ormdatasource.DatasourceMap(**m))
     return data
 
+@exceptions.ExceptionHandler
 def get_datasource_map_dates(did, fromdate, todate):
     row=connection.session.execute(stmtdatasource.S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
     data=[]
@@ -162,22 +184,27 @@ def get_datasource_map_dates(did, fromdate, todate):
         data=[r['date'] for r in row]
     return data
 
+@exceptions.ExceptionHandler
 def get_datasource_map_variables(did, date):
     row=connection.session.execute(stmtdatasource.S_VARIABLES_DATDATASOURCEMAP_B_DID_DATE,(did,date))
     return row[0]['variables'] if row else None
 
+@exceptions.ExceptionHandler
 def get_datasource_map_datapoints(did, date):
     row=connection.session.execute(stmtdatasource.S_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE,(did,date))
     return row[0]['datapoints'] if row else None
 
+@exceptions.ExceptionHandler
 def delete_datasource_map(did, date):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMAP_B_DID_DATE,(did,date))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datasource_maps(did):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMAP_B_DID,(did,))
     return True
 
+@exceptions.ExceptionHandler
 def get_datasource_text_summary(did, date):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCETEXTSUMMARY_B_DID_DATE,(did,date))
     if row:
@@ -185,6 +212,7 @@ def get_datasource_text_summary(did, date):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def get_datasource_text_summaries(did, fromdate, todate):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCETEXTSUMMARY_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
     data=[]
@@ -193,6 +221,7 @@ def get_datasource_text_summaries(did, fromdate, todate):
             data.append(ormdatasource.DatasourceTextSummary(**m))
     return data
 
+@exceptions.ExceptionHandler
 def insert_datasource_text_summary(dstextsummaryobj):
     if not isinstance(dstextsummaryobj, ormdatasource.DatasourceTextSummary):
         return False
@@ -200,14 +229,17 @@ def insert_datasource_text_summary(dstextsummaryobj):
         connection.session.execute(stmtdatasource.I_A_DATDATASOURCETEXTSUMMARY,(dstextsummaryobj.did,dstextsummaryobj.date,dstextsummaryobj.content_length,dstextsummaryobj.num_lines,dstextsummaryobj.num_words, dstextsummaryobj.word_frecuency))
         return True
 
+@exceptions.ExceptionHandler
 def delete_datasource_text_summary(did, date):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCETEXTSUMMARY_B_DID_DATE,(did,date))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datasource_text_summaries(did):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCETEXTSUMMARY_B_DID,(did,))
     return True
 
+@exceptions.ExceptionHandler
 def get_datasource_novelty_detectors_for_datapoint(did,pid):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID,(did,pid))
     data=[]
@@ -216,6 +248,7 @@ def get_datasource_novelty_detectors_for_datapoint(did,pid):
             data.append(ormdatasource.DatasourceNoveltyDetector(**d))
     return data
 
+@exceptions.ExceptionHandler
 def get_last_datasource_novelty_detector_for_datapoint(did,pid):
     row=connection.session.execute(stmtdatasource.S_LAST_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID,(did,pid))
     if row:
@@ -223,12 +256,14 @@ def get_last_datasource_novelty_detector_for_datapoint(did,pid):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def insert_datasource_novelty_detector_for_datapoint(obj):
     if not isinstance(obj, ormdatasource.DatasourceNoveltyDetector):
         return False
     connection.session.execute(stmtdatasource.I_A_DATDATASOURCENOVELTYDETECTORDATAPOINT,(obj.did,obj.pid,obj.date,obj.nd,obj.features))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datasource_novelty_detector_for_datapoint(did, pid, date=None):
     if did and pid and date:
         connection.session.execute(stmtdatasource.D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID_DATE,(did,pid,date))
@@ -238,6 +273,7 @@ def delete_datasource_novelty_detector_for_datapoint(did, pid, date=None):
         return True
     return False
 
+@exceptions.ExceptionHandler
 def get_datasource_hash(did, date):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_DATE,(did,date))
     if not row:
@@ -245,6 +281,7 @@ def get_datasource_hash(did, date):
     else:
         return ormdatasource.DatasourceHash(**row[0])
 
+@exceptions.ExceptionHandler
 def get_datasource_hashes(did, fromdate, todate, count=None):
     if not count:
         row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
@@ -256,6 +293,7 @@ def get_datasource_hashes(did, fromdate, todate, count=None):
             data.append(ormdatasource.DatasourceHash(**m))
     return data
 
+@exceptions.ExceptionHandler
 def insert_datasource_hash(obj):
     if not isinstance(obj, ormdatasource.DatasourceHash):
         return False
@@ -263,14 +301,17 @@ def insert_datasource_hash(obj):
         connection.session.execute(stmtdatasource.I_A_DATDATASOURCEHASH,(obj.did,obj.date,obj.content))
         return True
 
+@exceptions.ExceptionHandler
 def delete_datasource_hash(did, date):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCEHASH_B_DID_DATE,(did,date))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datasource_hashes(did):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCEHASH_B_DID,(did,))
     return True
 
+@exceptions.ExceptionHandler
 def get_datasource_metadata(did, fromdate, todate, count=None):
     data=[]
     if count is None:
@@ -282,6 +323,7 @@ def get_datasource_metadata(did, fromdate, todate, count=None):
             data.append(ormdatasource.DatasourceMetadata(**d))
     return data
 
+@exceptions.ExceptionHandler
 def get_datasource_metadata_at(did,date):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEMETADATA_B_DID_DATE,(did,date))
     if not row:
@@ -289,10 +331,12 @@ def get_datasource_metadata_at(did,date):
     else:
         return ormdatasource.DatasourceMetadata(**row[0])
 
+@exceptions.ExceptionHandler
 def get_datasource_metadata_size_at(did, date):
     row=connection.session.execute(stmtdatasource.S_SIZE_DATDATASOURCEMETADATA_B_DID_DATE,(did,date))
     return row[0]['size'] if row else None
 
+@exceptions.ExceptionHandler
 def insert_datasource_metadata(obj):
     if not isinstance(obj, ormdatasource.DatasourceMetadata):
         return False
@@ -300,10 +344,12 @@ def insert_datasource_metadata(obj):
         connection.session.execute(stmtdatasource.I_A_DATDATASOURCEMETADATA,(obj.did,obj.date,obj.size))
         return True
 
+@exceptions.ExceptionHandler
 def delete_datasource_metadata(did):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMETADATA_B_DID,(did,))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datasource_metadata_at(did, date):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMETADATA_B_DID_DATE,(did,date))
     return True

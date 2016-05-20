@@ -7,9 +7,10 @@ Created on 01/10/2014
 
 from komlog.komcass.model.orm import segment as ormsegment
 from komlog.komcass.model.statement import segment as stmtsegment
-from komlog.komcass import connection
+from komlog.komcass import connection, exceptions
 
 
+@exceptions.ExceptionHandler
 def get_user_segment_quotes(sid):
     quotes=[]
     rows=connection.session.execute(stmtsegment.S_A_PRMUSERSEGMENTQUO_B_SID,(sid,))
@@ -18,6 +19,7 @@ def get_user_segment_quotes(sid):
             quotes.append(ormsegment.UserSegmentQuo(**r))
     return quotes
 
+@exceptions.ExceptionHandler
 def get_user_segment_quote(sid, quote):
     row=connection.session.execute(stmtsegment.S_A_PRMUSERSEGMENTQUO_B_SID_QUOTE,(sid,quote))
     if row:
@@ -25,14 +27,17 @@ def get_user_segment_quote(sid, quote):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def insert_user_segment_quote(sid, quote, value):
     connection.session.execute(stmtsegment.I_A_PRMUSERSEGMENTQUO,(sid,quote,value))
     return True
 
+@exceptions.ExceptionHandler
 def delete_user_segment_quotes(sid):
     connection.session.execute(stmtsegment.D_A_PRMUSERSEGMENTQUO_B_SID,(sid,))
     return True
 
+@exceptions.ExceptionHandler
 def delete_user_segment_quote(sid, quote):
     connection.session.execute(stmtsegment.D_QUOTE_PRMUSERSEGMENTQUO_B_SID_QUOTE,(sid,quote))
     return True

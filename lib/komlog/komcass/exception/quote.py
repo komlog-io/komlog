@@ -1,1 +1,0 @@
-class DataConsistencyException(Exception): pass

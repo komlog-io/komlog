@@ -6,9 +6,10 @@ Created on 25/09/2015
 
 from komlog.komcass.model.orm import ticket as ormticket
 from komlog.komcass.model.statement import ticket as stmtticket
-from komlog.komcass import connection
+from komlog.komcass import connection, exceptions
 
 
+@exceptions.ExceptionHandler
 def get_ticket(tid):
     row=connection.session.execute(stmtticket.S_A_AUTHTICKET_B_TID,(tid,))
     if row:
@@ -16,6 +17,7 @@ def get_ticket(tid):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def get_tickets_by_uid(uid):
     row=connection.session.execute(stmtticket.S_A_AUTHTICKET_B_UID,(uid,))
     data=[]
@@ -24,6 +26,7 @@ def get_tickets_by_uid(uid):
             data.append(ormticket.Ticket(**r))
     return data
 
+@exceptions.ExceptionHandler
 def get_expired_ticket(tid):
     row=connection.session.execute(stmtticket.S_A_AUTHTICKETEXPIRED_B_TID,(tid,))
     if row:
@@ -31,6 +34,7 @@ def get_expired_ticket(tid):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def get_expired_tickets_by_uid(uid):
     row=connection.session.execute(stmtticket.S_A_AUTHTICKETEXPIRED_B_UID,(uid,))
     data=[]
@@ -39,6 +43,7 @@ def get_expired_tickets_by_uid(uid):
             data.append(ormticket.Ticket(**r))
     return data
 
+@exceptions.ExceptionHandler
 def new_ticket(ticket):
     if not isinstance(ticket, ormticket.Ticket):
         return False
@@ -46,6 +51,7 @@ def new_ticket(ticket):
         resp=connection.session.execute(stmtticket.I_A_AUTHTICKET_INE,(ticket.tid,ticket.date,ticket.uid,ticket.expires,ticket.allowed_uids,ticket.allowed_cids,ticket.resources,ticket.permissions,ticket.interval_init,ticket.interval_end))
         return resp[0]['[applied]'] if resp else False
 
+@exceptions.ExceptionHandler
 def insert_ticket(ticket):
     if not isinstance(ticket, ormticket.Ticket):
         return False
@@ -53,6 +59,7 @@ def insert_ticket(ticket):
         connection.session.execute(stmtticket.I_A_AUTHTICKET,(ticket.tid,ticket.date,ticket.uid,ticket.expires,ticket.allowed_uids,ticket.allowed_cids,ticket.resources,ticket.permissions,ticket.interval_init,ticket.interval_end))
         return True
 
+@exceptions.ExceptionHandler
 def insert_expired_ticket(ticket):
     if not isinstance(ticket, ormticket.Ticket):
         return False
@@ -60,10 +67,12 @@ def insert_expired_ticket(ticket):
         connection.session.execute(stmtticket.I_A_AUTHTICKETEXPIRED,(ticket.tid,ticket.date,ticket.uid,ticket.expires,ticket.allowed_uids,ticket.allowed_cids,ticket.resources,ticket.permissions,ticket.interval_init,ticket.interval_end))
         return True
 
+@exceptions.ExceptionHandler
 def delete_ticket(tid):
     connection.session.execute(stmtticket.D_A_AUTHTICKET_B_TID,(tid,))
     return True
 
+@exceptions.ExceptionHandler
 def delete_expired_ticket(tid):
     connection.session.execute(stmtticket.D_A_AUTHTICKETEXPIRED_B_TID,(tid,))
     return True

@@ -20,15 +20,10 @@ class Session:
 
     def execute(self,stmt,parameters):
         try:
-            row = self.session.execute(self.stmts[stmt],parameters)
-            return row
+            return self.session.execute(self.stmts[stmt],parameters)
         except KeyError:
             self.stmts[stmt]=self.session.prepare(statement.get_statement(stmt))
-            row = self.execute(stmt,parameters)
-            return row
-        except Exception as e:
-            logging.logger.exception('Exception in cassandra session: '+str(e))
-            return None
+            return self.execute(stmt,parameters)
 
 def initialize_session():
     global session

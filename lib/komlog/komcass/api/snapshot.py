@@ -9,10 +9,12 @@ from komlog.komcass.model.statement import snapshot as stmtsnapshot
 from komlog.komcass.model.parametrization import widget as prmwidget
 from komlog.komcass import exceptions, connection
 
+@exceptions.ExceptionHandler
 def get_snapshot(nid):
     row=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOT_B_NID,(nid,))
     return _get_snapshot(ormsnapshot.Snapshot(**row[0])) if row else None
 
+@exceptions.ExceptionHandler
 def get_snapshots(uid):
     snapshots=[]
     row=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOT_B_UID,(uid,))
@@ -23,6 +25,7 @@ def get_snapshots(uid):
                 snapshots.append(snapshot)
     return snapshots
 
+@exceptions.ExceptionHandler
 def _get_snapshot(snapshot):
     if not isinstance(snapshot,ormsnapshot.Snapshot):
         return None
@@ -68,6 +71,7 @@ def _get_snapshot(snapshot):
         else:
             return None
 
+@exceptions.ExceptionHandler
 def get_snapshots_nids(uid=None, wid=None):
     row=None
     if uid:
@@ -80,6 +84,7 @@ def get_snapshots_nids(uid=None, wid=None):
             nids.append(r['nid'])
     return nids
 
+@exceptions.ExceptionHandler
 def get_number_of_snapshots(uid=None, wid=None):
     row=None
     if uid:
@@ -88,6 +93,7 @@ def get_number_of_snapshots(uid=None, wid=None):
         row=connection.session.execute(stmtsnapshot.S_COUNT_MSTSNAPSHOT_B_WID,(wid,))
     return row[0]['count'] if row else 0
 
+@exceptions.ExceptionHandler
 def new_snapshot(snapshot):
     if not isinstance(snapshot, ormsnapshot.Snapshot):
         return False
@@ -109,6 +115,7 @@ def new_snapshot(snapshot):
     else:
         return False
 
+@exceptions.ExceptionHandler
 def insert_snapshot(snapshot):
     if not isinstance(snapshot, ormsnapshot.Snapshot):
         return False
@@ -127,6 +134,7 @@ def insert_snapshot(snapshot):
     connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOT,(snapshot.nid,snapshot.uid,snapshot.wid,snapshot.type,snapshot.interval_init,snapshot.interval_end,snapshot.widgetname,snapshot.creation_date))
     return True
 
+@exceptions.ExceptionHandler
 def get_snapshot_ds(nid):
     snap_conf=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTDS_B_NID,(nid,))
     if snap_conf:
@@ -141,6 +149,7 @@ def get_snapshot_ds(nid):
             return ormsnapshot.SnapshotDs(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],did=snap_conf[0]['did'], datasource_config=datasource_config, datapoints_config=datapoints_config)
     return None
 
+@exceptions.ExceptionHandler
 def get_snapshot_dp(nid):
     snap_conf=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTDP_B_NID,(nid,))
     if snap_conf:
@@ -150,6 +159,7 @@ def get_snapshot_dp(nid):
             return ormsnapshot.SnapshotDp(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],pid=snap_conf[0]['pid'], datapoint_config=datapoint_config)
     return None
 
+@exceptions.ExceptionHandler
 def get_snapshot_histogram(nid):
     snap_conf=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTHISTOGRAM_B_NID,(nid,))
     if snap_conf:
@@ -158,6 +168,7 @@ def get_snapshot_histogram(nid):
             return ormsnapshot.SnapshotHistogram(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],datapoints=snap_conf[0]['datapoints'],colors=snap_conf[0]['colors'])
     return None
 
+@exceptions.ExceptionHandler
 def get_snapshot_linegraph(nid):
     snap_conf=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTLINEGRAPH_B_NID,(nid,))
     if snap_conf:
@@ -166,6 +177,7 @@ def get_snapshot_linegraph(nid):
             return ormsnapshot.SnapshotLinegraph(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],datapoints=snap_conf[0]['datapoints'],colors=snap_conf[0]['colors'])
     return None
 
+@exceptions.ExceptionHandler
 def get_snapshot_table(nid):
     snap_conf=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTTABLE_B_NID,(nid,))
     if snap_conf:
@@ -174,6 +186,7 @@ def get_snapshot_table(nid):
             return ormsnapshot.SnapshotTable(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],datapoints=snap_conf[0]['datapoints'],colors=snap_conf[0]['colors'])
     return None
 
+@exceptions.ExceptionHandler
 def get_snapshot_multidp(nid):
     snap_conf=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOTMULTIDP_B_NID,(nid,))
     if snap_conf:
@@ -186,6 +199,7 @@ def get_snapshot_multidp(nid):
             return ormsnapshot.SnapshotMultidp(uid=row[0]['uid'],nid=row[0]['nid'],wid=row[0]['wid'],interval_init=row[0]['interval_init'],interval_end=row[0]['interval_end'],widgetname=row[0]['widgetname'],creation_date=row[0]['creation_date'],datapoints=snap_conf[0]['datapoints'],datapoints_config=datapoints_config, active_visualization=snap_conf[0]['active_visualization'])
     return None
 
+@exceptions.ExceptionHandler
 def delete_snapshot(nid):
     row=connection.session.execute(stmtsnapshot.S_A_MSTSNAPSHOT_B_NID,(nid,))
     if row:
@@ -205,50 +219,62 @@ def delete_snapshot(nid):
         connection.session.execute(stmtsnapshot.D_A_MSTSNAPSHOT_B_NID,(nid,))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_snapshot_ds(nid):
     connection.session.execute(stmtsnapshot.D_A_MSTSNAPSHOTDS_B_NID,(nid,))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_snapshot_ds(snapshot):
     connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTDS,(snapshot.nid, snapshot.did, snapshot.datasource_config, snapshot.datapoints_config))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_snapshot_dp(nid):
     connection.session.execute(stmtsnapshot.D_A_MSTSNAPSHOTDP_B_NID,(nid,))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_snapshot_dp(snapshot):
     connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTDP,(snapshot.nid, snapshot.pid, snapshot.datapoint_config))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_snapshot_histogram(nid):
     connection.session.execute(stmtsnapshot.D_A_MSTSNAPSHOTHISTOGRAM_B_NID,(nid,))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_snapshot_histogram(snapshot):
     connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTHISTOGRAM,(snapshot.nid,snapshot.datapoints,snapshot.colors))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_snapshot_linegraph(nid):
     connection.session.execute(stmtsnapshot.D_A_MSTSNAPSHOTLINEGRAPH_B_NID,(nid,))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_snapshot_linegraph(snapshot):
     connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTLINEGRAPH,(snapshot.nid,snapshot.datapoints,snapshot.colors))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_snapshot_table(nid):
     connection.session.execute(stmtsnapshot.D_A_MSTSNAPSHOTTABLE_B_NID,(nid,))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_snapshot_table(snapshot):
     connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTTABLE,(snapshot.nid,snapshot.datapoints,snapshot.colors))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_snapshot_multidp(nid):
     connection.session.execute(stmtsnapshot.D_A_MSTSNAPSHOTMULTIDP_B_NID,(nid,))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_snapshot_multidp(snapshot):
     connection.session.execute(stmtsnapshot.I_A_MSTSNAPSHOTMULTIDP,(snapshot.nid,snapshot.active_visualization, snapshot.datapoints,snapshot.datapoints_config))
     return True

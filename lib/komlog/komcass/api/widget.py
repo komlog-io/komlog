@@ -7,13 +7,14 @@ Created on 01/10/2014
 from komlog.komcass.model.orm import widget as ormwidget
 from komlog.komcass.model.statement import widget as stmtwidget
 from komlog.komcass.model.parametrization import widget as prmwidget
-from komlog.komcass.exception import widget as excpwidget
-from komlog.komcass import connection
+from komlog.komcass import connection, exceptions
 
+@exceptions.ExceptionHandler
 def get_widget(wid):
     row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_WID,(wid,))
     return _get_widget(ormwidget.Widget(**row[0])) if row else None
 
+@exceptions.ExceptionHandler
 def get_widgets(uid):
     widgets=[]
     row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_UID,(uid,))
@@ -24,6 +25,7 @@ def get_widgets(uid):
                 widgets.append(widget)
     return widgets
 
+@exceptions.ExceptionHandler
 def _get_widget(widget):
     if not isinstance(widget, ormwidget.Widget):
         return None
@@ -67,6 +69,7 @@ def _get_widget(widget):
         else:
             return None
 
+@exceptions.ExceptionHandler
 def get_widgets_wids(uid):
     row=connection.session.execute(stmtwidget.S_WID_MSTWIDGET_B_UID,(uid,))
     wids=[]
@@ -75,10 +78,12 @@ def get_widgets_wids(uid):
             wids.append(r['wid'])
     return wids
 
+@exceptions.ExceptionHandler
 def get_number_of_widgets_by_uid(uid):
     row=connection.session.execute(stmtwidget.S_COUNT_MSTWIDGET_B_UID,(uid,))
     return row[0]['count'] if row else 0
 
+@exceptions.ExceptionHandler
 def delete_widget(wid):
     row=connection.session.execute(stmtwidget.S_A_MSTWIDGET_B_WID,(wid,))
     if not row:
@@ -100,6 +105,7 @@ def delete_widget(wid):
         connection.session.execute(stmtwidget.D_A_MSTWIDGET_B_WID,(wid,))
         return True
 
+@exceptions.ExceptionHandler
 def new_widget(widget):
     if not isinstance(widget, ormwidget.Widget):
         return False
@@ -121,6 +127,7 @@ def new_widget(widget):
     else:
         return False
 
+@exceptions.ExceptionHandler
 def insert_widget(widget):
     if not isinstance(widget, ormwidget.Widget):
         return False
@@ -139,6 +146,7 @@ def insert_widget(widget):
         _insert_widget_multidp(widget)
     return True
 
+@exceptions.ExceptionHandler
 def insert_widget_widgetname(wid, widgetname):
     widget=get_widget(wid=wid)
     if not widget:
@@ -146,6 +154,7 @@ def insert_widget_widgetname(wid, widgetname):
     connection.session.execute(stmtwidget.U_WIDGETNAME_MSTWIDGET_B_WID,(widgetname,wid))
     return True
 
+@exceptions.ExceptionHandler
 def insert_widget_multidp_active_visualization(wid, active_visualization):
     widget=get_widget_multidp(wid=wid)
     if not widget:
@@ -154,6 +163,7 @@ def insert_widget_multidp_active_visualization(wid, active_visualization):
         connection.session.execute(stmtwidget.U_ACTIVEVISUALIZATION_MSTWIDGETMULTIDP_B_WID,(active_visualization,wid))
         return True
 
+@exceptions.ExceptionHandler
 def get_widget_ds(wid=None, did=None):
     if wid:
         widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETDS_B_WID,(wid,))
@@ -167,6 +177,7 @@ def get_widget_ds(wid=None, did=None):
             return ormwidget.WidgetDs(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], did=widget_config[0]['did'])
     return None
 
+@exceptions.ExceptionHandler
 def get_widget_dp(wid=None, pid=None):
     if wid:
         widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETDP_B_WID,(wid,))
@@ -180,6 +191,7 @@ def get_widget_dp(wid=None, pid=None):
             return ormwidget.WidgetDp(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], pid=widget_config[0]['pid'])
     return None
 
+@exceptions.ExceptionHandler
 def get_widget_histogram(wid):
     widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETHISTOGRAM_B_WID,(wid,))
     if widget_config:
@@ -188,6 +200,7 @@ def get_widget_histogram(wid):
             return ormwidget.WidgetHistogram(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], datapoints=widget_config[0]['datapoints'], colors=widget_config[0]['colors'])
     return None
 
+@exceptions.ExceptionHandler
 def get_wids_histograms_with_pid(pid):
     row=connection.session.execute(stmtwidget.S_WID_MSTWIDGETHISTOGRAM_B_PID,(pid,))
     if not row:
@@ -195,6 +208,7 @@ def get_wids_histograms_with_pid(pid):
     else:
         return [wid['wid'] for wid in row]
 
+@exceptions.ExceptionHandler
 def get_widget_linegraph(wid):
     widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETLINEGRAPH_B_WID,(wid,))
     if widget_config:
@@ -203,6 +217,7 @@ def get_widget_linegraph(wid):
             return ormwidget.WidgetLinegraph(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], datapoints=widget_config[0]['datapoints'], colors=widget_config[0]['colors'])
     return None
 
+@exceptions.ExceptionHandler
 def get_wids_linegraphs_with_pid(pid):
     row=connection.session.execute(stmtwidget.S_WID_MSTWIDGETLINEGRAPH_B_PID,(pid,))
     if not row:
@@ -210,6 +225,7 @@ def get_wids_linegraphs_with_pid(pid):
     else:
         return [wid['wid'] for wid in row]
 
+@exceptions.ExceptionHandler
 def get_widget_table(wid):
     widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETTABLE_B_WID,(wid,))
     if widget_config:
@@ -218,6 +234,7 @@ def get_widget_table(wid):
             return ormwidget.WidgetTable(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], datapoints=widget_config[0]['datapoints'], colors=widget_config[0]['colors'])
     return None
 
+@exceptions.ExceptionHandler
 def get_wids_tables_with_pid(pid):
     row=connection.session.execute(stmtwidget.S_WID_MSTWIDGETTABLE_B_PID,(pid,))
     if not row:
@@ -225,6 +242,7 @@ def get_wids_tables_with_pid(pid):
     else:
         return [wid['wid'] for wid in row]
 
+@exceptions.ExceptionHandler
 def get_widget_multidp(wid):
     widget_config=connection.session.execute(stmtwidget.S_A_MSTWIDGETMULTIDP_B_WID,(wid,))
     if widget_config:
@@ -233,6 +251,7 @@ def get_widget_multidp(wid):
             return ormwidget.WidgetMultidp(wid=row[0]['wid'], uid=row[0]['uid'], widgetname=row[0]['widgetname'], creation_date=row[0]['creation_date'], datapoints=widget_config[0]['datapoints'],active_visualization=widget_config[0]['active_visualization'])
     return None
 
+@exceptions.ExceptionHandler
 def get_wids_multidp_with_pid(pid):
     row=connection.session.execute(stmtwidget.S_WID_MSTWIDGETMULTIDP_B_PID,(pid,))
     if not row:
@@ -240,54 +259,67 @@ def get_wids_multidp_with_pid(pid):
     else:
         return [wid['wid'] for wid in row]
 
+@exceptions.ExceptionHandler
 def _delete_widget_ds(wid):
     connection.session.execute(stmtwidget.D_A_MSTWIDGETDS_B_WID,(wid,))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_widget_ds(widget):
     connection.session.execute(stmtwidget.I_A_MSTWIDGETDS,(widget.wid,widget.did))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_widget_dp(wid):
     connection.session.execute(stmtwidget.D_A_MSTWIDGETDP_B_WID,(wid,))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_widget_dp(widget):
     connection.session.execute(stmtwidget.I_A_MSTWIDGETDP,(widget.wid,widget.pid))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_widget_histogram(widget):
     connection.session.execute(stmtwidget.I_A_MSTWIDGETHISTOGRAM,(widget.wid,widget.datapoints, widget.colors))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_widget_histogram(wid):
     connection.session.execute(stmtwidget.D_A_MSTWIDGETHISTOGRAM_B_WID,(wid,))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_widget_linegraph(widget):
     connection.session.execute(stmtwidget.I_A_MSTWIDGETLINEGRAPH,(widget.wid, widget.datapoints, widget.colors))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_widget_linegraph(wid):
     connection.session.execute(stmtwidget.D_A_MSTWIDGETLINEGRAPH_B_WID,(wid,))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_widget_table(widget):
     connection.session.execute(stmtwidget.I_A_MSTWIDGETTABLE,(widget.wid, widget.datapoints, widget.colors))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_widget_table(wid):
     connection.session.execute(stmtwidget.D_A_MSTWIDGETTABLE_B_WID,(wid,))
     return True
 
+@exceptions.ExceptionHandler
 def _insert_widget_multidp(widget):
     connection.session.execute(stmtwidget.I_A_MSTWIDGETMULTIDP,(widget.wid, widget.active_visualization, widget.datapoints))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_widget_multidp(wid):
     connection.session.execute(stmtwidget.D_A_MSTWIDGETMULTIDP_B_WID,(wid,))
     return True
 
+@exceptions.ExceptionHandler
 def add_datapoint_to_histogram(wid, pid, color):
     histogram=get_widget_histogram(wid=wid)
     if not histogram:
@@ -297,11 +329,13 @@ def add_datapoint_to_histogram(wid, pid, color):
     connection.session.execute(stmtwidget.U_COLOR_MSTWIDGETHISTOGRAM_B_WID,(pid,color,wid))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datapoint_from_histogram(wid, pid):
     connection.session.execute(stmtwidget.D_DATAPOINT_MSTWIDGETHISTOGRAM_B_PID_WID,(pid,wid))
     connection.session.execute(stmtwidget.D_COLOR_MSTWIDGETHISTOGRAM_B_PID_WID,(pid,wid))
     return True
 
+@exceptions.ExceptionHandler
 def add_datapoint_to_linegraph(wid, pid, color):
     linegraph=get_widget_linegraph(wid=wid)
     if not linegraph:
@@ -311,11 +345,13 @@ def add_datapoint_to_linegraph(wid, pid, color):
     connection.session.execute(stmtwidget.U_COLOR_MSTWIDGETLINEGRAPH_B_WID,(pid,color,wid))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datapoint_from_linegraph(wid, pid):
     connection.session.execute(stmtwidget.D_DATAPOINT_MSTWIDGETLINEGRAPH_B_PID_WID,(pid,wid))
     connection.session.execute(stmtwidget.D_COLOR_MSTWIDGETLINEGRAPH_B_PID_WID,(pid,wid))
     return True
 
+@exceptions.ExceptionHandler
 def add_datapoint_to_table(wid, pid, color):
     table=get_widget_table(wid=wid)
     if not table:
@@ -325,11 +361,13 @@ def add_datapoint_to_table(wid, pid, color):
     connection.session.execute(stmtwidget.U_COLOR_MSTWIDGETTABLE_B_WID,(pid,color,wid))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datapoint_from_table(wid, pid):
     connection.session.execute(stmtwidget.D_DATAPOINT_MSTWIDGETTABLE_B_PID_WID,(pid,wid))
     connection.session.execute(stmtwidget.D_COLOR_MSTWIDGETTABLE_B_PID_WID,(pid,wid))
     return True
 
+@exceptions.ExceptionHandler
 def add_datapoint_to_multidp(wid, pid):
     multidp=get_widget_multidp(wid=wid)
     if not multidp:
@@ -338,6 +376,7 @@ def add_datapoint_to_multidp(wid, pid):
     connection.session.execute(stmtwidget.U_PIDS_MSTWIDGETMULTIDP_B_WID,(multidp.datapoints,wid))
     return True
 
+@exceptions.ExceptionHandler
 def delete_datapoint_from_multidp(wid, pid):
     connection.session.execute(stmtwidget.D_PID_MSTWIDGETMULTIDP_B_PID_WID,(pid,wid))
     return True

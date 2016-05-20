@@ -6,10 +6,10 @@ import json
 from komlog.komcass.model.orm import events as ormevents
 from komlog.komcass.model.parametrization.events import types
 from komlog.komcass.model.statement import events as stmtevents
-from komlog.komcass import connection
-from komlog.komfig import logging
+from komlog.komcass import connection, exceptions
 
 
+@exceptions.ExceptionHandler
 def get_user_event(uid, date):
     row=connection.session.execute(stmtevents.S_A_DATUSEREVENTS_B_UID_DATE,(uid,date))
     if row:
@@ -17,6 +17,7 @@ def get_user_event(uid, date):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def get_disabled_user_event(uid, date):
     row=connection.session.execute(stmtevents.S_A_DATUSEREVENTSDISABLED_B_UID_DATE,(uid,date))
     if row:
@@ -24,6 +25,7 @@ def get_disabled_user_event(uid, date):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def get_user_events(uid, end_date=None, from_date=None, count=None):
     events=[]
     if end_date and from_date:
@@ -41,6 +43,7 @@ def get_user_events(uid, end_date=None, from_date=None, count=None):
                 events.append(event)
     return events
 
+@exceptions.ExceptionHandler
 def get_disabled_user_events(uid, end_date=None, from_date=None, count=None):
     events=[]
     if end_date and from_date:
@@ -67,6 +70,7 @@ def _get_user_event(event):
         except KeyError:
             return None
 
+@exceptions.ExceptionHandler
 def _get_user_event_notification_new_user(event):
     event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWUSER_B_UID_DATE,(event.uid, event.date))
     if event_info:
@@ -74,6 +78,7 @@ def _get_user_event_notification_new_user(event):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def _get_user_event_notification_new_agent(event):
     event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWAGENT_B_UID_DATE,(event.uid, event.date))
     if event_info:
@@ -81,6 +86,7 @@ def _get_user_event_notification_new_agent(event):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def _get_user_event_notification_new_datasource(event):
     event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWDATASOURCE_B_UID_DATE,(event.uid, event.date))
     if event_info:
@@ -88,6 +94,7 @@ def _get_user_event_notification_new_datasource(event):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def _get_user_event_notification_new_datapoint(event):
     event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWDATAPOINT_B_UID_DATE,(event.uid, event.date))
     if event_info:
@@ -95,6 +102,7 @@ def _get_user_event_notification_new_datapoint(event):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def _get_user_event_notification_new_widget(event):
     event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWWIDGET_B_UID_DATE,(event.uid, event.date))
     if event_info:
@@ -102,6 +110,7 @@ def _get_user_event_notification_new_widget(event):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def _get_user_event_notification_new_dashboard(event):
     event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWDASHBOARD_B_UID_DATE,(event.uid, event.date))
     if event_info:
@@ -109,6 +118,7 @@ def _get_user_event_notification_new_dashboard(event):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def _get_user_event_notification_new_circle(event):
     event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWCIRCLE_B_UID_DATE,(event.uid, event.date))
     if event_info:
@@ -116,6 +126,7 @@ def _get_user_event_notification_new_circle(event):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def _get_user_event_notification_new_snapshot_shared(event):
     event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWSNAPSHOTSHARED_B_UID_DATE,(event.uid, event.date))
     if event_info:
@@ -123,6 +134,7 @@ def _get_user_event_notification_new_snapshot_shared(event):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def _get_user_event_notification_new_snapshot_shared_with_me(event):
     event_info=connection.session.execute(stmtevents.S_A_DATUENOTIFNEWSNAPSHOTSHAREDWITHME_B_UID_DATE,(event.uid, event.date))
     if event_info:
@@ -130,6 +142,7 @@ def _get_user_event_notification_new_snapshot_shared_with_me(event):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def _get_user_event_intervention_datapoint_identification(event):
     event_info=connection.session.execute(stmtevents.S_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE,(event.uid, event.date))
     if event_info:
@@ -146,6 +159,7 @@ def insert_user_event(event):
         except KeyError:
             return None
 
+@exceptions.ExceptionHandler
 def _insert_user_event_notification_new_user(event):
     if not isinstance(event, ormevents.UserEventNotificationNewUser):
         return False
@@ -154,6 +168,7 @@ def _insert_user_event_notification_new_user(event):
         connection.session.execute(stmtevents.I_A_DATUENOTIFNEWUSER, (event.uid, event.date, event.username))
         return True
 
+@exceptions.ExceptionHandler
 def _insert_user_event_notification_new_agent(event):
     if not isinstance(event, ormevents.UserEventNotificationNewAgent):
         return False
@@ -162,6 +177,7 @@ def _insert_user_event_notification_new_agent(event):
         connection.session.execute(stmtevents.I_A_DATUENOTIFNEWAGENT, (event.uid, event.date, event.aid, event.agentname))
         return True
 
+@exceptions.ExceptionHandler
 def _insert_user_event_notification_new_datasource(event):
     if not isinstance(event, ormevents.UserEventNotificationNewDatasource):
         return False
@@ -170,6 +186,7 @@ def _insert_user_event_notification_new_datasource(event):
         connection.session.execute(stmtevents.I_A_DATUENOTIFNEWDATASOURCE, (event.uid, event.date, event.aid, event.did, event.datasourcename))
         return True
 
+@exceptions.ExceptionHandler
 def _insert_user_event_notification_new_datapoint(event):
     if not isinstance(event, ormevents.UserEventNotificationNewDatapoint):
         return False
@@ -178,6 +195,7 @@ def _insert_user_event_notification_new_datapoint(event):
         connection.session.execute(stmtevents.I_A_DATUENOTIFNEWDATAPOINT, (event.uid, event.date, event.did, event.pid, event.datasourcename, event.datapointname))
         return True
 
+@exceptions.ExceptionHandler
 def _insert_user_event_notification_new_widget(event):
     if not isinstance(event, ormevents.UserEventNotificationNewWidget):
         return False
@@ -186,6 +204,7 @@ def _insert_user_event_notification_new_widget(event):
         connection.session.execute(stmtevents.I_A_DATUENOTIFNEWWIDGET, (event.uid, event.date, event.wid, event.widgetname))
         return True
 
+@exceptions.ExceptionHandler
 def _insert_user_event_notification_new_dashboard(event):
     if not isinstance(event, ormevents.UserEventNotificationNewDashboard):
         return False
@@ -194,6 +213,7 @@ def _insert_user_event_notification_new_dashboard(event):
         connection.session.execute(stmtevents.I_A_DATUENOTIFNEWDASHBOARD, (event.uid, event.date, event.bid, event.dashboardname))
         return True
 
+@exceptions.ExceptionHandler
 def _insert_user_event_notification_new_circle(event):
     if not isinstance(event, ormevents.UserEventNotificationNewCircle):
         return False
@@ -202,6 +222,7 @@ def _insert_user_event_notification_new_circle(event):
         connection.session.execute(stmtevents.I_A_DATUENOTIFNEWCIRCLE, (event.uid, event.date, event.cid, event.circlename))
         return True
 
+@exceptions.ExceptionHandler
 def _insert_user_event_intervention_datapoint_identification(event):
     if not isinstance(event, ormevents.UserEventInterventionDatapointIdentification):
         return False
@@ -210,6 +231,7 @@ def _insert_user_event_intervention_datapoint_identification(event):
         connection.session.execute(stmtevents.I_A_DATUEINTERVDPIDENTIFICATION, (event.uid, event.date, event.did, event.ds_date, event.doubts, event.discarded))
         return True
 
+@exceptions.ExceptionHandler
 def _insert_user_event_notification_new_snapshot_shared(event):
     if not isinstance(event, ormevents.UserEventNotificationNewSnapshotShared):
         return False
@@ -218,6 +240,7 @@ def _insert_user_event_notification_new_snapshot_shared(event):
         connection.session.execute(stmtevents.I_A_DATUENOTIFNEWSNAPSHOTSHARED, (event.uid, event.date, event.nid, event.tid, event.widgetname, event.shared_with_users, event.shared_with_circles))
         return True
 
+@exceptions.ExceptionHandler
 def _insert_user_event_notification_new_snapshot_shared_with_me(event):
     if not isinstance(event, ormevents.UserEventNotificationNewSnapshotSharedWithMe):
         return False
@@ -226,6 +249,7 @@ def _insert_user_event_notification_new_snapshot_shared_with_me(event):
         connection.session.execute(stmtevents.I_A_DATUENOTIFNEWSNAPSHOTSHAREDWITHME, (event.uid, event.date, event.nid, event.tid, event.username, event.widgetname))
         return True
 
+@exceptions.ExceptionHandler
 def delete_user_events(uid):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUSEREVENTSDISABLED_B_UID,(uid,))
@@ -243,6 +267,7 @@ def delete_user_events(uid):
     delete_user_events_responses_intervention_datapoint_identification(uid=uid)
     return True
 
+@exceptions.ExceptionHandler
 def enable_user_event(event):
     if not isinstance(event, ormevents.UserEvent):
         return False
@@ -254,6 +279,7 @@ def enable_user_event(event):
             return True
         return False
 
+@exceptions.ExceptionHandler
 def disable_user_event(event):
     if not isinstance(event, ormevents.UserEvent):
         return False
@@ -276,6 +302,7 @@ def get_user_event_responses(event):
         except KeyError:
             return []
 
+@exceptions.ExceptionHandler
 def _get_user_event_responses_intervention_datapoint_identification(event):
     responses=[]
     row=connection.session.execute(stmtevents.S_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE,(event.uid,event.date))
@@ -284,6 +311,7 @@ def _get_user_event_responses_intervention_datapoint_identification(event):
             responses.append(ormevents.UserEventResponseInterventionDatapointIdentification(uid=r['uid'],date=r['date'],response_date=r['response_date'],missing=r['missing'],identified=r['identified'],not_belonging=r['not_belonging'],to_update=r['to_update'],update_failed=r['update_failed'],update_success=r['update_success']))
     return responses
 
+@exceptions.ExceptionHandler
 def get_user_events_responses_intervention_datapoint_identification(uid):
     responses=[]
     row=connection.session.execute(stmtevents.S_A_DATUERINTERVDPIDENTIFICATION_B_UID,(uid,))
@@ -301,16 +329,19 @@ def insert_user_event_response(response):
         except KeyError:
             return False
 
+@exceptions.ExceptionHandler
 def _insert_user_event_response_intervention_datapoint_identification(response):
     connection.session.execute(stmtevents.I_A_DATUERINTERVDPIDENTIFICATION, (response.uid,response.date,response.response_date, response.missing, response.identified, response.not_belonging, response.to_update, response.update_failed, response.update_success))
     return True
 
+@exceptions.ExceptionHandler
 def delete_user_events_responses_intervention_datapoint_identification(uid):
     responses=get_user_events_responses_intervention_datapoint_identification(uid=uid)
     for resp in responses:
         connection.session.execute(stmtevents.D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE,(resp.uid,resp.date))
     return True
 
+@exceptions.ExceptionHandler
 def get_user_event_graph_summary(uid, date):
     row=connection.session.execute(stmtevents.S_A_DATUSEREVENTSGRAPHSUMMARY_B_UID_DATE,(uid,date))
     if row:
@@ -318,6 +349,7 @@ def get_user_event_graph_summary(uid, date):
     else:
         return None
 
+@exceptions.ExceptionHandler
 def insert_user_event_graph_summary(summary):
     if not isinstance(summary, ormevents.UserEventGraphSummary):
         return False
@@ -326,9 +358,10 @@ def insert_user_event_graph_summary(summary):
             text_summary=json.dumps(summary.summary) if isinstance(summary.summary,dict) else summary.summary
             connection.session.execute(stmtevents.I_A_DATUSEREVENTSGRAPHSUMMARY, (summary.uid,summary.date,text_summary))
             return True
-        except Exception:
+        except TypeError:
             return False
 
+@exceptions.ExceptionHandler
 def delete_user_event_graph_summary(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTSGRAPHSUMMARY_B_UID_DATE,(uid,date))
     return True
@@ -342,56 +375,67 @@ def delete_user_event(event):
         except KeyError:
             return False
 
+@exceptions.ExceptionHandler
 def _delete_user_event_notification_new_user(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid,date))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWUSER_B_UID_DATE, (uid, date))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_user_event_notification_new_agent(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWAGENT_B_UID_DATE, (uid, date))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_user_event_notification_new_datasource(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWDATASOURCE_B_UID_DATE, (uid, date))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_user_event_notification_new_datapoint(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWDATAPOINT_B_UID_DATE, (uid, date))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_user_event_notification_new_widget(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWWIDGET_B_UID_DATE, (uid, date))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_user_event_notification_new_dashboard(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWDASHBOARD_B_UID_DATE, (uid, date))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_user_event_notification_new_circle(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWCIRCLE_B_UID_DATE, (uid, date))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_user_event_intervention_datapoint_identification(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
     connection.session.execute(stmtevents.D_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE, (uid, date))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_user_event_notification_new_snapshot_shared(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid,date))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWSNAPSHOTSHARED_B_UID_DATE, (uid, date))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_user_event_notification_new_snapshot_shared_with_me(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWSNAPSHOTSHAREDWITHME_B_UID_DATE, (uid, date))
     return True
 
+@exceptions.ExceptionHandler
 def _delete_user_event_intervention_datapoint_identification(uid, date):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID_DATE,(uid, date))
     connection.session.execute(stmtevents.D_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE, (uid, date))
@@ -418,9 +462,10 @@ def delete_user_event_response(response):
     else:
         try:
             return delete_user_event_response_funcs[response.type](response.uid, response.date, response.response_date)
-        except Exception as e:
+        except KeyError:
             return False
 
+@exceptions.ExceptionHandler
 def _delete_user_event_response_intervention_datapoint_identification(uid, date, response_date):
     connection.session.execute(stmtevents.D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE_RESPDATE,(uid,date,response_date))
     return True

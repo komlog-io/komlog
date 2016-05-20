@@ -1,6 +1,7 @@
 import time
 import traceback
 from komlog.komfig import logging
+from komlog.komcass import exceptions as cassexcept
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.events import exceptions as eventexcept
@@ -53,6 +54,10 @@ RESOURCE_NOT_FOUND_STATUS_EXCEPTION_LIST=(
     gestexcept.DatasourceNotFoundException,
 )
 
+SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST = (
+    cassexcept.CassandraException,
+)
+
 class ExceptionHandler:
     def __init__(self, f):
         self.f=f
@@ -80,6 +85,10 @@ class ExceptionHandler:
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return modresp.Response(status=status.MESSAGE_EXECUTION_ERROR, reason='msg exec error', error=e.error.value)
+        except SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST as e:
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            return modresp.Response(status=status.SERVICE_UNAVAILABLE, reason='service temporarily unavailable', error=e.error.value)
         except Exception as e:
             logging.logger.error('WEBSOCKET Response non treated Exception:')
             ex_info=traceback.format_exc().splitlines()

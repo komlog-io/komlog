@@ -1,6 +1,7 @@
 import time
 import traceback
 from komlog.komfig import logging
+from komlog.komcass import exceptions as cassexcept
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.events import exceptions as eventexcept
@@ -67,6 +68,10 @@ INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
     eventexcept.UserEventCreationException,
 )
 
+SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST = (
+    cassexcept.CassandraException,
+)
+
 class ExceptionHandler(object):
     def __init__(self, f):
         self.f=f
@@ -108,6 +113,12 @@ class ExceptionHandler(object):
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
             return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=error.value)
+        except SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST as e:
+            error=e.error
+            data={'error':error.value}
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_SERVICE_UNAVAILABLE, data=data, error=error.value)
         except Exception as e:
             logging.logger.error('WEB Response non treated Exception:')
             ex_info=traceback.format_exc().splitlines()

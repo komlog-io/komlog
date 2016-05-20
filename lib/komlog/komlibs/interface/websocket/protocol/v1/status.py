@@ -1,6 +1,7 @@
 # status regarding protocol
 
 PROTOCOL_ERROR=4400
+ACCESS_DENIED=4403
 
 
 # status regarding message
@@ -16,3 +17,4 @@ RESOURCE_NOT_FOUND = 4404
 # status regarding server
 
 INTERNAL_ERROR = 4500
+SERVICE_UNAVAILABLE = 4503

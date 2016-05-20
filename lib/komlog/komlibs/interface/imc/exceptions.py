@@ -1,6 +1,7 @@
 import time
 import traceback
 from komlog.komfig import logging
+from komlog.komcass import exceptions as cassexcept
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.events import exceptions as eventexcept
@@ -61,6 +62,10 @@ INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
     eventexcept.UserEventCreationException,
 )
 
+SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST = (
+    cassexcept.CassandraException,
+)
+
 class ExceptionHandler(object):
     def __init__(self, f):
         self.f=f
@@ -88,6 +93,10 @@ class ExceptionHandler(object):
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR,error=e.error)
+        except SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST as e:
+            end=time.time()
+            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_SERVICE_UNAVAILABLE,error=e.error)
         except Exception as e:
             logging.logger.error('IMC Response Exception:')
             ex_info=traceback.format_exc().splitlines()
