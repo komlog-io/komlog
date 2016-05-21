@@ -124,8 +124,7 @@ def __R(rows, attribute):
         try:
             values.add(rows[i][attribute])
         except KeyError:
-            rows[i][attribute]=0
-            #values.add(0)
+            rows[i][attribute]=None
     d=list(values)
     for k in d:
         tk=0

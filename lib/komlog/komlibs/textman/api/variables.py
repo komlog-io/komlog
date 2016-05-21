@@ -110,8 +110,6 @@ def get_hashed_text(text):
                     hash_value=variables.DEFAULT_SPACES_HASH
                 elif patterns.ro_newline.search(content) and patterns.ro_newline.search(content).group()==content:
                     hash_value=variables.DEFAULT_NEWLINE_HASH
-                elif patterns.ro_number.search(content) and patterns.ro_number.search(content).group()==content:
-                    hash_value=variables.DEFAULT_NUMBER_HASH
                 else:
                     hash_value=zlib.adler32(bytes(element.group(),'utf-8'),0xffffffff)
                 text_pos = start+interval_init
