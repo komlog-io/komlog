@@ -69,10 +69,10 @@ def process_message_NEGVAR(message):
     length=message.length
     pid=message.pid
     if args.is_valid_date(date) and args.is_valid_int(position) and args.is_valid_int(length) and args.is_valid_uuid(pid):
-        if datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length):
-            #el dtrea lo genera la propia funcion, solo hay que pedir que vuelvan a almacenar los valores de la variable 
-            newmsg=messages.GenerateDTreeMessage(pid=pid,date=date)
-            response.add_msg_originated(newmsg)
+        datapoints=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
+        if datapoints:
+            for a_pid in datapoints:
+                response.add_msg_originated(messages.FillDatapointMessage(pid=a_pid,date=date))
             response.status=status.IMC_STATUS_OK
         else:
             response.status=status.IMC_STATUS_INTERNAL_ERROR
@@ -93,10 +93,10 @@ def process_message_POSVAR(message):
     length=message.length
     pid=message.pid
     if args.is_valid_date(date) and args.is_valid_int(position) and args.is_valid_int(length) and args.is_valid_uuid(pid):
-        if datapointapi.mark_positive_variable(date=date, position=position, length=length, pid=pid):
-            #el dtrea lo genera la propia funcion, solo hay que pedir que vuelvan a almacenar los valores de la variable 
-            newmsg=messages.GenerateDTreeMessage(pid=pid,date=date)
-            response.add_msg_originated(newmsg)
+        datapoints=datapointapi.mark_positive_variable(date=date, position=position, length=length, pid=pid)
+        if datapoints:
+            for a_pid in datapoints:
+                response.add_msg_originated(messages.FillDatapointMessage(pid=a_pid,date=date))
             response.status=status.IMC_STATUS_OK
         else:
             response.status=status.IMC_STATUS_INTERNAL_ERROR

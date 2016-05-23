@@ -155,21 +155,22 @@ def mark_negative_variable(pid, date, position, length):
         if not cassapidatapoint.delete_datapoint_dtree_positive_at(pid=pid, date=date):
             logging.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
             return None
-    #y eliminarla de los datapoints del datasourcemap si estuviese
-    if not cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid):
-        logging.logger.error('Error deleting datapoint from datasource map')
+    #y eliminarla de los datapoints del datasourcemap si estuviese asociada a esa variable
+    ds_datapoints=cassapidatasource.get_datasource_map_datapoints(did=datapoint.did, date=date)
+    if ds_datapoints and pid in ds_datapoints and ds_datapoints[pid]==position:
+        if not cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid):
+            logging.logger.error('Error deleting datapoint from datasource map')
     generate_decision_tree(pid=pid)
     generate_inverse_decision_tree(pid=pid)
     datapoints_to_update=[]
     datapoints_to_update.append(pid)
     return datapoints_to_update
 
-def mark_positive_variable(pid, date, position, length, replace=True):
+def mark_positive_variable(pid, date, position, length):
     ''' Los pasos son los siguientes:
     - Comprobamos que la variable exista en el sample (ds en un dtdo momento)
     - Establecemos la variable como positiva
-    - Si algun otro datapoint valida la variable marcada, solicitamos la regeneracion del DTREE de dicho datapoint
-    y mandamos un NEGVAR sobre esa variable y ese dtp
+    - Marcamos la variable negativa en el resto de pids del datasource y regeneramos sus dtrees
     '''
     if not args.is_valid_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_GPA_MPV_IP)
@@ -201,22 +202,13 @@ def mark_positive_variable(pid, date, position, length, replace=True):
     text_hash=json.loads(dshash.content)
     variable_atts=textmanvar.get_variable_atts(text_hash=text_hash, text_pos=position)
     pids=cassapidatapoint.get_datapoints_pids(did=did)
+    pids.remove(pid)
     response={}
     datapoints_to_update=[]
     datapoints_to_update.append(pid)
     for a_pid in pids:
-        datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=a_pid)
-        if not a_pid == pid:
-            if datapoint_stats==None or datapoint_stats.dtree==None:
-                generate_decision_tree(pid=a_pid)
-                datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=a_pid)
-            dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
-            if dtree.evaluate_row(variable_atts):
-                if replace:
-                    datapoints_to_update.append(a_pid)
-                    mark_negative_variable(pid=a_pid, date=date, position=position, length=length)
-                else:
-                    raise exceptions.VariableMatchesExistingDatapointException(error=Errors.E_GPA_MPV_VAE)
+        mark_negative_variable(pid=a_pid, date=date, position=position, length=length)
+        datapoints_to_update.append(a_pid)
     ''' establecemos la variable como positiva para este datapoint '''
     if not cassapidatapoint.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length):
         logging.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
@@ -394,7 +386,7 @@ def monitor_new_datapoint(did, date, position, length, datapointname):
         datapoint={}
         color=colors.get_random_color()
         datapoint=create_datapoint(did=did, datapointname=datapointname, color=color)
-        datapoints_to_update=mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length, replace=False)
+        datapoints_to_update=mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
         if datapoints_to_update==None:
             return None
         else:

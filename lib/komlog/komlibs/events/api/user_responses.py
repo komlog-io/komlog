@@ -76,7 +76,7 @@ def _process_event_response_user_event_intervention_datapoint_identification(eve
         l=dp_info['l']
         processing_result['identified'][pid]=p
         if pid in datasource_config['pids']:
-            to_update=datapointapi.mark_positive_variable(pid=pid, date=ds_date, position=p, length=l, replace=True)
+            to_update=datapointapi.mark_positive_variable(pid=pid, date=ds_date, position=p, length=l)
             if to_update:
                 for pid in to_update:
                     processing_result['dp_to_update'].add(pid)

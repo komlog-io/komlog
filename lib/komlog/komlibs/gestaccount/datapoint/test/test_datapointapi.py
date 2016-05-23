@@ -253,12 +253,12 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         length=2
         self.assertTrue(api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length))
 
-    def test_mark_positive_variable_failure_one_other_datapoint_matched_dont_replace(self):
-        ''' mark_positive_variable should fail if other datapoint matched and dont want to replace '''
-        datasourcename='test_mark_positive_variable_failure_one_other_datapoint_matched_datasource'
+    def test_mark_positive_variable_success_one_other_datapoint_matched(self):
+        ''' mark_positive_variable should succeed if other datapoint matched '''
+        datasourcename='test_mark_positive_variable_success_one_other_datapoint_matched_datasource'
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
         did=datasource['did']
-        datapointname='test_mark_positive_variable_failure_one_other_datapoint_matched'
+        datapointname='test_mark_positive_variable_success_one_other_datapoint_matched'
         color='#FFDDAA'
         datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
         date=timeuuid.uuid1()
@@ -274,41 +274,11 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertTrue(len(dsdatapoints),1)
         self.assertEqual(dsdatapoints[0]['pid'],datapoint['pid'])
         self.assertEqual(dsdatapoints[0]['position'],position)
-        datapointname='test_mark_positive_variable_failure_one_other_datapoint_matched_2'
-        color='#FFDDAA'
-        datapoint2=api.create_datapoint(did=did,datapointname=datapointname, color=color)
-        self.assertRaises(exceptions.VariableMatchesExistingDatapointException, api.mark_positive_variable, pid=datapoint2['pid'], date=date, position=position, length=length, replace=False)
-
-    def test_mark_positive_variable_success_one_other_datapoint_matched_but_replace(self):
-        ''' mark_positive_variable should succeed in this case other datapoint matched '''
-        datasourcename='test_mark_positive_variable_success_one_other_datapoint_matched_datasource'
-        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
-        did=datasource['did']
-        datapointname='test_mark_positive_variable_success_one_other_datapoint_matched'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
-        date=timeuuid.uuid1()
-        content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
-        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
-        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
-        #first var should be a position 45 and length 2
-        position=45
-        length=2
-        datapoints_to_update=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        dsdata=datasourceapi.get_datasource_data(did=did, date=date)
-        dsdatapoints=dsdata['datapoints']
-        self.assertTrue(len(dsdatapoints),1)
-        self.assertEqual(dsdatapoints[0]['pid'],datapoint['pid'])
-        self.assertEqual(dsdatapoints[0]['position'],position)
         datapointname='test_mark_positive_variable_success_one_other_datapoint_matched_2'
         color='#FFDDAA'
         datapoint2=api.create_datapoint(did=did,datapointname=datapointname, color=color)
-        datapoints_to_update=api.mark_positive_variable(pid=datapoint2['pid'], date=date, position=position, length=length)
-        dsdata=datasourceapi.get_datasource_data(did=did, date=date)
-        dsdatapoints=dsdata['datapoints']
-        self.assertTrue(len(dsdatapoints),1)
-        self.assertEqual(dsdatapoints[0]['pid'],datapoint2['pid'])
-        self.assertEqual(dsdatapoints[0]['position'],position)
+        dtp_to_update=api.mark_positive_variable(pid=datapoint2['pid'], date=date, position=position, length=length)
+        self.assertEqual(sorted(dtp_to_update),sorted([datapoint2['pid'],datapoint['pid']]))
 
     def test_mark_missing_datapoint_failure_non_existent_datapoint(self):
         ''' mark_missing_datapoint should fail if datapoint does not exist '''
@@ -440,26 +410,6 @@ class GestaccountDatapointApiTest(unittest.TestCase):
             variables_atts=textmanvar.get_variables_atts(text_hash)
             for var in variables_atts:
                 self.assertFalse(dtree_inv.evaluate_row(var['atts'])) if var['text_pos']==position else self.assertTrue(dtree_inv.evaluate_row(var['atts']))
-
-    def test_monitor_new_datapoint_failure_other_datapoint_matched_variable(self):
-        ''' monitor_new_datapoint should fail if there is other datapoint that matches the selected variable '''
-        datasourcename='test_monitor_new_datapoint_failure_other_datapoint_matched_variable_datasource'
-        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
-        did=datasource['did']
-        date=timeuuid.uuid1()
-        content='monitor_new_datapoint content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
-        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
-        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
-        #first var should be a position 44 and length 2
-        position=44
-        length=2
-        datapointname='test_monitor_new_datapoint_failure_other_datapoint_matched_variable_datapoint'
-        datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
-        self.assertTrue(len(datapoint),1)
-        self.assertEqual(datapoint['did'],did)
-        self.assertEqual(datapoint['datapointname'],datapointname)
-        datapointname2='test_monitor_new_datapoint_failure_other_datapoint_matched_variable_datapoint2'
-        self.assertRaises(exceptions.VariableMatchesExistingDatapointException, api.monitor_new_datapoint, did=did, date=date, position=position, length=length, datapointname=datapointname2)
 
     def test_monitor_new_datapoint_failure_datasource_data_not_found(self):
         ''' monitor_new_datapoint should fail if datasource data does not exist '''

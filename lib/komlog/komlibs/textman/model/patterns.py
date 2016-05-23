@@ -9,12 +9,12 @@ import re
 # patterns used for variable identification
 
 
-VAR_PREFIX_SEPARATOR_REGEXP='(?<=[ \n\t/\|\(\[;:\*%$#"=])'
-VAR_SUFIX_SEPARATOR_REGEXP ='(?=[ \n\t/\|\)\];:\*%$#"])'
-VAR_PREFIX_SEPARATOR_WITH_COMMA_REGEXP='(?<=[, \n\t/\|\(\[;:\*%$#"=])'
-VAR_SUFIX_SEPARATOR_WITH_COMMA_REGEXP='(?=[, \n\t/\|\(\];:\*%$#"])'
+VAR_PREFIX_SEPARATOR_REGEXP='(?<=[ \s/\|\(\[;:\*%$#"=])'
+VAR_SUFIX_SEPARATOR_REGEXP ='(?=[ \s/\|\)\];:\*%$#"])'
+VAR_PREFIX_SEPARATOR_WITH_COMMA_REGEXP='(?<=[, \s/\|\(\[;:\*%$#"=])'
+VAR_SUFIX_SEPARATOR_WITH_COMMA_REGEXP='(?=[, \s/\|\(\];:\*%$#"])'
 
-SEPARATOR_REGEXP='([ ]+|[\n\t/\|\(\)\[\];:\*\.%\$\#"=])'
+SEPARATOR_REGEXP='([ ]+|[\s/\|\(\)\[\];:\*\.%\$\#"=])'
 WORD_REGEXP='([A-Za-z0-9_]+)'
 NUMBER_REGEXP='([0-9]+)'
 SPACES_REGEXP='([ ]+)'
