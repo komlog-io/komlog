@@ -12,8 +12,11 @@ def get_statement(num):
 
 STATEMENTS={30000:'select * from mst_datapoint where pid=?',
             30001:'select * from mst_datapoint where did=?',
-            30002:'select count(*) from mst_datapoint where did=?',
-            30003:'select pid from mst_datapoint where did=?',
+            30002:'select * from mst_datapoint where uid=?',
+            30003:'select count(*) from mst_datapoint where did=?',
+            30004:'select count(*) from mst_datapoint where uid=?',
+            30005:'select pid from mst_datapoint where did=?',
+            30006:'select pid from mst_datapoint where uid=?',
             30100:'select * from mst_datapoint_stats where pid=?',
             30200:'select * from dat_datapoint  where pid=? and date=?',
             30201:'select * from dat_datapoint where pid=? and date>=? and date<=? limit ?',
@@ -24,8 +27,8 @@ STATEMENTS={30000:'select * from mst_datapoint where pid=?',
             30301:'select * from dat_datapoint_dtree_positives where pid=? and date=?',
             30400:'select * from dat_datapoint_dtree_negatives where pid=?',
             30401:'select * from dat_datapoint_dtree_negatives where pid=? and date=?',
-            35000:'insert into mst_datapoint (pid,did,datapointname,color,creation_date) values (?,?,?,?,?)',
-            35001:'insert into mst_datapoint (pid,did,datapointname,color,creation_date) values (?,?,?,?,?) if not exists',
+            35000:'insert into mst_datapoint (pid,did,uid,datapointname,color,creation_date) values (?,?,?,?,?,?)',
+            35001:'insert into mst_datapoint (pid,did,uid,datapointname,color,creation_date) values (?,?,?,?,?,?) if not exists',
             35200:'insert into dat_datapoint (pid,date,value) values (?,?,?)',
             37000:'delete from mst_datapoint where pid=?',
             37100:'delete from mst_datapoint_stats where pid=?',
@@ -36,6 +39,7 @@ STATEMENTS={30000:'select * from mst_datapoint where pid=?',
             37400:'delete from dat_datapoint_dtree_negatives where pid=?',
             37401:'delete coordinates[?] from dat_datapoint_dtree_negatives where pid=? and date=?',
             37402:'delete from dat_datapoint_dtree_negatives where pid=? and date=?',
+            39000:'update mst_datapoint set did=? where pid=?',
             39100:'update mst_datapoint_stats set dtree=? where pid=?',
             39101:'update mst_datapoint_stats set decimal_separator=? where pid=?',
             39102:'update mst_datapoint_stats set last_received=? where pid=?',
@@ -50,8 +54,11 @@ STATEMENTS={30000:'select * from mst_datapoint where pid=?',
 
 S_A_MSTDATAPOINT_B_PID=30000
 S_A_MSTDATAPOINT_B_DID=30001
-S_COUNT_MSTDATAPOINT_B_DID=30002
-S_PID_MSTDATAPOINT_B_DID=30003
+S_A_MSTDATAPOINT_B_UID=30002
+S_COUNT_MSTDATAPOINT_B_DID=30003
+S_COUNT_MSTDATAPOINT_B_UID=30004
+S_PID_MSTDATAPOINT_B_DID=30005
+S_PID_MSTDATAPOINT_B_UID=30006
 
 # mst_datapoint_stats
 
@@ -122,6 +129,8 @@ D_A_DATDATAPOINTDTREENEGATIVES_B_PID_DATE=37402
 # Updates (39000 - 39999)
 
 # mst_datapoint
+
+U_DID_MSTDATAPOINT = 39000
 
 # mst_datapoint_stats
 

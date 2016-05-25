@@ -10,14 +10,15 @@ class KomcassApiDatapointTest(unittest.TestCase):
     ''' komlog.komcass.api.datapoint tests '''
 
     def setUp(self):
+        uid=uuid.uuid4()
         pid1=uuid.uuid4()
         pid2=uuid.uuid4()
         did=uuid.uuid4()
         datapointname='test_komlog.komcass.api.datapoint_datapoint1'
         datapointname='test_komlog.komcass.api.datapoint_datapoint2'
         creation_date=timeuuid.uuid1()
-        self.datapoint1=ormdatapoint.Datapoint(pid=pid1, did=did, creation_date=creation_date, datapointname=datapointname)
-        self.datapoint2=ormdatapoint.Datapoint(pid=pid2, did=did, creation_date=creation_date, datapointname=datapointname)
+        self.datapoint1=ormdatapoint.Datapoint(pid=pid1, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
+        self.datapoint2=ormdatapoint.Datapoint(pid=pid2, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         datapointapi.insert_datapoint(self.datapoint1)
         datapointapi.insert_datapoint(self.datapoint2)
         datapointapi.set_datapoint_last_received(pid1,creation_date)
@@ -36,10 +37,23 @@ class KomcassApiDatapointTest(unittest.TestCase):
         pid=uuid.uuid4()
         self.assertIsNone(datapointapi.get_datapoint(pid=pid))
 
+    def test_get_datapoints_no_uid_nor_did_passed(self):
+        ''' get_datapoints should return an empty array if we dont pass uid nor did '''
+        datapoints=datapointapi.get_datapoints()
+        self.assertEqual(datapoints,[])
+
     def test_get_datapoints_existing_did(self):
         ''' get_datapoints should succeed if we pass an existing did '''
         did=self.datapoint1.did
         datapoints=datapointapi.get_datapoints(did=did)
+        self.assertEqual(len(datapoints),2)
+        for datapoint in datapoints:
+            self.assertTrue(isinstance(datapoint, ormdatapoint.Datapoint))
+
+    def test_get_datapoints_existing_uid(self):
+        ''' get_datapoints should succeed if we pass an existing uid '''
+        uid=self.datapoint1.uid
+        datapoints=datapointapi.get_datapoints(uid=uid)
         self.assertEqual(len(datapoints),2)
         for datapoint in datapoints:
             self.assertTrue(isinstance(datapoint, ormdatapoint.Datapoint))
@@ -51,16 +65,47 @@ class KomcassApiDatapointTest(unittest.TestCase):
         self.assertTrue(isinstance(datapoints,list))
         self.assertEqual(len(datapoints),0)
 
+    def test_get_datapoints_non_existing_uid(self):
+        ''' get_datapoints should return an empty array if we pass a non existing uid '''
+        uid=uuid.uuid4()
+        datapoints=datapointapi.get_datapoints(uid=uid)
+        self.assertTrue(isinstance(datapoints,list))
+        self.assertEqual(len(datapoints),0)
+
+    def test_get_datapoints_pids_passing_existing_did_with_datapoints(self):
+        ''' get_datapoints_pids should return the pids list '''
+        did=self.datapoint1.did
+        pids=datapointapi.get_datapoints_pids(did=did)
+        self.assertEqual(sorted(pids),sorted([self.datapoint1.pid, self.datapoint2.pid]))
+
+    def test_get_datapoints_pids_passing_existing_uid_with_datapoints(self):
+        ''' get_datapoints_pids should return the pids list '''
+        uid=self.datapoint1.uid
+        pids=datapointapi.get_datapoints_pids(uid=uid)
+        self.assertEqual(sorted(pids),sorted([self.datapoint1.pid, self.datapoint2.pid]))
+
     def test_get_number_of_datapoints_by_did_success(self):
         ''' get_number_of_datapoints_by_did should return the number of datapoints belonging to a did '''
         did=self.datapoint1.did
         num_datapoints=datapointapi.get_number_of_datapoints_by_did(did)
         self.assertEqual(num_datapoints, 2)
 
+    def test_get_number_of_datapoints_by_uid_success(self):
+        ''' get_number_of_datapoints_by_uid should return the number of datapoints belonging to a uid '''
+        uid=self.datapoint1.uid
+        num_datapoints=datapointapi.get_number_of_datapoints_by_uid(uid)
+        self.assertEqual(num_datapoints, 2)
+
     def test_get_number_of_datapoints_by_did_no_datapoints(self):
         ''' get_number_of_datapoints by did should return the number of datapoints belonging to a did '''
         did=uuid.uuid4()
         num_datapoints=datapointapi.get_number_of_datapoints_by_did(did)
+        self.assertEqual(num_datapoints, 0)
+
+    def test_get_number_of_datapoints_by_uid_no_datapoints(self):
+        ''' get_number_of_datapoints_by_uid should return the number of datapoints belonging to a uid '''
+        uid=uuid.uuid4()
+        num_datapoints=datapointapi.get_number_of_datapoints_by_uid(uid)
         self.assertEqual(num_datapoints, 0)
 
     def test_get_datapoint_stats_existing_pid(self):
@@ -213,16 +258,30 @@ class KomcassApiDatapointTest(unittest.TestCase):
 
     def test_new_datapoint_success(self):
         ''' new_datapoint should succeed if argument is a datapoint object and datapoint does not exist'''
+        uid=uuid.uuid4()
         pid=uuid.uuid4()
         did=uuid.uuid4()
         datapointname='test_new_datapoint_success_datapoint'
         creation_date=timeuuid.uuid1()
-        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, creation_date=creation_date, datapointname=datapointname)
+        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(datapointapi.new_datapoint(datapoint))
         datapoint_db=datapointapi.get_datapoint(pid=pid)
         self.assertTrue(isinstance(datapoint_db,ormdatapoint.Datapoint))
         self.assertEqual(datapoint.pid, datapoint_db.pid)
  
+    def test_new_datapoint_success_without_associated_did(self):
+        ''' new_datapoint should succeed if argument is a datapoint object and datapoint does not exist, and datapoint has no associated did'''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        did=None
+        datapointname='test_new_datapoint_success_datapoint'
+        creation_date=timeuuid.uuid1()
+        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
+        self.assertTrue(datapointapi.new_datapoint(datapoint))
+        datapoint_db=datapointapi.get_datapoint(pid=pid)
+        self.assertTrue(isinstance(datapoint_db,ormdatapoint.Datapoint))
+        self.assertEqual(datapoint.pid, datapoint_db.pid)
+
     def test_insert_datapoint_no_datapoint_object(self):
         ''' insert_datapoint should fail if no datapoint object is passed '''
         datapoints=[None, 234234, '12313514123', {'a':'dict'},['a','list']]
@@ -236,11 +295,12 @@ class KomcassApiDatapointTest(unittest.TestCase):
 
     def test_insert_datapoint_success(self):
         ''' insert_datapoint should succeed if argument is a datapoint object and datapoint does not exist'''
+        uid=uuid.uuid4()
         pid=uuid.uuid4()
         did=uuid.uuid4()
         datapointname='test_insert_datapoint_success_datapoint'
         creation_date=timeuuid.uuid1()
-        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, creation_date=creation_date, datapointname=datapointname)
+        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(datapointapi.insert_datapoint(datapoint))
         datapoint_db=datapointapi.get_datapoint(pid=pid)
         self.assertTrue(isinstance(datapoint_db,ormdatapoint.Datapoint))
@@ -321,7 +381,7 @@ class KomcassApiDatapointTest(unittest.TestCase):
 
     def test_delete_datapoint_success_existent_pid(self):
         ''' delete_datapoint should succeed even if pid does not exist '''
-        datapoint=ormdatapoint.Datapoint(pid=uuid.uuid4(), did=uuid.uuid4())
+        datapoint=ormdatapoint.Datapoint(pid=uuid.uuid4(), did=uuid.uuid4(), uid=uuid.uuid4())
         self.assertTrue(datapointapi.insert_datapoint(datapoint))
         self.assertIsNotNone(datapointapi.get_datapoint(pid=datapoint.pid))
         self.assertTrue(datapointapi.delete_datapoint(pid=datapoint.pid))
@@ -441,4 +501,32 @@ class KomcassApiDatapointTest(unittest.TestCase):
         self.assertTrue('value' in data[0])
         self.assertEqual(data[0]['date'],match_date)
         self.assertEqual(data[0]['value'],value)
+
+    def test_dissociate_datapoint_from_datasource_non_existent_pid(self):
+        ''' dissociate_datapoint_from_datasource should return True even if pid does not exist '''
+        pid=uuid.uuid4()
+        self.assertTrue(datapointapi.dissociate_datapoint_from_datasource(pid=pid))
+
+    def test_dissociate_datapoint_from_datasource_existent_pid(self):
+        ''' dissociate_datapoint_from_datasource should return True and set did to None '''
+        pid=uuid.uuid4()
+        did=uuid.uuid4()
+        uid=uuid.uuid4()
+        creation_date=timeuuid.uuid1()
+        datapointname='datapointname'
+        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
+        self.assertTrue(datapointapi.insert_datapoint(datapoint))
+        db_dp=datapointapi.get_datapoint(pid=pid)
+        self.assertEqual(datapoint.pid, db_dp.pid)
+        self.assertEqual(datapoint.did, db_dp.did)
+        self.assertEqual(datapoint.uid, db_dp.uid)
+        self.assertEqual(datapoint.creation_date, db_dp.creation_date)
+        self.assertEqual(datapoint.datapointname, db_dp.datapointname)
+        self.assertTrue(datapointapi.dissociate_datapoint_from_datasource(pid=pid))
+        db_dp=datapointapi.get_datapoint(pid=pid)
+        self.assertEqual(datapoint.pid, db_dp.pid)
+        self.assertEqual(None, db_dp.did)
+        self.assertEqual(datapoint.uid, db_dp.uid)
+        self.assertEqual(datapoint.creation_date, db_dp.creation_date)
+        self.assertEqual(datapoint.datapointname, db_dp.datapointname)
 

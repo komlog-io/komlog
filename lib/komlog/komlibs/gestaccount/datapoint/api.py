@@ -11,6 +11,7 @@ author: jcazor
 import uuid
 import json
 import pickle
+from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import datasource as cassapidatasource
 from komlog.komcass.api import datapoint as cassapidatapoint
 from komlog.komcass.api import widget as cassapiwidget
@@ -27,6 +28,7 @@ from komlog.komlibs.general import colors
 from komlog.komlibs.textman.api import variables as textmanvar
 from komlog.komlibs.textman.api import summary as textmansummary
 from komlog.komlibs.graph.api import uri as graphuri
+from komlog.komlibs.graph.relations import vertex
 from komlog.komfig import logging
 
 def get_datapoint_data(pid, fromdate=None, todate=None, count=None):
@@ -51,28 +53,69 @@ def get_datapoint_data(pid, fromdate=None, todate=None, count=None):
     else:
         return datapoint_data
 
-def create_datapoint(did, datapointname, color):
+def create_user_datapoint(uid, datapoint_uri):
     '''
-    Funcion utilizada para la creacion de un datapoint sin asociar a ninguna variable en particular
+    Funcion utilizada para la creacion de un datapoint asociado a un usuario
+    '''
+    if not args.is_valid_uuid(uid):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_CRUD_IU)
+    if not args.is_valid_uri(datapoint_uri):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_CRUD_IDU)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_GPA_CRUD_UNF)
+    pid=uuid.uuid4()
+    if not graphuri.new_datapoint_uri(uid=uid, uri=datapoint_uri, pid=pid):
+        raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRUD_UAE)
+    color=colors.get_random_color()
+    datapoint=ormdatapoint.Datapoint(pid=pid,did=None,uid=uid, datapointname=datapoint_uri,color=color, creation_date=timeuuid.uuid1())
+    if cassapidatapoint.new_datapoint(datapoint):
+        return {'pid':datapoint.pid, 'uid':uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color}
+    graphuri.dissociate_vertex(ido=pid)
+    raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRUD_IDE)
+
+def create_datasource_datapoint(did, datapoint_uri):
+    '''
+    Funcion utilizada para la creacion de un datapoint asociado a un datasource
+    pero sin asociar a ninguna variable en particular
     '''
     if not args.is_valid_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_GPA_CRD_ID)
-    if not args.is_valid_uri(datapointname):
-        raise exceptions.BadParametersException(error=Errors.E_GPA_CRD_IDN)
-    if not args.is_valid_hexcolor(color):
-        raise exceptions.BadParametersException(error=Errors.E_GPA_CRD_IC)
+    if not args.is_valid_uri(datapoint_uri):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_CRD_IDU)
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
         raise exceptions.DatasourceNotFoundException(error=Errors.E_GPA_CRD_DNF)
     pid=uuid.uuid4()
-    if not graphuri.new_datapoint_uri(did=did, uri=datapointname, pid=pid):
-        raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRD_ADU)
-    datapoint=ormdatapoint.Datapoint(pid=pid,did=did,datapointname=datapointname,color=color, creation_date=timeuuid.uuid1())
-    if cassapidatapoint.new_datapoint(datapoint):
-        return {'pid':datapoint.pid, 'did':datapoint.did, 'datapointname':datapoint.datapointname, 'color':datapoint.color}
+    if not graphuri.new_datapoint_uri(did=did, uri=datapoint_uri, pid=pid):
+        existing_node=graphuri.get_id(ido=did, uri=datapoint_uri)
+        if existing_node and existing_node['type']==vertex.DATAPOINT:
+            datapoint=cassapidatapoint.get_datapoint(pid=existing_node['id'])
+            if datapoint and datapoint.did:
+                raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_CRD_AAD)
+            else:
+                pid=existing_node['id']
+                if not datapoint:
+                    color=colors.get_random_color()
+                    datapointname='.'.join((datasource.datasourcename, datapoint_uri))
+                    datapoint=ormdatapoint.Datapoint(pid=pid,did=did,uid=datasource.uid, datapointname=datapointname,color=color, creation_date=timeuuid.uuid1())
+                else:
+                    datapoint.did=did
+                if cassapidatapoint.insert_datapoint(datapoint):
+                    return {'pid':pid, 'did':did, 'uid':datapoint.uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color}
+                else:
+                    raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRD_UDE)
+        else:
+            raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_CRD_ADU)
     else:
-        graphuri.dissociate_vertex(ido=pid)
-        raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRD_IDE)
+        color=colors.get_random_color()
+        datapointname='.'.join((datasource.datasourcename, datapoint_uri))
+        datapoint=ormdatapoint.Datapoint(pid=pid,did=did,uid=datasource.uid, datapointname=datapointname,color=color, creation_date=timeuuid.uuid1())
+        if cassapidatapoint.new_datapoint(datapoint):
+            return {'pid':datapoint.pid, 'did':datapoint.did, 'uid':datasource.uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color}
+        else:
+            graphuri.dissociate_vertex(ido=pid)
+            raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRD_IDE)
 
 def get_datapoint_config(pid):
     ''' como se ha pasado por las fases de autorización y autenticación, 
@@ -85,6 +128,7 @@ def get_datapoint_config(pid):
     data['pid']=pid
     if datapoint:
         data['datapointname']=datapoint.datapointname if datapoint.datapointname else ''
+        data['uid']=datapoint.uid
         data['did']=datapoint.did
         data['color']=datapoint.color if datapoint.color else ''
         if datapoint_stats:
@@ -134,6 +178,8 @@ def mark_negative_variable(pid, date, position, length):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_MNV_DNF)
+    if not datapoint.did:
+        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_MNV_DSNF)
     dsmapvars = cassapidatasource.get_datasource_map_variables(did=datapoint.did, date=date)
     if not dsmapvars: 
         raise exceptions.DatasourceMapNotFoundException(error=Errors.E_GPA_MNV_DMNF)
@@ -183,6 +229,8 @@ def mark_positive_variable(pid, date, position, length):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_MPV_DNF)
+    if not datapoint.did:
+        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_MPV_DSNF)
     dsmap = cassapidatasource.get_datasource_map(did=datapoint.did, date=date)
     if not dsmap:
         raise exceptions.DatasourceMapNotFoundException(error=Errors.E_GPA_MPV_DMNF)
@@ -193,9 +241,10 @@ def mark_positive_variable(pid, date, position, length):
             raise exceptions.DatasourceVariableNotFoundException(error=Errors.E_GPA_MPV_VLNF)
     except KeyError:
         raise exceptions.DatasourceVariableNotFoundException(error=Errors.E_GPA_MPV_VPNF)
-    ''' en este punto hemos comprobado que la muestra y variable existen y dtp pertenece a did indicado.
-    Comprobamos que no haya otros datapoints que validen esa variable, en caso contrario
-    solicitaremos que esa variable se marque como negativa en ellos '''
+    ''' en este punto hemos comprobado que la muestra y variable existen y 
+    dtp pertenece a did indicado.
+    solicitaremos que esa variable se marque como negativa en el resto de datapoints asociados
+    al datasource '''
     dshash=cassapidatasource.get_datasource_hash(did=datapoint.did,date=date)
     if not dshash:
         dshash=generate_datasource_hash(did=datapoint.did, date=date)
@@ -235,6 +284,8 @@ def mark_missing_datapoint(pid, date):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_MMDP_DNF)
+    if datapoint.did is None:
+        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_MMDP_DSNF)
     dsmapvars = cassapidatasource.get_datasource_map_variables(did=datapoint.did, date=date)
     if not dsmapvars: 
         raise exceptions.DatasourceMapNotFoundException(error=Errors.E_GPA_MMDP_DMNF)
@@ -269,6 +320,8 @@ def generate_decision_tree(pid):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_GDT_DNF)
+    if datapoint.did is None:
+        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_GDT_DSNF)
     did=datapoint.did
     dates_to_get=[]
     positive_samples={}
@@ -329,6 +382,8 @@ def generate_inverse_decision_tree(pid):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_GIDT_DNF)
+    if datapoint.did is None:
+        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_GIDT_DSNF)
     did=datapoint.did
     dates_to_get=[]
     positive_samples={}
@@ -384,8 +439,7 @@ def monitor_new_datapoint(did, date, position, length, datapointname):
         raise exceptions.BadParametersException(error=Errors.E_GPA_MND_IDN)
     try:
         datapoint={}
-        color=colors.get_random_color()
-        datapoint=create_datapoint(did=did, datapointname=datapointname, color=color)
+        datapoint=create_datasource_datapoint(did=did, datapoint_uri=datapointname)
         datapoints_to_update=mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
         if datapoints_to_update==None:
             return None
@@ -397,6 +451,27 @@ def monitor_new_datapoint(did, date, position, length, datapointname):
             graphuri.dissociate_vertex(ido=datapoint['pid'])
         logging.logger.debug('Exception monitoring new datapoint: '+str(e))
         raise e
+
+def store_user_datapoint_value(pid, date, content):
+    ''' This function extract the numeric value of a string and stores it in the database.
+        This function is used for storing values of user datapoints, those who are
+        sent directly not associated to a datasource. '''
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_SDPSV_IP)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_SDPSV_IDT)
+    if not args.is_valid_string(content):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_SDPSV_IC)
+    value=textmanvar.get_numeric_value_from_string(content)
+    if value is None:
+        raise exceptions.BadParametersException(error=Errors.E_GPA_SDPSV_CVNN)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    if datapoint is None:
+        raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_SDPSV_DNF)
+    if cassapidatapoint.insert_datapoint_data(pid=pid, date=date, value=value):
+        return True
+    else:
+        raise exceptions.DatapointStoreValueException(error=Errors.E_GPA_SDPSV_IDDE)
 
 def store_datapoint_values(pid, date, store_newer=True):
     '''
@@ -421,6 +496,8 @@ def store_datapoint_values(pid, date, store_newer=True):
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_SDPV_DNF)
     if datapoint_stats==None or datapoint_stats.dtree==None:
         raise exceptions.DatapointDTreeNotFoundException(error=Errors.E_GPA_SDPV_DTNF)
+    if datapoint.did is None:
+        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_SDPV_DSNF)
     did=datapoint.did
     dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
     datasource_stats=cassapidatasource.get_datasource_stats(did=did)
@@ -533,6 +610,8 @@ def should_datapoint_match_any_sample_variable(pid, date):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_SDMSV_DNF)
+    if datapoint.did is None:
+        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_SDMSV_DSNF)
     datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
     if not datapoint_stats or not datapoint_stats.dtree:
         generate_decision_tree(pid=pid)
@@ -601,6 +680,8 @@ def generate_datasource_novelty_detector_for_datapoint(pid):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_GDNDFD_DNF)
+    if datapoint.did is None:
+        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_GDNDFD_DSNF)
     inline_dates=[]
     for sample in cassapidatapoint.get_datapoint_dtree_positives(pid=pid):
         inline_dates.append(sample.date)
@@ -631,6 +712,8 @@ def should_datapoint_appear_in_sample(pid, date):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_SDAIS_DNF)
+    if datapoint.did is None:
+        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_SDAIS_DSNF)
     #obtenemos las caracteristicas de los datasources en los que aparece el datapoint, si no lo calculamos
     ds_nd=cassapidatasource.get_last_datasource_novelty_detector_for_datapoint(did=datapoint.did,pid=pid)
     if not ds_nd:

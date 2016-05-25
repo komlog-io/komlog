@@ -6,9 +6,10 @@ Created on 01/10/2014
 '''
 
 class Datapoint:
-    def __init__(self, pid, did=None, datapointname=None, color=None, creation_date=None):
+    def __init__(self, pid, did, uid, datapointname=None, color=None, creation_date=None):
         self.pid=pid
         self.did=did
+        self.uid=uid
         self.datapointname=datapointname
         self.color=color
         self.creation_date=creation_date

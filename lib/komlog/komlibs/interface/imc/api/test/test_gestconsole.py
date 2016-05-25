@@ -146,8 +146,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         datasourcename=username
         datasource=datasourceapi.create_datasource(uid=user['uid'],aid=aid,datasourcename=datasourcename)
         datapointname=username
-        color='#AAAAAA'
-        datapoint=datapointapi.create_datapoint(did=datasource['did'], datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         message=messages.DeleteDatapointMessage(pid=datapoint['pid'])
         response=gestconsole.process_message_DELDP(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)

@@ -129,7 +129,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname,color='#AAAAAA')
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         self.assertIsNotNone(datapoint)
         parameters={'pid':datapoint['pid'].hex}
         event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
@@ -139,7 +139,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertEqual(db_event['uid'],user['uid'])
         self.assertEqual(db_event['date'],event['date'])
         self.assertEqual(db_event['type'],types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT)
-        self.assertEqual(db_event['parameters'],{'did':datasource['did'],'pid':datapoint['pid'],'datasourcename':datasourcename,'datapointname':datapointname})
+        self.assertEqual(db_event['parameters'],{'did':datasource['did'],'pid':datapoint['pid'],'datasourcename':datasourcename,'datapointname':'.'.join((datasourcename,datapointname))})
 
     def test_get_event_success_new_widget(self):
         ''' get_event should return the event '''
@@ -818,7 +818,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname,color='#AAAAAA')
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         self.assertIsNotNone(datapoint)
         parameters={'pid':datapoint['pid'].hex}
         self.assertTrue(cassapidatasource.delete_datasource(did=datasource['did']))
@@ -843,7 +843,7 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname,color='#AAAAAA')
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         self.assertIsNotNone(datapoint)
         parameters={'pid':datapoint['pid'].hex}
         event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)

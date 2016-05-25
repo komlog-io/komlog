@@ -108,7 +108,7 @@ def new_widget_datapoint(uid,pid):
     if widget_dp:
         raise exceptions.WidgetAlreadyExistsException(error=Errors.E_GWA_NWDP_WAE)
     wid=uuid.uuid4()
-    widgetname='.'.join((datasource.datasourcename,datapoint.datapointname))
+    widgetname=datapoint.datapointname
     widget=ormwidget.WidgetDp(wid=wid,widgetname=widgetname, uid=user.uid,pid=datapoint.pid,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
         dswidget=cassapiwidget.get_widget_ds(did=datapoint.did)

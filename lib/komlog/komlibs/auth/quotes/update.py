@@ -55,13 +55,7 @@ def quo_user_total_datapoints(params):
     if 'uid' not in params:
         return None
     uid=params['uid']
-    aids=cassapiagent.get_agents_aids(uid=uid)
-    total_datapoints=0
-    for aid in aids:
-        dids=cassapidatasource.get_datasources_dids(aid=aid)
-        for did in dids:
-            datasource_datapoints=cassapidatapoint.get_number_of_datapoints_by_did(did=did)
-            total_datapoints+=int(datasource_datapoints)
+    total_datapoints=cassapidatapoint.get_number_of_datapoints_by_uid(uid=uid)
     quote=Quotes.quo_user_total_datapoints.name
     if cassapiquote.set_user_quote(uid=uid, quote=quote, value=total_datapoints):
         return total_datapoints

@@ -124,6 +124,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         psp = self.passport
         did=self.agents[0]['dids'][0]
         datapointname='test_new_datapoint_request_success'
+        datasource_config=datasourceapi.get_datasource_config_request(passport=psp, did=did)
+        self.assertEqual(datasource_config.status, status.WEB_STATUS_OK)
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
@@ -145,7 +147,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         #we put the message off the queue, but we process it manually calling the gestaccount directly
         datapoint=gestdatapointapi.monitor_new_datapoint(did=msg.did, date=msg.date, position=msg.position, length=msg.length, datapointname=msg.datapointname)
         self.assertIsNotNone(datapoint)
-        self.assertEqual(datapoint['datapointname'],datapointname)
+        self.assertEqual(datapoint['datapointname'],'.'.join((datasource_config.data['datasourcename'],datapointname)))
         self.assertEqual(datapoint['did'],uuid.UUID(did))
 
     def test_new_datapoint_request_failure_invalid_passport(self):
@@ -281,6 +283,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         psp = self.passport
         did=self.agents[0]['dids'][0]
         datapointname='test_update_datapoint_config_request_failure_non_existent_username'
+        datasource_config=datasourceapi.get_datasource_config_request(passport=psp, did=did)
+        self.assertEqual(datasource_config.status, status.WEB_STATUS_OK)
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
@@ -302,7 +306,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         #we put the message off the queue, but we process it manually calling the gestaccount directly
         datapoint=gestdatapointapi.monitor_new_datapoint(did=msg.did, date=msg.date, position=msg.position, length=msg.length, datapointname=msg.datapointname)
         self.assertIsNotNone(datapoint)
-        self.assertEqual(datapoint['datapointname'],datapointname)
+        self.assertEqual(datapoint['datapointname'],'.'.join((datasource_config.data['datasourcename'],datapointname)))
         self.assertEqual(datapoint['did'],uuid.UUID(did))
         psp = passport.Passport(uid=uuid.uuid4())
         pid=datapoint['pid'].hex

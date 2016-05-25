@@ -232,17 +232,25 @@ class Errors(Enum):
     E_GPA_GDNDFD_DNF    = 4501
     E_GPA_GDNDFD_NDF    = 4502
     E_GPA_GDNDFD_DSDNF  = 4503
+    E_GPA_GDNDFD_DSNF   = 4504 #: datapoint is not associated to a datasource
 
     E_GPA_SDAIS_IP      = 4510
     E_GPA_SDAIS_IDT     = 4511
     E_GPA_SDAIS_DNF     = 4512
     E_GPA_SDAIS_DSNDNF  = 4513
     E_GPA_SDAIS_DSTSNF  = 4514
+    E_GPA_SDAIS_DSNF    = 4515 #: datapoint is not associated to a datasource
 
-    E_GPA_CMDIS_ID      = 4510
-    E_GPA_CMDIS_IDT     = 4511
-    E_GPA_CMDIS_DSMNF   = 4512
-    E_GPA_CMDIS_DSTSNF  = 4513
+    E_GPA_CMDIS_ID      = 4530
+    E_GPA_CMDIS_IDT     = 4531
+    E_GPA_CMDIS_DSMNF   = 4532
+    E_GPA_CMDIS_DSTSNF  = 4533
+
+    E_GPA_CRUD_IU   = 5000 #: invalid uid
+    E_GPA_CRUD_IDU  = 5001 #: invalid datapoint uri
+    E_GPA_CRUD_UNF  = 5002 #: user not found
+    E_GPA_CRUD_UAE  = 5003 #: uri already used
+    E_GPA_CRUD_IDE  = 5004 #: error inserting to database
 
     E_GPA_GDD_IP    = 6600
     E_GPA_GDD_ITD   = 6601
@@ -251,11 +259,12 @@ class Errors(Enum):
     E_GPA_GDD_ICNT  = 6604 #: Invalid count parameter
 
     E_GPA_CRD_ID    = 6610
-    E_GPA_CRD_IDN   = 6611
-    E_GPA_CRD_IC    = 6612
-    E_GPA_CRD_DNF   = 6613
-    E_GPA_CRD_IDE   = 6614
-    E_GPA_CRD_ADU   = 6615
+    E_GPA_CRD_IDU   = 6611 #: Invalid datapoint uri
+    E_GPA_CRD_DNF   = 6612
+    E_GPA_CRD_IDE   = 6613
+    E_GPA_CRD_ADU   = 6614 #: Uri selected already used
+    E_GPA_CRD_AAD   = 6615 #: Datapoint already associated to a datasource
+    E_GPA_CRD_UDE   = 6616 #: Error updating datapoint row in database
 
     E_GPA_GDC_IP    = 6620
     E_GPA_GDC_DNF   = 6621
@@ -275,6 +284,7 @@ class Errors(Enum):
     E_GPA_MNV_DMNF  = 6645
     E_GPA_MNV_VLNF  = 6646
     E_GPA_MNV_VPNF  = 6647
+    E_GPA_MNV_DSNF  = 6648 #: Datapoint is not associated to a datasource
 
     E_GPA_MPV_IP    = 6660
     E_GPA_MPV_IDT   = 6661
@@ -285,14 +295,17 @@ class Errors(Enum):
     E_GPA_MPV_VLNF  = 6666
     E_GPA_MPV_VPNF  = 6667
     E_GPA_MPV_VAE   = 6668
+    E_GPA_MPV_DSNF  = 6669 #: datapoint is not associated to a datasource
 
     E_GPA_GDT_IP    = 6680
     E_GPA_GDT_DNF   = 6681
     E_GPA_GDT_ETS   = 6682
+    E_GPA_GDT_DSNF  = 6683 #: datapoint is not associated to a datasource
 
     E_GPA_GIDT_IP   = 6686
     E_GPA_GIDT_DNF  = 6687
     E_GPA_GIDT_ETS  = 6688
+    E_GPA_GIDT_DSNF = 6689 #: datapoint is not associated to a datasource
 
     E_GPA_MND_ID    = 6690
     E_GPA_MND_IDT   = 6691
@@ -306,6 +319,7 @@ class Errors(Enum):
     E_GPA_SDPV_DTNF = 6703
     E_GPA_SDPV_DMNF = 6704
     E_GPA_SDPV_IDDE = 6705
+    E_GPA_SDPV_DSNF = 6706 #: datapoint is not associated to a datasource
 
     E_GPA_SDSV_ID   = 6710
     E_GPA_SDSV_IDT  = 6711
@@ -319,17 +333,26 @@ class Errors(Enum):
     E_GPA_SDMSV_DNF     = 6742
     E_GPA_SDMSV_DPDTNF  = 6743
     E_GPA_SDMSV_DSMNF   = 6744
+    E_GPA_SDMSV_DSNF    = 6742 #: datapoint is not associated to a datasource
 
     E_GPA_MMDP_IP   = 6750
     E_GPA_MMDP_IDT  = 6751
     E_GPA_MMDP_DNF  = 6752
     E_GPA_MMDP_DMNF = 6753
+    E_GPA_MMDP_DSNF = 6754 #: datapoint is not associated to a datasource
 
     E_GPA_GDH_IDID  = 6760 #: generate_datasource_hash. invalid datasource id
     E_GPA_GDH_IDT   = 6761 #: generate_datasource_hash. invalid date
     E_GPA_GDH_DDNF  = 6762 #: generate_datasource_hash. datasource data not found
     E_GPA_GDH_EIDB  = 6763 #: generate_datasource_hash. error inserting in database
     E_GPA_GDH_NHO   = 6764 #: generate_datasource_hash. no hashed obtained
+
+    E_GPA_SDPSV_IP   = 6800 #: store_user_datapoint_value. Invalid pid
+    E_GPA_SDPSV_IDT  = 6801 #: store_user_datapoint_value. Invalid date
+    E_GPA_SDPSV_IC   = 6802 #: store_user_datapoint_value. Invalid content
+    E_GPA_SDPSV_CVNN = 6803 #: store_user_datapoint_value. content value not numeric
+    E_GPA_SDPSV_DNF  = 6804 #: store_user_datapoint_value. datapoint not found
+    E_GPA_SDPSV_IDDE = 6805 #: store_user_datapoint_value. insert datapoint data error
 
 # gestaccount widget api
 
@@ -574,4 +597,6 @@ class Errors(Enum):
     E_GCD_DC_IC     = 16600 #delete_circle invalid cid parameter
 
     E_GCD_DN_IN     = 16700 #delete_snapshot invalid nid parameter
+
+    E_GCD_DSDP_IP   = 16800 #dissociate_datapoint invalid pid parameter
 

@@ -92,7 +92,7 @@ def delete_agent(aid):
     cassapiquote.delete_agent_quotes(aid=aid)
     return True
 
-def delete_datasource(did):
+def delete_datasource(did, delete_datapoints=True):
     ''' Delete all datasource config and data, related widgets, and datapoints too '''
     if not args.is_valid_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_GCD_DDS_ID)
@@ -107,11 +107,32 @@ def delete_datasource(did):
     cassapidatasource.delete_datasource_text_summaries(did=did)
     cassapiquote.delete_datasource_quotes(did=did)
     cassapiquote.delete_datasource_ts_quotes(did=did)
-    for pid in pids:
-        delete_datapoint(pid=pid)
+    if delete_datapoints:
+        for pid in pids:
+            delete_datapoint(pid=pid)
+    else:
+        for pid in pids:
+            dissociate_datapoint(pid=pid)
     if widget:
         delete_widget(wid=widget.wid)
     graphuri.dissociate_vertex(ido=did)
+    return True
+
+def dissociate_datapoint(pid):
+    ''' Dissociate a datapoint from its current datasource.
+        The data already identified is not deleted, we only delete
+        the datasource association and the algorithms calculated for the identification
+        in the datasource.  '''
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=Errors.E_GCD_DSDP_IP)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    cassapidatapoint.dissociate_datapoint_from_datasource(pid)
+    cassapidatapoint.set_datapoint_dtree(pid=pid, dtree=None)
+    cassapidatapoint.set_datapoint_dtree_inv(pid=pid, dtree=None)
+    cassapidatapoint.delete_datapoint_dtree_positives(pid=pid)
+    cassapidatapoint.delete_datapoint_dtree_negatives(pid=pid)
+    if datapoint and datapoint.did:
+        cassapidatasource.delete_datasource_novelty_detector_for_datapoint(did=datapoint.did,pid=pid)
     return True
 
 def delete_datapoint(pid):
@@ -127,14 +148,13 @@ def delete_datapoint(pid):
             if rel_w_conf and rel_w_conf.type==widgettypes.MULTIDP:
                 cassapiwidget.delete_datapoint_from_multidp(wid=related_widget['wid'],pid=pid)
         delete_widget(wid=widget.wid)
-    if datapoint:
-        did=datapoint.did
-        cassapidatasource.delete_datasource_novelty_detector_for_datapoint(did=did,pid=pid)
+    if datapoint and datapoint.did:
+        cassapidatasource.delete_datasource_novelty_detector_for_datapoint(did=datapoint.did,pid=pid)
         fromdate=timeuuid.LOWEST_TIME_UUID
         todate=timeuuid.uuid1()
-        dsmap_dates=cassapidatasource.get_datasource_map_dates(did=did, fromdate=fromdate, todate=todate)
+        dsmap_dates=cassapidatasource.get_datasource_map_dates(did=datapoint.did, fromdate=fromdate, todate=todate)
         for date in dsmap_dates:
-            cassapidatasource.delete_datapoint_from_datasource_map(did=did, date=date, pid=pid)
+            cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid)
     cassapidatapoint.delete_datapoint(pid=pid)
     cassapidatapoint.delete_datapoint_stats(pid=pid)
     cassapidatapoint.delete_datapoint_dtree_positives(pid=pid)

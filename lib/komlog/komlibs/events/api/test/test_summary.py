@@ -7,7 +7,6 @@ from komlog.komcass.api import datapoint as cassapidatapoint
 from komlog.komlibs.auth.tickets import provision as ticketapi
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
-from komlog.komlibs.general import colors as libcolors
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
@@ -196,8 +195,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=widgetapi.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid']) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['pid'], datapoint['pid'])
@@ -224,8 +222,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=widgetapi.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid']) 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['pid'], datapoint['pid'])
@@ -246,7 +243,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         self.assertEqual(graph_summary['type'],widget_types.DATAPOINT)
         self.assertEqual(len(graph_summary['datapoints']),1)
         self.assertEqual(len(graph_summary['datapoints'][0]['data']),50)
-        self.assertEqual(graph_summary['datapoints'][0]['color'],color)
+        self.assertEqual(graph_summary['datapoints'][0]['color'],datapoint['color'])
 
     def test__generate_graph_summary_data_UENNSS_multi_datapoint_empty_no_data_found(self):
         ''' _generate_graph_summary_data_UENNSS should return None if no data is found '''
@@ -265,10 +262,8 @@ class EventsApiSummaryTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
-        color=libcolors.get_random_color()
-        datapoint_1=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname_1, color=color)
-        color=libcolors.get_random_color()
-        datapoint_2=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname_2, color=color)
+        datapoint_1=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname_1)
+        datapoint_2=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname_2)
         widget=widgetapi.new_widget_multidp(uid=user['uid'],widgetname='widget_multidp') 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
@@ -297,10 +292,8 @@ class EventsApiSummaryTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
-        color_1=libcolors.get_random_color()
-        datapoint_1=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname_1, color=color_1)
-        color_2=libcolors.get_random_color()
-        datapoint_2=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname_2, color=color_2)
+        datapoint_1=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname_1)
+        datapoint_2=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname_2)
         widget=widgetapi.new_widget_multidp(uid=user['uid'],widgetname='widget_multidp') 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
@@ -324,8 +317,8 @@ class EventsApiSummaryTest(unittest.TestCase):
         self.assertTrue(len(graph_summary['datapoints'][0]['data']) in (0,50))
         self.assertTrue(len(graph_summary['datapoints'][1]['data']) in (0,50))
         self.assertNotEqual(graph_summary['datapoints'][0]['data'],graph_summary['datapoints'][1]['data'])
-        self.assertTrue(graph_summary['datapoints'][0]['color'] in (color_1,color_2))
-        self.assertTrue(graph_summary['datapoints'][1]['color'] in (color_1,color_2))
+        self.assertTrue(graph_summary['datapoints'][0]['color'] in (datapoint_1['color'],datapoint_2['color']))
+        self.assertTrue(graph_summary['datapoints'][1]['color'] in (datapoint_1['color'],datapoint_2['color']))
         self.assertNotEqual(graph_summary['datapoints'][0]['color'],graph_summary['datapoints'][1]['color'])
 
     def test__generate_graph_summary_data_UENNSS_multi_datapoint_success(self):
@@ -345,10 +338,8 @@ class EventsApiSummaryTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
-        color_1=libcolors.get_random_color()
-        datapoint_1=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname_1, color=color_1)
-        color_2=libcolors.get_random_color()
-        datapoint_2=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname_2, color=color_2)
+        datapoint_1=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname_1)
+        datapoint_2=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname_2)
         widget=widgetapi.new_widget_multidp(uid=user['uid'],widgetname='widget_multidp') 
         self.assertIsInstance(widget, dict)
         self.assertEqual(widget['uid'], user['uid'])
@@ -375,7 +366,7 @@ class EventsApiSummaryTest(unittest.TestCase):
         self.assertEqual(len(graph_summary['datapoints']),2)
         self.assertEqual(len(graph_summary['datapoints'][0]['data']),50)
         self.assertEqual(len(graph_summary['datapoints'][1]['data']),50)
-        self.assertTrue(graph_summary['datapoints'][0]['color'] in (color_1,color_2))
-        self.assertTrue(graph_summary['datapoints'][1]['color'] in (color_1,color_2))
+        self.assertTrue(graph_summary['datapoints'][0]['color'] in (datapoint_1['color'],datapoint_2['color']))
+        self.assertTrue(graph_summary['datapoints'][1]['color'] in (datapoint_1['color'],datapoint_2['color']))
         self.assertNotEqual(graph_summary['datapoints'][0]['color'],graph_summary['datapoints'][1]['color'])
 

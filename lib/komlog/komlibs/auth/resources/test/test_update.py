@@ -193,7 +193,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                 cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
                 for i in range(0,10):
                     pid=uuid.uuid4()
-                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, datapointname=pid.hex)
                     cassapidatapoint.insert_datapoint(datapoint)
                     cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         for i in range(0,100):
@@ -256,7 +256,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     for i in range(0,10):
                         pid=uuid.uuid4()
                         selected_pids.append(pid)
-                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, datapointname=pid.hex)
                         cassapidatapoint.insert_datapoint(datapoint)
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
                         wid=uuid.uuid4()
@@ -272,7 +272,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
                     for i in range(0,10):
                         pid=uuid.uuid4()
-                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, datapointname=pid.hex)
                         cassapidatapoint.insert_datapoint(datapoint)
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         for i in range(0,100):
@@ -340,7 +340,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                 cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
                 for i in range(0,10):
                     pid=uuid.uuid4()
-                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, datapointname=pid.hex)
                     cassapidatapoint.insert_datapoint(datapoint)
                     cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         for i in range(0,10):
@@ -397,7 +397,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                 cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
                 for i in range(0,10):
                     pid=uuid.uuid4()
-                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, datapointname=pid.hex)
                     cassapidatapoint.insert_datapoint(datapoint)
                     cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         for i in range(0,10):
@@ -469,7 +469,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                         if did == selected_did:
                             selected_pids.append(pid)
                             selected_wids.append(wid)
-                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, datapointname=pid.hex)
                         cassapidatapoint.insert_datapoint(datapoint)
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
                         widget=ormwidget.WidgetDp(wid=wid, uid=uid, widgetname=pid.hex, creation_date=uuid.uuid1(), pid=pid)
@@ -483,7 +483,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
                     for i in range(0,10):
                         pid=uuid.uuid4()
-                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, datapointname=pid.hex)
                         cassapidatapoint.insert_datapoint(datapoint)
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         for i in range(0,100):
@@ -559,7 +559,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                         if i == 0 and did == selected_did:
                             selected_pid=pid
                             selected_wid=wid
-                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, datapointname=pid.hex)
                         cassapidatapoint.insert_datapoint(datapoint)
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
                         widget=ormwidget.WidgetDp(wid=wid, uid=uid, widgetname=pid.hex, creation_date=uuid.uuid1(), pid=pid)
@@ -573,7 +573,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                     cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
                     for i in range(0,10):
                         pid=uuid.uuid4()
-                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, datapointname=pid.hex)
                         cassapidatapoint.insert_datapoint(datapoint)
                         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         for i in range(0,100):
@@ -632,7 +632,7 @@ class AuthResourcesUpdateTest(unittest.TestCase):
                 cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
                 for i in range(0,10):
                     pid=uuid.uuid4()
-                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, datapointname=pid.hex)
+                    datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, datapointname=pid.hex)
                     cassapidatapoint.insert_datapoint(datapoint)
                     cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         for i in range(0,10):

@@ -9,7 +9,6 @@ from komlog.komlibs.gestaccount.widget import visualization_types as vistypes
 from komlog.komlibs.gestaccount import exceptions
 from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komcass.model.orm import widget as ormwidget
-from komlog.komlibs.general import colors as libcolors
 from komlog.komlibs.general.crypto import crypto
 
 class GestaccountWidgetApiTest(unittest.TestCase):
@@ -33,8 +32,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_datasource(uid=user['uid'], did=datasource['did']) 
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.DATASOURCE)
@@ -54,8 +52,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid']) 
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.DATAPOINT)
@@ -113,8 +110,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget_dp=api.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid']) 
         widget_ds=api.new_widget_datasource(uid=user['uid'], did=datasource['did']) 
         data=api.get_widgets_config(uid=user['uid'])
@@ -196,8 +192,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         uid=user['uid']
         pid=datapoint['pid']
         widget=api.new_widget_datapoint(uid=uid, pid=pid)
@@ -242,8 +237,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_new_widget_linegraph_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_linegraph(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.LINEGRAPH)
@@ -267,8 +261,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_add_datapoint_to_widget_linegraph_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_linegraph(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.LINEGRAPH)
@@ -301,8 +294,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_delete_datapoint_from_widget_linegraph_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_linegraph(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.LINEGRAPH)
@@ -360,8 +352,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_new_widget_table_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_table(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.TABLE)
@@ -385,8 +376,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_add_datapoint_to_widget_table_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_table(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.TABLE)
@@ -419,8 +409,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_delete_datapoint_from_widget_table_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_table(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.TABLE)
@@ -478,8 +467,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_new_widget_histogram_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_histogram(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.HISTOGRAM)
@@ -529,8 +517,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_new_widget_multidp_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.MULTIDP)
@@ -574,8 +561,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_add_datapoint_to_widget_histogram_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_histogram(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.HISTOGRAM)
@@ -608,8 +594,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_add_datapoint_to_widget_multidp_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.MULTIDP)
@@ -641,8 +626,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_datasource(uid=user['uid'], did=datasource['did']) 
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.DATASOURCE)
@@ -684,8 +668,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_delete_datapoint_from_widget_histogram_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_histogram(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.HISTOGRAM)
@@ -723,8 +706,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         datapointname='test_delete_datapoint_from_widget_multidp_success_datapoint'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.MULTIDP)
@@ -764,8 +746,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_datasource(uid=user['uid'], did=datasource['did']) 
         data=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(data['type'],types.DATASOURCE)
@@ -897,8 +878,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widget=api.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid']) 
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
         self.assertEqual(widget['widgetname'], '.'.join((datasourcename,datapointname)))
@@ -958,8 +938,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_histogram_success'
         widget=api.new_widget_histogram(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -998,8 +977,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_histogram_success_only_widgetname'
         widget=api.new_widget_histogram(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1037,8 +1015,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_histogram_success_only_colors'
         widget=api.new_widget_histogram(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1076,8 +1053,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_histogram_failure_non_existent_pid'
         widget=api.new_widget_histogram(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1108,8 +1084,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_histogram_failure_invalid_color'
         widget=api.new_widget_histogram(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1173,8 +1148,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_linegraph_success'
         widget=api.new_widget_linegraph(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1213,8 +1187,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_linegraph_success_only_widgetname'
         widget=api.new_widget_linegraph(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1252,8 +1225,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_linegraph_success_only_colors'
         widget=api.new_widget_linegraph(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1291,8 +1263,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_linegraph_failure_non_existent_pid'
         widget=api.new_widget_linegraph(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1323,8 +1294,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_linegraph_failure_invalid_color'
         widget=api.new_widget_linegraph(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1388,8 +1358,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_table_success'
         widget=api.new_widget_table(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1428,8 +1397,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_table_success_only_widgetname'
         widget=api.new_widget_table(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1467,8 +1435,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_table_success_only_colors'
         widget=api.new_widget_table(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1506,8 +1473,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_table_failure_non_existent_pid'
         widget=api.new_widget_table(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1538,8 +1504,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_table_failure_invalid_color'
         widget=api.new_widget_table(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1608,8 +1573,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_multidp_success'
         widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1649,8 +1613,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_multidp_failure_vis_not_supp'
         widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1683,8 +1646,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_multidp_succes_only_widgetnames'
         widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1721,8 +1683,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         widgetname='test_update_widget_multidp_success_only_active_visualization'
         widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
@@ -1768,8 +1729,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         user=userapi.create_user(username=username, password=password, email=email)
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        color=libcolors.get_random_color()
-        datapoint=datapointapi.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         dswidget=api.new_widget_datasource(uid=user['uid'], did=datasource['did']) 
         wdsdata=api.get_widget_config(wid=dswidget['wid'])
         self.assertEqual(wdsdata['type'],types.DATASOURCE)

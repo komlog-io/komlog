@@ -855,7 +855,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             if widget['type']==types.DATAPOINT:
                 datapointconfig=datapointapi.get_datapoint_config_request(passport=psp,pid=widget['pid'])
                 self.assertEqual(datapointconfig.status,status.WEB_STATUS_OK)
-                if datapointconfig.data['datapointname']==datapointname:
+                if datapointconfig.data['datapointname']=='.'.join((datasourcename,datapointname)):
                     wid=widget['wid']
                     pid=widget['pid']
                     color=datapointconfig.data['color']
@@ -888,7 +888,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
-        self.assertEqual(response7.data['datapoint'],{'pid':pid,'datapointname':datapointname, 'color':color})
+        self.assertEqual(response7.data['datapoint'],{'pid':pid,'datapointname':'.'.join((datasourcename,datapointname)), 'color':color})
         psp_to_share = self.passport_share
         response7 = snapshotapi.get_snapshot_config_request(passport=psp_to_share, nid=response6.data['nid'],tid=response6.data['tid'])
         self.assertEqual(response7.status, status.WEB_STATUS_OK)
@@ -897,7 +897,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
-        self.assertEqual(response7.data['datapoint'],{'pid':pid,'datapointname':datapointname, 'color':color})
+        self.assertEqual(response7.data['datapoint'],{'pid':pid,'datapointname':'.'.join((datasourcename,datapointname)), 'color':color})
         response7 = snapshotapi.get_snapshot_config_request(passport=psp_to_share, nid=response6.data['nid'])
         self.assertEqual(response7.status, status.WEB_STATUS_ACCESS_DENIED)
 
@@ -1569,7 +1569,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             if widget['type']==types.DATAPOINT:
                 datapointconfig=datapointapi.get_datapoint_config_request(passport=psp,pid=widget['pid'])
                 self.assertEqual(datapointconfig.status,status.WEB_STATUS_OK)
-                if datapointconfig.data['datapointname']==datapointname:
+                if datapointconfig.data['datapointname']=='.'.join((datasourcename,datapointname)):
                     wid=widget['wid']
                     pid=widget['pid']
                     color=datapointconfig.data['color']
@@ -1601,7 +1601,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
-        self.assertEqual(response7.data['datapoint'],{'pid':pid, 'datapointname':datapointname,'color':color})
+        self.assertEqual(response7.data['datapoint'],{'pid':pid, 'datapointname':'.'.join((datasourcename,datapointname)),'color':color})
         response8 = snapshotapi.delete_snapshot_request(passport=psp, nid=response6.data['nid'])
         self.assertEqual(response8.status, status.WEB_STATUS_OK)
         response9 = snapshotapi.get_snapshot_config_request(passport=psp, nid=response6.data['nid'])
@@ -2468,7 +2468,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             if widget['type']==types.DATAPOINT:
                 datapointconfig=datapointapi.get_datapoint_config_request(passport=psp,pid=widget['pid'])
                 self.assertEqual(datapointconfig.status,status.WEB_STATUS_OK)
-                if datapointconfig.data['datapointname']==datapointname:
+                if datapointconfig.data['datapointname']=='.'.join((datasourcename,datapointname)):
                     wid=widget['wid']
                     pid=widget['pid']
                     color=datapointconfig.data['color']
@@ -2502,7 +2502,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response7.data['widgetname'], '.'.join((datasourcename,datapointname)))
         self.assertEqual(response7.data['its'],1)
         self.assertEqual(response7.data['ets'],2)
-        self.assertEqual(response7.data['datapoint'],{'pid':pid,'datapointname':datapointname,'color':color})
+        self.assertEqual(response7.data['datapoint'],{'pid':pid,'datapointname':'.'.join((datasourcename,datapointname)),'color':color})
         response8=datapointapi.get_datapoint_config_request(passport=psp_to_share, pid=pid)
         self.assertEqual(response8.status, status.WEB_STATUS_ACCESS_DENIED)
         response9=datapointapi.get_datapoint_data_request(passport=psp_to_share, pid=pid, start_date='1',end_date='2',tid=response6.data['tid'])

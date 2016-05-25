@@ -6,6 +6,7 @@ This file defines the cassandra statements for the creation of datapoint related
 
 OBJECTS=['MST_DATAPOINT',
          'MST_DATAPOINT_INDEX_01',
+         'MST_DATAPOINT_INDEX_02',
          'MST_DATAPOINT_STATS',
          'DAT_DATAPOINT',
          'DAT_DATAPOINT_DTREE_POSITIVES',
@@ -16,6 +17,7 @@ MST_DATAPOINT='''
         CREATE TABLE mst_datapoint (
             pid uuid,
             did uuid,
+            uid uuid,
             datapointname text,
             color text,
             creation_date timeuuid,
@@ -25,6 +27,10 @@ MST_DATAPOINT='''
 
 MST_DATAPOINT_INDEX_01='''
         CREATE INDEX ON mst_datapoint (did);
+    '''
+
+MST_DATAPOINT_INDEX_02='''
+        CREATE INDEX ON mst_datapoint (uid);
     '''
 
 MST_DATAPOINT_STATS='''

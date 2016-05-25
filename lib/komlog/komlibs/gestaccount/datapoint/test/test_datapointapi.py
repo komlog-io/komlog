@@ -43,22 +43,170 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasourcename='test_gestaccount.datapoint.api_datasource.'+uuid.uuid1().hex
         self.datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
 
-    def test_create_datapoint_non_existent_datasource(self):
-        ''' create_datapoint should fail if datasource is not found in system '''
+    def test_create_user_datapoint_failure_invalid_uid(self):
+        ''' create_user_datapoint should fail if uid is invalid '''
+        uids=[None, '234234',23423,233.2324,{'a':'dict'},['a','list'],{'set'},('a','tuple'),timeuuid.uuid1(), uuid.uuid4().hex]
+        datapoint_uri='test_create_user_datapoint_failure_invalid_uid'
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_CRUD_IU)
+
+    def test_create_user_datapoint_failure_invalid_datapoint_uri(self):
+        ''' create_user_datapoint should fail if datapoint uri is invalid '''
+        uid=uuid.uuid4()
+        datapoint_uris=[None,213123123,'Not Valid chars ÑÑÑÑ',{},['names','in array'],('a','tuple'), {'set'},{'a':'dict'},uuid.uuid4(), uuid.uuid1(), 23.23]
+        for datapoint_uri in datapoint_uris:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_CRUD_IDU)
+
+    def test_create_user_datapoint_failure_user_not_found(self):
+        ''' create_user_datapoint should fail if uid is not found '''
+        uid=uuid.uuid4()
+        datapoint_uri='test_create_user_datapoint_failure_user_not_found'
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_CRUD_UNF)
+
+    def test_create_user_datapoint_success(self):
+        ''' create_user_datapoint should succeed '''
+        username='test_create_user_datapoint_success'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+
+    def test_create_user_datapoint_failure_uri_already_exists(self):
+        ''' create_user_datapoint should fail if selected uri already exists '''
+        username='test_create_user_datapoint_failure_uri_already_exists'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        with self.assertRaises(exceptions.DatapointCreationException) as cm:
+            api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_CRUD_UAE)
+
+    def test_create_datasource_datapoint_non_existent_datasource(self):
+        ''' create_datasource_datapoint should fail if datasource is not found in system '''
         did=uuid.uuid4()
         datapointname='datapoint_name'
-        color='#FFDDAA'
-        self.assertRaises(exceptions.DatasourceNotFoundException,api.create_datapoint,did=did,datapointname=datapointname, color=color)
+        self.assertRaises(exceptions.DatasourceNotFoundException,api.create_datasource_datapoint,did=did,datapoint_uri=datapointname)
 
-    def test_create_datapoint_success(self):
-        ''' create_datapoint should succeed if datasource exists '''
+    def test_create_datasource_datapoint_success(self):
+        ''' create_datasource_datapoint should succeed if datasource exists '''
         did=self.datasource['did']
-        datapointname='test_create_datapoint_success'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapointname='test_create_datasource_datapoint_success'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         self.assertIsInstance(datapoint, dict)
         self.assertEqual(datapoint['did'],did)
-        self.assertEqual(datapoint['datapointname'],datapointname)
+        self.assertEqual(datapoint['datapointname'],'.'.join((self.datasource['datasourcename'],datapointname)))
+
+    def test_create_datasource_datapoint_success_uri_already_existed_by_user_datapoint(self):
+        ''' create_datasource_datapoint should succeed if uri already existed and was a datapoint
+        without associated datasource. The datapoint returned must be the already existing one
+        which is now associated to the datasource too.
+        '''
+        username='test_create_datasource_datapoint_success_uri_already_existed_by_user_datapoint'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        datapoint_uri='some_level.datasource_uri.some_level.datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        self.assertFalse('did' in datapoint)
+        agentname='test_create_datasource_datapoint_agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        aid=agent['aid']
+        datasourcename='some_level.datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        did=datasource['did']
+        ds_datapoint_uri='some_level.datapoint_uri'
+        ds_datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=ds_datapoint_uri)
+        self.assertEqual(ds_datapoint['pid'],datapoint['pid'])
+        self.assertEqual(ds_datapoint['uid'],datapoint['uid'])
+        self.assertEqual(ds_datapoint['color'],datapoint['color'])
+        self.assertEqual(ds_datapoint['datapointname'],datapoint['datapointname'])
+        self.assertTrue(ds_datapoint['did'],did)
+
+    def test_create_datasource_datapoint_failure_uri_already_existed_by_something_other_than_datapoint(self):
+        ''' create_datasource_datapoint should fail if uri already existed and was something other
+        than a datapoint. In this case a datasource
+        '''
+        username='test_create_datasource_datapoint_failure_uri_already_existed_by_something_other_than_datapoint'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        agentname='test_create_datasource_datapoint_agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        aid=agent['aid']
+        datasourcename1='some_level.datasource1_uri'
+        datasource1=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename1)
+        did1=datasource1['did']
+        datasourcename2='some_level.datasource1_uri.some_level.datasource2_uri'
+        datasource2=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename2)
+        did2=datasource2['did']
+        ds_datapoint_uri='some_level.datasource2_uri'
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.create_datasource_datapoint(did=did1,datapoint_uri=ds_datapoint_uri)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_CRD_ADU)
+
+    def test_create_datasource_datapoint_failure_uri_already_existed_by_datasource_datapoint(self):
+        ''' create_datasource_datapoint should fail if uri already existed and was a datapoint
+        associated to a datasource.
+        '''
+        username='test_create_datasource_datapoint_failure_uri_already_existed_by_datasource_datapoint'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        datapoint_uri='some_level.datasource_uri.some_level.datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        self.assertFalse('did' in datapoint)
+        agentname='test_create_datasource_datapoint_agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        aid=agent['aid']
+        datasourcename='some_level.datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        did=datasource['did']
+        ds_datapoint_uri='some_level.datapoint_uri'
+        ds_datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=ds_datapoint_uri)
+        self.assertEqual(ds_datapoint['pid'],datapoint['pid'])
+        self.assertEqual(ds_datapoint['uid'],datapoint['uid'])
+        self.assertEqual(ds_datapoint['color'],datapoint['color'])
+        self.assertEqual(ds_datapoint['datapointname'],datapoint['datapointname'])
+        self.assertTrue(ds_datapoint['did'],did)
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.create_datasource_datapoint(did=did,datapoint_uri=ds_datapoint_uri)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_CRD_AAD)
 
     def test_get_datapoint_data_non_existent_datapoint(self):
         ''' get_datapoint_data should fail if pid is not in system '''
@@ -69,8 +217,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' get_datapoint_data should fail if pid has no data in system '''
         did=self.datasource['did']
         datapointname='test_get_datapoint_data_no_data'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         self.assertRaises(exceptions.DatapointDataNotFoundException, api.get_datapoint_data, pid=datapoint['pid'])
 
     def test_get_datapoint_config_non_existent_datapoint(self):
@@ -82,12 +229,11 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' get_datapoint_config should succeed if pid exists in system '''
         did=self.datasource['did']
         datapointname='test_get_datapoint_config_success'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         data=api.get_datapoint_config(pid=datapoint['pid'])
         self.assertIsInstance(data, dict)
         self.assertEqual(data['did'],did)
-        self.assertEqual(data['datapointname'],datapointname)
+        self.assertEqual(data['datapointname'],'.'.join((self.datasource['datasourcename'],datapointname)))
     
     def test_update_datapoint_config_non_existent_datapoint(self):
         ''' update_datapoint_config should fail if datapoint is not in system '''
@@ -102,13 +248,6 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         for datapointname in datapointnames:
             self.assertRaises(exceptions.BadParametersException, api.update_datapoint_config, pid=pid, datapointname=datapointname)
 
-    def test_update_datapoint_config_with_invalid_color(self):
-        ''' update_datapoint_config should fail if data has invalid color code'''
-        pid=uuid.uuid4()
-        datapointcolors=[None,213123123,'Not Valid chars ÑÑÑÑ',{},['colors','in array']]
-        for color in datapointcolors:
-            self.assertRaises(exceptions.BadParametersException, api.update_datapoint_config, pid=pid, color=color)
-
     def test_update_datapoint_config_failure_no_parameters(self):
         ''' update_datapoint_config should fail if datapoint nor color is passed'''
         pid=uuid.uuid4()
@@ -118,8 +257,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' update_datapoint_config should succeed if pid exists in system and params are OK '''
         did=self.datasource['did']
         datapointname='test_update_datapoint_config_success'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname,color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         datapointname='test_update_datapoint_config_success_after_update'
         color='#FFAA88'
         self.assertTrue(api.update_datapoint_config(pid=datapoint['pid'], datapointname=datapointname, color=color))
@@ -136,8 +274,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' mark_negative_variable should fail if datasource map has no variables '''
         did=self.datasource['did']
         datapointname='test_mark_negative_variable_failure_no_variables_in_datasource_map'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         position=1
         length=1
@@ -147,8 +284,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' mark_negative_variable should fail if variable length does not match with the value in db'''
         did=self.datasource['did']
         datapointname='test_mark_negative_variable_failure_invalid_variable_length'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
@@ -162,8 +298,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' mark_negative_variable should fail if variable position does not match with the value in db'''
         did=self.datasource['did']
         datapointname='test_mark_negative_variable_failure_invalid_variable_position'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
@@ -177,8 +312,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' mark_negative_variable should succeed '''
         did=self.datasource['did']
         datapointname='test_mark_negative_variable_success'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
@@ -201,8 +335,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' mark_positive_variable should fail if datasource map has no variables '''
         did=self.datasource['did']
         datapointname='test_mark_positive_variable_failure_no_variables_in_datasource_map'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         position=1
         length=1
@@ -212,8 +345,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' mark_positive_variable should fail if variable length does not match with the value in db'''
         did=self.datasource['did']
         datapointname='test_mark_positive_variable_failure_invalid_variable_length'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_positive_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
@@ -227,8 +359,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' mark_positive_variable should fail if variable position does not match with the value in db'''
         did=self.datasource['did']
         datapointname='test_mark_positive_variable_failure_invalid_variable_position'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
@@ -242,8 +373,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' mark_positive_variable should succeed in this case, no other datapoint matched '''
         did=self.datasource['did']
         datapointname='test_mark_positive_variable_success_no_other_datapoint_matched_dp'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
@@ -259,8 +389,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
         did=datasource['did']
         datapointname='test_mark_positive_variable_success_one_other_datapoint_matched'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_positive_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
@@ -275,8 +404,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(dsdatapoints[0]['pid'],datapoint['pid'])
         self.assertEqual(dsdatapoints[0]['position'],position)
         datapointname='test_mark_positive_variable_success_one_other_datapoint_matched_2'
-        color='#FFDDAA'
-        datapoint2=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint2=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         dtp_to_update=api.mark_positive_variable(pid=datapoint2['pid'], date=date, position=position, length=length)
         self.assertEqual(sorted(dtp_to_update),sorted([datapoint2['pid'],datapoint['pid']]))
 
@@ -294,8 +422,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' mark_missing_datapoint should fail if datasource map has no variables '''
         did=self.datasource['did']
         datapointname='test_mark_missing_datapoint_failure_no_variables_in_datasource_map'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         position=1
         length=1
@@ -322,8 +449,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
         did=datasource['did']
         datapointname='test_generate_decision_tree_failure_no_training_set_found_datapoint'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         pid=datapoint['pid']
         self.assertRaises(exceptions.DatapointDTreeTrainingSetEmptyException, api.generate_decision_tree, pid=pid)
 
@@ -333,8 +459,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
         did=datasource['did']
         datapointname='test_generate_decision_tree_success_datapoint'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         pid=datapoint['pid']
         date=timeuuid.uuid1()
         content='generate_decision_tree content with ññ€#@hrññ and 23 32 554 and \nnew lines\ttabs\tetc..'
@@ -376,8 +501,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
         did=datasource['did']
         datapointname='test_generate_inverse_decision_tree_failure_no_training_set_found_datapoint'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         pid=datapoint['pid']
         with self.assertRaises(exceptions.DatapointDTreeTrainingSetEmptyException) as cm:
             api.generate_inverse_decision_tree(pid=pid)
@@ -389,8 +513,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
         did=datasource['did']
         datapointname='test_generate_inverse_decision_tree_success_datapoint'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         pid=datapoint['pid']
         date=timeuuid.uuid1()
         content='generate_decision_tree content with ññ€#@hrññ and 23 32 554 and \nnew lines\ttabs\tetc..'
@@ -468,8 +591,62 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
         self.assertTrue(isinstance(datapoint,dict))
         self.assertEqual(datapoint['did'],did)
-        self.assertEqual(datapoint['datapointname'],datapointname)
+        self.assertEqual(datapoint['datapointname'],'.'.join((datasourcename,datapointname)))
         self.assertTrue(isinstance(datapoint['pid'],uuid.UUID))
+
+    def test_store_user_datapoint_value_failure_invalid_pid(self):
+        ''' store_user_datapoint_values should fail if pid is invalid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        date=timeuuid.uuid1()
+        content='333'
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.store_user_datapoint_value(pid=pid, date=date, content=content)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_SDPSV_IP)
+
+    def test_store_user_datapoint_value_failure_invalid_date(self):
+        ''' store_user_datapoint_values should fail if date is invalid '''
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        pid=uuid.uuid4()
+        content='333'
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.store_user_datapoint_value(pid=pid, date=date, content=content)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_SDPSV_IDT)
+
+    def test_store_user_datapoint_value_failure_invalid_content(self):
+        ''' store_user_datapoint_values should fail if content is invalid '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        contents=[234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4()]
+        for content in contents:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.store_user_datapoint_value(pid=pid, date=date, content=content)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_SDPSV_IC)
+        contents=['asdfasdf','a2','asdf 232.234','-l22','5m']
+        for content in contents:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.store_user_datapoint_value(pid=pid, date=date, content=content)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_SDPSV_CVNN)
+
+    def test_store_user_datapoint_value_failure_datapoint_not_found(self):
+        ''' store_user_datapoint_values should fail if datapoint is not found '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        content='44.3'
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            api.store_user_datapoint_value(pid=pid, date=date, content=content)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_SDPSV_DNF)
+
+    def test_store_user_datapoint_value_success(self):
+        ''' store_user_datapoint_values should fail if datapoint is not found '''
+        datapoint_uri='test_store_user_datapoint_value_success'
+        datapoint=api.create_user_datapoint(uid=self.user['uid'], datapoint_uri=datapoint_uri)
+        pid=datapoint['pid']
+        contents=['22','22.2','-33.3','1e6']
+        for content in contents:
+            date=timeuuid.uuid1()
+            self.assertTrue(api.store_user_datapoint_value(pid=pid, date=date, content=content))
 
     def test_store_datapoint_values_failure_datapoint_not_found(self):
         ''' store_datapoint_values should fail if datapoint is not found '''
@@ -481,8 +658,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' store_datapoint_values should fail if datapoint dtree is not found '''
         did=self.datasource['did']
         datapointname='test_store_datapoint_values_failure_dtree_not_found_datapoint'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         self.assertRaises(exceptions.DatapointDTreeNotFoundException, api.store_datapoint_values, pid=datapoint['pid'], date=date)
 
@@ -530,8 +706,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         did=datasource['did']
         date=timeuuid.uuid1()
         datapointname='test_store_datasource_values_failure_dsdata_not_found'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did, datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did, datapoint_uri=datapointname)
         self.assertRaises(exceptions.DatasourceDataNotFoundException, api.store_datasource_values, did=did, date=date)
 
     def test_store_datasource_values_success_one_datapoint(self):
@@ -582,12 +757,11 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' should_datapoint_match_any_sample_variable should fail if datapoint has no data '''
         did=self.datasource['did']
         datapointname='test_should_datapoint_match_any_sample_variable_failure_no_datapoint_data_datapoint'
-        color='#FFDDAA'
-        datapoint=api.create_datapoint(did=did,datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         self.assertIsInstance(datapoint, dict)
         self.assertEqual(datapoint['did'],did)
-        self.assertEqual(datapoint['datapointname'],datapointname)
+        self.assertEqual(datapoint['datapointname'],'.'.join((self.datasource['datasourcename'],datapointname)))
         with self.assertRaises(exceptions.DatapointDTreeTrainingSetEmptyException) as cm:
             api.should_datapoint_match_any_sample_variable(pid=datapoint['pid'], date=date)
         self.assertEqual(cm.exception.error, Errors.E_GPA_GDT_ETS)
@@ -774,8 +948,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'],datasourcename=datasourcename)
         self.assertTrue(isinstance(datasource,dict))
         datapointname='test_generate_datasource_novelty_detector_for_datapoint_datapoint'
-        color='#FFDDEE'
-        datapoint=api.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         with self.assertRaises(exceptions.DatasourceDataNotFoundException) as cm:
             api.generate_datasource_novelty_detector_for_datapoint(pid=datapoint['pid'])
         self.assertEqual(cm.exception.error, Errors.E_GPA_GDNDFD_DSDNF)
@@ -786,8 +959,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'],datasourcename=datasourcename)
         self.assertTrue(isinstance(datasource,dict))
         datapointname='test_generate_datasource_novelty_detector_for_datapoint_failure_no_text_summaries_found_datapoint'
-        color='#FFDDEE'
-        datapoint=api.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'], date=date, content=content))
@@ -807,8 +979,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'],datasourcename=datasourcename)
         self.assertTrue(isinstance(datasource,dict))
         datapointname='test_generate_datasource_novelty_detector_for_datapoint_success_datapoint'
-        color='#FFDDEE'
-        datapoint=api.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'], date=date, content=content))
@@ -852,8 +1023,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'],datasourcename=datasourcename)
         self.assertTrue(isinstance(datasource,dict))
         datapointname='test_should_datapoint_appear_in_sample_failure_no_novelty_detector_found_datapoint'
-        color='#FFDDEE'
-        datapoint=api.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'], date=date, content=content))
@@ -873,8 +1043,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'],datasourcename=datasourcename)
         self.assertTrue(isinstance(datasource,dict))
         datapointname='test_should_datapoint_appear_in_sample_failure_no_text_summary_found_datapoint'
-        color='#FFDDEE'
-        datapoint=api.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'], date=date, content=content))
@@ -896,8 +1065,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'],datasourcename=datasourcename)
         self.assertTrue(isinstance(datasource,dict))
         datapointname='test_should_datapoint_appear_in_sample_success_result_false_datapoint'
-        color='#FFDDEE'
-        datapoint=api.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'], date=date, content=content))
@@ -921,8 +1089,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'],datasourcename=datasourcename)
         self.assertTrue(isinstance(datasource,dict))
         datapointname='test_should_datapoint_appear_in_sample_success_result_true_datapoint'
-        color='#FFDDEE'
-        datapoint=api.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'], date=date, content=content))
@@ -984,8 +1151,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'],datasourcename=datasourcename)
         self.assertTrue(isinstance(datasource,dict))
         datapointname='test_classify_missing_datapoints_in_sample_success_no_datapoint_left_to_classify_datapoint'
-        color='#FFDDEE'
-        datapoint=api.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'], date=date, content=content))
@@ -1007,8 +1173,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'],datasourcename=datasourcename)
         self.assertTrue(isinstance(datasource,dict))
         datapointname='test_classify_missing_datapoints_in_sample_success_only_pid_is_discarded_datapoint'
-        color='#FFDDEE'
-        datapoint=api.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'], date=date, content=content))
@@ -1036,8 +1201,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'],datasourcename=datasourcename)
         self.assertTrue(isinstance(datasource,dict))
         datapointname='test_classify_missing_datapoints_in_sample_success_only_pid_is_discarded_2_datapoint'
-        color='#FFDDEE'
-        datapoint=api.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and a: 23, b: 32, c: 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'], date=date, content=content))
@@ -1065,8 +1229,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'],datasourcename=datasourcename)
         self.assertTrue(isinstance(datasource,dict))
         datapointname='test_classify_missing_datapoints_in_sample_success_only_pid_is_doubt_datapoint'
-        color='#FFDDEE'
-        datapoint=api.create_datapoint(did=datasource['did'],datapointname=datapointname, color=color)
+        datapoint=api.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
         date=timeuuid.uuid1()
         content='mark_negative_variable content with ññññ and a: 23, b: 32, c: 554 and \nnew lines\ttabs\tetc.. 20 something '+crypto.get_random_string(size=10)
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'], date=date, content=content))

@@ -18,18 +18,28 @@ def get_datapoint(pid):
         return ormdatapoint.Datapoint(**row[0])
 
 @exceptions.ExceptionHandler
-def get_datapoints(did):
-    row=connection.session.execute(stmtdatapoint.S_A_MSTDATAPOINT_B_DID,(did,))
+def get_datapoints(did=None, uid=None):
     datapoints=[]
+    if did:
+        row = connection.session.execute(stmtdatapoint.S_A_MSTDATAPOINT_B_DID,(did,))
+    elif uid:
+        row = connection.session.execute(stmtdatapoint.S_A_MSTDATAPOINT_B_UID,(uid,))
+    else:
+        row = None
     if row:
         for d in row:
             datapoints.append(ormdatapoint.Datapoint(**d))
     return datapoints
 
 @exceptions.ExceptionHandler
-def get_datapoints_pids(did):
-    row=connection.session.execute(stmtdatapoint.S_PID_MSTDATAPOINT_B_DID,(did,))
+def get_datapoints_pids(did=None, uid=None):
     pids=[]
+    if did:
+        row = connection.session.execute(stmtdatapoint.S_PID_MSTDATAPOINT_B_DID,(did,))
+    elif uid:
+        row = connection.session.execute(stmtdatapoint.S_PID_MSTDATAPOINT_B_UID,(uid,))
+    else:
+        row = None
     if row:
         for r in row:
             pids.append(r['pid'])
@@ -38,6 +48,11 @@ def get_datapoints_pids(did):
 @exceptions.ExceptionHandler
 def get_number_of_datapoints_by_did(did):
     row=connection.session.execute(stmtdatapoint.S_COUNT_MSTDATAPOINT_B_DID,(did,))
+    return row[0]['count'] if row else 0
+
+@exceptions.ExceptionHandler
+def get_number_of_datapoints_by_uid(uid):
+    row=connection.session.execute(stmtdatapoint.S_COUNT_MSTDATAPOINT_B_UID,(uid,))
     return row[0]['count'] if row else 0
 
 @exceptions.ExceptionHandler
@@ -107,7 +122,7 @@ def new_datapoint(datapoint):
     if not isinstance(datapoint, ormdatapoint.Datapoint):
         return False
     else:
-        resp=connection.session.execute(stmtdatapoint.I_A_MSTDATAPOINT_INE,(datapoint.pid, datapoint.did, datapoint.datapointname, datapoint.color, datapoint.creation_date))
+        resp=connection.session.execute(stmtdatapoint.I_A_MSTDATAPOINT_INE,(datapoint.pid, datapoint.did, datapoint.uid, datapoint.datapointname, datapoint.color, datapoint.creation_date))
         return resp[0]['[applied]'] if resp else False
 
 @exceptions.ExceptionHandler
@@ -115,7 +130,7 @@ def insert_datapoint(datapoint):
     if not isinstance(datapoint, ormdatapoint.Datapoint):
         return False
     else:
-        connection.session.execute(stmtdatapoint.I_A_MSTDATAPOINT,(datapoint.pid, datapoint.did, datapoint.datapointname, datapoint.color, datapoint.creation_date))
+        connection.session.execute(stmtdatapoint.I_A_MSTDATAPOINT,(datapoint.pid, datapoint.did, datapoint.uid, datapoint.datapointname, datapoint.color, datapoint.creation_date))
         return True
 
 @exceptions.ExceptionHandler
@@ -199,5 +214,10 @@ def delete_datapoint_dtree_negatives(pid):
 @exceptions.ExceptionHandler
 def delete_datapoint_stats(pid):
     connection.session.execute(stmtdatapoint.D_A_MSTDATAPOINTSTATS_B_PID,(pid,))
+    return True
+
+@exceptions.ExceptionHandler
+def dissociate_datapoint_from_datasource(pid):
+    connection.session.execute(stmtdatapoint.U_DID_MSTDATAPOINT,(None,pid,))
     return True
 

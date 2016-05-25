@@ -5,7 +5,7 @@ author: jcazor@komlog.org
 '''
 
 import zlib
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from komlog.komlibs.textman.model import variables, patterns
 from komlog.komfig import logging
 
@@ -276,4 +276,12 @@ def get_variables_atts(text_hash):
         var_atts=get_variable_atts(text_hash=text_hash, text_pos=var['text_pos'])
         variables_atts.append({'text_pos':var['text_pos'],'atts':var_atts})
     return variables_atts
+
+def get_numeric_value_from_string(string):
+    try:
+        value=Decimal(string)
+    except InvalidOperation:
+        return None
+    else:
+        return value
 
