@@ -33,22 +33,25 @@ class Errors(Enum):
 
 # auth.quotes.authorization
 
-    E_AQA_ANA_QE    = 51000      #: authorize_new_agent quotes exception
-    E_AQA_ANDS_QE   = 51010      #: authorize_new_datasource quotes exception
-    E_AQA_ANDS_IA   = 51011      #: authorize_new_datasource invalid aid
-    E_AQA_ANDP_DSNF = 51020      #: authorize_new_datapoint datasource not found exception
-    E_AQA_ANDP_QE   = 51030      #: authorize_new_datapoint quotes exception
-    E_AQA_ANW_QE    = 51040      #: authorize_new_widget quotes exception
-    E_AQA_ANDB_QE   = 51050      #: authorize_new_dashboard quotes exception
-    E_AQA_ANS_QE    = 51060      #: authorize_new_snapshot quotes exception
-    E_AQA_ANC_QE    = 51070      #: authorize_new_circle quotes exception
-    E_AQA_AAMTC_QE  = 51080      #: authorize_add_member_to_circle quotes exception
-    E_AQA_APDSD_QE  = 51090      #: authorize_post_datasource_data quotes exception
-    E_AQA_AGDSD_DSNF= 51100      #: authorize_get_datasource_data datasource not found exception
-    E_AQA_AGDSD_IBE = 51101      #: authorize_get_datasource_data interval bounds exception
-    E_AQA_AGDPD_DPNF= 51110      #: authorize_get_datapoint_data datapoint not found exception
-    E_AQA_AGDPD_DSNF= 51111      #: authorize_get_datapoint_data datasource not found exception
-    E_AQA_AGDPD_IBE = 51112      #: authorize_get_datapoint_data interval bounds exception
+    E_AQA_ANA_QE      = 51000      #: authorize_new_agent quotes exception
+    E_AQA_ANDS_QE     = 51010      #: authorize_new_datasource quotes exception
+    E_AQA_ANDS_IA     = 51011      #: authorize_new_datasource invalid aid
+    E_AQA_ANDSDP_DSNF = 51020      #: authorize_new_datasource_datapoint datasource not found exception
+    E_AQA_ANDSDP_QE   = 51030      #: authorize_new_datasource_datapoint quotes exception
+    E_AQA_ANUDP_IA    = 51035      #: authorize_new_user_datapoint invalid aid
+    E_AQA_ANUDP_QE    = 51036      #: authorize_new_user_datapoint quotes exception
+    E_AQA_ANW_QE      = 51040      #: authorize_new_widget quotes exception
+    E_AQA_ANDB_QE     = 51050      #: authorize_new_dashboard quotes exception
+    E_AQA_ANS_QE      = 51060      #: authorize_new_snapshot quotes exception
+    E_AQA_ANC_QE      = 51070      #: authorize_new_circle quotes exception
+    E_AQA_AAMTC_QE    = 51080      #: authorize_add_member_to_circle quotes exception
+    E_AQA_APDSD_QE    = 51090      #: authorize_post_datasource_data quotes exception
+    E_AQA_APDPD_QE    = 51095      #: authorize_post_datapoint_data quotes exception
+    E_AQA_AGDSD_DSNF  = 51100      #: authorize_get_datasource_data datasource not found exception
+    E_AQA_AGDSD_IBE   = 51101      #: authorize_get_datasource_data interval bounds exception
+    E_AQA_AGDPD_DPNF  = 51110      #: authorize_get_datapoint_data datapoint not found exception
+    E_AQA_AGDPD_DSNF  = 51111      #: authorize_get_datapoint_data datasource not found exception
+    E_AQA_AGDPD_IBE   = 51112      #: authorize_get_datapoint_data interval bounds exception
 
 
 # auth.resources.authorization
@@ -60,12 +63,16 @@ class Errors(Enum):
     E_ARA_AGDSD_RE  = 52030      #: authorize_get_datasource_data exception
     E_ARA_ATDSD_RE  = 52040      #: authorize_post_datasource_data exception
     E_ARA_ATDSD_ANF = 52041      #: authorize_post_datasource_data invalid agent exception
+    E_ARA_ATDPD_RE  = 52045      #: authorize_post_datapoint_data exception
+    E_ARA_ATDPD_ANF = 52046      #: authorize_post_datapoint_data invalid agent exception
     E_ARA_ANDS_RE   = 52050      #: authorize_new_datasource exception
     E_ARA_ANDS_ANF  = 52051      #: authorize_post_datasource_data invalid agent exception
     E_ARA_AGDPD_RE  = 52060      #: authorize_get_datapoint_data exception
     E_ARA_AGDPC_RE  = 52070      #: authorize_get_datapoint_config exception
     E_ARA_APDPC_RE  = 52080      #: authorize_put_datapoint_config exception
-    E_ARA_ANDP_RE   = 52090      #: authorize_new_datapoint exception
+    E_ARA_ANDSDP_RE = 52090      #: authorize_new_datasource_datapoint exception
+    E_ARA_ANUDP_IA  = 52095      #: authorize_new_user_datapoint exception invalid aid
+    E_ARA_ANUDP_RE  = 52096      #: authorize_new_user_datapoint exception
     E_ARA_APAC_RE   = 52100      #: authorize_put_agent_config exception
     E_ARA_AGWC_RE   = 52110      #: authorize_get_widget_config exception
     E_ARA_APWC_RE   = 52120      #: authorize_put_widget_config exception

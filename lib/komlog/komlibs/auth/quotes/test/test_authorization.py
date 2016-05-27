@@ -15,15 +15,6 @@ from komlog.komlibs.general.time import timeuuid
 class AuthQuotesAuthorizationTest(unittest.TestCase):
     ''' komlog.auth.quotes.authorization tests '''
     
-    def test_authorize_new_datapoint_non_existent_datasource(self):
-        ''' authorize_new_datapoint should fail if datasource does not exist '''
-        username = 'test_authorize_new_datapoint_non_existent_datasource_user'
-        password = 'password'
-        email = username+'@komlog.org'
-        user = gestuserapi.create_user(username=username, password=password, email=email)
-        did=uuid.uuid4()
-        self.assertRaises(exceptions.DatasourceNotFoundException, authorization.authorize_new_datapoint, uid=user['uid'], did=did)
-
     def test_authorize_new_agent_success(self):
         ''' authorize_new_agent should execute successfully if user has no quote restrictions '''
         uid=uuid.uuid4()
@@ -72,16 +63,25 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
             authorization.authorize_new_datasource(uid=uid, aid=aid)
         self.assertEqual(cm.exception.error, Errors.E_AQA_ANDS_QE)
 
-    def test_authorize_new_datapoint_failure_datasource_not_found(self):
-        ''' authorize_new_datapoint should fail if datasource does not exist '''
+    def test_authorize_new_datasource_datapoint_failure_datasource_not_found(self):
+        ''' authorize_new_datasource_datapoint should fail if datasource does not exist '''
         uid=uuid.uuid4()
         did=uuid.uuid4()
         with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
-            authorization.authorize_new_datapoint(uid=uid, did=did)
-        self.assertEqual(cm.exception.error, Errors.E_AQA_ANDP_DSNF)
+            authorization.authorize_new_datasource_datapoint(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_ANDSDP_DSNF)
 
-    def test_authorize_new_datapoint_success(self):
-        ''' authorize_new_datapoint should succeed if no quote restriction is found  '''
+    def test_authorize_new_datasource_datapoint_non_existent_datasource(self):
+        ''' authorize_new_datasource_datapoint should fail if datasource does not exist '''
+        username = 'test_authorize_new_datasource_datapoint_non_existent_datasource_user'
+        password = 'password'
+        email = username+'@komlog.org'
+        user = gestuserapi.create_user(username=username, password=password, email=email)
+        did=uuid.uuid4()
+        self.assertRaises(exceptions.DatasourceNotFoundException, authorization.authorize_new_datasource_datapoint, uid=user['uid'], did=did)
+
+    def test_authorize_new_datasource_datapoint_success(self):
+        ''' authorize_new_datasource_datapoint should succeed if no quote restriction is found  '''
         uid=uuid.uuid4()
         aid=uuid.uuid4()
         did=uuid.uuid4()
@@ -89,10 +89,10 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         creation_date=timeuuid.uuid1()
         datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
         self.assertTrue(cassapidatasource.new_datasource(datasource))
-        self.assertIsNone(authorization.authorize_new_datapoint(uid=uid, did=did))
+        self.assertIsNone(authorization.authorize_new_datasource_datapoint(uid=uid, did=did))
 
-    def test_authorize_new_datapoint_failure_user_datapoint_creation_limit(self):
-        ''' authorize_new_datapoint should fail if user has reached his datapoint creation limit '''
+    def test_authorize_new_datasource_datapoint_failure_user_datapoint_creation_limit(self):
+        ''' authorize_new_datasource_datapoint should fail if user has reached his datapoint creation limit '''
         uid=uuid.uuid4()
         aid=uuid.uuid4()
         did=uuid.uuid4()
@@ -103,11 +103,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         iface=interfaces.User_DatapointCreation().value
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, 'A'))
         with self.assertRaises(exceptions.AuthorizationException) as cm:
-            authorization.authorize_new_datapoint(uid=uid, did=did)
-        self.assertEqual(cm.exception.error, Errors.E_AQA_ANDP_QE)
+            authorization.authorize_new_datasource_datapoint(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_ANDSDP_QE)
 
-    def test_authorize_new_datapoint_failure_agent_datapoint_creation_limit(self):
-        ''' authorize_new_datapoint should fail if agent has reached his datapoint creation limit '''
+    def test_authorize_new_datasource_datapoint_failure_agent_datapoint_creation_limit(self):
+        ''' authorize_new_datasource_datapoint should fail if agent has reached his datapoint creation limit '''
         uid=uuid.uuid4()
         aid=uuid.uuid4()
         did=uuid.uuid4()
@@ -118,11 +118,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         iface=interfaces.Agent_DatapointCreation(aid).value
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, 'A'))
         with self.assertRaises(exceptions.AuthorizationException) as cm:
-            authorization.authorize_new_datapoint(uid=uid, did=did)
-        self.assertEqual(cm.exception.error, Errors.E_AQA_ANDP_QE)
+            authorization.authorize_new_datasource_datapoint(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_ANDSDP_QE)
 
-    def test_authorize_new_datapoint_failure_datasource_datapoint_creation_limit(self):
-        ''' authorize_new_datapoint should fail if datasource has reached his datapoint creation limit '''
+    def test_authorize_new_datasource_datapoint_failure_datasource_datapoint_creation_limit(self):
+        ''' authorize_new_datasource_datapoint should fail if datasource has reached his datapoint creation limit '''
         uid=uuid.uuid4()
         aid=uuid.uuid4()
         did=uuid.uuid4()
@@ -133,8 +133,55 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         iface=interfaces.Datasource_DatapointCreation(did).value
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, 'A'))
         with self.assertRaises(exceptions.AuthorizationException) as cm:
-            authorization.authorize_new_datapoint(uid=uid, did=did)
-        self.assertEqual(cm.exception.error, Errors.E_AQA_ANDP_QE)
+            authorization.authorize_new_datasource_datapoint(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_ANDSDP_QE)
+
+    def test_authorize_new_user_datapoint_failure_aid_not_valid(self):
+        ''' authorize_new_user_datapoint should fail if aid is not valid '''
+        aids=[None, 'text',12, 222.22, {'a':'dict'}, {'set'}, ['a','list'],('tuple','yes'),{uuid.uuid4()},[uuid.uuid4(),],(uuid.uuid4(),),uuid.uuid1(), uuid.uuid4().hex]
+        uid=uuid.uuid4()
+        for aid in aids:
+            with self.assertRaises(exceptions.AuthorizationException) as cm:
+                authorization.authorize_new_user_datapoint(uid=uid, aid=aid)
+            self.assertEqual(cm.exception.error, Errors.E_AQA_ANUDP_IA)
+
+    def test_authorize_new_user_datapoint_failure_user_datapoint_creation_deny(self):
+        ''' authorize_new_user_datapoint should fail if user datapoint creation deny is found '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        iface=interfaces.User_DatapointCreation().value
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, 'A'))
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_new_user_datapoint(uid=uid, aid=aid)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_ANUDP_QE)
+
+    def test_authorize_new_user_datapoint_failure_agent_datapoint_creation_deny(self):
+        ''' authorize_new_user_datapoint should fail if user datapoint creation deny is found '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        iface=interfaces.Agent_DatapointCreation(aid).value
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, 'A'))
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_new_user_datapoint(uid=uid, aid=aid)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_ANUDP_QE)
+
+    def test_authorize_new_user_datapoint_failure_user_and_agent_datapoint_creation_deny(self):
+        ''' authorize_new_user_datapoint should fail if user datapoint creation deny is found '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        iface=interfaces.User_DatapointCreation().value
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, 'A'))
+        iface=interfaces.Agent_DatapointCreation(aid).value
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, 'A'))
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_new_user_datapoint(uid=uid, aid=aid)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_ANUDP_QE)
+
+    def test_authorize_new_user_datapoint_success(self):
+        ''' authorize_new_user_datapoint should succeed if no deny is found '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        self.assertIsNone(authorization.authorize_new_user_datapoint(uid=uid, aid=aid))
 
     def test_authorize_new_widget_success(self):
         ''' authorize_new_widget should return None if there is no quote restriction '''
@@ -262,6 +309,65 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
             authorization.authorize_get_datasource_data(did=did, ii=ii, ie=ie)
         self.assertEqual(cm.exception.error, Errors.E_AQA_AGDSD_DSNF)
+
+    def test_authorize_post_datapoint_data_success(self):
+        ''' authorize_post_datapoint_data should return None if there is no quote restriction '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        self.assertIsNone(authorization.authorize_post_datapoint_data(uid=uid, pid=pid))
+
+    def test_authorize_post_datapoint_data_success_user_daily_quote_reached_other_day(self):
+        ''' authorize_post_datapoint_data should success if user reached his daily quote but not today '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        ts=timeuuid.get_day_timestamp(timeuuid.uuid1(seconds=1))
+        iface=interfaces.User_PostDatapointDataDaily().value
+        self.assertTrue(cassapiiface.insert_user_ts_iface_deny(uid, iface, ts, 'A'))
+        self.assertIsNone(authorization.authorize_post_datapoint_data(uid=uid, pid=pid))
+
+    def test_authorize_post_datapoint_data_success_datapoint_daily_quote_reached_other_day(self):
+        ''' authorize_post_datapoint_data should success if datapoint reached his daily quote but not today '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        ts=timeuuid.get_day_timestamp(timeuuid.uuid1(seconds=1))
+        iface=interfaces.User_PostDatapointDataDaily(pid).value
+        self.assertTrue(cassapiiface.insert_user_ts_iface_deny(uid, iface, ts, 'A'))
+        self.assertIsNone(authorization.authorize_post_datapoint_data(uid=uid, pid=pid))
+
+    def test_authorize_post_datapoint_data_failure_user_daily_quote_reached(self):
+        ''' authorize_post_datapoint_data should fail if user has reached his daily upload quote '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        ts=timeuuid.get_day_timestamp(timeuuid.uuid1())
+        iface=interfaces.User_PostDatapointDataDaily().value
+        self.assertTrue(cassapiiface.insert_user_ts_iface_deny(uid, iface, ts, 'A'))
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_post_datapoint_data(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_APDPD_QE)
+
+    def test_authorize_post_datapoint_data_failure_datapoint_daily_quote_reached(self):
+        ''' authorize_post_datapoint_data should fail if datapoint has reached his daily upload quote '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        ts=timeuuid.get_day_timestamp(timeuuid.uuid1())
+        iface=interfaces.User_PostDatapointDataDaily(pid).value
+        self.assertTrue(cassapiiface.insert_user_ts_iface_deny(uid, iface, ts, 'A'))
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_post_datapoint_data(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_APDPD_QE)
+
+    def test_authorize_post_datapoint_data_failure_datapoint_and_user_daily_quote_reached(self):
+        ''' authorize_post_datapoint_data should fail if datapoint and user have reached his daily upload quote '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        ts=timeuuid.get_day_timestamp(timeuuid.uuid1())
+        iface=interfaces.User_PostDatapointDataDaily(pid).value
+        self.assertTrue(cassapiiface.insert_user_ts_iface_deny(uid, iface, ts, 'A'))
+        iface=interfaces.User_PostDatapointDataDaily().value
+        self.assertTrue(cassapiiface.insert_user_ts_iface_deny(uid, iface, ts, 'A'))
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_post_datapoint_data(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_APDPD_QE)
 
     def test_authorize_get_datasource_data_success_no_interface_limit_found_no_interval_set(self):
         ''' authorize_get_datasource_data should return None if limit is not found and interval 

@@ -35,17 +35,27 @@ def authorize_new_datasource(uid,aid):
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
             raise exceptions.AuthorizationException(error=Errors.E_AQA_ANDS_QE)
 
-def authorize_new_datapoint(uid,did):
+def authorize_new_datasource_datapoint(uid,did):
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
-        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQA_ANDP_DSNF)
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQA_ANDSDP_DSNF)
     ifaces=[]
     ifaces.append(interfaces.User_DatapointCreation().value)
     ifaces.append(interfaces.Agent_DatapointCreation(datasource.aid).value)
     ifaces.append(interfaces.Datasource_DatapointCreation(did).value)
     for iface in ifaces:
         if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
-            raise exceptions.AuthorizationException(error=Errors.E_AQA_ANDP_QE)
+            raise exceptions.AuthorizationException(error=Errors.E_AQA_ANDSDP_QE)
+
+def authorize_new_user_datapoint(uid,aid):
+    if not args.is_valid_uuid(aid):
+        raise exceptions.AuthorizationException(error=Errors.E_AQA_ANUDP_IA)
+    ifaces=[]
+    ifaces.append(interfaces.User_DatapointCreation().value)
+    ifaces.append(interfaces.Agent_DatapointCreation(aid).value)
+    for iface in ifaces:
+        if cassapiiface.get_user_iface_deny(uid=uid, iface=iface):
+            raise exceptions.AuthorizationException(error=Errors.E_AQA_ANUDP_QE)
 
 def authorize_new_widget(uid):
     ifaces=[]
@@ -90,6 +100,15 @@ def authorize_post_datasource_data(uid, did):
     for iface in ifaces:
         if cassapiiface.get_user_ts_iface_deny(uid=uid, iface=iface, ts=ts):
             raise exceptions.AuthorizationException(error=Errors.E_AQA_APDSD_QE)
+
+def authorize_post_datapoint_data(uid, pid):
+    ts=timeuuid.get_day_timestamp(timeuuid.uuid1())
+    ifaces=[]
+    ifaces.append(interfaces.User_PostDatapointDataDaily().value)
+    ifaces.append(interfaces.User_PostDatapointDataDaily(pid).value)
+    for iface in ifaces:
+        if cassapiiface.get_user_ts_iface_deny(uid=uid, iface=iface, ts=ts):
+            raise exceptions.AuthorizationException(error=Errors.E_AQA_APDPD_QE)
 
 def authorize_get_datasource_data(did, ii, ie):
     ''' This method checks wether the DataRetrievalMinTimestamp interface is set.

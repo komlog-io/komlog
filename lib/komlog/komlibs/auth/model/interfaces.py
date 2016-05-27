@@ -55,6 +55,14 @@ class User_PostDatasourceDataDaily(Interface):
             value='/user/daily/postdsdata/'
         super().__init__(value)
 
+class User_PostDatapointDataDaily(Interface):
+    def __init__(self, pid=None):
+        if pid:
+            value='/user/daily/postdpdata/'+pid.hex
+        else:
+            value='/user/daily/postdpdata/'
+        super().__init__(value)
+
 class User_DataRetrievalMinTimestamp(Interface):
     def __init__(self):
         value='/user/dataretrievalmints/'

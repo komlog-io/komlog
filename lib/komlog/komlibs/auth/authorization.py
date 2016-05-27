@@ -60,6 +60,10 @@ def authorize_post_datasource_data(passport, did):
     resauth.authorize_post_datasource_data(uid=passport.uid,aid=passport.aid,did=did)
     quoauth.authorize_post_datasource_data(uid=passport.uid,did=did)
 
+def authorize_post_datapoint_data(passport, pid):
+    resauth.authorize_post_datapoint_data(uid=passport.uid,aid=passport.aid,pid=pid)
+    quoauth.authorize_post_datapoint_data(uid=passport.uid,pid=pid)
+
 def authorize_get_datasource_config(passport, did):
     resauth.authorize_get_datasource_config(uid=passport.uid,did=did)
 
@@ -86,9 +90,13 @@ def authorize_get_datapoint_data(passport, pid, ii, ie, tid):
 def authorize_get_datapoint_config(passport, pid):
     resauth.authorize_get_datapoint_config(uid=passport.uid,pid=pid)
 
-def authorize_new_datapoint_creation(passport, did):
-    quoauth.authorize_new_datapoint(uid=passport.uid,did=did)
-    resauth.authorize_new_datapoint(uid=passport.uid,did=did)
+def authorize_new_datasource_datapoint_creation(passport, did):
+    quoauth.authorize_new_datasource_datapoint(uid=passport.uid,did=did)
+    resauth.authorize_new_datasource_datapoint(uid=passport.uid,did=did)
+
+def authorize_new_user_datapoint_creation(passport):
+    quoauth.authorize_new_user_datapoint(uid=passport.uid,aid=passport.aid)
+    resauth.authorize_new_user_datapoint(uid=passport.uid,aid=passport.aid)
 
 def authorize_update_datapoint_config(passport, pid):
     resauth.authorize_put_datapoint_config(uid=passport.uid,pid=pid)
@@ -259,7 +267,8 @@ func_requests={
     Requests.NEW_AGENT:authorize_new_agent_creation,
     Requests.NEW_CIRCLE:authorize_new_circle_creation,
     Requests.NEW_DASHBOARD:authorize_new_dashboard_creation,
-    Requests.NEW_DATAPOINT:authorize_new_datapoint_creation,
+    Requests.NEW_DATASOURCE_DATAPOINT:authorize_new_datasource_datapoint_creation,
+    Requests.NEW_USER_DATAPOINT:authorize_new_user_datapoint_creation,
     Requests.NEW_DATASOURCE:authorize_new_datasource_creation,
     Requests.NEW_SNAPSHOT:authorize_new_snapshot_creation,
     Requests.NEW_WIDGET:authorize_new_widget_creation,
@@ -271,6 +280,7 @@ func_requests={
     Requests.UPDATE_USER_CONFIG:authorize_update_user_config,
     Requests.UPDATE_WIDGET_CONFIG:authorize_update_widget_config,
     Requests.POST_DATASOURCE_DATA:authorize_post_datasource_data,
+    Requests.POST_DATAPOINT_DATA:authorize_post_datapoint_data,
     Requests.RESPONSE_EVENT:authorize_response_event,
 }
 

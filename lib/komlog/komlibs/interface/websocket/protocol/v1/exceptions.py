@@ -44,6 +44,8 @@ MESSAGE_EXECUTION_DENIED_STATUS_EXCEPTION_LIST=(
 
 MESSAGE_EXECUTION_ERROR_STATUS_EXCEPTION_LIST=(
     gestexcept.DatasourceUploadContentException,
+    gestexcept.DatapointCreationException,
+    gestexcept.DatapointStoreValueException,
     OperationValidationException,
     ResponseValidationException,
 )

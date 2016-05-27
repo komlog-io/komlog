@@ -8,6 +8,7 @@ from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operation
 
 OPAUTHS={
     Operation.NEW_DATASOURCE:authoperations.NEW_DATASOURCE,
+    Operation.NEW_USER_DATAPOINT:authoperations.NEW_USER_DATAPOINT,
 }
 
 class WSIFaceOperation:
@@ -45,7 +46,7 @@ class NewDatasourceOperation(WSIFaceOperation):
         self.uid = uid
         self.aid = aid
         self.did = did
-        super(NewDatasourceOperation, self).__init__(oid=Operation.NEW_DATASOURCE)
+        super().__init__(oid=Operation.NEW_DATASOURCE)
 
     @property
     def params(self):
@@ -91,4 +92,59 @@ class NewDatasourceOperation(WSIFaceOperation):
             self._did = value
         else:
             raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_NDSO_IDT)
+
+class NewUserDatapointOperation(WSIFaceOperation):
+    def __init__(self, uid, aid, pid):
+        self._uid = None
+        self._aid = None
+        self._did = None
+        self.uid = uid
+        self.aid = aid
+        self.pid = pid
+        super().__init__(oid=Operation.NEW_USER_DATAPOINT)
+
+    @property
+    def params(self):
+        return {
+            'uid':self._uid,
+            'aid':self._aid,
+            'pid':self._pid
+        }
+
+    @params.setter
+    def params(self, value):
+        raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_WSIO_PMNA)
+
+    @property
+    def uid(self):
+        return self._uid
+
+    @uid.setter
+    def uid(self, value):
+        if args.is_valid_uuid(value):
+            self._uid = value
+        else:
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_NUDPO_IUT)
+
+    @property
+    def aid(self):
+        return self._aid
+
+    @aid.setter
+    def aid(self, value):
+        if args.is_valid_uuid(value):
+            self._aid = value
+        else:
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_NUDPO_IAT)
+
+    @property
+    def pid(self):
+        return self._pid
+
+    @pid.setter
+    def pid(self, value):
+        if args.is_valid_uuid(value):
+            self._pid = value
+        else:
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_NUDPO_IPT)
 

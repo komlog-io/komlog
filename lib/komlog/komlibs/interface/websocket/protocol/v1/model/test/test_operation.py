@@ -92,3 +92,62 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         self.assertEqual(op.did, did)
         self.assertEqual(op.params, {'uid':uid, 'aid':aid, 'did':did})
 
+    def test_new_NewUserDatapointOperation_failure_invalid_uid_type(self):
+        ''' the creation of a NewUserDatapointOperation object should fail if uid is not a UUID4 '''
+        uids=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid1()]
+        aid=uuid.uuid4()
+        pid=uuid.uuid4()
+        for uid in uids:
+            with self.assertRaises(exceptions.OperationValidationException) as cm:
+                operation.NewUserDatapointOperation(uid=uid, aid=aid, pid=pid)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_NUDPO_IUT)
+
+    def test_new_NewUserDatapointOperation_failure_invalid_aid_type(self):
+        ''' the creation of a NewUserDatapointOperation object should fail if aid is not a UUID4 '''
+        aids=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid1()]
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        for aid in aids:
+            with self.assertRaises(exceptions.OperationValidationException) as cm:
+                operation.NewUserDatapointOperation(uid=uid, aid=aid, pid=pid)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_NUDPO_IAT)
+
+    def test_new_NewUserDatapointOperation_failure_invalid_pid_type(self):
+        ''' the creation of a NewUserDatapointOperation object should fail if pid is not a UUID4 '''
+        pids=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid1()]
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        for pid in pids:
+            with self.assertRaises(exceptions.OperationValidationException) as cm:
+                operation.NewUserDatapointOperation(uid=uid, aid=aid, pid=pid)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_NUDPO_IPT)
+
+    def test_new_NewUserDatapointOperation_success_cannot_modify_params_property(self):
+        ''' the creation of a NewUserDatapointOperation object should succeed and params property cannot be modified directly'''
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        op=operation.NewUserDatapointOperation(uid, aid=aid, pid=pid)
+        self.assertTrue(isinstance(op, operation.NewUserDatapointOperation))
+        self.assertEqual(op.oid, Operation.NEW_USER_DATAPOINT)
+        self.assertEqual(op.uid, uid)
+        self.assertEqual(op.aid, aid)
+        self.assertEqual(op.pid, pid)
+        self.assertEqual(op.params, {'uid':uid, 'aid':aid, 'pid':pid})
+        with self.assertRaises(exceptions.OperationValidationException) as cm:
+            op.params={'uid':uuid.uuid4(),'what':'yes','number':3}
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_WSIO_PMNA)
+
+    def test_new_NewUserDatapointOperation_success(self):
+        ''' the creation of a NewUserDatapointOperation object should succeed '''
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        op=operation.NewUserDatapointOperation(uid, aid=aid, pid=pid)
+        self.assertTrue(isinstance(op, operation.NewUserDatapointOperation))
+        self.assertEqual(op.oid, Operation.NEW_USER_DATAPOINT)
+        self.assertEqual(op.uid, uid)
+        self.assertEqual(op.aid, aid)
+        self.assertEqual(op.pid, pid)
+        self.assertEqual(op.params, {'uid':uid, 'aid':aid, 'pid':pid})
+

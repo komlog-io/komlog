@@ -105,7 +105,7 @@ def update_datapoint_config_request(passport, pid, data):
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
-def new_datapoint_request(passport, did, sequence, position, length, datapointname):
+def new_datasource_datapoint_request(passport, did, sequence, position, length, datapointname):
     if not isinstance(passport, Passport):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_NDPR_IPSP)
     if not args.is_valid_hex_uuid(did):
@@ -119,7 +119,7 @@ def new_datapoint_request(passport, did, sequence, position, length, datapointna
     if not args.is_valid_datapointname(datapointname):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_NDPR_IDN)
     did=uuid.UUID(did)
-    authorization.authorize_request(request=Requests.NEW_DATAPOINT,passport=passport,did=did)
+    authorization.authorize_request(request=Requests.NEW_DATASOURCE_DATAPOINT,passport=passport,did=did)
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
     message=messages.MonitorVariableMessage(uid=passport.uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
     msgapi.send_message(message)

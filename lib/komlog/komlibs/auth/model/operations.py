@@ -12,7 +12,7 @@ from enum import Enum
 class Operations(Enum):
     NEW_AGENT                 = 0
     NEW_DATASOURCE            = 1
-    NEW_DATAPOINT             = 2
+    NEW_DATASOURCE_DATAPOINT  = 2
     NEW_WIDGET                = 3
     NEW_DASHBOARD             = 4
     NEW_WIDGET_SYSTEM         = 5
@@ -29,4 +29,5 @@ class Operations(Enum):
     UPDATE_CIRCLE_MEMBERS     = 16
     DATASOURCE_DATA_STORED    = 17
     NEW_USER                  = 18
+    NEW_USER_DATAPOINT        = 19
 

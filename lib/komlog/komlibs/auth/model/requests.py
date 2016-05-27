@@ -52,9 +52,10 @@ class Requests(AutoEnum):
     NEW_AGENT                      = ()
     NEW_CIRCLE                     = ()
     NEW_DASHBOARD                  = ()
-    NEW_DATAPOINT                  = ()
+    NEW_DATASOURCE_DATAPOINT       = ()
     NEW_DATASOURCE                 = ()
     NEW_SNAPSHOT                   = ()
+    NEW_USER_DATAPOINT             = ()
     NEW_WIDGET                     = ()
     UPDATE_DATASOURCE_CONFIG       = ()
     UPDATE_DATAPOINT_CONFIG        = ()
@@ -64,5 +65,6 @@ class Requests(AutoEnum):
     UPDATE_CIRCLE_CONFIG           = ()
     UPDATE_USER_CONFIG             = ()
     POST_DATASOURCE_DATA           = ()
+    POST_DATAPOINT_DATA            = ()
     RESPONSE_EVENT                 = ()
 

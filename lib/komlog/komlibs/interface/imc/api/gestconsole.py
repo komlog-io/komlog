@@ -41,7 +41,7 @@ def process_message_MONVAR(message):
         datapoint=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
         if datapoint:
             datasource=datasourceapi.get_datasource_config(did=did)
-            operation=weboperations.NewDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=datapoint['pid'])
+            operation=weboperations.NewDatasourceDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=datapoint['pid'])
             auth_op=operation.get_auth_operation()
             params=operation.get_params()
             response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))

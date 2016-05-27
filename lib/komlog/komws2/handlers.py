@@ -217,7 +217,7 @@ class DatapointsHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=datapoint.new_datapoint_request(passport=self.passport, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+            response=datapoint.new_datasource_datapoint_request(passport=self.passport, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 

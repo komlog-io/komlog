@@ -27,14 +27,12 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         ''' test_update_funcs should return a list of functions '''
         operation=Operations.NEW_AGENT
         update_funcs=update.get_update_funcs(operation=operation)
-        self.assertTrue(isinstance(update_funcs, list))
+        self.assertTrue(isinstance(update_funcs, tuple))
 
     def test_get_update_funcs_success_empty_list(self):
         '''test_update_funcs should return an empty list of functions if operation does not exist'''
         operation='234234234'
-        update_funcs=update.get_update_funcs(operation=operation)
-        self.assertTrue(isinstance(update_funcs, list))
-        self.assertEqual(update_funcs, [])
+        self.assertRaises( KeyError, update.get_update_funcs, operation)
 
     def test_new_agent_no_uid(self):
         ''' new_agent should fail if no uid is passed'''
@@ -76,22 +74,42 @@ class AuthResourcesUpdateTest(unittest.TestCase):
         self.assertIsNotNone(permission)
         self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
 
-    def test_new_datapoint_no_uid(self):
-        ''' new_datapoint should fail if no uid is passed'''
+    def test_new_datasource_datapoint_no_uid(self):
+        ''' new_datasource_datapoint should fail if no uid is passed'''
         params={'pid':uuid.uuid4()}
-        self.assertFalse(update.new_datapoint(params))
+        self.assertFalse(update.new_datasource_datapoint(params))
 
-    def test_new_datapoint_no_pid(self):
-        ''' new_datapoint should fail if no uid is passed'''
+    def test_new_datasource_datapoint_no_pid(self):
+        ''' new_datasource_datapoint should fail if no uid is passed'''
         params={'uid':uuid.uuid4()}
-        self.assertFalse(update.new_datapoint(params))
+        self.assertFalse(update.new_datasource_datapoint(params))
 
-    def test_new_datapoint_success(self):
-        ''' new_datapoint should succeed if permissions can be set'''
+    def test_new_datasource_datapoint_success(self):
+        ''' new_datasource_datapoint should succeed if permissions can be set'''
         uid=uuid.uuid4()
         pid=uuid.uuid4()
         params={'uid':uid,'pid':pid}
-        self.assertTrue(update.new_datapoint(params))
+        self.assertTrue(update.new_datasource_datapoint(params))
+        permission=cassapiperm.get_user_datapoint_perm(uid=uid, pid=pid)
+        self.assertIsNotNone(permission)
+        self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))
+
+    def test_new_user_datapoint_no_uid(self):
+        ''' new_user_datapoint should fail if no uid is passed'''
+        params={'pid':uuid.uuid4()}
+        self.assertFalse(update.new_user_datapoint(params))
+
+    def test_new_user_datapoint_no_pid(self):
+        ''' new_user_datapoint should fail if no pid is passed'''
+        params={'uid':uuid.uuid4()}
+        self.assertFalse(update.new_user_datapoint(params))
+
+    def test_new_user_datapoint_success(self):
+        ''' new_user_datapoint should succeed if permissions can be set'''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        params={'uid':uid,'pid':pid}
+        self.assertTrue(update.new_user_datapoint(params))
         permission=cassapiperm.get_user_datapoint_perm(uid=uid, pid=pid)
         self.assertIsNotNone(permission)
         self.assertTrue(permission.perm & (permissions.CAN_READ | permissions.CAN_EDIT| permissions.CAN_DELETE))

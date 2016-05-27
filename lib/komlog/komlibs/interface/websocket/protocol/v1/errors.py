@@ -37,19 +37,30 @@ class Errors(Enum):
 
 # interface websocket protocol v1 processing message
 
-    E_IWSPV1PM_PSDD_IURI     = 210100      #: uri is not a datasource
-    E_IWSPV1PM_PSDD_ECDS     = 210101      #: error creating datasource
-    E_IWSPV1PM_PSDD_EUR      = 210102      #: exception updating ds resources
-    E_IWSPV1PM_PSDD_FUR      = 210103      #: fail updating ds resources
-    E_IWSPV1PM_PSDD_ESC      = 210104      #: error storing ds content
+    E_IWSPV1PM_PSDSD_IURI    = 210100      #: uri is not a datasource
+    E_IWSPV1PM_PSDSD_ECDS    = 210101      #: error creating datasource
+    E_IWSPV1PM_PSDSD_EUR     = 210102      #: exception updating ds resources
+    E_IWSPV1PM_PSDSD_FUR     = 210103      #: fail updating ds resources
+    E_IWSPV1PM_PSDSD_ESC     = 210104      #: error storing ds content
+
+    E_IWSPV1PM_PSDPD_IURI    = 210200      #: uri is not a datapoint
+    E_IWSPV1PM_PSDPD_ECDP    = 210201      #: error creating datapoint
+    E_IWSPV1PM_PSDPD_FPOR    = 210202      #: error procesing operation result
 
 # interface websocket protocol v1 model message
 
-    E_IWSPV1MM_SDDM_IMT      = 220000      #: PostDatasourceDataMessage. message format error or 
+    E_IWSPV1MM_SDSDM_IMT     = 220000      #: SendDsDataMessage. message format error or 
                                            #: not v action or payload fields found
-    E_IWSPV1MM_SDDM_IA       = 220001      #: SendDsDataMessage. invalid message action
-    E_IWSPV1MM_SDDM_IV       = 220002      #: SendDsDataMessage. invalid message version
-    E_IWSPV1MM_SDDM_IPL      = 220003      #: SendDsDataMessage. invalid message payload
+    E_IWSPV1MM_SDSDM_IA      = 220001      #: SendDsDataMessage. invalid message action
+    E_IWSPV1MM_SDSDM_IV      = 220002      #: SendDsDataMessage. invalid message version
+    E_IWSPV1MM_SDSDM_IPL     = 220003      #: SendDsDataMessage. invalid message payload
+
+
+    E_IWSPV1MM_SDPDM_IMT     = 220100      #: SendDpDataMessage. message format error or 
+                                           #: not v action or payload fields found
+    E_IWSPV1MM_SDPDM_IA      = 220101      #: SendDpDataMessage. invalid message action
+    E_IWSPV1MM_SDPDM_IV      = 220102      #: SendDpDataMessage. invalid message version
+    E_IWSPV1MM_SDPDM_IPL     = 220103      #: SendDpDataMessage. invalid message payload
 
 # interface websocket protocol v1 model response
 
@@ -66,6 +77,10 @@ class Errors(Enum):
     E_IWSPV1MO_NDSO_IUT      = 240100      #: NewDatasourceOperation. invalid uid
     E_IWSPV1MO_NDSO_IAT      = 240101      #: NewDatasourceOperation. invalid aid
     E_IWSPV1MO_NDSO_IDT      = 240102      #: NewDatasourceOperation. invalid did
+
+    E_IWSPV1MO_NUDPO_IUT     = 240200      #: NewUserDatapointOperation. invalid uid
+    E_IWSPV1MO_NUDPO_IAT     = 240201      #: NewUserDatapointOperation. invalid aid
+    E_IWSPV1MO_NUDPO_IPT     = 240202      #: NewUserDatapointOperation. invalid pid
 
 #interface websocket protocol v1 processing operation
 

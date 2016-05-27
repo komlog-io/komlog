@@ -46,6 +46,17 @@ def authorize_post_datasource_data(uid,aid,did):
         return
     raise exceptions.AuthorizationException(error=Errors.E_ARA_ATDSD_RE)
 
+def authorize_post_datapoint_data(uid,aid,pid):
+    if not args.is_valid_uuid(aid):
+        raise exceptions.AuthorizationException(error=Errors.E_ARA_ATDPD_ANF)
+    user_datapoint_perm=cassapiperm.get_user_datapoint_perm(uid=uid,pid=pid)
+    user_agent_perm=cassapiperm.get_user_agent_perm(uid=uid,aid=aid)
+    if (user_datapoint_perm and user_agent_perm and
+        user_datapoint_perm.perm & permissions.CAN_EDIT and
+        user_agent_perm.perm & permissions.CAN_EDIT):
+        return
+    raise exceptions.AuthorizationException(error=Errors.E_ARA_ATDPD_RE)
+
 def authorize_new_datasource(uid,aid):
     if not args.is_valid_uuid(aid):
         raise exceptions.AuthorizationException(error=Errors.E_ARA_ANDS_ANF)
@@ -72,11 +83,19 @@ def authorize_put_datapoint_config(uid,pid):
         return
     raise exceptions.AuthorizationException(error=Errors.E_ARA_APDPC_RE)
 
-def authorize_new_datapoint(uid,did):
+def authorize_new_datasource_datapoint(uid,did):
     permission=cassapiperm.get_user_datasource_perm(uid=uid, did=did)
     if permission and permission.perm & permissions.CAN_EDIT:
         return
-    raise exceptions.AuthorizationException(error=Errors.E_ARA_ANDP_RE)
+    raise exceptions.AuthorizationException(error=Errors.E_ARA_ANDSDP_RE)
+
+def authorize_new_user_datapoint(uid,aid):
+    if not args.is_valid_uuid(aid):
+        raise exceptions.AuthorizationException(error=Errors.E_ARA_ANUDP_IA)
+    permission=cassapiperm.get_user_agent_perm(uid=uid, aid=aid)
+    if permission and permission.perm & permissions.CAN_EDIT:
+        return
+    raise exceptions.AuthorizationException(error=Errors.E_ARA_ANUDP_RE)
 
 def authorize_put_agent_config(uid,aid):
     permission=cassapiperm.get_user_agent_perm(uid=uid, aid=aid)

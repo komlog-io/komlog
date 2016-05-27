@@ -12,7 +12,6 @@ from komlog.komlibs.interface.websocket.protocol.v1.model.types import Message
 
 
 
-@exceptions.ExceptionHandler
 def process_message(passport, message):
     try:
         return _processing_funcs[message['action']](passport, message)
@@ -21,5 +20,6 @@ def process_message(passport, message):
 
 _processing_funcs = {
     Message.SEND_DS_DATA:procmsg._process_send_ds_data,
+    Message.SEND_DP_DATA:procmsg._process_send_dp_data,
 }
 

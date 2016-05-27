@@ -127,6 +127,57 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
             authorization.authorize_post_datasource_data(uid=uid, aid=aid, did=did)
         self.assertEqual(cm.exception.error, Errors.E_ARA_ATDSD_RE)
 
+    def test_authorize_post_datapoint_data_failure_invalid_aid(self):
+        ''' authorize_post_datapoint_data should fail if aid is invalid '''
+        uid=uuid.uuid4()
+        aids=[None, 'text',12, 222.22, {'a':'dict'}, {'set'}, ['a','list'],('tuple','yes'),{uuid.uuid4()},[uuid.uuid4(),],(uuid.uuid4(),),uuid.uuid1(), uuid.uuid4().hex]
+        pid=uuid.uuid4()
+        for aid in aids:
+            with self.assertRaises(exceptions.AuthorizationException) as cm:
+                authorization.authorize_post_datapoint_data(uid=uid, aid=aid, pid=pid)
+            self.assertEqual(cm.exception.error, Errors.E_ARA_ATDPD_ANF)
+
+    def test_authorize_post_datapoint_data_success(self):
+        ''' authorize_post_datapoint_data should succeed if permission is granted'''
+        uid=self.user['uid']
+        aid=uuid.uuid4()
+        pid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
+        self.assertIsNone(authorization.authorize_post_datapoint_data(uid=uid, aid=aid, pid=pid))
+
+    def test_authorize_post_datapoint_data_failure_no_permission_over_datapoint(self):
+        ''' authorize_post_datapoint_data should fail if user has no permission over datapoint '''
+        uid=self.user['uid']
+        aid=uuid.uuid4()
+        pid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm)
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_post_datapoint_data(uid=uid, aid=aid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ATDPD_RE)
+
+    def test_authorize_post_datapoint_data_failure_no_permission_over_agent(self):
+        ''' authorize_post_datapoint_data should fail if user has no permission over agent '''
+        uid=self.user['uid']
+        aid=uuid.uuid4()
+        pid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_post_datapoint_data(uid=uid, aid=aid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ATDPD_RE)
+
+    def test_authorize_post_datapoint_data_failure_no_permission_over_agent_nor_datapoint(self):
+        ''' authorize_post_datapoint_data should fail if user has no permission over agent nor dp '''
+        uid=self.user['uid']
+        aid=uuid.uuid4()
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_post_datapoint_data(uid=uid, aid=aid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ATDPD_RE)
+
     def test_authorize_new_datasource_success(self):
         ''' authorize_new_datasource should succeed if permission is granted'''
         uid=self.user['uid']
@@ -191,21 +242,46 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
             authorization.authorize_put_datapoint_config(uid=uid, pid=pid)
         self.assertEqual(cm.exception.error, Errors.E_ARA_APDPC_RE)
 
-    def test_authorize_new_datapoint_success(self):
-        ''' authorize_new_datapoint should succeed if permission is granted'''
+    def test_authorize_new_datasource_datapoint_success(self):
+        ''' authorize_new_datasource_datapoint should succeed if permission is granted'''
         uid=self.user['uid']
         did=uuid.uuid4()
         perm=permissions.CAN_EDIT
         cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
-        self.assertIsNone(authorization.authorize_new_datapoint(uid=uid, did=did))
+        self.assertIsNone(authorization.authorize_new_datasource_datapoint(uid=uid, did=did))
 
-    def test_authorize_new_datapoint_failure(self):
-        ''' authorize_new_datapoint should fail if permission is not granted'''
+    def test_authorize_new_datasource_datapoint_failure(self):
+        ''' authorize_new_datasource_datapoint should fail if permission is not granted'''
         uid=self.user['uid']
         did=uuid.uuid4()
         with self.assertRaises(exceptions.AuthorizationException) as cm:
-            authorization.authorize_new_datapoint(uid=uid, did=did)
-        self.assertEqual(cm.exception.error, Errors.E_ARA_ANDP_RE)
+            authorization.authorize_new_datasource_datapoint(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ANDSDP_RE)
+
+    def test_authorize_new_user_datapoint_failure_invalid_aid(self):
+        ''' authorize_new_user_datapoint should fail if aid is invalid '''
+        aids=[None, 'text',12, 222.22, {'a':'dict'}, {'set'}, ['a','list'],('tuple','yes'),{uuid.uuid4()},[uuid.uuid4(),],(uuid.uuid4(),),uuid.uuid1(), uuid.uuid4().hex]
+        uid=uuid.uuid4()
+        for aid in aids:
+            with self.assertRaises(exceptions.AuthorizationException) as cm:
+                authorization.authorize_new_user_datapoint(uid=uid, aid=aid)
+            self.assertEqual(cm.exception.error, Errors.E_ARA_ANUDP_IA)
+
+    def test_authorize_new_user_datapoint_failure_no_permission_found(self):
+        ''' authorize_new_user_datapoint should fail if no permission is found '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_new_user_datapoint(uid=uid, aid=aid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ANUDP_RE)
+
+    def test_authorize_new_user_datapoint_success(self):
+        ''' authorize_new_user_datapoint should succeed if user has permission over agent '''
+        uid=uuid.uuid4()
+        aid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        self.assertTrue(cassapiperm.insert_user_agent_perm(uid=uid, aid=aid, perm=perm))
+        self.assertIsNone(authorization.authorize_new_user_datapoint(uid=uid, aid=aid))
 
     def test_authorize_put_agent_config_success(self):
         ''' authorize_put_agent_config should succeed if permission is granted'''

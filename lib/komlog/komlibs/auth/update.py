@@ -5,7 +5,6 @@ from komlog.komlibs.auth.quotes import compare as quocmp
 from komlog.komlibs.auth.quotes import deny as quodeny
 from komlog.komlibs.auth.resources import update as resup
 
-resource_update_funcs={}
 
 def update_quotes(operation, params):
     quotes=relations.operation_quotes[operation]
@@ -32,18 +31,8 @@ def update_resources(operation, params):
     num_updates=len(update_funcs)
     num_success=0
     for update_func in update_funcs:
-        avalue=False
-        try:
-            avalue=resource_update_funcs[update_func](params=params)
-        except KeyError:
-            try:
-                resource_update_funcs[update_func]=getattr(resup,update_func)
-                avalue=resource_update_funcs[update_func](params=params)
-            except Exception as e:
-                logging.logger.exception('Exception getting authorization functions: '+update_func+' '+str(e))
-        except Exception as e:
-            logging.logger.exception('Exception in authorization update function: '+update_func+' '+str(e))
-        if avalue:
+        result=update_func(params=params)
+        if result:
             ''' auth updated successfully'''
             num_success+=1
         else:

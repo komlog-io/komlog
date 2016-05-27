@@ -21,12 +21,6 @@ from komlog.komcass.api import quote as cassapiquote
 from komlog.komlibs.auth.model.quotes import Quotes
 from komlog.komlibs.general.time import timeuuid
 
-def get_update_funcs(operation):
-    try:
-        return update_funcs[operation]
-    except KeyError:
-        return []
-
 def quo_user_total_agents(params):
     if 'uid' not in params:
         return None

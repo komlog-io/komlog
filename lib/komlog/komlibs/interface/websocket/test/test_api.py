@@ -86,7 +86,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDDM_IPL.value)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDSDM_IPL.value)
 
     def test_process_message_failure_unsupported_protocol_version(self):
         ''' process_message should fail if protocol version is not known '''

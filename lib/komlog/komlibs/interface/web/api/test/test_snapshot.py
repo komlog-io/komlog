@@ -203,7 +203,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_get_snapshot_config_request_success_snapshot_linegraph_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -323,7 +323,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_get_snapshot_config_request_success_snapshot_histogram_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -443,7 +443,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_get_snapshot_config_request_success_snapshot_table_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -563,7 +563,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_get_snapshot_config_request_success_snapshot_multidp_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -826,7 +826,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_get_snapshot_config_request_success_snapshot_datapoint'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -990,7 +990,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_delete_snapshot_request_success_snapshot_linegraph_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -1113,7 +1113,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_delete_snapshot_request_success_snapshot_histogram_datapoint'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -1236,7 +1236,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_delete_snapshot_request_success_snapshot_table_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -1359,7 +1359,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_delete_snapshot_request_success_snapshot_multidp_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -1540,7 +1540,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_delete_snapshot_request_success_snapshot_datapoint_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -1746,7 +1746,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_new_snapshot_request_success_widget_linegraph_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -1911,7 +1911,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_new_snapshot_request_success_widget_histogram_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -2075,7 +2075,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_new_snapshot_request_success_widget_table_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -2240,7 +2240,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_new_snapshot_request_success_widget_multidp_dp'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -2439,7 +2439,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         datapointname='test_new_snapshot_request_success_widget_datapoint'
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:

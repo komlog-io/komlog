@@ -21,30 +21,8 @@ from komlog.komcass.api import snapshot as cassapisnapshot
 from komlog.komcass.api import circle as cassapicircle
 from komlog.komcass.api import permission as cassapiperm
 
-update_funcs = {
-                Operations.NEW_AGENT: ['new_agent'],
-                Operations.NEW_DATASOURCE: ['new_datasource'],
-                Operations.NEW_DATAPOINT: ['new_datapoint'],
-                Operations.NEW_WIDGET: ['new_widget'],
-                Operations.NEW_DASHBOARD: ['new_dashboard'],
-                Operations.NEW_WIDGET_SYSTEM: ['new_widget_system'],
-                Operations.NEW_SNAPSHOT: ['new_snapshot'],
-                Operations.NEW_CIRCLE: ['new_circle'],
-                Operations.DELETE_USER: ['delete_user'],
-                Operations.DELETE_AGENT: ['delete_agent'],
-                Operations.DELETE_DATASOURCE: ['delete_datasource'],
-                Operations.DELETE_DATAPOINT: ['delete_datapoint'],
-                Operations.DELETE_WIDGET: ['delete_widget'],
-                Operations.DELETE_DASHBOARD: ['delete_dashboard'],
-                Operations.DELETE_SNAPSHOT: ['delete_snapshot'],
-                Operations.DELETE_CIRCLE: ['delete_circle'],
-}
-
 def get_update_funcs(operation):
-    try:
-        return update_funcs[operation]
-    except KeyError:
-        return []
+    return update_funcs[operation]
 
 def new_agent(params):
     if not 'aid' in params or not 'uid' in params:
@@ -66,7 +44,17 @@ def new_datasource(params):
         return True
     return False
 
-def new_datapoint(params):
+def new_datasource_datapoint(params):
+    if not 'uid' in params or not 'pid' in params:
+        return False
+    uid=params['uid']
+    pid=params['pid']
+    user_perm=permissions.CAN_READ|permissions.CAN_EDIT|permissions.CAN_DELETE
+    if cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=user_perm):
+        return True
+    return False
+
+def new_user_datapoint(params):
     if not 'uid' in params or not 'pid' in params:
         return False
     uid=params['uid']
@@ -218,4 +206,24 @@ def delete_circle(cid):
     if circle:
         cassapiperm.insert_user_circle_perm(uid=circle.uid, cid=cid, perm=perm)
     return True
+
+update_funcs = {
+    Operations.NEW_AGENT: (new_agent,),
+    Operations.NEW_DATASOURCE: (new_datasource,),
+    Operations.NEW_DATASOURCE_DATAPOINT: (new_datasource_datapoint,),
+    Operations.NEW_USER_DATAPOINT: (new_user_datapoint,),
+    Operations.NEW_WIDGET: (new_widget,),
+    Operations.NEW_DASHBOARD: (new_dashboard,),
+    Operations.NEW_WIDGET_SYSTEM: (new_widget_system,),
+    Operations.NEW_SNAPSHOT: (new_snapshot,),
+    Operations.NEW_CIRCLE: (new_circle,),
+    Operations.DELETE_USER: (delete_user,),
+    Operations.DELETE_AGENT: (delete_agent,),
+    Operations.DELETE_DATASOURCE: (delete_datasource,),
+    Operations.DELETE_DATAPOINT: (delete_datapoint,),
+    Operations.DELETE_WIDGET: (delete_widget,),
+    Operations.DELETE_DASHBOARD: (delete_dashboard,),
+    Operations.DELETE_SNAPSHOT: (delete_snapshot,),
+    Operations.DELETE_CIRCLE: (delete_circle,),
+}
 

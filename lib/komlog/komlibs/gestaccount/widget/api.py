@@ -101,9 +101,6 @@ def new_widget_datapoint(uid,pid):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GWA_NWDP_DNF)
-    datasource=cassapidatasource.get_datasource(did=datapoint.did)
-    if not datasource:
-        raise exceptions.DatasourceNotFoundException(error=Errors.E_GWA_NWDP_DSNF)
     widget_dp=cassapiwidget.get_widget_dp(pid=pid)
     if widget_dp:
         raise exceptions.WidgetAlreadyExistsException(error=Errors.E_GWA_NWDP_WAE)
@@ -111,9 +108,10 @@ def new_widget_datapoint(uid,pid):
     widgetname=datapoint.datapointname
     widget=ormwidget.WidgetDp(wid=wid,widgetname=widgetname, uid=user.uid,pid=datapoint.pid,creation_date=timeuuid.uuid1())
     if cassapiwidget.new_widget(widget=widget):
-        dswidget=cassapiwidget.get_widget_ds(did=datapoint.did)
-        if dswidget:
-            graphkin.kin_widgets(ido=widget.wid, idd=dswidget.wid)
+        if datapoint.did:
+            dswidget=cassapiwidget.get_widget_ds(did=datapoint.did)
+            if dswidget:
+                graphkin.kin_widgets(ido=widget.wid, idd=dswidget.wid)
         return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type, 'pid': widget.pid}
     else:
         raise exceptions.WidgetCreationException(error=Errors.E_GWA_NWDP_IWE)

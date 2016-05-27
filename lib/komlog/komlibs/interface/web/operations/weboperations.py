@@ -13,32 +13,33 @@ import uuid
 from komlog.komlibs.general.validation import arguments
 from komlog.komlibs.auth.model.operations import Operations
 
-NEW_AGENT             = 0
-NEW_DATASOURCE        = 1
-NEW_DATAPOINT         = 2
-NEW_WIDGET            = 3
-NEW_DASHBOARD         = 4
-NEW_WIDGET_SYSTEM     = 5
-NEW_SNAPSHOT          = 6
-NEW_CIRCLE            = 7
-DELETE_USER           = 8
-DELETE_AGENT          = 9
-DELETE_DATASOURCE     = 10
-DELETE_DATAPOINT      = 11
-DELETE_WIDGET         = 12
-DELETE_DASHBOARD      = 13
-DELETE_SNAPSHOT       = 14
-DELETE_CIRCLE         = 15
-UPDATE_CIRCLE_MEMBERS = 16
-#DATASOURCE_DATA_STORED    = 17
-NEW_USER              = 18
+NEW_AGENT                   = 0
+NEW_DATASOURCE              = 1
+NEW_DATASOURCE_DATAPOINT    = 2
+NEW_WIDGET                  = 3
+NEW_DASHBOARD               = 4
+NEW_WIDGET_SYSTEM           = 5
+NEW_SNAPSHOT                = 6
+NEW_CIRCLE                  = 7
+DELETE_USER                 = 8
+DELETE_AGENT                = 9
+DELETE_DATASOURCE           = 10
+DELETE_DATAPOINT            = 11
+DELETE_WIDGET               = 12
+DELETE_DASHBOARD            = 13
+DELETE_SNAPSHOT             = 14
+DELETE_CIRCLE               = 15
+UPDATE_CIRCLE_MEMBERS       = 16
+#DATASOURCE_DATA_STORED     = 17
+NEW_USER                    = 18
+#NEW_USER_DATAPOINT         = 19
 
 
 OPAUTHS={
     NEW_USER:Operations.NEW_USER,
     NEW_AGENT:Operations.NEW_AGENT,
     NEW_DATASOURCE:Operations.NEW_DATASOURCE,
-    NEW_DATAPOINT:Operations.NEW_DATAPOINT,
+    NEW_DATASOURCE_DATAPOINT:Operations.NEW_DATASOURCE_DATAPOINT,
     NEW_WIDGET:Operations.NEW_WIDGET,
     NEW_DASHBOARD:Operations.NEW_DASHBOARD,
     NEW_WIDGET_SYSTEM:Operations.NEW_WIDGET_SYSTEM,
@@ -89,9 +90,9 @@ class NewDatasourceOperation(WIFaceOperation):
         self.params['aid']=aid
         self.params['did']=did
 
-class NewDatapointOperation(WIFaceOperation):
+class NewDatasourceDatapointOperation(WIFaceOperation):
     def __init__(self, uid, aid, did, pid):
-        self.oid=NEW_DATAPOINT
+        self.oid=NEW_DATASOURCE_DATAPOINT
         self.params={}
         self.params['uid']=uid
         self.params['aid']=aid

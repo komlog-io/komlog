@@ -119,18 +119,18 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date, content=content))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date))
 
-    def test_new_datapoint_request_success(self):
-        ''' new_datapoint_request should succeed if parameters exists, and user has permission '''
+    def test_new_datasource_datapoint_request_success(self):
+        ''' new_datasource_datapoint_request should succeed if parameters exists, and user has permission '''
         psp = self.passport
         did=self.agents[0]['dids'][0]
-        datapointname='test_new_datapoint_request_success'
+        datapointname='test_new_datasource_datapoint_request_success'
         datasource_config=datasourceapi.get_datasource_config_request(passport=psp, did=did)
         self.assertEqual(datasource_config.status, status.WEB_STATUS_OK)
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][0]
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
@@ -150,97 +150,97 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datapoint['datapointname'],'.'.join((datasource_config.data['datasourcename'],datapointname)))
         self.assertEqual(datapoint['did'],uuid.UUID(did))
 
-    def test_new_datapoint_request_failure_invalid_passport(self):
-        ''' new_datapoint_request should fail if username is invalid '''
+    def test_new_datasource_datapoint_request_failure_invalid_passport(self):
+        ''' new_datasource_datapoint_request should fail if username is invalid '''
         passports=[None, 233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
         did=uuid.uuid4().hex
-        datapointname='test_new_datapoint_request_failure'
+        datapointname='test_new_datasource_datapoint_request_failure'
         sequence='23423234565432345678'
         variable=(0,1)
         for psp in passports:
-            response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_new_datapoint_request_failure_invalid_did(self):
-        ''' new_datapoint_request should fail if did is invalid '''
+    def test_new_datasource_datapoint_request_failure_invalid_did(self):
+        ''' new_datasource_datapoint_request should fail if did is invalid '''
         psp = self.passport
         dids=[None, 233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
-        datapointname='test_new_datapoint_request_failure'
+        datapointname='test_new_datasource_datapoint_request_failure'
         sequence='23423234565432345678'
         variable=(0,1)
         for did in dids:
-            response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_new_datapoint_request_failure_invalid_datapointname(self):
-        ''' new_datapoint_request should fail if datapointname is invalid '''
+    def test_new_datasource_datapoint_request_failure_invalid_datapointname(self):
+        ''' new_datasource_datapoint_request should fail if datapointname is invalid '''
         datapointnames=[None, 233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'user\tName','user name\n','userñame',json.dumps('username')]
         did=uuid.uuid4().hex
         psp = self.passport
         sequence='23423234565432345678'
         variable=(0,1)
         for datapointname in datapointnames:
-            response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_new_datapoint_request_failure_invalid_sequence(self):
-        ''' new_datapoint_request should fail if sequence is invalid '''
+    def test_new_datasource_datapoint_request_failure_invalid_sequence(self):
+        ''' new_datasource_datapoint_request should fail if sequence is invalid '''
         psp = self.passport
         sequences=[None, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4(),'abcde1234567890ABCDF1','abcde1234567890ABCD']
         did=uuid.uuid4().hex
-        datapointname='test_new_datapoint_request_failure'
+        datapointname='test_new_datasource_datapoint_request_failure'
         variable=(0,1)
         for sequence in sequences:
-            response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+            response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_new_datapoint_request_failure_invalid_position(self):
-        ''' new_datapoint_request should fail if position is invalid '''
+    def test_new_datasource_datapoint_request_failure_invalid_position(self):
+        ''' new_datasource_datapoint_request should fail if position is invalid '''
         psp = self.passport
         positions=[None, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
         did=uuid.uuid4().hex
-        datapointname='test_new_datapoint_request_failure'
+        datapointname='test_new_datasource_datapoint_request_failure'
         sequence='23423234565432345678'
         length=1
         for position in positions:
-            response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+            response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_new_datapoint_request_failure_invalid_length(self):
-        ''' new_datapoint_request should fail if length is invalid '''
+    def test_new_datasource_datapoint_request_failure_invalid_length(self):
+        ''' new_datasource_datapoint_request should fail if length is invalid '''
         psp = self.passport
         lengths=[None, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
         did=uuid.uuid4().hex
-        datapointname='test_new_datapoint_request_failure'
+        datapointname='test_new_datasource_datapoint_request_failure'
         sequence='23423234565432345678'
         position=1
         for length in lengths:
-            response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+            response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_new_datapoint_request_failure_user_does_not_exist(self):
-        ''' new_datapoint_request should fail if user does not exist '''
+    def test_new_datasource_datapoint_request_failure_user_does_not_exist(self):
+        ''' new_datasource_datapoint_request should fail if user does not exist '''
         psp = passport.Passport(uid=uuid.uuid4())
         did=self.agents[0]['dids'][0]
-        datapointname='test_new_datapoint_request_failure'
+        datapointname='test_new_datasource_datapoint_request_failure'
         sequence='23423234565432345678'
         position=1
         length=1
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_ARA_ANDP_RE.value)
+        self.assertEqual(response.error, autherrors.E_ARA_ANDSDP_RE.value)
 
-    def test_new_datapoint_request_failure_no_permission_did_does_not_exist(self):
-        ''' new_datapoint_request should fail if did does not exist '''
+    def test_new_datasource_datapoint_request_failure_no_permission_did_does_not_exist(self):
+        ''' new_datasource_datapoint_request should fail if did does not exist '''
         psp = self.passport
         did=uuid.uuid4().hex
-        datapointname='test_new_datapoint_request_failure'
+        datapointname='test_new_datasource_datapoint_request_failure'
         sequence='23423234565432345678'
         position=1
         length=1
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
-        self.assertEqual(response.error, autherrors.E_AQA_ANDP_DSNF.value)
+        self.assertEqual(response.error, autherrors.E_AQA_ANDSDP_DSNF.value)
 
     def test_update_datapoint_config_request_failure_invalid_passport(self):
         ''' update_datapoint_config_request should fail if username is invalid '''
@@ -289,7 +289,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
         variable=datasourcedata.data['variables'][1]
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
@@ -324,7 +324,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][2]
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
@@ -377,7 +377,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][3]
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
@@ -430,7 +430,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][4]
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
@@ -484,7 +484,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][5]
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
@@ -743,7 +743,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][6]
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
@@ -793,7 +793,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][7]
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
@@ -858,7 +858,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][8]
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
@@ -927,7 +927,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
         position,length=datasourcedata.data['variables'][9]
-        response=datapointapi.new_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         count=0
