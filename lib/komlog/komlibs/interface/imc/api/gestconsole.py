@@ -47,8 +47,9 @@ def process_message_MONVAR(message):
             response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
             response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
             response.add_msg_originated(messages.FillDatapointMessage(pid=datapoint['pid'],date=date))
-            response.add_msg_originated(messages.NewDPWidgetMessage(uid=uid,pid=datapoint['pid']))
             response.add_msg_originated(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':datapoint['pid'].hex}))
+            if datapoint['previously_existed'] is False:
+                response.add_msg_originated(messages.NewDPWidgetMessage(uid=uid,pid=datapoint['pid']))
             response.status=status.IMC_STATUS_OK
         else:
             logging.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position)+' length: '+str(length))

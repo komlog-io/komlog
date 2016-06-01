@@ -141,57 +141,6 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertEqual(cassapidatasource.get_datasource_maps(did=datasource['did'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
         self.assertEqual(cassapidatasource.get_datasource_text_summaries(did=datasource['did'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
 
-    def test_dissociate_datapoint_failure_invalid_pid(self):
-        ''' dissociate_datapoint should fail if we pass incorrect pid '''
-        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
-        for pid in pids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                deleteapi.dissociate_datapoint(pid=pid)
-            self.assertEqual(cm.exception.error, Errors.E_GCD_DSDP_IP)
-
-    def test_dissociate_datapoint_success_non_existent_pid(self):
-        ''' dissociate_datapoint should succeed even if pid does not exist '''
-        pid=uuid.uuid4()
-        self.assertTrue(deleteapi.dissociate_datapoint(pid=pid))
-
-    def test_dissociate_datapoint_success_existent_pid_but_not_associated(self):
-        ''' dissociate_datapoint should succeed even if pid is not associated to any datasource '''
-        username='test_dissociate_datapoint_success_existent_pid_but_not_associated'
-        email=username+'@komlog.org'
-        password='password'
-        datapointname=username+'_datapoint'
-        user=userapi.create_user(username=username, password=password, email=email)
-        datapoint=datapointapi.create_user_datapoint(uid=user['uid'],datapoint_uri=datapointname)
-        self.assertTrue(deleteapi.dissociate_datapoint(pid=datapoint['pid']))
-        db_datapoint=datapointapi.get_datapoint_config(pid=datapoint['pid'])
-        self.assertEqual(datapoint['pid'],db_datapoint['pid'])
-        self.assertEqual(None,db_datapoint['did'])
-        self.assertEqual(datapoint['uid'],db_datapoint['uid'])
-
-    def test_dissociate_datapoint_success_existent_pid_and_associated(self):
-        ''' dissociate_datapoint should succeed and dissasociate the pid '''
-        username='test_dissociate_datapoint_success_existent_pid_and_associated'
-        agentname='test_dissociate_datapoint_success_existent_pid_and_associated_agent'
-        datasourcename='datasource'
-        datapointname='datapoint'
-        email=username+'@komlog.org'
-        password='password'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='Test Version'
-        user=userapi.create_user(username=username, password=password, email=email)
-        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
-        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
-        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
-        db_datapoint=datapointapi.get_datapoint_config(pid=datapoint['pid'])
-        self.assertEqual(datapoint['pid'],db_datapoint['pid'])
-        self.assertEqual(datasource['did'],db_datapoint['did'])
-        self.assertEqual(datapoint['uid'],db_datapoint['uid'])
-        self.assertTrue(deleteapi.dissociate_datapoint(pid=datapoint['pid']))
-        db_datapoint=datapointapi.get_datapoint_config(pid=datapoint['pid'])
-        self.assertEqual(datapoint['pid'],db_datapoint['pid'])
-        self.assertEqual(None,db_datapoint['did'])
-        self.assertEqual(datapoint['uid'],db_datapoint['uid'])
-
     def test_delete_datapoint_failure_bad_parameters(self):
         ''' delete_datapoint should fail if we pass incorrect parameters '''
         pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
@@ -419,4 +368,71 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertIsNotNone(cassapisnapshot.get_snapshot(nid=snapshot['nid']))
         self.assertTrue(deleteapi.delete_snapshot(nid=snapshot['nid']))
         self.assertIsNone(cassapisnapshot.get_snapshot(nid=snapshot['nid']))
+
+    def test_dissociate_datapoint_from_datasource_failure_invalid_pid(self):
+        ''' dissociate_datapoint_from_datasource should fail if pid is invalid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                deleteapi.dissociate_datapoint_from_datasource(pid=pid)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DDPFDS_IP)
+
+    def test_dissociate_datapoint_from_datasource_failure_non_existent_datapoint(self):
+        ''' dissociate_datapoint_from_datasource should fail if pid does not exist '''
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            deleteapi.dissociate_datapoint_from_datasource(pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_GCD_DDPFDS_DPNF)
+
+    def test_dissociate_datapoint_from_datasource_success_datapoint_was_not_associated_already(self):
+        ''' dissociate_datapoint_from_datasource should succeed if we try to dissociate
+            a datapoint that is not associated '''
+        username='test_dissociate_datapoint_from_datasource_success_datapoint_was_not_associated_already'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        result=deleteapi.dissociate_datapoint_from_datasource(pid=datapoint['pid'])
+        self.assertIsNone(result['did'])
+        datapoint2=datapointapi.get_datapoint_config(pid=datapoint['pid'])
+        self.assertEqual(datapoint2['uid'],uid)
+        self.assertEqual(datapoint2['did'],None)
+        self.assertEqual(datapoint2['datapointname'],datapoint_uri)
+        self.assertTrue(datapoint2['pid'],datapoint['pid'])
+        self.assertTrue(datapoint2['color'],datapoint['color'])
+
+    def test_dissociate_datapoint_from_datasource_success_datapoint_was_associated(self):
+        ''' dissociate_datapoint_from_datasource should succeed if we try to dissociate
+            a datapoint that is associated to a datasource '''
+        username='test_dissociate_datapoint_from_datasource_success_datapoint_was_associated'
+        agentname=username
+        datasourcename='datasource'
+        datapointname='datapoint'
+        email=username+'@komlog.org'
+        password='password'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        widgetds=widgetapi.new_widget_datasource(uid=user['uid'], did=datasource['did']) 
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
+        widget=widgetapi.new_widget_datapoint(uid=user['uid'], pid=datapoint['pid']) 
+        datapoint_config=datapointapi.get_datapoint_config(pid=datapoint['pid'])
+        self.assertEqual(datapoint_config['did'], datasource['did'])
+        self.assertIsNotNone(cassapiwidget.get_widget(wid=widget['wid']))
+        self.assertNotEqual(graphkin.get_kin_widgets(ido=widgetds['wid']),[])
+        self.assertNotEqual(graphkin.get_kin_widgets(ido=widget['wid']),[])
+        result=deleteapi.dissociate_datapoint_from_datasource(pid=datapoint_config['pid'])
+        self.assertEqual(result['did'],datasource['did'])
+        datapoint_config=datapointapi.get_datapoint_config(pid=datapoint['pid'])
+        self.assertEqual(datapoint_config['did'], None)
+        self.assertEqual(graphkin.get_kin_widgets(ido=widget['wid']),[])
+        self.assertEqual(graphkin.get_kin_widgets(ido=widgetds['wid']),[])
 

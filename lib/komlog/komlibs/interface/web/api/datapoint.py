@@ -16,6 +16,7 @@ from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.widget import api as widgetapi
+from komlog.komlibs.gestaccount.common import delete as deleteapi
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.interface.web.model import webmodel
@@ -73,10 +74,11 @@ def get_datapoint_config_request(passport, pid):
     authorization.authorize_request(request=Requests.GET_DATAPOINT_CONFIG,passport=passport,pid=pid)
     data=datapointapi.get_datapoint_config(pid=pid)
     datapoint={}
-    datapoint['did']=data['did'].hex
     datapoint['pid']=data['pid'].hex
     datapoint['color']=data['color']
     datapoint['datapointname']=data['datapointname']
+    if data['did'] is not None:
+        datapoint['did']=data['did'].hex
     if 'decimalseparator' in data:
         datapoint['decimalseparator']=data['decimalseparator']
     if 'wid' in data:
@@ -184,4 +186,21 @@ def delete_datapoint_request(passport, pid):
     message=messages.DeleteDatapointMessage(pid=pid)
     msgapi.send_message(msg=message)
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+
+@exceptions.ExceptionHandler
+def dissociate_datapoint_from_datasource_request(passport, pid):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=Errors.E_IWADP_DDPFDS_IPSP)
+    if not args.is_valid_hex_uuid(pid):
+        raise exceptions.BadParametersException(error=Errors.E_IWADP_DDPFDS_IP)
+    pid=uuid.UUID(pid)
+    authorization.authorize_request(request=Requests.DISSOCIATE_DATAPOINT_FROM_DATASOURCE,passport=passport,pid=pid)
+    result=deleteapi.dissociate_datapoint_from_datasource(pid=pid)
+    if result['did'] is not None:
+        operation=weboperations.DissociateDatapointFromDatasourceOperation(pid=pid, did=result['did'])
+        auth_op=operation.get_auth_operation()
+        params=operation.get_params()
+        message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+        msgapi.send_message(message)
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 

@@ -1,6 +1,7 @@
 import unittest
 import uuid
 import json
+import decimal
 from komlog.komcass.api import datasource as cassapidatasource
 from komlog.komcass.api import datapoint as cassapidatapoint
 from komlog.komlibs.textman.api import variables as textmanvar
@@ -114,6 +115,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertIsInstance(datapoint, dict)
         self.assertEqual(datapoint['did'],did)
         self.assertEqual(datapoint['datapointname'],'.'.join((self.datasource['datasourcename'],datapointname)))
+        self.assertFalse(datapoint['previously_existed'])
 
     def test_create_datasource_datapoint_success_uri_already_existed_by_user_datapoint(self):
         ''' create_datasource_datapoint should succeed if uri already existed and was a datapoint
@@ -147,6 +149,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(ds_datapoint['color'],datapoint['color'])
         self.assertEqual(ds_datapoint['datapointname'],datapoint['datapointname'])
         self.assertTrue(ds_datapoint['did'],did)
+        self.assertTrue(ds_datapoint['previously_existed'])
 
     def test_create_datasource_datapoint_failure_uri_already_existed_by_something_other_than_datapoint(self):
         ''' create_datasource_datapoint should fail if uri already existed and was something other
@@ -208,6 +211,50 @@ class GestaccountDatapointApiTest(unittest.TestCase):
             api.create_datasource_datapoint(did=did,datapoint_uri=ds_datapoint_uri)
         self.assertEqual(cm.exception.error, Errors.E_GPA_CRD_AAD)
 
+    def test_get_datapoint_data_invalid_pid(self):
+        ''' get_datapoint_data should fail if pid is invalid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        its=timeuuid.uuid1(seconds=10)
+        ets=timeuuid.uuid1(seconds=20)
+        count=100
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datapoint_data(pid=pid, fromdate=its, todate=ets, count=count)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_GDD_IP)
+
+    def test_get_datapoint_data_invalid_todate(self):
+        ''' get_datapoint_data should fail if todate is invalid '''
+        todates=['asdfasd',234234,234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        pid=uuid.uuid4()
+        fromdate=timeuuid.uuid1(seconds=10)
+        count=100
+        for todate in todates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datapoint_data(pid=pid, fromdate=fromdate, todate=todate, count=count)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_GDD_ITD)
+
+    def test_get_datapoint_data_invalid_fromdate(self):
+        ''' get_datapoint_data should fail if fromdate is invalid '''
+        fromdates=['asdfasd',234234,234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        pid=uuid.uuid4()
+        todate=timeuuid.uuid1(seconds=10)
+        count=100
+        for fromdate in fromdates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datapoint_data(pid=pid, fromdate=fromdate, todate=todate, count=count)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_GDD_IFD)
+
+    def test_get_datapoint_data_invalid_count(self):
+        ''' get_datapoint_data should fail if count is invalid '''
+        counts=['asdfasd',234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        pid=uuid.uuid4()
+        todate=timeuuid.uuid1(seconds=20)
+        fromdate=timeuuid.uuid1(seconds=10)
+        for count in counts:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datapoint_data(pid=pid, fromdate=fromdate, todate=todate, count=count)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_GDD_ICNT)
+
     def test_get_datapoint_data_non_existent_datapoint(self):
         ''' get_datapoint_data should fail if pid is not in system '''
         pid=uuid.uuid4()
@@ -220,10 +267,55 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         self.assertRaises(exceptions.DatapointDataNotFoundException, api.get_datapoint_data, pid=datapoint['pid'])
 
+    def test_get_datapoint_data_success_user_datapoint_some_data(self):
+        ''' get_datapoint_data should return the data found '''
+        username='test_get_datapoint_data_success_user_datapoint_some_data'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        datapoint_data=(
+            (timeuuid.uuid1(seconds=1),'1'),
+            (timeuuid.uuid1(seconds=2),'2'),
+            (timeuuid.uuid1(seconds=3),'3'),
+            (timeuuid.uuid1(seconds=4),'4'),
+            (timeuuid.uuid1(seconds=5),'5'),
+            (timeuuid.uuid1(seconds=6),'6'),
+            (timeuuid.uuid1(seconds=7),'7'),
+            (timeuuid.uuid1(seconds=8),'8'),
+            (timeuuid.uuid1(seconds=9),'9'),
+            (timeuuid.uuid1(seconds=10),'10')
+        )
+        for date, content in datapoint_data:
+            self.assertTrue(api.store_user_datapoint_value(pid=datapoint['pid'],date=date, content=content))
+        db_data=api.get_datapoint_data(pid=datapoint['pid'])
+        self.assertEqual(len(db_data), 10)
+        db_data=api.get_datapoint_data(pid=datapoint['pid'], count=1)
+        self.assertEqual(len(db_data), 1)
+        self.assertEqual(db_data[0]['value'], decimal.Decimal(10))
+        fromdate=timeuuid.uuid1(seconds=20)
+        todate=timeuuid.uuid1(seconds=30)
+        with self.assertRaises(exceptions.DatapointDataNotFoundException) as cm:
+            api.get_datapoint_data(pid=datapoint['pid'], fromdate=fromdate, todate=todate)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GDD_DDNF)
+        self.assertEqual(cm.exception.last_date, fromdate)
+
+    def test_get_datapoint_config_failure_invalid_pid(self):
+        ''' get_datapoint_config should fail if pid is invalid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datapoint_config(pid=pid)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_GDC_IP)
+
     def test_get_datapoint_config_non_existent_datapoint(self):
         ''' get_datapoint_config should fail if pid is not in system '''
         pid=uuid.uuid4()
-        self.assertRaises(exceptions.DatapointNotFoundException, api.get_datapoint_config, pid=pid)
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            api.get_datapoint_config(pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GDC_DNF)
 
     def test_get_datapoint_config_success(self):
         ''' get_datapoint_config should succeed if pid exists in system '''
@@ -234,24 +326,65 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertIsInstance(data, dict)
         self.assertEqual(data['did'],did)
         self.assertEqual(data['datapointname'],'.'.join((self.datasource['datasourcename'],datapointname)))
-    
+
+    def test_get_datapoint_config_success_user_datapoint(self):
+        ''' get_datapoint_config should return the datapoint config '''
+        username='test_get_datapoint_config_success_user_datapoint'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        dp_config=api.get_datapoint_config(pid=datapoint['pid'])
+        self.assertEqual(dp_config['pid'],datapoint['pid'])
+        self.assertEqual(dp_config['uid'],user['uid'])
+        self.assertEqual(dp_config['did'],None)
+        self.assertEqual(dp_config['datapointname'],datapoint_uri)
+        self.assertTrue('color' in dp_config)
+        self.assertFalse('decimalseparator' in dp_config)
+        self.assertFalse('wid' in dp_config)
+
+    def test_update_datapoint_config_failure_invalid_pid(self):
+        ''' update_datapoint_config should fail if pid is invalid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_datapoint_config(pid=pid)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_UDC_IP)
+
+    def test_update_datapoint_config_failure_invalid_datapointname(self):
+        ''' update_datapoint_config should fail if datapointname is invalid '''
+        names=['Invalid ÑÑ chars',234234,234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4()]
+        pid=uuid.uuid4()
+        for datapointname in names:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_datapoint_config(pid=pid, datapointname=datapointname)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_UDC_IDN)
+
+    def test_update_datapoint_config_failure_invalid_color(self):
+        ''' update_datapoint_config should fail if color is invalid '''
+        colors=[234234,234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4()]
+        pid=uuid.uuid4()
+        for color in colors:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_datapoint_config(pid=pid, color=color)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_UDC_IC)
+
+    def test_update_datapoint_config_failure_nothing_to_update(self):
+        ''' update_datapoint_config should fail if not color nor datapointname is passed'''
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            api.update_datapoint_config(pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_UDC_EMP)
+
     def test_update_datapoint_config_non_existent_datapoint(self):
         ''' update_datapoint_config should fail if datapoint is not in system '''
         pid=uuid.uuid4()
         datapointname='test_update_datapoint_config_with_non_existent_datapoint'
-        self.assertRaises(exceptions.DatapointNotFoundException, api.update_datapoint_config, pid=pid, datapointname=datapointname)
-
-    def test_update_datapoint_config_with_invalid_datapointname(self):
-        ''' update_datapoint_config should fail if data has invalid datapointname'''
-        pid=uuid.uuid4()
-        datapointnames=[None,213123123,'Not Valid chars ÑÑÑÑ',{},['names','in array']]
-        for datapointname in datapointnames:
-            self.assertRaises(exceptions.BadParametersException, api.update_datapoint_config, pid=pid, datapointname=datapointname)
-
-    def test_update_datapoint_config_failure_no_parameters(self):
-        ''' update_datapoint_config should fail if datapoint nor color is passed'''
-        pid=uuid.uuid4()
-        self.assertRaises(exceptions.BadParametersException, api.update_datapoint_config, pid=pid)
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            api.update_datapoint_config(pid=pid,datapointname=datapointname)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_UDC_DNF)
 
     def test_update_datapoint_config_success(self):
         ''' update_datapoint_config should succeed if pid exists in system and params are OK '''
@@ -261,6 +394,31 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datapointname='test_update_datapoint_config_success_after_update'
         color='#FFAA88'
         self.assertTrue(api.update_datapoint_config(pid=datapoint['pid'], datapointname=datapointname, color=color))
+
+    def test_update_datapoint_config_success_user_datapoint(self):
+        ''' update_datapoint_config should succeed if pid exists in system and params are OK '''
+        username='test_update_datapoint_config_success_user_datapoint'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        datapoint_config=api.get_datapoint_config(pid=datapoint['pid'])
+        new_color='#DDFFCC'
+        self.assertTrue(api.update_datapoint_config(pid=datapoint['pid'], color=new_color))
+        datapoint_config=api.get_datapoint_config(pid=datapoint['pid'])
+        self.assertEqual(datapoint_config['color'],new_color)
+        new_datapointname='new_datapoint_uri'
+        self.assertTrue(api.update_datapoint_config(pid=datapoint['pid'],datapointname=new_datapointname))
+        datapoint_config=api.get_datapoint_config(pid=datapoint['pid'])
+        self.assertEqual(datapoint_config['datapointname'],new_datapointname)
+        new_color='#99FFCC'
+        new_datapointname='new_datapoint_uri2'
+        self.assertTrue(api.update_datapoint_config(pid=datapoint['pid'],color=new_color,datapointname=new_datapointname))
+        datapoint_config=api.get_datapoint_config(pid=datapoint['pid'])
+        self.assertEqual(datapoint_config['color'],new_color)
+        self.assertEqual(datapoint_config['datapointname'],new_datapointname)
 
     def test_mark_negative_variable_failure_non_existent_datapoint(self):
         ''' mark_negative_variable should fail if datapoint does not exist '''
@@ -307,6 +465,23 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         position=46
         length=2
         self.assertRaises(exceptions.DatasourceVariableNotFoundException, api.mark_negative_variable, pid=datapoint['pid'], date=date, position=position, length=length)
+
+    def test_mark_negative_variable_failure_unsupported_operation(self):
+        ''' mark_negative_variable should fail if the datapoint is not associated
+            to any datasource '''
+        username='test_mark_negative_variable_failure_unsupported_operation'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        date=timeuuid.uuid1()
+        position=1
+        length=1
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_DSNF)
 
     def test_mark_negative_variable_success(self):
         ''' mark_negative_variable should succeed '''
@@ -369,6 +544,23 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         length=2
         self.assertRaises(exceptions.DatasourceVariableNotFoundException, api.mark_positive_variable, pid=datapoint['pid'], date=date, position=position, length=length)
 
+    def test_mark_positive_variable_failure_unsupported_operation(self):
+        ''' mark_positive_variable should fail if the datapoint is not associated
+            to any datasource '''
+        username='test_mark_positive_variable_failure_unsupported_operation'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        date=timeuuid.uuid1()
+        position=1
+        length=1
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MPV_DSNF)
+
     def test_mark_positive_variable_success_no_other_datapoint_matched(self):
         ''' mark_positive_variable should succeed in this case, no other datapoint matched '''
         did=self.datasource['did']
@@ -430,6 +622,21 @@ class GestaccountDatapointApiTest(unittest.TestCase):
             api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
         self.assertEqual(cm.exception.error, Errors.E_GPA_MMDP_DMNF)
 
+    def test_mark_missing_datapoint_failure_unsupported_operation(self):
+        ''' mark_missing_datapoint should fail if the datapoint is not associated
+            to any datasource '''
+        username='test_mark_missing_datapoint_failure_unsupported_operation'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MMDP_DSNF)
+
     def test_generate_decision_tree_failure_invalid_pid(self):
         ''' generate_tree should fail if pid does not exists '''
         pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
@@ -452,6 +659,21 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
         pid=datapoint['pid']
         self.assertRaises(exceptions.DatapointDTreeTrainingSetEmptyException, api.generate_decision_tree, pid=pid)
+
+    def test_generate_decision_tree_failure_unsupported_operation(self):
+        ''' mark_missing_datapoint should fail if the datapoint is not associated
+            to any datasource '''
+        username='test_generate_decision_tree_failure_unsupported_operation'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.generate_decision_tree(pid=datapoint['pid'])
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GDT_DSNF)
 
     def test_generate_decision_tree_success(self):
         ''' generate_decision_tree should succeed if pid exists and has training set '''
@@ -506,6 +728,21 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         with self.assertRaises(exceptions.DatapointDTreeTrainingSetEmptyException) as cm:
             api.generate_inverse_decision_tree(pid=pid)
         self.assertEqual(cm.exception.error, Errors.E_GPA_GIDT_ETS)
+
+    def test_generate_inverse_decision_tree_failure_unsupported_operation(self):
+        ''' mark_missing_datapoint should fail if the datapoint is not associated
+            to any datasource '''
+        username='test_generate_inverse_decision_tree_failure_unsupported_operation'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.generate_inverse_decision_tree(pid=datapoint['pid'])
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GIDT_DSNF)
 
     def test_generate_inverse_decision_tree_success(self):
         ''' generate_decision_tree should succeed if pid exists and has training set '''
@@ -593,6 +830,33 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(datapoint['did'],did)
         self.assertEqual(datapoint['datapointname'],'.'.join((datasourcename,datapointname)))
         self.assertTrue(isinstance(datapoint['pid'],uuid.UUID))
+        self.assertFalse(datapoint['previously_existed'])
+
+    def test_monitor_new_datapoint_success_previously_existed(self):
+        ''' monitor_new_datapoint should succeed if we try to associate a datasource to an
+            existing user datapoint not associated yet '''
+
+        datasourcename='test_monitor_new_datapoint_success_previously_existed'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='monitor_new_datapoint content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        datapoint_uri=datasourcename+'.test_monitor_new_datapoint_success_previously_existed_dp'
+        datapoint=api.create_user_datapoint(uid=self.user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        #second var should be a position 44 and length 2
+        position=47
+        length=2
+        datapointname='test_monitor_new_datapoint_success_previously_existed_dp'
+        dsdatapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(isinstance(datapoint,dict))
+        self.assertEqual(dsdatapoint['did'],did)
+        self.assertEqual(dsdatapoint['datapointname'],datapoint_uri)
+        self.assertTrue(isinstance(dsdatapoint['pid'],uuid.UUID))
+        self.assertEqual(dsdatapoint['pid'],datapoint['pid'])
+        self.assertTrue(dsdatapoint['previously_existed'])
 
     def test_store_user_datapoint_value_failure_invalid_pid(self):
         ''' store_user_datapoint_values should fail if pid is invalid '''
@@ -648,11 +912,44 @@ class GestaccountDatapointApiTest(unittest.TestCase):
             date=timeuuid.uuid1()
             self.assertTrue(api.store_user_datapoint_value(pid=pid, date=date, content=content))
 
+    def test_store_datapoint_values_failure_invalid_pid(self):
+        ''' store_datapoint_values should fail if pid is invalid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        date=timeuuid.uuid1()
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.store_datapoint_values(pid=pid, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_SDPV_IP)
+
+    def test_store_datapoint_values_failure_invalid_date(self):
+        ''' store_datapoint_values should fail if date is invalid '''
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        pid=uuid.uuid4()
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.store_datapoint_values(pid=pid, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_SDPV_IDT)
+
     def test_store_datapoint_values_failure_datapoint_not_found(self):
         ''' store_datapoint_values should fail if datapoint is not found '''
         pid=uuid.uuid4()
         date=timeuuid.uuid1()
         self.assertRaises(exceptions.DatapointNotFoundException, api.store_datapoint_values, pid=pid, date=date)
+
+    def test_store_datapoint_values_failure_unsupported_operation(self):
+        ''' store_datapoint_values should fail if we try to execute the function over
+            an user datapoint that is not associated to any datasource '''
+        username='test_store_datapoint_values_failure_unsupported_operation'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.store_datapoint_values(pid=datapoint['pid'], date=date)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_SDPV_DSNF)
 
     def test_store_datapoint_values_failure_dtree_not_found(self):
         ''' store_datapoint_values should fail if datapoint dtree is not found '''
@@ -752,6 +1049,22 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
             api.should_datapoint_match_any_sample_variable(pid=pid, date=date)
         self.assertEqual(cm.exception.error, Errors.E_GPA_SDMSV_DNF)
+
+    def test_should_datapoint_match_any_sample_variable_failure_unsupported_operation(self):
+        ''' should_datapoint_match_any_sample_variable should fail if we try 
+            to execute the function over an user datapoint that is not associated
+            to any datasource '''
+        username='test_should_datapoint_match_any_sample_variable_failure_unsupported_operation'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.should_datapoint_match_any_sample_variable(pid=datapoint['pid'], date=date)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_SDMSV_DSNF)
 
     def test_should_datapoint_match_any_sample_variable_failure_no_datapoint_data(self):
         ''' should_datapoint_match_any_sample_variable should fail if datapoint has no data '''
@@ -942,6 +1255,22 @@ class GestaccountDatapointApiTest(unittest.TestCase):
             api.generate_datasource_novelty_detector_for_datapoint(pid=pid)
         self.assertEqual(cm.exception.error, Errors.E_GPA_GDNDFD_DNF)
 
+    def test_generate_datasource_novelty_detector_for_datapoint_failure_unsupported_operation(self):
+        ''' generate_datasource_novelty_detector_for_datapoint should fail if we try 
+            to execute the function over an user datapoint that is not associated
+            to any datasource '''
+        username='test_generate_datasource_novelty_detector_for_datapoint_failure_unsupported_operation'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.generate_datasource_novelty_detector_for_datapoint(pid=datapoint['pid'])
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GDNDFD_DSNF)
+
     def test_generate_datasource_novelty_detector_for_datapoint_failure_non_datasource_data(self):
         ''' generate_datasource_novelty_detector_for_datapoint should fail if no datasource data is found '''
         datasourcename='test_generate_datasource_novelty_detector_for_datapoint_datasource'
@@ -1016,6 +1345,22 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
             api.should_datapoint_appear_in_sample(pid=pid, date=date)
         self.assertEqual(cm.exception.error, Errors.E_GPA_SDAIS_DNF)
+
+    def test_should_datapoint_appear_in_sample_failure_unsupported_operation(self):
+        ''' should_datapoint_appear_in_sample should fail if we try 
+            to execute the function over an user datapoint that is not associated
+            to any datasource '''
+        username='test_should_datapoint_appear_in_sample_failure_unsupported_operation'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.should_datapoint_appear_in_sample(pid=datapoint['pid'], date=date)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_SDAIS_DSNF)
 
     def test_should_datapoint_appear_in_sample_failure_no_novelty_detector_found(self):
         ''' should_datapoint_appear_in_sample should fail if no novelty_detector is found '''

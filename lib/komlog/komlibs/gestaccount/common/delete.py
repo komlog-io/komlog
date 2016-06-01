@@ -118,23 +118,6 @@ def delete_datasource(did, delete_datapoints=True):
     graphuri.dissociate_vertex(ido=did)
     return True
 
-def dissociate_datapoint(pid):
-    ''' Dissociate a datapoint from its current datasource.
-        The data already identified is not deleted, we only delete
-        the datasource association and the algorithms calculated for the identification
-        in the datasource.  '''
-    if not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException(error=Errors.E_GCD_DSDP_IP)
-    datapoint=cassapidatapoint.get_datapoint(pid=pid)
-    cassapidatapoint.dissociate_datapoint_from_datasource(pid)
-    cassapidatapoint.set_datapoint_dtree(pid=pid, dtree=None)
-    cassapidatapoint.set_datapoint_dtree_inv(pid=pid, dtree=None)
-    cassapidatapoint.delete_datapoint_dtree_positives(pid=pid)
-    cassapidatapoint.delete_datapoint_dtree_negatives(pid=pid)
-    if datapoint and datapoint.did:
-        cassapidatasource.delete_datasource_novelty_detector_for_datapoint(did=datapoint.did,pid=pid)
-    return True
-
 def delete_datapoint(pid):
     ''' Delete all datapoint info. '''
     if not args.is_valid_uuid(pid):
@@ -163,6 +146,26 @@ def delete_datapoint(pid):
     cassapiquote.delete_datapoint_quotes(pid=pid)
     graphuri.dissociate_vertex(ido=pid)
     return True
+
+def dissociate_datapoint_from_datasource(pid):
+    ''' This function clears the associated datasource of a datapoint '''
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=Errors.E_GCD_DDPFDS_IP)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    if not datapoint:
+        raise exceptions.DatapointNotFoundException(error=Errors.E_GCD_DDPFDS_DPNF)
+    cassapidatapoint.dissociate_datapoint_from_datasource(pid=pid)
+    cassapidatapoint.set_datapoint_dtree(pid=pid, dtree=None)
+    cassapidatapoint.set_datapoint_dtree_inv(pid=pid, dtree=None)
+    cassapidatapoint.delete_datapoint_dtree_positives(pid=pid)
+    cassapidatapoint.delete_datapoint_dtree_negatives(pid=pid)
+    if datapoint.did:
+        cassapidatasource.delete_datasource_novelty_detector_for_datapoint(did=datapoint.did,pid=pid)
+        dpwidget=cassapiwidget.get_widget_dp(pid=pid)
+        dswidget=cassapiwidget.get_widget_ds(did=datapoint.did)
+        if dswidget and dpwidget:
+            graphkin.unkin_widgets(ido=dpwidget.wid, idd=dswidget.wid)
+    return {'did':datapoint.did}
 
 def delete_widget(wid):
     if not args.is_valid_uuid(wid):

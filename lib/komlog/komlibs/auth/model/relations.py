@@ -76,5 +76,8 @@ operation_quotes = {
     Operations.DELETE_CIRCLE: [
         Quotes.quo_user_total_circles,
     ],
+    Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE: [
+        Quotes.quo_datasource_total_datapoints,
+    ],
 }
 

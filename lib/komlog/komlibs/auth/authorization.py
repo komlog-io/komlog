@@ -227,6 +227,9 @@ def authorize_response_event(passport):
 def authorize_get_uri(passport):
     pass
 
+def authorize_dissociate_datapoint_from_datasource(passport, pid):
+    resauth.authorize_dissociate_datapoint_from_datasource(uid=passport.uid,pid=pid)
+
 func_requests={
     Requests.ADD_DATAPOINT_TO_WIDGET:authorize_add_datapoint_to_widget,
     Requests.ADD_MEMBER_TO_CIRCLE:authorize_add_member_to_circle,
@@ -243,6 +246,7 @@ func_requests={
     Requests.DELETE_WIDGET:authorize_delete_widget,
     Requests.DELETE_WIDGET_FROM_DASHBOARD:authorize_delete_widget_from_dashboard,
     Requests.DISABLE_EVENT:authorize_disable_event,
+    Requests.DISSOCIATE_DATAPOINT_FROM_DATASOURCE:authorize_dissociate_datapoint_from_datasource,
     Requests.GET_AGENT_CONFIG:authorize_get_agent_config,
     Requests.GET_AGENTS_CONFIG:authorize_get_agents_config,
     Requests.GET_CIRCLE_CONFIG:authorize_get_circle_config,

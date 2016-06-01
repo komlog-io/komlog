@@ -169,6 +169,8 @@ class Errors(Enum):
     E_IWADP_DDPR_IPSP=100775
     E_IWADP_DDPR_IP=100776
 
+    E_IWADP_DDPFDS_IPSP      = 100800  #: dissociate_datapoint_from_datasource_request invalid psp 
+    E_IWADP_DDPFDS_IP        = 100801  #: dissociate_datapoint_from_datasource_request invalid pid
 
 #interface web api widget
 

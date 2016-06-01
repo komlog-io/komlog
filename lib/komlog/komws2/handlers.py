@@ -255,6 +255,14 @@ class DatapointNegativesHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
+class DatapointDatasourceHandler(tornado.web.RequestHandler):
+    
+    @auth.authenticated
+    def delete(self, pid):
+        response=datapoint.dissociate_datapoint_from_datasource_request(passport=self.passport, pid=pid)
+        self.set_status(response.status)
+        self.write(json.dumps(response.data))
+
 class UserConfigHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
@@ -683,6 +691,7 @@ HANDLERS = [
             (r'/etc/dp/('+UUID4_REGEX+')', DatapointConfigHandler),
             (r'/etc/dp/('+UUID4_REGEX+')/positives/?', DatapointPositivesHandler),
             (r'/etc/dp/('+UUID4_REGEX+')/negatives/?', DatapointNegativesHandler),
+            (r'/etc/dp/('+UUID4_REGEX+')/ds/?', DatapointDatasourceHandler),
             (r'/etc/wg/?', WidgetsHandler),
             (r'/etc/wg/('+UUID4_REGEX+')', WidgetConfigHandler),
             (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/dp/(?P<pid>'+UUID4_REGEX+')', WidgetDatapointsHandler),

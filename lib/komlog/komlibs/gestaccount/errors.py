@@ -354,6 +354,7 @@ class Errors(Enum):
     E_GPA_SDPSV_DNF  = 6804 #: store_user_datapoint_value. datapoint not found
     E_GPA_SDPSV_IDDE = 6805 #: store_user_datapoint_value. insert datapoint data error
 
+
 # gestaccount widget api
 
     E_GWA_GWC_IW    = 8900
@@ -581,22 +582,23 @@ class Errors(Enum):
 
 #gestaccount common delete
 
-    E_GCD_DU_IU     = 16000 #delete_user invalid uid parameter
-    E_GCD_DU_UNF    = 16001 #delete_user user not found
+    E_GCD_DU_IU       = 16000 #delete_user invalid uid parameter
+    E_GCD_DU_UNF      = 16001 #delete_user user not found
 
-    E_GCD_DA_IA     = 16100 #delete_agent invalid aid parameter
+    E_GCD_DA_IA       = 16100 #delete_agent invalid aid parameter
 
-    E_GCD_DDS_ID    = 16200 #delete_datasource invalid did parameter
+    E_GCD_DDS_ID      = 16200 #delete_datasource invalid did parameter
 
-    E_GCD_DDP_IP    = 16300 #delete_datapoint invalid pid parameter
+    E_GCD_DDP_IP      = 16300 #delete_datapoint invalid pid parameter
 
-    E_GCD_DW_IW     = 16400 #delete_widget invalid wid parameter
+    E_GCD_DW_IW       = 16400 #delete_widget invalid wid parameter
 
-    E_GCD_DDB_IB    = 16500 #delete_dashboard invalid bid parameter
+    E_GCD_DDB_IB      = 16500 #delete_dashboard invalid bid parameter
 
-    E_GCD_DC_IC     = 16600 #delete_circle invalid cid parameter
+    E_GCD_DC_IC       = 16600 #delete_circle invalid cid parameter
 
-    E_GCD_DN_IN     = 16700 #delete_snapshot invalid nid parameter
+    E_GCD_DN_IN       = 16700 #delete_snapshot invalid nid parameter
 
-    E_GCD_DSDP_IP   = 16800 #dissociate_datapoint invalid pid parameter
+    E_GCD_DDPFDS_IP   = 16800 #: dissociate_datapoint_from_datasource: invalid pid
+    E_GCD_DDPFDS_DPNF = 16801 #: dissociate_datapoint_from_datasource: datapoint not found
 

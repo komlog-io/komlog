@@ -567,21 +567,6 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
             authorization.authorize_get_datapoint_data(pid=pid, ii=ii, ie=ie)
         self.assertEqual(cm.exception.error, Errors.E_AQA_AGDPD_DPNF)
 
-    def test_authorize_get_datapoint_data_failure_datasource_not_found(self):
-        ''' authorize_get_datapoint_data should fail if datasource is not found '''
-        uid=uuid.uuid4()
-        did=uuid.uuid4()
-        pid=uuid.uuid4()
-        datapointname='datapoint'
-        creation_date=timeuuid.uuid1()
-        ii=None
-        ie=None
-        datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
-        self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
-            authorization.authorize_get_datapoint_data(pid=pid, ii=ii, ie=ie)
-        self.assertEqual(cm.exception.error, Errors.E_AQA_AGDPD_DSNF)
-
     def test_authorize_get_datapoint_data_success_limit_not_found_interval_not_set(self):
         ''' authorize_get_datapoint_data should succeed if limit is not found '''
         uid=uuid.uuid4()
@@ -595,25 +580,20 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         ie=None
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         self.assertIsNone(authorization.authorize_get_datapoint_data(pid=pid, ii=ii, ie=ie))
 
     def test_authorize_get_datapoint_data_success_limit_not_found_interval_set(self):
         ''' authorize_get_datapoint_data should succeed if limit is not found '''
         uid=uuid.uuid4()
         aid=uuid.uuid4()
-        did=uuid.uuid4()
+        did=None
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.uuid1()
         ie=timeuuid.uuid1()
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         self.assertIsNone(authorization.authorize_get_datapoint_data(pid=pid, ii=ii, ie=ie))
 
     def test_authorize_get_datapoint_data_failure_limit_found_ii_less_than_limit_ie_more_than_limit(self):
@@ -623,14 +603,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -646,14 +623,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.uuid1(seconds=1000)
         ie=timeuuid.uuid1(seconds=50)
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -669,14 +643,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.uuid1(seconds=10)
         ie=None
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -692,14 +663,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=None
         ie=timeuuid.uuid1(seconds=50)
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -715,14 +683,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.uuid1(seconds=10)
         ie=timeuuid.uuid1(seconds=50)
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -738,14 +703,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=None
         ie=None
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -761,14 +723,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=None
         ie=timeuuid.uuid1(seconds=1000)
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -784,14 +743,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.uuid1(seconds=1000)
         ie=None
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -807,14 +763,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.uuid1(seconds=10)
         ie=timeuuid.min_uuid_from_time(500)
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -830,14 +783,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.min_uuid_from_time(500)
         ie=timeuuid.uuid1(seconds=10)
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -853,14 +803,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.min_uuid_from_time(500)
         ie=timeuuid.uuid1(seconds=1000)
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -873,14 +820,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.min_uuid_from_time(1000)
         ie=timeuuid.min_uuid_from_time(500)
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -893,14 +837,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.min_uuid_from_time(500)
         ie=timeuuid.min_uuid_from_time(500)
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -913,14 +854,11 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         did=uuid.uuid4()
         pid=uuid.uuid4()
         datapointname='datapoint'
-        datasourcename='datasource'
         creation_date=timeuuid.uuid1()
         ii=timeuuid.max_uuid_from_time(500)
         ie=timeuuid.max_uuid_from_time(500)
         datapoint=ormdatapoint.Datapoint(pid=pid, did=did, uid=uid, creation_date=creation_date, datapointname=datapointname)
         self.assertTrue(cassapidatapoint.new_datapoint(datapoint))
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename=datasourcename, creation_date=creation_date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(500)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))

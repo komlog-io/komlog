@@ -139,11 +139,8 @@ def authorize_get_datapoint_data(pid, ii, ie):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_AQA_AGDPD_DPNF)
-    datasource=cassapidatasource.get_datasource(did=datapoint.did)
-    if not datasource or not datasource.uid:
-        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQA_AGDPD_DSNF)
     iface=interfaces.User_DataRetrievalMinTimestamp().value
-    db_iface=cassapiiface.get_user_iface_deny(uid=datasource.uid, iface=iface)
+    db_iface=cassapiiface.get_user_iface_deny(uid=datapoint.uid, iface=iface)
     if db_iface:
         min_date=uuid.UUID(db_iface.perm)
         if ii and ie and ii.time >= min_date.time and ie.time >= min_date.time:

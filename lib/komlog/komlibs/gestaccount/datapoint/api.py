@@ -28,12 +28,10 @@ from komlog.komlibs.general import colors
 from komlog.komlibs.textman.api import variables as textmanvar
 from komlog.komlibs.textman.api import summary as textmansummary
 from komlog.komlibs.graph.api import uri as graphuri
+from komlog.komlibs.graph.api import kin as graphkin
 from komlog.komlibs.graph.relations import vertex
-from komlog.komfig import logging
 
 def get_datapoint_data(pid, fromdate=None, todate=None, count=None):
-    ''' como se ha pasado por las fases de autorización y autenticación, 
-    no comprobamos que el pid existe '''
     if not args.is_valid_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_GPA_GDD_IP)
     if todate and not args.is_valid_date(todate):
@@ -102,7 +100,7 @@ def create_datasource_datapoint(did, datapoint_uri):
                 else:
                     datapoint.did=did
                 if cassapidatapoint.insert_datapoint(datapoint):
-                    return {'pid':pid, 'did':did, 'uid':datapoint.uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color}
+                    return {'pid':pid, 'did':did, 'uid':datapoint.uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color, 'previously_existed':True}
                 else:
                     raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRD_UDE)
         else:
@@ -112,14 +110,12 @@ def create_datasource_datapoint(did, datapoint_uri):
         datapointname='.'.join((datasource.datasourcename, datapoint_uri))
         datapoint=ormdatapoint.Datapoint(pid=pid,did=did,uid=datasource.uid, datapointname=datapointname,color=color, creation_date=timeuuid.uuid1())
         if cassapidatapoint.new_datapoint(datapoint):
-            return {'pid':datapoint.pid, 'did':datapoint.did, 'uid':datasource.uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color}
+            return {'pid':datapoint.pid, 'did':datapoint.did, 'uid':datasource.uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color, 'previously_existed':False}
         else:
             graphuri.dissociate_vertex(ido=pid)
             raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRD_IDE)
 
 def get_datapoint_config(pid):
-    ''' como se ha pasado por las fases de autorización y autenticación, 
-    no comprobamos que el pid existe '''
     if not args.is_valid_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_GPA_GDC_IP)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
@@ -179,33 +175,28 @@ def mark_negative_variable(pid, date, position, length):
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_MNV_DNF)
     if not datapoint.did:
-        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_MNV_DSNF)
+        raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_MNV_DSNF)
     dsmapvars = cassapidatasource.get_datasource_map_variables(did=datapoint.did, date=date)
     if not dsmapvars: 
         raise exceptions.DatasourceMapNotFoundException(error=Errors.E_GPA_MNV_DMNF)
     try:
         value=dsmapvars[position]
         if not value==length:
-            logging.logger.debug('Received length doesnt match stored value: '+str(datapoint.did)+' '+str(date)+' position: '+str(position)+' length: '+str(length))
             raise exceptions.DatasourceVariableNotFoundException(error=Errors.E_GPA_MNV_VLNF)
     except KeyError:
-        logging.logger.debug('Variable not found: '+str(datapoint.did)+' '+str(date)+' position: '+str(position)+' length: '+str(length))
         raise exceptions.DatasourceVariableNotFoundException(error=Errors.E_GPA_MNV_VPNF)
     #en este punto hemos comprobado que la muestra y variable existen, falta añadirla al listado de negativos
     if not cassapidatapoint.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length):
-        logging.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
         return None
     #y eliminarla de los positivos si coincidiese con la que marcamos como negativo
     positive=cassapidatapoint.get_datapoint_dtree_positives_at(pid=pid, date=date)
     if positive and positive.position==position and positive.length==length:
         if not cassapidatapoint.delete_datapoint_dtree_positive_at(pid=pid, date=date):
-            logging.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
             return None
     #y eliminarla de los datapoints del datasourcemap si estuviese asociada a esa variable
     ds_datapoints=cassapidatasource.get_datasource_map_datapoints(did=datapoint.did, date=date)
     if ds_datapoints and pid in ds_datapoints and ds_datapoints[pid]==position:
-        if not cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid):
-            logging.logger.error('Error deleting datapoint from datasource map')
+        cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did,date=date,pid=pid)
     generate_decision_tree(pid=pid)
     generate_inverse_decision_tree(pid=pid)
     datapoints_to_update=[]
@@ -230,7 +221,7 @@ def mark_positive_variable(pid, date, position, length):
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_MPV_DNF)
     if not datapoint.did:
-        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_MPV_DSNF)
+        raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_MPV_DSNF)
     dsmap = cassapidatasource.get_datasource_map(did=datapoint.did, date=date)
     if not dsmap:
         raise exceptions.DatasourceMapNotFoundException(error=Errors.E_GPA_MPV_DMNF)
@@ -260,13 +251,10 @@ def mark_positive_variable(pid, date, position, length):
         datapoints_to_update.append(a_pid)
     ''' establecemos la variable como positiva para este datapoint '''
     if not cassapidatapoint.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length):
-        logging.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
         return None
     if not cassapidatapoint.delete_datapoint_dtree_negative_at(pid=pid, date=date, position=position):
-        logging.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
         return None
-    if not cassapidatasource.add_datapoint_to_datasource_map(did=did, date=date, pid=pid, position=position):
-        logging.logger.error('Error updating datasource map ')
+    cassapidatasource.add_datapoint_to_datasource_map(did=did,date=date,pid=pid,position=position)
     generate_decision_tree(pid=pid)
     generate_inverse_decision_tree(pid=pid)
     return datapoints_to_update
@@ -285,21 +273,18 @@ def mark_missing_datapoint(pid, date):
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_MMDP_DNF)
     if datapoint.did is None:
-        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_MMDP_DSNF)
+        raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_MMDP_DSNF)
     dsmapvars = cassapidatasource.get_datasource_map_variables(did=datapoint.did, date=date)
     if not dsmapvars: 
         raise exceptions.DatasourceMapNotFoundException(error=Errors.E_GPA_MMDP_DMNF)
     for position,length in dsmapvars.items():
         if not cassapidatapoint.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length):
-            logging.logger.error('Error updating DTree Negatives: '+str(pid)+' '+str(date))
             return None
     #y eliminarla de los positivos si estuviese
     if not cassapidatapoint.delete_datapoint_dtree_positive_at(pid=pid, date=date):
-        logging.logger.error('Error updating DTree Positives: '+str(pid)+' '+str(date))
         return None
     #y eliminarla de los datapoints del datasourcemap si estuviese
-    if not cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid):
-        logging.logger.error('Error deleting datapoint from datasource map')
+    cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid)
     generate_decision_tree(pid=pid)
     generate_inverse_decision_tree(pid=pid)
     datapoints_to_update=[]
@@ -321,7 +306,7 @@ def generate_decision_tree(pid):
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_GDT_DNF)
     if datapoint.did is None:
-        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_GDT_DSNF)
+        raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_GDT_DSNF)
     did=datapoint.did
     dates_to_get=[]
     positive_samples={}
@@ -383,7 +368,7 @@ def generate_inverse_decision_tree(pid):
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_GIDT_DNF)
     if datapoint.did is None:
-        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_GIDT_DSNF)
+        raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_GIDT_DSNF)
     did=datapoint.did
     dates_to_get=[]
     positive_samples={}
@@ -438,19 +423,27 @@ def monitor_new_datapoint(did, date, position, length, datapointname):
     if not args.is_valid_datapointname(datapointname):
         raise exceptions.BadParametersException(error=Errors.E_GPA_MND_IDN)
     try:
+        widgets_related=False
         datapoint={}
         datapoint=create_datasource_datapoint(did=did, datapoint_uri=datapointname)
         datapoints_to_update=mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
         if datapoints_to_update==None:
             return None
         else:
+            if datapoint['previously_existed']:
+                dswidget=cassapiwidget.get_widget_ds(did=did)
+                dpwidget=cassapiwidget.get_widget_dp(pid=datapoint['pid'])
+                if dswidget and dpwidget:
+                    graphkin.kin_widgets(ido=dpwidget.wid, idd=dswidget.wid)
+                    widgets_related=True
             return datapoint
-    except Exception as e:
-        if 'pid' in datapoint:
+    except:
+        if 'pid' in datapoint and datapoint['previously_existed'] is False:
             cassapidatapoint.delete_datapoint(pid=datapoint['pid'])
             graphuri.dissociate_vertex(ido=datapoint['pid'])
-        logging.logger.debug('Exception monitoring new datapoint: '+str(e))
-        raise e
+        if widgets_related:
+            graphkin.unkin_widgets(ido=dpwidget.wid, idd=dswidget.wid)
+        raise
 
 def store_user_datapoint_value(pid, date, content):
     ''' This function extract the numeric value of a string and stores it in the database.
@@ -468,7 +461,11 @@ def store_user_datapoint_value(pid, date, content):
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if datapoint is None:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_SDPSV_DNF)
+    datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
+    last_received=datapoint_stats.last_received if datapoint_stats else None
     if cassapidatapoint.insert_datapoint_data(pid=pid, date=date, value=value):
+        if last_received==None or last_received.time<date.time:
+            cassapidatapoint.set_datapoint_last_received(pid=pid, last_received=date)
         return True
     else:
         raise exceptions.DatapointStoreValueException(error=Errors.E_GPA_SDPSV_IDDE)
@@ -492,12 +489,12 @@ def store_datapoint_values(pid, date, store_newer=True):
         raise exceptions.BadParametersException(error=Errors.E_GPA_SDPV_IDT)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
-    if datapoint==None:
+    if datapoint is None:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_SDPV_DNF)
-    if datapoint_stats==None or datapoint_stats.dtree==None:
-        raise exceptions.DatapointDTreeNotFoundException(error=Errors.E_GPA_SDPV_DTNF)
     if datapoint.did is None:
-        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_SDPV_DSNF)
+        raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_SDPV_DSNF)
+    if datapoint_stats is None or datapoint_stats.dtree is None:
+        raise exceptions.DatapointDTreeNotFoundException(error=Errors.E_GPA_SDPV_DTNF)
     did=datapoint.did
     dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
     datasource_stats=cassapidatasource.get_datasource_stats(did=did)
@@ -507,7 +504,7 @@ def store_datapoint_values(pid, date, store_newer=True):
     else:
         fromdate=date
         todate=date
-    if timeuuid.get_unix_timestamp(date) > timeuuid.get_unix_timestamp(datasource_stats.last_mapped):
+    if date.time > datasource_stats.last_mapped.time:
         raise exceptions.DatasourceMapNotFoundException(error=Errors.E_GPA_SDPV_DMNF)
     dsmaps=cassapidatasource.get_datasource_maps(did=did, fromdate=fromdate, todate=todate)
     for dsmap in dsmaps:
@@ -527,7 +524,7 @@ def store_datapoint_values(pid, date, store_newer=True):
                         cassapidatasource.add_datapoint_to_datasource_map(did=did,date=dsmap.date,pid=datapoint.pid,position=element['text_pos'])
                         if datapoint_stats.decimal_separator!=element['decsep']:
                             cassapidatapoint.set_datapoint_decimal_separator(pid=datapoint.pid, decimal_separator=element['decsep'])
-                        if datapoint_stats.last_received==None or timeuuid.get_unix_timestamp(datapoint_stats.last_received) < timeuuid.get_unix_timestamp(dsmap.date):
+                        if datapoint_stats.last_received is None or datapoint_stats.last_received.time < dsmap.date.time:
                             cassapidatapoint.set_datapoint_last_received(pid=datapoint.pid, last_received=dshash.date)
                         break
                     else:
@@ -591,14 +588,13 @@ def store_datasource_values(did, date):
                     value=textmanvar.get_numeric_value(variable=element)
                     if cassapidatapoint.insert_datapoint_data(pid=pid, date=dshash.date, value=value):
                         cassapidatasource.add_datapoint_to_datasource_map(did=dshash.did,date=dshash.date,pid=pid,position=element['text_pos'])
-                        if decimal_separator==None or decimal_separator!=element['decsep']:
+                        if decimal_separator is None or decimal_separator!=element['decsep']:
                             cassapidatapoint.set_datapoint_decimal_separator(pid=pid, decimal_separator=element['decsep'])
-                        if last_received==None or timeuuid.get_unix_timestamp(last_received)< timeuuid.get_unix_timestamp(dshash.date):
+                        if last_received is None or last_received.time < dshash.date.time:
                             cassapidatapoint.set_datapoint_last_received(pid=pid, last_received=dshash.date)
                         loop_pids.remove(pid)
                         break
                     else:
-                        logging.logger.error('Error inserting datapoint data. pid: %s, dsmap.date: %s.' %(pid.hex,date.hex))
                         break
     return {'dp_not_found':loop_pids}
 
@@ -611,7 +607,7 @@ def should_datapoint_match_any_sample_variable(pid, date):
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_SDMSV_DNF)
     if datapoint.did is None:
-        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_SDMSV_DSNF)
+        raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_SDMSV_DSNF)
     datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
     if not datapoint_stats or not datapoint_stats.dtree:
         generate_decision_tree(pid=pid)
@@ -678,10 +674,10 @@ def generate_datasource_novelty_detector_for_datapoint(pid):
     if not args.is_valid_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_GPA_GDNDFD_IP)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
-    if not datapoint:
+    if datapoint is None:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_GDNDFD_DNF)
     if datapoint.did is None:
-        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_GDNDFD_DSNF)
+        raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_GDNDFD_DSNF)
     inline_dates=[]
     for sample in cassapidatapoint.get_datapoint_dtree_positives(pid=pid):
         inline_dates.append(sample.date)
@@ -710,10 +706,10 @@ def should_datapoint_appear_in_sample(pid, date):
     if not args.is_valid_date(date):
         raise exceptions.BadParametersException(error=Errors.E_GPA_SDAIS_IDT)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
-    if not datapoint:
+    if datapoint is None:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_SDAIS_DNF)
     if datapoint.did is None:
-        raise exceptions.DatapointUnsupportedOperationException(error.Errors.E_GPA_SDAIS_DSNF)
+        raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_SDAIS_DSNF)
     #obtenemos las caracteristicas de los datasources en los que aparece el datapoint, si no lo calculamos
     ds_nd=cassapidatasource.get_last_datasource_novelty_detector_for_datapoint(did=datapoint.did,pid=pid)
     if not ds_nd:

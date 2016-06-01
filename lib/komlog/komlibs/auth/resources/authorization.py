@@ -251,4 +251,9 @@ def authorize_delete_member_from_circle(uid,cid):
         return
     raise exceptions.AuthorizationException(error=Errors.E_ARA_ADMFC_RE)
 
+def authorize_dissociate_datapoint_from_datasource(uid, pid):
+    permission=cassapiperm.get_user_datapoint_perm(uid=uid, pid=pid)
+    if permission and permission.perm & permissions.CAN_EDIT:
+        return
+    raise exceptions.AuthorizationException(error=Errors.E_ARA_ADDPFDS_RE)
 

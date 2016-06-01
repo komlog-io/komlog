@@ -991,3 +991,175 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(response.data[0]['value'],9)
         self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
 
+    def test_dissociate_datapoint_from_datasource_request_failure_invalid_passport(self):
+        ''' dissociate_datapoint_from_datasource_request should fail if passport is invalid '''
+        passports=[None, 233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
+        pid=uuid.uuid4().hex
+        for psp in passports:
+            response=datapointapi.dissociate_datapoint_from_datasource_request(passport=psp, pid=pid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWADP_DDPFDS_IPSP.value)
+
+    def test_dissociate_datapoint_from_datasource_request_failure_invalid_pid(self):
+        ''' dissociate_datapoint_from_datasource_request should fail if passport is invalid '''
+        psp = self.passport
+        pids=[None, 233423, 2342.2342, {'a':'dict'},['a','list'],('a','tuple'),'userName','user name','userñame',json.dumps('username'), uuid.uuid4()]
+        for pid in pids:
+            response=datapointapi.dissociate_datapoint_from_datasource_request(passport=psp, pid=pid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWADP_DDPFDS_IP.value)
+
+    def test_dissociate_datapoint_from_datasource_request_failure_non_existent_pid(self):
+        ''' dissociate_datapoint_from_datasource_request should fail if pid does not exist '''
+        psp = self.passport
+        pid = uuid.uuid4().hex
+        response=datapointapi.dissociate_datapoint_from_datasource_request(passport=psp, pid=pid)
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.error, autherrors.E_ARA_ADDPFDS_RE.value)
+
+    def test_dissociate_datapoint_from_datasource_request_success_datapoint_associated(self):
+        ''' dissociate_datapoint_from_datasource_request should succeed if datapoint is
+            not associated already '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        datapointname='test_dissociate_datapoint_from_datasource_request_success_datapoint_not_associated'
+        datasource_config=datasourceapi.get_datasource_config_request(passport=psp, did=did)
+        self.assertEqual(datasource_config.status, status.WEB_STATUS_OK)
+        datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
+        sequence=datasourcedata.data['seq']
+        variable=datasourcedata.data['variables'][10]
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        pid=None
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
+                    msg_result=msgapi.process_message(msg)
+                    if msg_result:
+                        msgs=msg_result.get_msg_originated()
+                        for msg in msgs:
+                            if msg.type==messages.UPDATE_QUOTES_MESSAGE:
+                                pid=msg.params['pid'].hex
+                else:
+                    msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgs=msg_result.get_msg_originated()
+                    for msg in msgs:
+                        msgapi.process_message(msg)
+            else:
+                break
+        self.assertIsNotNone(pid)
+        datapoint_config=datapointapi.get_datapoint_config_request(passport=psp, pid=pid)
+        self.assertEqual(datapoint_config.status, status.WEB_STATUS_OK)
+        self.assertEqual(datapoint_config.data['pid'], pid)
+        self.assertEqual(datapoint_config.data['did'], did)
+        response=datapointapi.dissociate_datapoint_from_datasource_request(passport=psp, pid=pid)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        found=False
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE.value and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
+                    found=True
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgs=msg_result.get_msg_originated()
+                    for msg in msgs:
+                        msgapi.process_message(msg)
+            else:
+                break
+        self.assertTrue(found)
+        datapoint_config=datapointapi.get_datapoint_config_request(passport=psp, pid=pid)
+        self.assertEqual(datapoint_config.status, status.WEB_STATUS_OK)
+        self.assertEqual(datapoint_config.data['pid'], pid)
+        self.assertTrue('did' not in datapoint_config.data)
+
+    def test_dissociate_datapoint_from_datasource_request_success_datapoint_not_associated(self):
+        ''' dissociate_datapoint_from_datasource_request should succeed if datapoint is
+            not associated already '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        datapointname='test_dissociate_datapoint_from_datasource_request_success_datapoint_not_associated'
+        datasource_config=datasourceapi.get_datasource_config_request(passport=psp, did=did)
+        self.assertEqual(datasource_config.status, status.WEB_STATUS_OK)
+        datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
+        sequence=datasourcedata.data['seq']
+        variable=datasourcedata.data['variables'][10]
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        count=0
+        pid=None
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
+                    msg_result=msgapi.process_message(msg)
+                    if msg_result:
+                        msgs=msg_result.get_msg_originated()
+                        for msg in msgs:
+                            if msg.type==messages.UPDATE_QUOTES_MESSAGE:
+                                pid=msg.params['pid'].hex
+                else:
+                    msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgs=msg_result.get_msg_originated()
+                    for msg in msgs:
+                        msgapi.process_message(msg)
+            else:
+                break
+        self.assertIsNotNone(pid)
+        datapoint_config=datapointapi.get_datapoint_config_request(passport=psp, pid=pid)
+        self.assertEqual(datapoint_config.status, status.WEB_STATUS_OK)
+        self.assertEqual(datapoint_config.data['pid'], pid)
+        self.assertEqual(datapoint_config.data['did'], did)
+        response=datapointapi.dissociate_datapoint_from_datasource_request(passport=psp, pid=pid)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        found=False
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE.value and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
+                    found=True
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgs=msg_result.get_msg_originated()
+                    for msg in msgs:
+                        msgapi.process_message(msg)
+            else:
+                break
+        self.assertTrue(found)
+        datapoint_config=datapointapi.get_datapoint_config_request(passport=psp, pid=pid)
+        self.assertEqual(datapoint_config.status, status.WEB_STATUS_OK)
+        self.assertEqual(datapoint_config.data['pid'], pid)
+        self.assertTrue('did' not in datapoint_config.data)
+        #launch again over the dissociated datapoint
+        response=datapointapi.dissociate_datapoint_from_datasource_request(passport=psp, pid=pid)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+        found=False
+        while True:
+            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+            if msg:
+                if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE.value and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
+                    found=True
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgs=msg_result.get_msg_originated()
+                    for msg in msgs:
+                        msgapi.process_message(msg)
+            else:
+                break
+        self.assertFalse(found)
+        datapoint_config=datapointapi.get_datapoint_config_request(passport=psp, pid=pid)
+        self.assertEqual(datapoint_config.status, status.WEB_STATUS_OK)
+        self.assertEqual(datapoint_config.data['pid'], pid)
+        self.assertTrue('did' not in datapoint_config.data)
+

@@ -814,3 +814,37 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_circle_perm(uid=uid, cid=cid, perm=perm)
         self.assertIsNone(authorization.authorize_delete_member_from_circle(uid=uid,cid=cid))
 
+    def test_authorize_dissociate_datapoint_from_datasource_failure_non_existent_pid(self):
+        ''' authorize_dissociate_datapoint_from_datasource should fail if user has not the pid '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_dissociate_datapoint_from_datasource(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADDPFDS_RE)
+
+    def test_authorize_dissociate_datapoint_from_datasource_failure_non_existent_uid(self):
+        ''' authorize_dissociate_datapoint_from_datasource should fail if user does not exist '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_dissociate_datapoint_from_datasource(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADDPFDS_RE)
+
+    def test_authorize_dissociate_datapoint_from_datasource_failure_non_enought_perms(self):
+        ''' authorize_dissociate_datapoint_from_datasource should fail if user has not the necessary permissions '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_dissociate_datapoint_from_datasource(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_ADDPFDS_RE)
+
+    def test_authorize_dissociate_datapoint_from_datasource_success(self):
+        ''' authorize_dissociate_datapoint_from_datasource should fail if user has the necessary permissions over datapoint '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        self.assertIsNone(authorization.authorize_dissociate_datapoint_from_datasource(uid=uid, pid=pid))
+

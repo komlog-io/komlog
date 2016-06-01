@@ -157,12 +157,10 @@ def delete_datapoint(pid):
     perm=permissions.NONE
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if datapoint:
-        datasource=cassapidatasource.get_datasource(did=datapoint.did)
-        if datasource:
-            cassapiperm.insert_user_datapoint_perm(uid=datasource.uid, pid=pid, perm=perm)
-            widgetdp=cassapiwidget.get_widget_dp(pid=pid)
-            if widgetdp:
-                cassapiperm.insert_user_widget_perm(uid=datasource.uid, wid=widgetdp.wid, perm=perm)
+        cassapiperm.insert_user_datapoint_perm(uid=datapoint.uid, pid=pid, perm=perm)
+        widgetdp=cassapiwidget.get_widget_dp(pid=pid)
+        if widgetdp:
+            cassapiperm.insert_user_widget_perm(uid=datapoint.uid, wid=widgetdp.wid, perm=perm)
     return True
 
 def delete_widget(wid):
@@ -225,5 +223,6 @@ update_funcs = {
     Operations.DELETE_DASHBOARD: (delete_dashboard,),
     Operations.DELETE_SNAPSHOT: (delete_snapshot,),
     Operations.DELETE_CIRCLE: (delete_circle,),
+    Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE: (),
 }
 
