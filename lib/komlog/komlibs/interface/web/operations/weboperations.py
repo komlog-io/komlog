@@ -24,7 +24,7 @@ NEW_CIRCLE                           = 7
 DELETE_USER                          = 8
 DELETE_AGENT                         = 9
 DELETE_DATASOURCE                    = 10
-DELETE_DATAPOINT                     = 11
+DELETE_DATASOURCE_DATAPOINT          = 11
 DELETE_WIDGET                        = 12
 DELETE_DASHBOARD                     = 13
 DELETE_SNAPSHOT                      = 14
@@ -34,6 +34,7 @@ UPDATE_CIRCLE_MEMBERS                = 16
 NEW_USER                             = 18
 #NEW_USER_DATAPOINT                  = 19
 DISSOCIATE_DATAPOINT_FROM_DATASOURCE = 20
+DELETE_USER_DATAPOINT                = 21
 
 
 OPAUTHS={
@@ -49,7 +50,8 @@ OPAUTHS={
     DELETE_USER: Operations.DELETE_USER,
     DELETE_AGENT: Operations.DELETE_AGENT,
     DELETE_DATASOURCE: Operations.DELETE_DATASOURCE,
-    DELETE_DATAPOINT: Operations.DELETE_DATAPOINT,
+    DELETE_DATASOURCE_DATAPOINT: Operations.DELETE_DATASOURCE_DATAPOINT,
+    DELETE_USER_DATAPOINT: Operations.DELETE_USER_DATAPOINT,
     DELETE_WIDGET: Operations.DELETE_WIDGET,
     DELETE_DASHBOARD: Operations.DELETE_DASHBOARD,
     DELETE_SNAPSHOT:Operations.DELETE_SNAPSHOT,
@@ -160,12 +162,19 @@ class DeleteDatasourceOperation(WIFaceOperation):
         self.params['did']=did
         self.params['pids']=pids
 
-class DeleteDatapointOperation(WIFaceOperation):
+class DeleteDatasourceDatapointOperation(WIFaceOperation):
     def __init__(self, uid, aid, pid):
-        self.oid=DELETE_DATAPOINT
+        self.oid=DELETE_DATASOURCE_DATAPOINT
         self.params={}
         self.params['uid']=uid
         self.params['aid']=aid
+        self.params['pid']=pid
+
+class DeleteUserDatapointOperation(WIFaceOperation):
+    def __init__(self, uid, pid):
+        self.oid=DELETE_USER_DATAPOINT
+        self.params={}
+        self.params['uid']=uid
         self.params['pid']=pid
 
 class DeleteWidgetOperation(WIFaceOperation):

@@ -21,7 +21,7 @@ class Operations(Enum):
     DELETE_USER                          = 8
     DELETE_AGENT                         = 9
     DELETE_DATASOURCE                    = 10
-    DELETE_DATAPOINT                     = 11
+    DELETE_DATASOURCE_DATAPOINT          = 11
     DELETE_WIDGET                        = 12
     DELETE_DASHBOARD                     = 13
     DELETE_SNAPSHOT                      = 14
@@ -31,4 +31,5 @@ class Operations(Enum):
     NEW_USER                             = 18
     NEW_USER_DATAPOINT                   = 19
     DISSOCIATE_DATAPOINT_FROM_DATASOURCE = 20
+    DELETE_USER_DATAPOINT                = 21
 

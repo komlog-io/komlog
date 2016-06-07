@@ -1,6 +1,7 @@
 import unittest
 import uuid
 import json
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.interface.imc.api import gestconsole
 from komlog.komlibs.interface.imc.api import rescontrol
 from komlog.komlibs.interface.imc.model import messages
@@ -125,7 +126,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         response=rescontrol.process_message_UPDQUO(response.get_msg_originated()[0])
         self.assertEqual(response.status, status.IMC_STATUS_OK)
 
-    def test_process_message_DELDP_failure_non_existent_datasource(self):
+    def test_process_message_DELDP_failure_non_existent_datapoint(self):
         ''' process_message_DELDP should fail if datapoint does not exist '''
         pid=uuid.uuid4()
         message=messages.DeleteDatapointMessage(pid=pid)
@@ -151,6 +152,26 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         response=gestconsole.process_message_DELDP(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
         self.assertEqual(len(response.get_msg_originated()),1)
+        message_originated=response.get_msg_originated()[0]
+        self.assertEqual(message_originated.operation,Operations.DELETE_DATASOURCE_DATAPOINT.value)
+        response=rescontrol.process_message_UPDQUO(response.get_msg_originated()[0])
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+
+    def test_process_message_DELDP_success_user_datapoint(self):
+        ''' process_message_DELDP should succeed if datapoint exists and is a user datapoint '''
+        username='test_process_message_deldp_user_dp_success'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapointname='user.datapoint.delete.success'
+        datapoint=datapointapi.create_user_datapoint(uid=user['uid'],datapoint_uri=datapointname)
+        self.assertIsNotNone(datapoint)
+        message=messages.DeleteDatapointMessage(pid=datapoint['pid'])
+        response=gestconsole.process_message_DELDP(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(len(response.get_msg_originated()),1)
+        message_originated=response.get_msg_originated()[0]
+        self.assertEqual(message_originated.operation,Operations.DELETE_USER_DATAPOINT.value)
         response=rescontrol.process_message_UPDQUO(response.get_msg_originated()[0])
         self.assertEqual(response.status, status.IMC_STATUS_OK)
 

@@ -259,11 +259,18 @@ def process_message_DELDP(message):
     pid=message.pid
     if args.is_valid_uuid(pid):
         datapoint=datapointapi.get_datapoint_config(pid=pid)
-        datasource=datasourceapi.get_datasource_config(did=datapoint['did'])
+        datasource=None
+        if datapoint['did'] is not None:
+            datasource=datasourceapi.get_datasource_config(did=datapoint['did'])
         deleteapi.delete_datapoint(pid=pid)
-        op_id=Operations.DELETE_DATAPOINT.value
-        op_params={'uid':datasource['uid'],'aid':datasource['aid'],'did':datapoint['did']}
-        response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+        if datasource:
+            op_id=Operations.DELETE_DATASOURCE_DATAPOINT.value
+            op_params={'uid':datapoint['uid'],'aid':datasource['aid'],'did':datapoint['did']}
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+        else:
+            op_id=Operations.DELETE_USER_DATAPOINT.value
+            op_params={'uid':datapoint['uid']}
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
         response.status=status.IMC_STATUS_BAD_PARAMETERS

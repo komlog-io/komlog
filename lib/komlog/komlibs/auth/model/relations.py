@@ -59,9 +59,12 @@ operation_quotes = {
         Quotes.quo_agent_total_datasources,
         Quotes.quo_user_total_datasources
     ],
-    Operations.DELETE_DATAPOINT: [
+    Operations.DELETE_DATASOURCE_DATAPOINT: [
         Quotes.quo_datasource_total_datapoints,
         Quotes.quo_agent_total_datapoints,
+        Quotes.quo_user_total_datapoints
+    ],
+    Operations.DELETE_USER_DATAPOINT: [
         Quotes.quo_user_total_datapoints
     ],
     Operations.DELETE_WIDGET: [
