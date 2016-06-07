@@ -4,8 +4,8 @@ Methods for manipulating User Events
 
 '''
 
-from komlog.komfig import logging
 import uuid
+from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import events as cassapievents
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
@@ -145,7 +145,11 @@ def enable_event(uid, date):
         raise exceptions.BadParametersException(error=Errors.E_EAU_ENE_ID)
     event=cassapievents.get_disabled_user_event(uid=uid, date=date)
     if event:
-        return cassapievents.enable_user_event(event=event)
+        try:
+            return cassapievents.enable_user_event(event=event)
+        except cassexcept.KomcassException:
+            cassapievents.disable_user_event(event)
+            raise
     else:
         event=cassapievents.get_user_event(uid=uid, date=date)
         if event:
@@ -160,7 +164,11 @@ def disable_event(uid, date):
         raise exceptions.BadParametersException(error=Errors.E_EAU_DISE_ID)
     event=cassapievents.get_user_event(uid=uid, date=date)
     if event:
-        return cassapievents.disable_user_event(event=event)
+        try:
+            return cassapievents.disable_user_event(event=event)
+        except cassexcept.KomcassException:
+            cassapievents.enable_user_event(event=event)
+            raise
     else:
         event=cassapievents.get_disabled_user_event(uid=uid, date=date)
         if event:
@@ -189,10 +197,14 @@ def _insert_event_notification_new_user(uid, parameters):
     if not user:
         raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNU_UNF)
     event=ormevents.UserEventNotificationNewUser(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_USER, username=user.username)
-    if cassapievents.insert_user_event(event):
-        return {'uid':uid, 'date':now}
-    else:
-        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNU_DBIE)
+    try:
+        if cassapievents.insert_user_event(event):
+            return {'uid':uid, 'date':now}
+        else:
+            raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNU_DBIE)
+    except cassexcept.KomcassException:
+        cassapievents.delete_user_event(event)
+        raise
 
 def _insert_event_notification_new_agent(uid, parameters):
     if not args.is_valid_uuid(uid):
@@ -210,10 +222,14 @@ def _insert_event_notification_new_agent(uid, parameters):
     if not agent:
         raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNA_ANF)
     event=ormevents.UserEventNotificationNewAgent(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_AGENT, aid=aid, agentname=agent.agentname)
-    if cassapievents.insert_user_event(event):
-        return {'uid':uid, 'date':now}
-    else:
-        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNA_DBIE)
+    try:
+        if cassapievents.insert_user_event(event):
+            return {'uid':uid, 'date':now}
+        else:
+            raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNA_DBIE)
+    except cassexcept.KomcassException:
+        cassapievents.delete_user_event(event)
+        raise
 
 def _insert_event_notification_new_datasource(uid, parameters):
     if not args.is_valid_uuid(uid):
@@ -231,10 +247,14 @@ def _insert_event_notification_new_datasource(uid, parameters):
     if not datasource:
         raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDS_DNF)
     event=ormevents.UserEventNotificationNewDatasource(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, aid=datasource.aid, did=did, datasourcename=datasource.datasourcename)
-    if cassapievents.insert_user_event(event):
-        return {'uid':uid, 'date':now}
-    else:
-        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDS_DBIE)
+    try:
+        if cassapievents.insert_user_event(event):
+            return {'uid':uid, 'date':now}
+        else:
+            raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDS_DBIE)
+    except cassexcept.KomcassException:
+        cassapievents.delete_user_event(event)
+        raise
 
 def _insert_event_notification_new_datapoint(uid, parameters):
     if not args.is_valid_uuid(uid):
@@ -255,10 +275,14 @@ def _insert_event_notification_new_datapoint(uid, parameters):
     if not datasource:
         raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDP_DNF)
     event=ormevents.UserEventNotificationNewDatapoint(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, did=datapoint.did, pid=pid, datasourcename=datasource.datasourcename, datapointname=datapoint.datapointname)
-    if cassapievents.insert_user_event(event):
-        return {'uid':uid, 'date':now}
-    else:
-        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDP_DBIE)
+    try:
+        if cassapievents.insert_user_event(event):
+            return {'uid':uid, 'date':now}
+        else:
+            raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDP_DBIE)
+    except cassexcept.KomcassException:
+        cassapievents.delete_user_event(event)
+        raise
 
 def _insert_event_notification_new_widget(uid, parameters):
     if not args.is_valid_uuid(uid):
@@ -276,10 +300,14 @@ def _insert_event_notification_new_widget(uid, parameters):
     if not widget:
         raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNWG_WNF)
     event=ormevents.UserEventNotificationNewWidget(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_WIDGET, wid=wid, widgetname=widget.widgetname)
-    if cassapievents.insert_user_event(event):
-        return {'uid':uid, 'date':now}
-    else:
-        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNWG_DBIE)
+    try:
+        if cassapievents.insert_user_event(event):
+            return {'uid':uid, 'date':now}
+        else:
+            raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNWG_DBIE)
+    except cassexcept.KomcassException:
+        cassapievents.delete_user_event(event)
+        raise
 
 def _insert_event_notification_new_dashboard(uid, parameters):
     if not args.is_valid_uuid(uid):
@@ -297,10 +325,14 @@ def _insert_event_notification_new_dashboard(uid, parameters):
     if not dashboard:
         raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDB_BNF)
     event=ormevents.UserEventNotificationNewDashboard(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, bid=bid, dashboardname=dashboard.dashboardname)
-    if cassapievents.insert_user_event(event):
-        return {'uid':uid, 'date':now}
-    else:
-        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDB_DBIE)
+    try:
+        if cassapievents.insert_user_event(event):
+            return {'uid':uid, 'date':now}
+        else:
+            raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDB_DBIE)
+    except cassexcept.KomcassException:
+        cassapievents.delete_user_event(event)
+        raise
 
 def _insert_event_notification_new_circle(uid, parameters):
     if not args.is_valid_uuid(uid):
@@ -318,10 +350,14 @@ def _insert_event_notification_new_circle(uid, parameters):
     if not circle:
         raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNC_CNF)
     event=ormevents.UserEventNotificationNewCircle(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_CIRCLE, cid=cid, circlename=circle.circlename)
-    if cassapievents.insert_user_event(event):
-        return {'uid':uid, 'date':now}
-    else:
-        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNC_DBIE)
+    try:
+        if cassapievents.insert_user_event(event):
+            return {'uid':uid, 'date':now}
+        else:
+            raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNC_DBIE)
+    except cassexcept.KomcassException:
+        cassapievents.delete_user_event(event)
+        raise
 
 def _insert_event_intervention_datapoint_identification(uid, parameters):
     if not args.is_valid_uuid(uid):
@@ -354,10 +390,14 @@ def _insert_event_intervention_datapoint_identification(uid, parameters):
     doubts=[uuid.UUID(pid) for pid in parameters['doubts']]
     discarded=[uuid.UUID(pid) for pid in parameters['discarded']]
     event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
-    if cassapievents.insert_user_event(event):
-        return {'uid':uid, 'date':now}
-    else:
-        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_DBIE)
+    try:
+        if cassapievents.insert_user_event(event):
+            return {'uid':uid, 'date':now}
+        else:
+            raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_DBIE)
+    except cassexcept.KomcassException:
+        cassapievents.delete_user_event(event)
+        raise
 
 def _insert_event_notification_new_snapshot_shared(uid, parameters):
     if not args.is_valid_uuid(uid):
@@ -399,29 +439,46 @@ def _insert_event_notification_new_snapshot_shared(uid, parameters):
     shared_event=ormevents.UserEventNotificationNewSnapshotShared(uid=user.uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, widgetname=snapshot.widgetname, nid=snapshot.nid, tid=ticket.tid, shared_with_users=users_info, shared_with_circles=circles_info)
     summary_data=summary.generate_user_event_graph_summary_data(event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters=parameters)
     op_failed=False
-    if cassapievents.insert_user_event(shared_event):
-        graph_summary=ormevents.UserEventGraphSummary(uid=user.uid, date=now, summary=summary_data)
-        cassapievents.insert_user_event_graph_summary(graph_summary)
-        insert_events=[]
-        for uid in shared_uids:
-            event=ormevents.UserEventNotificationNewSnapshotSharedWithMe(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME, username=user.username, widgetname=snapshot.widgetname, nid=snapshot.nid, tid=ticket.tid)
-            if not cassapievents.insert_user_event(event):
-                op_failed=True
-                break
-            else:
-                graph_summary=ormevents.UserEventGraphSummary(uid=uid, date=now, summary=summary_data)
-                cassapievents.insert_user_event_graph_summary(graph_summary)
-                insert_events.append(event)
+    graph_summary=ormevents.UserEventGraphSummary(uid=user.uid, date=now, summary=summary_data)
+    shared_with_me_events=[]
+    shared_with_me_graph_summaries=[]
+    for uid in shared_uids:
+        shared_with_me_events.append(ormevents.UserEventNotificationNewSnapshotSharedWithMe(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME, username=user.username, widgetname=snapshot.widgetname, nid=snapshot.nid, tid=ticket.tid))
+        shared_with_me_graph_summaries.append(ormevents.UserEventGraphSummary(uid=uid, date=now, summary=summary_data))
+    events_inserted=[]
+    graph_summaries_inserted=[]
+    try:
+        if cassapievents.insert_user_event(shared_event) and cassapievents.insert_user_event_graph_summary(graph_summary):
+            events_inserted.append(shared_event)
+            graph_summaries_inserted.append(graph_summary)
+            for event in shared_with_me_events:
+                if not cassapievents.insert_user_event(event):
+                    op_failed=True
+                    break
+                events_inserted.append(event)
+            for graph_summary in shared_with_me_graph_summaries:
+                if not cassapievents.insert_user_event_graph_summary(graph_summary):
+                    op_failed=True
+                    break
+                graph_summaries_inserted.append(graph_summary)
+        else:
+            cassapievents.delete_user_event(event=shared_event)
+            cassapievents.delete_user_event_graph_summary(uid=graph_summary.uid, date=graph_summary.date)
+            raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNSS_DBIIE)
         if op_failed:
-            for event in insert_events:
+            for event in events_inserted:
                 cassapievents.delete_user_event(event=event)
-                cassapievents.delete_user_event_graph_summary(uid=event.uid, date=event.date)
-    if op_failed:
-        cassapievents.delete_user_event(event=shared_event)
-        cassapievents.delete_user_event_graph_summary(uid=shared_event.uid, date=shared_event.date)
-        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNSS_DBPIE)
-    else:
-        return {'uid':uid, 'date':now}
+            for graph_summary in graph_summaries_inserted:
+                cassapievents.delete_user_event_graph_summary(uid=graph_summary.uid, date=graph_summary.date)
+            raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNSS_DBPIE)
+        else:
+            return {'uid':uid, 'date':now}
+    except cassexcept.KomcassException:
+        for event in events_inserted:
+            cassapievents.delete_user_event(event=event)
+        for graph_summary in graph_summaries_inserted:
+            cassapievents.delete_user_event_graph_summary(uid=graph_summary.uid, date=graph_summary.date)
+        raise
 
 
 ## association functions

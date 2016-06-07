@@ -5,6 +5,7 @@ This file defines the logic associated with web interface operations
 '''
 
 import uuid
+from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
@@ -183,22 +184,26 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
     authorization.authorize_request(request=Requests.NEW_SNAPSHOT,passport=passport, wid=wid)
     snapshot=snapshotapi.new_snapshot(uid=passport.uid,wid=wid,interval_init=interval_init,interval_end=interval_end)
     if snapshot:
-        ticket=ticketprov.new_snapshot_ticket(uid=passport.uid,nid=snapshot['nid'],allowed_uids=uids, allowed_cids=cids)
-        if ticket:
-            operation=weboperations.NewSnapshotOperation(uid=passport.uid, nid=snapshot['nid'],wid=wid)
-            auth_op=operation.get_auth_operation()
-            params=operation.get_params()
-            if authupdate.update_resources(operation=auth_op, params=params):
-                message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
-                msgapi.send_message(message)
-                message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
-                msgapi.send_message(message)
-                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
+        try:
+            ticket=ticketprov.new_snapshot_ticket(uid=passport.uid,nid=snapshot['nid'],allowed_uids=uids, allowed_cids=cids)
+            if ticket:
+                operation=weboperations.NewSnapshotOperation(uid=passport.uid, nid=snapshot['nid'],wid=wid)
+                auth_op=operation.get_auth_operation()
+                params=operation.get_params()
+                if authupdate.update_resources(operation=auth_op, params=params):
+                    message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+                    msgapi.send_message(message)
+                    message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
+                    msgapi.send_message(message)
+                    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
+                else:
+                    deleteapi.delete_snapshot(nid=snapshot['nid'])
+                    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_AUTHERR.value)
             else:
                 deleteapi.delete_snapshot(nid=snapshot['nid'])
-                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_AUTHERR.value)
-        else:
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_TCKCE.value)
+        except cassexcept.KomcassException:
             deleteapi.delete_snapshot(nid=snapshot['nid'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_TCKCE.value)
+            raise
     return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_SCE.value)
 

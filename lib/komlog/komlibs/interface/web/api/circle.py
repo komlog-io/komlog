@@ -5,6 +5,7 @@ This file defines the logic associated with web interface operations
 '''
 
 import uuid
+from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
@@ -82,15 +83,19 @@ def new_users_circle_request(passport, circlename, members_list=None):
         operation=weboperations.NewCircleOperation(uid=circle['uid'], cid=circle['cid'])
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
-        if authupdate.update_resources(operation=auth_op, params=params):
-            message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
-            msgapi.send_message(message)
-            message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_CIRCLE, parameters={'cid':circle['cid'].hex})
-            msgapi.send_message(message)
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'cid':circle['cid'].hex})
-        else:
+        try:
+            if authupdate.update_resources(operation=auth_op, params=params):
+                message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+                msgapi.send_message(message)
+                message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_CIRCLE, parameters={'cid':circle['cid'].hex})
+                msgapi.send_message(message)
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'cid':circle['cid'].hex})
+            else:
+                deleteapi.delete_circle(cid=circle['cid'])
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWACI_NUCR_AUTHERR.value)
+        except cassexcept.KomcassException:
             deleteapi.delete_circle(cid=circle['cid'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWACI_NUCR_AUTHERR.value)
+            raise
     else:
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWACI_NUCR_CCE.value)
 

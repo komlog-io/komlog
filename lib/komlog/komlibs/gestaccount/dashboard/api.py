@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 dashboard.py: library for managing dashboard operations
 
@@ -10,6 +9,7 @@ author: jcazor
 '''
 
 import uuid
+from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import dashboard as cassapidashboard
 from komlog.komcass.api import widget as cassapiwidget
 from komlog.komcass.api import user as cassapiuser
@@ -55,10 +55,14 @@ def create_dashboard(uid, dashboardname):
         raise exceptions.UserNotFoundException(error=Errors.E_GBA_CRD_UNF)
     bid=uuid.uuid4()
     dashboard=ormdashboard.Dashboard(uid=user.uid, bid=bid, creation_date=timeuuid.uuid1(), dashboardname=dashboardname)
-    if cassapidashboard.new_dashboard(dobj=dashboard):
-        return {'uid':user.uid,'bid':bid,'dashboardname':dashboardname}
-    else:
-        raise exceptions.DashboardCreationException(error=Errors.E_GBA_CRD_IDE)
+    try:
+        if cassapidashboard.new_dashboard(dobj=dashboard):
+            return {'uid':user.uid,'bid':bid,'dashboardname':dashboardname}
+        else:
+            raise exceptions.DashboardCreationException(error=Errors.E_GBA_CRD_IDE)
+    except cassexcept.KomcassException:
+        cassapidashboard.delete_dashboard(bid=bid)
+        raise
 
 def update_dashboard_config(bid, dashboardname):
     if not args.is_valid_uuid(bid):
@@ -68,11 +72,16 @@ def update_dashboard_config(bid, dashboardname):
     dashboard=cassapidashboard.get_dashboard(bid=bid)
     if not dashboard:
         raise exceptions.DashboardNotFoundException(error=Errors.E_GBA_UDC_DNF)
-    dashboard.dashboardname=dashboardname
-    if cassapidashboard.insert_dashboard(dobj=dashboard):
-        return True
-    else:
-        raise exceptions.DashboardUpdateException(error=Errors.E_GBA_UDC_IDE)
+    new_dashboard=dashboard
+    new_dashboard.dashboardname=dashboardname
+    try:
+        if cassapidashboard.insert_dashboard(dobj=new_dashboard):
+            return True
+        else:
+            raise exceptions.DashboardUpdateException(error=Errors.E_GBA_UDC_IDE)
+    except cassexcept.KomcassException:
+        cassapidashboard.insert_dashboard(dobj=dashboard)
+        raise
 
 def add_widget_to_dashboard(bid, wid):
     if not args.is_valid_uuid(bid):
@@ -85,10 +94,16 @@ def add_widget_to_dashboard(bid, wid):
     widget=cassapiwidget.get_widget(wid=wid)
     if not widget:
         raise exceptions.WidgetNotFoundException(error=Errors.E_GBA_AWTD_WNF)
-    if cassapidashboard.add_widget_to_dashboard(bid=bid, wid=wid):
-        return True
-    else:
-        return False
+    if wid not in dashboard.widgets:
+        try:
+            if cassapidashboard.add_widget_to_dashboard(bid=bid, wid=wid):
+                return True
+            else:
+                return False
+        except cassexcept.KomcassException:
+            cassapidashboard.delete_widget_from_dashboard(bid=bid, wid=wid)
+            raise
+    return True
 
 def delete_widget_from_dashboard(bid, wid):
     if not args.is_valid_uuid(bid):
@@ -98,8 +113,14 @@ def delete_widget_from_dashboard(bid, wid):
     dashboard=cassapidashboard.get_dashboard(bid=bid)
     if not dashboard:
         raise exceptions.DashboardNotFoundException(error=Errors.E_GBA_DWFD_DNF)
-    if cassapidashboard.delete_widget_from_dashboard(bid=bid, wid=wid):
-        return True
-    else:
-        return False
+    if wid in dashboard.widgets:
+        try:
+            if cassapidashboard.delete_widget_from_dashboard(bid=bid, wid=wid):
+                return True
+            else:
+                return False
+        except cassexcept.KomcassException:
+            cassapidashboard.add_widget_to_dashboard(bid=bid, wid=wid)
+            raise
+    return True
 

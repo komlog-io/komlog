@@ -213,8 +213,6 @@ def process_message_DELUSER(message):
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
     uid=message.uid
     if args.is_valid_uuid(uid):
-        user=userapi.get_user_config(uid=uid)
-        agents=agentapi.get_agents_config(uid=uid)
         deleteapi.delete_user(uid=uid)
         #TODO: Enviar email de despedida
         response.status=status.IMC_STATUS_OK

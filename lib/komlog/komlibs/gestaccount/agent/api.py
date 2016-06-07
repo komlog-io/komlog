@@ -8,6 +8,7 @@ author: jcazor
 import uuid
 import os
 from komlog.komfig import logging
+from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
 from komlog.komcass.api import datasource as cassapidatasource
@@ -40,10 +41,14 @@ def generate_auth_challenge(username, pubkey):
     if not ch_enc or not ch_hash:
         raise exceptions.ChallengeGenerationException(error=Errors.E_GAA_GAC_EGC)
     agent_challenge=ormagent.AgentChallenge(aid=agent_pubkey.aid, challenge=ch_hash, generated=timeuuid.uuid1())
-    if cassapiagent.insert_agent_challenge(agent_challenge):
-        return ch_enc
-    else:
-        raise exceptions.ChallengeGenerationException(error=Errors.E_GAA_GAC_EIDB)
+    try:
+        if cassapiagent.insert_agent_challenge(agent_challenge):
+            return ch_enc
+        else:
+            raise exceptions.ChallengeGenerationException(error=Errors.E_GAA_GAC_EIDB)
+    except cassexcept.KomcassException:
+        cassapiagent.delete_agent_challenge(aid=agent_pubkey.aid, challenge=ch_hash)
+        raise
 
 def validate_auth_challenge(username, pubkey, challenge_hash, signature):
     if not args.is_valid_username(username):
@@ -69,10 +74,15 @@ def validate_auth_challenge(username, pubkey, challenge_hash, signature):
         raise exceptions.ChallengeValidationException(error=Errors.E_GAA_VAC_CHEX)
     if crypto.verify_signature(key=agent_pubkey.pubkey, message=agent_challenge.challenge, signature=signature):
         agent_challenge.validated=timeuuid.uuid1()
-        if cassapiagent.insert_agent_challenge(agent_challenge):
-            return agent_challenge.aid
-        else:
-            raise exceptions.ChallengeValidationException(error=Errors.E_GAA_VAC_EIDB)
+        try:
+            if cassapiagent.insert_agent_challenge(agent_challenge):
+                return agent_challenge.aid
+            else:
+                raise exceptions.ChallengeValidationException(error=Errors.E_GAA_VAC_EIDB)
+        except cassexcept.KomcassException:
+            agent_challenge.validated=None
+            cassapiagent.insert_agent_challenge(agent_challenge)
+            raise
     else:
         raise exceptions.ChallengeValidationException(error=Errors.E_GAA_VAC_EVS)
 
@@ -91,14 +101,19 @@ def create_agent(uid,agentname,pubkey,version):
         now=timeuuid.uuid1()
         agent_pubkey=ormagent.AgentPubkey(uid=uid, pubkey=pubkey, aid=aid, state=AgentStates.ACTIVE)
         agent=ormagent.Agent(aid=aid, uid=uid, agentname=agentname, pubkey=pubkey, version=version, state=AgentStates.ACTIVE,creation_date=now)
-        if cassapiagent.new_agent_pubkey(obj=agent_pubkey):
-            if cassapiagent.new_agent(agent=agent):
-                return {'uid':agent.uid, 'aid':agent.aid, 'agentname':agent.agentname, 'pubkey':agent.pubkey, 'version':agent.version, 'state':agent.state}
+        try:
+            if cassapiagent.new_agent_pubkey(obj=agent_pubkey):
+                if cassapiagent.new_agent(agent=agent):
+                    return {'uid':agent.uid, 'aid':agent.aid, 'agentname':agent.agentname, 'pubkey':agent.pubkey, 'version':agent.version, 'state':agent.state}
+                else:
+                    cassapiagent.delete_agent_pubkey(uid=uid, pubkey=pubkey)
+                    raise exceptions.AgentCreationException(error=Errors.E_GAA_CRA_EIA)
             else:
-                cassapiagent.delete_agent_pubkey(uid=uid, pubkey=pubkey)
-                raise exceptions.AgentCreationException(error=Errors.E_GAA_CRA_EIA)
-        else:
-            raise exceptions.AgentAlreadyExistsException(error=Errors.E_GAA_CRA_AAE)
+                raise exceptions.AgentAlreadyExistsException(error=Errors.E_GAA_CRA_AAE)
+        except cassexcept.KomcassException:
+            cassapiagent.delete_agent_pubkey(uid=uid, pubkey=pubkey)
+            cassapiagent.delete_agent(aid=agent.aid)
+            raise
     else:
         raise exceptions.UserNotFoundException(error=Errors.E_GAA_CRA_UNF)
 
@@ -107,12 +122,23 @@ def activate_agent(aid):
         raise exceptions.BadParametersException(error=Errors.E_GAA_ACA_IA)
     agent=cassapiagent.get_agent(aid=aid)
     if agent:
-        agent_pubkey=ormagent.AgentPubkey(uid=agent.uid, pubkey=agent.pubkey, aid=agent.aid, state=AgentStates.ACTIVE)
-        agent.state=AgentStates.ACTIVE
-        if cassapiagent.insert_agent(agent=agent) and cassapiagent.insert_agent_pubkey(obj=agent_pubkey):
-            return True
+        agent_pubkey=cassapiagent.get_agent_pubkey(uid=agent.uid, pubkey=agent.pubkey)
+        if agent_pubkey:
+            new_agent_pubkey=agent_pubkey
+            new_agent_pubkey.state=AgentStates.ACTIVE
+            new_agent=agent
+            new_agent.state=AgentStates.ACTIVE
+            try:
+                if cassapiagent.insert_agent(agent=new_agent) and cassapiagent.insert_agent_pubkey(obj=new_agent_pubkey):
+                    return True
+                else:
+                    raise exceptions.AgentUpdateException(error=Errors.E_GAA_ACA_EIA)
+            except cassexcept.KomcassException:
+                cassapiagent.insert_agent(agent=agent)
+                cassapiagent.insert_agent_pubkey(agent_pubkey)
+                raise
         else:
-            raise exceptions.AgentUpdateException(error=Errors.E_GAA_ACA_EIA)
+            raise exceptions.AgentNotFoundException(error=Errors.E_GAA_ACA_APKNF)
     else:
         raise exceptions.AgentNotFoundException(error=Errors.E_GAA_ACA_ANF)
 
@@ -121,12 +147,23 @@ def suspend_agent(aid):
         raise exceptions.BadParametersException(error=Errors.E_GAA_SPA_IA)
     agent=cassapiagent.get_agent(aid=aid)
     if agent:
-        agent_pubkey=ormagent.AgentPubkey(uid=agent.uid, pubkey=agent.pubkey, aid=agent.aid, state=AgentStates.SUSPENDED)
-        agent.state=AgentStates.SUSPENDED
-        if cassapiagent.insert_agent(agent=agent) and cassapiagent.insert_agent_pubkey(obj=agent_pubkey):
-            return True
+        agent_pubkey=cassapiagent.get_agent_pubkey(uid=agent.uid, pubkey=agent.pubkey)
+        if agent_pubkey:
+            new_agent=agent
+            new_agent.state=AgentStates.SUSPENDED
+            new_agent_pubkey=agent_pubkey
+            new_agent_pubkey.state=AgentStates.SUSPENDED
+            try:
+                if cassapiagent.insert_agent(agent=new_agent) and cassapiagent.insert_agent_pubkey(obj=new_agent_pubkey):
+                    return True
+                else:
+                    raise exceptions.AgentUpdateException(error=Errors.E_GAA_SPA_EIA)
+            except cassexcept.KomcassException:
+                cassapiagent.insert_agent(agent=agent)
+                cassapiagent.insert_agent_pubkey(agent_pubkey)
+                raise
         else:
-            raise exceptions.AgentUpdateException(error=Errors.E_GAA_SPA_EIA)
+            raise exceptions.AgentNotFoundException(error=Errors.E_GAA_SPA_APKNF)
     else:
         raise exceptions.AgentNotFoundException(error=Errors.E_GAA_SPA_ANF)
 
@@ -182,9 +219,14 @@ def update_agent_config(aid, agentname):
     agent=cassapiagent.get_agent(aid=aid)
     if not agent:
         raise exceptions.AgentNotFoundException(error=Errors.E_GAA_UAC_ANF)
-    agent.agentname=agentname
-    if not cassapiagent.insert_agent(agent=agent):
-        raise exceptions.AgentUpdateException(error=Errors.E_GAA_UAC_IAE)
-    else:
-        return True
+    new_agent=agent
+    new_agent.agentname=agentname
+    try:
+        if not cassapiagent.insert_agent(agent=new_agent):
+            raise exceptions.AgentUpdateException(error=Errors.E_GAA_UAC_IAE)
+        else:
+            return True
+    except cassexcept.KomcassException:
+        cassapiagent.insert_agent(agent)
+        raise
 

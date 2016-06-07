@@ -8,6 +8,7 @@ the uri graph layer
 '''
 
 import uuid
+from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import graph as cassapigraph
 from komlog.komcass.model.orm import graph as ormgraph
 from komlog.komlibs.graph.api import base as graphbase

@@ -182,33 +182,37 @@ class Errors(Enum):
     E_IWAW_DWR_IPSP=101010
     E_IWAW_DWR_IW=101011
 
-    E_IWAW_NWR_IPSP=101020
-    E_IWAW_NWR_ID=101021
-    E_IWAW_NWR_IT=101022
-    E_IWAW_NWR_IWN=101023
-    E_IWAW_NWR_AUTHERR=101024 #new_widget_request error in update_resources
+    E_IWAW_NWR_IPSP     = 101020
+    E_IWAW_NWR_ID       = 101021
+    E_IWAW_NWR_IT       = 101022
+    E_IWAW_NWR_IWN      = 101023
+    E_IWAW_NWR_AUTHERR  = 101024 #: new_widget_request error in update_resources
+    E_IWAW_NWR_WCE      = 101025 #: new_widget_request widget creation error
 
-    E_IWAW_ADPR_IPSP=101030
-    E_IWAW_ADPR_IW=101031
-    E_IWAW_ADPR_IP=101032
+    E_IWAW_ADPR_IPSP    = 101030
+    E_IWAW_ADPR_IW      = 101031
+    E_IWAW_ADPR_IP      = 101032
+    E_IWAW_ADPR_OE      = 101033 #: add_datapoint_request. Operation error.
 
-    E_IWAW_DDPR_IPSP=101040
-    E_IWAW_DDPR_IW=101041
-    E_IWAW_DDPR_IP=101042
+    E_IWAW_DDPR_IPSP    = 101040
+    E_IWAW_DDPR_IW      = 101041
+    E_IWAW_DDPR_IP      = 101042
+    E_IWAW_DDPR_OE      = 101043 #: delete_datapoint_request. Operation error.
 
-    E_IWAW_UWCR_IPSP=101050
-    E_IWAW_UWCR_IW=101051
-    E_IWAW_UWCR_ID=101052
-    E_IWAW_UWCR_EMP=101053
-    E_IWAW_UWCR_IWN=101054
-    E_IWAW_UWCR_IDP=101055
-    E_IWAW_UWCR_EMDP=101056
-    E_IWAW_UWCR_IDPE=101057
-    E_IWAW_UWCR_EPNF=101058
-    E_IWAW_UWCR_ECNF=101059
-    E_IWAW_UWCR_IEP=101060
-    E_IWAW_UWCR_IEC=101061
-    E_IWAW_UWCR_IVW=101062 #update_widget_config_request invalid view parameter
+    E_IWAW_UWCR_IPSP    = 101050
+    E_IWAW_UWCR_IW      = 101051
+    E_IWAW_UWCR_ID      = 101052
+    E_IWAW_UWCR_EMP     = 101053
+    E_IWAW_UWCR_IWN     = 101054
+    E_IWAW_UWCR_IDP     = 101055
+    E_IWAW_UWCR_EMDP    = 101056
+    E_IWAW_UWCR_IDPE    = 101057
+    E_IWAW_UWCR_EPNF    = 101058
+    E_IWAW_UWCR_ECNF    = 101059
+    E_IWAW_UWCR_IEP     = 101060
+    E_IWAW_UWCR_IEC     = 101061
+    E_IWAW_UWCR_IVW     = 101062 #: update_widget_config_request invalid view parameter
+    E_IWAW_UWCR_OE      = 101043 #: update_widget_config_request. Operation error.
 
     E_IWAW_GRWR_IPSP=101080
     E_IWAW_GRWR_IW=101081

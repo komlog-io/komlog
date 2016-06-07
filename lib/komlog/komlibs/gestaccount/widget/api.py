@@ -9,6 +9,7 @@ author: jcazor
 '''
 
 import uuid
+from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import widget as cassapiwidget
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import datasource as cassapidatasource
@@ -85,10 +86,14 @@ def new_widget_datasource(uid,did):
         raise exceptions.WidgetAlreadyExistsException(error=Errors.E_GWA_NWDS_WAE)
     wid=uuid.uuid4()
     widget=ormwidget.WidgetDs(wid=wid,widgetname=datasource.datasourcename, uid=user.uid,did=datasource.did,creation_date=timeuuid.uuid1())
-    if cassapiwidget.new_widget(widget=widget):
-        return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type, 'did': widget.did}
-    else:
-        raise exceptions.WidgetCreationException(error=Errors.E_GWA_NWDS_IWE)
+    try:
+        if cassapiwidget.new_widget(widget=widget):
+            return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type, 'did': widget.did}
+        else:
+            raise exceptions.WidgetCreationException(error=Errors.E_GWA_NWDS_IWE)
+    except cassexcept.KomcassException:
+        cassapiwidget.delete_widget(wid=wid)
+        raise
 
 def new_widget_datapoint(uid,pid):
     if not args.is_valid_uuid(uid):
@@ -107,14 +112,21 @@ def new_widget_datapoint(uid,pid):
     wid=uuid.uuid4()
     widgetname=datapoint.datapointname
     widget=ormwidget.WidgetDp(wid=wid,widgetname=widgetname, uid=user.uid,pid=datapoint.pid,creation_date=timeuuid.uuid1())
-    if cassapiwidget.new_widget(widget=widget):
-        if datapoint.did:
-            dswidget=cassapiwidget.get_widget_ds(did=datapoint.did)
-            if dswidget:
-                graphkin.kin_widgets(ido=widget.wid, idd=dswidget.wid)
-        return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type, 'pid': widget.pid}
-    else:
-        raise exceptions.WidgetCreationException(error=Errors.E_GWA_NWDP_IWE)
+    dswidget=None
+    try:
+        if cassapiwidget.new_widget(widget=widget):
+            if datapoint.did:
+                dswidget=cassapiwidget.get_widget_ds(did=datapoint.did)
+                if dswidget:
+                    graphkin.kin_widgets(ido=widget.wid, idd=dswidget.wid)
+            return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type, 'pid': widget.pid}
+        else:
+            raise exceptions.WidgetCreationException(error=Errors.E_GWA_NWDP_IWE)
+    except cassexcept.KomcassException:
+        cassapiwidget.delete_widget(wid=wid)
+        if dswidget:
+            graphkin.unkin_widgets(ido=wid, idd=dswidget.wid)
+        raise
 
 def new_widget_histogram(uid, widgetname):
     if not args.is_valid_uuid(uid):
@@ -171,10 +183,14 @@ def new_widget_multidp(uid, widgetname):
         raise exceptions.UserNotFoundException(error=Errors.E_GWA_NWMP_UNF)
     wid=uuid.uuid4()
     widget=ormwidget.WidgetMultidp(wid=wid,uid=user.uid,widgetname=widgetname,creation_date=timeuuid.uuid1(), active_visualization=vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
-    if cassapiwidget.new_widget(widget=widget):
-        return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type}
-    else:
-        raise exceptions.WidgetCreationException(error=Errors.E_GWA_NWMP_IWE)
+    try:
+        if cassapiwidget.new_widget(widget=widget):
+            return {'wid': widget.wid, 'widgetname': widget.widgetname, 'uid': widget.uid, 'type': widget.type}
+        else:
+            raise exceptions.WidgetCreationException(error=Errors.E_GWA_NWMP_IWE)
+    except cassexcept.KomcassException:
+        cassapiwidget.delete_widget(wid=wid)
+        raise
 
 def add_datapoint_to_widget(wid, pid):
     if not args.is_valid_uuid(wid):
@@ -189,8 +205,12 @@ def add_datapoint_to_widget(wid, pid):
         raise exceptions.DatapointNotFoundException(error=Errors.E_GWA_ADTW_DNF)
     color=datapoint.color if datapoint.color else colors.get_random_color()
     if widget.type==types.MULTIDP:
-        if not cassapiwidget.add_datapoint_to_multidp(wid=wid, pid=pid):
-            raise exceptions.AddDatapointToWidgetException(error=Errors.E_GWA_ADTW_IDMPE)
+        try:
+            if not cassapiwidget.add_datapoint_to_multidp(wid=wid, pid=pid):
+                raise exceptions.AddDatapointToWidgetException(error=Errors.E_GWA_ADTW_IDMPE)
+        except cassexcept.KomcassException:
+            cassapiwidget.delete_datapoint_from_multidp(wid=wid, pid=pid)
+            raise
     elif widget.type==types.HISTOGRAM:
         if not cassapiwidget.add_datapoint_to_histogram(wid=wid, pid=pid, color=color):
             raise exceptions.AddDatapointToWidgetException(error=Errors.E_GWA_ADTW_IDHE)
@@ -204,7 +224,12 @@ def add_datapoint_to_widget(wid, pid):
         raise exceptions.WidgetUnsupportedOperationException(error=Errors.E_GWA_ADTW_WUO)
     dpwidget=cassapiwidget.get_widget_dp(pid=pid)
     if dpwidget:
-        graphkin.kin_widgets(ido=dpwidget.wid, idd=wid)
+        try:
+            graphkin.kin_widgets(ido=dpwidget.wid, idd=wid)
+        except cassexcept.KomcassException:
+            cassapiwidget.delete_datapoint_from_multidp(wid=wid, pid=pid)
+            graphkin.unkin_widgets(ido=dpwidget.wid, idd=wid)
+            raise
     return True
 
 def delete_datapoint_from_widget(wid, pid):
@@ -219,8 +244,13 @@ def delete_datapoint_from_widget(wid, pid):
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GWA_DDFW_DNF)
     if widget.type==types.MULTIDP:
-        if not cassapiwidget.delete_datapoint_from_multidp(wid=wid, pid=pid):
-            raise exceptions.DeleteDatapointFromWidgetException(error=Errors.E_GWA_DDFW_IDMPE)
+        if pid in widget.datapoints:
+            try:
+                if not cassapiwidget.delete_datapoint_from_multidp(wid=wid, pid=pid):
+                    raise exceptions.DeleteDatapointFromWidgetException(error=Errors.E_GWA_DDFW_IDMPE)
+            except cassexcept.KomcassException:
+                cassapiwidget.add_datapoint_to_multidp(wid=wid, pid=pid)
+                raise
     elif widget.type==types.HISTOGRAM:
         if not cassapiwidget.delete_datapoint_from_histogram(wid=wid, pid=pid):
             raise exceptions.DeleteDatapointFromWidgetException(error=Errors.E_GWA_DDFW_IDHE)
@@ -234,7 +264,13 @@ def delete_datapoint_from_widget(wid, pid):
         raise exceptions.WidgetUnsupportedOperationException(error=Errors.E_GWA_DDFW_WUO)
     dpwidget=cassapiwidget.get_widget_dp(pid=pid)
     if dpwidget:
-        graphkin.unkin_widgets(ido=dpwidget.wid, idd=wid)
+        try:
+            graphkin.unkin_widgets(ido=dpwidget.wid, idd=wid)
+        except cassexcept.KomcassException:
+            if pid in widget.datapoints:
+                graphkin.kin_widgets(ido=dpwidget.wid, idd=wid)
+                cassapiwidget.add_datapoint_to_multidp(wid=wid, pid=pid)
+            raise
     return True
 
 def update_widget_config(wid, widgetname=None, colors=None, active_visualization=None):
@@ -272,10 +308,14 @@ def update_widget_datasource(wid, widgetname):
     widget=cassapiwidget.get_widget_ds(wid=wid)
     if not widget:
         raise exceptions.WidgetNotFoundException(error=Errors.E_GWA_UWDS_WNF)
-    if cassapiwidget.insert_widget_widgetname(wid=wid, widgetname=widgetname):
-        return True
-    else:
-        return False
+    try:
+        if cassapiwidget.insert_widget_widgetname(wid=wid, widgetname=widgetname):
+            return True
+        else:
+            return False
+    except cassexcept.KomcassException:
+        cassapiwidget.insert_widget_widgetname(wid=wid, widgetname=widget.widgetname)
+        raise
 
 def update_widget_datapoint(wid, widgetname):
     if not args.is_valid_uuid(wid):
@@ -285,10 +325,14 @@ def update_widget_datapoint(wid, widgetname):
     widget=cassapiwidget.get_widget_dp(wid=wid)
     if not widget:
         raise exceptions.WidgetNotFoundException(error=Errors.E_GWA_UWDP_WNF)
-    if cassapiwidget.insert_widget_widgetname(wid=wid, widgetname=widgetname):
-        return True
-    else:
-        return False
+    try:
+        if cassapiwidget.insert_widget_widgetname(wid=wid, widgetname=widgetname):
+            return True
+        else:
+            return False
+    except cassexcept.KomcassException:
+        cassapiwidget.insert_widget_widgetname(wid=wid, widgetname=widget.widgetname)
+        raise
 
 def update_widget_histogram(wid, widgetname=None, colors=None):
     if not args.is_valid_uuid(wid):
@@ -382,13 +426,21 @@ def update_widget_multidp(wid, widgetname=None, active_visualization=None):
     if not widget:
         raise exceptions.WidgetNotFoundException(error=Errors.E_GWA_UWMP_WNF)
     if active_visualization:
-        if not active_visualization in vistypes.WIDGET_MULTIDP_AVAILABLE_VISUALIZATIONS:
-            raise exceptions.WidgetUnsupportedOperationException(error=Errors.E_GWA_UWMP_IAVT)
-        elif not active_visualization==widget.active_visualization and not cassapiwidget.insert_widget_multidp_active_visualization(wid=wid, active_visualization=active_visualization):
-            return False
+        try:
+            if not active_visualization in vistypes.WIDGET_MULTIDP_AVAILABLE_VISUALIZATIONS:
+                raise exceptions.WidgetUnsupportedOperationException(error=Errors.E_GWA_UWMP_IAVT)
+            elif not active_visualization==widget.active_visualization and not cassapiwidget.insert_widget_multidp_active_visualization(wid=wid, active_visualization=active_visualization):
+                return False
+        except cassexcept.KomcassException:
+            cassapiwidget.insert_widget_multidp_active_visualization(wid=wid, active_visualization=widget.active_visualization)
+            raise
     if widgetname:
-        if not cassapiwidget.insert_widget_widgetname(wid,widgetname):
-            return False
+        try:
+            if not cassapiwidget.insert_widget_widgetname(wid,widgetname):
+                return False
+        except cassexcept.KomcassException:
+            cassapiwidget.insert_widget_widgetname(wid=wid, widgetname=widget.widgetname)
+            raise
     return True
 
 def get_related_widgets(wid):

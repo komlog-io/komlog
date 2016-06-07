@@ -5,6 +5,7 @@ This file defines the logic associated with web interface operations
 '''
 
 import uuid
+from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
@@ -131,15 +132,19 @@ def new_widget_request(passport, data):
         operation=weboperations.NewWidgetOperation(uid=widget['uid'], wid=widget['wid'])
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
-        if authupdate.update_resources(operation=auth_op, params=params):
-            message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
-            msgapi.send_message(message)
-            message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_WIDGET, parameters={'wid':widget['wid'].hex})
-            msgapi.send_message(message)
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'wid':widget['wid'].hex})
-        else:
+        try:
+            if authupdate.update_resources(operation=auth_op, params=params):
+                message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+                msgapi.send_message(message)
+                message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_WIDGET, parameters={'wid':widget['wid'].hex})
+                msgapi.send_message(message)
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'wid':widget['wid'].hex})
+            else:
+                deleteapi.delete_widget(wid=widget['wid'])
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAW_NWR_AUTHERR.value)
+        except cassexcept.KomcassException:
             deleteapi.delete_widget(wid=widget['wid'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAW_NWR_AUTHERR.value)
+            raise
     else:
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAW_NWR_WCE.value)
 
@@ -156,6 +161,7 @@ def add_datapoint_request(passport, wid, pid):
     authorization.authorize_request(request=Requests.ADD_DATAPOINT_TO_WIDGET,passport=passport, wid=wid, pid=pid)
     if widgetapi.add_datapoint_to_widget(wid=wid, pid=pid):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAW_ADPR_OE.value)
 
 @exceptions.ExceptionHandler
 def delete_datapoint_request(passport, wid, pid):
@@ -170,6 +176,7 @@ def delete_datapoint_request(passport, wid, pid):
     authorization.authorize_request(request=Requests.DELETE_DATAPOINT_FROM_WIDGET,passport=passport, wid=wid)
     if widgetapi.delete_datapoint_from_widget(wid=wid, pid=pid):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAW_DDPR_OE.value)
 
 @exceptions.ExceptionHandler
 def update_widget_config_request(passport, wid, data):
@@ -211,6 +218,7 @@ def update_widget_config_request(passport, wid, data):
     view=data['view'] if 'view' in data else None
     if widgetapi.update_widget_config(wid=wid, widgetname=widgetname, colors=colors, active_visualization=view):
         return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAW_UWCR_OE.value)
 
 @exceptions.ExceptionHandler
 def get_related_widgets_request(passport, wid):

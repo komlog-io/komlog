@@ -13,6 +13,7 @@ import json
 import os
 import pickle
 from komlog.komfig import logging
+from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
 from komlog.komcass.api import datasource as cassapidatasource
@@ -46,11 +47,16 @@ def create_datasource(uid,aid,datasourcename):
     if not graphuri.new_datasource_uri(uid=uid, uri=datasourcename, did=did):
         raise exceptions.DatasourceCreationException(error=Errors.E_GDA_CRD_ADU)
     datasource=ormdatasource.Datasource(did=did,aid=aid,uid=uid,datasourcename=datasourcename,creation_date=now)
-    if cassapidatasource.new_datasource(datasource=datasource):
-        return {'did':datasource.did, 'datasourcename':datasource.datasourcename, 'uid': datasource.uid, 'aid':datasource.aid}
-    else:
+    try:
+        if cassapidatasource.new_datasource(datasource=datasource):
+            return {'did':datasource.did, 'datasourcename':datasource.datasourcename, 'uid': datasource.uid, 'aid':datasource.aid}
+        else:
+            graphuri.dissociate_vertex(ido=did)
+            raise exceptions.DatasourceCreationException(error=Errors.E_GDA_CRD_IDE)
+    except cassexcept.KomcassException:
         graphuri.dissociate_vertex(ido=did)
-        raise exceptions.DatasourceCreationException(error=Errors.E_GDA_CRD_IDE)
+        cassapidatasource.delete_datasource(did=did)
+        raise
 
 def get_last_processed_datasource_data(did):
     if not args.is_valid_uuid(did):
@@ -124,19 +130,27 @@ def store_datasource_data(did, date, content):
     size=len(content.encode('utf-8'))
     dsdobj=ormdatasource.DatasourceData(did=did,date=date,content=content)
     metobj=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
-    if cassapidatasource.insert_datasource_data(dsdobj=dsdobj):
-        if cassapidatasource.insert_datasource_metadata(obj=metobj):
-            if cassapidatasource.set_last_received(did=did, last_received=date):
+    dsstats=None
+    try:
+        if cassapidatasource.insert_datasource_data(dsdobj=dsdobj):
+            if cassapidatasource.insert_datasource_metadata(obj=metobj):
+                dsstats=cassapidatasource.get_datasource_stats(did=did)
+                if dsstats is None or dsstats.last_received is None or dsstats.last_received.time < date.time:
+                    cassapidatasource.set_last_received(did=did, last_received=date)
                 return True
             else:
                 cassapidatasource.delete_datasource_data_at(did=did, date=date)
-                cassapidatasource.delete_datasource_metadata_at(did=did, date=date)
                 return False
         else:
-            cassapidatasource.delete_datasource_data_at(did=did, date=date)
             return False
-    else:
-        return False
+    except cassexcept.KomcassException:
+        cassapidatasource.delete_datasource_data_at(did=did, date=date)
+        cassapidatasource.delete_datasource_metadata_at(did=did, date=date)
+        if dsstats is None:
+            cassapidatasource.delete_datasource_stats(did=did)
+        else:
+            cassapidatasource.set_last_received(did=did, last_received=dsstats.last_received)
+        raise
 
 def get_datasource_config(did, pids_flag=True):
     if not args.is_valid_uuid(did):
@@ -179,11 +193,16 @@ def update_datasource_config(did,datasourcename):
         raise exceptions.BadParametersException(error=Errors.E_GDA_UDS_IDN)
     datasource=cassapidatasource.get_datasource(did=did)
     if datasource:
-        datasource.datasourcename=datasourcename
-        if cassapidatasource.insert_datasource(datasource=datasource):
-            return True
-        else:
-            raise exceptions.DatasourceUpdateException(error=Errors.E_GDA_UDS_IDE)
+        new_datasource=datasource
+        new_datasource.datasourcename=datasourcename
+        try:
+            if cassapidatasource.insert_datasource(datasource=new_datasource):
+                return True
+            else:
+                raise exceptions.DatasourceUpdateException(error=Errors.E_GDA_UDS_IDE)
+        except cassexcept.KomcassException:
+            cassapidatasource.insert_datasource(datasource=datasource)
+            raise
     else:
         raise exceptions.DatasourceNotFoundException(error=Errors.E_GDA_UDS_DNF)
 
@@ -204,15 +223,19 @@ def generate_datasource_map(did, date):
         raise exceptions.DatasourceDataNotFoundException(error=Errors.E_GDA_GDM_DDNF)
     index=textmanvar.get_variables_index_from_text(text=dsdata.content)
     dsmapobj=ormdatasource.DatasourceMap(did=did,date=date,variables=index)
-    datasource_stats=cassapidatasource.get_datasource_stats(did=did)
+    dsstats=cassapidatasource.get_datasource_stats(did=did)
     try:
         if not cassapidatasource.insert_datasource_map(dsmapobj=dsmapobj):
             return False
-        if not datasource_stats or not datasource_stats.last_mapped or timeuuid.get_unix_timestamp(datasource_stats.last_mapped)<timeuuid.get_unix_timestamp(date):
+        if dsstats is None or dsstats.last_mapped is None or dsstats.last_mapped.time<date.time:
             cassapidatasource.set_last_mapped(did=did, last_mapped=date)
         return True
-    except Exception as e:
+    except cassexcept.KomcassException:
         #rollback
         cassapidatasource.delete_datasource_map(did=did, date=date)
-        return False
+        if dsstats is None:
+            cassapidatasource.delete_datasource_stats(did=did)
+        else:
+            cassapidatasource.set_last_mapped(did=did, last_mapped=dsstats.last_mapped)
+        raise
 

@@ -11,6 +11,7 @@ author: jcazor
 import uuid
 import json
 import pickle
+from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import datasource as cassapidatasource
 from komlog.komcass.api import datapoint as cassapidatapoint
@@ -67,10 +68,15 @@ def create_user_datapoint(uid, datapoint_uri):
         raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRUD_UAE)
     color=colors.get_random_color()
     datapoint=ormdatapoint.Datapoint(pid=pid,did=None,uid=uid, datapointname=datapoint_uri,color=color, creation_date=timeuuid.uuid1())
-    if cassapidatapoint.new_datapoint(datapoint):
-        return {'pid':datapoint.pid, 'uid':uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color}
-    graphuri.dissociate_vertex(ido=pid)
-    raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRUD_IDE)
+    try:
+        if cassapidatapoint.new_datapoint(datapoint):
+            return {'pid':datapoint.pid, 'uid':uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color}
+        graphuri.dissociate_vertex(ido=pid)
+        raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRUD_IDE)
+    except cassexcept.KomcassException:
+        cassapidatapoint.delete_datapoint(pid=pid)
+        graphuri.dissociate_vertex(ido=pid)
+        raise
 
 def create_datasource_datapoint(did, datapoint_uri):
     '''
@@ -89,31 +95,37 @@ def create_datasource_datapoint(did, datapoint_uri):
         existing_node=graphuri.get_id(ido=did, uri=datapoint_uri)
         if existing_node and existing_node['type']==vertex.DATAPOINT:
             datapoint=cassapidatapoint.get_datapoint(pid=existing_node['id'])
-            if datapoint and datapoint.did:
+            if datapoint is None:
+                raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRD_INF)
+            elif datapoint.did:
                 raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_CRD_AAD)
             else:
-                pid=existing_node['id']
-                if not datapoint:
-                    color=colors.get_random_color()
-                    datapointname='.'.join((datasource.datasourcename, datapoint_uri))
-                    datapoint=ormdatapoint.Datapoint(pid=pid,did=did,uid=datasource.uid, datapointname=datapointname,color=color, creation_date=timeuuid.uuid1())
-                else:
-                    datapoint.did=did
-                if cassapidatapoint.insert_datapoint(datapoint):
-                    return {'pid':pid, 'did':did, 'uid':datapoint.uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color, 'previously_existed':True}
-                else:
-                    raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRD_UDE)
+                datapoint.did=did
+                try:
+                    if cassapidatapoint.insert_datapoint(datapoint):
+                        return {'pid':datapoint.pid, 'did':did, 'uid':datapoint.uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color, 'previously_existed':True}
+                    else:
+                        raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRD_UDE)
+                except cassexcept.KomcassException:
+                    datapoint.did=None
+                    cassapidatapoint.insert_datapoint(datapoint)
+                    raise
         else:
             raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_CRD_ADU)
     else:
         color=colors.get_random_color()
         datapointname='.'.join((datasource.datasourcename, datapoint_uri))
         datapoint=ormdatapoint.Datapoint(pid=pid,did=did,uid=datasource.uid, datapointname=datapointname,color=color, creation_date=timeuuid.uuid1())
-        if cassapidatapoint.new_datapoint(datapoint):
-            return {'pid':datapoint.pid, 'did':datapoint.did, 'uid':datasource.uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color, 'previously_existed':False}
-        else:
+        try:
+            if cassapidatapoint.new_datapoint(datapoint):
+                return {'pid':pid, 'did':did, 'uid':datasource.uid, 'datapointname':datapoint.datapointname, 'color':datapoint.color, 'previously_existed':False}
+            else:
+                graphuri.dissociate_vertex(ido=pid)
+                raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRD_IDE)
+        except cassexcept.KomcassException:
+            cassapidatapoint.delete_datapoint(pid)
             graphuri.dissociate_vertex(ido=pid)
-            raise exceptions.DatapointCreationException(error=Errors.E_GPA_CRD_IDE)
+            raise
 
 def get_datapoint_config(pid):
     if not args.is_valid_uuid(pid):
@@ -147,14 +159,19 @@ def update_datapoint_config(pid, datapointname=None, color=None):
         raise exceptions.BadParametersException(error=Errors.E_GPA_UDC_EMP)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
     if datapoint:
+        new_datapoint=datapoint
         if datapointname:
-            datapoint.datapointname=datapointname
+            new_datapoint.datapointname=datapointname
         if color:
-            datapoint.color=color
-        if cassapidatapoint.insert_datapoint(datapoint):
-            return True
-        else:
-            raise exceptions.DatapointUpdateException(error=Errors.E_GPA_UDC_IDE)
+            new_datapoint.color=color
+        try:
+            if cassapidatapoint.insert_datapoint(new_datapoint):
+                return True
+            else:
+                raise exceptions.DatapointUpdateException(error=Errors.E_GPA_UDC_IDE)
+        except cassexcept.KomcassException:
+            cassapidatapoint.insert_datapoint(datapoint)
+            raise
     else:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_UDC_DNF)
 

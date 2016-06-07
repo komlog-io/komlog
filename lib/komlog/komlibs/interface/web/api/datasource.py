@@ -4,6 +4,7 @@ This file defines the logic associated with web interface operations
 
 '''
 import uuid
+from komlog.komcass import exceptions as cassexcept
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
@@ -143,17 +144,21 @@ def new_datasource_request(passport, datasourcename):
         operation=weboperations.NewDatasourceOperation(uid=passport.uid,aid=passport.aid,did=datasource['did'])
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
-        if authupdate.update_resources(operation=auth_op, params=params):
-            message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
-            msgapi.send_message(message)
-            message=messages.NewDSWidgetMessage(uid=passport.uid, did=datasource['did'])
-            msgapi.send_message(message)
-            message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':datasource['did'].hex})
-            msgapi.send_message(message)
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
-        else:
+        try:
+            if authupdate.update_resources(operation=auth_op, params=params):
+                message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+                msgapi.send_message(message)
+                message=messages.NewDSWidgetMessage(uid=passport.uid, did=datasource['did'])
+                msgapi.send_message(message)
+                message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':datasource['did'].hex})
+                msgapi.send_message(message)
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
+            else:
+                deleteapi.delete_datasource(did=datasource['did'])
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADS_NDSR_AUTHERR.value)
+        except cassexcept.KomcassException:
             deleteapi.delete_datasource(did=datasource['did'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADS_NDSR_AUTHERR.value)
+            raise
 
 @exceptions.ExceptionHandler
 def delete_datasource_request(passport, did):

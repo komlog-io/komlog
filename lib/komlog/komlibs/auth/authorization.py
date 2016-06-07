@@ -14,8 +14,6 @@ from komlog.komlibs.auth.errors import Errors
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.gestaccount.user.states import UserStates
 from komlog.komlibs.gestaccount.agent.states import AgentStates
-from komlog.komcass.api import user as cassapiuser
-from komlog.komcass.api import agent as cassapiagent
 from komlog.komfig import logging
 
 def authorize_request(*args, **kwargs):

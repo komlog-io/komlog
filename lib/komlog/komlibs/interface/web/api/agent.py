@@ -1,5 +1,6 @@
 import uuid
 from base64 import b64decode
+from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
 from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
@@ -35,16 +36,19 @@ def new_agent_request(passport, agentname, pubkey, version):
         operation=weboperations.NewAgentOperation(uid=passport.uid,aid=agent['aid'])
         auth_op=operation.get_auth_operation()
         params=operation.get_params()
-        if authupdate.update_resources(operation=auth_op, params=params):
-            message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
-            msgapi.send_message(message)
-            message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_AGENT, parameters={'aid':agent['aid'].hex})
-            msgapi.send_message(message)
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'aid':agent['aid'].hex})
-        else:
+        try:
+            if authupdate.update_resources(operation=auth_op, params=params):
+                message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+                msgapi.send_message(message)
+                message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_AGENT, parameters={'aid':agent['aid'].hex})
+                msgapi.send_message(message)
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'aid':agent['aid'].hex})
+            else:
+                deleteapi.delete_agent(aid=agent['aid'])
+                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAA_NAGR_AUTHERR.value)
+        except cassexcept.KomcassException:
             deleteapi.delete_agent(aid=agent['aid'])
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAA_NAGR_AUTHERR.value)
-
+            raise
 
 @exceptions.ExceptionHandler
 def get_agents_config_request(passport):

@@ -5,6 +5,7 @@ Created on 01/10/2014
 '''
 
 from cassandra.cluster import Cluster
+from cassandra.policies import RetryPolicy
 from cassandra.query import dict_factory
 from komlog.komcass.model import statement
 from komlog.komfig import logging, config, options
@@ -13,7 +14,7 @@ session = None
 
 class Session:
     def __init__(self, cluster, keyspace=None):
-        self.cluster = Cluster(cluster)
+        self.cluster = Cluster(cluster, default_retry_policy=RetryPolicy())
         self.session = self.cluster.connect(keyspace)
         self.session.row_factory = dict_factory
         self.stmts={}

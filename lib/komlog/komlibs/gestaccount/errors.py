@@ -74,8 +74,6 @@ class Errors(Enum):
 
     E_GUA_GUI_IEMAIL= 95 #: generate user invitation. Invalid Email
 
-    E_GUA_CUBI_RCF  = 100 #: create_user_by_invitation. race condition found processing invitation
-
     E_GUA_SIP_IINV  = 110 #: start_invitation_process. invalid invitation.
     E_GUA_SIP_INVNF = 111 #: start_invitation_process. invitation not found.
     E_GUA_SIP_INVAU = 112 #: start_invitation_process. invitation already used
@@ -138,10 +136,12 @@ class Errors(Enum):
     E_GAA_ACA_IA    = 2200
     E_GAA_ACA_EIA   = 2201
     E_GAA_ACA_ANF   = 2202
+    E_GAA_ACA_APKNF = 2203 #: activate_agent: agent public key not found
 
     E_GAA_SPA_IA    = 2250
     E_GAA_SPA_EIA   = 2251
     E_GAA_SPA_ANF   = 2252
+    E_GAA_SPA_APKNF = 2253 #: suspend_agent: agent public key not found
 
     E_GAA_GACFG_IA  = 2300
     E_GAA_GACFG_IF  = 2301
@@ -265,6 +265,7 @@ class Errors(Enum):
     E_GPA_CRD_ADU   = 6614 #: Uri selected already used
     E_GPA_CRD_AAD   = 6615 #: Datapoint already associated to a datasource
     E_GPA_CRD_UDE   = 6616 #: Error updating datapoint row in database
+    E_GPA_CRD_INF   = 6617 #: Data inconsistency found
 
     E_GPA_GDC_IP    = 6620
     E_GPA_GDC_DNF   = 6621

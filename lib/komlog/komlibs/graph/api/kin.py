@@ -8,6 +8,7 @@ the kin graph layer
 '''
 
 import uuid
+from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import graph as cassapigraph
 from komlog.komcass.model.orm import graph as ormgraph
 from komlog.komlibs.graph.api import base as graphbase
@@ -34,7 +35,11 @@ def set_kin_relation(ido, idd, vertex_type, params):
         return False
     if not args.is_valid_dict(params):
         return False
-    return graphbase.set_kin_edge(ido=ido, idd=idd, vertex_type=vertex_type, params=params)
+    try:
+        return graphbase.set_kin_edge(ido=ido, idd=idd, vertex_type=vertex_type, params=params)
+    except cassexcept.KomcassException:
+        delete_kin_relation(ido=ido, idd=idd)
+        raise
 
 def delete_kin_relations(ido):
     if not args.is_valid_uuid(ido):
@@ -58,12 +63,17 @@ def kin_widgets(ido, idd, params=None):
         return False
     vertex_type=vertex.WIDGET_WIDGET_RELATION
     rel_params=params if params else dict()
-    if set_kin_relation(ido=ido, idd=idd, vertex_type=vertex_type, params=rel_params) and set_kin_relation(ido=idd, idd=ido, vertex_type=vertex_type, params=rel_params):
-        return True
-    else:
+    try:
+        if set_kin_relation(ido=ido, idd=idd, vertex_type=vertex_type, params=rel_params) and set_kin_relation(ido=idd, idd=ido, vertex_type=vertex_type, params=rel_params):
+            return True
+        else:
+            delete_kin_relation(ido=ido, idd=idd)
+            delete_kin_relation(ido=idd, idd=ido)
+            return False
+    except cassexcept.KomcassException:
         delete_kin_relation(ido=ido, idd=idd)
         delete_kin_relation(ido=idd, idd=ido)
-        return False
+        raise
 
 def unkin_widgets(ido, idd):
     ''' this function removes the kin relations between widgets on both directions '''

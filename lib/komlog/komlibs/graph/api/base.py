@@ -7,6 +7,7 @@ graph vertex and edges
 
 '''
 
+from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import graph as cassapigraph
 from komlog.komcass.model.orm import graph as ormgraph
 from komlog.komlibs.graph.relations import edge, vertex
@@ -107,11 +108,15 @@ def set_uri_edge(ido, idd, vertex_type, uri):
     if args.is_valid_uuid(ido) and args.is_valid_uuid(idd) and args.is_valid_string(vertex_type) and args.is_valid_uri(uri):
         now=timeuuid.uuid1()
         relation=ormgraph.UriRelation(ido=ido, idd=idd, type=vertex_type, creation_date=now, uri=uri)
-        if cassapigraph.insert_uri_out_relation(relation) and cassapigraph.insert_uri_in_relation(relation):
-            return True
-        else:
+        try:
+            if cassapigraph.insert_uri_out_relation(relation) and cassapigraph.insert_uri_in_relation(relation):
+                return True
+            else:
+                delete_edge(ido=ido, idd=idd, edge_type=edge.URI_RELATION)
+                return False
+        except cassexcept.KomcassException:
             delete_edge(ido=ido, idd=idd, edge_type=edge.URI_RELATION)
-            return False
+            raise
     else:
         return False
 
@@ -119,11 +124,15 @@ def set_kin_edge(ido, idd, vertex_type, params):
     if args.is_valid_uuid(ido) and args.is_valid_uuid(idd) and args.is_valid_string(vertex_type) and args.is_valid_dict(params):
         now=timeuuid.uuid1()
         relation=ormgraph.KinRelation(ido=ido, idd=idd, type=vertex_type, creation_date=now, params=params)
-        if cassapigraph.insert_kin_out_relation(relation) and cassapigraph.insert_kin_in_relation(relation):
-            return True
-        else:
+        try:
+            if cassapigraph.insert_kin_out_relation(relation) and cassapigraph.insert_kin_in_relation(relation):
+                return True
+            else:
+                delete_edge(ido=ido, idd=idd, edge_type=edge.KIN_RELATION)
+                return False
+        except cassexcept.KomcassException:
             delete_edge(ido=ido, idd=idd, edge_type=edge.KIN_RELATION)
-            return False
+            raise
     else:
         return False
 

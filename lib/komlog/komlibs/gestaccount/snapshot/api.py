@@ -9,6 +9,7 @@ author: jcazor
 '''
 
 import uuid
+from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import snapshot as cassapisnapshot
 from komlog.komcass.api import widget as cassapiwidget
 from komlog.komcass.api import user as cassapiuser
@@ -71,8 +72,12 @@ def delete_snapshot(nid):
     snapshot=cassapisnapshot.get_snapshot(nid=nid)
     if not snapshot:
         raise exceptions.SnapshotNotFoundException(error=Errors.E_GSA_DS_SNF)
-    cassapisnapshot.delete_snapshot(nid=nid)
-    return True
+    try:
+        cassapisnapshot.delete_snapshot(nid=nid)
+        return True
+    except cassexcept.KomcassException:
+        cassapisnapshot.insert_snapshot(snapshot)
+        raise
 
 def new_snapshot(uid, wid, interval_init, interval_end):
     if not args.is_valid_uuid(uid):
@@ -133,10 +138,14 @@ def _new_snapshot_datasource(uid,wid,interval_init, interval_end):
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
     snapshot=ormsnapshot.SnapshotDs(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, did=widget.did, datasource_config=datasource_config, datapoints_config=datapoints_config)
-    if cassapisnapshot.new_snapshot(snapshot):
-        return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
-    else:
-        raise exceptions.SnapshotCreationException(error=Errors.E_GSA_NSDS_SCE)
+    try:
+        if cassapisnapshot.new_snapshot(snapshot):
+            return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
+        else:
+            raise exceptions.SnapshotCreationException(error=Errors.E_GSA_NSDS_SCE)
+    except cassexcept.KomcassException:
+        cassapisnapshot.delete_snapshot(nid=nid)
+        raise
 
 def _new_snapshot_datapoint(uid,wid,interval_init, interval_end):
     widget=cassapiwidget.get_widget_dp(wid=wid)
@@ -149,10 +158,14 @@ def _new_snapshot_datapoint(uid,wid,interval_init, interval_end):
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
     snapshot=ormsnapshot.SnapshotDp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, pid=widget.pid, datapoint_config=datapoint_config)
-    if cassapisnapshot.new_snapshot(snapshot):
-        return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
-    else:
-        raise exceptions.SnapshotCreationException(error=Errors.E_GSA_NSDP_SCE)
+    try:
+        if cassapisnapshot.new_snapshot(snapshot):
+            return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
+        else:
+            raise exceptions.SnapshotCreationException(error=Errors.E_GSA_NSDP_SCE)
+    except cassexcept.KomcassException:
+        cassapisnapshot.delete_snapshot(nid=nid)
+        raise
 
 def _new_snapshot_histogram(uid,wid,interval_init, interval_end):
     widget=cassapiwidget.get_widget_histogram(wid=wid)
@@ -215,8 +228,12 @@ def _new_snapshot_multidp(uid,wid,interval_init, interval_end):
     nid=uuid.uuid4()
     creation_date=timeuuid.uuid1()
     snapshot=ormsnapshot.SnapshotMultidp(nid=nid, uid=uid, wid=wid, interval_init=interval_init, interval_end=interval_end, widgetname=widget.widgetname, creation_date=creation_date, active_visualization=widget.active_visualization, datapoints=datapoints, datapoints_config=datapoints_config)
-    if cassapisnapshot.new_snapshot(snapshot):
-        return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
-    else:
-        raise exceptions.SnapshotCreationException(error=Errors.E_GSA_NSMP_SCE)
+    try:
+        if cassapisnapshot.new_snapshot(snapshot):
+            return {'nid':nid,'uid':uid,'wid':wid, 'interval_init':interval_init, 'interval_end':interval_end}
+        else:
+            raise exceptions.SnapshotCreationException(error=Errors.E_GSA_NSMP_SCE)
+    except cassexcept.KomcassException:
+        cassapisnapshot.delete_snapshot(nid=nid)
+        raise
 

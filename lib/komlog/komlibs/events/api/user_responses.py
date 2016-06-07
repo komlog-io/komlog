@@ -4,8 +4,10 @@ Methods for manipulating User Events Responses
 
 '''
 
-from komlog.komfig import logging
 import uuid, json
+from komlog.komcass import exceptions as cassexcept
+from komlog.komcass.api import events as cassapievents
+from komlog.komcass.model.orm import events as ormevents
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
@@ -13,8 +15,6 @@ from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.events import exceptions
 from komlog.komlibs.events.errors import Errors
 from komlog.komlibs.events.model import types
-from komlog.komcass.model.orm import events as ormevents
-from komlog.komcass.api import events as cassapievents
 
 def process_event_response(uid, date, response_data):
     if not args.is_valid_uuid(uid):
@@ -87,18 +87,22 @@ def _process_event_response_user_event_intervention_datapoint_identification(eve
     for pid in processing_result['dp_to_update']:
         if datapointapi.store_datapoint_values(pid=pid, date=ds_date):
             processing_result['dp_updated_successfully'].add(pid)
-    event_response=ormevents.UserEventResponseInterventionDatapointIdentification(\
-    uid=event.uid,\
-    date=event.date,\
-    response_date=now,\
-    missing=processing_result['missing'],\
-    identified=processing_result['identified'],\
-    not_belonging=processing_result['dp_not_belonging'],\
-    to_update=processing_result['dp_to_update'],\
-    update_failed=processing_result['dp_updated_failed'],\
-    update_success=processing_result['dp_updated_successfully'])
-    if cassapievents.insert_user_event_response(response=event_response):
-        return True
-    else:
-        return False
+    event_response=ormevents.UserEventResponseInterventionDatapointIdentification(
+        uid=event.uid,
+        date=event.date,
+        response_date=now,
+        missing=processing_result['missing'],
+        identified=processing_result['identified'],
+        not_belonging=processing_result['dp_not_belonging'],
+        to_update=processing_result['dp_to_update'],
+        update_failed=processing_result['dp_updated_failed'],
+        update_success=processing_result['dp_updated_successfully'])
+    try:
+        if cassapievents.insert_user_event_response(response=event_response):
+            return True
+        else:
+            return False
+    except cassexcept.KomcassException:
+        cassapievents.delete_user_event_response(event_response)
+        raise
 

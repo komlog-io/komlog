@@ -9,6 +9,7 @@ author: jcazor
 '''
 
 import uuid
+from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import circle as cassapicircle
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.model.orm import circle as ormcircle
@@ -66,10 +67,14 @@ def new_users_circle(uid, circlename, members_list=None):
         members=None
     cid=uuid.uuid4()
     circle=ormcircle.Circle(cid=cid,uid=user.uid,type=types.USERS_CIRCLE,creation_date=timeuuid.uuid1(),circlename=circlename,members=members)
-    if cassapicircle.new_circle(circle):
-        return {'cid':cid,'uid':user.uid}
-    else:
-        raise exceptions.CircleCreationException(error=Errors.E_GCA_NUC_ICE)
+    try:
+        if cassapicircle.new_circle(circle):
+            return {'cid':cid,'uid':user.uid}
+        else:
+            raise exceptions.CircleCreationException(error=Errors.E_GCA_NUC_ICE)
+    except cassexcept.KomcassException:
+        cassapicircle.delete_circle(cid=cid)
+        raise
 
 def update_circle(cid, circlename):
     if not args.is_valid_uuid(cid):
@@ -79,11 +84,16 @@ def update_circle(cid, circlename):
     circle=cassapicircle.get_circle(cid=cid)
     if not circle:
         raise exceptions.CircleNotFoundException(error=Errors.E_GCA_UC_CNF)
-    circle.circlename=circlename
-    if cassapicircle.insert_circle(circle=circle):
-        return True
-    else:
-        raise exceptions.CircleUpdateException(error=Errors.E_GCA_UC_ICE)
+    new_circle=circle
+    new_circle.circlename=circlename
+    try:
+        if cassapicircle.insert_circle(circle=new_circle):
+            return True
+        else:
+            raise exceptions.CircleUpdateException(error=Errors.E_GCA_UC_ICE)
+    except cassexcept.KomcassException:
+        cassapicircle.insert_circle(circle=circle)
+        raise
 
 def add_user_to_circle(cid, username):
     if not args.is_valid_uuid(cid):
@@ -96,10 +106,16 @@ def add_user_to_circle(cid, username):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException(error=Errors.E_GCA_AUTC_UNF)
-    if cassapicircle.add_member_to_circle(cid=cid, member=user.uid):
-        return True
-    else:
-        raise exceptions.CircleAddMemberException(error=Errors.E_GCA_AUTC_AME)
+    if not user.uid in circle.members:
+        try:
+            if cassapicircle.add_member_to_circle(cid=cid, member=user.uid):
+                return True
+            else:
+                raise exceptions.CircleAddMemberException(error=Errors.E_GCA_AUTC_AME)
+        except cassexcept.KomcassException:
+            cassapicircle.delete_member_from_circle(cid=cid, member=user.uid)
+            raise
+    return True
 
 def delete_user_from_circle(cid, username):
     if not args.is_valid_uuid(cid):
@@ -112,8 +128,14 @@ def delete_user_from_circle(cid, username):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException(error=Errors.E_GCA_DUFC_IU)
-    if cassapicircle.delete_member_from_circle(cid=cid, member=user.uid):
-        return True
-    else:
-        raise exceptions.CircleDeleteMemberException(error=Errors.E_GCA_DUFC_IU)
+    if user.uid in circle.members:
+        try:
+            if cassapicircle.delete_member_from_circle(cid=cid, member=user.uid):
+                return True
+            else:
+                raise exceptions.CircleDeleteMemberException(error=Errors.E_GCA_DUFC_IU)
+        except cassexcept.KomcassException:
+            cassapicircle.add_member_to_circle(cid=cid, member=user.uid)
+            raise
+    return True
 
