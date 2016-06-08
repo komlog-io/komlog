@@ -9,6 +9,7 @@ bus.py: Messages Bus implementation
 '''
 
 import redis
+import os.path
 from komlog.komfig import logging, config, options
 from komlog.komimc import routing
 
@@ -22,7 +23,7 @@ class MessageBus:
         self.running_host = running_host
         self.addr_list = routing.get_mod_address(module_id,module_instance,running_host)
         try:
-            self.connection = redis.StrictRedis(host=self.broker)
+            self.connection = redis.StrictRedis(unix_socket_path=self.broker) if os.path.isabs(self.broker) else redis.StrictRedis(host=self.broker)
             logging.logger.debug('Session established with Redis Server: '+self.broker)
         except Exception as e:
             logging.logger.debug('Exception establishing connection with Redis Server: '+str(e))
