@@ -8,8 +8,7 @@ from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.interface.web.api import login as loginapi 
 from komlog.komlibs.interface.web.api import user as userapi 
 from komlog.komlibs.interface.web.api import agent as agentapi 
-from komlog.komlibs.interface.web.model import webmodel
-from komlog.komlibs.interface.web.operations import weboperations
+from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status
 from komlog.komlibs.interface.imc.api import rescontrol
 from komlog.komlibs.interface.imc.model import messages
@@ -34,7 +33,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         if response.status == status.WEB_STATUS_NOT_FOUND:
             email = username+'@komlog.org'
             creation = userapi.new_user_request(username=username, password=password, email=email)
-            self.assertTrue(isinstance(creation , webmodel.WebInterfaceResponse))
+            self.assertTrue(isinstance(creation , webresp.WebInterfaceResponse))
             self.assertEqual(creation .status, status.WEB_STATUS_OK)
             response, cookie = loginapi.login_request(username=username, password=password)
             #response = userapi.get_user_config_request(username=username)
@@ -48,7 +47,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -56,7 +55,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==self.passport.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==self.passport.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -129,7 +128,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -149,7 +148,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -157,7 +156,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -218,7 +217,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -232,7 +231,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         password = 'password'
         email2 = username2+'@komlog.org'
         response2 = userapi.new_user_request(username=username2, password=password, email=email2)
-        self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         response3, cookie = loginapi.login_request(username=username2, password=password)
         psp2 = passport.get_user_passport(cookie)
@@ -247,7 +246,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         pubkey1 = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response1 = agentapi.new_agent_request(passport=psp, agentname=agentname1, pubkey=pubkey1, version=version)
-        self.assertTrue(isinstance(response1, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response1, webresp.WebInterfaceResponse))
         self.assertEqual(response1.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response1.data['aid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -255,7 +254,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response1.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response1.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -268,7 +267,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         pubkey2 = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response2 = agentapi.new_agent_request(passport=psp, agentname=agentname2, pubkey=pubkey2, version=version)
-        self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response2.data['aid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -276,7 +275,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response2.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response2.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -322,7 +321,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         response, cookie = loginapi.login_request(username=username, password=password)
         psp = passport.get_user_passport(cookie)
@@ -337,7 +336,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -345,7 +344,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:

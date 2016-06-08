@@ -14,7 +14,7 @@ from komlog.komlibs.interface.web.api import login as loginapi
 from komlog.komlibs.interface.web.api import user as userapi 
 from komlog.komlibs.interface.web.api import agent as agentapi 
 from komlog.komlibs.interface.web.api import datasource as datasourceapi 
-from komlog.komlibs.interface.web.model import webmodel
+from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
@@ -40,7 +40,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username+'@komlog.org'
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
-            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             response, cookie = loginapi.login_request(username=self.username, password=self.password)
             self.passport = passport.get_user_passport(cookie)
@@ -53,7 +53,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             while True:
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
                 self.assertIsNotNone(msg)
-                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT.value or not (msg.params['uid']==self.passport.uid and msg.params['aid']==self.agent_passport.aid):
+                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==self.passport.uid and msg.params['aid']==self.agent_passport.aid):
                     msgapi.send_message(msg)
                     count+=1
                     if count>=1000:
@@ -64,7 +64,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             rescontrol.process_message_UPDQUO(msg)
             datasourcename='datasource'
             response = datasourceapi.new_datasource_request(passport=self.agent_passport, datasourcename=datasourcename)
-            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
             msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -72,7 +72,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             while True:
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
                 self.assertIsNotNone(msg)
-                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE.value or not (msg.params['uid']==self.agent_passport.uid and msg.params['aid']==self.agent_passport.aid and msg.params['did']==uuid.UUID(response.data['did'])):
+                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE or not (msg.params['uid']==self.agent_passport.uid and msg.params['aid']==self.agent_passport.aid and msg.params['did']==uuid.UUID(response.data['did'])):
                     msgapi.send_message(msg)
                     count+=1
                     if count>=1000:
@@ -87,7 +87,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 if not msg:
                     break
-                if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==self.agent_passport.uid:
+                if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==self.agent_passport.uid:
                     rescontrol.process_message_UPDQUO(msg)
                 else:
                     msgapi.send_message(msg)
@@ -99,7 +99,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 if not msg:
                     break
-                if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==self.agent_passport.uid: 
+                if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==self.agent_passport.uid: 
                     rescontrol.process_message_RESAUTH(message=msg)
                 else:
                     msgapi.send_message(msg)
@@ -116,7 +116,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         psp = self.passport
         did=self.agents[0]['dids'][0]
         response = datasourceapi.get_datasource_config_request(passport=psp, did=did)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('datasourcename' in response.data)
         self.assertTrue('aid' in response.data)
@@ -163,7 +163,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         password = 'password'
         new_email = new_username+'@komlog.org'
         response = userapi.new_user_request(username=new_username, password=password, email=new_email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         response, cookie = loginapi.login_request(username=new_username, password = password)
         psp = passport.get_user_passport(cookie)
@@ -180,7 +180,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         psp = passport.get_agent_passport(cookie)
         datasourcename='test_get_datasource_config_request_success_datasource_ds'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -188,7 +188,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE.value or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -203,7 +203,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
             if not msg:
                 break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==psp.uid:
+            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid:
                 rescontrol.process_message_UPDQUO(msg)
             else:
                 msgapi.send_message(msg)
@@ -215,7 +215,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if not msg:
                 break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==psp.uid: 
+            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid: 
                 rescontrol.process_message_RESAUTH(message=msg)
             else:
                 msgapi.send_message(msg)
@@ -250,7 +250,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         response, cookie = loginapi.login_request(username=username, password=password)
         psp = passport.get_user_passport(cookie)
@@ -484,7 +484,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         response, cookie = loginapi.login_request(username=username, password=password)
         psp = passport.get_user_passport(cookie)
@@ -509,7 +509,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         while True:
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
             self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE.value or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
+            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
                 msgapi.send_message(msg)
                 count+=1
                 if count>=1000:
@@ -524,7 +524,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if not msg:
                 break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==psp.uid:
+            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid:
                 rescontrol.process_message_UPDQUO(msg)
             else:
                 msgapi.send_message(msg)
@@ -536,7 +536,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if not msg:
                 break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM.value and msg.params['uid']==psp.uid: 
+            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid: 
                 rescontrol.process_message_RESAUTH(message=msg)
             else:
                 msgapi.send_message(msg)
@@ -579,7 +579,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         password='temporal'
         email=username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         response, cookie = loginapi.login_request(username=username, password=password)
         psp= passport.get_user_passport(cookie)

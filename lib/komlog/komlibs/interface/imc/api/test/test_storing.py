@@ -37,7 +37,7 @@ class InterfaceImcApiStoringTest(unittest.TestCase):
                 self.assertEqual(message.did,did)
                 self.assertEqual(timeuuid.get_unix_timestamp(message.date),ts)
             elif message.type == messages.UPDATE_QUOTES_MESSAGE:
-                self.assertEqual(message.operation,Operations.DATASOURCE_DATA_STORED.value)
+                self.assertEqual(message.operation,Operations.DATASOURCE_DATA_STORED)
                 self.assertEqual(message.params['did'],did)
                 self.assertEqual(timeuuid.get_unix_timestamp(message.params['date']),ts)
             imcapi.process_message(message)

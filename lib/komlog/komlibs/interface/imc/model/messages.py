@@ -10,6 +10,7 @@ messages: komlog custom messages class implementations for inter module communic
 
 import uuid
 import json
+from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.interface.imc import exceptions
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komfig import logging
@@ -233,7 +234,7 @@ class UpdateQuotesMessage:
             self.serialized_message=serialized_message
             mtype,operation,str_params = self.serialized_message.split('|')
             self.type=mtype
-            self.operation=int(operation)
+            self.operation=getattr(Operations,operation)
             self.params={}
             for key,value in json.loads(str_params).items():
                 if isinstance(value,list):
@@ -244,7 +245,9 @@ class UpdateQuotesMessage:
                 else:
                     self.params[key]=uuid.UUID(value) if args.is_valid_hex_uuid(value) or args.is_valid_hex_date(value) else value
         else:
-            if not args.is_valid_int(operation) or not args.is_valid_dict(params):
+            if not args.is_valid_dict(params):
+                raise exceptions.BadParametersException()
+            if not isinstance(operation, Operations):
                 raise exceptions.BadParametersException()
             self.type=UPDATE_QUOTES_MESSAGE
             self.operation=operation
@@ -258,7 +261,7 @@ class UpdateQuotesMessage:
                     str_params[key]=tmp_list
                 else:
                     str_params[key]=value.hex if args.is_valid_uuid(value) or args.is_valid_date(value) else value
-            self.serialized_message='|'.join((self.type,str(self.operation),json.dumps(str_params)))
+            self.serialized_message='|'.join((self.type,self.operation.name,json.dumps(str_params)))
 
 class ResourceAuthorizationUpdateMessage:
     def __init__(self, serialized_message=None, operation=None, params=None):
@@ -266,7 +269,7 @@ class ResourceAuthorizationUpdateMessage:
             self.serialized_message=serialized_message
             mtype,operation,str_params = self.serialized_message.split('|')
             self.type=mtype
-            self.operation=int(operation)
+            self.operation=getattr(Operations,operation)
             self.params={}
             for key,value in json.loads(str_params).items():
                 if isinstance(value,list):
@@ -277,7 +280,9 @@ class ResourceAuthorizationUpdateMessage:
                 else:
                     self.params[key]=uuid.UUID(value) if args.is_valid_hex_uuid(value) or args.is_valid_hex_date(value) else value
         else:
-            if not args.is_valid_int(operation) or not args.is_valid_dict(params):
+            if not args.is_valid_dict(params):
+                raise exceptions.BadParametersException()
+            if not isinstance(operation, Operations):
                 raise exceptions.BadParametersException()
             self.type=RESOURCE_AUTHORIZATION_UPDATE_MESSAGE
             self.operation=operation
@@ -291,7 +296,7 @@ class ResourceAuthorizationUpdateMessage:
                     str_params[key]=tmp_list
                 else:
                     str_params[key]=value.hex if args.is_valid_uuid(value) or args.is_valid_date(value) else value
-            self.serialized_message='|'.join((self.type,str(self.operation),json.dumps(str_params)))
+            self.serialized_message='|'.join((self.type,self.operation.name,json.dumps(str_params)))
 
 class NewDPWidgetMessage:
     def __init__(self, serialized_message=None, uid=None, pid=None):

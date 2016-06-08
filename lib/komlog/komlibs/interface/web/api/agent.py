@@ -13,8 +13,7 @@ from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.common import delete as deleteapi
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
-from komlog.komlibs.interface.web.model import webmodel
-from komlog.komlibs.interface.web.operations import weboperations
+from komlog.komlibs.interface.web.model import response, operation
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.general.validation import arguments as args
 
@@ -33,19 +32,19 @@ def new_agent_request(passport, agentname, pubkey, version):
     pubkey=b64decode(pubkey.encode('utf-8'))
     agent=agentapi.create_agent(uid=passport.uid, agentname=agentname, pubkey=pubkey, version=version)
     if agent:
-        operation=weboperations.NewAgentOperation(uid=passport.uid,aid=agent['aid'])
-        auth_op=operation.get_auth_operation()
-        params=operation.get_params()
+        webop=operation.NewAgentOperation(uid=passport.uid,aid=agent['aid'])
+        authop=webop.get_auth_operation()
+        params=webop.get_params()
         try:
-            if authupdate.update_resources(operation=auth_op, params=params):
-                message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+            if authupdate.update_resources(operation=authop, params=params):
+                message=messages.UpdateQuotesMessage(operation=authop, params=params)
                 msgapi.send_message(message)
                 message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_AGENT, parameters={'aid':agent['aid'].hex})
                 msgapi.send_message(message)
-                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'aid':agent['aid'].hex})
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'aid':agent['aid'].hex})
             else:
                 deleteapi.delete_agent(aid=agent['aid'])
-                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAA_NAGR_AUTHERR.value)
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAA_NAGR_AUTHERR.value)
         except cassexcept.KomcassException:
             deleteapi.delete_agent(aid=agent['aid'])
             raise
@@ -68,7 +67,7 @@ def get_agents_config_request(passport):
             for did in reg['dids']:
                 agent_config['dids'].append(did.hex)
         response_data.append(agent_config)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
 def get_agent_config_request(passport, aid):
@@ -88,7 +87,7 @@ def get_agent_config_request(passport, aid):
         response_data['dids']=[]
         for did in data['dids']:
             response_data['dids'].append(did.hex)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
 def update_agent_config_request(passport, aid, data):
@@ -103,7 +102,7 @@ def update_agent_config_request(passport, aid, data):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_UAGCR_IAN)
     authorization.authorize_request(request=Requests.UPDATE_AGENT_CONFIG,passport=passport, aid=aid)
     if agentapi.update_agent_config(aid=aid, agentname=data['agentname']):
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
 def delete_agent_request(passport, aid):
@@ -115,5 +114,5 @@ def delete_agent_request(passport, aid):
     authorization.authorize_request(request=Requests.DELETE_AGENT, passport=passport, aid=aid)
     message=messages.DeleteAgentMessage(aid=aid)
     msgapi.send_message(msg=message)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 

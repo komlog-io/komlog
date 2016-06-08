@@ -20,7 +20,7 @@ from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model import operation as modop
-from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operation
+from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operations
 
 def process_operation(operation):
     if not isinstance(operation, modop.WSIFaceOperation):
@@ -31,7 +31,7 @@ def process_operation(operation):
 
 def _process_operation_new_datasource(operation):
     if authupdate.update_resources(operation=operation.auth_operation, params=operation.params):
-        message=messages.UpdateQuotesMessage(operation=operation.auth_operation.value, params=operation.params)
+        message=messages.UpdateQuotesMessage(operation=operation.auth_operation, params=operation.params)
         msgapi.send_message(message)
         message=messages.NewDSWidgetMessage(uid=operation.uid,did=operation.did)
         msgapi.send_message(message)
@@ -43,7 +43,7 @@ def _process_operation_new_datasource(operation):
 
 def _process_operation_new_user_datapoint(operation):
     if authupdate.update_resources(operation=operation.auth_operation, params=operation.params):
-        message=messages.UpdateQuotesMessage(operation=operation.auth_operation.value, params=operation.params)
+        message=messages.UpdateQuotesMessage(operation=operation.auth_operation, params=operation.params)
         msgapi.send_message(message)
         message=messages.NewDPWidgetMessage(uid=operation.uid,pid=operation.pid)
         msgapi.send_message(message)
@@ -52,7 +52,7 @@ def _process_operation_new_user_datapoint(operation):
         return False
 
 _operation_funcs = {
-    Operation.NEW_DATASOURCE:_process_operation_new_datasource,
-    Operation.NEW_USER_DATAPOINT:_process_operation_new_user_datapoint,
+    Operations.NEW_DATASOURCE:_process_operation_new_datasource,
+    Operations.NEW_USER_DATAPOINT:_process_operation_new_user_datapoint,
 }
 

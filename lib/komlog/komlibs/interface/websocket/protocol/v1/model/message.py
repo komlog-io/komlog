@@ -1,7 +1,7 @@
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
-from komlog.komlibs.interface.websocket.protocol.v1.model.types import Message
+from komlog.komlibs.interface.websocket.protocol.v1.model.types import Messages
 
 class SendDsDataMessage:
     def __init__(self, message):
@@ -24,7 +24,7 @@ class SendDsDataMessage:
 
     @action.setter
     def action(self, value):
-        if args.is_valid_string(value) and value==Message.SEND_DS_DATA:
+        if args.is_valid_string(value) and value==Messages.SEND_DS_DATA:
             self._action=value
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSDM_IA)
@@ -82,7 +82,7 @@ class SendDpDataMessage:
 
     @action.setter
     def action(self, value):
-        if args.is_valid_string(value) and value==Message.SEND_DP_DATA:
+        if args.is_valid_string(value) and value==Messages.SEND_DP_DATA:
             self._action=value
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPDM_IA)

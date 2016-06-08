@@ -13,7 +13,7 @@ from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.graph.api import uri as graphuri
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
-from komlog.komlibs.interface.web.model import webmodel
+from komlog.komlibs.interface.web.model import response
 
 def get_node_info(ido,uri,counter):
     id_info=graphuri.get_id(ido=ido)
@@ -50,12 +50,12 @@ def get_uri_request(passport, uri=None):
         base_uri=graphuri.get_joined_uri(base=uri)
         uri_id=graphuri.get_id(ido=passport.uid, uri=base_uri)
         if not uri_id:
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND)
+            return response.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND)
         else:
             root_id=uri_id['id']
     else:
         root_id=passport.uid
         base_uri=''
     node_info=get_node_info(ido=root_id,uri=base_uri,counter=5)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=node_info)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=node_info)
 

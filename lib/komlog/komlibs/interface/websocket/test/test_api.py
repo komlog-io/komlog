@@ -11,7 +11,6 @@ from komlog.komlibs.interface.websocket.protocol.v1.processing import operation,
 from komlog.komlibs.interface.websocket.protocol.v1.model import message as modmsg
 from komlog.komlibs.interface.websocket.protocol.v1.model import response as modresp
 from komlog.komlibs.interface.websocket.protocol.v1.model import operation as modop
-from komlog.komlibs.interface.websocket.protocol.v1.model.types import Message
 
 
 class InterfaceWebSocketApiTest(unittest.TestCase):

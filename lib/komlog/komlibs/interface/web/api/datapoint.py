@@ -19,8 +19,7 @@ from komlog.komlibs.gestaccount.widget import api as widgetapi
 from komlog.komlibs.gestaccount.common import delete as deleteapi
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
-from komlog.komlibs.interface.web.model import webmodel
-from komlog.komlibs.interface.web.operations import weboperations
+from komlog.komlibs.interface.web.model import response, operation
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
@@ -62,7 +61,7 @@ def get_datapoint_data_request(passport, pid, start_date, end_date, tid=None):
             'ts':timeuuid.get_unix_timestamp(point['date']),
             'value':int(point['value']) if point['value']%1==0 else float(point['value'])
         })
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
 def get_datapoint_config_request(passport, pid):
@@ -83,7 +82,7 @@ def get_datapoint_config_request(passport, pid):
         datapoint['decimalseparator']=data['decimalseparator']
     if 'wid' in data:
         datapoint['wid']=data['wid'].hex
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datapoint)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datapoint)
 
 @exceptions.ExceptionHandler
 def update_datapoint_config_request(passport, pid, data):
@@ -104,7 +103,7 @@ def update_datapoint_config_request(passport, pid, data):
     pid=uuid.UUID(pid)
     authorization.authorize_request(request=Requests.UPDATE_DATAPOINT_CONFIG,passport=passport,pid=pid)
     datapointapi.update_datapoint_config(pid=pid,datapointname=datapointname, color=color)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
 def new_datasource_datapoint_request(passport, did, sequence, position, length, datapointname):
@@ -125,7 +124,7 @@ def new_datasource_datapoint_request(passport, did, sequence, position, length, 
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
     message=messages.MonitorVariableMessage(uid=passport.uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
     msgapi.send_message(message)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 
 @exceptions.ExceptionHandler
 def mark_positive_variable_request(passport, pid, sequence, position, length):
@@ -147,9 +146,9 @@ def mark_positive_variable_request(passport, pid, sequence, position, length):
         for datapoint in datapoints_to_update:
             message=messages.FillDatapointMessage(pid=pid, date=date)
             msgapi.send_message(message)
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     else:
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, errors=Errors.UNKNOWN.value)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, errors=Errors.UNKNOWN.value)
 
 @exceptions.ExceptionHandler
 def mark_negative_variable_request(passport, pid, sequence, position, length):
@@ -171,9 +170,9 @@ def mark_negative_variable_request(passport, pid, sequence, position, length):
         for datapoint in datapoints_to_update:
             message=messages.FillDatapointMessage(pid=pid, date=date)
             msgapi.send_message(message)
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     else:
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, errors=Errors.UNKNOWN.value)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, errors=Errors.UNKNOWN.value)
 
 @exceptions.ExceptionHandler
 def delete_datapoint_request(passport, pid):
@@ -185,7 +184,7 @@ def delete_datapoint_request(passport, pid):
     authorization.authorize_request(request=Requests.DELETE_DATAPOINT,passport=passport,pid=pid)
     message=messages.DeleteDatapointMessage(pid=pid)
     msgapi.send_message(msg=message)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 
 @exceptions.ExceptionHandler
 def dissociate_datapoint_from_datasource_request(passport, pid):
@@ -197,10 +196,10 @@ def dissociate_datapoint_from_datasource_request(passport, pid):
     authorization.authorize_request(request=Requests.DISSOCIATE_DATAPOINT_FROM_DATASOURCE,passport=passport,pid=pid)
     result=deleteapi.dissociate_datapoint_from_datasource(pid=pid)
     if result['did'] is not None:
-        operation=weboperations.DissociateDatapointFromDatasourceOperation(pid=pid, did=result['did'])
-        auth_op=operation.get_auth_operation()
-        params=operation.get_params()
-        message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+        webop=operation.DissociateDatapointFromDatasourceOperation(pid=pid, did=result['did'])
+        authop=webop.get_auth_operation()
+        params=webop.get_params()
+        message=messages.UpdateQuotesMessage(operation=authop, params=params)
         msgapi.send_message(message)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 

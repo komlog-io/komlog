@@ -1,14 +1,14 @@
 
-from komlog.komlibs.auth.model.operations import Operations as authoperations
+from komlog.komlibs.auth.model.operations import Operations as AuthOperations
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
-from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operation
+from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operations
 
 
 OPAUTHS={
-    Operation.NEW_DATASOURCE:authoperations.NEW_DATASOURCE,
-    Operation.NEW_USER_DATAPOINT:authoperations.NEW_USER_DATAPOINT,
+    Operations.NEW_DATASOURCE:AuthOperations.NEW_DATASOURCE,
+    Operations.NEW_USER_DATAPOINT:AuthOperations.NEW_USER_DATAPOINT,
 }
 
 class WSIFaceOperation:
@@ -29,7 +29,7 @@ class WSIFaceOperation:
     def oid(self, value):
         if self._oid:
             raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_WSIO_OIDAI)
-        if value in Operation:
+        if value in Operations:
             self._oid = value
         else:
             raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_WSIO_IOID)
@@ -46,7 +46,7 @@ class NewDatasourceOperation(WSIFaceOperation):
         self.uid = uid
         self.aid = aid
         self.did = did
-        super().__init__(oid=Operation.NEW_DATASOURCE)
+        super().__init__(oid=Operations.NEW_DATASOURCE)
 
     @property
     def params(self):
@@ -101,7 +101,7 @@ class NewUserDatapointOperation(WSIFaceOperation):
         self.uid = uid
         self.aid = aid
         self.pid = pid
-        super().__init__(oid=Operation.NEW_USER_DATAPOINT)
+        super().__init__(oid=Operations.NEW_USER_DATAPOINT)
 
     @property
     def params(self):

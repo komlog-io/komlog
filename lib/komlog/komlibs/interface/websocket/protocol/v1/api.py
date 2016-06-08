@@ -8,7 +8,7 @@ from komlog.komlibs.interface.websocket.protocol.v1 import status, exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.processing import message as procmsg
 from komlog.komlibs.interface.websocket.protocol.v1.model.response import Response
-from komlog.komlibs.interface.websocket.protocol.v1.model.types import Message
+from komlog.komlibs.interface.websocket.protocol.v1.model.types import Messages
 
 
 
@@ -19,7 +19,7 @@ def process_message(passport, message):
         return Response(status=status.PROTOCOL_ERROR, error=Errors.E_IWSPV1A_PM_IA.value, reason='unsupported action')
 
 _processing_funcs = {
-    Message.SEND_DS_DATA:procmsg._process_send_ds_data,
-    Message.SEND_DP_DATA:procmsg._process_send_dp_data,
+    Messages.SEND_DS_DATA:procmsg._process_send_ds_data,
+    Messages.SEND_DP_DATA:procmsg._process_send_dp_data,
 }
 

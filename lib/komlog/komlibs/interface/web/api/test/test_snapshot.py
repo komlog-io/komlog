@@ -15,7 +15,7 @@ from komlog.komlibs.interface.web.api import datapoint as datapointapi
 from komlog.komlibs.interface.web.api import widget as widgetapi
 from komlog.komlibs.interface.web.api import snapshot as snapshotapi
 from komlog.komlibs.interface.web.api import circle as circleapi
-from komlog.komlibs.interface.web.model import webmodel
+from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
@@ -39,7 +39,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username+'@komlog.org'
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
-            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
             while True:
@@ -76,7 +76,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username_to_share+'@komlog.org'
             response = userapi.new_user_request(username=self.username_to_share, password=self.password, email=email)
-            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
             while True:
@@ -152,7 +152,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_get_snapshot_config_request_success_snapshot_linegraph'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -173,7 +173,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_get_snapshot_config_request_success_snapshot_linegraph_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -272,7 +272,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_get_snapshot_config_request_success_snapshot_histogram'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -293,7 +293,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_get_snapshot_config_request_success_snapshot_histogram_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -392,7 +392,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_get_snapshot_config_request_success_snapshot_table'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -413,7 +413,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_get_snapshot_config_request_success_snapshot_table_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -512,7 +512,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_get_snapshot_config_request_success_snapshot_multidp'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -533,7 +533,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_get_snapshot_config_request_success_snapshot_multidp_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -635,7 +635,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         psp = self.agent_passport
         datasourcename='test_get_snapshot_config_request_success_snapshot_datasource'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         did=response.data['did']
@@ -702,7 +702,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         psp = self.agent_passport
         datasourcename='test_get_snapshot_config_request_success_snapshot_datasource_shared_to_circle'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         did=response.data['did']
@@ -796,7 +796,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         psp = self.agent_passport
         datasourcename='test_get_snapshot_config_request_success_snapshot_datapoint'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -939,7 +939,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_delete_snapshot_request_success_snapshot_linegraph'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -960,7 +960,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_delete_snapshot_request_success_snapshot_linegraph_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1062,7 +1062,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_delete_snapshot_request_success_snapshot_histogram'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1083,7 +1083,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_delete_snapshot_request_success_snapshot_histogram_datasource'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1185,7 +1185,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_delete_snapshot_request_success_snapshot_table'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1206,7 +1206,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_delete_snapshot_request_success_snapshot_table_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1308,7 +1308,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_delete_snapshot_request_success_snapshot_multidp'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1329,7 +1329,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_delete_snapshot_request_success_snapshot_multidp_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1439,7 +1439,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         psp = self.agent_passport
         datasourcename='test_delete_snapshot_request_success_snapshot_datasource'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         did=response.data['did']
@@ -1510,7 +1510,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         psp = self.agent_passport
         datasourcename='test_delete_snapshot_request_success_snapshot_datapoint_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1664,7 +1664,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_new_snapshot_request_failure_widget_linegraph_has_no_datapoints'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1695,7 +1695,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_new_snapshot_request_success_widget_linegraph'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1716,7 +1716,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_new_snapshot_request_success_widget_linegraph_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1829,7 +1829,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_new_snapshot_request_failure_widget_histogram_has_no_datapoints'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1860,7 +1860,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_new_snapshot_request_success_widget_histogram'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1881,7 +1881,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_new_snapshot_request_success_widget_histogram_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -1993,7 +1993,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_new_snapshot_request_failure_widget_table_has_no_datapoints'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -2024,7 +2024,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_new_snapshot_request_success_widget_table'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -2045,7 +2045,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_new_snapshot_request_success_widget_table_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -2158,7 +2158,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_new_snapshot_request_failure_widget_multidp_has_no_datapoints'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -2189,7 +2189,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         widgetname='test_new_snapshot_request_success_widget_multidp'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -2210,7 +2210,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_new_snapshot_request_success_widget_multidp_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -2325,7 +2325,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         psp = self.agent_passport
         datasourcename='test_new_snapshot_request_success_widget_datasource'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         did=response.data['did']
@@ -2409,7 +2409,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         psp = self.agent_passport
         datasourcename='test_new_snapshot_request_success_widget_datapoint'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)

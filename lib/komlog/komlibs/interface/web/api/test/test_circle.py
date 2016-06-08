@@ -7,7 +7,7 @@ from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.interface.web.api import login as loginapi
 from komlog.komlibs.interface.web.api import user as userapi
 from komlog.komlibs.interface.web.api import circle as circleapi
-from komlog.komlibs.interface.web.model import webmodel
+from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
@@ -29,13 +29,23 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username+'@komlog.org'
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
-            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
             while True:
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 if msg:
                     msg_result=msgapi.process_message(msg)
+                    if msg_result:
+                        msgapi.process_msg_result(msg_result)
+                else:
+                    break
+            msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+            while True:
+                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+                if msg:
+                    msg_result=msgapi.process_message(msg)
+                    self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
                     if msg_result:
                         msgapi.process_msg_result(msg_result)
                 else:
@@ -116,7 +126,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -202,7 +212,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -353,7 +363,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -497,7 +507,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         password = 'password'
         email = member+'@komlog.org'
         response2 = userapi.new_user_request(username=member, password=password, email=email)
-        self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -624,7 +634,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         password = 'password'
         email = member+'@komlog.org'
         response2 = userapi.new_user_request(username=member, password=password, email=email)
-        self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:

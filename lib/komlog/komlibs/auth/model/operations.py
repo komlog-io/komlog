@@ -7,29 +7,37 @@ the system has received but is not done yet
 
 '''
 
-from enum import Enum
+from enum import Enum, unique
 
-class Operations(Enum):
-    NEW_AGENT                            = 0
-    NEW_DATASOURCE                       = 1
-    NEW_DATASOURCE_DATAPOINT             = 2
-    NEW_WIDGET                           = 3
-    NEW_DASHBOARD                        = 4
-    NEW_WIDGET_SYSTEM                    = 5
-    NEW_SNAPSHOT                         = 6
-    NEW_CIRCLE                           = 7
-    DELETE_USER                          = 8
-    DELETE_AGENT                         = 9
-    DELETE_DATASOURCE                    = 10
-    DELETE_DATASOURCE_DATAPOINT          = 11
-    DELETE_WIDGET                        = 12
-    DELETE_DASHBOARD                     = 13
-    DELETE_SNAPSHOT                      = 14
-    DELETE_CIRCLE                        = 15
-    UPDATE_CIRCLE_MEMBERS                = 16
-    DATASOURCE_DATA_STORED               = 17
-    NEW_USER                             = 18
-    NEW_USER_DATAPOINT                   = 19
-    DISSOCIATE_DATAPOINT_FROM_DATASOURCE = 20
-    DELETE_USER_DATAPOINT                = 21
+class AutoEnum(Enum):
+    def __new__(cls):
+        value = len(cls.__members__)+1
+        obj = object.__new__(cls)
+        obj._value_ = value
+        return obj
+
+@unique
+class Operations(AutoEnum):
+    DATASOURCE_DATA_STORED               = ()
+    DELETE_AGENT                         = ()
+    DELETE_CIRCLE                        = ()
+    DELETE_DASHBOARD                     = ()
+    DELETE_DATASOURCE                    = ()
+    DELETE_DATASOURCE_DATAPOINT          = ()
+    DELETE_SNAPSHOT                      = ()
+    DELETE_USER                          = ()
+    DELETE_USER_DATAPOINT                = ()
+    DELETE_WIDGET                        = ()
+    DISSOCIATE_DATAPOINT_FROM_DATASOURCE = ()
+    UPDATE_CIRCLE_MEMBERS                = ()
+    NEW_AGENT                            = ()
+    NEW_CIRCLE                           = ()
+    NEW_DASHBOARD                        = ()
+    NEW_DATASOURCE                       = ()
+    NEW_DATASOURCE_DATAPOINT             = ()
+    NEW_SNAPSHOT                         = ()
+    NEW_USER                             = ()
+    NEW_USER_DATAPOINT                   = ()
+    NEW_WIDGET                           = ()
+    NEW_WIDGET_SYSTEM                    = ()
 

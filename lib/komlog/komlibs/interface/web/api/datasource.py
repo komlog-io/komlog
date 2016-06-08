@@ -19,8 +19,7 @@ from komlog.komlibs.gestaccount.widget import api as widgetapi
 from komlog.komlibs.gestaccount.common import delete as deleteapi
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
-from komlog.komlibs.interface.web.model import webmodel
-from komlog.komlibs.interface.web.operations import weboperations
+from komlog.komlibs.interface.web.model import response, operation
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
@@ -70,7 +69,7 @@ def get_datasource_data_request(passport, did, seq=None, tid=None):
     datasource['datapoints']=[]
     for datapoint in data['datapoints']:
         datasource['datapoints'].append({'pid':datapoint['pid'].hex,'index':datapoint['position']})
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datasource)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datasource)
 
 @exceptions.ExceptionHandler
 def upload_datasource_data_request(passport, did, content, destination):
@@ -85,7 +84,7 @@ def upload_datasource_data_request(passport, did, content, destination):
     did=uuid.UUID(did)
     authorization.authorize_request(request=Requests.POST_DATASOURCE_DATA,passport=passport,did=did)
     destfile=datasourceapi.upload_datasource_data(did,content,destination)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 
 @exceptions.ExceptionHandler
 def get_datasources_config_request(passport):
@@ -96,7 +95,7 @@ def get_datasources_config_request(passport):
     response_data=[]
     for datasource in data:
         response_data.append({'did':datasource['did'].hex, 'aid':datasource['aid'].hex, 'datasourcename':datasource['datasourcename']})
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
 def get_datasource_config_request(passport, did):
@@ -115,7 +114,7 @@ def get_datasource_config_request(passport, did):
         datasource['pids']=[pid.hex for pid in data['pids']]
     if 'wid' in data:
         datasource['wid']=data['wid'].hex
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datasource)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datasource)
 
 @exceptions.ExceptionHandler
 def update_datasource_config_request(passport, did, data):
@@ -130,7 +129,7 @@ def update_datasource_config_request(passport, did, data):
     did=uuid.UUID(did)
     authorization.authorize_request(request=Requests.UPDATE_DATASOURCE_CONFIG,passport=passport,did=did)
     datasourceapi.update_datasource_config(did=did,datasourcename=data['datasourcename'])
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
 def new_datasource_request(passport, datasourcename):
@@ -141,21 +140,21 @@ def new_datasource_request(passport, datasourcename):
     authorization.authorize_request(request=Requests.NEW_DATASOURCE,passport=passport)
     datasource=datasourceapi.create_datasource(uid=passport.uid,aid=passport.aid,datasourcename=datasourcename)
     if datasource:
-        operation=weboperations.NewDatasourceOperation(uid=passport.uid,aid=passport.aid,did=datasource['did'])
-        auth_op=operation.get_auth_operation()
-        params=operation.get_params()
+        webop=operation.NewDatasourceOperation(uid=passport.uid,aid=passport.aid,did=datasource['did'])
+        authop=webop.get_auth_operation()
+        params=webop.get_params()
         try:
-            if authupdate.update_resources(operation=auth_op, params=params):
-                message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+            if authupdate.update_resources(operation=authop, params=params):
+                message=messages.UpdateQuotesMessage(operation=authop, params=params)
                 msgapi.send_message(message)
                 message=messages.NewDSWidgetMessage(uid=passport.uid, did=datasource['did'])
                 msgapi.send_message(message)
                 message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':datasource['did'].hex})
                 msgapi.send_message(message)
-                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
             else:
                 deleteapi.delete_datasource(did=datasource['did'])
-                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADS_NDSR_AUTHERR.value)
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADS_NDSR_AUTHERR.value)
         except cassexcept.KomcassException:
             deleteapi.delete_datasource(did=datasource['did'])
             raise
@@ -170,5 +169,5 @@ def delete_datasource_request(passport, did):
     authorization.authorize_request(request=Requests.DELETE_DATASOURCE,passport=passport,did=did)
     message=messages.DeleteDatasourceMessage(did=did)
     msgapi.send_message(msg=message)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 

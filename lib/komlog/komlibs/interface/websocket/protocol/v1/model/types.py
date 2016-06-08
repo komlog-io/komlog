@@ -16,14 +16,14 @@ class AutoEnum(Enum):
 # MESSAGE TYPES
 
 @unique
-class Message(str, Enum):
+class Messages(str, Enum):
     SEND_DS_DATA='send_ds_data'
     SEND_DP_DATA='send_dp_data'
 
 # OPERATION TYPES
 
 @unique
-class Operation(AutoEnum):
+class Operations(AutoEnum):
     NEW_DATASOURCE     = ()
     NEW_USER_DATAPOINT = ()
 

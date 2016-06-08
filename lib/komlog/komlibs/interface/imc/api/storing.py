@@ -18,7 +18,6 @@ from komlog.komlibs.gestaccount.widget import types as widgettypes
 from komlog.komlibs.interface.imc.model import messages, responses
 from komlog.komlibs.interface.imc import status, exceptions
 from komlog.komlibs.mail import api as mailapi
-from komlog.komlibs.interface.web.operations import weboperations
 
 
 @exceptions.ExceptionHandler
@@ -80,7 +79,7 @@ def process_message_STOSMP(message):
                 logging.logger.debug('Error moving processed file to stored path: '+str(e))
             auth_op=Operations.DATASOURCE_DATA_STORED
             params={'did':did, 'date':date}
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
             response.add_msg_originated(messages.GenerateTextSummaryMessage(did=did,date=date))
             response.add_msg_originated(messages.MapVarsMessage(did=did,date=date))
             response.status=status.IMC_STATUS_OK

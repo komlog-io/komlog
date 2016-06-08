@@ -18,8 +18,8 @@ from komlog.komlibs.gestaccount.dashboard import api as dashboardapi
 from komlog.komlibs.gestaccount.widget import types as widgettypes
 from komlog.komlibs.interface.imc.model import messages, responses
 from komlog.komlibs.interface.imc import status, exceptions
+from komlog.komlibs.interface.web.model import operation
 from komlog.komlibs.mail import api as mailapi
-from komlog.komlibs.interface.web.operations import weboperations
 
 
 @exceptions.ExceptionHandler
@@ -41,11 +41,11 @@ def process_message_MONVAR(message):
         datapoint=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
         if datapoint:
             datasource=datasourceapi.get_datasource_config(did=did)
-            operation=weboperations.NewDatasourceDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=datapoint['pid'])
-            auth_op=operation.get_auth_operation()
-            params=operation.get_params()
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
+            webop=operation.NewDatasourceDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=datapoint['pid'])
+            authop=webop.get_auth_operation()
+            params=webop.get_params()
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=authop, params=params))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
             response.add_msg_originated(messages.FillDatapointMessage(pid=datapoint['pid'],date=date))
             response.add_msg_originated(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':datapoint['pid'].hex}))
             if datapoint['previously_existed'] is False:
@@ -174,11 +174,11 @@ def process_message_NEWDSW(message):
     if args.is_valid_uuid(did) and args.is_valid_uuid(uid):
         widget=widgetapi.new_widget_datasource(uid=uid, did=did)
         if widget:
-            operation=weboperations.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
-            auth_op=operation.get_auth_operation()
-            params=operation.get_params()
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
+            webop=operation.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
+            authop=webop.get_auth_operation()
+            params=webop.get_params()
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=authop, params=params))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
             response.status=status.IMC_STATUS_OK
         else:
             response.status=status.IMC_STATUS_INTERNAL_ERROR
@@ -195,11 +195,11 @@ def process_message_NEWDPW(message):
     if args.is_valid_uuid(pid) and args.is_valid_uuid(uid):
         widget=widgetapi.new_widget_datapoint(uid=uid, pid=pid)
         if widget:
-            operation=weboperations.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
-            auth_op=operation.get_auth_operation()
-            params=operation.get_params()
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op.value, params=params))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=auth_op.value, params=params))
+            webop=operation.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
+            authop=webop.get_auth_operation()
+            params=webop.get_params()
+            response.add_msg_originated(messages.UpdateQuotesMessage(operation=authop, params=params))
+            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
             response.status=status.IMC_STATUS_OK
         else:
             response.status=status.IMC_STATUS_INTERNAL_ERROR
@@ -228,7 +228,7 @@ def process_message_DELAGENT(message):
     if args.is_valid_uuid(aid):
         agent=agentapi.get_agent_config(aid=aid, dids_flag=True)
         deleteapi.delete_agent(aid=agent['aid'])
-        op_id=Operations.DELETE_AGENT.value
+        op_id=Operations.DELETE_AGENT
         op_params={'uid':agent['uid']}
         response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
@@ -244,7 +244,7 @@ def process_message_DELDS(message):
     if args.is_valid_uuid(did):
         datasource=datasourceapi.get_datasource_config(did=did)
         deleteapi.delete_datasource(did=did)
-        op_id=Operations.DELETE_DATASOURCE.value
+        op_id=Operations.DELETE_DATASOURCE
         op_params={'uid':datasource['uid'],'aid':datasource['aid']}
         response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
@@ -264,11 +264,11 @@ def process_message_DELDP(message):
             datasource=datasourceapi.get_datasource_config(did=datapoint['did'])
         deleteapi.delete_datapoint(pid=pid)
         if datasource:
-            op_id=Operations.DELETE_DATASOURCE_DATAPOINT.value
+            op_id=Operations.DELETE_DATASOURCE_DATAPOINT
             op_params={'uid':datapoint['uid'],'aid':datasource['aid'],'did':datapoint['did']}
             response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         else:
-            op_id=Operations.DELETE_USER_DATAPOINT.value
+            op_id=Operations.DELETE_USER_DATAPOINT
             op_params={'uid':datapoint['uid']}
             response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
@@ -284,7 +284,7 @@ def process_message_DELWIDGET(message):
     if args.is_valid_uuid(wid):
         widget=widgetapi.get_widget_config(wid=wid)
         deleteapi.delete_widget(wid=wid)
-        op_id=Operations.DELETE_WIDGET.value
+        op_id=Operations.DELETE_WIDGET
         op_params={'uid':widget['uid']}
         response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
@@ -300,7 +300,7 @@ def process_message_DELDASHB(message):
     if args.is_valid_uuid(bid):
         dashboard=dashboardapi.get_dashboard_config(bid=bid)
         deleteapi.delete_dashboard(bid=bid)
-        op_id=Operations.DELETE_DASHBOARD.value
+        op_id=Operations.DELETE_DASHBOARD
         op_params={'uid':dashboard['uid']}
         response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK

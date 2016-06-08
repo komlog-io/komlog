@@ -7,7 +7,7 @@ from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.events import exceptions as eventexcept
 from komlog.komlibs.interface.web import status
 from komlog.komlibs.interface.web.errors import Errors
-from komlog.komlibs.interface.web.model import webmodel
+from komlog.komlibs.interface.web.model import response
 
 class BadParametersException(Exception):
     def __init__(self, error):
@@ -79,46 +79,46 @@ class ExceptionHandler(object):
     def __call__(self, *args, **kwargs):
         init=time.time()
         try:
-            response=self.f(*args, **kwargs)
+            resp=self.f(*args, **kwargs)
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__name__,Errors.OK.name,str(init),str(end))))
-            return response
+            return resp
         except BAD_PARAMETERS_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, data=data, error=error.value)
         except NOT_ALLOWED_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED, data=data, error=error.value)
         except ACCESS_DENIED_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, data=data, error=error.value)
         except NOT_FOUND_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND, data=data, error=error.value)
         except INTERNAL_ERROR_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=error.value)
         except SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_SERVICE_UNAVAILABLE, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status.WEB_STATUS_SERVICE_UNAVAILABLE, data=data, error=error.value)
         except Exception as e:
             logging.logger.error('WEB Response non treated Exception:')
             ex_info=traceback.format_exc().splitlines()
@@ -128,5 +128,5 @@ class ExceptionHandler(object):
             data={'error':error.value}
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
-            return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=error.value)
 

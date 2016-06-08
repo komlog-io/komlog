@@ -17,7 +17,7 @@ from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
-from komlog.komlibs.interface.web.model import webmodel
+from komlog.komlibs.interface.web.model import response
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 
@@ -48,7 +48,7 @@ def get_user_events_request(passport, ets=None, its=None):
         if 'summary' in event:
             reg['summary']=event['summary']
         response_data.append(reg)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
 def disable_event_request(passport, seq):
@@ -59,7 +59,7 @@ def disable_event_request(passport, seq):
     authorization.authorize_request(request=Requests.DISABLE_EVENT,passport=passport)
     date=timeuuid.get_uuid1_from_custom_sequence(seq)
     userevents.disable_event(uid=passport.uid, date=date)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
 def event_response_request(passport, seq, data):
@@ -94,7 +94,7 @@ def event_response_request(passport, seq, data):
                 parameters['identified'].append({'pid':dp_info['pid'],'p':dp_info['p'],'l':dp_info['l']})
         message=messages.UserEventResponseMessage(uid=passport.uid,date=date,parameters=parameters)
         msgapi.send_message(message)
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
     else:
         raise exceptions.BadParametersException(error=Errors.E_IWAEV_EVRPR_IEVT)
 

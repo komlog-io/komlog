@@ -20,8 +20,7 @@ from komlog.komlibs.gestaccount.common import delete as deleteapi
 from komlog.komlibs.gestaccount.widget import types
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
-from komlog.komlibs.interface.web.model import webmodel
-from komlog.komlibs.interface.web.operations import weboperations
+from komlog.komlibs.interface.web.model import response, operation
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
@@ -76,7 +75,7 @@ def get_snapshots_config_request(passport):
                     color=''
                 reg['datapoints'].append({'pid':pid.hex,'color':color})
         response_data.append(reg)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
 def get_snapshot_config_request(passport, nid, tid=None):
@@ -129,7 +128,7 @@ def get_snapshot_config_request(passport, nid, tid=None):
             else:
                 color=''
             snapshot['datapoints'].append({'pid':pid.hex,'color':color})
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=snapshot)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=snapshot)
 
 @exceptions.ExceptionHandler
 def delete_snapshot_request(passport, nid):
@@ -140,7 +139,7 @@ def delete_snapshot_request(passport, nid):
     nid=uuid.UUID(nid)
     authorization.authorize_request(request=Requests.DELETE_SNAPSHOT,passport=passport,nid=nid)
     deleteapi.delete_snapshot(nid=nid)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
 def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None, ets=None, seq=None):
@@ -187,23 +186,23 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
         try:
             ticket=ticketprov.new_snapshot_ticket(uid=passport.uid,nid=snapshot['nid'],allowed_uids=uids, allowed_cids=cids)
             if ticket:
-                operation=weboperations.NewSnapshotOperation(uid=passport.uid, nid=snapshot['nid'],wid=wid)
-                auth_op=operation.get_auth_operation()
-                params=operation.get_params()
-                if authupdate.update_resources(operation=auth_op, params=params):
-                    message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+                webop=operation.NewSnapshotOperation(uid=passport.uid, nid=snapshot['nid'],wid=wid)
+                authop=webop.get_auth_operation()
+                params=webop.get_params()
+                if authupdate.update_resources(operation=authop, params=params):
+                    message=messages.UpdateQuotesMessage(operation=authop, params=params)
                     msgapi.send_message(message)
                     message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
                     msgapi.send_message(message)
-                    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
+                    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
                 else:
                     deleteapi.delete_snapshot(nid=snapshot['nid'])
-                    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_AUTHERR.value)
+                    return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_AUTHERR.value)
             else:
                 deleteapi.delete_snapshot(nid=snapshot['nid'])
-                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_TCKCE.value)
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_TCKCE.value)
         except cassexcept.KomcassException:
             deleteapi.delete_snapshot(nid=snapshot['nid'])
             raise
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_SCE.value)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_SCE.value)
 

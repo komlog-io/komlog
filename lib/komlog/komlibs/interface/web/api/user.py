@@ -17,8 +17,7 @@ from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.interface.web import status, exceptions, errors
 from komlog.komlibs.interface.web.errors import Errors
-from komlog.komlibs.interface.web.model import webmodel
-from komlog.komlibs.interface.web.operations import weboperations
+from komlog.komlibs.interface.web.model import response, operation
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.general.validation import arguments as args
 
@@ -44,7 +43,7 @@ def new_user_request(username, password, email, invitation=None, require_invitat
             status_c=status.WEB_STATUS_BAD_PARAMETERS
             data={'message':'Invalid Invitation Code'}
             error=Errors.E_IWAU_NUSR_INVNF
-            return webmodel.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
         except gestexcept.InvitationProcessException as e:
             if e.error == gesterrors.E_GUA_SIP_INVAU:
                 status_c=status.WEB_STATUS_BAD_PARAMETERS
@@ -54,7 +53,7 @@ def new_user_request(username, password, email, invitation=None, require_invitat
                 status_c=status.WEB_STATUS_INTERNAL_ERROR
                 data={'message':'Error code '+str(e.error)}
                 error=e.error
-            return webmodel.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
         except gestexcept.UserAlreadyExistsException as e:
             status_c=status.WEB_STATUS_BAD_PARAMETERS
             data={'message':'User already exists'}
@@ -64,20 +63,20 @@ def new_user_request(username, password, email, invitation=None, require_invitat
                 error=Errors.E_IWAU_NUSR_UAEE
             else:
                 error=e.error
-            return webmodel.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
     else:
         user=userapi.create_user(username, password, email)
     if user:
-        operation=weboperations.NewUserOperation(uid=user['uid'])
-        auth_op=operation.get_auth_operation()
-        params=operation.get_params()
-        message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+        webop=operation.NewUserOperation(uid=user['uid'])
+        authop=webop.get_auth_operation()
+        params=webop.get_params()
+        message=messages.UpdateQuotesMessage(operation=authop, params=params)
         msgapi.send_message(message)
         message=messages.NewUserNotificationMessage(email=user['email'], code=user['code'])
         msgapi.send_message(message)
         message=messages.UserEventMessage(uid=user['uid'],event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_USER)
         msgapi.send_message(message)
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'uid':user['uid'].hex,'username':username})
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'uid':user['uid'].hex,'username':username})
 
 @exceptions.ExceptionHandler
 def confirm_user_request(email, code):
@@ -86,7 +85,7 @@ def confirm_user_request(email, code):
     if not args.is_valid_code(code):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_CUSR_IC)
     if userapi.confirm_user(email, code):
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
 def get_user_config_request(passport):
@@ -99,7 +98,7 @@ def get_user_config_request(passport):
           'email':user['email'],
           'state':user['state']
          }
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
 
 @exceptions.ExceptionHandler
 def update_user_config_request(passport, data):
@@ -122,7 +121,7 @@ def update_user_config_request(passport, data):
         request_params['old_password']=data['old_password']
     authorization.authorize_request(request=Requests.UPDATE_USER_CONFIG, passport=passport)
     if userapi.update_user_config(uid=passport.uid, **request_params):
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
 def delete_user_request(passport):
@@ -131,7 +130,7 @@ def delete_user_request(passport):
     authorization.authorize_request(request=Requests.DELETE_USER, passport=passport)
     message=messages.DeleteUserMessage(uid=passport.uid)
     msgapi.send_message(msg=message)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 
 @exceptions.ExceptionHandler
 def register_invitation_request(email):
@@ -139,9 +138,9 @@ def register_invitation_request(email):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_RIR_IEMAIL)
     if userapi.register_invitation_request(email=email):
         data={'email':email}
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
     else:
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN.value)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN.value)
 
 @exceptions.ExceptionHandler
 def check_invitation_request(invitation):
@@ -154,7 +153,7 @@ def check_invitation_request(invitation):
         status_c=status.WEB_STATUS_NOT_FOUND
         data={'message':'Invitation not found'}
         error=Errors.E_IWAU_CIR_INVNF
-        return webmodel.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
     except gestexcept.InvitationProcessException as e:
         if e.error == gesterrors.E_GUA_CUI_INVAU:
             status_c=status.WEB_STATUS_BAD_PARAMETERS
@@ -164,10 +163,10 @@ def check_invitation_request(invitation):
             status_c=status.WEB_STATUS_INTERNAL_ERROR
             data={'message':'Error code '+str(e.error)}
             error=e.error
-        return webmodel.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
     else:
         data={'invitation':invitation}
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
 
 @exceptions.ExceptionHandler
 def send_invitation_request(email=None, num=1):
@@ -181,7 +180,7 @@ def send_invitation_request(email=None, num=1):
         message=messages.NewInvitationMailMessage(email=invitation['email'], inv_id=invitation['inv_id'])
         msgapi.send_message(message)
         sent.append((invitation['email'],invitation['inv_id'].hex))
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data=sent)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data=sent)
 
 @exceptions.ExceptionHandler
 def register_forget_request(account):
@@ -196,12 +195,12 @@ def register_forget_request(account):
         status_c=status.WEB_STATUS_BAD_PARAMETERS
         data={'message':'User not found','account':account}
         error=Errors.E_IWAU_RFR_UNF
-        return webmodel.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
     else:
         message=messages.ForgetMailMessage(email=request['email'], code=request['code'])
         msgapi.send_message(message)
         data={'username':request['username'],'email':request['email'],'code':request['code'].hex}
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
 
 @exceptions.ExceptionHandler
 def check_forget_code_request(code):
@@ -214,7 +213,7 @@ def check_forget_code_request(code):
         status_c=status.WEB_STATUS_BAD_PARAMETERS
         data={'message':'Code not found'}
         error=Errors.E_IWAU_CFR_CNF
-        return webmodel.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
     except gestexcept.ForgetRequestException as e:
         if e.error == gesterrors.E_GUA_CUFC_CODEAU:
             status_c=status.WEB_STATUS_BAD_PARAMETERS
@@ -224,10 +223,10 @@ def check_forget_code_request(code):
             status_c=status.WEB_STATUS_INTERNAL_ERROR
             data={'message':'Error code '+str(e.error)}
             error=e.error
-        return webmodel.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
     else:
         data={'code':code.hex}
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
 
 @exceptions.ExceptionHandler
 def reset_password_request(code, password):
@@ -238,11 +237,11 @@ def reset_password_request(code, password):
     try:
         code=uuid.UUID(code)
         userapi.reset_password(code=code, password=password)
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     except gestexcept.UserNotFoundException:
         status_c=status.WEB_STATUS_NOT_FOUND
         error=Errors.E_IWAU_RPR_UNF
-        return webmodel.WebInterfaceResponse(status=status_c, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, error=error.value)
     except (gestexcept.ForgetRequestException,gestexcept.ForgetRequestNotFoundException) as e:
         status_c=status.WEB_STATUS_BAD_PARAMETERS
         if e.error==gesterrors.E_GUA_RP_CODEAU:
@@ -251,5 +250,5 @@ def reset_password_request(code, password):
             error=Errors.E_IWAU_RPR_CNF
         else:
             error=e.error
-        return webmodel.WebInterfaceResponse(status=status_c, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, error=error.value)
 

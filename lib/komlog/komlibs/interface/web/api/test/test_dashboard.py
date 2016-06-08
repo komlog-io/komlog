@@ -10,7 +10,7 @@ from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.web.api import login as loginapi 
 from komlog.komlibs.interface.web.api import user as userapi 
 from komlog.komlibs.interface.web.api import dashboard as dashboardapi 
-from komlog.komlibs.interface.web.model import webmodel
+from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status, exceptions
 
 
@@ -25,7 +25,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username+'@komlog.org'
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
-            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
             while True:
@@ -113,7 +113,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         while True:
@@ -136,7 +136,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         response, cookie = loginapi.login_request(username=username, password=password)
         psp = passport.get_user_passport(cookie)
@@ -238,7 +238,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         response, cookie = loginapi.login_request(username=username, password=password)
         psp = passport.get_user_passport(cookie)

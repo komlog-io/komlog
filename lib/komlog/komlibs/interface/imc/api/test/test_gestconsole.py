@@ -153,7 +153,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.status, status.IMC_STATUS_OK)
         self.assertEqual(len(response.get_msg_originated()),1)
         message_originated=response.get_msg_originated()[0]
-        self.assertEqual(message_originated.operation,Operations.DELETE_DATASOURCE_DATAPOINT.value)
+        self.assertEqual(message_originated.operation,Operations.DELETE_DATASOURCE_DATAPOINT)
         response=rescontrol.process_message_UPDQUO(response.get_msg_originated()[0])
         self.assertEqual(response.status, status.IMC_STATUS_OK)
 
@@ -171,7 +171,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.status, status.IMC_STATUS_OK)
         self.assertEqual(len(response.get_msg_originated()),1)
         message_originated=response.get_msg_originated()[0]
-        self.assertEqual(message_originated.operation,Operations.DELETE_USER_DATAPOINT.value)
+        self.assertEqual(message_originated.operation,Operations.DELETE_USER_DATAPOINT)
         response=rescontrol.process_message_UPDQUO(response.get_msg_originated()[0])
         self.assertEqual(response.status, status.IMC_STATUS_OK)
 

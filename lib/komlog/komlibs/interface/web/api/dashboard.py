@@ -18,8 +18,7 @@ from komlog.komlibs.gestaccount.dashboard import api as dashboardapi
 from komlog.komlibs.gestaccount.common import delete as deleteapi
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
-from komlog.komlibs.interface.web.model import webmodel
-from komlog.komlibs.interface.web.operations import weboperations
+from komlog.komlibs.interface.web.model import response, operation
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.general.validation import arguments as args
 
@@ -36,7 +35,7 @@ def get_dashboards_config_request(passport):
         reg['dashboardname']=dashboard['dashboardname']
         reg['wids']=[wid.hex for wid in dashboard['wids']]
         response_data.append(reg)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
 def get_dashboard_config_request(passport, bid):
@@ -51,7 +50,7 @@ def get_dashboard_config_request(passport, bid):
     dashboard['bid']=data['bid'].hex
     dashboard['dashboardname']=data['dashboardname']
     dashboard['wids']=[wid.hex for wid in data['wids']]
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=dashboard)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=dashboard)
 
 @exceptions.ExceptionHandler
 def new_dashboard_request(passport, data):
@@ -64,19 +63,19 @@ def new_dashboard_request(passport, data):
     authorization.authorize_request(request=Requests.NEW_DASHBOARD,passport=passport)
     dashboard=dashboardapi.create_dashboard(uid=passport.uid, dashboardname=data['dashboardname'])
     if dashboard:
-        operation=weboperations.NewDashboardOperation(uid=passport.uid,bid=dashboard['bid'])
-        auth_op=operation.get_auth_operation()
-        params=operation.get_params()
+        webop=operation.NewDashboardOperation(uid=passport.uid,bid=dashboard['bid'])
+        authop=webop.get_auth_operation()
+        params=webop.get_params()
         try:
-            if authupdate.update_resources(operation=auth_op, params=params):
-                message=messages.UpdateQuotesMessage(operation=auth_op.value, params=params)
+            if authupdate.update_resources(operation=authop, params=params):
+                message=messages.UpdateQuotesMessage(operation=authop, params=params)
                 msgapi.send_message(message)
                 message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, parameters={'bid':dashboard['bid'].hex})
                 msgapi.send_message(message)
-                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'bid':dashboard['bid'].hex})
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'bid':dashboard['bid'].hex})
             else:
                 deleteapi.delete_dashboard(bid=dashboard['bid'])
-                return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADB_NDBR_AUTHERR.value)
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADB_NDBR_AUTHERR.value)
         except cassexcept.KomcassException:
             deleteapi.delete_dashboard(bid=dashboard['bid'])
             raise
@@ -91,7 +90,7 @@ def delete_dashboard_request(passport, bid):
     authorization.authorize_request(request=Requests.DELETE_DASHBOARD,passport=passport,bid=bid)
     message=messages.DeleteDashboardMessage(bid=bid)
     msgapi.send_message(msg=message)
-    return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
 
 @exceptions.ExceptionHandler
 def update_dashboard_config_request(passport, bid, data):
@@ -106,7 +105,7 @@ def update_dashboard_config_request(passport, bid, data):
     bid=uuid.UUID(bid)
     authorization.authorize_request(request=Requests.UPDATE_DASHBOARD_CONFIG,passport=passport,bid=bid)
     if dashboardapi.update_dashboard_config(bid=bid, dashboardname=data['dashboardname']):
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
 def add_widget_request(passport, bid, wid):
@@ -120,7 +119,7 @@ def add_widget_request(passport, bid, wid):
     wid=uuid.UUID(wid)
     authorization.authorize_request(request=Requests.ADD_WIDGET_TO_DASHBOARD,passport=passport, bid=bid, wid=wid)
     if dashboardapi.add_widget_to_dashboard(bid=bid, wid=wid):
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
 def delete_widget_request(passport, bid, wid):
@@ -134,5 +133,5 @@ def delete_widget_request(passport, bid, wid):
     wid=uuid.UUID(wid)
     authorization.authorize_request(request=Requests.DELETE_WIDGET_FROM_DASHBOARD,passport=passport, bid=bid)
     if dashboardapi.delete_widget_from_dashboard(bid=bid, wid=wid):
-        return webmodel.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 

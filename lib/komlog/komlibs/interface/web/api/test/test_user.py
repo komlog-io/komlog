@@ -10,7 +10,7 @@ from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.user import api as gestuserapi
 from komlog.komlibs.gestaccount.user.states import *
 from komlog.komlibs.interface.web.api import user as userapi 
-from komlog.komlibs.interface.web.model import webmodel
+from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status
 from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.interface.web import exceptions
@@ -30,7 +30,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
         cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
@@ -79,7 +79,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
         cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
@@ -117,7 +117,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
             else:
                 break
         response3 = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response3, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response3, webresp.WebInterfaceResponse))
         self.assertEqual(response3.status, status.WEB_STATUS_ACCESS_DENIED)
         #TODO: en el mensaje de respuesta hay que indicar el motivo del fallo
 
@@ -269,7 +269,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -299,7 +299,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
         response2=userapi.confirm_user_request(email=msg.email, code=msg.code)
-        self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
@@ -332,7 +332,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -363,7 +363,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(args.is_valid_code(msg.code))
         email2='test_confirm_user_request_failure_wrong_email_2@komlog.org'
         response2=userapi.confirm_user_request(email=email2, code=msg.code)
-        self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_NOT_FOUND)
         #TODO: falta hacer tratamiento de la excepcion para mostrar mensaje concreto de error
 
@@ -373,7 +373,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -403,7 +403,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
             else:
                 break
         response2=userapi.confirm_user_request(email=email, code='CUSTOMCODE')
-        self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_INTERNAL_ERROR)
         #TODO: falta hacer tratamiento de la excepcion para mostrar mensaje concreto de error
 
@@ -413,7 +413,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
         msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
@@ -443,7 +443,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(msg.email, email)
         self.assertTrue(args.is_valid_code(msg.code))
         response2=userapi.confirm_user_request(email=msg.email, code=msg.code)
-        self.assertTrue(isinstance(response2, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
@@ -454,7 +454,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(email,response3.data['email'])
         self.assertEqual(UserStates.ACTIVE,response3.data['state'])
         response4=userapi.confirm_user_request(email=email, code=msg.code)
-        self.assertTrue(isinstance(response4, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response4, webresp.WebInterfaceResponse))
         self.assertEqual(response4.status, status.WEB_STATUS_INTERNAL_ERROR)
         #TODO: falta hacer tratamiento de la excepcion para mostrar mensaje concreto de error
 
@@ -742,7 +742,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         username = 'test_send_invitation_request_success'
         email = username+'@komlog.org'
         response = userapi.send_invitation_request(email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(len(response.data), 1)
         self.assertTrue(isinstance(response.data[0],tuple))
@@ -791,7 +791,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
         cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
@@ -851,7 +851,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
         cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
@@ -926,7 +926,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
         cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
@@ -993,7 +993,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
         cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
@@ -1083,7 +1083,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
         cookie = {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}

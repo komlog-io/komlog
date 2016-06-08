@@ -6,7 +6,7 @@ from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.interface.web.api import login as loginapi
 from komlog.komlibs.interface.web.api import user as userapi
 from komlog.komlibs.interface.web.api import events as eventsapi
-from komlog.komlibs.interface.web.model import webmodel
+from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.events.errors import Errors as eventerrors
@@ -35,7 +35,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username+'@komlog.org'
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
-            self.assertTrue(isinstance(response, webmodel.WebInterfaceResponse))
+            self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
             while True:
