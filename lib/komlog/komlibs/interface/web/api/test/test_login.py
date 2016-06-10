@@ -23,8 +23,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
     def test_login_request_failure_no_password_nor_pubkey_passed(self):
         ''' login_request should fail if password and pubkey are None '''
         username = 'username'
-        response, cookie = loginapi.login_request(username)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username)
+        self.assertEqual(getattr(response,'cookie',None), None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
         self.assertEqual(response.error, Errors.E_IWAL_LR_IPRM.value)
@@ -34,8 +34,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         usernames = ['username\n', 1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'},None]
         password = 'password'
         for username in usernames:
-            response, cookie = loginapi.login_request(username, password=password)
-            self.assertEqual(cookie, None)
+            response = loginapi.login_request(username, password=password)
+            self.assertEqual(getattr(response,'cookie', None),None)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
             self.assertEqual(response.error, Errors.E_IWAL_ULR_IU.value)
@@ -45,8 +45,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         passwords= ['short', 1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'}]
         username = 'username'
         for password in passwords:
-            response, cookie = loginapi.login_request(username, password=password)
-            self.assertEqual(cookie, None)
+            response = loginapi.login_request(username, password=password)
+            self.assertEqual(getattr(response,'cookie', None),None)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
             self.assertEqual(response.error, Errors.E_IWAL_ULR_IPWD.value)
@@ -55,8 +55,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         ''' user_login_request should fail if username does not exist '''
         username = 'test_user_login_request_failure_non_existent_username'
         password = 'password'
-        response, cookie = loginapi.login_request(username, password=password)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username, password=password)
+        self.assertEqual(getattr(response,'cookie', None),None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
         self.assertEqual(response.error, gesterrors.E_GUA_AUU_UNF.value)
@@ -68,8 +68,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         email = username + '@komlog.org'
         user = userapi.create_user(username=username, password=password, email=email)
         password = 'wrong_password'
-        response, cookie = loginapi.login_request(username, password=password)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username, password=password)
+        self.assertEqual(getattr(response,'cookie', None),None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, Errors.E_IWAL_ULR_AUTHERR.value)
@@ -80,7 +80,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         password = 'password'
         email = username + '@komlog.org'
         user = userapi.create_user(username=username, password=password, email=email)
-        response, cookie = loginapi.login_request(username, password=password)
+        response = loginapi.login_request(username, password=password)
+        cookie=response.cookie
         self.assertEqual(cookie['user'], username)
         self.assertEqual(cookie['aid'],None)
         self.assertTrue(args.is_valid_sequence(cookie['seq']))
@@ -94,8 +95,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         usernames = ['username\n', 1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'},None]
         pubkey = 'pubkey'
         for username in usernames:
-            response, cookie = loginapi.login_request(username, pubkey=pubkey)
-            self.assertEqual(cookie, None)
+            response = loginapi.login_request(username, pubkey=pubkey)
+            self.assertEqual(getattr(response,'cookie', None),None)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
             self.assertEqual(response.error, Errors.E_IWAL_ALGCR_IU.value)
@@ -105,8 +106,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         pubkeys = [1, 1.1, uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'),['a','list'], {'set'}, {'a':'dict'}, crypto.generate_rsa_key().public_key(), crypto.serialize_public_key(crypto.generate_rsa_key().public_key())]
         username = 'username'
         for pubkey in pubkeys:
-            response, cookie = loginapi.login_request(username, pubkey=pubkey)
-            self.assertEqual(cookie, None)
+            response = loginapi.login_request(username, pubkey=pubkey)
+            self.assertEqual(getattr(response,'cookie', None),None)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
             self.assertEqual(response.error, Errors.E_IWAL_ALGCR_IPK.value)
@@ -115,8 +116,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         ''' agent_login_generate_challenge_request should fail if username does not exist '''
         username = 'test_agent_login_generate_challenge_request_failure_non_existent_username'
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username, pubkey=pubkey)
+        self.assertEqual(getattr(response,'cookie', None),None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_GAC_UNF.value)
@@ -128,8 +129,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         email = username + '@komlog.org'
         user = userapi.create_user(username=username, password=password, email=email)
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username, pubkey=pubkey)
+        self.assertEqual(getattr(response,'cookie', None),None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_GAC_ANF.value)
@@ -144,8 +145,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         agent = agentapi.create_agent(uid=user['uid'],agentname=agentname,pubkey=pubkey,version='v')
         pubkey = b64encode(pubkey).decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username, pubkey=pubkey)
+        self.assertEqual(getattr(response,'cookie', None),None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('challenge' in response.data)
@@ -159,8 +160,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         challenge = 'challenge'
         signature = 'signature'
         for username in usernames:
-            response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
-            self.assertEqual(cookie, None)
+            response = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+            self.assertEqual(getattr(response,'cookie', None),None)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
             self.assertEqual(response.error, Errors.E_IWAL_ALVCR_IU.value)
@@ -172,8 +173,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         challenge = 'challenge'
         signature = 'signature'
         for pubkey in pubkeys:
-            response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
-            self.assertEqual(cookie, None)
+            response = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+            self.assertEqual(getattr(response,'cookie', None),None)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
             self.assertEqual(response.error, Errors.E_IWAL_ALVCR_IPK.value)
@@ -185,8 +186,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         username = 'username'
         signature = 'signature'
         for challenge in challenges:
-            response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
-            self.assertEqual(cookie, None)
+            response = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+            self.assertEqual(getattr(response,'cookie', None),None)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
             self.assertEqual(response.error, Errors.E_IWAL_ALVCR_ICH.value)
@@ -198,8 +199,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         username = 'username'
         challenge = 'signature'
         for signature in signatures:
-            response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
-            self.assertEqual(cookie, None)
+            response = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+            self.assertEqual(getattr(response,'cookie', None),None)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
             self.assertEqual(response.error, Errors.E_IWAL_ALVCR_ISG.value)
@@ -210,8 +211,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         challenge=b64encode(b'challenge').decode('utf-8')
         signature=b64encode(b'signature').decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+        self.assertEqual(getattr(response,'cookie', None),None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_VAC_UNF.value)
@@ -225,8 +226,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         challenge=b64encode(b'challenge').decode('utf-8')
         signature=b64encode(b'signature').decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+        self.assertEqual(getattr(response,'cookie', None),None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_VAC_ANF.value)
@@ -244,8 +245,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         pubkey = b64encode(pubkey).decode('utf-8')
         challenge=b64encode(b'challenge').decode('utf-8')
         signature=b64encode(b'signature').decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username, pubkey=pubkey, challenge=challenge, signature=signature)
+        self.assertEqual(getattr(response,'cookie', None),None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHNF.value)
@@ -262,15 +263,15 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         pubkey = crypto.serialize_public_key(key.public_key())
         agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
         pubkey = b64encode(pubkey).decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        response = loginapi.login_request(username, pubkey=pubkey)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         serialized_priv_key=crypto.serialize_private_key(key)
         ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
         ch_hash = crypto.get_hash(ch_plain)
         ch_resp = b64encode(ch_hash).decode('utf-8')
         signature=b64encode(b'signature').decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        self.assertEqual(getattr(response,'cookie', None),None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_VAC_EVS.value)
@@ -287,14 +288,15 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         pubkey = crypto.serialize_public_key(key.public_key())
         agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
         pubkey = b64encode(pubkey).decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        response = loginapi.login_request(username, pubkey=pubkey)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         serialized_priv_key=crypto.serialize_private_key(key)
         ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
         ch_hash = crypto.get_hash(ch_plain)
         ch_resp = b64encode(ch_hash).decode('utf-8')
         signature=b64encode(crypto.sign_message(serialized_priv_key, ch_hash)).decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        response = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        cookie=response.cookie
         self.assertEqual(cookie['user'], username)
         self.assertEqual(cookie['aid'],agent['aid'].hex)
         self.assertTrue(args.is_valid_sequence(cookie['seq']))
@@ -314,22 +316,23 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         pubkey = crypto.serialize_public_key(key.public_key())
         agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
         pubkey = b64encode(pubkey).decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        response = loginapi.login_request(username, pubkey=pubkey)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         serialized_priv_key=crypto.serialize_private_key(key)
         ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
         ch_hash = crypto.get_hash(ch_plain)
         ch_resp = b64encode(ch_hash).decode('utf-8')
         signature=b64encode(crypto.sign_message(serialized_priv_key, ch_hash)).decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        response = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        cookie=response.cookie
         self.assertEqual(cookie['user'], username)
         self.assertEqual(cookie['aid'],agent['aid'].hex)
         self.assertTrue(args.is_valid_sequence(cookie['seq']))
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.error, Errors.OK.value)
-        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        self.assertEqual(getattr(response,'cookie', None),None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHAU.value)
@@ -346,7 +349,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         pubkey = crypto.serialize_public_key(key.public_key())
         agent = agentapi.create_agent(user['uid'],agentname=agentname,pubkey=pubkey,version=version)
         pubkey = b64encode(pubkey).decode('utf-8')
-        response, cookie = loginapi.login_request(username, pubkey=pubkey)
+        response = loginapi.login_request(username, pubkey=pubkey)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         serialized_priv_key=crypto.serialize_private_key(key)
         ch_plain = crypto.decrypt(serialized_priv_key, b64decode(response.data['challenge'].encode('utf-8')))
@@ -357,8 +360,8 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertIsNotNone(agent_challenge)
         agent_challenge.generated = timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(agent_challenge.generated)-61)
         self.assertTrue(cassapiagent.insert_agent_challenge(agent_challenge))
-        response, cookie = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
-        self.assertEqual(cookie, None)
+        response = loginapi.login_request(username, pubkey=pubkey, challenge=ch_resp, signature=signature)
+        self.assertEqual(getattr(response,'cookie', None),None)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, gesterrors.E_GAA_VAC_CHEX.value)

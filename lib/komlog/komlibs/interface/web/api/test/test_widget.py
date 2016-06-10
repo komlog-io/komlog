@@ -33,7 +33,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         ''' In this module, we need a user and agent '''
         self.username = 'test_komlibs.interface.web.api.widget_user'
         self.password = 'password'
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username+'@komlog.org'
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
@@ -48,7 +49,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                         msgapi.process_msg_result(msg_result)
                 else:
                     break
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         self.passport = passport.get_user_passport(cookie)
         agentname='test_komlibs.interface.web.api.widget_agent'
         pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
@@ -368,7 +370,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response = userapi.new_user_request(username=new_username, password=password, email=new_email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        response, cookie = loginapi.login_request(username=new_username, password=password)
+        response = loginapi.login_request(username=new_username, password=password)
+        cookie=getattr(response, 'cookie',None)
         psp2 = passport.get_user_passport(cookie)
         widgetinfo = widgetapi.get_widget_config_request(passport=psp2, wid=wid)
         self.assertEqual(widgetinfo.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -467,7 +470,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        response, cookie = loginapi.login_request(username=username, password=password)
+        response = loginapi.login_request(username=username, password=password)
+        cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
         response2=widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -2082,7 +2086,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response = userapi.new_user_request(username=new_username, password=password, email=new_email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        response, cookie = loginapi.login_request(username=new_username, password=password)
+        response = loginapi.login_request(username=new_username, password=password)
+        cookie=getattr(response, 'cookie',None)
         psp2 = passport.get_user_passport(cookie)
         widgetrelated = widgetapi.get_related_widgets_request(passport=psp2, wid=wid)
         self.assertEqual(widgetrelated.status, status.WEB_STATUS_ACCESS_DENIED)

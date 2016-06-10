@@ -44,7 +44,7 @@ def new_agent_request(passport, agentname, pubkey, version):
                 return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'aid':agent['aid'].hex})
             else:
                 deleteapi.delete_agent(aid=agent['aid'])
-                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAA_NAGR_AUTHERR.value)
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAA_NAGR_AUTHERR)
         except cassexcept.KomcassException:
             deleteapi.delete_agent(aid=agent['aid'])
             raise

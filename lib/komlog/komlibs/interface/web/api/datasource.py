@@ -154,7 +154,7 @@ def new_datasource_request(passport, datasourcename):
                 return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
             else:
                 deleteapi.delete_datasource(did=datasource['did'])
-                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADS_NDSR_AUTHERR.value)
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADS_NDSR_AUTHERR)
         except cassexcept.KomcassException:
             deleteapi.delete_datasource(did=datasource['did'])
             raise

@@ -53,8 +53,10 @@ def process_message_MONVAR(message):
             response.status=status.IMC_STATUS_OK
         else:
             logging.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position)+' length: '+str(length))
+            response.error=Errors.E_IIAG_MONVAR_EMV
             response.status=status.IMC_STATUS_INTERNAL_ERROR
     else:
+        response.error=Errors.E_IIAG_MONVAR_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -76,8 +78,10 @@ def process_message_NEGVAR(message):
                 response.add_msg_originated(messages.FillDatapointMessage(pid=a_pid,date=date))
             response.status=status.IMC_STATUS_OK
         else:
+            response.error=Errors.E_IIAG_NEGVAR_EMNV
             response.status=status.IMC_STATUS_INTERNAL_ERROR
     else:
+        response.error=Errors.E_IIAG_NEGVAR_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -100,8 +104,10 @@ def process_message_POSVAR(message):
                 response.add_msg_originated(messages.FillDatapointMessage(pid=a_pid,date=date))
             response.status=status.IMC_STATUS_OK
         else:
+            response.error=Errors.E_IIAG_POSVAR_EMPV
             response.status=status.IMC_STATUS_INTERNAL_ERROR
     else:
+        response.error=Errors.E_IIAG_POSVAR_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -119,9 +125,10 @@ def process_message_NEWUSR(message):
             response.status=status.IMC_STATUS_OK
         else:
             logging.logger.error('Error sending new user welcome mail to: '+usermail)
+            response.error=Errors.E_IIAG_NEWUSR_ESWM
             response.status=status.IMC_STATUS_INTERNAL_ERROR
-            response.error=999999
     else:
+        response.error=Errors.E_IIAG_NEWUSR_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -139,9 +146,10 @@ def process_message_NEWINV(message):
             response.status=status.IMC_STATUS_OK
         else:
             logging.logger.error('Error sending invitation mail to: '+email)
+            response.error=Errors.E_IIAG_NEWINV_ESIM
             response.status=status.IMC_STATUS_INTERNAL_ERROR
-            response.error=999999
     else:
+        response.error=Errors.E_IIAG_NEWINV_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -159,9 +167,10 @@ def process_message_FORGETMAIL(message):
             response.status=status.IMC_STATUS_OK
         else:
             logging.logger.error('Error sending forget mail to: '+email)
+            response.error=Errors.E_IIAG_FORGETMAIL_ESFM
             response.status=status.IMC_STATUS_INTERNAL_ERROR
-            response.error=999999
     else:
+        response.error=Errors.E_IIAG_FORGETMAIL_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -181,8 +190,10 @@ def process_message_NEWDSW(message):
             response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
             response.status=status.IMC_STATUS_OK
         else:
+            response.error=Errors.E_IIAG_NEWDSW_ECW
             response.status=status.IMC_STATUS_INTERNAL_ERROR
     else:
+        response.error=Errors.E_IIAG_NEWDSW_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -202,8 +213,10 @@ def process_message_NEWDPW(message):
             response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
             response.status=status.IMC_STATUS_OK
         else:
+            response.error=Errors.E_IIAG_NEWDPW_ECW
             response.status=status.IMC_STATUS_INTERNAL_ERROR
     else:
+        response.error=Errors.E_IIAG_NEWDPW_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -217,6 +230,7 @@ def process_message_DELUSER(message):
         #TODO: Enviar email de despedida
         response.status=status.IMC_STATUS_OK
     else:
+        response.error=Errors.E_IIAG_DELUSER_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -233,6 +247,7 @@ def process_message_DELAGENT(message):
         response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
+        response.error=Errors.E_IIAG_DELAGENT_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -249,6 +264,7 @@ def process_message_DELDS(message):
         response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
+        response.error=Errors.E_IIAG_DELDS_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -273,6 +289,7 @@ def process_message_DELDP(message):
             response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
+        response.error=Errors.E_IIAG_DELDP_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -289,6 +306,7 @@ def process_message_DELWIDGET(message):
         response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
+        response.error=Errors.E_IIAG_DELWIDGET_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 
@@ -305,6 +323,7 @@ def process_message_DELDASHB(message):
         response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
+        response.error=Errors.E_IIAG_DELDASHB_BP
         response.status=status.IMC_STATUS_BAD_PARAMETERS
     return response
 

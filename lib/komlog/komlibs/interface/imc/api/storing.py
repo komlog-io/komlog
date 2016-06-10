@@ -15,8 +15,9 @@ from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.widget import types as widgettypes
-from komlog.komlibs.interface.imc.model import messages, responses
 from komlog.komlibs.interface.imc import status, exceptions
+from komlog.komlibs.interface.imc.errors import Errors
+from komlog.komlibs.interface.imc.model import messages, responses
 from komlog.komlibs.mail import api as mailapi
 
 
@@ -28,6 +29,7 @@ def process_message_STOSMP(message):
         os.rename(f,f[:-5]+'.wspl')
     except OSError:
         logging.logger.error('Error renaming file before starting to process it: '+f)
+        response.error = Errors.E_IIAST_STOSMP_ERF
         response.status=status.IMC_STATUS_INTERNAL_ERROR
     else:
         filename = f[:-5]+'.wspl'
@@ -38,8 +40,12 @@ def process_message_STOSMP(message):
                 os.rename(filename[:-5]+'.wspl',filename[:-5]+'.xspl')
             except Exception as e:
                 logging.logger.debug('Error renaming file after failing loading its content: '+str(e))
-            response.status=status.IMC_STATUS_INTERNAL_ERROR
-            return response
+                response.error = Errors.E_IIAST_STOSMP_ERFALC
+            else:
+                response.error = Errors.E_IIAST_STOSMP_ELFC
+            finally:
+                response.status=status.IMC_STATUS_INTERNAL_ERROR
+                return response
         try:
             metainfo = json.loads(file_content)
             if not isinstance(metainfo,dict):
@@ -50,8 +56,12 @@ def process_message_STOSMP(message):
                 os.rename(filename[:-5]+'.wspl',filename[:-5]+'.xspl')
             except Exception as e:
                 logging.logger.debug('Error renaming file after failing loading json content: '+str(e))
-            response.status=status.IMC_STATUS_BAD_PARAMETERS
-            return response
+                response.error = Errors.E_IIAST_STOSMP_ERFALC2
+            else:
+                response.error = Errors.E_IIAST_STOSMP_ELJC
+            finally:
+                response.status=status.IMC_STATUS_BAD_PARAMETERS
+                return response
         str_did=metainfo['did'] if 'did' in metainfo else None
         sampledata=json.loads(metainfo['json_content']) if 'json_content' in metainfo else None
         content=sampledata['content'] if 'content' in sampledata else None
@@ -63,8 +73,12 @@ def process_message_STOSMP(message):
                 os.rename(filename[:-5]+'.wspl',filename[:-5]+'.xspl')
             except Exception as e:
                 logging.logger.debug('Error renaming file after failing checking its content: '+str(e))
-            response.status=status.IMC_STATUS_BAD_PARAMETERS
-            return response
+                response.error = Errors.E_IIAST_STOSMP_ERFACC
+            else:
+                response.error = Errors.E_IIAST_STOSMP_ECC
+            finally:
+                response.status=status.IMC_STATUS_BAD_PARAMETERS
+                return response
         did=uuid.UUID(str_did)
         date=timeuuid.uuid1(seconds=timestamp)
         if datasourceapi.store_datasource_data(did=did, date=date, content=content):
@@ -90,6 +104,9 @@ def process_message_STOSMP(message):
                 os.rename(filename,fo)
             except Exception as e:
                 logging.logger.debug('Error renaming file after failing proccessing it: '+str(e))
+                response.error = Errors.E_IIAST_STOSMP_ERFAFP
+            else:
+                response.error = Errors.E_IIAST_STOSMP_ESDSD
             response.status=status.IMC_STATUS_INTERNAL_ERROR
     return response
 

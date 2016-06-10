@@ -82,6 +82,7 @@ class ExceptionHandler(object):
             resp=self.f(*args, **kwargs)
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__name__,Errors.OK.name,str(init),str(end))))
+            resp.error=resp.error.value
             return resp
         except BAD_PARAMETERS_STATUS_EXCEPTION_LIST as e:
             error=e.error
@@ -120,7 +121,7 @@ class ExceptionHandler(object):
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
             return response.WebInterfaceResponse(status=status.WEB_STATUS_SERVICE_UNAVAILABLE, data=data, error=error.value)
         except Exception as e:
-            logging.logger.error('WEB Response non treated Exception:')
+            logging.logger.error('WEB Response non treated Exception in: '+'.'.join((self.f.__module__,self.f.__qualname__)))
             ex_info=traceback.format_exc().splitlines()
             for line in ex_info:
                 logging.logger.error(line)

@@ -31,7 +31,8 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         ''' In this module, we need a user '''
         self.username = 'test_komlibs.interface.web.api.events_user'
         self.password = 'password'
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username+'@komlog.org'
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
@@ -55,7 +56,8 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
                         msgapi.process_msg_result(msg_result)
                 else:
                     break
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         self.passport = passport.get_user_passport(cookie)
 
     def test_get_user_events_request_failure_invalid_passport(self):

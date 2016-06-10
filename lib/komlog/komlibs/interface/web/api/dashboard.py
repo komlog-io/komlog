@@ -75,7 +75,7 @@ def new_dashboard_request(passport, data):
                 return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'bid':dashboard['bid'].hex})
             else:
                 deleteapi.delete_dashboard(bid=dashboard['bid'])
-                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADB_NDBR_AUTHERR.value)
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADB_NDBR_AUTHERR)
         except cassexcept.KomcassException:
             deleteapi.delete_dashboard(bid=dashboard['bid'])
             raise

@@ -91,12 +91,12 @@ def new_users_circle_request(passport, circlename, members_list=None):
                 return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'cid':circle['cid'].hex})
             else:
                 deleteapi.delete_circle(cid=circle['cid'])
-                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWACI_NUCR_AUTHERR.value)
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWACI_NUCR_AUTHERR)
         except cassexcept.KomcassException:
             deleteapi.delete_circle(cid=circle['cid'])
             raise
     else:
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWACI_NUCR_CCE.value)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWACI_NUCR_CCE)
 
 @exceptions.ExceptionHandler
 def update_circle_request(passport, cid, data):
@@ -131,7 +131,7 @@ def add_user_to_circle_request(passport, cid, member):
         msgapi.send_message(message)
         return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     else:
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN.value)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN)
 
 @exceptions.ExceptionHandler
 def delete_user_from_circle_request(passport, cid, member):
@@ -151,5 +151,5 @@ def delete_user_from_circle_request(passport, cid, member):
         msgapi.send_message(message)
         return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     else:
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN.value)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN)
 

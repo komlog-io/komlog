@@ -38,13 +38,15 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         agentname='test_komlibs.interface.web.api.datapoint_agent'
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username+'@komlog.org'
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            response, cookie = loginapi.login_request(username=self.username, password=self.password)
+            response = loginapi.login_request(username=self.username, password=self.password)
+            cookie=getattr(response, 'cookie',None)
             self.passport = passport.get_user_passport(cookie)
             response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
             aid = response.data['aid']
@@ -109,7 +111,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                     if count>=100:
                         break
 
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         self.passport = passport.get_user_passport(cookie)
         response = agentapi.get_agents_config_request(passport=self.passport)
         self.agents = response.data

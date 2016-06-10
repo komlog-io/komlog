@@ -197,12 +197,12 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
                     return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
                 else:
                     deleteapi.delete_snapshot(nid=snapshot['nid'])
-                    return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_AUTHERR.value)
+                    return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_AUTHERR)
             else:
                 deleteapi.delete_snapshot(nid=snapshot['nid'])
-                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_TCKCE.value)
+                return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_TCKCE)
         except cassexcept.KomcassException:
             deleteapi.delete_snapshot(nid=snapshot['nid'])
             raise
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_SCE.value)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.E_IWASN_NSNR_SCE)
 

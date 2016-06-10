@@ -1,6 +1,7 @@
+from komlog.komlibs.interface.imc.errors import Errors
 
 class ImcInterfaceResponse:
-    def __init__(self, status, error=None, message_type=None, message_params=None ):
+    def __init__(self, status, error=Errors.OK, message_type=None, message_params=None ):
         self.status=status
         self.error=error
         self.message_type=message_type

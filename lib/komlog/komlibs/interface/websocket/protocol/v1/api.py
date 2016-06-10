@@ -4,6 +4,8 @@ This file implement the v1 api of the websocket protocol
 
 '''
 
+import time
+from komlog.komfig import logging
 from komlog.komlibs.interface.websocket.protocol.v1 import status, exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.processing import message as procmsg
@@ -16,7 +18,10 @@ def process_message(passport, message):
     try:
         return _processing_funcs[message['action']](passport, message)
     except KeyError:
-        return Response(status=status.PROTOCOL_ERROR, error=Errors.E_IWSPV1A_PM_IA.value, reason='unsupported action')
+        t=time.time()
+        error=Errors.E_IWSPV1A_PM_IA
+        logging.c_logger.info(','.join(('komlog.komlibs.interface.websocket.protocol.v1.api.process_message',error.name,str(t),str(t))))
+        return Response(status=status.PROTOCOL_ERROR, error=error.value,reason='unsupported action')
 
 _processing_funcs = {
     Messages.SEND_DS_DATA:procmsg._process_send_ds_data,

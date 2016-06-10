@@ -36,13 +36,15 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         agentname='test_komlibs.interface.web.api.datasource_agent'
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username+'@komlog.org'
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            response, cookie = loginapi.login_request(username=self.username, password=self.password)
+            response = loginapi.login_request(username=self.username, password=self.password)
+            cookie=getattr(response, 'cookie',None)
             self.passport = passport.get_user_passport(cookie)
             response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
             aid = response.data['aid']
@@ -106,7 +108,8 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
                     count+=1
                     if count>=100:
                         break
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         self.passport = passport.get_user_passport(cookie)
         response = agentapi.get_agents_config_request(passport=self.passport)
         self.agents = response.data
@@ -165,7 +168,8 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = userapi.new_user_request(username=new_username, password=password, email=new_email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        response, cookie = loginapi.login_request(username=new_username, password = password)
+        response = loginapi.login_request(username=new_username, password = password)
+        cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
         did = self.agents[0]['dids'][0]
         response= datasourceapi.get_datasource_config_request(passport=psp, did=did)
@@ -252,7 +256,8 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        response, cookie = loginapi.login_request(username=username, password=password)
+        response = loginapi.login_request(username=username, password=password)
+        cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
         response2=datasourceapi.get_datasources_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -373,7 +378,8 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        response, cookie = loginapi.login_request(username=username, password=password)
+        response = loginapi.login_request(username=username, password=password)
+        cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
         pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='v'
@@ -486,7 +492,8 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        response, cookie = loginapi.login_request(username=username, password=password)
+        response = loginapi.login_request(username=username, password=password)
+        cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
         did=self.agents[0]['dids'][0]
         new_datasourcename='test_update_datasource_config_request_failure_no_permission_over_ds'
@@ -581,7 +588,8 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        response, cookie = loginapi.login_request(username=username, password=password)
+        response = loginapi.login_request(username=username, password=password)
+        cookie=getattr(response, 'cookie',None)
         psp= passport.get_user_passport(cookie)
         psp.aid=uuid.UUID(self.agents[0]['aid'])
         datasourcename='test_new_datasource_request_failure_no_permission_over_agent'

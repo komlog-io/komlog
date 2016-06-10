@@ -29,16 +29,15 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' In this module, we need a user '''
         username = 'test_komlibs.interface.web.api.agent_user'
         password = 'password'
-        response, cookie = loginapi.login_request(username=username, password=password)
+        response = loginapi.login_request(username=username, password=password)
+        cookie=getattr(response,'cookie',None)
         if response.status == status.WEB_STATUS_NOT_FOUND:
             email = username+'@komlog.org'
             creation = userapi.new_user_request(username=username, password=password, email=email)
             self.assertTrue(isinstance(creation , webresp.WebInterfaceResponse))
             self.assertEqual(creation .status, status.WEB_STATUS_OK)
-            response, cookie = loginapi.login_request(username=username, password=password)
-            #response = userapi.get_user_config_request(username=username)
-            #self.assertEqual(response.status, status.WEB_STATUS_OK)
-        #self.userinfo=response.data
+            response = loginapi.login_request(username=username, password=password)
+            cookie=getattr(response,'cookie',None)
         self.passport=passport.get_user_passport(cookie)
 
     def test_new_agent_request_success(self):
@@ -233,7 +232,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         response2 = userapi.new_user_request(username=username2, password=password, email=email2)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
-        response3, cookie = loginapi.login_request(username=username2, password=password)
+        response3 = loginapi.login_request(username=username2, password=password)
+        cookie=getattr(response3,'cookie',None)
         psp2 = passport.get_user_passport(cookie)
         response3 = agentapi.get_agent_config_request(passport=psp2, aid=response.data['aid'])
         self.assertTrue(response3.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -323,7 +323,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        response, cookie = loginapi.login_request(username=username, password=password)
+        response = loginapi.login_request(username=username, password=password)
+        cookie=getattr(response,'cookie',None)
         psp = passport.get_user_passport(cookie)
         response2=agentapi.get_agents_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)

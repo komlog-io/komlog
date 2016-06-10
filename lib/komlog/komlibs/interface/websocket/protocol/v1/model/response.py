@@ -3,7 +3,7 @@ from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 
 class Response:
-    def __init__(self, status, error=0, reason=None):
+    def __init__(self, status, error=Errors.OK, reason=None):
         self._status=None
         self.error=error
         self.reason=reason

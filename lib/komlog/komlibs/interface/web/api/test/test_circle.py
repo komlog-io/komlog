@@ -25,7 +25,8 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         ''' In this module, we need an user '''
         self.username = 'test_komlibs.interface.web.api.circle_user'
         self.password = 'password'
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response,'cookie',None)
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username+'@komlog.org'
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
@@ -45,12 +46,12 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
                 msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
                 if msg:
                     msg_result=msgapi.process_message(msg)
-                    self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
                     if msg_result:
                         msgapi.process_msg_result(msg_result)
                 else:
                     break
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response,'cookie',None)
         self.passport = passport.get_user_passport(cookie)
 
     def test_get_users_circles_config_request_failure_invalid_passport(self):
@@ -137,7 +138,8 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
                     msgapi.process_msg_result(msg_result)
             else:
                 break
-        response, cookie = loginapi.login_request(username=username, password=password)
+        response = loginapi.login_request(username=username, password=password)
+        cookie=getattr(response,'cookie',None)
         psp2 = passport.get_user_passport(cookie)
         response=circleapi.get_users_circle_config_request(passport=psp2, cid=cid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -203,7 +205,6 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if msg:
                 msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
                 if msg_result:
                     msgapi.process_msg_result(msg_result)
             else:
@@ -223,7 +224,8 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
                     msgapi.process_msg_result(msg_result)
             else:
                 break
-        response, cookie = loginapi.login_request(username=username, password=password)
+        response = loginapi.login_request(username=username, password=password)
+        cookie=getattr(response,'cookie',None)
         psp2 = passport.get_user_passport(cookie)
         response=circleapi.delete_circle_request(passport=psp2, cid=cid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -241,7 +243,6 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if msg:
                 msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
                 if msg_result:
                     msgapi.process_msg_result(msg_result)
             else:
@@ -375,7 +376,8 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
             else:
                 break
         data={'circlename':circlename}
-        response, cookie = loginapi.login_request(username=username, password=password)
+        response = loginapi.login_request(username=username, password=password)
+        cookie=getattr(response,'cookie',None)
         psp2= passport.get_user_passport(cookie)
         response=circleapi.update_circle_request(passport=psp2, cid=cid, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -466,7 +468,6 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if msg:
                 msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
                 if msg_result:
                     msgapi.process_msg_result(msg_result)
             else:
@@ -493,7 +494,6 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
             msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
             if msg:
                 msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
                 if msg_result:
                     msgapi.process_msg_result(msg_result)
             else:

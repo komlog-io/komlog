@@ -16,15 +16,6 @@ from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 
-def cookie_appender(f):
-    def func(*args, **kwargs):
-        resp=f(*args, **kwargs)
-        if isinstance(resp, tuple) and len(resp)==2:
-            return resp
-        return resp,None
-    return func
-
-@cookie_appender
 @exceptions.ExceptionHandler
 def login_request(username, password=None, pubkey=None, challenge=None, signature=None):
     if password is not None:
@@ -34,7 +25,7 @@ def login_request(username, password=None, pubkey=None, challenge=None, signatur
             return _agent_login_generate_challenge_request(username=username, pubkey=pubkey)
         else:
             return _agent_login_validate_challenge_request(username=username, pubkey=pubkey, challenge=challenge, signature=signature)
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, error=Errors.E_IWAL_LR_IPRM.value), None
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, error=Errors.E_IWAL_LR_IPRM)
 
 def _user_login_request(username, password):
     if not args.is_valid_username(username):
@@ -42,10 +33,11 @@ def _user_login_request(username, password):
     if not args.is_valid_password(password):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ULR_IPWD)
     if not userapi.auth_user(username=username, password=password):
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, error=Errors.E_IWAL_ULR_AUTHERR.value), None
-    else:
-        data={'redirect':'/home'}
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data), {'user':username, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, error=Errors.E_IWAL_ULR_AUTHERR)
+    data={'redirect':'/home'}
+    resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
+    resp.cookie={'user':username,'aid':None,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+    return resp
 
 def _agent_login_generate_challenge_request(username, pubkey):
     if not args.is_valid_username(username):
@@ -58,7 +50,7 @@ def _agent_login_generate_challenge_request(username, pubkey):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALGCR_IPK)
     challenge=agentapi.generate_auth_challenge(username=username, pubkey=pubkey)
     data={'challenge':b64encode(challenge).decode('utf-8')}
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data), None
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
 
 def _agent_login_validate_challenge_request(username, pubkey, challenge, signature):
     if not args.is_valid_username(username):
@@ -76,6 +68,8 @@ def _agent_login_validate_challenge_request(username, pubkey, challenge, signatu
     except Exception:
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALVCR_IPK)
     aid=agentapi.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge, signature=signature)
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK), {'user':username, 'aid':aid.hex, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+    resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    resp.cookie={'user':username,'aid':aid.hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+    return resp
 
 

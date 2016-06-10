@@ -43,7 +43,7 @@ def new_user_request(username, password, email, invitation=None, require_invitat
             status_c=status.WEB_STATUS_BAD_PARAMETERS
             data={'message':'Invalid Invitation Code'}
             error=Errors.E_IWAU_NUSR_INVNF
-            return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status_c, data=data, error=error)
         except gestexcept.InvitationProcessException as e:
             if e.error == gesterrors.E_GUA_SIP_INVAU:
                 status_c=status.WEB_STATUS_BAD_PARAMETERS
@@ -53,7 +53,7 @@ def new_user_request(username, password, email, invitation=None, require_invitat
                 status_c=status.WEB_STATUS_INTERNAL_ERROR
                 data={'message':'Error code '+str(e.error)}
                 error=e.error
-            return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status_c, data=data, error=error)
         except gestexcept.UserAlreadyExistsException as e:
             status_c=status.WEB_STATUS_BAD_PARAMETERS
             data={'message':'User already exists'}
@@ -63,7 +63,7 @@ def new_user_request(username, password, email, invitation=None, require_invitat
                 error=Errors.E_IWAU_NUSR_UAEE
             else:
                 error=e.error
-            return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+            return response.WebInterfaceResponse(status=status_c, data=data, error=error)
     else:
         user=userapi.create_user(username, password, email)
     if user:
@@ -140,7 +140,7 @@ def register_invitation_request(email):
         data={'email':email}
         return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
     else:
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN.value)
+        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN)
 
 @exceptions.ExceptionHandler
 def check_invitation_request(invitation):
@@ -153,7 +153,7 @@ def check_invitation_request(invitation):
         status_c=status.WEB_STATUS_NOT_FOUND
         data={'message':'Invitation not found'}
         error=Errors.E_IWAU_CIR_INVNF
-        return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error)
     except gestexcept.InvitationProcessException as e:
         if e.error == gesterrors.E_GUA_CUI_INVAU:
             status_c=status.WEB_STATUS_BAD_PARAMETERS
@@ -163,7 +163,7 @@ def check_invitation_request(invitation):
             status_c=status.WEB_STATUS_INTERNAL_ERROR
             data={'message':'Error code '+str(e.error)}
             error=e.error
-        return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error)
     else:
         data={'invitation':invitation}
         return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
@@ -195,7 +195,7 @@ def register_forget_request(account):
         status_c=status.WEB_STATUS_BAD_PARAMETERS
         data={'message':'User not found','account':account}
         error=Errors.E_IWAU_RFR_UNF
-        return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error)
     else:
         message=messages.ForgetMailMessage(email=request['email'], code=request['code'])
         msgapi.send_message(message)
@@ -213,7 +213,7 @@ def check_forget_code_request(code):
         status_c=status.WEB_STATUS_BAD_PARAMETERS
         data={'message':'Code not found'}
         error=Errors.E_IWAU_CFR_CNF
-        return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error)
     except gestexcept.ForgetRequestException as e:
         if e.error == gesterrors.E_GUA_CUFC_CODEAU:
             status_c=status.WEB_STATUS_BAD_PARAMETERS
@@ -223,7 +223,7 @@ def check_forget_code_request(code):
             status_c=status.WEB_STATUS_INTERNAL_ERROR
             data={'message':'Error code '+str(e.error)}
             error=e.error
-        return response.WebInterfaceResponse(status=status_c, data=data, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error)
     else:
         data={'code':code.hex}
         return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
@@ -241,7 +241,7 @@ def reset_password_request(code, password):
     except gestexcept.UserNotFoundException:
         status_c=status.WEB_STATUS_NOT_FOUND
         error=Errors.E_IWAU_RPR_UNF
-        return response.WebInterfaceResponse(status=status_c, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, error=error)
     except (gestexcept.ForgetRequestException,gestexcept.ForgetRequestNotFoundException) as e:
         status_c=status.WEB_STATUS_BAD_PARAMETERS
         if e.error==gesterrors.E_GUA_RP_CODEAU:
@@ -250,5 +250,5 @@ def reset_password_request(code, password):
             error=Errors.E_IWAU_RPR_CNF
         else:
             error=e.error
-        return response.WebInterfaceResponse(status=status_c, error=error.value)
+        return response.WebInterfaceResponse(status=status_c, error=error)
 

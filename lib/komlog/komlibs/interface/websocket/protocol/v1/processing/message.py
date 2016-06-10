@@ -41,19 +41,19 @@ def _process_send_ds_data(passport, message):
             new_datasource = True
             did=datasource['did']
         else:
-            return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDSD_ECDS.value)
+            return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDSD_ECDS)
     elif uri_info['type']==vertex.DATASOURCE:
         did=uri_info['id']
         authorization.authorize_request(request=Requests.POST_DATASOURCE_DATA,passport=passport,did=did)
     else:
-        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datasource', error=Errors.E_IWSPV1PM_PSDSD_IURI.value)
+        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datasource', error=Errors.E_IWSPV1PM_PSDSD_IURI)
     try:
         dest_dir=config.get(options.SAMPLES_RECEIVED_PATH)
         datasourceapi.upload_datasource_data(did=did, content=json.dumps({'content':message.payload['content'],'ts':message.payload['ts']}),dest_dir=dest_dir)
     except Exception:
         if new_datasource:
             deleteapi.delete_datasource(did=datasource['did'])
-        return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDSD_EUR.value)
+        return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDSD_EUR)
     else:
         if new_datasource:
             try:
@@ -61,11 +61,11 @@ def _process_send_ds_data(passport, message):
                 op_result=operation.process_operation(op)
             except Exception as e:
                 deleteapi.delete_datasource(did=datasource['did'])
-                return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDSD_EUR.value)
+                return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDSD_EUR)
             else:
                 if op_result == False:
                     deleteapi.delete_datasource(did=datasource['did'])
-                    return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDSD_FUR.value)
+                    return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDSD_FUR)
         return Response(status=status.MESSAGE_ACCEPTED_FOR_PROCESSING)
 
 @exceptions.ExceptionHandler
@@ -89,13 +89,13 @@ def _process_send_dp_data(passport, message):
                 op_result=operation.process_operation(op)
                 if op_result == False:
                     deleteapi.delete_datapoint(pid=datapoint['pid'])
-                    return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDPD_FPOR.value)
+                    return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDPD_FPOR)
             except:
                 deleteapi.delete_datapoint(pid=datapoint['pid'])
                 raise
         else:
-            return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDPD_ECDP.value)
+            return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDPD_ECDP)
     else:
-        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datapoint', error=Errors.E_IWSPV1PM_PSDPD_IURI.value)
+        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datapoint', error=Errors.E_IWSPV1PM_PSDPD_IURI)
     return Response(status=status.MESSAGE_EXECUTION_OK)
 

@@ -35,7 +35,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         ''' In this module, we need a user and agent '''
         self.username = 'test_komlibs.interface.web.api.snapshot_user'
         self.password = 'password'
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username+'@komlog.org'
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
@@ -50,7 +51,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
                         msgapi.process_msg_result(msg_result)
                 else:
                     break
-        response, cookie = loginapi.login_request(username=self.username, password=self.password)
+        response = loginapi.login_request(username=self.username, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         self.passport = passport.get_user_passport(cookie)
         agentname='test_komlibs.interface.web.api.snapshot_agent'
         pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
@@ -72,7 +74,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         cookie = {'user':self.username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         self.agent_passport = passport.get_agent_passport(cookie)
         self.username_to_share='test_komlibs.interface.web.api.snapshot_user_to_share'
-        response, cookie = loginapi.login_request(username=self.username_to_share, password=self.password)
+        response = loginapi.login_request(username=self.username_to_share, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         if response.status==status.WEB_STATUS_NOT_FOUND:
             email = self.username_to_share+'@komlog.org'
             response = userapi.new_user_request(username=self.username_to_share, password=self.password, email=email)
@@ -87,7 +90,8 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
                         msgapi.process_msg_result(msg_result)
                 else:
                     break
-        response, cookie = loginapi.login_request(username=self.username_to_share, password=self.password)
+        response = loginapi.login_request(username=self.username_to_share, password=self.password)
+        cookie=getattr(response, 'cookie',None)
         self.passport_share = passport.get_user_passport(cookie)
 
     def test_get_snapshots_config_request_failure_invalid_passport(self):

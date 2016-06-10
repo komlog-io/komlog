@@ -26,7 +26,7 @@ def retrieve_message(timeout=0):
         addr, s_message = data
         mtype = s_message.split('|')[0]
         try:
-            message=getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[mtype])(serialized_message=s_message)
+            message=messages.MESSAGE_TO_CLASS_MAPPING[mtype](serialized_message=s_message)
             return message
         except Exception as e:
             logging.logger.exception('Cannot map message.type to message Class: '+str(e))
@@ -56,7 +56,7 @@ def retrieve_message_from(addr, timeout=0):
         addr, s_message = data
         mtype = s_message.split('|')[0]
         try:
-            message=getattr(messages,messages.MESSAGE_TO_CLASS_MAPPING[mtype])(serialized_message=s_message)
+            message=messages.MESSAGE_TO_CLASS_MAPPING[mtype](serialized_message=s_message)
             return message
         except Exception as e:
             logging.logger.exception('Cannot map message.type to message Class: '+str(e))

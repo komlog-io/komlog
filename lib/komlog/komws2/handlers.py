@@ -309,9 +309,10 @@ class LoginHandler(tornado.web.RequestHandler):
         except Exception:
             self.redirect(self.get_login_url())
         else:
-            response,cookie=login.login_request(username=username, password=password, pubkey=pubkey, challenge=challenge, signature=signature)
-            if cookie:
-                self.set_secure_cookie('kid',json.dumps(cookie), expires_days=7, httponly=True)#, secure=True)
+            response=login.login_request(username=username, password=password, pubkey=pubkey, challenge=challenge, signature=signature)
+            if getattr(response,'cookie',None):
+                self.set_secure_cookie('kid',json.dumps(response.cookie), expires_days=7, httponly=True)#, secure=True)
+                del response.cookie
             if isinstance(response.data, dict) and 'redirect' in response.data:
                 self.redirect(response.data['redirect'])
             else:
