@@ -19,34 +19,47 @@ class AuthPassportTest(unittest.TestCase):
     def test_passport_creation_success(self):
         ''' a new passport instance should be create successfully '''
         uid = uuid.uuid4()
+        sid = uuid.uuid4()
         aid = None
-        psp = passport.Passport(uid=uid, aid=aid)
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid)
         self.assertTrue(isinstance(psp, passport.Passport))
         aid = uuid.uuid4()
-        psp = passport.Passport(uid=uid, aid=aid)
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid)
         self.assertTrue(isinstance(psp, passport.Passport))
 
     def test_passport_creation_failure_invalid_uid(self):
         ''' a new passport instance should fail if uid is invalid '''
         uids = ['234234',1,1.2,{'a':'dict'},uuid.uuid4().hex, uuid.uuid1(), None, ('a','tuple'), ['an','array'],{'set'}]
+        sid=uuid.uuid4()
         aid = None
         for uid in uids:
             with self.assertRaises(exceptions.PassportException) as cm:
-                psp = passport.Passport(uid=uid, aid=aid)
+                psp = passport.Passport(uid=uid, sid=sid, aid=aid)
             self.assertEqual(cm.exception.error, Errors.E_AP_PC_IU)
 
     def test_passport_creation_failure_invalid_aid(self):
         ''' a new passport instance should fail if aid is invalid '''
         aids = ['234234',1,1.2,{'a':'dict'},uuid.uuid4().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'}]
         uid = uuid.uuid4()
+        sid = uuid.uuid4()
         for aid in aids:
             with self.assertRaises(exceptions.PassportException) as cm:
-                psp = passport.Passport(uid=uid, aid=aid)
+                psp = passport.Passport(uid=uid, sid=sid, aid=aid)
             self.assertEqual(cm.exception.error, Errors.E_AP_PC_IA)
+
+    def test_passport_creation_failure_invalid_sid(self):
+        ''' a new passport instance should fail if sid is invalid '''
+        sids = [None,'234234',1,1.2,{'a':'dict'},uuid.uuid4().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'}]
+        uid = uuid.uuid4()
+        aid = uuid.uuid4()
+        for sid in sids:
+            with self.assertRaises(exceptions.PassportException) as cm:
+                psp = passport.Passport(uid=uid, sid=sid, aid=aid)
+            self.assertEqual(cm.exception.error, Errors.E_AP_PC_IS)
 
     def test_cookie_creation_failure_invalid_cookie(self):
         ''' a new cookie instance should fail if cookie is invalid '''
-        cookies= ['234234',1,1.2,{'a':'dict'},uuid.uuid4().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'}]
+        cookies= ['234234',1,1.2,{'a':'dict'},uuid.uuid4().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'},{'user':'user','aid':'aid','seq':'seq'}]
         for cookie in cookies:
             with self.assertRaises(exceptions.CookieException) as cm:
                 cookie = passport.Cookie(cookie)
@@ -55,7 +68,7 @@ class AuthPassportTest(unittest.TestCase):
     def test_cookie_creation_failure_invalid_user(self):
         ''' a new cookie instance should fail if cookie user is invalid '''
         usernames= [1,1.2,{'a':'dict'},uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'},None]
-        cookie={'aid':uuid.uuid4().hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie={'sid':uuid.uuid4().hex, 'aid':uuid.uuid4().hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         for user in usernames:
             cookie['user']=user
             with self.assertRaises(exceptions.CookieException) as cm:
@@ -65,27 +78,38 @@ class AuthPassportTest(unittest.TestCase):
     def test_cookie_creation_failure_invalid_aid(self):
         ''' a new cookie instance should fail if cookie aid is invalid '''
         aids= ['string',1,1.2,{'a':'dict'},uuid.uuid4(),uuid.uuid1().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'}]
-        cookie={'user':'username','seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie={'user':'username','sid':uuid.uuid4().hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         for aid in aids:
             cookie['aid']=aid
             with self.assertRaises(exceptions.CookieException) as cm:
                 cookie = passport.Cookie(cookie)
             self.assertEqual(cm.exception.error, Errors.E_AP_CC_IA)
 
+    def test_cookie_creation_failure_invalid_sid(self):
+        ''' a new cookie instance should fail if cookie sid is invalid '''
+        sids= [None,'string',1,1.2,{'a':'dict'},uuid.uuid4(),uuid.uuid1().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'}]
+        cookie={'user':'username','aid':uuid.uuid4().hex, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        for sid in sids:
+            cookie['sid']=sid
+            with self.assertRaises(exceptions.CookieException) as cm:
+                cookie = passport.Cookie(cookie)
+            self.assertEqual(cm.exception.error, Errors.E_AP_CC_IS)
+
     def test_cookie_creation_failure_invalid_seq(self):
         ''' a new cookie instance should fail if cookie seq is invalid '''
         seqs= ['string',1,1.2,{'a':'dict'},uuid.uuid4(),uuid.uuid1().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'}, None]
-        cookie={'user':'username','aid':uuid.uuid4().hex}
+        cookie={'user':'username','sid':uuid.uuid4().hex, 'aid':uuid.uuid4().hex}
         for seq in seqs:
             cookie['seq']=seq
             with self.assertRaises(exceptions.CookieException) as cm:
                 cookie = passport.Cookie(cookie)
-            self.assertEqual(cm.exception.error, Errors.E_AP_CC_IS)
+            self.assertEqual(cm.exception.error, Errors.E_AP_CC_ISQ)
 
     def test_get_user_passport_failure_non_existing_user(self):
         ''' get_user_passport should fail if user does not exist '''
         cookie = {
             'user':'test_get_user_passport_failure_non_existing_user',
+            'sid':uuid.uuid4().hex,
             'aid':None,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
@@ -100,6 +124,7 @@ class AuthPassportTest(unittest.TestCase):
         email=username+'@komlog.org'
         cookie = {
             'user':username,
+            'sid':uuid.uuid4().hex,
             'aid':None,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
@@ -117,6 +142,7 @@ class AuthPassportTest(unittest.TestCase):
         state=UserStates.ACTIVE
         cookie = {
             'user':username,
+            'sid':uuid.uuid4().hex,
             'aid':None,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
@@ -131,6 +157,7 @@ class AuthPassportTest(unittest.TestCase):
         ''' get_agent_passport should fail if cookie has no agent '''
         cookie = {
             'user':'test_get_agent_passport_failure_cookie_has_no_aid',
+            'sid':uuid.uuid4().hex,
             'aid':None,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
@@ -142,6 +169,7 @@ class AuthPassportTest(unittest.TestCase):
         ''' get_agent_passport should fail if agent does not exist '''
         cookie = {
             'user':'test_get_agent_passport_failure_non_existing_agent',
+            'sid':uuid.uuid4().hex,
             'aid':uuid.uuid4().hex,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
@@ -159,6 +187,7 @@ class AuthPassportTest(unittest.TestCase):
         self.assertTrue(cassapiagent.new_agent(agent))
         cookie = {
             'user':'test_get_agent_passport_failure_agent_state_not_valid',
+            'sid':uuid.uuid4().hex,
             'aid':aid.hex,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
@@ -177,6 +206,7 @@ class AuthPassportTest(unittest.TestCase):
         self.assertTrue(cassapiagent.new_agent(agent))
         cookie = {
             'user':'test_get_agent_passport_failure_agent_state_not_valid',
+            'sid':uuid.uuid4().hex,
             'aid':aid.hex,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }

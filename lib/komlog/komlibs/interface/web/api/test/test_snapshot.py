@@ -71,7 +71,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         agents_info=agentapi.get_agents_config_request(passport=self.passport)
         self.agents=agents_info.data
         aid = response.data['aid']
-        cookie = {'user':self.username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':self.username, 'sid':uuid.uuid4().hex,  'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         self.agent_passport = passport.get_agent_passport(cookie)
         self.username_to_share='test_komlibs.interface.web.api.snapshot_user_to_share'
         response = loginapi.login_request(username=self.username_to_share, password=self.password)
@@ -103,7 +103,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_get_snapshots_config_request_failure_non_existent_username(self):
         ''' get_snapshots_config_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response=snapshotapi.get_snapshots_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
         self.assertEqual(response.error, gesterrors.E_GSA_GSSC_UNF.value)
@@ -789,7 +789,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datasourceapi.get_datasource_data_request(passport=psp_to_share, did=did)
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4())
+        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datasourceapi.get_datasource_config_request(passport=psp_to_deny, did=did)
@@ -1821,7 +1821,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datapointapi.get_datapoint_data_request(passport=psp_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4())
+        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datapointapi.get_datapoint_config_request(passport=psp_to_deny, pid=pid)
@@ -1985,7 +1985,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datapointapi.get_datapoint_data_request(passport=psp_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4())
+        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datapointapi.get_datapoint_config_request(passport=psp_to_deny, pid=pid)
@@ -2150,7 +2150,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datapointapi.get_datapoint_data_request(passport=psp_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4())
+        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datapointapi.get_datapoint_config_request(passport=psp_to_deny, pid=pid)
@@ -2318,7 +2318,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datapointapi.get_datapoint_data_request(passport=psp_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny=passport.Passport(uid=uuid.uuid4())
+        psp_to_deny=passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datapointapi.get_datapoint_config_request(passport=psp_to_deny, pid=pid)
@@ -2402,7 +2402,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datasourceapi.get_datasource_data_request(passport=psp_to_share, did=did)
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4())
+        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datasourceapi.get_datasource_config_request(passport=psp_to_deny, did=did)
@@ -2514,7 +2514,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datapointapi.get_datapoint_data_request(passport=psp_to_share, pid=pid, start_date='1', end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4())
+        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datapointapi.get_datapoint_config_request(passport=psp_to_deny, pid=pid)

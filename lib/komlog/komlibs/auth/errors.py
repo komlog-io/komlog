@@ -105,10 +105,12 @@ class Errors(Enum):
     E_AP_CC_ID      = 53000      #: Cookie class. invalid dict cookie passed
     E_AP_CC_IU      = 53001      #: Cookie class. invalid user
     E_AP_CC_IA      = 53002      #: Cookie class. invalid aid
-    E_AP_CC_IS      = 53003      #: Cookie class. invalid sequence
+    E_AP_CC_IS      = 53003      #: Cookie class. invalid session id
+    E_AP_CC_ISQ     = 53004      #: Cookie class. invalid sequence
 
     E_AP_PC_IU      = 53010      #: Passport class. invalid uid
     E_AP_PC_IA      = 53011      #: Passport class. invalid aid
+    E_AP_PC_IS      = 53012      #: Passport class. invalid session id
 
     E_AP_GUP_UNF    = 53100      #: get_user_passport. User not found exception
     E_AP_GUP_IUS    = 53101      #: get_user_passport. Invalid user state

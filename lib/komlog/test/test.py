@@ -24,6 +24,7 @@ MODULES = [
     'komlog.komlibs.gestaccount.common.test.test_delete.GestaccountCommonDeleteTest',
     'komlog.komlibs.auth.test.test_authorization.AuthAuthorizationTest',
     'komlog.komlibs.auth.test.test_passport.AuthPassportTest',
+    'komlog.komlibs.auth.test.test_session.AuthSessionTest',
     'komlog.komlibs.auth.quotes.test.test_authorization.AuthQuotesAuthorizationTest',
     'komlog.komlibs.auth.quotes.test.test_deny.AuthQuotesDenyTest',
     'komlog.komlibs.auth.quotes.test.test_compare.AuthQuotesCompareTest',
@@ -73,6 +74,7 @@ MODULES = [
     'komlog.komlibs.interface.websocket.protocol.v1.processing.test.test_message.InterfaceWebSocketProtocolV1ProcessingMessageTest',
     'komlog.komlibs.interface.websocket.protocol.v1.test.test_api.InterfaceWebSocketProtocolV1ApiTest',
     'komlog.komlibs.interface.websocket.test.test_api.InterfaceWebSocketApiTest',
+    'komlog.komlibs.interface.websocket.test.test_session.InterfaceWebSocketSessionTest',
 ]
 
 def run_tests():

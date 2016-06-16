@@ -77,7 +77,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
     def test_new_agent_request_failure_invalid_agentname(self):
         ''' new_agent_request should fail if agentname is invalid '''
         agentnames=[None, 23423422, 23423.2342, {'a':'dict'},['a','list'],json.dumps('username'),'userñame','user\nname','\tusername']
-        psp = passport.Passport(uid=uuid.uuid4(), aid=None)
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4(), aid=None)
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         for agentname in agentnames:
@@ -88,7 +88,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' new_agent_request should fail if pubkey is invalid '''
         pubkeys=[None, 23423422, 23423.2342, {'a':'dict'},['a','list']]
         agentname='test_new_agent_request_failure_invalid_pubkey'
-        psp = passport.Passport(uid=uuid.uuid4(), aid=None)
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4(), aid=None)
         version='test library vX.XX'
         for pubkey in pubkeys:
             response=agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -98,7 +98,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         ''' new_agent_request should fail if version is invalid '''
         versions=[None, 23423422, 23423.2342, {'a':'dict'},['a','list'],json.dumps('username'),'userñame','user\nname','\tusername']
         agentname='test_new_agent_request_failure_invalid_version'
-        psp = passport.Passport(uid=uuid.uuid4(), aid=None)
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4(), aid=None)
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         for version in versions:
             response=agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -106,7 +106,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
 
     def test_new_agent_request_failure_non_existent_user(self):
         ''' new_agent_request should fail if user does not exists '''
-        psp = passport.Passport(uid=uuid.uuid4(), aid=None)
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4(), aid=None)
         agentname='test_new_agent_request_failure_non_existent_user'
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
@@ -182,14 +182,14 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
     def test_get_agent_config_request_failure_invalid_aid(self):
         ''' get_agent_config_request should fail if aid is invalid '''
         aids=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
-        psp=passport.Passport(uid=uuid.uuid4())
+        psp=passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         for aid in aids:
             response=agentapi.get_agent_config_request(passport=psp, aid=aid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_agent_config_request_failure_non_existent_username(self):
         ''' get_agent_config_request should fail if username does not exist '''
-        psp=passport.Passport(uid=uuid.uuid4())
+        psp=passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         aid=uuid.uuid4().hex
         response=agentapi.get_agent_config_request(passport=psp, aid=aid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -310,7 +310,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
 
     def test_get_agents_config_request_failure_non_existent_username(self):
         ''' get_agents_config_request should fail if username does not exist '''
-        psp=passport.Passport(uid=uuid.uuid4())
+        psp=passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response=agentapi.get_agents_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
         self.assertEqual(response.error, gesterrors.E_GAA_GASC_UNF.value)
@@ -377,7 +377,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
     def test_update_agent_config_request_failure_invalid_aid(self):
         ''' update_agent_config_request should fail if aid is invalid '''
         aids=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame', uuid.uuid4(),'23234234hasdfasdfASDFASDF']
-        psp=passport.Passport(uid=uuid.uuid4())
+        psp=passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         data={'agentname':'test_update_agent_config_request_failure'}
         for aid in aids:
             response=agentapi.update_agent_config_request(passport=psp, aid=aid, data=data)
@@ -432,7 +432,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
     def test_delete_agent_request_failure_invalid_aid(self):
         ''' delete_agent_request should fail if aid is invalid '''
         aids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
-        psp=passport.Passport(uid=uuid.uuid4())
+        psp=passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         for aid in aids:
             response=agentapi.delete_agent_request(passport=psp, aid=aid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)

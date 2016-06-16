@@ -28,3 +28,11 @@ class AgentChallenge:
         self.generated = generated
         self.validated = validated
 
+class AgentSession:
+    def __init__(self, sid, aid, uid, imc_address, generated):
+        self.sid = sid
+        self.aid = aid
+        self.uid = uid
+        self.imc_address = imc_address
+        self.generated = generated
+    

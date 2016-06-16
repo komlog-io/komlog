@@ -11,23 +11,28 @@ def get_statement(num):
         return None
 
 
-STATEMENTS={10000:'select * from mst_agent where aid=?',
-            10001:'select * from mst_agent where uid=?',
-            10002:'select count(*) from mst_agent where uid=?',
-            10003:'select aid from mst_agent where uid=?',
-            10100:'select * from mst_agent_pubkey where uid=?',
-            10101:'select * from mst_agent_pubkey where uid=? and pubkey=?',
-            10200:'select * from mst_agent_challenge where aid=? and challenge=?',
-            15000:'insert into mst_agent (aid,uid,agentname,pubkey,version,state,creation_date) values (?,?,?,?,?,?,?)',
-            15001:'insert into mst_agent (aid,uid,agentname,pubkey,version,state,creation_date) values (?,?,?,?,?,?,?) if not exists',
-            15100:'insert into mst_agent_pubkey (uid,pubkey,aid,state) values (?,?,?,?)',
-            15101:'insert into mst_agent_pubkey (uid,pubkey,aid,state) values (?,?,?,?) if not exists',
-            15200:'insert into mst_agent_challenge (aid,challenge,generated,validated) values (?,?,?,?)',
-            17000:'delete from mst_agent where aid=?',
-            17100:'delete from mst_agent_pubkey where uid=? and pubkey=?',
-            17200:'delete from mst_agent_challenge where aid=? and challenge=?',
-            17201:'delete from mst_agent_challenge where aid=?',
-           }
+STATEMENTS={
+    10000:'select * from mst_agent where aid=?',
+    10001:'select * from mst_agent where uid=?',
+    10002:'select count(*) from mst_agent where uid=?',
+    10003:'select aid from mst_agent where uid=?',
+    10100:'select * from mst_agent_pubkey where uid=?',
+    10101:'select * from mst_agent_pubkey where uid=? and pubkey=?',
+    10200:'select * from mst_agent_challenge where aid=? and challenge=?',
+    10300:'select * from mst_agent_session where sid=?',
+    10301:'select sid from mst_agent_session where aid=?',
+    15000:'insert into mst_agent (aid,uid,agentname,pubkey,version,state,creation_date) values (?,?,?,?,?,?,?)',
+    15001:'insert into mst_agent (aid,uid,agentname,pubkey,version,state,creation_date) values (?,?,?,?,?,?,?) if not exists',
+    15100:'insert into mst_agent_pubkey (uid,pubkey,aid,state) values (?,?,?,?)',
+    15101:'insert into mst_agent_pubkey (uid,pubkey,aid,state) values (?,?,?,?) if not exists',
+    15200:'insert into mst_agent_challenge (aid,challenge,generated,validated) values (?,?,?,?)',
+    15300:'insert into mst_agent_session (sid,aid,uid,imc_address,generated) values (?,?,?,?,?)',
+    17000:'delete from mst_agent where aid=?',
+    17100:'delete from mst_agent_pubkey where uid=? and pubkey=?',
+    17200:'delete from mst_agent_challenge where aid=? and challenge=?',
+    17201:'delete from mst_agent_challenge where aid=?',
+    17300:'delete from mst_agent_session where sid=?',
+}
 
 # selects (10000 - 14999)
 
@@ -47,6 +52,12 @@ S_A_MSTAGENTPUBKEY_B_UID_PUBKEY=10101
 
 S_A_MSTAGENTCHALLENGE_B_AID_CH=10200
 
+# mst_agent_session
+
+S_A_MSTAGENTSESSION_B_SID=10300
+S_SID_MSTAGENTSESSION_B_AID=10301
+
+
 # Inserts (15000 - 16999)
 
 # mst_agent
@@ -63,6 +74,11 @@ I_A_MSTAGENTPUBKEY_INE=15101
 
 I_A_MSTAGENTCHALLENGE=15200
 
+# mst_agent_session
+
+I_A_MSTAGENTSESSION=15300
+
+
 # Deletes (17000 - 18999)
 
 # mst_agent
@@ -77,6 +93,11 @@ D_A_MSTAGENTPUBKEY=17100
 
 D_A_MSTAGENTCHALLENGE_B_AID_CHALLENGE=17200
 D_A_MSTAGENTCHALLENGE_B_AID=17201
+
+# mst_agent_challenge
+
+D_A_MSTAGENTSESSION_B_SID=17300
+
 
 # Update (19000 - 19999)
 

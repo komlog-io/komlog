@@ -63,7 +63,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         agents_info=agentapi.get_agents_config_request(passport=self.passport)
         self.agents=agents_info.data
         aid = response.data['aid']
-        cookie = {'user':self.username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         self.agent_passport = passport.get_agent_passport(cookie)
 
     def test_get_uri_request_failure_invalid_passport(self):
@@ -81,7 +81,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_get_uri_request_failure_invalid_uri(self):
         ''' get_uri_request should fail if uri is invalid '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
         uris=[234234,'with spaces','withspecialcharacterslike\t','or\ncharacter',
                 ' spacesatbeggining',
                 'spacesatend ',
@@ -99,7 +99,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_get_uri_request_failure_user_not_found(self):
         ''' get_uri_request should fail if user does not exist on system '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
         response=uriapi.get_uri_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.error, Errors.OK.value)

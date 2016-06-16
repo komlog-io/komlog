@@ -15,14 +15,14 @@ class AuthAuthorizationTest(unittest.TestCase):
 
     def test_authorize_request_failure_request_parameter_not_passed(self):
         ''' authorize_request should fail if request parameter is not passed '''
-        passport = Passport(uid=uuid.uuid4())
+        passport = Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
         with self.assertRaises(exceptions.BadParametersException) as cm:
             authorization.authorize_request(passport=passport)
         self.assertEqual(cm.exception.error, Errors.E_AA_AR_BP)
 
     def test_authorize_request_non_existent_request_in_kwargs(self):
         ''' authorize_request should fail if request does not exist '''
-        passport = Passport(uid=uuid.uuid4())
+        passport = Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
         requests=[uuid.uuid4(),234234234,'TEST_AUTHORIZE_REQUEST_NON_EXISTENT_REQUEST']
         for request in requests:
             with self.assertRaises(exceptions.RequestNotFoundException) as cm:
@@ -31,7 +31,7 @@ class AuthAuthorizationTest(unittest.TestCase):
 
     def test_authorize_request_non_existent_request_in_args(self):
         ''' authorize_request should fail if request does not exist '''
-        passport = Passport(uid=uuid.uuid4())
+        passport = Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
         requests=[uuid.uuid4(),234234234,'TEST_AUTHORIZE_REQUEST_NON_EXISTENT_REQUEST']
         for request in requests:
             with self.assertRaises(exceptions.RequestNotFoundException) as cm:

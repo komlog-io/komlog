@@ -69,7 +69,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         agents_info=agentapi.get_agents_config_request(passport=self.passport)
         self.agents=agents_info.data
         aid = response.data['aid']
-        cookie = {'user':self.username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         self.agent_passport = passport.get_agent_passport(cookie)
 
     def test_get_widget_config_request_success_widget_ds(self):
@@ -273,7 +273,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_get_widget_config_request_failure_non_existent_username(self):
         ''' get_widget_config_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         wid=uuid.uuid4().hex
         response=widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -457,7 +457,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_get_widgets_config_request_failure_non_existent_username(self):
         ''' get_widgets_config_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response=widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
         self.assertEqual(response.error, gesterrors.E_GWA_GWSC_UNF.value)
@@ -718,7 +718,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_widget_request_failure_non_existing_user(self):
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         data={'type':'mp', 'widgetname':'widgetname'}
         response=widgetapi.new_widget_request(passport=psp, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
@@ -1290,7 +1290,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_delete_datapoint_request_failure_non_existent_username(self):
         ''' delete_datapoint_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         pid=uuid.uuid4().hex
         wid=uuid.uuid4().hex
         response=widgetapi.delete_datapoint_request(passport=psp, wid=wid, pid=pid)
@@ -1989,7 +1989,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_get_related_widgets_request_failure_non_existent_username(self):
         ''' get_related_widgets_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         wid=uuid.uuid4().hex
         response=widgetapi.get_related_widgets_request(passport=psp, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)

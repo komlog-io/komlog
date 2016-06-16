@@ -17,10 +17,12 @@ from komlog.komfig import logging
 
 
 class Passport:
-    def __init__(self, uid, aid=None):
+    def __init__(self, uid, sid, aid=None):
         self._uid=None
+        self._sid=None
         self._aid=None
         self.uid = uid
+        self.sid = sid
         self.aid = aid
 
     @property
@@ -35,12 +37,23 @@ class Passport:
             raise exceptions.PassportException(error = Errors.E_AP_PC_IU)
 
     @property
+    def sid(self):
+        return self._sid
+
+    @sid.setter
+    def sid(self, value):
+        if args.is_valid_uuid(value):
+            self._sid = value
+        else:
+            raise exceptions.PassportException(error = Errors.E_AP_PC_IS)
+
+    @property
     def aid(self):
         return self._aid
 
     @aid.setter
     def aid(self, value):
-        if not value:
+        if value is None:
             self._aid = None
         elif args.is_valid_uuid(value):
             self._aid = value
@@ -50,13 +63,16 @@ class Passport:
 class Cookie:
     def __init__(self, cookie):
         self._user = None
+        self._sid = None
         self._aid = None
         self._seq = None
         if (isinstance(cookie, dict)
             and 'user' in cookie
+            and 'sid' in cookie
             and 'aid' in cookie
             and 'seq' in cookie):
             self.user= cookie['user']
+            self.sid = cookie['sid']
             self.aid = cookie['aid']
             self.seq = cookie['seq']
         else:
@@ -72,6 +88,17 @@ class Cookie:
             self._user = user
         else:
             raise exceptions.CookieException(error = Errors.E_AP_CC_IU)
+
+    @property
+    def sid(self):
+        return self._sid
+
+    @sid.setter
+    def sid(self, hex_sid):
+        if args.is_valid_hex_uuid(hex_sid):
+            self._sid = uuid.UUID(hex_sid)
+        else:
+            raise exceptions.CookieException(error = Errors.E_AP_CC_IS)
 
     @property
     def aid(self):
@@ -95,7 +122,7 @@ class Cookie:
         if args.is_valid_sequence(seq):
             self._seq = timeuuid.get_uuid1_from_custom_sequence(seq)
         else:
-            raise exceptions.CookieException(error = Errors.E_AP_CC_IS)
+            raise exceptions.CookieException(error = Errors.E_AP_CC_ISQ)
 
 def get_user_passport(cookie):
     cookie = Cookie(cookie)
@@ -104,7 +131,7 @@ def get_user_passport(cookie):
         raise exceptions.UserNotFoundException(error=Errors.E_AP_GUP_UNF)
     if user.state not in (UserStates.ACTIVE, UserStates.PREACTIVE):
         raise exceptions.AuthorizationExpiredException(error=Errors.E_AP_GUP_IUS)
-    return Passport(uid=user.uid)
+    return Passport(uid=user.uid, sid=cookie.sid)
 
 def get_agent_passport(cookie):
     cookie = Cookie(cookie)
@@ -115,5 +142,5 @@ def get_agent_passport(cookie):
         raise exceptions.AgentNotFoundException(error=Errors.E_AP_GAP_ANF)
     if agent.state != AgentStates.ACTIVE:
         raise exceptions.AuthorizationExpiredException(error=Errors.E_AP_GAP_IAS)
-    return Passport(uid=agent.uid, aid=agent.aid)
+    return Passport(uid=agent.uid, sid=cookie.sid, aid=agent.aid)
 

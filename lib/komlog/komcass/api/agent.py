@@ -126,3 +126,32 @@ def delete_agent_challenges(aid):
     connection.session.execute(stmtagent.D_A_MSTAGENTCHALLENGE_B_AID,(aid,))
     return True
 
+@exceptions.ExceptionHandler
+def get_agent_session(sid):
+    row=connection.session.execute(stmtagent.S_A_MSTAGENTSESSION_B_SID, (sid,))
+    if row:
+        return ormagent.AgentSession(**row[0])
+    else:
+        return None
+
+@exceptions.ExceptionHandler
+def insert_agent_session(obj):
+    if not isinstance(obj, ormagent.AgentSession):
+        return False
+    else:
+        connection.session.execute(stmtagent.I_A_MSTAGENTSESSION,(obj.sid,obj.aid,obj.uid,obj.imc_address,obj.generated))
+        return True
+
+@exceptions.ExceptionHandler
+def delete_agent_session(sid):
+    connection.session.execute(stmtagent.D_A_MSTAGENTSESSION_B_SID,(sid,))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_agent_sessions(aid):
+    rows=connection.session.execute(stmtagent.S_SID_MSTAGENTSESSION_B_AID,(aid,))
+    if rows:
+        for r in rows:
+            connection.session.execute(stmtagent.D_A_MSTAGENTSESSION_B_SID,(r['sid'],))
+    return True
+

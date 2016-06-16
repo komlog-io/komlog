@@ -48,7 +48,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             self.passport = passport.get_user_passport(cookie)
             response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
             aid = response.data['aid']
-            cookie = {'user':self.username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+            cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
             self.agent_passport = passport.get_agent_passport(cookie)
             msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
             count=0
@@ -139,14 +139,14 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
     def test_get_datasource_config_request_failure_invalid_did(self):
         ''' get_datasource_config_request should fail if did is invalid '''
         dids=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame', uuid.uuid4()]
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         for did in dids:
             response=datasourceapi.get_datasource_config_request(passport=psp, did=did)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_datasource_config_request_failure_non_existent_username(self):
         ''' get_datasource_config_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         did=uuid.uuid4().hex
         response=datasourceapi.get_datasource_config_request(passport=psp, did=did)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -180,7 +180,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         ''' get_datasources_config_request should succeed if username exists and return the datasources config '''
         username=self.username
         aid=self.agents[0]['aid']
-        cookie ={'user':username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie ={'user':username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_agent_passport(cookie)
         datasourcename='test_get_datasource_config_request_success_datasource_ds'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
@@ -244,7 +244,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
 
     def test_get_datasources_config_request_failure_non_existent_username(self):
         ''' get_datasources_config_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response=datasourceapi.get_datasources_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
@@ -267,7 +267,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         ''' upload_datasource_data should store content on a file and return a received status code '''
         username=self.username
         aid=self.agents[0]['aid']
-        cookie ={'user':username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie ={'user':username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_agent_passport(cookie)
         did=self.agents[0]['dids'][0]
         content='Datasource Content upload_datasource_data_request_success 0 1 2 3 4'
@@ -289,7 +289,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
 
     def test_upload_datasource_data_request_failure_invalid_did(self):
         ''' upload_datasource_data should fail if did is invalid'''
-        psp = passport.Passport(uid=uuid.uuid4(), aid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4(), aid=uuid.uuid4())
         dids=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame', uuid.uuid4()]
         content='Datasource Content upload_datasource_data_request_success 0 1 2 3 4'
         destination='/tmp/'
@@ -302,7 +302,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         ''' upload_datasource_data should fail if content is invalid '''
         username=self.username
         aid=self.agents[0]['aid']
-        cookie ={'user':username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie ={'user':username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_agent_passport(cookie)
         contents=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),uuid.uuid4()]
         did=self.agents[0]['dids'][0]
@@ -316,7 +316,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         ''' upload_datasource_data should fail if destination is invalid '''
         username=self.username
         aid=self.agents[0]['aid']
-        cookie ={'user':username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie ={'user':username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_agent_passport(cookie)
         did=self.agents[0]['dids'][0]
         content='Datasource Content upload_datasource_data_request_success 0 1 2 3 4'
@@ -329,7 +329,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         ''' upload_datasource_data should fail if destination is invalid '''
         username=self.username
         aid=self.agents[0]['aid']
-        cookie ={'user':username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie ={'user':username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_agent_passport(cookie)
         did=self.agents[0]['dids'][0]
         content='Datasource Content upload_datasource_data_request_success 0 1 2 3 4'
@@ -340,7 +340,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
 
     def test_upload_datasource_data_request_failure_non_existent_user(self):
         ''' upload_datasource_data should fail if user does not exists '''
-        psp = passport.Passport(uid=uuid.uuid4(), aid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4(), aid=uuid.uuid4())
         did=self.agents[0]['dids'][0]
         content='Datasource Content upload_datasource_data_request_success 0 1 2 3 4'
         destination='/tmp'
@@ -362,7 +362,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         ''' upload_datasource_data should fail if datasource does not exists '''
         username=self.username
         aid=self.agents[0]['aid']
-        cookie ={'user':username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie ={'user':username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_agent_passport(cookie)
         did=uuid.uuid4().hex
         content='Datasource Content upload_datasource_data_request_success 0 1 2 3 4'
@@ -385,7 +385,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         version='v'
         response = agentapi.new_agent_request(passport=psp, agentname=username+'_agent', pubkey=pubkey, version=version)
         aid = response.data['aid']
-        cookie = {'user':username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         agent_passport = passport.get_agent_passport(cookie)
         did=self.agents[0]['dids'][0]
         content='Datasource Content upload_datasource_data_request_success 0 1 2 3 4'
@@ -403,7 +403,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         aid=response.data['aid']
-        cookie = {'user':self.username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         agent_passport = passport.get_agent_passport(cookie)
         did=self.agents[0]['dids'][0]
         content='Datasource Content upload_datasource_data_request_success 0 1 2 3 4'
@@ -426,7 +426,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
 
     def test_update_datasource_config_request_failure_invalid_did(self):
         ''' update_datasource_config should fail if did is invalid '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         dids=[None, 2342342, uuid.uuid4(), '2342342','234 234 223 ','stringwithñ',{'a','dict'},['a','list'],('a','tuple'),json.dumps('jsonstring')]
         new_datasourcename='test_update_datasource_config_request_failure'
         data={'datasourcename':new_datasourcename}
@@ -446,7 +446,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
 
     def test_update_datasource_config_request_failure_invalid_data_type(self):
         ''' update_datasource_config should fail if data is invalid '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         did=self.agents[0]['dids'][0]
         datas=[None, 2342342, uuid.uuid4(), '2342342','234 234 223 ','stringwithñ',['a','list'],('a','tuple'),json.dumps('jsonstring')]
         for data in datas:
@@ -455,7 +455,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
 
     def test_update_datasource_config_request_failure_invalid_data_content(self):
         ''' update_datasource_config should fail if data is invalid '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         did=self.agents[0]['dids'][0]
         datas=[{'a':'dict'},]
         for datasourcename in [None, 234234, 23423.234234, ['a','list'],{'a':'dict'},('a','tuple'),'Invalid\tdatasourcename','Invalid\n','ÑÑnovalid']:
@@ -466,7 +466,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
 
     def test_update_datasource_config_request_failure_non_existent_user(self):
         ''' update_datasource_config should succeed if user and did exists, user have permission and datasourcename parameter is passed '''
-        psp =passport.Passport(uid=uuid.uuid4())
+        psp =passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         did=self.agents[0]['dids'][0]
         new_datasourcename='test_update_datasource_config_request_failure'
         data={'datasourcename':new_datasourcename}
@@ -476,7 +476,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
 
     def test_update_datasource_config_request_failure_non_existent_did(self):
         ''' update_datasource_config should succeed if user and did exists, user have permission and datasourcename parameter is passed '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         did=uuid.uuid4().hex
         new_datasourcename='test_update_datasource_config_failure_non_existent_did'
         data={'datasourcename':new_datasourcename}
@@ -505,7 +505,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         ''' new_datasource_request should succeed if parameters exists, and user has permission '''
         username=self.username
         aid=self.agents[0]['aid']
-        cookie = {'user':self.username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp= passport.get_agent_passport(cookie)
         datasourcename='test_new_datasource_request_success'
         response=datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
@@ -566,7 +566,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
 
     def test_new_datasource_request_failure_invalid_aid(self):
         ''' new_datasource_request should fail if passport passed only contains the user '''
-        psp=passport.Passport(uid=uuid.uuid4())
+        psp=passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         datasourcename='test_new_datasource_request_failure'
         response=datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -575,7 +575,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
     def test_new_datasource_request_failure_invalid_datasourcename(self):
         ''' new_datasource_request should fail if datasourcename is invalid '''
         datasourcenames=[None, 234234, 23423.02342, 'Datasource Name ÑÑ', {'a':'dict'},['a','list'],('a','tuple'),'a\ninvalid\tusername']
-        psp = passport.Passport(uid=uuid.uuid4(), aid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4(), aid=uuid.uuid4())
         for datasourcename in datasourcenames:
             response=datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
@@ -608,7 +608,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
     def test_get_datasource_data_request_failure_invalid_did(self):
         ''' get_datasource_data_request should fail if did is invalid '''
         dids=[None, 234234, 23423.02342, 'UserName', {'a':'dict'},['a','list'],('a','tuple'),'a\ninvalid\tusername',uuid.uuid4()]
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         for did in dids:
             response=datasourceapi.get_datasource_data_request(passport=psp, did=did)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
@@ -616,7 +616,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
     def test_get_datasource_data_request_failure_invalid_tid(self):
         ''' get_datasource_data_request should fail if tid is invalid '''
         tids=[234234, 23423.02342, 'UserName', {'a':'dict'},['a','list'],('a','tuple'),'a\ninvalid\tusername',uuid.uuid4()]
-        psp=passport.Passport(uid=uuid.uuid4())
+        psp=passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         did=uuid.uuid4().hex
         for tid in tids:
             response=datasourceapi.get_datasource_data_request(passport=psp, did=did, tid=tid)
@@ -632,7 +632,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
 
     def test_get_datasource_data_request_failure_non_existent_username(self):
         ''' get_datasource_data_request should fail if user does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         did=self.agents[0]['dids'][0]
         response=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -756,7 +756,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
     def test_delete_datasource_request_failure_invalid_did(self):
         ''' delete_datasource_request should fail if did is invalid '''
         dids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         for did in dids:
             response=datasourceapi.delete_datasource_request(passport=psp, did=did)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)

@@ -50,7 +50,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             self.passport = passport.get_user_passport(cookie)
             response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
             aid = response.data['aid']
-            cookie = {'user':self.username, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+            cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
             self.agent_passport = passport.get_agent_passport(cookie)
             msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
             count=0
@@ -223,7 +223,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
 
     def test_new_datasource_datapoint_request_failure_user_does_not_exist(self):
         ''' new_datasource_datapoint_request should fail if user does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         did=self.agents[0]['dids'][0]
         datapointname='test_new_datasource_datapoint_request_failure'
         sequence='23423234565432345678'
@@ -311,7 +311,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertIsNotNone(datapoint)
         self.assertEqual(datapoint['datapointname'],'.'.join((datasource_config.data['datasourcename'],datapointname)))
         self.assertEqual(datapoint['did'],uuid.UUID(did))
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         pid=datapoint['pid'].hex
         data={'datapointname':'datapointname','color':'#FFAADD'}
         response=datapointapi.update_datapoint_config_request(passport=psp, pid=pid, data=data)

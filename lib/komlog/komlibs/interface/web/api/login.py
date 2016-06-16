@@ -4,6 +4,7 @@ This file defines the logic associated with web interface operations
 
 '''
 
+import uuid
 from komlog.komfig import logging
 from base64 import b64encode, b64decode
 from komlog.komlibs.auth import authorization
@@ -36,7 +37,7 @@ def _user_login_request(username, password):
         return response.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, error=Errors.E_IWAL_ULR_AUTHERR)
     data={'redirect':'/home'}
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
-    resp.cookie={'user':username,'aid':None,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+    resp.cookie={'user':username,'aid':None,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
     return resp
 
 def _agent_login_generate_challenge_request(username, pubkey):
@@ -69,7 +70,7 @@ def _agent_login_validate_challenge_request(username, pubkey, challenge, signatu
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALVCR_IPK)
     aid=agentapi.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge, signature=signature)
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
-    resp.cookie={'user':username,'aid':aid.hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+    resp.cookie={'user':username,'aid':aid.hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
     return resp
 
 

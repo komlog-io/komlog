@@ -16,8 +16,9 @@ from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.widget import api as widgetapi
 from komlog.komlibs.gestaccount.dashboard import api as dashboardapi
 from komlog.komlibs.gestaccount.widget import types as widgettypes
-from komlog.komlibs.interface.imc.model import messages, responses
 from komlog.komlibs.interface.imc import status, exceptions
+from komlog.komlibs.interface.imc.errors import Errors
+from komlog.komlibs.interface.imc.model import messages, responses
 from komlog.komlibs.interface.web.model import operation
 from komlog.komlibs.mail import api as mailapi
 

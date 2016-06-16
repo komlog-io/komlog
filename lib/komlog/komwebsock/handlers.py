@@ -3,6 +3,7 @@ import json
 from tornado import websocket
 from komlog.komfig import logging
 from komlog.komwebsock import auth
+from komlog.komlibs.interface.websocket import session
 from komlog.komlibs.interface.websocket import api as wsapi
 
 class WSConnectionHandler(websocket.WebSocketHandler):
@@ -10,8 +11,9 @@ class WSConnectionHandler(websocket.WebSocketHandler):
     def check_origin(self, origin):
         return True
 
+    @auth.agent_authenticated
     def open(self):
-        pass
+        session.set_session(passport=self.passport, callback=self.agent_callback)
 
     @auth.agent_authenticated
     def on_message(self, message):
@@ -23,11 +25,16 @@ class WSConnectionHandler(websocket.WebSocketHandler):
             response=wsapi.process_message(passport=self.passport, message=message)
             self.write_message(json.dumps({'status':response.status,'reason':response.reason,'error':response.error}))
 
+    @auth.agent_authenticated
     def on_close(self):
+        session.unset_session(passport=self.passport)
         logging.logger.debug('session closed')
 
+    def agent_callback(self, message):
+        self.write_message(message)
+
 HANDLERS = [
-            (r'/', WSConnectionHandler),
-            ]
+    (r'/', WSConnectionHandler),
+]
 
 

@@ -383,3 +383,98 @@ class KomcassApiAgentTest(unittest.TestCase):
             db_ch = agentapi.get_agent_challenge(aid=aid, challenge=challenge)
             self.assertIsNone(db_ch)
 
+    def test_get_agent_session_not_found(self):
+        ''' get_agent_session should return none if sid is not found '''
+        sid=uuid.uuid4()
+        self.assertIsNone(agentapi.get_agent_session(sid=sid))
+
+    def test_get_agent_session_found(self):
+        ''' get_agent_session should return an AgentSession object if sid is found '''
+        sid=uuid.uuid4()
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        imc_address='host@imc.address'
+        generated=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,generated=generated)
+        self.assertTrue(agentapi.insert_agent_session(session))
+        db_session=agentapi.get_agent_session(sid=sid)
+        self.assertIsNotNone(db_session)
+        self.assertEqual(db_session.sid,sid)
+        self.assertEqual(db_session.aid,aid)
+        self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.generated,generated)
+        self.assertEqual(db_session.imc_address,imc_address)
+
+    def test_insert_agent_session_failure_invalid_agent_session_instance(self):
+        ''' insert_agent_session should fail if obj is not and AgentSession instance '''
+        sessions=[None, 123123, '1231231', {'a':'dict'},['a','list'], uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'), {'set'}]
+        for session in sessions:
+            self.assertFalse(agentapi.insert_agent_session(obj=session))
+
+    def test_insert_agent_session_success(self):
+        ''' insert_agent_session should return True and insert the AgentSession object '''
+        sid=uuid.uuid4()
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        imc_address='host@imc.address'
+        generated=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,generated=generated)
+        self.assertTrue(agentapi.insert_agent_session(session))
+        db_session=agentapi.get_agent_session(sid=sid)
+        self.assertIsNotNone(db_session)
+        self.assertEqual(db_session.sid,sid)
+        self.assertEqual(db_session.aid,aid)
+        self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.generated,generated)
+        self.assertEqual(db_session.imc_address,imc_address)
+
+    def test_delete_agent_session_success_agent_session_does_not_exist(self):
+        ''' delete_agent_session should return True even if sid does not exist '''
+        sid=uuid.uuid4()
+        self.assertTrue(agentapi.delete_agent_session(sid=sid))
+
+    def test_delete_agent_session_success(self):
+        ''' delete_agent_session should return True and delete the AgentSession object '''
+        sid=uuid.uuid4()
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        imc_address='host@imc.address'
+        generated=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,generated=generated)
+        self.assertTrue(agentapi.insert_agent_session(session))
+        db_session=agentapi.get_agent_session(sid=sid)
+        self.assertIsNotNone(db_session)
+        self.assertEqual(db_session.sid,sid)
+        self.assertEqual(db_session.aid,aid)
+        self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.generated,generated)
+        self.assertEqual(db_session.imc_address,imc_address)
+        self.assertTrue(agentapi.delete_agent_session(sid=sid))
+        db_session=agentapi.get_agent_session(sid=sid)
+        self.assertIsNone(db_session)
+
+    def test_delete_agent_sessions_success_agent_does_not_exist(self):
+        ''' delete_agent_session should return True even if aid does not exist '''
+        aid=uuid.uuid4()
+        self.assertTrue(agentapi.delete_agent_sessions(aid=aid))
+
+    def test_delete_agent_sessions_success(self):
+        ''' delete_agent_sessions should return True and delete all agent sessions '''
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        sid1=uuid.uuid4()
+        imc_address1='host@imc.address'
+        generated1=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid1, aid=aid,uid=uid,imc_address=imc_address1,generated=generated1)
+        self.assertTrue(agentapi.insert_agent_session(session))
+        sid2=uuid.uuid4()
+        imc_address2='host@imc.address2'
+        generated2=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid2, aid=aid,uid=uid,imc_address=imc_address2,generated=generated2)
+        self.assertTrue(agentapi.insert_agent_session(session))
+        self.assertIsNotNone(agentapi.get_agent_session(sid=sid1))
+        self.assertIsNotNone(agentapi.get_agent_session(sid=sid2))
+        self.assertTrue(agentapi.delete_agent_sessions(aid=aid))
+        self.assertIsNone(agentapi.get_agent_session(sid=sid1))
+        self.assertIsNone(agentapi.get_agent_session(sid=sid2))
+

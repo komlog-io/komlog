@@ -20,7 +20,8 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         ''' process_message should fail if message has no version field '''
         uid=uuid.uuid4()
         aid=uuid.uuid4()
-        psp = Passport(uid,aid)
+        sid=uuid.uuid4()
+        psp = Passport(uid=uid,sid=sid,aid=aid)
         msg={'action':1}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
@@ -31,7 +32,8 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         ''' process_message should fail if message has no action field '''
         uid=uuid.uuid4()
         aid=uuid.uuid4()
-        psp = Passport(uid,aid)
+        sid=uuid.uuid4()
+        psp = Passport(uid=uid,sid=sid,aid=aid)
         msg={'v':1}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
@@ -43,7 +45,8 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         versions=['\tadas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],{'dict':1}, uuid.uuid4()]
         uid=uuid.uuid4()
         aid=uuid.uuid4()
-        psp = Passport(uid,aid)
+        sid=uuid.uuid4()
+        psp = Passport(uid=uid,sid=sid,aid=aid)
         msg={'v':None,'action':'send_ds_data','payload':{'data':'data'}}
         for version in versions:
             msg['v']=version
@@ -57,7 +60,8 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         actions=[None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],{'dict':1}, uuid.uuid4()]
         uid=uuid.uuid4()
         aid=uuid.uuid4()
-        psp = Passport(uid,aid)
+        sid=uuid.uuid4()
+        psp = Passport(uid=uid,sid=sid,aid=aid)
         msg={'v':1,'action':None,'payload':{'data':'data'}}
         for action in actions:
             msg['action']=action
@@ -80,7 +84,8 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         ''' process_message should fail if message payload is invalid '''
         uid = uuid.uuid4()
         aid = uuid.uuid4()
-        psp = Passport(uid,aid)
+        sid=uuid.uuid4()
+        psp = Passport(uid=uid,sid=sid,aid=aid)
         msg={'v':1,'action':'send_ds_data','payload':{'data':'data'}}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
@@ -91,7 +96,8 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         ''' process_message should fail if protocol version is not known '''
         uid = uuid.uuid4()
         aid = uuid.uuid4()
-        psp = Passport(uid,aid)
+        sid=uuid.uuid4()
+        psp = Passport(uid=uid,sid=sid,aid=aid)
         msg={'v':100000000000,'action':'send_ds_data','payload':{'data':'data'}}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))

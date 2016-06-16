@@ -18,7 +18,7 @@ class InterfaceWebSocketProtocolV1ApiTest(unittest.TestCase):
     def test_process_message_failure_non_existent_action(self):
         ''' process_message should fail if action is invalid '''
         action=999999999999
-        psp = Passport(uid=uuid.uuid4(), aid=uuid.uuid4())
+        psp = Passport(uid=uuid.uuid4(), aid=uuid.uuid4(),sid=uuid.uuid4())
         msg={'action':action}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
@@ -27,7 +27,7 @@ class InterfaceWebSocketProtocolV1ApiTest(unittest.TestCase):
 
     def test_process_message_failure_message_without_action_field(self):
         ''' process_message should fail if message has no action field '''
-        psp = Passport(uid=uuid.uuid4(), aid=uuid.uuid4())
+        psp = Passport(uid=uuid.uuid4(), aid=uuid.uuid4(),sid=uuid.uuid4())
         msg={'v':1}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
@@ -36,7 +36,7 @@ class InterfaceWebSocketProtocolV1ApiTest(unittest.TestCase):
 
     def test_process_message_failure_invalid_message_payload_SEND_DS_DATA_message(self):
         ''' process_message should fail if message payload is invalid '''
-        psp = Passport(uid=uuid.uuid4(), aid=uuid.uuid4())
+        psp = Passport(uid=uuid.uuid4(), aid=uuid.uuid4(),sid=uuid.uuid4())
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'data':'data'}}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
@@ -45,7 +45,7 @@ class InterfaceWebSocketProtocolV1ApiTest(unittest.TestCase):
 
     def test_process_message_failure_invalid_message_payload_SEND_DP_DATA_message(self):
         ''' process_message should fail if message payload is invalid '''
-        psp = Passport(uid=uuid.uuid4(), aid=uuid.uuid4())
+        psp = Passport(uid=uuid.uuid4(), aid=uuid.uuid4(),sid=uuid.uuid4())
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'data':'data'}}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))
@@ -54,7 +54,7 @@ class InterfaceWebSocketProtocolV1ApiTest(unittest.TestCase):
 
     def test_process_message_failure_username_not_found(self):
         ''' process_message should fail if username is not found '''
-        psp = Passport(uid=uuid.uuid4(), aid=uuid.uuid4())
+        psp = Passport(uid=uuid.uuid4(), aid=uuid.uuid4(),sid=uuid.uuid4())
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'ts':time.time(),'content':'content', 'uri':'uri'}}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, modresp.Response))

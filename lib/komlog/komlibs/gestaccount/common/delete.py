@@ -90,6 +90,7 @@ def delete_agent(aid):
     cassapiagent.delete_agent_pubkey(uid=agent.uid, pubkey=agent.pubkey)
     cassapiagent.delete_agent_challenges(aid=aid)
     cassapiquote.delete_agent_quotes(aid=aid)
+    cassapiagent.delete_agent_sessions(aid=aid)
     return True
 
 def delete_datasource(did, delete_datapoints=True):

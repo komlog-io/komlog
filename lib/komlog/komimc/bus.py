@@ -21,6 +21,7 @@ class MessageBus:
         self.module_id = module_id
         self.module_instance = module_instance
         self.running_host = running_host
+        self.imc_address = routing.get_imc_address(module_id, module_instance, running_host)
         self.addr_list = routing.get_mod_address(module_id,module_instance,running_host)
         try:
             self.connection = redis.StrictRedis(unix_socket_path=self.broker) if os.path.isabs(self.broker) else redis.StrictRedis(host=self.broker)
@@ -73,7 +74,7 @@ class MessageBus:
             logging.logger.debug('Exception retrieving messages (timeout='+str(timeout)+') address_list: '+str(addr))
             logging.logger.exception('Exception retrieveing message: '+str(e))
             return None
-    
+
 def initialize_msgbus(module_name, module_instance, hostname):
     global msgbus
     broker = config.get(options.MESSAGE_BROKER)

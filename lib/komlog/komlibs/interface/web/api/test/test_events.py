@@ -85,7 +85,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
 
     def test_get_user_events_request_failure_user_not_found(self):
         ''' get_user_events_request should fail if username is not found '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response=eventsapi.get_user_events_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, [])
@@ -123,7 +123,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
 
     def test_disable_event_request_failure_user_not_found(self):
         ''' disable_event_request should fail if username is not found '''
-        psp = passport.Passport(uid=uuid.uuid4())
+        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         seq=timeuuid.get_custom_sequence(timeuuid.uuid1())
         response=eventsapi.disable_event_request(passport=psp, seq=seq)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
@@ -194,7 +194,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
+        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
         datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
         content='content'
@@ -223,7 +223,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
+        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
         datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
         content='content'
@@ -252,7 +252,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
+        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
         datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
         content='content'
@@ -281,7 +281,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
+        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
         datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
         content='content'
@@ -310,7 +310,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
+        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
         datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
         content='content'
@@ -339,7 +339,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         datasourcename='test_event_response_request_failure_invalid_identified_item'
-        psp_agent = passport.get_agent_passport({'user':self.username,'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
+        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
         datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
         content='content'
@@ -386,7 +386,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
+        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
         datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
         content='content'
