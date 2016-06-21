@@ -603,3 +603,9 @@ class Errors(Enum):
     E_GCD_DDPFDS_IP   = 16800 #: dissociate_datapoint_from_datasource: invalid pid
     E_GCD_DDPFDS_DPNF = 16801 #: dissociate_datapoint_from_datasource: datapoint not found
 
+    E_GCD_DDPDA_IPID  = 16900 #: delete_datapoint_data_at: invalid pid
+    E_GCD_DDPDA_IDATE = 16901 #: delete_datapoint_data_at: invalid date
+
+    E_GCD_DDSDA_IDID  = 16900 #: delete_datasource_data_at: invalid did
+    E_GCD_DDSDA_IDATE = 16901 #: delete_datasource_data_at: invalid date
+

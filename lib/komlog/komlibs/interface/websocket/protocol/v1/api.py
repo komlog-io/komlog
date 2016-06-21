@@ -24,7 +24,8 @@ def process_message(passport, message):
         return Response(status=status.PROTOCOL_ERROR, error=error.value,reason='unsupported action')
 
 _processing_funcs = {
-    Messages.SEND_DS_DATA:procmsg._process_send_ds_data,
-    Messages.SEND_DP_DATA:procmsg._process_send_dp_data,
+    Messages.SEND_DS_DATA.value:procmsg._process_send_ds_data,
+    Messages.SEND_DP_DATA.value:procmsg._process_send_dp_data,
+    Messages.SEND_MULTI_DATA.value:procmsg._process_send_multi_data,
 }
 

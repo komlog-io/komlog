@@ -9,6 +9,7 @@ from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operation
 OPAUTHS={
     Operations.NEW_DATASOURCE:AuthOperations.NEW_DATASOURCE,
     Operations.NEW_USER_DATAPOINT:AuthOperations.NEW_USER_DATAPOINT,
+    Operations.DATASOURCE_DATA_STORED:AuthOperations.DATASOURCE_DATA_STORED,
 }
 
 class WSIFaceOperation:
@@ -97,7 +98,7 @@ class NewUserDatapointOperation(WSIFaceOperation):
     def __init__(self, uid, aid, pid):
         self._uid = None
         self._aid = None
-        self._did = None
+        self._pid = None
         self.uid = uid
         self.aid = aid
         self.pid = pid
@@ -147,4 +148,45 @@ class NewUserDatapointOperation(WSIFaceOperation):
             self._pid = value
         else:
             raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_NUDPO_IPT)
+
+class DatasourceDataStoredOperation(WSIFaceOperation):
+    def __init__(self, did, date):
+        self._did = None
+        self._date = None
+        self.did = did
+        self.date = date
+        super().__init__(oid=Operations.DATASOURCE_DATA_STORED)
+
+    @property
+    def params(self):
+        return {
+            'did':self._did,
+            'date':self._date,
+        }
+
+    @params.setter
+    def params(self, value):
+        raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_WSIO_PMNA)
+
+    @property
+    def did(self):
+        return self._did
+
+    @did.setter
+    def did(self, value):
+        if args.is_valid_uuid(value):
+            self._did = value
+        else:
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_DSDSTO_IDID)
+
+    @property
+    def date(self):
+        return self._date
+
+    @date.setter
+    def date(self, value):
+        if args.is_valid_date(value):
+            self._date = value
+        else:
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_DSDSTO_IDATE)
 

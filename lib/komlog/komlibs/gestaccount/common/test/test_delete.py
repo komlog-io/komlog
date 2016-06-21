@@ -1,5 +1,6 @@
 import unittest
 import uuid
+import decimal
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
 from komlog.komcass.api import datasource as cassapidatasource
@@ -8,6 +9,7 @@ from komlog.komcass.api import widget as cassapiwidget
 from komlog.komcass.api import dashboard as cassapidashboard
 from komlog.komcass.api import snapshot as cassapisnapshot
 from komlog.komcass.api import circle as cassapicircle
+from komlog.komcass.model.orm import datasource as ormdatasource
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.gestaccount.user import api as userapi
@@ -435,4 +437,73 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertEqual(datapoint_config['did'], None)
         self.assertEqual(graphkin.get_kin_widgets(ido=widget['wid']),[])
         self.assertEqual(graphkin.get_kin_widgets(ido=widgetds['wid']),[])
+
+    def test_delete_datapoint_data_at_failure_invalid_pid(self):
+        ''' delete_datapoint_data_at should fail if pid is invalid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        date=timeuuid.uuid1()
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                deleteapi.delete_datapoint_data_at(pid=pid, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DDPDA_IPID)
+
+    def test_delete_datapoint_data_at_failure_invalid_date(self):
+        ''' delete_datapoint_data_at should fail if date is invalid '''
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        pid=uuid.uuid4()
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                deleteapi.delete_datapoint_data_at(pid=pid, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DDPDA_IDATE)
+
+    def test_delete_datapoint_data_at_success_no_data_existed_previously(self):
+        ''' delete_datapoint_data_at should succeed even if data did not exist previously '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertTrue(deleteapi.delete_datapoint_data_at(pid,date))
+
+    def test_delete_datapoint_data_at_success_data_existed_previously(self):
+        ''' delete_datapoint_data_at should succeed even if data did not exist previously '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        value=decimal.Decimal(5)
+        self.assertTrue(cassapidatapoint.insert_datapoint_data(pid, date, value))
+        self.assertIsNotNone(cassapidatapoint.get_datapoint_data_at(pid, date))
+        self.assertTrue(deleteapi.delete_datapoint_data_at(pid,date))
+        self.assertIsNone(cassapidatapoint.get_datapoint_data_at(pid, date))
+
+    def test_delete_datasource_data_at_failure_invalid_did(self):
+        ''' delete_datasource_data_at should fail if did is invalid '''
+        dids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        date=timeuuid.uuid1()
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                deleteapi.delete_datasource_data_at(did=did, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DDSDA_IDID)
+
+    def test_delete_datasource_data_at_failure_invalid_date(self):
+        ''' delete_datasource_data_at should fail if date is invalid '''
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        did=uuid.uuid4()
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                deleteapi.delete_datasource_data_at(did=did, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_GCD_DDSDA_IDATE)
+
+    def test_delete_datasource_data_at_success_no_data_existed_previously(self):
+        ''' delete_datasource_data_at should succeed even if data did not exist previously '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertTrue(deleteapi.delete_datasource_data_at(did,date))
+
+    def test_delete_datasource_data_at_success_data_existed_previously(self):
+        ''' delete_datasource_data_at should succeed even if data did not exist previously '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        content='content'
+        dsdata=ormdatasource.DatasourceData(did,date,content)
+        self.assertTrue(cassapidatasource.insert_datasource_data(dsdata))
+        self.assertIsNotNone(cassapidatasource.get_datasource_data_at(did, date))
+        self.assertTrue(deleteapi.delete_datasource_data_at(did,date))
+        self.assertIsNone(cassapidatasource.get_datasource_data_at(did, date))
 

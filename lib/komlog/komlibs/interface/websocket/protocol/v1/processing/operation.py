@@ -25,9 +25,10 @@ from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operation
 def process_operation(operation):
     if not isinstance(operation, modop.WSIFaceOperation):
         raise exceptions.BadParametersException(error=Errors.E_IWSPV1PO_ROA_IOT)
-    if operation.oid not in _operation_funcs:
+    try:
+        return _operation_funcs[operation.oid](operation)
+    except KeyError:
         raise exceptions.OperationValidationException(error=Errors.E_IWSPV1PO_ROA_ONF)
-    return _operation_funcs[operation.oid](operation)
 
 def _process_operation_new_datasource(operation):
     if authupdate.update_resources(operation=operation.auth_operation, params=operation.params):
@@ -51,8 +52,18 @@ def _process_operation_new_user_datapoint(operation):
     else:
         return False
 
+def _process_operation_datasource_data_stored(operation):
+    message=messages.UpdateQuotesMessage(operation=operation.auth_operation,params=operation.params)
+    msgapi.send_message(message)
+    message=messages.GenerateTextSummaryMessage(did=operation.did,date=operation.date)
+    msgapi.send_message(message)
+    message=messages.MapVarsMessage(did=operation.did,date=operation.date)
+    msgapi.send_message(message)
+    return True
+
 _operation_funcs = {
     Operations.NEW_DATASOURCE:_process_operation_new_datasource,
     Operations.NEW_USER_DATAPOINT:_process_operation_new_user_datapoint,
+    Operations.DATASOURCE_DATA_STORED:_process_operation_datasource_data_stored,
 }
 

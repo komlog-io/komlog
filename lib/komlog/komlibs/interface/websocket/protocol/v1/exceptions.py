@@ -18,19 +18,23 @@ class WebSocketProtocolException(Exception):
 
 class BadParametersException(WebSocketProtocolException):
     def __init__(self, error):
-        super(BadParametersException,self).__init__(error=error)
+        super().__init__(error=error)
 
 class ResponseValidationException(WebSocketProtocolException):
     def __init__(self, error):
-        super(ResponseValidationException,self).__init__(error=error)
+        super().__init__(error=error)
 
 class MessageValidationException(WebSocketProtocolException):
     def __init__(self, error):
-        super(MessageValidationException,self).__init__(error=error)
+        super().__init__(error=error)
 
 class OperationValidationException(WebSocketProtocolException):
     def __init__(self, error):
-        super(OperationValidationException,self).__init__(error=error)
+        super().__init__(error=error)
+
+class OperationExecutionException(WebSocketProtocolException):
+    def __init__(self, error):
+        super().__init__(error=error)
 
 PROTOCOL_ERROR_STATUS_EXCEPTION_LIST=(
     BadParametersException,
@@ -47,6 +51,7 @@ MESSAGE_EXECUTION_ERROR_STATUS_EXCEPTION_LIST=(
     gestexcept.DatapointCreationException,
     gestexcept.DatapointStoreValueException,
     OperationValidationException,
+    OperationExecutionException,
     ResponseValidationException,
 )
 

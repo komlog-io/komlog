@@ -205,3 +205,17 @@ def delete_snapshot(nid):
         raise exceptions.BadParametersException(error=Errors.E_GCD_DN_IN)
     return True if cassapisnapshot.delete_snapshot(nid=nid) else False
 
+def delete_datapoint_data_at(pid, date):
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=Errors.E_GCD_DDPDA_IPID)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=Errors.E_GCD_DDPDA_IDATE)
+    return cassapidatapoint.delete_datapoint_data_at(pid=pid, date=date)
+
+def delete_datasource_data_at(did, date):
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_GCD_DDSDA_IDID)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=Errors.E_GCD_DDSDA_IDATE)
+    return cassapidatasource.delete_datasource_data_at(did=did, date=date)
+

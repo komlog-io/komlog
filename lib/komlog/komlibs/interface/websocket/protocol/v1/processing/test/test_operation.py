@@ -78,3 +78,26 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
                     break
         self.assertEqual(message_retrieved, message_expected)
 
+    def test_process_operation_datasource_data_stored_success(self):
+        ''' _process_operation_datasource_data_stored should succeed and send the corresponding messages '''
+        did=uuid.uuid4()
+        date=uuid.uuid1()
+        op=modop.DatasourceDataStoredOperation(did=did, date=date)
+        self.assertTrue(operation.process_operation(operation=op))
+        message_expected={messages.GENERATE_TEXT_SUMMARY_MESSAGE:1,
+                          messages.UPDATE_QUOTES_MESSAGE:1,
+                          messages.MAP_VARS_MESSAGE:1}
+        message_retrieved={}
+        for msg_type in routing.MESSAGE_TO_ADDRESS_MAPPING.keys():
+            msg_addr=routing.get_address(type=msg_type, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
+            while True:
+                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
+                if msg:
+                    message_retrieved[msg.type] = message_retrieved.get(msg.type,0) + 1
+                    msg_result=msgapi.process_message(msg)
+                    if msg_result:
+                        msgapi.process_msg_result(msg_result)
+                else:
+                    break
+        self.assertEqual(message_retrieved, message_expected)
+

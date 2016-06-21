@@ -9,15 +9,16 @@ import uuid
 from komlog.komlibs.general.crypto import crypto
 
 
-KOMLOGID=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\n)$')
-KOMLOGDESC=re.compile('^[ a-zA-Z0-9\-\._@#!\(\):/$%&+=]+(?!\n)$')
-KOMLOGURI=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\n)$')
-KOMLOGRELURI=re.compile('^([a-zA-Z0-9\-_]+\.\.?)*[a-zA-Z0-9\-_]+(?!\n)$')
+KOMLOGID=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\s)$')
+KOMLOGDESC=re.compile('^[ a-zA-Z0-9\-\._@#!\(\):/$%&+=]+(?!\s)$')
+KOMLOGURI=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$')
+KOMLOGRELURI=re.compile('^([a-zA-Z0-9\-_]+\.\.?)*[a-zA-Z0-9\-_]+(?!\s)$')
 NOTVERSION=re.compile('[^ a-zA-Z0-9\-\+/:\._]')
 CODE=re.compile('^[a-zA-Z0-9]+$')
 WHITESPACES=re.compile(' ')
 ASCII=re.compile('a-zA-Z')
 NUMBERS=re.compile('0-9')
+STRINGNUMBER=re.compile('^[+-]?([0-9]*\.)?[0-9]+([e|E][-|+]?[0-9]+)?(?!\s)$')
 EMAIL=re.compile('''^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$''')
 SEQUENCE=re.compile('^[a-fA-F0-9]{20}$')
 
@@ -85,9 +86,14 @@ def is_valid_relative_uri(argument):
     return False
 
 def is_valid_datasource_content(argument):
-    if not isinstance(argument,str):
-        return False
-    return True
+    if isinstance(argument, str) and len(argument.encode('utf-8'))<=2**17:
+        return True
+    return False
+
+def is_valid_datapoint_content(argument):
+    if isinstance(argument, str) and STRINGNUMBER.search(argument) and len(argument.encode('utf-8'))<=2**7:
+        return True
+    return False
 
 def is_valid_string(argument):
     if not isinstance(argument,str):
@@ -110,7 +116,6 @@ def is_valid_email(argument):
     if EMAIL.search(argument):
         return True
     return False
-
 
 def is_valid_code(argument):
     if isinstance(argument,str):
@@ -161,10 +166,9 @@ def is_valid_int(argument):
         return False
 
 def is_valid_timestamp(argument):
-    if (isinstance(argument, int) or isinstance(argument, float)) and argument>0:
+    if (isinstance(argument,int) or isinstance(argument,float)) and argument >= 0 and argument <= 2**32-1:
         return True
-    else:
-        return False
+    return False
 
 def is_valid_sequence(argument):
     if isinstance(argument,str) and SEQUENCE.search(argument):
@@ -212,8 +216,7 @@ def is_valid_string_int(argument):
                 return False
         except Exception:
             return False
-    else:
-        return False
+    return False
 
 def is_valid_string_float(argument):
     if isinstance(argument,str):
@@ -225,8 +228,7 @@ def is_valid_string_float(argument):
                 return False
         except Exception:
             return False
-    else:
-        return False
+    return False
 
 def is_valid_date(argument):
     if isinstance(argument, uuid.UUID) and argument.version==1:
