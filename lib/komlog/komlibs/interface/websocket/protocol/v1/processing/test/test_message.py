@@ -1057,3 +1057,461 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         pid=datapoint['pid']
         existing_dp_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
         self.assertIsNone(existing_dp_stats)
+
+    def test__process_hook_to_uri_failure_invalid_message(self):
+        ''' _process_hook_to_uri should fail if message is invalid '''
+        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4())
+        msg={'key':'a message malformed'}
+        resp=message._process_hook_to_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.PROTOCOL_ERROR)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_HTUM_IMT.value)
+
+    def test__process_hook_to_uri_failure_different_message_passed(self):
+        ''' _process_hook_to_uri should fail if message is not of type HOOK_TO_URI '''
+        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.ds','ts':time.time(),'content':'content'}}
+        resp=message._process_hook_to_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.PROTOCOL_ERROR)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_HTUM_IA.value)
+
+    def test__process_hook_to_uri_failure_uri_not_found(self):
+        ''' _process_hook_to_uri should fail if uri does not exist '''
+        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'system.ds'}}
+        resp=message._process_hook_to_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PHTU_UNF.value)
+        self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
+
+    def test__process_hook_to_uri_failure_operation_not_allowed_for_uri_type(self):
+        ''' _process_hook_to_uri should fail if uri type is not datasource nor datapoint '''
+        username='test_process_hook_to_uri_failure_operation_not_allowed_for_uri_type'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri.widget'}}
+        self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
+        resp=message._process_hook_to_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PHTU_ONA.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+
+    def test__process_hook_to_uri_failure_no_read_permission_for_datasource(self):
+        ''' _process_hook_to_uri should fail if uri type is datasource and no read perm is found'''
+        username='test_process_hook_to_uri_failure_no_read_permission_for_datasource'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
+        self.assertIsNotNone(datasource)
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
+        self.assertIsNotNone(uri_info)
+        #res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
+        #self.assertIsNotNone(msgapi.process_message(res_msg))
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri.ds'}}
+        resp=message._process_hook_to_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, autherrors.E_ARA_AHTDS_RE.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+
+    def test__process_hook_to_uri_success_datasource_uri(self):
+        ''' _process_hook_to_uri should succeed if uri type is ds and read perm is found'''
+        username='test_process_hook_to_uri_success_datasource_uri'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
+        self.assertIsNotNone(datasource)
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
+        self.assertIsNotNone(uri_info)
+        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
+        self.assertIsNotNone(msgapi.process_message(res_msg))
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri.ds'}}
+        resp=message._process_hook_to_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp.sid])
+
+    def test__process_hook_to_uri_success_datasource_uri_multiple_sessions(self):
+        ''' _process_hook_to_uri should succeed if uri type is ds and read perm is found and register all sessions hooked to the ds '''
+        username='test_process_hook_to_uri_success_datasource_uri_multiple_sessions'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
+        self.assertIsNotNone(datasource)
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
+        self.assertIsNotNone(uri_info)
+        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
+        self.assertIsNotNone(msgapi.process_message(res_msg))
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri.ds'}}
+        resp=message._process_hook_to_uri(psp1, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp1.sid])
+        resp=message._process_hook_to_uri(psp2, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid]))
+        resp=message._process_hook_to_uri(psp3, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid,psp3.sid]))
+        #if the same session resend the message, it has no efect over hooked sids
+        resp=message._process_hook_to_uri(psp3, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid,psp3.sid]))
+
+    def test__process_hook_to_uri_failure_no_read_permission_for_datapoint(self):
+        ''' _process_hook_to_uri should fail if uri is dp and we dont have read perm over it'''
+        username='test_process_hook_to_uri_failure_no_read_permission_for_datapoint'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
+        self.assertIsNotNone(msgapi.process_message(res_msg))
+        datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
+        self.assertIsNotNone(datapoint)
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.dp')
+        self.assertIsNotNone(uri_info)
+        #res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
+        #self.assertIsNotNone(msgapi.process_message(res_msg))
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri.dp'}}
+        resp=message._process_hook_to_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, autherrors.E_ARA_AHTDP_RE.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+
+    def test__process_hook_to_uri_success_datapoint_uri(self):
+        ''' _process_hook_to_uri should succeed if uri is dp and we have read perm over it'''
+        username='test_process_hook_to_uri_success_datapoint_uri'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
+        self.assertIsNotNone(msgapi.process_message(res_msg))
+        datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
+        self.assertIsNotNone(datapoint)
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.dp')
+        self.assertIsNotNone(uri_info)
+        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
+        self.assertIsNotNone(msgapi.process_message(res_msg))
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri.dp'}}
+        resp=message._process_hook_to_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp.sid])
+
+    def test__process_hook_to_uri_success_datapoint_uri_multiple_sessions(self):
+        ''' _process_hook_to_uri should succeed if uri is dp and we have read perm over it and register all the sessions hooked '''
+        username='test_process_hook_to_uri_success_datapoint_uri_multiple_sessions'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
+        self.assertIsNotNone(msgapi.process_message(res_msg))
+        datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
+        self.assertIsNotNone(datapoint)
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.dp')
+        self.assertIsNotNone(uri_info)
+        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
+        self.assertIsNotNone(msgapi.process_message(res_msg))
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri.dp'}}
+        resp=message._process_hook_to_uri(psp1, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp1.sid])
+        resp=message._process_hook_to_uri(psp2, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid]))
+        resp=message._process_hook_to_uri(psp3, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid,psp3.sid]))
+
+    def test__process_unhook_from_uri_failure_invalid_message(self):
+        ''' _process_unhook_from_uri should fail if message is invalid '''
+        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4())
+        msg={'key':'a message malformed'}
+        resp=message._process_unhook_from_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.PROTOCOL_ERROR)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_UHFUM_IMT.value)
+
+    def test__process_unhook_from_uri_failure_different_message_passed(self):
+        ''' _process_unhook_from_uri should fail if message is not of type UNHOOK_FROM_URI '''
+        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'system.ds'}}
+        resp=message._process_unhook_from_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.PROTOCOL_ERROR)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_UHFUM_IA.value)
+
+    def test__process_unhook_from_uri_failure_uri_not_found(self):
+        ''' _process_unhook_from_uri should fail if uri does not exist '''
+        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'system.ds'}}
+        resp=message._process_unhook_from_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PUHFU_UNF.value)
+        self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
+
+    def test__process_unhook_from_uri_failure_operation_not_allowed_for_uri_type(self):
+        ''' _process_unhook_from_uri should fail if uri type is not datasource nor datapoint '''
+        username='test_process_unhook_from_uri_failure_operation_not_allowed_for_uri_type'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri.widget'}}
+        self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
+        resp=message._process_unhook_from_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PUHFU_ONA.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+
+    def test__process_unhook_from_uri_failure_no_read_permission_for_datasource(self):
+        ''' _process_unhook_from_uri should fail if uri type is datasource and no read perm is found'''
+        username='test_process_unhook_from_uri_failure_no_read_permission_for_datasource'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
+        self.assertIsNotNone(datasource)
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
+        self.assertIsNotNone(uri_info)
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri.ds'}}
+        resp=message._process_unhook_from_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, autherrors.E_ARA_AUHFDS_RE.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+
+    def test__process_unhook_from_uri_success_datasource_uri(self):
+        ''' _process_unhook_from_uri should succeed if uri type is ds and read perm is found'''
+        username='test_process_unhook_from_uri_success_datasource_uri'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
+        self.assertIsNotNone(datasource)
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
+        self.assertIsNotNone(uri_info)
+        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
+        self.assertIsNotNone(msgapi.process_message(res_msg))
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri.ds'}}
+        resp=message._process_hook_to_uri(psp1, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp1.sid])
+        resp=message._process_hook_to_uri(psp2, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid]))
+        resp=message._process_hook_to_uri(psp3, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid,psp3.sid]))
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri.ds'}}
+        resp=message._process_unhook_from_uri(psp1, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp3.sid,psp2.sid]))
+        resp=message._process_unhook_from_uri(psp2, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp3.sid])
+        # if we receive the same unhook, no problem
+        resp=message._process_unhook_from_uri(psp2, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp3.sid])
+        resp=message._process_unhook_from_uri(psp3, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[])
+
+    def test__process_unhook_from_uri_failure_no_read_permission_for_datapoint(self):
+        ''' _process_unhook_to_uri should fail if uri is dp and we dont have read perm over it'''
+        username='test_process_unhook_from_uri_failure_no_read_permission_for_datapoint'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
+        self.assertIsNotNone(msgapi.process_message(res_msg))
+        datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
+        self.assertIsNotNone(datapoint)
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.dp')
+        self.assertIsNotNone(uri_info)
+        #res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
+        #self.assertIsNotNone(msgapi.process_message(res_msg))
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri.dp'}}
+        resp=message._process_unhook_from_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, autherrors.E_ARA_AUHFDP_RE.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+
+    def test__process_unhook_from_uri_success_datapoint_uri(self):
+        ''' _process_unhook_from_uri should succeed if uri is dp and we have read perm over it'''
+        username='test_process_unhook_from_uri_success_datapoint_uri'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
+        self.assertIsNotNone(msgapi.process_message(res_msg))
+        datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
+        self.assertIsNotNone(datapoint)
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.dp')
+        self.assertIsNotNone(uri_info)
+        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
+        self.assertIsNotNone(msgapi.process_message(res_msg))
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri.dp'}}
+        resp=message._process_hook_to_uri(psp1, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp1.sid])
+        resp=message._process_hook_to_uri(psp2, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid]))
+        resp=message._process_hook_to_uri(psp3, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid,psp3.sid]))
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri.dp'}}
+        resp=message._process_unhook_from_uri(psp1, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp3.sid,psp2.sid]))
+        resp=message._process_unhook_from_uri(psp2, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp3.sid])
+        # if we receive the same unhook, no problem
+        resp=message._process_unhook_from_uri(psp2, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp3.sid])
+        resp=message._process_unhook_from_uri(psp3, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[])
+

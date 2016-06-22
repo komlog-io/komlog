@@ -222,35 +222,43 @@ class Errors(Enum):
     E_GDA_DD_ID     = 4480
     E_GDA_DD_DNF    = 4481
 
+    E_GDA_HTDS_IDID     =   4500    #: hook_to_datasource. invalid did
+    E_GDA_HTDS_ISID     =   4501    #: hook_to_datasource. invalid sid
+    E_GDA_HTDS_DSNF     =   4502    #: hook_to_datasource. datasource not found
+
+    E_GDA_UHFDS_IDID    =   4550    #: unhook_from_datasource. invalid did
+    E_GDA_UHFDS_ISID    =   4551    #: unhook_from_datasource. invalid sid
+
 # gestaccount datapoint api
 
-    E_GPA_GDTS_ID   = 4490
-    E_GPA_GDTS_IDT  = 4491
-    E_GPA_GDTS_DDNF = 4492
 
-    E_GPA_GDNDFD_IP     = 4500
-    E_GPA_GDNDFD_DNF    = 4501
-    E_GPA_GDNDFD_NDF    = 4502
-    E_GPA_GDNDFD_DSDNF  = 4503
-    E_GPA_GDNDFD_DSNF   = 4504 #: datapoint is not associated to a datasource
+    E_GPA_CRUD_IU   = 6000 #: invalid uid
+    E_GPA_CRUD_IDU  = 6001 #: invalid datapoint uri
+    E_GPA_CRUD_UNF  = 6002 #: user not found
+    E_GPA_CRUD_UAE  = 6003 #: uri already used
+    E_GPA_CRUD_IDE  = 6004 #: error inserting to database
 
-    E_GPA_SDAIS_IP      = 4510
-    E_GPA_SDAIS_IDT     = 4511
-    E_GPA_SDAIS_DNF     = 4512
-    E_GPA_SDAIS_DSNDNF  = 4513
-    E_GPA_SDAIS_DSTSNF  = 4514
-    E_GPA_SDAIS_DSNF    = 4515 #: datapoint is not associated to a datasource
+    E_GPA_GDTS_ID   = 6050
+    E_GPA_GDTS_IDT  = 6051
+    E_GPA_GDTS_DDNF = 6052
 
-    E_GPA_CMDIS_ID      = 4530
-    E_GPA_CMDIS_IDT     = 4531
-    E_GPA_CMDIS_DSMNF   = 4532
-    E_GPA_CMDIS_DSTSNF  = 4533
+    E_GPA_GDNDFD_IP     = 6100
+    E_GPA_GDNDFD_DNF    = 6101
+    E_GPA_GDNDFD_NDF    = 6102
+    E_GPA_GDNDFD_DSDNF  = 6103
+    E_GPA_GDNDFD_DSNF   = 6104 #: datapoint is not associated to a datasource
 
-    E_GPA_CRUD_IU   = 5000 #: invalid uid
-    E_GPA_CRUD_IDU  = 5001 #: invalid datapoint uri
-    E_GPA_CRUD_UNF  = 5002 #: user not found
-    E_GPA_CRUD_UAE  = 5003 #: uri already used
-    E_GPA_CRUD_IDE  = 5004 #: error inserting to database
+    E_GPA_SDAIS_IP      = 6150
+    E_GPA_SDAIS_IDT     = 6151
+    E_GPA_SDAIS_DNF     = 6152
+    E_GPA_SDAIS_DSNDNF  = 6153
+    E_GPA_SDAIS_DSTSNF  = 6154
+    E_GPA_SDAIS_DSNF    = 6155 #: datapoint is not associated to a datasource
+
+    E_GPA_CMDIS_ID      = 6200
+    E_GPA_CMDIS_IDT     = 6201
+    E_GPA_CMDIS_DSMNF   = 6202
+    E_GPA_CMDIS_DSTSNF  = 6203
 
     E_GPA_GDD_IP    = 6600
     E_GPA_GDD_ITD   = 6601
@@ -355,6 +363,12 @@ class Errors(Enum):
     E_GPA_SDPSV_DNF  = 6804 #: store_user_datapoint_value. datapoint not found
     E_GPA_SDPSV_IDDE = 6805 #: store_user_datapoint_value. insert datapoint data error
 
+    E_GPA_HTDP_IPID     =   6850    #: hook_to_datapoint. invalid pid
+    E_GPA_HTDP_ISID     =   6851    #: hook_to_datapoint. invalid sid
+    E_GPA_HTDP_DPNF     =   6852    #: hook_to_datapoint. datapoint not found
+
+    E_GPA_UHFDP_IPID    =   6900    #: unhook_from_datapoint. invalid pid
+    E_GPA_UHFDP_ISID    =   6901    #: unhook_from_datapoint. invalid sid
 
 # gestaccount widget api
 

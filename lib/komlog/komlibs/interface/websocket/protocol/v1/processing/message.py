@@ -220,3 +220,37 @@ def _process_send_multi_data(passport, message):
     else:
         return Response(status=status.MESSAGE_EXECUTION_OK)
 
+@exceptions.ExceptionHandler
+def _process_hook_to_uri(passport, message):
+    message = modmsg.HookToUriMessage(message=message)
+    uri_info=graphuri.get_id(ido=passport.uid, uri=message.payload['uri'])
+    if not uri_info:
+        return Response(status=status.RESOURCE_NOT_FOUND, reason='uri does not exist', error=Errors.E_IWSPV1PM_PHTU_UNF)
+    elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
+        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.payload['uri'], error=Errors.E_IWSPV1PM_PHTU_ONA)
+    else:
+        if uri_info['type'] == vertex.DATASOURCE:
+            authorization.authorize_request(request=Requests.HOOK_TO_DATASOURCE,passport=passport,did=uri_info['id'])
+            datasourceapi.hook_to_datasource(did=uri_info['id'], sid=passport.sid)
+        elif uri_info['type'] == vertex.DATAPOINT:
+            authorization.authorize_request(request=Requests.HOOK_TO_DATAPOINT,passport=passport,pid=uri_info['id'])
+            datapointapi.hook_to_datapoint(pid=uri_info['id'], sid=passport.sid)
+    return Response(status=status.MESSAGE_EXECUTION_OK)
+
+@exceptions.ExceptionHandler
+def _process_unhook_from_uri(passport, message):
+    message = modmsg.UnHookFromUriMessage(message=message)
+    uri_info=graphuri.get_id(ido=passport.uid, uri=message.payload['uri'])
+    if not uri_info:
+        return Response(status=status.RESOURCE_NOT_FOUND, reason='uri does not exist', error=Errors.E_IWSPV1PM_PUHFU_UNF)
+    elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
+        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.payload['uri'], error=Errors.E_IWSPV1PM_PUHFU_ONA)
+    else:
+        if uri_info['type'] == vertex.DATASOURCE:
+            authorization.authorize_request(request=Requests.UNHOOK_FROM_DATASOURCE,passport=passport,did=uri_info['id'])
+            datasourceapi.unhook_from_datasource(did=uri_info['id'], sid=passport.sid)
+        elif uri_info['type'] == vertex.DATAPOINT:
+            authorization.authorize_request(request=Requests.UNHOOK_FROM_DATAPOINT,passport=passport, pid=uri_info['id'])
+            datapointapi.unhook_from_datapoint(pid=uri_info['id'], sid=passport.sid)
+    return Response(status=status.MESSAGE_EXECUTION_OK)
+

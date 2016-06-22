@@ -257,3 +257,27 @@ def authorize_dissociate_datapoint_from_datasource(uid, pid):
         return
     raise exceptions.AuthorizationException(error=Errors.E_ARA_ADDPFDS_RE)
 
+def authorize_hook_to_datapoint(uid, pid):
+    permission=cassapiperm.get_user_datapoint_perm(uid=uid, pid=pid)
+    if permission and permission.perm & permissions.CAN_READ:
+        return
+    raise exceptions.AuthorizationException(error=Errors.E_ARA_AHTDP_RE)
+
+def authorize_hook_to_datasource(uid, did):
+    permission=cassapiperm.get_user_datasource_perm(uid=uid, did=did)
+    if permission and permission.perm & permissions.CAN_READ:
+        return
+    raise exceptions.AuthorizationException(error=Errors.E_ARA_AHTDS_RE)
+
+def authorize_unhook_from_datapoint(uid, pid):
+    permission=cassapiperm.get_user_datapoint_perm(uid=uid, pid=pid)
+    if permission and permission.perm & permissions.CAN_READ:
+        return
+    raise exceptions.AuthorizationException(error=Errors.E_ARA_AUHFDP_RE)
+
+def authorize_unhook_from_datasource(uid, did):
+    permission=cassapiperm.get_user_datasource_perm(uid=uid, did=did)
+    if permission and permission.perm & permissions.CAN_READ:
+        return
+    raise exceptions.AuthorizationException(error=Errors.E_ARA_AUHFDS_RE)
+

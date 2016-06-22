@@ -99,6 +99,10 @@ class Errors(Enum):
     E_ARA_AAMTC_RE  = 52330      #: authorize_add_member_to_circle exception
     E_ARA_ADMFC_RE  = 52340      #: authorize_delete_member_from_circle exception
     E_ARA_ADDPFDS_RE= 52350      #: authorize_dissociate_datapoint_from_datasource exception
+    E_ARA_AHTDP_RE  = 52360      #: authorize_hook_to_datapoint exception
+    E_ARA_AHTDS_RE  = 52370      #: authorize_hook_to_datasource exception
+    E_ARA_AUHFDP_RE = 52380      #: authorize_unhook_from_datapoint exception
+    E_ARA_AUHFDS_RE = 52390      #: authorize_unhook_from_datasource exception
 
 # auth.passport
 

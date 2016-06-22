@@ -17,8 +17,9 @@ The range reserved for Errors.in this module is 200000 - 250000
 
 '''
 
-from enum import Enum
+from enum import Enum, unique
 
+@unique
 class Errors(Enum):
 #common to every Error class
 
@@ -57,6 +58,12 @@ class Errors(Enum):
     E_IWSPV1PM_PSMTD_DSDSTE = 210307    #: datasource data store error
     E_IWSPV1PM_PSMTD_UCNV   = 210308    #: uri content not valid for this uri type
 
+    E_IWSPV1PM_PHTU_UNF     = 210400    #: process_hook_to_uri: uri not found
+    E_IWSPV1PM_PHTU_ONA     = 210401    #: process_hook_to_uri: operation not allowed on this uri
+
+    E_IWSPV1PM_PUHFU_UNF    = 210500    #: process_unhook_from_uri: uri not found
+    E_IWSPV1PM_PUHFU_ONA    = 210501    #: process_unhook_from_uri:operation not allowed on this uri
+
 # interface websocket protocol v1 model message
 
     E_IWSPV1MM_SDSDM_IMT     = 220000      #: SendDsDataMessage. message format error or 
@@ -74,9 +81,19 @@ class Errors(Enum):
 
     E_IWSPV1MM_SMTDM_IMT     = 220200      #: SendMultiDataMessage. message format error or 
                                            #: not v action or payload fields found
-    E_IWSPV1MM_SMTDM_IA      = 220101      #: SendMultiDataMessage. invalid message action
-    E_IWSPV1MM_SMTDM_IV      = 220102      #: SendMultiDataMessage. invalid message version
-    E_IWSPV1MM_SMTDM_IPL     = 220103      #: SendMultiDataMessage. invalid message payload
+    E_IWSPV1MM_SMTDM_IA      = 220201      #: SendMultiDataMessage. invalid message action
+    E_IWSPV1MM_SMTDM_IV      = 220202      #: SendMultiDataMessage. invalid message version
+    E_IWSPV1MM_SMTDM_IPL     = 220203      #: SendMultiDataMessage. invalid message payload
+
+    E_IWSPV1MM_HTUM_IMT      = 220300      #: HookToUriMessage. message format error
+    E_IWSPV1MM_HTUM_IA       = 220301      #: HookToUriMessage. invalid message action
+    E_IWSPV1MM_HTUM_IV       = 220302      #: HookToUriMessage. invalid message version
+    E_IWSPV1MM_HTUM_IPL      = 220303      #: HookToUriMessage. invalid message payload
+
+    E_IWSPV1MM_UHFUM_IMT     = 220400      #: UnHookFromUriMessage. message format error
+    E_IWSPV1MM_UHFUM_IA      = 220401      #: UnHookFromUriMessage. invalid message action
+    E_IWSPV1MM_UHFUM_IV      = 220402      #: UnHookFromUriMessage. invalid message version
+    E_IWSPV1MM_UHFUM_IPL     = 220403      #: UnHookFromUriMessage. invalid message payload
 
 # interface websocket protocol v1 model response
 

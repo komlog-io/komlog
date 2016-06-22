@@ -27,5 +27,7 @@ _processing_funcs = {
     Messages.SEND_DS_DATA.value:procmsg._process_send_ds_data,
     Messages.SEND_DP_DATA.value:procmsg._process_send_dp_data,
     Messages.SEND_MULTI_DATA.value:procmsg._process_send_multi_data,
+    Messages.HOOK_TO_URI.value:procmsg._process_hook_to_uri,
+    Messages.UNHOOK_FROM_URI.value:procmsg._process_unhook_from_uri,
 }
 

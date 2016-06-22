@@ -802,3 +802,20 @@ def classify_missing_datapoints_in_sample(did, date):
         response['doubts'].append(pid) if doubt else response['discarded'].append(pid)
     return response
 
+def hook_to_datapoint(pid, sid):
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_HTDP_IPID)
+    if not args.is_valid_uuid(sid):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_HTDP_ISID)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    if datapoint is None:
+        raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_HTDP_DPNF)
+    return cassapidatapoint.insert_datapoint_hook(pid=pid, sid=sid)
+
+def unhook_from_datapoint(pid, sid):
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_UHFDP_IPID)
+    if not args.is_valid_uuid(sid):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_UHFDP_ISID)
+    return cassapidatapoint.delete_datapoint_hook(pid=pid, sid=sid)
+

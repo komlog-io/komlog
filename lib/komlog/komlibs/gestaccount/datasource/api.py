@@ -239,3 +239,20 @@ def generate_datasource_map(did, date):
             cassapidatasource.set_last_mapped(did=did, last_mapped=dsstats.last_mapped)
         raise
 
+def hook_to_datasource(did, sid):
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_HTDS_IDID)
+    if not args.is_valid_uuid(sid):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_HTDS_ISID)
+    datasource=cassapidatasource.get_datasource(did=did)
+    if datasource is None:
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_GDA_HTDS_DSNF)
+    return cassapidatasource.insert_datasource_hook(did=did, sid=sid)
+
+def unhook_from_datasource(did, sid):
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_UHFDS_IDID)
+    if not args.is_valid_uuid(sid):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_UHFDS_ISID)
+    return cassapidatasource.delete_datasource_hook(did=did, sid=sid)
+

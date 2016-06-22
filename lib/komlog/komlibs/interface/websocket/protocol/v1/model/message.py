@@ -179,3 +179,107 @@ class SendMultiDataMessage:
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTDM_IPL)
 
+class HookToUriMessage:
+    def __init__(self, message):
+        self._action=None
+        self._v=None
+        self._payload=None
+        if (args.is_valid_dict(message)
+            and 'v' in message
+            and 'action' in message
+            and 'payload' in message):
+            self.v=message['v']
+            self.action=message['action']
+            self.payload=message['payload']
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTUM_IMT)
+
+    @property
+    def action(self):
+        return self._action
+
+    @action.setter
+    def action(self, value):
+        if args.is_valid_string(value) and value==Messages.HOOK_TO_URI.value:
+            self._action=Messages.HOOK_TO_URI
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTUM_IA)
+
+    @property
+    def v(self):
+        return self._v
+
+    @v.setter
+    def v(self, value):
+        if args.is_valid_int(value) and value==1:
+            self._v=value
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTUM_IV)
+
+    @property
+    def payload(self):
+        return self._payload
+
+    @payload.setter
+    def payload(self, value):
+        if (args.is_valid_dict(value)
+            and 'uri' in value
+            and args.is_valid_uri(value['uri'])):
+            self._payload={
+                'uri':value['uri'],
+            }
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTUM_IPL)
+
+class UnHookFromUriMessage:
+    def __init__(self, message):
+        self._action=None
+        self._v=None
+        self._payload=None
+        if (args.is_valid_dict(message)
+            and 'v' in message
+            and 'action' in message
+            and 'payload' in message):
+            self.v=message['v']
+            self.action=message['action']
+            self.payload=message['payload']
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFUM_IMT)
+
+    @property
+    def action(self):
+        return self._action
+
+    @action.setter
+    def action(self, value):
+        if args.is_valid_string(value) and value==Messages.UNHOOK_FROM_URI.value:
+            self._action=Messages.UNHOOK_FROM_URI
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFUM_IA)
+
+    @property
+    def v(self):
+        return self._v
+
+    @v.setter
+    def v(self, value):
+        if args.is_valid_int(value) and value==1:
+            self._v=value
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFUM_IV)
+
+    @property
+    def payload(self):
+        return self._payload
+
+    @payload.setter
+    def payload(self, value):
+        if (args.is_valid_dict(value)
+            and 'uri' in value
+            and args.is_valid_uri(value['uri'])):
+            self._payload={
+                'uri':value['uri'],
+            }
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFUM_IPL)
+

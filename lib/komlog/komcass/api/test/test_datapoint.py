@@ -530,3 +530,75 @@ class KomcassApiDatapointTest(unittest.TestCase):
         self.assertEqual(datapoint.creation_date, db_dp.creation_date)
         self.assertEqual(datapoint.datapointname, db_dp.datapointname)
 
+    def test_get_datapoint_hooks_sids_none_found(self):
+        ''' get_datapoint_hooks should return an empty list if no sid is found '''
+        pid=uuid.uuid4()
+        self.assertEqual(datapointapi.get_datapoint_hooks_sids(pid=pid),[])
+
+    def test_get_datapoint_hooks_sids_some_found(self):
+        ''' get_datapoint_hooks should return a sid list '''
+        pid=uuid.uuid4()
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        sids=datapointapi.get_datapoint_hooks_sids(pid=pid)
+        self.assertEqual(len(sids),4)
+
+    def test_insert_datapoint_hook_success(self):
+        ''' insert_datapoint_hook should insert the pid,sid data '''
+        pid=uuid.uuid4()
+        sid=uuid.uuid4()
+        self.assertEqual(datapointapi.get_datapoint_hooks_sids(pid=pid),[])
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,sid))
+        self.assertEqual(datapointapi.get_datapoint_hooks_sids(pid=pid),[sid])
+
+    def test_delete_datapoint_hooks_some_found(self):
+        ''' delete_datapoint_hooks should delete the pid hooks '''
+        pid=uuid.uuid4()
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        sids=datapointapi.get_datapoint_hooks_sids(pid=pid)
+        self.assertEqual(len(sids),4)
+        self.assertTrue(datapointapi.delete_datapoint_hooks(pid=pid))
+        self.assertEqual(datapointapi.get_datapoint_hooks_sids(pid=pid),[])
+
+    def test_delete_datapoint_hooks_none_found(self):
+        ''' delete_datapoint_hooks should return True even if no sid is found '''
+        pid=uuid.uuid4()
+        self.assertEqual(datapointapi.get_datapoint_hooks_sids(pid=pid),[])
+        self.assertTrue(datapointapi.delete_datapoint_hooks(pid=pid))
+        self.assertEqual(datapointapi.get_datapoint_hooks_sids(pid=pid),[])
+
+    def test_delete_datapoint_hook_found(self):
+        ''' delete_datapoint_hook should delete the hook '''
+        pid=uuid.uuid4()
+        sid=uuid.uuid4()
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,sid))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        sids=datapointapi.get_datapoint_hooks_sids(pid=pid)
+        self.assertEqual(len(sids),4)
+        self.assertTrue(datapointapi.delete_datapoint_hook(pid=pid,sid=sid))
+        sids=datapointapi.get_datapoint_hooks_sids(pid=pid)
+        self.assertEqual(len(sids),3)
+        self.assertFalse(sid in sids)
+
+    def test_delete_datapoint_hook_not_found(self):
+        ''' delete_datapoint_hook should delete the hook if found. return True always '''
+        pid=uuid.uuid4()
+        sid=uuid.uuid4()
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        self.assertTrue(datapointapi.insert_datapoint_hook(pid,uuid.uuid4()))
+        sids=datapointapi.get_datapoint_hooks_sids(pid=pid)
+        self.assertEqual(len(sids),4)
+        self.assertTrue(datapointapi.delete_datapoint_hook(pid=pid,sid=sid))
+        sids=datapointapi.get_datapoint_hooks_sids(pid=pid)
+        self.assertEqual(len(sids),4)
+        self.assertFalse(sid in sids)
+

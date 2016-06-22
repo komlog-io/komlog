@@ -11,6 +11,9 @@ from komlog.komlibs.gestaccount import exceptions
 from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
+from komlog.komcass.api import datasource as cassapidatasource
+
+pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
 
 class GestaccountDatasourceApiTest(unittest.TestCase):
     ''' komlog.gestaccount.datasource.api tests '''
@@ -27,7 +30,6 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         finally:
             self.user=userapi.get_user_config(uid=uid)
         agentname='test_gestaccount.datasource.api_agent'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         try:
             self.agent=agentapi.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -188,4 +190,87 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         self.assertEqual(data['date'], date)
         self.assertEqual(data['content'], content)
         self.assertTrue(api.generate_datasource_map(did=did, date=date))
+
+    def test_hook_to_datasource_failure_invalid_did(self):
+        ''' hook_to_datasource should fail if did is not valid '''
+        dids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        sid=uuid.uuid4()
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.hook_to_datasource(did=did, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_HTDS_IDID)
+
+    def test_hook_to_datasource_failure_invalid_sid(self):
+        ''' hook_to_datasource should fail if sid is not valid '''
+        sids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        did=uuid.uuid4()
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.hook_to_datasource(did=did, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_HTDS_ISID)
+
+    def test_hook_to_datasource_failure_datasource_not_found(self):
+        ''' hook_to_datasource should fail if did is not found '''
+        did=uuid.uuid4()
+        sid=uuid.uuid4()
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            api.hook_to_datasource(did=did, sid=sid)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_HTDS_DSNF)
+
+    def test_hook_to_datasource_success(self):
+        ''' hook_to_datasource should succeed if did exists '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_hook_to_datasource_success'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename) 
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        sid=uuid.uuid4()
+        self.assertTrue(api.hook_to_datasource(did=did, sid=sid))
+        did_hooks=cassapidatasource.get_datasource_hooks_sids(did=did)
+        self.assertEqual(did_hooks,[sid])
+
+    def test_unhook_from_datasource_failure_invalid_did(self):
+        ''' unhook_from_datasource should fail if did is not valid '''
+        dids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        sid=uuid.uuid4()
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.unhook_from_datasource(did=did, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_UHFDS_IDID)
+
+    def test_unhook_from_datasource_failure_invalid_sid(self):
+        ''' unhook_from_datasource should fail if sid is not valid '''
+        sids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        did=uuid.uuid4()
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.unhook_from_datasource(did=did, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_UHFDS_ISID)
+
+    def test_unhook_from_datasource_success_hook_does_not_exist(self):
+        ''' unhook_from_datasource should succeed if hook does not exist '''
+        did=uuid.uuid4()
+        sid=uuid.uuid4()
+        self.assertTrue(api.unhook_from_datasource(did=did, sid=sid))
+
+    def test_unhook_from_datasource_success_hook_does_exist(self):
+        ''' unhook_from_datasource should succeed if hook exists '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_unhook_from_datasource_success_hook_does_exist'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename) 
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        sid=uuid.uuid4()
+        self.assertTrue(api.hook_to_datasource(did=did, sid=sid))
+        did_hooks=cassapidatasource.get_datasource_hooks_sids(did=did)
+        self.assertEqual(did_hooks,[sid])
+        self.assertTrue(api.unhook_from_datasource(did=did, sid=sid))
+        did_hooks=cassapidatasource.get_datasource_hooks_sids(did=did)
+        self.assertEqual(did_hooks,[])
 

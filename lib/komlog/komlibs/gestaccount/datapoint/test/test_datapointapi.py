@@ -17,6 +17,8 @@ from komlog.komlibs.gestaccount import exceptions
 from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komfig import logging
 
+pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+
 class GestaccountDatapointApiTest(unittest.TestCase):
     ''' komlog.gestaccount.datapoint.api tests '''
     
@@ -32,7 +34,6 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         finally:
             self.user=userapi.get_user_config(uid=uid)
         agentname='test_gestaccount.datapoint.api_agent'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         try:
             self.agent=agentapi.create_agent(uid=self.user['uid'], agentname=agentname, pubkey=pubkey, version=version)
@@ -1607,4 +1608,95 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertTrue(isinstance(result,dict))
         self.assertEqual(result['discarded'],[])
         self.assertEqual(result['doubts'],[datapoint['pid']])
+
+    def test_hook_to_datapoint_failure_invalid_pid(self):
+        ''' hook_to_datapoint should fail if pid is not valid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        sid=uuid.uuid4()
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.hook_to_datapoint(pid=pid, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_HTDP_IPID)
+
+    def test_hook_to_datapoint_failure_invalid_sid(self):
+        ''' hook_to_datapoint should fail if sid is not valid '''
+        sids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        pid=uuid.uuid4()
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.hook_to_datapoint(pid=pid, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_HTDP_ISID)
+
+    def test_hook_to_datapoint_failure_datapoint_not_found(self):
+        ''' hook_to_datapoint should fail if pid is not found '''
+        pid=uuid.uuid4()
+        sid=uuid.uuid4()
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            api.hook_to_datapoint(pid=pid, sid=sid)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_HTDP_DPNF)
+
+    def test_hook_to_datapoint_success(self):
+        ''' hook_to_datapoint should succeed if pid exists '''
+        username='test_hook_to_datapoint_success'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        sid=uuid.uuid4()
+        self.assertTrue(api.hook_to_datapoint(pid=pid, sid=sid))
+        pid_hooks=cassapidatapoint.get_datapoint_hooks_sids(pid=pid)
+        self.assertEqual(pid_hooks,[sid])
+
+    def test_unhook_from_datapoint_failure_invalid_pid(self):
+        ''' unhook_from_datapoint should fail if pid is not valid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        sid=uuid.uuid4()
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.unhook_from_datapoint(pid=pid, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_UHFDP_IPID)
+
+    def test_unhook_from_datapoint_failure_invalid_sid(self):
+        ''' unhook_from_datapoint should fail if sid is not valid '''
+        sids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        pid=uuid.uuid4()
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.unhook_from_datapoint(pid=pid, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_UHFDP_ISID)
+
+    def test_unhook_from_datapoint_success_hook_does_not_exist(self):
+        ''' unhook_from_datapoint should succeed if hook does not exist '''
+        pid=uuid.uuid4()
+        sid=uuid.uuid4()
+        self.assertTrue(api.unhook_from_datapoint(pid=pid, sid=sid))
+
+    def test_unhook_from_datapoint_success_hook_does_exist(self):
+        ''' unhook_from_datapoint should succeed if hook exists '''
+        username='test_unhook_from_datapoint_success_hook_does_exist'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        sid=uuid.uuid4()
+        self.assertTrue(api.hook_to_datapoint(pid=pid, sid=sid))
+        pid_hooks=cassapidatapoint.get_datapoint_hooks_sids(pid=pid)
+        self.assertEqual(pid_hooks,[sid])
+        self.assertTrue(api.unhook_from_datapoint(pid=pid, sid=sid))
+        pid_hooks=cassapidatapoint.get_datapoint_hooks_sids(pid=pid)
+        self.assertEqual(pid_hooks,[])
 

@@ -398,3 +398,177 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(modmsg.v,msg['v'])
         self.assertEqual(modmsg.action,Messages.SEND_MULTI_DATA)
 
+    def test_new_HookToUriMessage_failure_invalid_type(self):
+        ''' the creation of a HookToUriMessage object should fail if message is not a dict '''
+        messages=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
+        for msg in messages:
+            with self.assertRaises(exceptions.MessageValidationException) as cm:
+                message.HookToUriMessage(message=msg )
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IMT)
+
+    def test_new_HookToUriMessage_failure_version_not_found(self):
+        ''' the creation of a HookToUriMessage object should fail if version is not found '''
+        msg={'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri'}}
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            message.HookToUriMessage(message=msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IMT)
+
+    def test_new_HookToUriMessage_failure_action_not_found(self):
+        ''' the creation of a HookToUriMessage object should fail if action is not found '''
+        msg={'v':1,'payload':{'uri':'uri'}}
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            message.HookToUriMessage(message=msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IMT)
+
+    def test_new_HookToUriMessage_failure_payload_not_found(self):
+        ''' the creation of a HookToUriMessage object should fail if payload is not found '''
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value}
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            message.HookToUriMessage(message=msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IMT)
+
+    def test_new_HookToUriMessage_failure_invalid_version(self):
+        ''' the creation of a HookToUriMessage object should fail if version is not 1 '''
+        versions=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
+        msg={'v':None,'action':Messages.HOOK_TO_URI.value,'payload':{}}
+        for version in versions:
+            msg['v']=version
+            with self.assertRaises(exceptions.MessageValidationException) as cm:
+                message.HookToUriMessage(message=msg)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IV)
+
+    def test_new_HookToUriMessage_failure_invalid_action(self):
+        ''' the creation of a HookToUriMessage object should fail if action is not Messages.HOOK_TO_URI.value '''
+        actions=['adas',None,-2,1.1,1000000,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),Messages.SEND_DP_DATA.value, Messages.SEND_DS_DATA.value]
+        msg={'v':1,'action':None,'payload':{}}
+        for action in actions:
+            msg['action']=action
+            with self.assertRaises(exceptions.MessageValidationException) as cm:
+                message.HookToUriMessage(message=msg)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IA)
+
+    def test_new_HookToUriMessage_failure_invalid_payload_no_uri(self):
+        ''' the creation of a HookToUriMessage object should fail if payload has no uri field '''
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uris':[{'uri':'uri','content':'content'}]}}
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            message.HookToUriMessage(message=msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IPL)
+
+    def test_new_HookToUriMessage_failure_invalid_payload_invalid_uri_type(self):
+        '''the creation of a HookToUriMessage object should fail if payload uri is not valid '''
+        uris=[None,-2,1.1,{'set','a'},('a','tuple'),uuid.uuid4(),{'a':'dict'},'In valid Uri','']
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':None}}
+        for uri in uris:
+            msg['payload']['uri']=uri
+            with self.assertRaises(exceptions.MessageValidationException) as cm:
+                message.HookToUriMessage(message=msg)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IPL)
+
+    def test_new_HookToUriMessage_success(self):
+        ''' the creation of a HookToUriMessage object should succeed '''
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri'}}
+        modmsg=message.HookToUriMessage(message=msg)
+        self.assertTrue(isinstance(modmsg,message.HookToUriMessage))
+        self.assertEqual(modmsg.payload,msg['payload'])
+        self.assertEqual(modmsg.v,msg['v'])
+        self.assertEqual(modmsg.action,Messages.HOOK_TO_URI)
+
+    def test_new_HookToUriMessage_success_extra_fields_are_not_loaded(self):
+        ''' the creation of a HookToUriMessage object should succeed and any extra (not valid) field received in payload is not propagated '''
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{}}
+        valid_payload={'uri':'valid.uri'}
+        extra_payload={'uri':'valid.uri','content':'33232.2323'}
+        msg['payload']=extra_payload
+        modmsg=message.HookToUriMessage(message=msg)
+        self.assertTrue(isinstance(modmsg,message.HookToUriMessage))
+        self.assertEqual(modmsg.payload,valid_payload)
+        self.assertEqual(modmsg.v,msg['v'])
+        self.assertEqual(modmsg.action,Messages.HOOK_TO_URI)
+
+    def test_new_UnHookFromUriMessage_failure_invalid_type(self):
+        ''' the creation of a UnHookFromUriMessage object should fail if message is not a dict '''
+        messages=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
+        for msg in messages:
+            with self.assertRaises(exceptions.MessageValidationException) as cm:
+                message.UnHookFromUriMessage(message=msg )
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IMT)
+
+    def test_new_UnHookFromUriMessage_failure_version_not_found(self):
+        ''' the creation of a UnHookFromUriMessage object should fail if version is not found '''
+        msg={'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri'}}
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            message.UnHookFromUriMessage(message=msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IMT)
+
+    def test_new_UnHookFromUriMessage_failure_action_not_found(self):
+        ''' the creation of a UnHookFromUriMessage object should fail if action is not found '''
+        msg={'v':1,'payload':{'uri':'uri'}}
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            message.UnHookFromUriMessage(message=msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IMT)
+
+    def test_new_UnHookFromUriMessage_failure_payload_not_found(self):
+        ''' the creation of a UnHookFromUriMessage object should fail if payload is not found '''
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value}
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            message.UnHookFromUriMessage(message=msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IMT)
+
+    def test_new_UnHookFromUriMessage_failure_invalid_version(self):
+        ''' the creation of a UnHookFromUriMessage object should fail if version is not 1 '''
+        versions=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
+        msg={'v':None,'action':Messages.UNHOOK_FROM_URI.value,'payload':{}}
+        for version in versions:
+            msg['v']=version
+            with self.assertRaises(exceptions.MessageValidationException) as cm:
+                message.UnHookFromUriMessage(message=msg)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IV)
+
+    def test_new_UnHookFromUriMessage_failure_invalid_action(self):
+        ''' the creation of a UnHookFromUriMessage object should fail if action is not Messages.UNHOOK_FROM_URI.value '''
+        actions=['adas',None,-2,1.1,1000000,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),Messages.SEND_DP_DATA.value, Messages.SEND_DS_DATA.value]
+        msg={'v':1,'action':None,'payload':{}}
+        for action in actions:
+            msg['action']=action
+            with self.assertRaises(exceptions.MessageValidationException) as cm:
+                message.UnHookFromUriMessage(message=msg)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IA)
+
+    def test_new_UnHookFromUriMessage_failure_invalid_payload_no_uri(self):
+        ''' the creation of a UnHookFromUriMessage object should fail if payload has no uri field '''
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uris':[{'uri':'uri','content':'content'}]}}
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            message.UnHookFromUriMessage(message=msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IPL)
+
+    def test_new_UnHookFromUriMessage_failure_invalid_payload_invalid_uri_type(self):
+        '''the creation of a UnHookFromUriMessage object should fail if payload uri is not valid '''
+        uris=[None,-2,1.1,{'set','a'},('a','tuple'),uuid.uuid4(),{'a':'dict'},'In valid Uri','']
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':None}}
+        for uri in uris:
+            msg['payload']['uri']=uri
+            with self.assertRaises(exceptions.MessageValidationException) as cm:
+                message.UnHookFromUriMessage(message=msg)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IPL)
+
+    def test_new_UnHookFromUriMessage_success(self):
+        ''' the creation of a UnHookFromUriMessage object should succeed '''
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri'}}
+        modmsg=message.UnHookFromUriMessage(message=msg)
+        self.assertTrue(isinstance(modmsg,message.UnHookFromUriMessage))
+        self.assertEqual(modmsg.payload,msg['payload'])
+        self.assertEqual(modmsg.v,msg['v'])
+        self.assertEqual(modmsg.action,Messages.UNHOOK_FROM_URI)
+
+    def test_new_UnHookFromUriMessage_success_extra_fields_are_not_loaded(self):
+        ''' the creation of a UnHookFromUriMessage object should succeed and any extra (not valid) field received in payload is not propagated '''
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{}}
+        valid_payload={'uri':'valid.uri'}
+        extra_payload={'uri':'valid.uri','content':'33232.2323'}
+        msg['payload']=extra_payload
+        modmsg=message.UnHookFromUriMessage(message=msg)
+        self.assertTrue(isinstance(modmsg,message.UnHookFromUriMessage))
+        self.assertEqual(modmsg.payload,valid_payload)
+        self.assertEqual(modmsg.v,msg['v'])
+        self.assertEqual(modmsg.action,Messages.UNHOOK_FROM_URI)
+

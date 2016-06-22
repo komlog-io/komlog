@@ -848,3 +848,139 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
         self.assertIsNone(authorization.authorize_dissociate_datapoint_from_datasource(uid=uid, pid=pid))
 
+    def test_authorize_hook_to_datapoint_failure_non_existent_uid(self):
+        ''' authorize_hook_to_datapoint should fail if uid-pid relation is not found '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_hook_to_datapoint(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AHTDP_RE)
+
+    def test_authorize_hook_to_datapoint_failure_non_existent_pid(self):
+        ''' authorize_hook_to_datapoint should fail if uid-pid relation is not found '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_hook_to_datapoint(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AHTDP_RE)
+
+    def test_authorize_hook_to_datapoint_failure_read_permission_not_found(self):
+        ''' authorize_hook_to_datapoint should fail if user has not the necessary permissions '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_hook_to_datapoint(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AHTDP_RE)
+
+    def test_authorize_hook_to_datapoint_success(self):
+        ''' authorize_hook_to_datapoint should succeed if user has the necessary permissions '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        self.assertIsNone(authorization.authorize_hook_to_datapoint(uid=uid, pid=pid))
+
+    def test_authorize_unhook_from_datapoint_failure_non_existent_uid(self):
+        ''' authorize_unhook_from_datapoint should fail if uid-pid relation is not found '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_unhook_from_datapoint(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AUHFDP_RE)
+
+    def test_authorize_unhook_from_datapoint_failure_non_existent_pid(self):
+        ''' authorize_unhook_from_datapoint should fail if uid-pid relation is not found '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_unhook_from_datapoint(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AUHFDP_RE)
+
+    def test_authorize_unhook_from_datapoint_failure_read_permission_not_found(self):
+        ''' authorize_unhook_from_datapoint should fail if user has not the necessary permissions'''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_unhook_from_datapoint(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AUHFDP_RE)
+
+    def test_authorize_unhook_from_datapoint_success(self):
+        ''' authorize_unhook_from_datapoint should succeed if user has the necessary permissions '''
+        uid=self.user['uid']
+        pid=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_datapoint_perm(uid=uid, pid=pid, perm=perm)
+        self.assertIsNone(authorization.authorize_unhook_from_datapoint(uid=uid, pid=pid))
+
+    def test_authorize_hook_to_datasource_failure_non_existent_uid(self):
+        ''' authorize_hook_to_datasource should fail if uid-did relation is not found '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_hook_to_datasource(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AHTDS_RE)
+
+    def test_authorize_hook_to_datasource_failure_non_existent_did(self):
+        ''' authorize_hook_to_datasource should fail if uid-did relation is not found '''
+        uid=self.user['uid']
+        did=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_hook_to_datasource(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AHTDS_RE)
+
+    def test_authorize_hook_to_datasource_failure_read_permission_not_found(self):
+        ''' authorize_hook_to_datasource should fail if user has not the necessary permissions '''
+        uid=self.user['uid']
+        did=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_hook_to_datasource(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AHTDS_RE)
+
+    def test_authorize_hook_to_datasource_success(self):
+        ''' authorize_hook_to_datasource should succeed if user has the necessary permissions '''
+        uid=self.user['uid']
+        did=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+        self.assertIsNone(authorization.authorize_hook_to_datasource(uid=uid, did=did))
+
+    def test_authorize_unhook_from_datasource_failure_non_existent_uid(self):
+        ''' authorize_unhook_from_datasource should fail if uid-did relation is not found '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_unhook_from_datasource(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AUHFDS_RE)
+
+    def test_authorize_unhook_from_datasource_failure_non_existent_did(self):
+        ''' authorize_unhook_from_datasource should fail if uid-did relation is not found '''
+        uid=self.user['uid']
+        did=uuid.uuid4()
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_unhook_from_datasource(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AUHFDS_RE)
+
+    def test_authorize_unhook_from_datasource_failure_read_permission_not_found(self):
+        ''' authorize_unhook_from_datasource should fail if user has notthe necessary permissions'''
+        uid=self.user['uid']
+        did=uuid.uuid4()
+        perm=permissions.CAN_EDIT
+        cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_unhook_from_datasource(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_ARA_AUHFDS_RE)
+
+    def test_authorize_unhook_from_datasource_success(self):
+        ''' authorize_unhook_from_datasource should succeed if user hasthe necessary permissions '''
+        uid=self.user['uid']
+        did=uuid.uuid4()
+        perm=permissions.CAN_READ
+        cassapiperm.insert_user_datasource_perm(uid=uid, did=did, perm=perm)
+        self.assertIsNone(authorization.authorize_unhook_from_datasource(uid=uid, did=did))
+

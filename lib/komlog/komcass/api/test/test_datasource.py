@@ -837,3 +837,75 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         db_metadata=datasourceapi.get_datasource_metadata(did=did, fromdate=init, todate=end)
         self.assertEqual(len(db_metadata),999)
 
+    def test_get_datasource_hooks_sids_none_found(self):
+        ''' get_datasource_hooks should return an empty list if no sid is found '''
+        did=uuid.uuid4()
+        self.assertEqual(datasourceapi.get_datasource_hooks_sids(did=did),[])
+
+    def test_get_datasource_hooks_sids_some_found(self):
+        ''' get_datasource_hooks should return a sid list '''
+        did=uuid.uuid4()
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        sids=datasourceapi.get_datasource_hooks_sids(did=did)
+        self.assertEqual(len(sids),4)
+
+    def test_insert_datasource_hook_success(self):
+        ''' insert_datasource_hook should insert the did,sid data '''
+        did=uuid.uuid4()
+        sid=uuid.uuid4()
+        self.assertEqual(datasourceapi.get_datasource_hooks_sids(did=did),[])
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,sid))
+        self.assertEqual(datasourceapi.get_datasource_hooks_sids(did=did),[sid])
+
+    def test_delete_datasource_hooks_some_found(self):
+        ''' delete_datasource_hooks should delete the did hooks '''
+        did=uuid.uuid4()
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        sids=datasourceapi.get_datasource_hooks_sids(did=did)
+        self.assertEqual(len(sids),4)
+        self.assertTrue(datasourceapi.delete_datasource_hooks(did=did))
+        self.assertEqual(datasourceapi.get_datasource_hooks_sids(did=did),[])
+
+    def test_delete_datasource_hooks_none_found(self):
+        ''' delete_datasource_hooks should return True even if no sid is found '''
+        did=uuid.uuid4()
+        self.assertEqual(datasourceapi.get_datasource_hooks_sids(did=did),[])
+        self.assertTrue(datasourceapi.delete_datasource_hooks(did=did))
+        self.assertEqual(datasourceapi.get_datasource_hooks_sids(did=did),[])
+
+    def test_delete_datasource_hook_found(self):
+        ''' delete_datasource_hook should delete the hook '''
+        did=uuid.uuid4()
+        sid=uuid.uuid4()
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,sid))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        sids=datasourceapi.get_datasource_hooks_sids(did=did)
+        self.assertEqual(len(sids),4)
+        self.assertTrue(datasourceapi.delete_datasource_hook(did=did,sid=sid))
+        sids=datasourceapi.get_datasource_hooks_sids(did=did)
+        self.assertEqual(len(sids),3)
+        self.assertFalse(sid in sids)
+
+    def test_delete_datasource_hook_not_found(self):
+        ''' delete_datasource_hook should delete the hook if found. return True always '''
+        did=uuid.uuid4()
+        sid=uuid.uuid4()
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        self.assertTrue(datasourceapi.insert_datasource_hook(did,uuid.uuid4()))
+        sids=datasourceapi.get_datasource_hooks_sids(did=did)
+        self.assertEqual(len(sids),4)
+        self.assertTrue(datasourceapi.delete_datasource_hook(did=did,sid=sid))
+        sids=datasourceapi.get_datasource_hooks_sids(did=did)
+        self.assertEqual(len(sids),4)
+        self.assertFalse(sid in sids)
+

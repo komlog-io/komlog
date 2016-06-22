@@ -221,3 +221,27 @@ def dissociate_datapoint_from_datasource(pid):
     connection.session.execute(stmtdatapoint.U_DID_MSTDATAPOINT,(None,pid,))
     return True
 
+@exceptions.ExceptionHandler
+def get_datapoint_hooks_sids(pid):
+    sids=[]
+    row=connection.session.execute(stmtdatapoint.S_SID_MSTDATAPOINTHOOKS_B_PID,(pid,))
+    if row:
+        for r in row:
+            sids.append(r['sid'])
+    return sids
+
+@exceptions.ExceptionHandler
+def insert_datapoint_hook(pid,sid):
+    connection.session.execute(stmtdatapoint.I_A_MSTDATAPOINTHOOKS,(pid,sid))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_datapoint_hooks(pid):
+    connection.session.execute(stmtdatapoint.D_A_MSTDATAPOINTHOOKS_B_PID,(pid,))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_datapoint_hook(pid,sid):
+    connection.session.execute(stmtdatapoint.D_A_MSTDATAPOINTHOOKS_B_PID_SID,(pid,sid))
+    return True
+

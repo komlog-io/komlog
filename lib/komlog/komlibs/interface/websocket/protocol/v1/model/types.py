@@ -17,9 +17,11 @@ class AutoEnum(Enum):
 
 @unique
 class Messages(Enum):
-    SEND_DS_DATA='send_ds_data'
-    SEND_DP_DATA='send_dp_data'
+    HOOK_TO_URI='hook_to_uri'
     SEND_MULTI_DATA='send_multi_data'
+    SEND_DP_DATA='send_dp_data'
+    SEND_DS_DATA='send_ds_data'
+    UNHOOK_FROM_URI='unhook_from_uri'
 
 # OPERATION TYPES
 

@@ -354,3 +354,27 @@ def delete_datasource_metadata_at(did, date):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCEMETADATA_B_DID_DATE,(did,date))
     return True
 
+@exceptions.ExceptionHandler
+def get_datasource_hooks_sids(did):
+    sids=[]
+    row=connection.session.execute(stmtdatasource.S_SID_MSTDATASOURCEHOOKS_B_DID,(did,))
+    if row:
+        for r in row:
+            sids.append(r['sid'])
+    return sids
+
+@exceptions.ExceptionHandler
+def insert_datasource_hook(did,sid):
+    connection.session.execute(stmtdatasource.I_A_MSTDATASOURCEHOOKS,(did,sid))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_datasource_hooks(did):
+    connection.session.execute(stmtdatasource.D_A_MSTDATASOURCEHOOKS_B_DID,(did,))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_datasource_hook(did,sid):
+    connection.session.execute(stmtdatasource.D_A_MSTDATASOURCEHOOKS_B_DID_SID,(did,sid))
+    return True
+

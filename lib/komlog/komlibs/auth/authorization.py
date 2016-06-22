@@ -228,6 +228,18 @@ def authorize_get_uri(passport):
 def authorize_dissociate_datapoint_from_datasource(passport, pid):
     resauth.authorize_dissociate_datapoint_from_datasource(uid=passport.uid,pid=pid)
 
+def authorize_hook_to_datapoint(passport, pid):
+    resauth.authorize_hook_to_datapoint(uid=passport.uid, pid=pid)
+
+def authorize_hook_to_datasource(passport, did):
+    resauth.authorize_hook_to_datasource(uid=passport.uid, did=did)
+
+def authorize_unhook_from_datapoint(passport, pid):
+    resauth.authorize_unhook_from_datapoint(uid=passport.uid, pid=pid)
+
+def authorize_unhook_from_datasource(passport, did):
+    resauth.authorize_unhook_from_datasource(uid=passport.uid, did=did)
+
 func_requests={
     Requests.ADD_DATAPOINT_TO_WIDGET:authorize_add_datapoint_to_widget,
     Requests.ADD_MEMBER_TO_CIRCLE:authorize_add_member_to_circle,
@@ -264,6 +276,8 @@ func_requests={
     Requests.GET_USER_EVENTS:authorize_get_user_events,
     Requests.GET_WIDGET_CONFIG:authorize_get_widget_config,
     Requests.GET_WIDGETS_CONFIG:authorize_get_widgets_config,
+    Requests.HOOK_TO_DATAPOINT:authorize_hook_to_datapoint,
+    Requests.HOOK_TO_DATASOURCE:authorize_hook_to_datasource,
     Requests.MARK_NEGATIVE_VARIABLE:authorize_mark_negative_variable,
     Requests.MARK_POSITIVE_VARIABLE:authorize_mark_positive_variable,
     Requests.NEW_AGENT:authorize_new_agent_creation,
@@ -274,6 +288,8 @@ func_requests={
     Requests.NEW_DATASOURCE:authorize_new_datasource_creation,
     Requests.NEW_SNAPSHOT:authorize_new_snapshot_creation,
     Requests.NEW_WIDGET:authorize_new_widget_creation,
+    Requests.UNHOOK_FROM_DATAPOINT:authorize_unhook_from_datapoint,
+    Requests.UNHOOK_FROM_DATASOURCE:authorize_unhook_from_datasource,
     Requests.UPDATE_AGENT_CONFIG:authorize_update_agent_config,
     Requests.UPDATE_CIRCLE_CONFIG:authorize_update_circle_config,
     Requests.UPDATE_DASHBOARD_CONFIG:authorize_update_dashboard_config,
