@@ -15,13 +15,10 @@ from komlog.komlibs.interface.imc.model import messages
 
 
 def send_message(msg):
-    if msgbus.msgbus.sendMessage(msg):
-        return True
-    else:
-        return False
+    return msgbus.msgbus.send_message(msg)
 
 def retrieve_message(timeout=0):
-    data=msgbus.msgbus.retrieveMessage(timeout)
+    data= msgbus.msgbus.retrieve_message(timeout)
     if data:
         addr, s_message = data
         mtype = s_message.split('|')[0]
@@ -45,10 +42,7 @@ def process_msg_result(msg_result):
     return True
 
 def send_message_to(addr, msg):
-    if msgbus.msgbus.send_message_to(addr, msg):
-        return True
-    else:
-        return False
+    return msgbus.msgbus.send_message_to(addr, msg)
 
 def retrieve_message_from(addr, timeout=0):
     data=msgbus.msgbus.retrieve_message_from(addr=addr, timeout=timeout)
