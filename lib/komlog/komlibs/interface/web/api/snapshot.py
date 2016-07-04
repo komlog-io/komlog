@@ -7,7 +7,6 @@ This file defines the logic associated with web interface operations
 import uuid
 from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
-from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
 from komlog.komlibs.auth.passport import Passport
@@ -190,11 +189,10 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
                 authop=webop.get_auth_operation()
                 params=webop.get_params()
                 if authupdate.update_resources(operation=authop, params=params):
-                    message=messages.UpdateQuotesMessage(operation=authop, params=params)
-                    msgapi.send_message(message)
-                    message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
-                    msgapi.send_message(message)
-                    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
+                    resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
+                    resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                    resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex}))
+                    return resp
                 else:
                     deleteapi.delete_snapshot(nid=snapshot['nid'])
                     return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWASN_NSNR_AUTHERR)

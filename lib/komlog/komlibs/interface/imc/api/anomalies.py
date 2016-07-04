@@ -22,7 +22,7 @@ def process_message_MISSINGDP(message):
     dp_classified=datapointapi.classify_missing_datapoints_in_sample(did=did, date=date)
     if len(dp_classified['doubts'])>0:
         datasource=datasourceapi.get_datasource_config(did=did)
-        response.add_msg_originated(messages.UserEventMessage(uid=datasource['uid'], event_type=eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters={'did':did.hex,'date':date.hex,'doubts':[pid.hex for pid in dp_classified['doubts']],'discarded':[pid.hex for pid in dp_classified['discarded']]}))
+        response.add_message(messages.UserEventMessage(uid=datasource['uid'], event_type=eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters={'did':did.hex,'date':date.hex,'doubts':[pid.hex for pid in dp_classified['doubts']],'discarded':[pid.hex for pid in dp_classified['discarded']]}))
     response.status=status.IMC_STATUS_OK
     return response
 

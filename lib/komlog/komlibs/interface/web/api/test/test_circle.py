@@ -11,7 +11,7 @@ from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
-from komlog.komlibs.interface.imc import status as msgstatus
+from komlog.komlibs.interface.imc import status as imcstatus
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc.api import rescontrol, gestconsole
 from komlog.komimc import bus, routing
@@ -32,24 +32,8 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if msg:
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgapi.process_msg_result(msg_result)
-                else:
-                    break
-            msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if msg:
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgapi.process_msg_result(msg_result)
-                else:
-                    break
+            for msg in response.unrouted_messages:
+                msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response,'cookie',None)
         self.passport = passport.get_user_passport(cookie)
@@ -113,31 +97,17 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         username='test_get_users_circle_config_request_failure_no_permissions_over_cid'
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response,'cookie',None)
         psp2 = passport.get_user_passport(cookie)
@@ -152,16 +122,9 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['cid'],cid)
@@ -200,30 +163,17 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         username='test_delete_circle_request_failure_no_permissions_over_cid'
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response,'cookie',None)
         psp2 = passport.get_user_passport(cookie)
@@ -238,17 +188,14 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.delete_circle_request(passport=psp, cid=cid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
@@ -292,16 +239,9 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         response=circleapi.new_users_circle_request(passport=psp, circlename=circlename)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
 
     def test_update_circle_request_failure_invalid_passport(self):
         ''' update_circle_request should fail if passport is invalid '''
@@ -350,31 +290,16 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
         username='test_update_circle_request_failure_no_permissions_over_cid'
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
         data={'circlename':circlename}
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response,'cookie',None)
@@ -390,16 +315,9 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         new_circlename='test_update_circle_request_success_updated'
         data={'circlename':new_circlename}
         response=circleapi.update_circle_request(passport=psp, cid=cid, data=data)
@@ -463,15 +381,9 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['cid'],cid)
@@ -489,15 +401,9 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['cid'],cid)
@@ -509,27 +415,13 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         response2 = userapi.new_user_request(username=member, password=password, email=email)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response2.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
         response3=circleapi.add_user_to_circle_request(passport=psp, cid=cid, member=member)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response3.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response4=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
         self.assertEqual(response4.status, status.WEB_STATUS_OK)
         self.assertEqual(response4.data['cid'],cid)
@@ -588,16 +480,9 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['cid'],cid)
@@ -615,16 +500,9 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['cid'],cid)
@@ -636,27 +514,13 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         response2 = userapi.new_user_request(username=member, password=password, email=email)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response2.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
         response3=circleapi.add_user_to_circle_request(passport=psp, cid=cid, member=member)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response3.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response4=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
         self.assertEqual(response4.status, status.WEB_STATUS_OK)
         self.assertEqual(response4.data['cid'],cid)
@@ -664,16 +528,9 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response4.data['members'],[{'username':member,'uid':response2.data['uid']}])
         response5=circleapi.delete_user_from_circle_request(passport=psp,cid=cid,member=member)
         self.assertEqual(response5.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                self.assertEqual(msg_result.status,msgstatus.IMC_STATUS_OK)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response5.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response6=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
         self.assertEqual(response6.status, status.WEB_STATUS_OK)
         self.assertEqual(response6.data['cid'],cid)

@@ -274,3 +274,47 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         did_hooks=cassapidatasource.get_datasource_hooks_sids(did=did)
         self.assertEqual(did_hooks,[])
 
+    def test_get_datasource_hooks_failure_invalid_did(self):
+        ''' get_datasource_hooks should fail if did is invalid '''
+        dids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datasource_hooks(did=did)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GDSH_IDID)
+
+    def test_get_datasource_hooks_failure_datasource_not_found(self):
+        ''' get_datasource_hooks should fail if datasource does not exist '''
+        did=uuid.uuid4()
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            api.get_datasource_hooks(did=did)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_GDSH_DSNF)
+
+    def test_get_datasource_hooks_success_some_hooks(self):
+        ''' get_datasource_hooks should return the sid list of hooks '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_get_datasource_hooks_success_some_hooks'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename) 
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        sids=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        for sid in sids:
+            self.assertTrue(api.hook_to_datasource(did=did, sid=sid))
+        did_hooks=api.get_datasource_hooks(did=did)
+        self.assertEqual(sorted(did_hooks),sorted(sids))
+
+    def test_get_datasource_hooks_success_no_hooks(self):
+        ''' get_datasource_hooks should return an empty list if no hook is found '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_get_datasource_hooks_success_no_hooks'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename) 
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        did_hooks=api.get_datasource_hooks(did=did)
+        self.assertEqual(did_hooks,[])
+

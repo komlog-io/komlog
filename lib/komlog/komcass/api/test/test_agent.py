@@ -394,15 +394,15 @@ class KomcassApiAgentTest(unittest.TestCase):
         aid=uuid.uuid4()
         uid=uuid.uuid4()
         imc_address='host@imc.address'
-        generated=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,generated=generated)
+        last_update=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         db_session=agentapi.get_agent_session(sid=sid)
         self.assertIsNotNone(db_session)
         self.assertEqual(db_session.sid,sid)
         self.assertEqual(db_session.aid,aid)
         self.assertEqual(db_session.uid,uid)
-        self.assertEqual(db_session.generated,generated)
+        self.assertEqual(db_session.last_update,last_update)
         self.assertEqual(db_session.imc_address,imc_address)
 
     def test_insert_agent_session_failure_invalid_agent_session_instance(self):
@@ -417,16 +417,95 @@ class KomcassApiAgentTest(unittest.TestCase):
         aid=uuid.uuid4()
         uid=uuid.uuid4()
         imc_address='host@imc.address'
-        generated=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,generated=generated)
+        last_update=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         db_session=agentapi.get_agent_session(sid=sid)
         self.assertIsNotNone(db_session)
         self.assertEqual(db_session.sid,sid)
         self.assertEqual(db_session.aid,aid)
         self.assertEqual(db_session.uid,uid)
-        self.assertEqual(db_session.generated,generated)
+        self.assertEqual(db_session.last_update,last_update)
         self.assertEqual(db_session.imc_address,imc_address)
+
+    def test_update_agent_session_if_last_update_failure_invalid_agent_session_instance(self):
+        ''' update_agent_session_if_last_update should fail if obj is not and AgentSession instance '''
+        sessions=[None, 123123, '1231231', {'a':'dict'},['a','list'], uuid.uuid4(), timeuuid.uuid1(), ('a','tuple'), {'set'}]
+        last_update=timeuuid.uuid1()
+        for session in sessions:
+            self.assertFalse(agentapi.update_agent_session_if_last_update(obj=session, last_update=last_update))
+
+    def test_update_agent_session_if_last_update_failure_session_does_not_exist(self):
+        ''' update_agent_session_if_last_update should fail if session does not exist '''
+        sid=uuid.uuid4()
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        imc_address='host@imc.address'
+        last_update=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        last_update=timeuuid.uuid1()
+        self.assertFalse(agentapi.update_agent_session_if_last_update(obj=session, last_update=last_update))
+
+    def test_update_agent_session_if_last_update_success(self):
+        ''' update_agent_session_if_last_update should return True and insert the AgentSession object if it exists and last_update is later than saved value '''
+        sid=uuid.uuid4()
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        imc_address='host@imc.address'
+        last_update=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        self.assertTrue(agentapi.insert_agent_session(session))
+        db_session=agentapi.get_agent_session(sid=sid)
+        self.assertIsNotNone(db_session)
+        self.assertEqual(db_session.sid,sid)
+        self.assertEqual(db_session.aid,aid)
+        self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.last_update,last_update)
+        self.assertEqual(db_session.imc_address,imc_address)
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        imc_address='host@imc.address'
+        last_update=timeuuid.uuid1()
+        new_session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        self.assertTrue(agentapi.update_agent_session_if_last_update(obj=new_session, last_update=last_update))
+        db_session=agentapi.get_agent_session(sid=sid)
+        self.assertIsNotNone(db_session)
+        self.assertEqual(db_session.sid,sid)
+        self.assertEqual(db_session.aid,aid)
+        self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.last_update,last_update)
+        self.assertEqual(db_session.imc_address,imc_address)
+
+    def test_update_agent_session_if_last_update_failure_last_update_earlier(self):
+        ''' update_agent_session_if_last_update should fail if last_update is earlier than saved value '''
+        sid=uuid.uuid4()
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        imc_address='host@imc.address'
+        last_update=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        self.assertTrue(agentapi.insert_agent_session(session))
+        db_session=agentapi.get_agent_session(sid=sid)
+        self.assertIsNotNone(db_session)
+        self.assertEqual(db_session.sid,sid)
+        self.assertEqual(db_session.aid,aid)
+        self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.last_update,last_update)
+        self.assertEqual(db_session.imc_address,imc_address)
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        imc_address='host@imc.address'
+        last_update=timeuuid.uuid1()
+        new_session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        last_update=timeuuid.uuid1(seconds=1)
+        self.assertFalse(agentapi.update_agent_session_if_last_update(obj=session, last_update=last_update))
+        db_session2=agentapi.get_agent_session(sid=sid)
+        self.assertIsNotNone(db_session2)
+        self.assertEqual(db_session.sid,db_session2.sid)
+        self.assertEqual(db_session.aid,db_session2.aid)
+        self.assertEqual(db_session.uid,db_session2.uid)
+        self.assertEqual(db_session.last_update,db_session2.last_update)
+        self.assertEqual(db_session.imc_address,db_session2.imc_address)
 
     def test_delete_agent_session_success_agent_session_does_not_exist(self):
         ''' delete_agent_session should return True even if sid does not exist '''
@@ -439,15 +518,15 @@ class KomcassApiAgentTest(unittest.TestCase):
         aid=uuid.uuid4()
         uid=uuid.uuid4()
         imc_address='host@imc.address'
-        generated=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,generated=generated)
+        last_update=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         db_session=agentapi.get_agent_session(sid=sid)
         self.assertIsNotNone(db_session)
         self.assertEqual(db_session.sid,sid)
         self.assertEqual(db_session.aid,aid)
         self.assertEqual(db_session.uid,uid)
-        self.assertEqual(db_session.generated,generated)
+        self.assertEqual(db_session.last_update,last_update)
         self.assertEqual(db_session.imc_address,imc_address)
         self.assertTrue(agentapi.delete_agent_session(sid=sid))
         db_session=agentapi.get_agent_session(sid=sid)
@@ -458,19 +537,67 @@ class KomcassApiAgentTest(unittest.TestCase):
         aid=uuid.uuid4()
         self.assertTrue(agentapi.delete_agent_sessions(aid=aid))
 
+    def test_delete_agent_session_if_last_update_failure_agent_session_does_not_exist(self):
+        ''' delete_agent_session_if_last_update should return False if sid does not exist '''
+        sid=uuid.uuid4()
+        last_update=uuid.uuid1()
+        self.assertFalse(agentapi.delete_agent_session_if_last_update(sid=sid, last_update=last_update))
+
+    def test_delete_agent_session_if_last_update_success(self):
+        ''' delete_agent_session_if_last_update should return True and delete the AgentSession object if session exists and last_update is later than the stored value '''
+        sid=uuid.uuid4()
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        imc_address='host@imc.address'
+        last_update=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        self.assertTrue(agentapi.insert_agent_session(session))
+        db_session=agentapi.get_agent_session(sid=sid)
+        self.assertIsNotNone(db_session)
+        self.assertEqual(db_session.sid,sid)
+        self.assertEqual(db_session.aid,aid)
+        self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.last_update,last_update)
+        self.assertEqual(db_session.imc_address,imc_address)
+        last_update=timeuuid.uuid1()
+        self.assertTrue(agentapi.delete_agent_session_if_last_update(sid=sid, last_update=last_update))
+        db_session=agentapi.get_agent_session(sid=sid)
+        self.assertIsNone(db_session)
+
+    def test_delete_agent_session_if_last_update_failure(self):
+        ''' delete_agent_session_if_last_update should return False if session exists and last_update is earlier than the stored value '''
+        sid=uuid.uuid4()
+        aid=uuid.uuid4()
+        uid=uuid.uuid4()
+        imc_address='host@imc.address'
+        last_update=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        self.assertTrue(agentapi.insert_agent_session(session))
+        db_session=agentapi.get_agent_session(sid=sid)
+        self.assertIsNotNone(db_session)
+        self.assertEqual(db_session.sid,sid)
+        self.assertEqual(db_session.aid,aid)
+        self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.last_update,last_update)
+        self.assertEqual(db_session.imc_address,imc_address)
+        last_update=timeuuid.uuid1(seconds=1)
+        self.assertFalse(agentapi.delete_agent_session_if_last_update(sid=sid, last_update=last_update))
+        db_session=agentapi.get_agent_session(sid=sid)
+        self.assertIsNotNone(db_session)
+
     def test_delete_agent_sessions_success(self):
         ''' delete_agent_sessions should return True and delete all agent sessions '''
         aid=uuid.uuid4()
         uid=uuid.uuid4()
         sid1=uuid.uuid4()
         imc_address1='host@imc.address'
-        generated1=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid1, aid=aid,uid=uid,imc_address=imc_address1,generated=generated1)
+        last_update=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid1, aid=aid,uid=uid,imc_address=imc_address1,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         sid2=uuid.uuid4()
         imc_address2='host@imc.address2'
-        generated2=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid2, aid=aid,uid=uid,imc_address=imc_address2,generated=generated2)
+        last_update2=timeuuid.uuid1()
+        session=ormagent.AgentSession(sid=sid2, aid=aid,uid=uid,imc_address=imc_address2,last_update=last_update2)
         self.assertTrue(agentapi.insert_agent_session(session))
         self.assertIsNotNone(agentapi.get_agent_session(sid=sid1))
         self.assertIsNotNone(agentapi.get_agent_session(sid=sid2))

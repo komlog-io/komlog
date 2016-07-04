@@ -26,12 +26,14 @@ STATEMENTS={
     15100:'insert into mst_agent_pubkey (uid,pubkey,aid,state) values (?,?,?,?)',
     15101:'insert into mst_agent_pubkey (uid,pubkey,aid,state) values (?,?,?,?) if not exists',
     15200:'insert into mst_agent_challenge (aid,challenge,generated,validated) values (?,?,?,?)',
-    15300:'insert into mst_agent_session (sid,aid,uid,imc_address,generated) values (?,?,?,?,?)',
+    15300:'insert into mst_agent_session (sid,aid,uid,imc_address,last_update) values (?,?,?,?,?)',
     17000:'delete from mst_agent where aid=?',
     17100:'delete from mst_agent_pubkey where uid=? and pubkey=?',
     17200:'delete from mst_agent_challenge where aid=? and challenge=?',
     17201:'delete from mst_agent_challenge where aid=?',
     17300:'delete from mst_agent_session where sid=?',
+    17301:'delete from mst_agent_session where sid=? if last_update <= ?',
+    19300:'update mst_agent_session set aid=?,uid=?,imc_address=?,last_update=? where sid=? if last_update <= ?',
 }
 
 # selects (10000 - 14999)
@@ -94,12 +96,17 @@ D_A_MSTAGENTPUBKEY=17100
 D_A_MSTAGENTCHALLENGE_B_AID_CHALLENGE=17200
 D_A_MSTAGENTCHALLENGE_B_AID=17201
 
-# mst_agent_challenge
+# mst_agent_session
 
 D_A_MSTAGENTSESSION_B_SID=17300
+D_A_MSTAGENTSESSION_B_SID_I_LASTUPDATE=17301
 
 
 # Update (19000 - 19999)
 
 # mst_agent
+
+# mst_agent_session
+
+U_A_MSTAGENTSESSION_B_SID_I_LASTUPDATE=19300
 

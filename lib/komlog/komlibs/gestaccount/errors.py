@@ -17,8 +17,9 @@ The range reserved for Errors.in this module is 1 - 49999
 
 '''
 
-from enum import Enum
+from enum import Enum, unique
 
+@unique
 class Errors(Enum):
 #common to every Error class
 
@@ -90,7 +91,7 @@ class Errors(Enum):
 
     E_GUA_UIT_IINV  = 130 #: undo_invitation_transactions. invalid invitation.
     E_GUA_UIT_ITRN  = 131 #: undo_invitation_transactions. invalid transaction id.
-    E_GUA_UIT_INVNF = 131 #: undo_invitation_transactions. invitation info not found.
+    E_GUA_UIT_INVNF = 132 #: undo_invitation_transactions. invitation info not found.
 
     E_GUA_II_IINV   = 135 #: initialize_invitation. invalid invitation.
     E_GUA_II_INVNF  = 136 #: initialize_invitation. invitation info not found.
@@ -228,6 +229,9 @@ class Errors(Enum):
 
     E_GDA_UHFDS_IDID    =   4550    #: unhook_from_datasource. invalid did
     E_GDA_UHFDS_ISID    =   4551    #: unhook_from_datasource. invalid sid
+    
+    E_GDA_GDSH_IDID     =   4600    #: get_datasource_hooks. invalid sid
+    E_GDA_GDSH_DSNF     =   4601    #: get_datasource_hooks. datasource not found
 
 # gestaccount datapoint api
 
@@ -342,7 +346,7 @@ class Errors(Enum):
     E_GPA_SDMSV_DNF     = 6742
     E_GPA_SDMSV_DPDTNF  = 6743
     E_GPA_SDMSV_DSMNF   = 6744
-    E_GPA_SDMSV_DSNF    = 6742 #: datapoint is not associated to a datasource
+    E_GPA_SDMSV_DSNF    = 6745 #: datapoint is not associated to a datasource
 
     E_GPA_MMDP_IP   = 6750
     E_GPA_MMDP_IDT  = 6751
@@ -369,6 +373,9 @@ class Errors(Enum):
 
     E_GPA_UHFDP_IPID    =   6900    #: unhook_from_datapoint. invalid pid
     E_GPA_UHFDP_ISID    =   6901    #: unhook_from_datapoint. invalid sid
+
+    E_GPA_GDPH_IPID     =   6950    #: get_datapoint_hooks. invalid pid
+    E_GPA_GDPH_DPNF     =   6951    #: get_datapoint_hooks. datapoint not found
 
 # gestaccount widget api
 
@@ -620,6 +627,6 @@ class Errors(Enum):
     E_GCD_DDPDA_IPID  = 16900 #: delete_datapoint_data_at: invalid pid
     E_GCD_DDPDA_IDATE = 16901 #: delete_datapoint_data_at: invalid date
 
-    E_GCD_DDSDA_IDID  = 16900 #: delete_datasource_data_at: invalid did
-    E_GCD_DDSDA_IDATE = 16901 #: delete_datasource_data_at: invalid date
+    E_GCD_DDSDA_IDID  = 16950 #: delete_datasource_data_at: invalid did
+    E_GCD_DDSDA_IDATE = 16951 #: delete_datasource_data_at: invalid date
 

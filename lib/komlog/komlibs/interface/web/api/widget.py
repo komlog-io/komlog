@@ -7,7 +7,6 @@ This file defines the logic associated with web interface operations
 import uuid
 from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
-from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
 from komlog.komlibs.auth.passport import Passport
@@ -103,9 +102,9 @@ def delete_widget_request(passport, wid):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_DWR_IW)
     wid=uuid.UUID(wid)
     authorization.authorize_request(request=Requests.DELETE_WIDGET,passport=passport,wid=wid)
-    message=messages.DeleteWidgetMessage(wid=wid)
-    msgapi.send_message(msg=message)
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp.add_message(messages.DeleteWidgetMessage(wid=wid))
+    return resp
 
 @exceptions.ExceptionHandler
 def new_widget_request(passport, data):
@@ -133,11 +132,10 @@ def new_widget_request(passport, data):
         params=webop.get_params()
         try:
             if authupdate.update_resources(operation=authop, params=params):
-                message=messages.UpdateQuotesMessage(operation=authop, params=params)
-                msgapi.send_message(message)
-                message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_WIDGET, parameters={'wid':widget['wid'].hex})
-                msgapi.send_message(message)
-                return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'wid':widget['wid'].hex})
+                resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'wid':widget['wid'].hex})
+                resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_WIDGET, parameters={'wid':widget['wid'].hex}))
+                return resp
             else:
                 deleteapi.delete_widget(wid=widget['wid'])
                 return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAW_NWR_AUTHERR.value)

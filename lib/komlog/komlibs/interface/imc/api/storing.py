@@ -15,6 +15,7 @@ from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.widget import types as widgettypes
+from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.interface.imc import status, exceptions
 from komlog.komlibs.interface.imc.errors import Errors
 from komlog.komlibs.interface.imc.model import messages, responses
@@ -81,6 +82,7 @@ def process_message_STOSMP(message):
                 return response
         did=uuid.UUID(str_did)
         date=timeuuid.uuid1(seconds=timestamp)
+        datasource=datasourceapi.get_datasource_config(did=did, pids_flag=False)
         if datasourceapi.store_datasource_data(did=did, date=date, content=content):
             stored_path=config.get(options.SAMPLES_STORED_PATH)
             if not stored_path:
@@ -93,9 +95,10 @@ def process_message_STOSMP(message):
                 logging.logger.debug('Error moving processed file to stored path: '+str(e))
             auth_op=Operations.DATASOURCE_DATA_STORED
             params={'did':did, 'date':date}
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=auth_op, params=params))
-            response.add_msg_originated(messages.GenerateTextSummaryMessage(did=did,date=date))
-            response.add_msg_originated(messages.MapVarsMessage(did=did,date=date))
+            response.add_message(messages.UpdateQuotesMessage(operation=auth_op, params=params))
+            response.add_message(messages.GenerateTextSummaryMessage(did=did,date=date))
+            response.add_message(messages.MapVarsMessage(did=did,date=date))
+            response.add_message(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATASOURCE,'id':did,'uri':datasource['datasourcename']}],date=date))
             response.status=status.IMC_STATUS_OK
         else:
             logging.logger.debug('Error storing sample. did: '+did.hex+' date:'+ds_date.hex)

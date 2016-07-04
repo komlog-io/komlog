@@ -6,7 +6,6 @@ This file defines the logic associated with web interface requests
 
 import uuid
 from komlog.komfig import logging
-from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.auth.model.requests import Requests
@@ -70,13 +69,11 @@ def new_user_request(username, password, email, invitation=None, require_invitat
         webop=operation.NewUserOperation(uid=user['uid'])
         authop=webop.get_auth_operation()
         params=webop.get_params()
-        message=messages.UpdateQuotesMessage(operation=authop, params=params)
-        msgapi.send_message(message)
-        message=messages.NewUserNotificationMessage(email=user['email'], code=user['code'])
-        msgapi.send_message(message)
-        message=messages.UserEventMessage(uid=user['uid'],event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_USER)
-        msgapi.send_message(message)
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'uid':user['uid'].hex,'username':username})
+        resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'uid':user['uid'].hex,'username':username})
+        resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+        resp.add_message(messages.NewUserNotificationMessage(email=user['email'], code=user['code']))
+        resp.add_message(messages.UserEventMessage(uid=user['uid'],event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_USER))
+        return resp
 
 @exceptions.ExceptionHandler
 def confirm_user_request(email, code):
@@ -119,6 +116,15 @@ def update_user_config_request(passport, data):
         if not args.is_valid_password(data['old_password']):
             raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSCR_IOP)
         request_params['old_password']=data['old_password']
+    if ('new_password' in request_params) != ('old_password' in request_params):
+        if 'new_password' in request_params:
+            raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSCR_ONPR)
+        else:
+            raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSCR_OOPR)
+    elif ('new_password' in request_params
+        and 'old_password' in request_params
+        and request_params['new_password'] == request_params['old_password']):
+        raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSCR_NPEOP)
     authorization.authorize_request(request=Requests.UPDATE_USER_CONFIG, passport=passport)
     if userapi.update_user_config(uid=passport.uid, **request_params):
         return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
@@ -128,9 +134,9 @@ def delete_user_request(passport):
     if not isinstance(passport, Passport):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_DUSR_IPSP)
     authorization.authorize_request(request=Requests.DELETE_USER, passport=passport)
-    message=messages.DeleteUserMessage(uid=passport.uid)
-    msgapi.send_message(msg=message)
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp = response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp.add_message(messages.DeleteUserMessage(uid=passport.uid))
+    return resp
 
 @exceptions.ExceptionHandler
 def register_invitation_request(email):
@@ -176,11 +182,14 @@ def send_invitation_request(email=None, num=1):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_SIR_INUM)
     invitations=userapi.generate_user_invitations(email=email, num=num)
     sent=[]
+    msgs=[]
     for invitation in invitations:
-        message=messages.NewInvitationMailMessage(email=invitation['email'], inv_id=invitation['inv_id'])
-        msgapi.send_message(message)
+        msgs.append(messages.NewInvitationMailMessage(email=invitation['email'], inv_id=invitation['inv_id']))
         sent.append((invitation['email'],invitation['inv_id'].hex))
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data=sent)
+    resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data=sent)
+    for msg in msgs:
+        resp.add_message(msg)
+    return resp
 
 @exceptions.ExceptionHandler
 def register_forget_request(account):
@@ -197,10 +206,10 @@ def register_forget_request(account):
         error=Errors.E_IWAU_RFR_UNF
         return response.WebInterfaceResponse(status=status_c, data=data, error=error)
     else:
-        message=messages.ForgetMailMessage(email=request['email'], code=request['code'])
-        msgapi.send_message(message)
         data={'username':request['username'],'email':request['email'],'code':request['code'].hex}
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
+        resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
+        resp.add_message(messages.ForgetMailMessage(email=request['email'], code=request['code']))
+        return resp
 
 @exceptions.ExceptionHandler
 def check_forget_code_request(code):

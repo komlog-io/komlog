@@ -5,7 +5,6 @@ This file defines the logic associated with web interface operations
 '''
 import uuid
 from komlog.komcass import exceptions as cassexcept
-from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
 from komlog.komlibs.auth import exceptions as authexcept
@@ -145,13 +144,11 @@ def new_datasource_request(passport, datasourcename):
         params=webop.get_params()
         try:
             if authupdate.update_resources(operation=authop, params=params):
-                message=messages.UpdateQuotesMessage(operation=authop, params=params)
-                msgapi.send_message(message)
-                message=messages.NewDSWidgetMessage(uid=passport.uid, did=datasource['did'])
-                msgapi.send_message(message)
-                message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':datasource['did'].hex})
-                msgapi.send_message(message)
-                return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
+                resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
+                resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                resp.add_message(messages.NewDSWidgetMessage(uid=passport.uid, did=datasource['did']))
+                resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':datasource['did'].hex}))
+                return resp
             else:
                 deleteapi.delete_datasource(did=datasource['did'])
                 return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADS_NDSR_AUTHERR)
@@ -167,7 +164,7 @@ def delete_datasource_request(passport, did):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_DDSR_ID)
     did=uuid.UUID(did)
     authorization.authorize_request(request=Requests.DELETE_DATASOURCE,passport=passport,did=did)
-    message=messages.DeleteDatasourceMessage(did=did)
-    msgapi.send_message(msg=message)
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp.add_message(messages.DeleteDatasourceMessage(did=did))
+    return resp
 

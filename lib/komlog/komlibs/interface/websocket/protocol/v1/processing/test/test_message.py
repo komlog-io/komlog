@@ -22,6 +22,7 @@ from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.graph.api import uri as graphuri
 from komlog.komlibs.graph.relations import vertex
+from komlog.komlibs.interface.imc import status as imcstatus
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.websocket.protocol.v1 import exceptions, status
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
@@ -41,7 +42,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDSDM_IMT.value)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDSD_ELFD.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_ds_data_failure_user_not_found(self):
         ''' _process_send_ds_data should fail if user does not exist '''
@@ -51,6 +54,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ANDS_RE.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_ds_data_failure_agent_not_found(self):
         ''' _process_send_ds_data should fail if user does not exist '''
@@ -66,6 +71,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ANDS_RE.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_ds_data_failure_no_permission_for_ds_creation(self):
         ''' _process_send_ds_data should fail if user has no permission for ds creation '''
@@ -87,6 +94,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ANDS_RE.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_ds_data_failure_no_permission_for_uri_mutation(self):
         ''' _process_send_ds_data should fail if user has no permission for uri mutation '''
@@ -109,6 +118,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ANDS_RE.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_ds_data_failure_no_permission_for_post_ds_data(self):
         ''' _process_send_ds_data should fail if user has no permission for posting over this ds '''
@@ -131,6 +142,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ATDSD_RE.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_ds_data_failure_incompatible_uri_type(self):
         ''' _process_send_ds_data should fail if uri exists and is not void or ds type '''
@@ -153,6 +166,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDSD_IURI.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_ds_data_failure_error_creating_ds(self):
         ''' _process_send_ds_data should fail if ds creationg fails '''
@@ -182,6 +197,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDSD_ECDS.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         authorization.authorize_request = auth_req_bck
         datasourceapi.create_datasource = ds_creation_bck
 
@@ -210,43 +227,12 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         options.SAMPLES_RECEIVED_PATH=option_mock
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, gesterrors.E_GDA_UDD_IDD.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDSD_EUR.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         authorization.authorize_request = auth_req_bck
         options.SAMPLES_RECEIVED_PATH=option_bck
-        uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
-        self.assertIsNone(uri_info)
-
-    def test__process_send_ds_data_failure_processing_operation(self):
-        ''' _process_send_ds_data should fail if processing the post operation fails '''
-        username='test_process_send_ds_data_failure_processing_operation'
-        password='password_for_the_user'
-        email=username+'@komlog.org'
-        user_reg=userapi.create_user(username=username, password=password, email=email)
-        self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
-        agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='agent_version'
-        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
-        self.assertIsNotNone(agent)
-        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.ds','ts':time.time(),'content':'content'}}
-        auth_req_bck=authorization.authorize_request
-        operation_bck=operation.process_operation
-        def auth_mock(request, passport):
-            return True
-        def operation_mock(op):
-            return False
-        authorization.authorize_request = auth_mock
-        operation.process_operation=operation_mock
-        resp=message._process_send_ds_data(psp, msg)
-        self.assertTrue(isinstance(resp, modresp.Response))
-        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDSD_FUR.value)
-        authorization.authorize_request = auth_req_bck
-        operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNone(uri_info)
 
@@ -277,7 +263,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDSD_EUR.value)
         authorization.authorize_request = auth_req_bck
         operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
@@ -307,6 +292,21 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.error, Errors.OK.value)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNotNone(uri_info)
+        self.assertNotEqual(resp.unrouted_messages,[])
+        self.assertEqual(resp.routed_messages,{})
+        expected_messages={
+            messages.UPDATE_QUOTES_MESSAGE:1,
+            messages.NEW_DS_WIDGET_MESSAGE:1,
+            messages.USER_EVENT_MESSAGE:1
+        }
+        retrieved_messages={}
+        msgs=resp.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg.type]+=1
+            except KeyError:
+                retrieved_messages[msg.type]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
 
     def test__process_send_ds_data_success_ds_already_existed(self):
         ''' _process_send_ds_data should succeed and create the ds '''
@@ -341,6 +341,18 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNotNone(uri_info)
+        self.assertEqual(resp.unrouted_messages,[])
+        self.assertEqual(resp.routed_messages,{})
+        expected_messages={
+        }
+        retrieved_messages={}
+        msgs=resp.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg.type]+=1
+            except KeyError:
+                retrieved_messages[msg.type]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
 
     def test__process_send_dp_data_failure_invalid_message(self):
         ''' _process_send_dp_data should fail if message is invalid '''
@@ -349,7 +361,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDPDM_IMT.value)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDPD_ELFD.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_dp_data_failure_different_message_passed(self):
         ''' _process_send_dp_data should fail if message is not of type SEND_DP_DATA '''
@@ -358,16 +372,20 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDPDM_IA.value)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDPD_ELFD.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_dp_data_failure_user_not_found(self):
         ''' _process_send_dp_data should fail if user does not exist '''
         psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':time.time(),'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':time.time(),'content':'89'}}
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
-        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ANUDP_RE.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_dp_data_failure_agent_not_found(self):
         ''' _process_send_dp_data should fail if agent does not exist '''
@@ -378,11 +396,13 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         psp = Passport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':time.time(),'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':time.time(),'content':'79'}}
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
-        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ANUDP_RE.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_dp_data_failure_no_permission_for_dp_creation(self):
         ''' _process_send_dp_data should fail if agent has no permission for dp creation '''
@@ -399,11 +419,13 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = Passport(uid=user_reg['uid'],sid=uuid.uuid4(), aid=agent['aid'])
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':time.time(),'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':time.time(),'content':'70'}}
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
-        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ANUDP_RE.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_dp_data_failure_no_permission_for_uri_mutation(self):
         ''' _process_send_dp_data should fail if user has no permission for uri mutation '''
@@ -420,12 +442,14 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.void','ts':time.time(),'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.void','ts':time.time(),'content':'70'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_VOID_RELATION))
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ANUDP_RE.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_dp_data_failure_no_permission_for_post_dp_data(self):
         ''' _process_send_dp_data should fail if user has no permission for posting over this dp '''
@@ -442,12 +466,14 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.void','ts':time.time(),'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.void','ts':time.time(),'content':'70'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_DATAPOINT_RELATION))
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ATDPD_RE.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_dp_data_failure_incompatible_uri_type(self):
         ''' _process_send_dp_data should fail if uri exists and is not void or dp type '''
@@ -464,12 +490,14 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.void','ts':time.time(),'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.void','ts':time.time(),'content':'70'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_DATASOURCE_RELATION))
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDPD_IURI.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_dp_data_failure_error_creating_dp(self):
         ''' _process_send_dp_data should fail if dp creationg fails '''
@@ -486,7 +514,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':time.time(),'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':time.time(),'content':'70'}}
         res_msg=messages. ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         dp_creation_bck=datapointapi.create_user_datapoint
@@ -497,6 +525,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDPD_ECDP.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         datapointapi.create_user_datapoint = dp_creation_bck
 
     def test__process_send_dp_data_failure_error_invalid_message_numeric_content(self):
@@ -519,38 +549,10 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(msgapi.process_message(res_msg))
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
-        self.assertEqual(resp.error, gesterrors.E_GPA_SDPSV_CVNN.value)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDPD_ICNT.value)
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
-        self.assertIsNone(uri_info)
-
-    def test__process_send_dp_data_failure_processing_operation(self):
-        ''' _process_send_dp_data should fail if processing the post operation fails '''
-        username='test_process_send_dp_data_failure_processing_operation'
-        password='password_for_the_user'
-        email=username+'@komlog.org'
-        user_reg=userapi.create_user(username=username, password=password, email=email)
-        self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
-        agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='agent_version'
-        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
-        self.assertIsNotNone(agent)
-        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
-        self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.dp','ts':time.time(),'content':'55'}}
-        operation_bck=operation.process_operation
-        def operation_mock(op):
-            return False
-        operation.process_operation=operation_mock
-        resp=message._process_send_dp_data(psp, msg)
-        self.assertTrue(isinstance(resp, modresp.Response))
-        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDPD_FPOR.value)
-        operation.process_operation = operation_bck
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNone(uri_info)
 
@@ -580,6 +582,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.UNKNOWN.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNone(uri_info)
@@ -608,6 +612,23 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNotNone(uri_info)
+        self.assertNotEqual(resp.unrouted_messages,[])
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.routed_messages,{})
+        self.assertNotEqual(resp.unrouted_messages,[])
+        expected_messages={
+            messages.UPDATE_QUOTES_MESSAGE:1,
+            messages.NEW_DP_WIDGET_MESSAGE:1,
+            messages.URIS_UPDATED_MESSAGE:1
+        }
+        retrieved_messages={}
+        msgs=resp.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg.type]+=1
+            except KeyError:
+                retrieved_messages[msg.type]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
 
     def test__process_send_dp_data_success_dp_already_existed(self):
         ''' _process_send_dp_data should succeed using the existing datapoint '''
@@ -635,6 +656,19 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.OK.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertNotEqual(resp.unrouted_messages,[])
+        expected_messages={
+            messages.URIS_UPDATED_MESSAGE:1
+        }
+        retrieved_messages={}
+        msgs=resp.unrouted_messages
+        for item in msgs:
+            try:
+                retrieved_messages[item.type]+=1
+            except KeyError:
+                retrieved_messages[item.type]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNotNone(uri_info)
         self.assertEqual(uri_info['id'],datapoint['pid'])
@@ -646,7 +680,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SMTDM_IMT.value)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SMTD_ELFD.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_multi_data_failure_different_message_passed(self):
         ''' _process_send_multi_data should fail if message is not of type SEND_MULTI_DATA '''
@@ -655,7 +691,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SMTDM_IA.value)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SMTD_ELFD.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_multi_data_failure_user_not_found_new_datasource_auth_failed(self):
         ''' _process_send_multi_data should fail if user does not exist and a new ds uri has to be created '''
@@ -665,6 +703,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ANDS_RE.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_multi_data_failure_agent_not_found_new_datasource_auth_failed(self):
         ''' _process_send_multi_data should fail if agent does not exist '''
@@ -680,6 +720,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, autherrors.E_ARA_ANDS_RE.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_multi_data_failure_user_not_found_new_datapoint_auth_failed(self):
         ''' _process_send_multi_data should fail if user does not exist '''
@@ -689,6 +731,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
         self.assertEqual(resp.error, autherrors.E_ARA_ANUDP_RE.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_multi_data_failure_agent_not_found_new_datapoint_auth_failed(self):
         ''' _process_send_multi_data should fail if agent does not exist '''
@@ -704,6 +748,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, autherrors.E_ARA_ANUDP_RE.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_multi_data_failure_operation_not_allowed_for_uri_type(self):
         ''' _process_send_multi_data should fail if uri type is not datasource nor datapoint '''
@@ -726,6 +772,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSMTD_ONAOU.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_multi_data_failure_no_permission_for_post_datapoint_data(self):
         ''' _process_send_multi_data should fail if user has no permission to post datapoint data'''
@@ -755,6 +803,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, autherrors.E_ARA_ATDPD_RE.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_multi_data_failure_no_permission_for_post_datasource_data(self):
         ''' _process_send_multi_data should fail if user has no permission to post datasource data'''
@@ -784,6 +834,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, autherrors.E_ARA_ATDSD_RE.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_multi_data_success_new_datasource(self):
         ''' _process_send_multi_data should succeed and create the new datasource '''
@@ -809,6 +861,24 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.OK.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertNotEqual(resp.unrouted_messages,[])
+        expected_messages={
+            messages.UPDATE_QUOTES_MESSAGE:2,
+            messages.NEW_DS_WIDGET_MESSAGE:1,
+            messages.USER_EVENT_MESSAGE:1,
+            messages.GENERATE_TEXT_SUMMARY_MESSAGE:1,
+            messages.MAP_VARS_MESSAGE:1,
+            messages.URIS_UPDATED_MESSAGE:1
+        }
+        retrieved_messages={}
+        msgs=resp.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg.type]+=1
+            except KeyError:
+                retrieved_messages[msg.type]=1
+        self.assertEqual(sorted(retrieved_messages), sorted(expected_messages))
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
         self.assertIsNotNone(uri_info)
         self.assertEqual(uri_info['type'],vertex.DATASOURCE)
@@ -837,6 +907,21 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.OK.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertNotEqual(resp.unrouted_messages,[])
+        expected_messages={
+            messages.UPDATE_QUOTES_MESSAGE:1,
+            messages.NEW_DP_WIDGET_MESSAGE:1,
+            messages.URIS_UPDATED_MESSAGE:1
+        }
+        retrieved_messages={}
+        msgs=resp.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg.type]+=1
+            except KeyError:
+                retrieved_messages[msg.type]=1
+        self.assertEqual(sorted(retrieved_messages), sorted(expected_messages))
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.dp')
         self.assertIsNotNone(uri_info)
         self.assertEqual(uri_info['type'],vertex.DATAPOINT)
@@ -869,7 +954,22 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.OK.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
-
+        self.assertEqual(resp.routed_messages,{})
+        self.assertNotEqual(resp.unrouted_messages,[])
+        expected_messages={
+            messages.UPDATE_QUOTES_MESSAGE:1,
+            messages.GENERATE_TEXT_SUMMARY_MESSAGE:1,
+            messages.MAP_VARS_MESSAGE:1,
+            messages.URIS_UPDATED_MESSAGE:1
+        }
+        retrieved_messages={}
+        msgs=resp.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg.type]+=1
+            except KeyError:
+                retrieved_messages[msg.type]=1
+ 
     def test__process_send_multi_data_success_datapoint_already_existed(self):
         ''' _process_send_multi_data should and store content in datapoint '''
         username='test_process_send_multi_data_success_datapoint_already_existed'
@@ -898,7 +998,19 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.OK.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
-
+        self.assertEqual(resp.routed_messages,{})
+        self.assertNotEqual(resp.unrouted_messages,[])
+        expected_messages={
+            messages.URIS_UPDATED_MESSAGE:1
+        }
+        retrieved_messages={}
+        msgs=resp.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg.type]+=1
+            except KeyError:
+                retrieved_messages[msg.type]=1
+ 
     def test__process_send_multi_data_failure_datapoint_already_existed_but_content_is_not_numeric(self):
         ''' _process_send_multi_data should fail if we try to store non numeric content into a datapoint '''
         username='test_process_send_multi_data_failure_datapoint_already_existed_but_content_is_not_numeric'
@@ -927,6 +1039,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSMTD_UCNV.value)
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_send_multi_data_success_existing_and_non_existing_uris(self):
         ''' _process_send_multi_data should succeed, creating uris when they do not exist and updating the existing ones '''
@@ -974,6 +1088,25 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.OK.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertNotEqual(resp.unrouted_messages,[])
+        expected_messages={
+            messages.UPDATE_QUOTES_MESSAGE:4,
+            messages.NEW_DP_WIDGET_MESSAGE:1,
+            messages.NEW_DS_WIDGET_MESSAGE:1,
+            messages.USER_EVENT_MESSAGE:1,
+            messages.GENERATE_TEXT_SUMMARY_MESSAGE:2,
+            messages.MAP_VARS_MESSAGE:2,
+            messages.URIS_UPDATED_MESSAGE:1
+        }
+        retrieved_messages={}
+        msgs=resp.unrouted_messages
+        for item in msgs:
+            try:
+                retrieved_messages[item.type]+=1
+            except KeyError:
+                retrieved_messages[item.type]=1
+        self.assertEqual(sorted(retrieved_messages), sorted(expected_messages))
         did=datasource['did']
         existing_ds_stats=cassapidatasource.get_datasource_stats(did=did)
         date=existing_ds_stats.last_received
@@ -1047,6 +1180,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSMTD_UCNV.value)
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.new_ds')
         self.assertIsNone(uri_info)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.new_dp')
@@ -1065,7 +1200,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_HTUM_IMT.value)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_HTU_ELFD.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_hook_to_uri_failure_different_message_passed(self):
         ''' _process_hook_to_uri should fail if message is not of type HOOK_TO_URI '''
@@ -1074,7 +1211,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_HTUM_IA.value)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_HTU_ELFD.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_hook_to_uri_failure_uri_not_found(self):
         ''' _process_hook_to_uri should fail if uri does not exist '''
@@ -1084,6 +1223,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PHTU_UNF.value)
         self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_hook_to_uri_failure_operation_not_allowed_for_uri_type(self):
         ''' _process_hook_to_uri should fail if uri type is not datasource nor datapoint '''
@@ -1106,6 +1247,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PHTU_ONA.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_hook_to_uri_failure_no_read_permission_for_datasource(self):
         ''' _process_hook_to_uri should fail if uri type is datasource and no read perm is found'''
@@ -1133,6 +1276,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, autherrors.E_ARA_AHTDS_RE.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_hook_to_uri_success_datasource_uri(self):
         ''' _process_hook_to_uri should succeed if uri type is ds and read perm is found'''
@@ -1159,6 +1304,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp.sid])
 
     def test__process_hook_to_uri_success_datasource_uri_multiple_sessions(self):
@@ -1188,19 +1335,27 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid,psp3.sid]))
         #if the same session resend the message, it has no efect over hooked sids
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid,psp3.sid]))
 
     def test__process_hook_to_uri_failure_no_read_permission_for_datapoint(self):
@@ -1231,6 +1386,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, autherrors.E_ARA_AHTDP_RE.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_hook_to_uri_success_datapoint_uri(self):
         ''' _process_hook_to_uri should succeed if uri is dp and we have read perm over it'''
@@ -1259,6 +1416,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp.sid])
 
     def test__process_hook_to_uri_success_datapoint_uri_multiple_sessions(self):
@@ -1290,14 +1449,20 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid,psp3.sid]))
 
     def test__process_unhook_from_uri_failure_invalid_message(self):
@@ -1307,7 +1472,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_unhook_from_uri(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_UHFUM_IMT.value)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_UHFU_ELFD.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_unhook_from_uri_failure_different_message_passed(self):
         ''' _process_unhook_from_uri should fail if message is not of type UNHOOK_FROM_URI '''
@@ -1316,7 +1483,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_unhook_from_uri(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_UHFUM_IA.value)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_UHFU_ELFD.value)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_unhook_from_uri_failure_uri_not_found(self):
         ''' _process_unhook_from_uri should fail if uri does not exist '''
@@ -1326,6 +1495,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PUHFU_UNF.value)
         self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_unhook_from_uri_failure_operation_not_allowed_for_uri_type(self):
         ''' _process_unhook_from_uri should fail if uri type is not datasource nor datapoint '''
@@ -1348,6 +1519,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PUHFU_ONA.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_unhook_from_uri_failure_no_read_permission_for_datasource(self):
         ''' _process_unhook_from_uri should fail if uri type is datasource and no read perm is found'''
@@ -1373,6 +1546,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, autherrors.E_ARA_AUHFDS_RE.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_unhook_from_uri_success_datasource_uri(self):
         ''' _process_unhook_from_uri should succeed if uri type is ds and read perm is found'''
@@ -1401,32 +1576,46 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid,psp3.sid]))
         msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri.ds'}}
         resp=message._process_unhook_from_uri(psp1, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp3.sid,psp2.sid]))
         resp=message._process_unhook_from_uri(psp2, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp3.sid])
         # if we receive the same unhook, no problem
         resp=message._process_unhook_from_uri(psp2, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp3.sid])
         resp=message._process_unhook_from_uri(psp3, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[])
 
     def test__process_unhook_from_uri_failure_no_read_permission_for_datapoint(self):
@@ -1457,6 +1646,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, autherrors.E_ARA_AUHFDP_RE.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
 
     def test__process_unhook_from_uri_success_datapoint_uri(self):
         ''' _process_unhook_from_uri should succeed if uri is dp and we have read perm over it'''
@@ -1487,31 +1678,45 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid,psp3.sid]))
         msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri.dp'}}
         resp=message._process_unhook_from_uri(psp1, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp3.sid,psp2.sid]))
         resp=message._process_unhook_from_uri(psp2, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp3.sid])
         # if we receive the same unhook, no problem
         resp=message._process_unhook_from_uri(psp2, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp3.sid])
         resp=message._process_unhook_from_uri(psp3, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[])
 

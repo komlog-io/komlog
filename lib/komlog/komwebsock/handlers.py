@@ -1,8 +1,10 @@
+import asyncio
 import uuid
 import json
 from tornado import websocket
 from komlog.komfig import logging
 from komlog.komwebsock import auth
+from komlog.komimc import api as msgapi
 from komlog.komlibs.interface.websocket import session
 from komlog.komlibs.interface.websocket import api as wsapi
 
@@ -23,12 +25,12 @@ class WSConnectionHandler(websocket.WebSocketHandler):
             self.close()
         else:
             response=wsapi.process_message(passport=self.passport, message=message)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
             self.write_message(json.dumps({'status':response.status,'reason':response.reason,'error':response.error}))
 
     @auth.agent_authenticated
     def on_close(self):
         session.unset_session(passport=self.passport)
-        logging.logger.debug('session closed')
 
     def agent_callback(self, message):
         self.write_message(message)

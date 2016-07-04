@@ -35,7 +35,7 @@ def process_message_MAPVARS(message):
         raise exceptions.BadParametersException(error=Errors.E_IAATM_MAPVARS_IDT)
     if datasourceapi.generate_datasource_map(did=did, date=date):
         newmsg=messages.FillDatasourceMessage(did=did,date=date)
-        response.add_msg_originated(newmsg)
+        response.add_message(newmsg)
         response.status=status.IMC_STATUS_OK
     else:
         response.error=Errors.E_IAATM_MAPVARS_EGDSM
@@ -71,7 +71,7 @@ def process_message_FILLDS(message):
     if store_info:
         response.status=status.IMC_STATUS_OK
         if isinstance(store_info,dict) and 'dp_not_found' in store_info and len(store_info['dp_not_found'])>0:
-            response.add_msg_originated(messages.MissingDatapointMessage(did=did,date=date))
+            response.add_message(messages.MissingDatapointMessage(did=did,date=date))
     else:
         response.error=Errors.E_IAATM_FILLDS_ESDSV
         response.status=status.IMC_STATUS_INTERNAL_ERROR

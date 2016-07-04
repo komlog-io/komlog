@@ -45,12 +45,12 @@ def process_message_MONVAR(message):
             webop=operation.NewDatasourceDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=datapoint['pid'])
             authop=webop.get_auth_operation()
             params=webop.get_params()
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=authop, params=params))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
-            response.add_msg_originated(messages.FillDatapointMessage(pid=datapoint['pid'],date=date))
-            response.add_msg_originated(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':datapoint['pid'].hex}))
+            response.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+            response.add_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
+            response.add_message(messages.FillDatapointMessage(pid=datapoint['pid'],date=date))
+            response.add_message(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':datapoint['pid'].hex}))
             if datapoint['previously_existed'] is False:
-                response.add_msg_originated(messages.NewDPWidgetMessage(uid=uid,pid=datapoint['pid']))
+                response.add_message(messages.NewDPWidgetMessage(uid=uid,pid=datapoint['pid']))
             response.status=status.IMC_STATUS_OK
         else:
             logging.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position)+' length: '+str(length))
@@ -76,7 +76,7 @@ def process_message_NEGVAR(message):
         datapoints=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
         if datapoints:
             for a_pid in datapoints:
-                response.add_msg_originated(messages.FillDatapointMessage(pid=a_pid,date=date))
+                response.add_message(messages.FillDatapointMessage(pid=a_pid,date=date))
             response.status=status.IMC_STATUS_OK
         else:
             response.error=Errors.E_IIAG_NEGVAR_EMNV
@@ -102,7 +102,7 @@ def process_message_POSVAR(message):
         datapoints=datapointapi.mark_positive_variable(date=date, position=position, length=length, pid=pid)
         if datapoints:
             for a_pid in datapoints:
-                response.add_msg_originated(messages.FillDatapointMessage(pid=a_pid,date=date))
+                response.add_message(messages.FillDatapointMessage(pid=a_pid,date=date))
             response.status=status.IMC_STATUS_OK
         else:
             response.error=Errors.E_IIAG_POSVAR_EMPV
@@ -187,8 +187,8 @@ def process_message_NEWDSW(message):
             webop=operation.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
             authop=webop.get_auth_operation()
             params=webop.get_params()
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=authop, params=params))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
+            response.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+            response.add_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
             response.status=status.IMC_STATUS_OK
         else:
             response.error=Errors.E_IIAG_NEWDSW_ECW
@@ -210,8 +210,8 @@ def process_message_NEWDPW(message):
             webop=operation.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
             authop=webop.get_auth_operation()
             params=webop.get_params()
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=authop, params=params))
-            response.add_msg_originated(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
+            response.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+            response.add_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
             response.status=status.IMC_STATUS_OK
         else:
             response.error=Errors.E_IIAG_NEWDPW_ECW
@@ -245,7 +245,7 @@ def process_message_DELAGENT(message):
         deleteapi.delete_agent(aid=agent['aid'])
         op_id=Operations.DELETE_AGENT
         op_params={'uid':agent['uid']}
-        response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+        response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
         response.error=Errors.E_IIAG_DELAGENT_BP
@@ -262,7 +262,7 @@ def process_message_DELDS(message):
         deleteapi.delete_datasource(did=did)
         op_id=Operations.DELETE_DATASOURCE
         op_params={'uid':datasource['uid'],'aid':datasource['aid']}
-        response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+        response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
         response.error=Errors.E_IIAG_DELDS_BP
@@ -283,11 +283,11 @@ def process_message_DELDP(message):
         if datasource:
             op_id=Operations.DELETE_DATASOURCE_DATAPOINT
             op_params={'uid':datapoint['uid'],'aid':datasource['aid'],'did':datapoint['did']}
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+            response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         else:
             op_id=Operations.DELETE_USER_DATAPOINT
             op_params={'uid':datapoint['uid']}
-            response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+            response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
         response.error=Errors.E_IIAG_DELDP_BP
@@ -304,7 +304,7 @@ def process_message_DELWIDGET(message):
         deleteapi.delete_widget(wid=wid)
         op_id=Operations.DELETE_WIDGET
         op_params={'uid':widget['uid']}
-        response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+        response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
         response.error=Errors.E_IIAG_DELWIDGET_BP
@@ -321,7 +321,7 @@ def process_message_DELDASHB(message):
         deleteapi.delete_dashboard(bid=bid)
         op_id=Operations.DELETE_DASHBOARD
         op_params={'uid':dashboard['uid']}
-        response.add_msg_originated(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+        response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
         response.status=status.IMC_STATUS_OK
     else:
         response.error=Errors.E_IIAG_DELDASHB_BP

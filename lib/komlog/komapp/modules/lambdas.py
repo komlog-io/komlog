@@ -1,7 +1,7 @@
 from komlog.komapp.modules import modules
 
 
-class Rescontrol(modules.Module):
+class Lambdas(modules.Module):
     def __init__(self, instance_number):
         super().__init__(
             name=self.__class__.__name__,

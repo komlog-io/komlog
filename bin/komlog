@@ -6,7 +6,7 @@ Created on 2016/04/01
 '''
 
 from komlog.komapp import komapp
-from komlog.komapp.modules import textmining,anomalies,storing,validation,events,gestconsole,rescontrol,websocketserver,webserver
+from komlog.komapp.modules import lambdas,textmining,anomalies,storing,validation,events,gestconsole,rescontrol,websocketserver,webserver
 import os
 
 def main():

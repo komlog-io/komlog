@@ -173,3 +173,19 @@ class Errors(Enum):
     E_ATA_AGSNC_DNA  = 57106      #: authorize_get_snapshot_config nid not allowed
     E_ATA_AGSNC_INSP = 57107      #: authorize_get_snapshot_config insufficient permissions
 
+# auth.session
+
+    E_AS_SAGS_ISID  =   58000       #: set_agent_session. invalid sid
+    E_AS_SAGS_IAID  =   58001       #: set_agent_session. invalid aid
+    E_AS_SAGS_IUID  =   58002       #: set_agent_session. invalid uid
+    E_AS_SAGS_IMCNC =   58003       #: set_agent_session. imc address not configured
+
+    E_AS_USAGS_ISID =   58100       #: unset_agent_session. invalid sid
+    E_AS_USAGS_ILU  =   58101       #: unset_agent_session. invalid last_update
+
+    E_AS_DAGS_ISID  =   58200       #: delete_agent_session. invalid sid
+    E_AS_DAGS_ILU   =   58201       #: delete_agent_session. invalid last_update
+
+    E_AS_GASI_ISID  =   58300       #: get_agent_session_info. invalid sid
+    E_AS_GASI_SNF   =   58301       #: get_agent_session_info. session not found
+

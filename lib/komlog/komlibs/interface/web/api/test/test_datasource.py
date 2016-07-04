@@ -20,11 +20,13 @@ from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
+from komlog.komlibs.interface.imc import status as imcstatus
 from komlog.komlibs.interface.imc.api import rescontrol
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
 
+pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
 
 class InterfaceWebApiDatasourceTest(unittest.TestCase):
     ''' komlibs.interface.web.api.datasource tests '''
@@ -34,7 +36,6 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         self.username = 'test_komlibs.interface.web.api.datasource_user'
         self.password = 'password'
         agentname='test_komlibs.interface.web.api.datasource_agent'
-        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response, 'cookie',None)
@@ -43,6 +44,13 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            msgs=response.unrouted_messages
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.unrouted_messages:
+                        msgs.append(msg2)
             response = loginapi.login_request(username=self.username, password=self.password)
             cookie=getattr(response, 'cookie',None)
             self.passport = passport.get_user_passport(cookie)
@@ -50,64 +58,27 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             aid = response.data['aid']
             cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
             self.agent_passport = passport.get_agent_passport(cookie)
-            msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            count=0
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-                self.assertIsNotNone(msg)
-                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==self.passport.uid and msg.params['aid']==self.agent_passport.aid):
-                    msgapi.send_message(msg)
-                    count+=1
-                    if count>=1000:
-                        break
-                else:
-                    break
-            self.assertFalse(count>=1000)
-            rescontrol.process_message_UPDQUO(msg)
+            msgs=response.unrouted_messages
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.unrouted_messages:
+                        msgs.append(msg2)
+                    self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
             datasourcename='datasource'
             response = datasourceapi.new_datasource_request(passport=self.agent_passport, datasourcename=datasourcename)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-            msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            count=0
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-                self.assertIsNotNone(msg)
-                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE or not (msg.params['uid']==self.agent_passport.uid and msg.params['aid']==self.agent_passport.aid and msg.params['did']==uuid.UUID(response.data['did'])):
-                    msgapi.send_message(msg)
-                    count+=1
-                    if count>=1000:
-                        break
-                else:
-                    break
-            self.assertFalse(count>=1000)
-            rescontrol.process_message_UPDQUO(msg)
-            msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            count=0
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if not msg:
-                    break
-                if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==self.agent_passport.uid:
-                    rescontrol.process_message_UPDQUO(msg)
-                else:
-                    msgapi.send_message(msg)
-                    count+=1
-                    if count>=100:
-                        break
-            count=0
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if not msg:
-                    break
-                if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==self.agent_passport.uid: 
-                    rescontrol.process_message_RESAUTH(message=msg)
-                else:
-                    msgapi.send_message(msg)
-                    count+=1
-                    if count>=100:
-                        break
+            msgs=response.unrouted_messages
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.unrouted_messages:
+                        msgs.append(msg2)
+                    self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response, 'cookie',None)
         self.passport = passport.get_user_passport(cookie)
@@ -187,45 +158,14 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_UPDQUO(msg)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
-            if not msg:
-                break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid:
-                rescontrol.process_message_UPDQUO(msg)
-            else:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=100:
-                    break
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if not msg:
-                break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid: 
-                rescontrol.process_message_RESAUTH(message=msg)
-            else:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=100:
-                    break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = datasourceapi.get_datasources_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertTrue(len(response2.data)>=2) #the one created at setup too
@@ -511,45 +451,14 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response=datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']),uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_UPDQUO(msg)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if not msg:
-                break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid:
-                rescontrol.process_message_UPDQUO(msg)
-            else:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=100:
-                    break
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if not msg:
-                break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid: 
-                rescontrol.process_message_RESAUTH(message=msg)
-            else:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=100:
-                    break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_config_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourceinfo.status, status.WEB_STATUS_OK)
         self.assertEqual(datasourceinfo.data['did'],response.data['did'])

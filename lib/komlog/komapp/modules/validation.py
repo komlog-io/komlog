@@ -8,12 +8,23 @@ from komlog.komimc import bus as msgbus
 from komlog.komimc import api as msgapi
 from komlog.komlibs.interface.imc.model import messages
 
+
 class Validation(modules.Module):
     def __init__(self, instance_number):
-        super(Validation,self).__init__(self.__class__.__name__, instance_number)
+        super().__init__(
+            self.__class__.__name__,
+            instance_number
+        )
         self.watchdir = config.get(options.SAMPLES_RECEIVED_PATH)
         self.outputdir = config.get(options.SAMPLES_VALIDATED_PATH)
-            
+
+    def signal_handler(self, signum, frame):
+        if signum == signal.SIGTERM:
+            logging.logger.info('SIGTERM received, terminating')
+            self.run = False
+        else:
+            logging.logger.info('signal '+str(signum)+' received, ignoring')
+
     def start(self):
         signal.signal(signal.SIGTERM,self.signal_handler)
         if not logging.initialize_logging(self.name+'_'+str(self.instance_number)):
@@ -30,8 +41,9 @@ class Validation(modules.Module):
             exit()
         self.loop()
         self.terminate()
-        
+
     def loop(self):
+        self.run = True
         while self.run:
             logging.logger.debug('Looking for samples received...')
             files = list(filter(os.path.isfile,glob.glob(os.path.join(self.watchdir,'*pspl'))))
@@ -55,10 +67,11 @@ class Validation(modules.Module):
                                 logging.logger.exception('Error sending: STORE_SAMPLE_MESSAGE')
                                 os.rename(fo,fi)
                         else:
-                            os.rename(fi,fi[:-5]+'.pspl')                                            
+                            os.rename(fi,fi[:-5]+'.pspl')
             else:
                 time.sleep(5)
-    
+
     def validate(self, filename):
         logging.logger.debug('Validating '+filename)
         return True
+

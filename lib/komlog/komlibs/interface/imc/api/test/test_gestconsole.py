@@ -30,6 +30,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.MonitorVariableMessage(uid=uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
         response=gestconsole.process_message_MONVAR(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_NEGVAR_failure_non_existent_datapoint(self):
         ''' process_message_NEGVAR should fail if datapoint does not exists '''
@@ -40,6 +42,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.NegativeVariableMessage(pid=pid, date=date, position=position, length=length)
         response=gestconsole.process_message_NEGVAR(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_POSVAR_failure_non_existent_datapoint(self):
         ''' process_message_POSVAR should fail if datapoint does not exists '''
@@ -50,6 +54,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.PositiveVariableMessage(pid=pid, date=date, position=position, length=length)
         response=gestconsole.process_message_POSVAR(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_NEWDSW_failure_non_existent_user(self):
         ''' process_message_NEWDSW should fail if user does not exist '''
@@ -58,6 +64,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.NewDSWidgetMessage(uid=uid, did=did)
         response=gestconsole.process_message_NEWDSW(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_NEWDPW_failure_non_existent_user(self):
         ''' process_message_NEWDPW should fail if user does not exist '''
@@ -66,6 +74,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.NewDPWidgetMessage(uid=uid, pid=pid)
         response=gestconsole.process_message_NEWDPW(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELUSER_failure_non_existent_user(self):
         ''' process_message_DELUSER should fail if user does not exist '''
@@ -73,6 +83,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteUserMessage(uid=uid)
         response=gestconsole.process_message_DELUSER(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELAGENT_failure_non_existent_agent(self):
         ''' process_message_DELAGENT should fail if agent does not exist '''
@@ -80,6 +92,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteAgentMessage(aid=aid)
         response=gestconsole.process_message_DELAGENT(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELAGENT_success(self):
         ''' process_message_DELAGENT should succeed if agent exists '''
@@ -95,9 +109,12 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteAgentMessage(aid=aid)
         response=gestconsole.process_message_DELAGENT(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
-        self.assertEqual(len(response.get_msg_originated()),1)
-        response=rescontrol.process_message_UPDQUO(response.get_msg_originated()[0])
+        self.assertEqual(len(response.unrouted_messages),1)
+        self.assertEqual(response.routed_messages,{})
+        response=rescontrol.process_message_UPDQUO(response.unrouted_messages[0])
         self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELDS_failure_non_existent_datasource(self):
         ''' process_message_DELDS should fail if datasource does not exist '''
@@ -105,6 +122,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteDatasourceMessage(did=did)
         response=gestconsole.process_message_DELDS(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELDS_success(self):
         ''' process_message_DELDS should succeed if datasource exists '''
@@ -122,9 +141,12 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteDatasourceMessage(did=datasource['did'])
         response=gestconsole.process_message_DELDS(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
-        self.assertEqual(len(response.get_msg_originated()),1)
-        response=rescontrol.process_message_UPDQUO(response.get_msg_originated()[0])
+        self.assertEqual(len(response.unrouted_messages),1)
+        self.assertEqual(response.routed_messages,{})
+        response=rescontrol.process_message_UPDQUO(response.unrouted_messages[0])
         self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELDP_failure_non_existent_datapoint(self):
         ''' process_message_DELDP should fail if datapoint does not exist '''
@@ -132,6 +154,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteDatapointMessage(pid=pid)
         response=gestconsole.process_message_DELDP(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELDP_success(self):
         ''' process_message_DELDP should succeed if datapoint exists '''
@@ -151,11 +175,13 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteDatapointMessage(pid=datapoint['pid'])
         response=gestconsole.process_message_DELDP(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
-        self.assertEqual(len(response.get_msg_originated()),1)
-        message_originated=response.get_msg_originated()[0]
-        self.assertEqual(message_originated.operation,Operations.DELETE_DATASOURCE_DATAPOINT)
-        response=rescontrol.process_message_UPDQUO(response.get_msg_originated()[0])
+        self.assertEqual(len(response.unrouted_messages),1)
+        self.assertEqual(response.routed_messages,{})
+        self.assertEqual(response.unrouted_messages[0].operation,Operations.DELETE_DATASOURCE_DATAPOINT)
+        response=rescontrol.process_message_UPDQUO(response.unrouted_messages[0])
         self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELDP_success_user_datapoint(self):
         ''' process_message_DELDP should succeed if datapoint exists and is a user datapoint '''
@@ -169,11 +195,13 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteDatapointMessage(pid=datapoint['pid'])
         response=gestconsole.process_message_DELDP(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
-        self.assertEqual(len(response.get_msg_originated()),1)
-        message_originated=response.get_msg_originated()[0]
-        self.assertEqual(message_originated.operation,Operations.DELETE_USER_DATAPOINT)
-        response=rescontrol.process_message_UPDQUO(response.get_msg_originated()[0])
+        self.assertEqual(len(response.unrouted_messages),1)
+        self.assertEqual(response.routed_messages,{})
+        self.assertEqual(response.unrouted_messages[0].operation,Operations.DELETE_USER_DATAPOINT)
+        response=rescontrol.process_message_UPDQUO(response.unrouted_messages[0])
         self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELWIDGET_failure_non_existent_widget(self):
         ''' process_message_DELWIDGET should fail if widget does not exist '''
@@ -181,6 +209,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteWidgetMessage(wid=wid)
         response=gestconsole.process_message_DELWIDGET(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELWIDGET_success(self):
         ''' process_message_DELAWIDGET should succeed if widget exists '''
@@ -193,9 +223,12 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteWidgetMessage(wid=widget['wid'])
         response=gestconsole.process_message_DELWIDGET(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
-        self.assertEqual(len(response.get_msg_originated()),1)
-        response=rescontrol.process_message_UPDQUO(response.get_msg_originated()[0])
+        self.assertEqual(len(response.unrouted_messages),1)
+        self.assertEqual(response.routed_messages,{})
+        response=rescontrol.process_message_UPDQUO(response.unrouted_messages[0])
         self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELDASHB_failure_non_existent_dashboard(self):
         ''' process_message_DELDASHB should fail if dashboard does not exist '''
@@ -203,6 +236,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteDashboardMessage(bid=bid)
         response=gestconsole.process_message_DELDASHB(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_DELDASHB_success(self):
         ''' process_message_DELDASHB should succeed if widget exists '''
@@ -215,7 +250,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         message=messages.DeleteDashboardMessage(bid=dashboard['bid'])
         response=gestconsole.process_message_DELDASHB(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
-        self.assertEqual(len(response.get_msg_originated()),1)
-        response=rescontrol.process_message_UPDQUO(response.get_msg_originated()[0])
+        self.assertEqual(len(response.unrouted_messages),1)
+        self.assertEqual(response.routed_messages,{})
+        response=rescontrol.process_message_UPDQUO(response.unrouted_messages[0])
         self.assertEqual(response.status, status.IMC_STATUS_OK)
 

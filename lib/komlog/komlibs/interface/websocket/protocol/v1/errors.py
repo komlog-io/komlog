@@ -40,13 +40,9 @@ class Errors(Enum):
 
     E_IWSPV1PM_PSDSD_IURI   = 210100    #: uri is not a datasource
     E_IWSPV1PM_PSDSD_ECDS   = 210101    #: error creating datasource
-    E_IWSPV1PM_PSDSD_EUR    = 210102    #: exception updating ds resources
-    E_IWSPV1PM_PSDSD_FUR    = 210103    #: fail updating ds resources
-    E_IWSPV1PM_PSDSD_ESC    = 210104    #: error storing ds content
 
     E_IWSPV1PM_PSDPD_IURI   = 210200    #: uri is not a datapoint
     E_IWSPV1PM_PSDPD_ECDP   = 210201    #: error creating datapoint
-    E_IWSPV1PM_PSDPD_FPOR   = 210202    #: error procesing operation result
 
     E_IWSPV1PM_PSMTD_IUC    = 210300    #: invalid uri content 
     E_IWSPV1PM_PSMTD_ONAOU  = 210301    #: operation not allowed on uri
@@ -66,34 +62,25 @@ class Errors(Enum):
 
 # interface websocket protocol v1 model message
 
-    E_IWSPV1MM_SDSDM_IMT     = 220000      #: SendDsDataMessage. message format error or 
-                                           #: not v action or payload fields found
-    E_IWSPV1MM_SDSDM_IA      = 220001      #: SendDsDataMessage. invalid message action
-    E_IWSPV1MM_SDSDM_IV      = 220002      #: SendDsDataMessage. invalid message version
-    E_IWSPV1MM_SDSDM_IPL     = 220003      #: SendDsDataMessage. invalid message payload
+    E_IWSPV1MM_SDSD_IURI    = 220000      #: SendDsData. invalid uri
+    E_IWSPV1MM_SDSD_ITS     = 220001      #: SendDsData. invalid ts
+    E_IWSPV1MM_SDSD_ICNT    = 220002      #: SendDsData. invalid content
+    E_IWSPV1MM_SDSD_ELFD    = 220003      #: SendDsData. error loading from dict
 
+    E_IWSPV1MM_SDPD_IURI    = 220100      #: SendDpData. invalid uri
+    E_IWSPV1MM_SDPD_ITS     = 220101      #: SendDpData. invalid ts
+    E_IWSPV1MM_SDPD_ICNT    = 220102      #: SendDpData. invalid content
+    E_IWSPV1MM_SDPD_ELFD    = 220103      #: SendDpData. error loading from dict
 
-    E_IWSPV1MM_SDPDM_IMT     = 220100      #: SendDpDataMessage. message format error or 
-                                           #: not v action or payload fields found
-    E_IWSPV1MM_SDPDM_IA      = 220101      #: SendDpDataMessage. invalid message action
-    E_IWSPV1MM_SDPDM_IV      = 220102      #: SendDpDataMessage. invalid message version
-    E_IWSPV1MM_SDPDM_IPL     = 220103      #: SendDpDataMessage. invalid message payload
+    E_IWSPV1MM_SMTD_IURIS   = 220200      #: SendMultiData. invalid uris
+    E_IWSPV1MM_SMTD_ITS     = 220201      #: SendMultiData. invalid ts
+    E_IWSPV1MM_SMTD_ELFD    = 220203      #: SendMultiData. error loading from dict
 
-    E_IWSPV1MM_SMTDM_IMT     = 220200      #: SendMultiDataMessage. message format error or 
-                                           #: not v action or payload fields found
-    E_IWSPV1MM_SMTDM_IA      = 220201      #: SendMultiDataMessage. invalid message action
-    E_IWSPV1MM_SMTDM_IV      = 220202      #: SendMultiDataMessage. invalid message version
-    E_IWSPV1MM_SMTDM_IPL     = 220203      #: SendMultiDataMessage. invalid message payload
+    E_IWSPV1MM_HTU_IURI     = 220300      #: HookToUri. invalid uri
+    E_IWSPV1MM_HTU_ELFD     = 220303      #: HookToUri. error loading from dict
 
-    E_IWSPV1MM_HTUM_IMT      = 220300      #: HookToUriMessage. message format error
-    E_IWSPV1MM_HTUM_IA       = 220301      #: HookToUriMessage. invalid message action
-    E_IWSPV1MM_HTUM_IV       = 220302      #: HookToUriMessage. invalid message version
-    E_IWSPV1MM_HTUM_IPL      = 220303      #: HookToUriMessage. invalid message payload
-
-    E_IWSPV1MM_UHFUM_IMT     = 220400      #: UnHookFromUriMessage. message format error
-    E_IWSPV1MM_UHFUM_IA      = 220401      #: UnHookFromUriMessage. invalid message action
-    E_IWSPV1MM_UHFUM_IV      = 220402      #: UnHookFromUriMessage. invalid message version
-    E_IWSPV1MM_UHFUM_IPL     = 220403      #: UnHookFromUriMessage. invalid message payload
+    E_IWSPV1MM_UHFU_IURI    = 220400      #: UnHookFromUri. invalid uri
+    E_IWSPV1MM_UHFU_ELFD    = 220403      #: UnHookFromUri. error loading from dict
 
 # interface websocket protocol v1 model response
 
@@ -122,4 +109,8 @@ class Errors(Enum):
 
     E_IWSPV1PO_ROA_IOT       = 250000      #: request_operation_actions. invalid operation type
     E_IWSPV1PO_ROA_ONF       = 250001      #: request_operation_actions. operation not found
+
+    E_IWSPV1PO_PONDS_EUR     = 250100      #: process_operation_new_datasource. error updating res.
+
+    E_IWSPV1PO_PONUDP_EUR    = 250200      #: process_operation_new_user_dp. error updating res.
 

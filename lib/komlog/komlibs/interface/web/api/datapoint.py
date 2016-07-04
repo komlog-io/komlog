@@ -6,7 +6,6 @@ This file defines the logic associated with web interface operations
 
 import uuid
 from komlog.komfig import logging
-from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.auth.passport import Passport
@@ -122,9 +121,9 @@ def new_datasource_datapoint_request(passport, did, sequence, position, length, 
     did=uuid.UUID(did)
     authorization.authorize_request(request=Requests.NEW_DATASOURCE_DATAPOINT,passport=passport,did=did)
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
-    message=messages.MonitorVariableMessage(uid=passport.uid, did=did, date=date, position=position, length=length, datapointname=datapointname)
-    msgapi.send_message(message)
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp.add_message(messages.MonitorVariableMessage(uid=passport.uid, did=did, date=date, position=position, length=length, datapointname=datapointname))
+    return resp
 
 @exceptions.ExceptionHandler
 def mark_positive_variable_request(passport, pid, sequence, position, length):
@@ -143,10 +142,13 @@ def mark_positive_variable_request(passport, pid, sequence, position, length):
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
     datapoints_to_update=datapointapi.mark_positive_variable(pid=pid, date=date, position=position, length=length)
     if datapoints_to_update!=None:
+        msgs=[]
         for datapoint in datapoints_to_update:
-            message=messages.FillDatapointMessage(pid=pid, date=date)
-            msgapi.send_message(message)
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+            msgs.append(messages.FillDatapointMessage(pid=pid, date=date))
+        resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        for msg in msgs:
+            resp.add_message(msg)
+        return resp
     else:
         return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, errors=Errors.UNKNOWN)
 
@@ -167,10 +169,13 @@ def mark_negative_variable_request(passport, pid, sequence, position, length):
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
     datapoints_to_update=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
     if datapoints_to_update!=None:
+        msgs=[]
         for datapoint in datapoints_to_update:
-            message=messages.FillDatapointMessage(pid=pid, date=date)
-            msgapi.send_message(message)
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+            msgs.append(messages.FillDatapointMessage(pid=pid, date=date))
+        resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        for msg in msgs:
+            resp.add_message(msg)
+        return resp
     else:
         return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, errors=Errors.UNKNOWN)
 
@@ -182,9 +187,9 @@ def delete_datapoint_request(passport, pid):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_DDPR_IP)
     pid=uuid.UUID(pid)
     authorization.authorize_request(request=Requests.DELETE_DATAPOINT,passport=passport,pid=pid)
-    message=messages.DeleteDatapointMessage(pid=pid)
-    msgapi.send_message(msg=message)
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp.add_message(messages.DeleteDatapointMessage(pid=pid))
+    return resp
 
 @exceptions.ExceptionHandler
 def dissociate_datapoint_from_datasource_request(passport, pid):
@@ -195,11 +200,14 @@ def dissociate_datapoint_from_datasource_request(passport, pid):
     pid=uuid.UUID(pid)
     authorization.authorize_request(request=Requests.DISSOCIATE_DATAPOINT_FROM_DATASOURCE,passport=passport,pid=pid)
     result=deleteapi.dissociate_datapoint_from_datasource(pid=pid)
+    msgs=[]
     if result['did'] is not None:
         webop=operation.DissociateDatapointFromDatasourceOperation(pid=pid, did=result['did'])
         authop=webop.get_auth_operation()
         params=webop.get_params()
-        message=messages.UpdateQuotesMessage(operation=authop, params=params)
-        msgapi.send_message(message)
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        msgs.append(messages.UpdateQuotesMessage(operation=authop, params=params))
+    resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    for msg in msgs:
+        resp.add_message(msg)
+    return resp
 

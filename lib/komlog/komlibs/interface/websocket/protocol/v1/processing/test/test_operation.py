@@ -40,21 +40,15 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
         aid=uuid.uuid4()
         did=uuid.uuid4()
         op=modop.NewDatasourceOperation(uid=uid, aid=aid, did=did)
-        self.assertTrue(operation.process_operation(operation=op))
+        msgs=operation.process_operation(operation=op)
         message_expected={messages.UPDATE_QUOTES_MESSAGE:1,messages.NEW_DS_WIDGET_MESSAGE:1,messages.USER_EVENT_MESSAGE:1}
         message_retrieved={}
-        for msg_type in routing.MESSAGE_TO_ADDRESS_MAPPING.keys():
-            msg_addr=routing.get_address(type=msg_type, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if msg:
-                    message_retrieved[msg.type] = message_retrieved.get(msg.type,0) + 1
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgapi.process_msg_result(msg_result)
-                else:
-                    break
-        self.assertEqual(message_retrieved, message_expected)
+        for msg in msgs:
+            try:
+                message_retrieved[msg.type]+=1
+            except KeyError:
+                message_retrieved[msg.type]=1
+        self.assertEqual(sorted(message_retrieved), sorted(message_expected))
 
     def test_process_operation_new_user_datapoint_success(self):
         ''' _process_operation_new_user_datapoint should succeed and send the corresponding messages '''
@@ -62,42 +56,30 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
         aid=uuid.uuid4()
         pid=uuid.uuid4()
         op=modop.NewUserDatapointOperation(uid=uid, aid=aid, pid=pid)
-        self.assertTrue(operation.process_operation(operation=op))
+        msgs=operation.process_operation(operation=op)
         message_expected={messages.NEW_DP_WIDGET_MESSAGE:1,messages.UPDATE_QUOTES_MESSAGE:1}
         message_retrieved={}
-        for msg_type in routing.MESSAGE_TO_ADDRESS_MAPPING.keys():
-            msg_addr=routing.get_address(type=msg_type, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if msg:
-                    message_retrieved[msg.type] = message_retrieved.get(msg.type,0) + 1
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgapi.process_msg_result(msg_result)
-                else:
-                    break
-        self.assertEqual(message_retrieved, message_expected)
+        for msg in msgs:
+            try:
+                message_retrieved[msg.type]+=1
+            except KeyError:
+                message_retrieved[msg.type]=1
+        self.assertEqual(sorted(message_retrieved), sorted(message_expected))
 
     def test_process_operation_datasource_data_stored_success(self):
         ''' _process_operation_datasource_data_stored should succeed and send the corresponding messages '''
         did=uuid.uuid4()
         date=uuid.uuid1()
         op=modop.DatasourceDataStoredOperation(did=did, date=date)
-        self.assertTrue(operation.process_operation(operation=op))
+        msgs=operation.process_operation(operation=op)
         message_expected={messages.GENERATE_TEXT_SUMMARY_MESSAGE:1,
                           messages.UPDATE_QUOTES_MESSAGE:1,
                           messages.MAP_VARS_MESSAGE:1}
         message_retrieved={}
-        for msg_type in routing.MESSAGE_TO_ADDRESS_MAPPING.keys():
-            msg_addr=routing.get_address(type=msg_type, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if msg:
-                    message_retrieved[msg.type] = message_retrieved.get(msg.type,0) + 1
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgapi.process_msg_result(msg_result)
-                else:
-                    break
-        self.assertEqual(message_retrieved, message_expected)
+        for msg in msgs:
+            try:
+                message_retrieved[msg.type]+=1
+            except KeyError:
+                message_retrieved[msg.type]=1
+        self.assertEqual(sorted(message_retrieved), sorted(message_expected))
 

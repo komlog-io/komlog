@@ -38,24 +38,13 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if msg:
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgapi.process_msg_result(msg_result)
-                else:
-                    break
-            msg_addr=routing.get_address(type=messages.USER_EVENT_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if msg:
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgapi.process_msg_result(msg_result)
-                else:
-                    break
+            msgs=response.unrouted_messages
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.unrouted_messages:
+                        msgs.append(msg2)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response, 'cookie',None)
         self.passport = passport.get_user_passport(cookie)
@@ -406,12 +395,15 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         data={'missing':[missing_pid.hex],'identified':[identified_entry]}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.USER_EVENT_RESPONSE_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                self.assertEqual(msg.uid, psp.uid)
-                self.assertEqual(msg.date, new_event['date'])
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.USER_EVENT_RESPONSE_MESSAGE:
+                    self.assertEqual(msg.uid, psp.uid)
+                    self.assertEqual(msg.date, new_event['date'])
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                    self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
 

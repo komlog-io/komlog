@@ -1,22 +1,21 @@
+
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model.types import Messages
 
-class SendDsDataMessage:
-    def __init__(self, message):
-        self._action=None
-        self._v=None
-        self._payload=None
-        if (args.is_valid_dict(message)
-            and 'v' in message
-            and 'action' in message
-            and 'payload' in message):
-            self.v=message['v']
-            self.action=message['action']
-            self.payload=message['payload']
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSDM_IMT)
+VERSION = 1
+
+class KomlogMessage:
+
+    def __new__(cls, *args, **kwargs):
+        if cls is KomlogMessage:
+            raise TypeError('<KomlogMessage> cannot be instantiated directly')
+        return object.__new__(cls)
+
+    def __init__(self, action):
+        self._v = VERSION
+        self._action = action
 
     @property
     def action(self):
@@ -24,10 +23,7 @@ class SendDsDataMessage:
 
     @action.setter
     def action(self, value):
-        if args.is_valid_string(value) and value==Messages.SEND_DS_DATA.value:
-            self._action=Messages.SEND_DS_DATA
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSDM_IA)
+        raise TypeError('Action cannot be modified')
 
     @property
     def v(self):
@@ -35,251 +31,318 @@ class SendDsDataMessage:
 
     @v.setter
     def v(self, value):
-        if args.is_valid_int(value) and value==1:
-            self._v=value
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSDM_IV)
+        raise TypeError('Version cannot be modified')
+
+    @classmethod
+    def load_from_dict(cls, msg):
+        ''' create instance from JSON loaded dict.
+            Must be implemented in derived classes. '''
+        raise NotImplementedError
+
+    def to_dict(self):
+        ''' returns JSON serializable dict.
+            Must be implemented in derived classes.'''
+        raise NotImplementedError
+
+class SendDsData(KomlogMessage):
+
+    def __init__(self, uri=None, ts=None, content=None):
+        if uri is not None:
+            self.uri=uri
+        if ts is not None:
+            self.ts=ts
+        if content is not None:
+            self.content=content
+        super().__init__(action=Messages.SEND_DS_DATA)
 
     @property
-    def payload(self):
-        return self._payload
+    def uri(self):
+        return self._uri
 
-    @payload.setter
-    def payload(self, value):
-        if (args.is_valid_dict(value)
-            and 'uri' in value
-            and args.is_valid_uri(value['uri'])
-            and 'ts' in value
-            and args.is_valid_timestamp(value['ts'])
-            and 'content' in value
-            and args.is_valid_datasource_content(value['content'])):
-            self._payload={
-                'uri':value['uri'],
-                'ts':value['ts'],
-                'content':value['content']
+    @uri.setter
+    def uri(self, uri):
+        if args.is_valid_uri(uri):
+            self._uri=uri
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSD_IURI)
+
+    @property
+    def ts(self):
+        return self._ts
+
+    @ts.setter
+    def ts(self, ts):
+        if args.is_valid_timestamp(ts):
+            self._ts=ts
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSD_ITS)
+
+    @property
+    def content(self):
+        return self._content
+
+    @content.setter
+    def content(self, content):
+        if args.is_valid_datasource_content(content):
+            self._content=content
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSD_ICNT)
+
+    @classmethod
+    def load_from_dict(cls, msg):
+        ''' create instance from JSON loaded dict '''
+        if (isinstance(msg,dict)
+            and 'v' in msg
+            and 'action' in msg
+            and 'payload' in msg
+            and args.is_valid_int(msg['v']) and msg['v']==VERSION
+            and args.is_valid_string(msg['action']) and msg['action']==Messages.SEND_DS_DATA.value
+            and args.is_valid_dict(msg['payload'])
+            and 'uri' in msg['payload']
+            and 'ts' in msg['payload']
+            and 'content' in msg['payload']):
+            uri=msg['payload']['uri']
+            ts=msg['payload']['ts']
+            content=msg['payload']['content']
+            return cls(uri=uri, ts=ts, content=content)
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSD_ELFD)
+
+    def to_dict(self):
+        ''' returns a JSON serializable dict '''
+        return {
+            'v':self.v,
+            'action':self.action.value,
+            'payload':{
+                'uri':self.uri,
+                'ts':self.ts,
+                'content':self.content
             }
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSDM_IPL)
+        }
 
-class SendDpDataMessage:
-    def __init__(self, message):
-        self._action=None
-        self._v=None
-        self._payload=None
-        if (args.is_valid_dict(message)
-            and 'v' in message
-            and 'action' in message
-            and 'payload' in message):
-            self.v=message['v']
-            self.action=message['action']
-            self.payload=message['payload']
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPDM_IMT)
+class SendDpData(KomlogMessage):
+
+    def __init__(self, uri=None, ts=None, content=None):
+        if uri is not None:
+            self.uri=uri
+        if ts is not None:
+            self.ts=ts
+        if content is not None:
+            self.content=content
+        super().__init__(action=Messages.SEND_DP_DATA)
 
     @property
-    def action(self):
-        return self._action
+    def uri(self):
+        return self._uri
 
-    @action.setter
-    def action(self, value):
-        if args.is_valid_string(value) and value==Messages.SEND_DP_DATA.value:
-            self._action=Messages.SEND_DP_DATA
+    @uri.setter
+    def uri(self, uri):
+        if args.is_valid_uri(uri):
+            self._uri=uri
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPDM_IA)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_IURI)
 
     @property
-    def v(self):
-        return self._v
+    def ts(self):
+        return self._ts
 
-    @v.setter
-    def v(self, value):
-        if args.is_valid_int(value) and value==1:
-            self._v=value
+    @ts.setter
+    def ts(self, ts):
+        if args.is_valid_timestamp(ts):
+            self._ts=ts
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPDM_IV)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_ITS)
 
     @property
-    def payload(self):
-        return self._payload
+    def content(self):
+        return self._content
 
-    @payload.setter
-    def payload(self, value):
-        if (args.is_valid_dict(value)
-            and 'uri' in value
-            and args.is_valid_uri(value['uri'])
-            and 'ts' in value
-            and args.is_valid_timestamp(value['ts'])
-            and 'content' in value
-            and args.is_valid_string(value['content'])):
-            self._payload={
-                'uri':value['uri'],
-                'ts':value['ts'],
-                'content':value['content']
+    @content.setter
+    def content(self, content):
+        if args.is_valid_datapoint_content(content):
+            self._content=content
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_ICNT)
+
+    @classmethod
+    def load_from_dict(cls, msg):
+        ''' create instance from JSON loaded dict '''
+        if (isinstance(msg,dict)
+            and 'v' in msg
+            and 'action' in msg
+            and 'payload' in msg
+            and args.is_valid_int(msg['v']) and msg['v']==VERSION
+            and args.is_valid_string(msg['action']) and msg['action']==Messages.SEND_DP_DATA.value
+            and args.is_valid_dict(msg['payload'])
+            and 'uri' in msg['payload']
+            and 'ts' in msg['payload']
+            and 'content' in msg['payload']):
+            uri=msg['payload']['uri']
+            ts=msg['payload']['ts']
+            content=msg['payload']['content']
+            return cls(uri=uri, ts=ts, content=content)
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_ELFD)
+
+    def to_dict(self):
+        ''' returns a JSON serializable dict '''
+        return {
+            'v':self.v,
+            'action':self.action.value,
+            'payload':{
+                'uri':self.uri,
+                'ts':self.ts,
+                'content':self.content
             }
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPDM_IPL)
+        }
 
-class SendMultiDataMessage:
-    def __init__(self, message):
-        self._action=None
-        self._v=None
-        self._payload=None
-        if (args.is_valid_dict(message)
-            and 'v' in message
-            and 'action' in message
-            and 'payload' in message):
-            self.v=message['v']
-            self.action=message['action']
-            self.payload=message['payload']
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTDM_IMT)
+class SendMultiData(KomlogMessage):
+
+    def __init__(self, ts=None, uris=None):
+        if ts is not None:
+            self.ts=ts
+        if uris is not None:
+            self.uris=uris
+        super().__init__(action=Messages.SEND_MULTI_DATA)
 
     @property
-    def action(self):
-        return self._action
+    def uris(self):
+        return self._uris
 
-    @action.setter
-    def action(self, value):
-        if args.is_valid_string(value) and value==Messages.SEND_MULTI_DATA.value:
-            self._action=Messages.SEND_MULTI_DATA
+    @uris.setter
+    def uris(self, uris):
+        if (isinstance(uris,list)
+            and all(isinstance(item,dict) for item in uris)
+            and all('uri' in item for item in uris)
+            and all(args.is_valid_uri(item['uri']) for item in uris)
+            and all('content' in item for item in uris)
+            and all(args.is_valid_datasource_content(item['content']) for item in uris)):
+            self._uris=[{'uri':item['uri'],'content':item['content']} for item in uris]
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTDM_IA)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTD_IURIS)
 
     @property
-    def v(self):
-        return self._v
+    def ts(self):
+        return self._ts
 
-    @v.setter
-    def v(self, value):
-        if args.is_valid_int(value) and value==1:
-            self._v=value
+    @ts.setter
+    def ts(self, ts):
+        if args.is_valid_timestamp(ts):
+            self._ts=ts
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTDM_IV)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTD_ITS)
 
-    @property
-    def payload(self):
-        return self._payload
+    @classmethod
+    def load_from_dict(cls, msg):
+        if (isinstance(msg,dict)
+            and 'v' in msg
+            and 'action' in msg
+            and 'payload' in msg
+            and args.is_valid_int(msg['v']) and msg['v']==VERSION
+            and args.is_valid_string(msg['action']) and msg['action']==Messages.SEND_MULTI_DATA.value
+            and args.is_valid_dict(msg['payload'])
+            and 'ts' in msg['payload']
+            and 'uris' in msg['payload']):
+            ts=msg['payload']['ts']
+            uris=msg['payload']['uris']
+            return cls(ts=ts, uris=uris)
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTD_ELFD)
 
-    @payload.setter
-    def payload(self, value):
-        if (args.is_valid_dict(value)
-            and 'ts' in value
-            and args.is_valid_timestamp(value['ts'])
-            and 'uris' in value
-            and isinstance(value['uris'],list)
-            and len(value['uris'])>0
-            and all('uri' in item for item in value['uris'])
-            and all(args.is_valid_uri(item['uri']) for item in value['uris'])
-            and all('content' in item for item in value['uris'])
-            and all(args.is_valid_string(item['content']) for item in value['uris'])):
-            self._payload={
-                'ts':value['ts'],
-                'uris':[{'uri':item['uri'],'content':item['content']} for item in value['uris']]
+    def to_dict(self):
+        ''' returns a JSON serializable dict '''
+        return {
+            'v':self.v,
+            'action':self.action.value,
+            'payload':{
+                'ts':self.ts,
+                'uris':self.uris
             }
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTDM_IPL)
+        }
 
-class HookToUriMessage:
-    def __init__(self, message):
-        self._action=None
-        self._v=None
-        self._payload=None
-        if (args.is_valid_dict(message)
-            and 'v' in message
-            and 'action' in message
-            and 'payload' in message):
-            self.v=message['v']
-            self.action=message['action']
-            self.payload=message['payload']
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTUM_IMT)
+class HookToUri(KomlogMessage):
+
+    def __init__(self, uri=None):
+        if uri is not None:
+            self.uri=uri
+        super().__init__(action=Messages.HOOK_TO_URI)
 
     @property
-    def action(self):
-        return self._action
+    def uri(self):
+        return self._uri
 
-    @action.setter
-    def action(self, value):
-        if args.is_valid_string(value) and value==Messages.HOOK_TO_URI.value:
-            self._action=Messages.HOOK_TO_URI
+    @uri.setter
+    def uri(self, uri):
+        if args.is_valid_uri(uri):
+            self._uri=uri
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTUM_IA)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTU_IURI)
 
-    @property
-    def v(self):
-        return self._v
-
-    @v.setter
-    def v(self, value):
-        if args.is_valid_int(value) and value==1:
-            self._v=value
+    @classmethod
+    def load_from_dict(cls, msg):
+        if (isinstance(msg,dict)
+            and 'v' in msg
+            and 'action' in msg
+            and 'payload' in msg
+            and args.is_valid_int(msg['v']) and msg['v']==VERSION
+            and args.is_valid_string(msg['action']) and msg['action']==Messages.HOOK_TO_URI.value
+            and args.is_valid_dict(msg['payload'])
+            and 'uri' in msg['payload']):
+            uri=msg['payload']['uri']
+            return cls(uri=uri)
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTUM_IV)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTU_ELFD)
 
-    @property
-    def payload(self):
-        return self._payload
-
-    @payload.setter
-    def payload(self, value):
-        if (args.is_valid_dict(value)
-            and 'uri' in value
-            and args.is_valid_uri(value['uri'])):
-            self._payload={
-                'uri':value['uri'],
+    def to_dict(self):
+        ''' returns a JSON serializable dict '''
+        return {
+            'v':self.v,
+            'action':self.action.value,
+            'payload':{
+                'uri':self.uri
             }
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTUM_IPL)
+        }
 
-class UnHookFromUriMessage:
-    def __init__(self, message):
-        self._action=None
-        self._v=None
-        self._payload=None
-        if (args.is_valid_dict(message)
-            and 'v' in message
-            and 'action' in message
-            and 'payload' in message):
-            self.v=message['v']
-            self.action=message['action']
-            self.payload=message['payload']
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFUM_IMT)
+class UnHookFromUri(KomlogMessage):
+
+    def __init__(self, uri=None):
+        if uri is not None:
+            self.uri=uri
+        super().__init__(action=Messages.UNHOOK_FROM_URI)
 
     @property
-    def action(self):
-        return self._action
+    def uri(self):
+        return self._uri
 
-    @action.setter
-    def action(self, value):
-        if args.is_valid_string(value) and value==Messages.UNHOOK_FROM_URI.value:
-            self._action=Messages.UNHOOK_FROM_URI
+    @uri.setter
+    def uri(self, uri):
+        if args.is_valid_uri(uri):
+            self._uri=uri
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFUM_IA)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFU_IURI)
 
-    @property
-    def v(self):
-        return self._v
-
-    @v.setter
-    def v(self, value):
-        if args.is_valid_int(value) and value==1:
-            self._v=value
+    @classmethod
+    def load_from_dict(cls, msg):
+        if (isinstance(msg,dict)
+            and 'v' in msg
+            and 'action' in msg
+            and 'payload' in msg
+            and args.is_valid_int(msg['v']) and msg['v']==VERSION
+            and args.is_valid_string(msg['action']) and msg['action']==Messages.UNHOOK_FROM_URI.value
+            and args.is_valid_dict(msg['payload'])
+            and 'uri' in msg['payload']):
+            uri=msg['payload']['uri']
+            return cls(uri=uri)
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFUM_IV)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFU_ELFD)
 
-    @property
-    def payload(self):
-        return self._payload
-
-    @payload.setter
-    def payload(self, value):
-        if (args.is_valid_dict(value)
-            and 'uri' in value
-            and args.is_valid_uri(value['uri'])):
-            self._payload={
-                'uri':value['uri'],
+    def to_dict(self):
+        ''' returns a JSON serializable dict '''
+        return {
+            'v':self.v,
+            'action':self.action.value,
+            'payload':{
+                'uri':self.uri
             }
-        else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFUM_IPL)
+        }
 

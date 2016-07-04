@@ -17,8 +17,9 @@ The range reserved for Errors.in this module is 250000 - 300000
 
 '''
 
-from enum import Enum
+from enum import Enum, unique
 
+@unique
 class Errors(Enum):
 #common to every Error class
 
@@ -109,6 +110,12 @@ class Errors(Enum):
     E_IIATM_GTXS_EGDSTXS    = 255402    #: proccess_message_GENTEXTSUMMARY. error gen ds text summ
 
 
+# komlibs.interface.imc.api.lambdas
+
+    E_IIATM_SSDT_MRE        = 256000    #: process_message_SSDATA. message routing error
+    E_IIATM_SSDT_SUS        = 256001    #: process_message_SSDATA. session unset successfully
+    E_IIATM_SSDT_SUE        = 256002    #: process_message_SSDATA. session unset error
+    E_IIATM_SSDT_SNF        = 256003    #: process_message_SSDATA. session not found
 
 # komlibs.interface.imc.model.messages
 
@@ -177,15 +184,22 @@ class Errors(Enum):
     E_IIMM_USEREVR_IDT      = 261901    #: UserEventResponseMessage. invalid date
     E_IIMM_USEREVR_IPRM     = 261902    #: UserEventResponseMessage. invalid params
 
-    E_IIMM_GTXS_IDID        = 262000     #: GenerateTextSummaryMessage. invalid did
-    E_IIMM_GTXS_IDT         = 262001     #: GenerateTextSummaryMessage. invalid date
+    E_IIMM_GTXS_IDID        = 262000    #: GenerateTextSummaryMessage. invalid did
+    E_IIMM_GTXS_IDT         = 262001    #: GenerateTextSummaryMessage. invalid date
 
-    E_IIMM_MISSDP_IDID      = 262100     #: MissingDatapointMessage. invalid did
-    E_IIMM_MISSDP_IDT       = 262101     #: MissingDatapointMessage. invalid date
+    E_IIMM_MISSDP_IDID      = 262100    #: MissingDatapointMessage. invalid did
+    E_IIMM_MISSDP_IDT       = 262101    #: MissingDatapointMessage. invalid date
 
-    E_IIMM_NEWINV_IEMAIL    = 262200     #: NewInvitationMailMessage. invalid email
-    E_IIMM_NEWINV_IINV      = 262201     #: NewInvitationMailMessage. invalid invitation id
+    E_IIMM_NEWINV_IEMAIL    = 262200    #: NewInvitationMailMessage. invalid email
+    E_IIMM_NEWINV_IINV      = 262201    #: NewInvitationMailMessage. invalid invitation id
 
-    E_IIMM_FORGET_IEMAIL    = 262300     #: ForgetMailMailMessage. invalid email
-    E_IIMM_FORGET_ICODE     = 262301     #: ForgetMailMailMessage. invalid code
+    E_IIMM_FORGET_IEMAIL    = 262300    #: ForgetMailMailMessage. invalid email
+    E_IIMM_FORGET_ICODE     = 262301    #: ForgetMailMailMessage. invalid code
+
+    E_IIMM_URUP_IDT         = 262400    #: UrisUpdatedMessage. Invalid date
+
+    E_IIMM_SSDT_ISID        = 262500    #: SendSessionDataMessage. Invalid sid
+    E_IIMM_SSDT_IDT         = 262501    #: SendSessionDataMessage. Invalid date
+
+    E_IIMM_CSH_ISID         = 262600    #: ClearSessionHooksMessage. Invalid sid
 

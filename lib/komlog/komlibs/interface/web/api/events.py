@@ -6,7 +6,6 @@ This file defines the logic associated with web interface operations
 
 import uuid
 from komlog.komfig import logging
-from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.auth.model.requests import Requests
@@ -92,9 +91,9 @@ def event_response_request(passport, seq, data):
                 raise exceptions.BadParametersException(error=Errors.E_IWAEV_EVRPR_IIDIT)
             else:
                 parameters['identified'].append({'pid':dp_info['pid'],'p':dp_info['p'],'l':dp_info['l']})
-        message=messages.UserEventResponseMessage(uid=passport.uid,date=date,parameters=parameters)
-        msgapi.send_message(message)
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+        resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+        resp.add_message(messages.UserEventResponseMessage(uid=passport.uid,date=date,parameters=parameters))
+        return resp
     else:
         raise exceptions.BadParametersException(error=Errors.E_IWAEV_EVRPR_IEVT)
 

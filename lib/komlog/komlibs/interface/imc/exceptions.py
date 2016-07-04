@@ -8,6 +8,7 @@ from komlog.komlibs.events import exceptions as eventexcept
 from komlog.komlibs.interface.imc import status
 from komlog.komlibs.interface.imc.errors import Errors
 from komlog.komlibs.interface.imc.model import responses
+from komlog.komlibs.interface.websocket.protocol.v1 import exceptions as wsv1except
 
 class BadParametersException(Exception):
     def __init__(self, error):
@@ -60,6 +61,7 @@ INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
     gestexcept.CircleAddMemberException,
     gestexcept.CircleDeleteMemberException,
     eventexcept.UserEventCreationException,
+    wsv1except.MessageValidationException,
 )
 
 SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST = (
@@ -90,10 +92,16 @@ class ExceptionHandler(object):
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
         except INTERNAL_ERROR_STATUS_EXCEPTION_LIST as e:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR,error=e.error)
         except SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST as e:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_SERVICE_UNAVAILABLE,error=e.error)

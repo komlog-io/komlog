@@ -26,51 +26,79 @@ class MessageBus:
         self.imc_address = routing.get_imc_address(module_id, module_instance, running_host)
         self.addr_list = routing.get_mod_address(module_id,module_instance,running_host)
         self.local=None
+        self.remotes={}
 
     async def start(self):
         try:
             self.local = await aioredis.create_redis(self.broker, encoding='utf-8')
+            self.remotes[self.running_host]=self.local
         except Exception as e:
             logging.logger.debug('Exception establishing connection with Redis Server: '+str(e))
             raise e
 
-    def retrieve_message(self, timeout):
-        msg = loop.run_until_complete(self.local.blpop(self.addr_list, timeout=1))
-        return msg
+    async def stop(self):
+        for host in self.remotes.keys():
+            self.remotes[host].close()
+        for host in self.remotes.keys():
+            await self.remotes[host].wait_closed()
+        return True
 
-    def send_message(self, komlog_message):
+    async def send_message(self, komlog_message):
         try:
             addr=routing.get_address(komlog_message.type,self.module_id, self.module_instance, self.running_host)
-            if addr:
-                loop.run_until_complete(self.local.rpush(addr,komlog_message.serialized_message.encode('utf-8')))
-                return True
+            await self.local.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+            return True
+        except aioredis.RedisError:
+            try:
+                self.local = await aioredis.create_redis(self.broker,encoding='utf-8')
+                self.remotes[self.running_host]=self.local
+                await self.local.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+            except aioredis.RedisError:
+                #try on other running connections
+                connections=[item[0] for item in list(self.remotes.items()) if item[0] != self.running_host]
+                for host in connections:
+                    try:
+                        await self.remotes[host].rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+                    except aioredis.RedisError:
+                        del self.remotes[host]
+                    else:
+                        return True
+                return False
             else:
-                logging.logger.error('Could not determine message destination address: '+komlog_message.type)
+                return True
+        except Exception as e:
+            logging.logger.exception('Exception sending message: '+str(e))
+            return False
+
+    async def retrieve_message(self, timeout):
+        try:
+            msg = await self.local.blpop(*self.addr_list, timeout=timeout)
+            return msg
+        except Exception as e:
+            logging.logger.exception('Exception retrieving message: '+str(e))
+            return None
+
+    async def send_message_to(self, remote_addr, komlog_message):
+        try:
+            host,addr=remote_addr.split(':')
+            await self.remotes[host].rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+        except (KeyError, aioredis.RedisError):
+            try:
+                self.remotes[host] = await aioredis.create_redis(host, encoding='utf-8')
+                await self.remotes[host].rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+            except:
                 return False
         except Exception as e:
             logging.logger.exception('Exception sending message: '+str(e))
             return False
-
-    async def stop(self):
-        if self.local:
-            await self.local.close()
         return True
 
-    def send_message_to(self, addr, komlog_message):
+    async def retrieve_message_from(self, addr, timeout=0):
         try:
-            loop.run_until_complete(self.local.rpush(addr,komlog_message.serialized_message.encode('utf-8')))
-        except Exception as e:
-            logging.logger.exception('Exception sending message: '+str(e))
-            return False
-        return True
-
-    def retrieve_message_from(self, addr, timeout=0):
-        try:
-            data = loop.run_until_complete(self.local.blpop(addr,timeout=timeout))
+            data = await self.local.blpop(addr,timeout=timeout)
             return data
         except Exception as e:
             logging.logger.debug('Exception retrieving messages (timeout='+str(timeout)+') address_list: '+str(addr))
-            logging.logger.exception('Exception retrieveing message: '+str(e))
             return None
 
 def initialize_msgbus(module_name, module_instance, hostname):
@@ -93,7 +121,8 @@ def initialize_msgbus(module_name, module_instance, hostname):
 def terminate_msgbus():
     global msgbus
     try:
-        loop.run_until_complete(msgbus.stop())
+        if msgbus:
+            loop.run_until_complete(msgbus.stop())
     except Exception as e:
         logging.logger.error('Exception stopping message bus: '+str(e))
         return False

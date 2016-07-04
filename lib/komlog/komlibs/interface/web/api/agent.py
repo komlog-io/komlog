@@ -2,7 +2,6 @@ import uuid
 from base64 import b64decode
 from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
-from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
 from komlog.komlibs.auth.passport import Passport
@@ -37,11 +36,10 @@ def new_agent_request(passport, agentname, pubkey, version):
         params=webop.get_params()
         try:
             if authupdate.update_resources(operation=authop, params=params):
-                message=messages.UpdateQuotesMessage(operation=authop, params=params)
-                msgapi.send_message(message)
-                message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_AGENT, parameters={'aid':agent['aid'].hex})
-                msgapi.send_message(message)
-                return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'aid':agent['aid'].hex})
+                resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'aid':agent['aid'].hex})
+                resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_AGENT, parameters={'aid':agent['aid'].hex}))
+                return resp
             else:
                 deleteapi.delete_agent(aid=agent['aid'])
                 return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWAA_NAGR_AUTHERR)
@@ -113,6 +111,7 @@ def delete_agent_request(passport, aid):
     aid=uuid.UUID(aid)
     authorization.authorize_request(request=Requests.DELETE_AGENT, passport=passport, aid=aid)
     message=messages.DeleteAgentMessage(aid=aid)
-    msgapi.send_message(msg=message)
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp = response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp.add_message(messages.DeleteAgentMessage(aid=aid))
+    return resp
 

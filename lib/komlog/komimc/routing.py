@@ -23,6 +23,7 @@ RESCONTROL='Rescontrol'
 EVENTS='Events'
 ANOMALIES='Anomalies'
 WEBSOCKETSERVER='Websocketserver'
+LAMBDAS='Lambdas'
 
 
 MESSAGE_TO_ADDRESS_MAPPING={
@@ -51,6 +52,8 @@ MESSAGE_TO_ADDRESS_MAPPING={
     messages.MISSING_DATAPOINT_MESSAGE:ANOMALIES,
     messages.NEW_INV_MAIL_MESSAGE:GESTCONSOLE,
     messages.FORGET_MAIL_MESSAGE:GESTCONSOLE,
+    messages.URIS_UPDATED_MESSAGE:LAMBDAS,
+    messages.CLEAR_SESSION_HOOKS_MESSAGE:LAMBDAS,
 }
 
 
@@ -64,6 +67,7 @@ MODULE_TO_ADDRESS_MAPPING={
     EVENTS:['%m','%i.%m.%h'],
     ANOMALIES:['%m','%i.%m.%h'],
     WEBSOCKETSERVER: ['%i.%m.%h'],
+    LAMBDAS:['%m','%i.%m.%h'],
 }
 
 

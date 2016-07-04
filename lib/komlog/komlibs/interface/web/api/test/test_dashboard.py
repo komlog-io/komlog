@@ -6,6 +6,7 @@ from komlog.komimc import api as msgapi
 from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.auth import passport
 from komlog.komlibs.gestaccount.errors import Errors as gesterrors
+from komlog.komlibs.interface.imc import status as imcstatus
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.web.api import login as loginapi 
 from komlog.komlibs.interface.web.api import user as userapi 
@@ -28,15 +29,8 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if msg:
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgapi.process_msg_result(msg_result)
-                else:
-                    break
+            for msg in response.unrouted_messages:
+                msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response, 'cookie',None)
         self.passport = passport.get_user_passport(cookie)
@@ -74,15 +68,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['dashboardname'],dashboardname)
@@ -117,15 +105,8 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
@@ -141,18 +122,11 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
         response2=dashboardapi.get_dashboards_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response2.data, [])
@@ -162,15 +136,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['dashboardname'],dashboardname)
@@ -183,15 +151,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['dashboardname'],dashboardname)
@@ -247,15 +209,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            #self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
@@ -268,15 +224,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['dashboardname'],dashboardname)
@@ -289,15 +239,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['dashboardname'],dashboardname)
@@ -319,15 +263,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(count,2)
         response=dashboardapi.delete_dashboard_request(passport=psp, bid=dashboard1['bid'])
         self.assertTrue(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.DELETE_DASHBOARD_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboards_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         count=0
@@ -385,15 +323,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['dashboardname'],dashboardname)
@@ -463,15 +395,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['dashboardname'],dashboardname)
@@ -536,15 +462,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['dashboardname'],dashboardname)
@@ -595,15 +515,9 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data['dashboardname'],dashboardname)

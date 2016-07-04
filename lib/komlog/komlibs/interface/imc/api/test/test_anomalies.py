@@ -19,4 +19,6 @@ class InterfaceImcApiAnomaliesTest(unittest.TestCase):
         response=anomalies.process_message_MISSINGDP(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
         self.assertEqual(response.error, gesterrors.E_GPA_CMDIS_DSMNF)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 

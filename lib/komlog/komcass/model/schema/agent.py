@@ -54,7 +54,7 @@ MST_AGENT_SESSION='''
         sid uuid,
         aid uuid,
         uid uuid,
-        generated timeuuid,
+        last_update timeuuid,
         imc_address text,
         PRIMARY KEY (sid)
     );

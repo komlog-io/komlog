@@ -11,7 +11,20 @@ from komlog.komlibs.mail import connection as mailcon
 
 class Tester(modules.Module):
     def __init__(self, instance_number):
-        super(Tester,self).__init__(name=self.__class__.__name__, instance_number=instance_number, needs_db=True, needs_msgbus=True, needs_mailer=True)
+        super().__init__(
+            name=self.__class__.__name__,
+            instance_number=instance_number,
+            needs_db=True,
+            needs_msgbus=True,
+            needs_mailer=True
+        )
+
+    def signal_handler(self, signum, frame):
+        if signum == signal.SIGTERM:
+            logging.logger.info('SIGTERM received, terminating')
+            self.run = False
+        else:
+            logging.logger.info('signal '+str(signum)+' received, ignoring')
 
     def start(self):
         signal.signal(signal.SIGTERM,self.signal_handler)
@@ -40,6 +53,7 @@ class Tester(modules.Module):
         self.terminate()
 
     def loop(self):
+        self.run = True
         while self.run:
             results=test.run_tests()
             if results:

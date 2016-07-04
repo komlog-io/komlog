@@ -17,8 +17,9 @@ The range reserved for Errors.in this module is 100000 - 150000
 
 '''
 
-from enum import Enum
+from enum import Enum, unique
 
+@unique
 class Errors(Enum):
 #common to every Error class
 
@@ -27,25 +28,28 @@ class Errors(Enum):
 
 #interface web api user
 
-    E_IWAU_NUSR_IU=100000
-    E_IWAU_NUSR_IP=100001
-    E_IWAU_NUSR_IE=100002
-    E_IWAU_NUSR_IINV=100003 #: new_user_request invalid (malformed) invitation
-    E_IWAU_NUSR_INVNF=100004 #: new_user_request invitation not found
-    E_IWAU_NUSR_INVAU=100005 #: new_user_request invitation already used
-    E_IWAU_NUSR_UAEU=100006 #: new_user_request user already exists (username)
-    E_IWAU_NUSR_UAEE=100007 #: new_user_request user already exists (email)
+    E_IWAU_NUSR_IU      = 100000
+    E_IWAU_NUSR_IP      = 100001
+    E_IWAU_NUSR_IE      = 100002
+    E_IWAU_NUSR_IINV    = 100003 #: new_user_request invalid (malformed) invitation
+    E_IWAU_NUSR_INVNF   = 100004 #: new_user_request invitation not found
+    E_IWAU_NUSR_INVAU   = 100005 #: new_user_request invitation already used
+    E_IWAU_NUSR_UAEU    = 100006 #: new_user_request user already exists (username)
+    E_IWAU_NUSR_UAEE    = 100007 #: new_user_request user already exists (email)
 
-    E_IWAU_CUSR_IE=100010
-    E_IWAU_CUSR_IC=100011
+    E_IWAU_CUSR_IE      = 100010
+    E_IWAU_CUSR_IC      = 100011
 
-    E_IWAU_GUSCR_IPSP=100015
+    E_IWAU_GUSCR_IPSP   = 100015
 
-    E_IWAU_UUSCR_IPSP=100020
-    E_IWAU_UUSCR_ID=100021
-    E_IWAU_UUSCR_IE=100022
-    E_IWAU_UUSCR_INP=100023
-    E_IWAU_UUSCR_IOP=100024
+    E_IWAU_UUSCR_IPSP   = 100020
+    E_IWAU_UUSCR_ID     = 100021
+    E_IWAU_UUSCR_IE     = 100022
+    E_IWAU_UUSCR_INP    = 100023
+    E_IWAU_UUSCR_IOP    = 100024
+    E_IWAU_UUSCR_ONPR   = 100025 #: only new_password received
+    E_IWAU_UUSCR_OOPR   = 100026 #: only old_password received
+    E_IWAU_UUSCR_NPEOP  = 100027 #: new_password equals old_password
 
     E_IWAU_DUSR_IPSP=100030
 
@@ -99,7 +103,7 @@ class Errors(Enum):
     E_IWADS_GDSDR_ID   = 100401
     E_IWADS_GDSDR_IS   = 100402
     E_IWADS_GDSDR_IT   = 100403
-    E_IWADS_GDSDR_LDBL = 100403  #: get_datasource_data_request. Last date retrieved is before allowed limit.
+    E_IWADS_GDSDR_LDBL = 100404  #: get_datasource_data_request. Last date retrieved is before allowed limit.
 
     E_IWADS_UDSDR_IPSP=100410
     E_IWADS_UDSDR_IA=100411
@@ -212,7 +216,7 @@ class Errors(Enum):
     E_IWAW_UWCR_IEP     = 101060
     E_IWAW_UWCR_IEC     = 101061
     E_IWAW_UWCR_IVW     = 101062 #: update_widget_config_request invalid view parameter
-    E_IWAW_UWCR_OE      = 101043 #: update_widget_config_request. Operation error.
+    E_IWAW_UWCR_OE      = 101063 #: update_widget_config_request. Operation error.
 
     E_IWAW_GRWR_IPSP=101080
     E_IWAW_GRWR_IW=101081

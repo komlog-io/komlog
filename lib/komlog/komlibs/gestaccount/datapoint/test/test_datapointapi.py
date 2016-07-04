@@ -1700,3 +1700,55 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         pid_hooks=cassapidatapoint.get_datapoint_hooks_sids(pid=pid)
         self.assertEqual(pid_hooks,[])
 
+    def test_get_datapoint_hooks_failure_invalid_pid(self):
+        ''' get_datapoint_hooks should fail if pid is invalid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datapoint_hooks(pid=pid)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_GDPH_IPID)
+
+    def test_get_datapoint_hooks_failure_datapoint_not_found(self):
+        ''' get_datapoint_hooks should fail if datapoint does not exist '''
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            api.get_datapoint_hooks(pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GDPH_DPNF)
+
+    def test_get_datapoint_hooks_success_some_hooks(self):
+        ''' get_datapoint_hooks should return the sid list of hooks '''
+        username='test_get_datapoint_hooks_success_some_hooks'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        sids=[uuid.uuid4(), uuid.uuid4(), uuid.uuid4()]
+        for sid in sids:
+            self.assertTrue(api.hook_to_datapoint(pid=pid, sid=sid))
+        pid_hooks=api.get_datapoint_hooks(pid=pid)
+        self.assertEqual(sorted(pid_hooks),sorted(sids))
+
+    def test_get_datapoint_hooks_success_no_hooks(self):
+        ''' get_datapoint_hooks should return an empty list if no hook is found '''
+        username='test_get_datapoint_hooks_success_no_hooks'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        pid_hooks=api.get_datapoint_hooks(pid=pid)
+        self.assertEqual(pid_hooks,[])
+

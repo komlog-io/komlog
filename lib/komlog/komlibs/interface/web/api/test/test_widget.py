@@ -20,6 +20,7 @@ from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
+from komlog.komlibs.interface.imc import status as imcstatus
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc.api import rescontrol, gestconsole
 from komlog.komimc import bus, routing
@@ -40,15 +41,13 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if msg:
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgapi.process_msg_result(msg_result)
-                else:
-                    break
+            msgs=response.unrouted_messages
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.unrouted_messages:
+                        msgs.append(msg2)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response, 'cookie',None)
         self.passport = passport.get_user_passport(cookie)
@@ -57,15 +56,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if msg:
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgapi.process_msg_result(msg_result)
-                else:
-                    break
+            msgs=response.unrouted_messages
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.unrouted_messages:
+                        msgs.append(msg2)
+                    self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         agents_info=agentapi.get_agents_config_request(passport=self.passport)
         self.agents=agents_info.data
         aid = response.data['aid']
@@ -80,24 +78,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -124,15 +112,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -159,15 +146,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -194,15 +180,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -229,15 +214,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -295,60 +279,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_DS_WIDGET_MESSAGE or msg.did.hex!=response.data['did']:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        msg_result=gestconsole.process_message_NEWDSW(message=msg)
-        msgapi.process_msg_result(msg_result)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_UPDQUO(msg)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if not msg:
-                break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid:
-                rescontrol.process_message_UPDQUO(message=msg)
-            else:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=100:
-                    break
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if not msg:
-                break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid: 
-                rescontrol.process_message_RESAUTH(message=msg)
-            else:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=100:
-                    break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -385,60 +323,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_DS_WIDGET_MESSAGE or msg.did.hex!=response.data['did']:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        msg_result=gestconsole.process_message_NEWDSW(message=msg)
-        msgapi.process_msg_result(msg_result)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_UPDQUO(msg)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
-            if not msg:
-                break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid:
-                rescontrol.process_message_UPDQUO(msg)
-            else:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=100:
-                    break
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=2)
-            if not msg:
-                break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid: 
-                rescontrol.process_message_RESAUTH(msg)
-            else:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=100:
-                    break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertTrue(len(response2.data)>=1)
@@ -508,24 +400,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -553,15 +435,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -571,15 +452,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         response4=widgetapi.delete_widget_request(passport=psp, wid=wid)
         self.assertEqual(response4.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.DELETE_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response4.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response5 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response5.status, status.WEB_STATUS_NOT_FOUND)
 
@@ -592,15 +472,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -610,15 +489,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         response4=widgetapi.delete_widget_request(passport=psp, wid=wid)
         self.assertEqual(response4.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.DELETE_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response4.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response5 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response5.status, status.WEB_STATUS_NOT_FOUND)
 
@@ -631,15 +509,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -649,15 +526,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         response4=widgetapi.delete_widget_request(passport=psp, wid=wid)
         self.assertEqual(response4.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.DELETE_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response4.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response5 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response5.status, status.WEB_STATUS_NOT_FOUND)
 
@@ -670,15 +546,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -688,15 +563,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         response4=widgetapi.delete_widget_request(passport=psp, wid=wid)
         self.assertEqual(response4.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.DELETE_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response4.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response5 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response5.status, status.WEB_STATUS_NOT_FOUND)
 
@@ -745,15 +619,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -771,15 +644,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -797,15 +669,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -823,15 +694,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -885,15 +755,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -906,24 +775,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
@@ -935,24 +794,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -981,15 +830,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -1002,24 +850,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
@@ -1031,24 +869,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -1077,15 +905,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -1098,24 +925,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
@@ -1127,24 +944,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -1173,15 +980,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -1195,24 +1001,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
@@ -1224,24 +1020,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -1306,15 +1092,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -1327,24 +1112,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
@@ -1356,24 +1131,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -1410,15 +1175,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -1431,24 +1195,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
@@ -1460,24 +1214,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -1514,15 +1258,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -1535,24 +1278,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
@@ -1564,24 +1297,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -1618,15 +1341,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -1640,24 +1362,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
@@ -1669,24 +1381,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -1762,15 +1464,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -1783,24 +1484,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
@@ -1812,24 +1503,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -1869,15 +1550,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -1891,24 +1571,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
@@ -1920,24 +1590,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -2011,60 +1671,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_DS_WIDGET_MESSAGE or msg.did.hex!=response.data['did']:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        msg_result=gestconsole.process_message_NEWDSW(message=msg)
-        msgapi.process_msg_result(msg_result)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE or not (msg.params['uid']==psp.uid and msg.params['aid']==psp.aid and msg.params['did']==uuid.UUID(response.data['did'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_UPDQUO(msg)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if not msg:
-                break
-            if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid:
-                rescontrol.process_message_UPDQUO(message=msg)
-            else:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=100:
-                    break
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if not msg:
-                break
-            if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==psp.uid: 
-                rescontrol.process_message_RESAUTH(message=msg)
-            else:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=100:
-                    break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -2102,15 +1716,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -2123,24 +1736,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_DS_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
@@ -2152,33 +1755,14 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.NEW_DP_WIDGET_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgapi.process_msg_result(msg_result)
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -2202,5 +1786,4 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response6=widgetapi.get_related_widgets_request(passport=psp, wid=wid_dp)
         self.assertEqual(response6.status, status.WEB_STATUS_OK)
         self.assertEqual(len(response6.data),2)
-
 

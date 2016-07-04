@@ -41,32 +41,19 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertTrue(found)
         auth_op=Operations.NEW_USER
         for quote in operation_quotes[auth_op]:
             user_quo=cassapiquote.get_user_quote(uid=psp.uid, quote=quote.name)
@@ -90,36 +77,21 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email,email)
-        self.assertTrue(args.is_valid_code(msg.code))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
         response3 = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response3, webresp.WebInterfaceResponse))
         self.assertEqual(response3.status, status.WEB_STATUS_ACCESS_DENIED)
-        #TODO: en el mensaje de respuesta hay que indicar el motivo del fallo
 
     def test_new_user_request_failure_invalid_username(self):
         ''' new_user_request should fail if username is invalid'''
@@ -185,32 +157,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
 
     def test_new_user_request_failure_already_used_invitation(self):
         ''' new_user_request should fail if invitation passed is already used '''
@@ -230,32 +188,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
         username = 'test_new_user_request_failure_already_used_invitation_2'
         password = 'password'
         email = username+'@komlog.org'
@@ -272,32 +216,19 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         response2=userapi.confirm_user_request(email=msg.email, code=msg.code)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -335,32 +266,19 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         email2='test_confirm_user_request_failure_wrong_email_2@komlog.org'
         response2=userapi.confirm_user_request(email=email2, code=msg.code)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
@@ -376,32 +294,19 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         response2=userapi.confirm_user_request(email=email, code='CUSTOMCODE')
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_INTERNAL_ERROR)
@@ -416,32 +321,19 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         response2=userapi.confirm_user_request(email=msg.email, code=msg.code)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -584,6 +476,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         data['old_password']=password
         response2 = userapi.update_user_config_request(passport=psp, data=data)
         self.assertEqual(response2.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response2.error, Errors.E_IWAU_UUSCR_OOPR.value)
 
     def test_update_user_config_request_failure_only_new_password(self):
         ''' update_user_config_request should fail if only new_password is passed '''
@@ -598,6 +491,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         data['new_password']=password
         response2 = userapi.update_user_config_request(passport=psp, data=data)
         self.assertEqual(response2.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response2.error, Errors.E_IWAU_UUSCR_ONPR.value)
 
     def test_update_user_config_request_failure_new_password_same_as_old_password(self):
         ''' update_user_config_request should fail if new_password is equal that old_password '''
@@ -610,8 +504,10 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         psp = passport.get_user_passport(cookie)
         data={}
         data['new_password']=password
+        data['old_password']=password
         response2 = userapi.update_user_config_request(passport=psp, data=data)
         self.assertEqual(response2.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response2.error, Errors.E_IWAU_UUSCR_NPEOP.value)
 
     def test_delete_user_request_failure_invalid_passport(self):
         ''' delete_user_request should fail if passport is invalid '''
@@ -678,32 +574,19 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         response=userapi.check_invitation_request(invitation=invitation)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
         self.assertEqual(response.error, Errors.E_IWAU_CIR_INVAU.value)
@@ -747,21 +630,20 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(len(response.data), 1)
         self.assertTrue(isinstance(response.data[0],tuple))
         self.assertEqual(response.data[0][0], email)
-        msg_addr=routing.get_address(type=messages.NEW_INV_MAIL_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_INV_MAIL_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertEqual(msg.inv_id, uuid.UUID(response.data[0][1]))
-        self.assertTrue(args.is_valid_uuid(msg.inv_id))
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_INV_MAIL_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertEqual(msg.inv_id, uuid.UUID(response.data[0][1]))
+                    self.assertTrue(args.is_valid_uuid(msg.inv_id))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
 
     def test_register_forget_request_failure_invalid_account(self):
         ''' register_forget_request should fail if account is not an email nor username '''
@@ -802,48 +684,35 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         response3=userapi.register_forget_request(account=email)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
         self.assertEqual(response3.data['email'],email)
-        msg_addr=routing.get_address(type=messages.FORGET_MAIL_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.FORGET_MAIL_MESSAGE or msg.email!=email:
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(response3.data['code'],msg.code.hex)
+        msgs=response3.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.FORGET_MAIL_MESSAGE:
+                    self.assertEqual(response3.data['code'],msg.code.hex)
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
 
     def test_register_forget_request_success_passing_user_username(self):
         ''' register_forget_request should succeed if we pass an existing username '''
@@ -862,48 +731,35 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         response3=userapi.register_forget_request(account=username)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
         self.assertEqual(response3.data['email'],email)
-        msg_addr=routing.get_address(type=messages.FORGET_MAIL_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.FORGET_MAIL_MESSAGE or msg.email!=email:
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(response3.data['code'],msg.code.hex)
+        msgs=response3.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.FORGET_MAIL_MESSAGE:
+                    self.assertEqual(response3.data['code'],msg.code.hex)
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
 
     def test_check_forget_code_request_failure_invalid_code(self):
         ''' check_forget_code_request should fail if code is invalid '''
@@ -937,48 +793,35 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         response3=userapi.register_forget_request(account=username)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
         self.assertEqual(response3.data['email'],email)
-        msg_addr=routing.get_address(type=messages.FORGET_MAIL_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.FORGET_MAIL_MESSAGE or msg.email!=email:
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(response3.data['code'],msg.code.hex)
+        msgs=response3.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.FORGET_MAIL_MESSAGE:
+                    self.assertEqual(response3.data['code'],msg.code.hex)
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         code=response3.data['code']
         password='newpassword'
         response=userapi.reset_password_request(code=code, password=password)
@@ -1004,48 +847,35 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         response3=userapi.register_forget_request(account=username)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
         self.assertEqual(response3.data['email'],email)
-        msg_addr=routing.get_address(type=messages.FORGET_MAIL_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.FORGET_MAIL_MESSAGE or msg.email!=email:
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(response3.data['code'],msg.code.hex)
+        msgs=response3.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.FORGET_MAIL_MESSAGE:
+                    self.assertEqual(response3.data['code'],msg.code.hex)
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         code=response3.data['code']
         response=userapi.check_forget_code_request(code=code)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -1094,48 +924,35 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
-        msg_addr=routing.get_address(type=messages.NEW_USR_NOTIF_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.NEW_USR_NOTIF_MESSAGE or msg.email!=email:
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(msg.email, email)
-        self.assertTrue(args.is_valid_code(msg.code))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         response3=userapi.register_forget_request(account=username)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
         self.assertEqual(response3.data['email'],email)
-        msg_addr=routing.get_address(type=messages.FORGET_MAIL_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.FORGET_MAIL_MESSAGE or msg.email!=email:
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertEqual(response3.data['code'],msg.code.hex)
+        msgs=response3.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.FORGET_MAIL_MESSAGE:
+                    self.assertEqual(response3.data['code'],msg.code.hex)
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        self.assertEqual(found,True)
         code=response3.data['code']
         password='newpassword'
         response=userapi.reset_password_request(code=code, password=password)

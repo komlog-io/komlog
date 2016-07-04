@@ -1,9 +1,11 @@
+import asyncio
 import os
 import uuid
 import json
 import tornado.web
 from tornado.escape import json_decode
 from tornado.template import Template
+from komlog.komimc import api as msgapi
 from komlog.komlibs.interface.web.api import agent
 from komlog.komlibs.interface.web.api import user
 from komlog.komlibs.interface.web.api import datasource
@@ -34,6 +36,7 @@ class AgentsHandler(tornado.web.RequestHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=agent.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -66,6 +69,7 @@ class AgentConfigHandler(tornado.web.RequestHandler):
     @auth.authenticated
     def delete(self, aid):
         response=agent.delete_agent_request(passport=self.passport, aid=aid)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -126,6 +130,7 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
     @auth.authenticated
     def delete(self, did):
         response=datasource.delete_datasource_request(passport=self.passport, did=did)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -199,6 +204,7 @@ class DatapointConfigHandler(tornado.web.RequestHandler):
     @auth.authenticated
     def delete(self, pid):
         response=datapoint.delete_datapoint_request(passport=self.passport, pid=pid)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -218,6 +224,7 @@ class DatapointsHandler(tornado.web.RequestHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datapoint.new_datasource_datapoint_request(passport=self.passport, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -235,6 +242,7 @@ class DatapointPositivesHandler(tornado.web.RequestHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datapoint.mark_positive_variable_request(passport=self.passport, pid=pid, sequence=sequence, position=position, length=length)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -252,6 +260,7 @@ class DatapointNegativesHandler(tornado.web.RequestHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datapoint.mark_negative_variable_request(passport=self.passport, pid=pid, sequence=sequence, position=position, length=length)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -260,6 +269,7 @@ class DatapointDatasourceHandler(tornado.web.RequestHandler):
     @auth.authenticated
     def delete(self, pid):
         response=datapoint.dissociate_datapoint_from_datasource_request(passport=self.passport, pid=pid)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -285,6 +295,7 @@ class UserConfigHandler(tornado.web.RequestHandler):
     @auth.authenticated
     def delete(self):
         response=user.delete_user_request(passport=self.passport)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -348,6 +359,7 @@ class WidgetsHandler(tornado.web.RequestHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=widget.new_widget_request(passport=self.passport, data=data)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -374,6 +386,7 @@ class WidgetConfigHandler(tornado.web.RequestHandler):
     @auth.authenticated
     def delete(self, wid):
         response=widget.delete_widget_request(passport=self.passport, wid=wid)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -415,6 +428,7 @@ class WidgetSnapshotsHandler(tornado.web.RequestHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=snapshot.new_snapshot_request(passport=self.passport, wid=wid, user_list=user_list, cid_list=cid_list, its=its, ets=ets, seq=seq)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -435,6 +449,7 @@ class DashboardsHandler(tornado.web.RequestHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=dashboard.new_dashboard_request(passport=self.passport, data=data)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -461,6 +476,7 @@ class DashboardConfigHandler(tornado.web.RequestHandler):
     @auth.authenticated
     def delete(self, bid):
         response=dashboard.delete_dashboard_request(passport=self.passport, bid=bid)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -510,7 +526,8 @@ class CirclesHandler(tornado.web.RequestHandler):
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=circle.new_circle_request(passport=self.passport, circlename=circlename, members_list=members)
+            response=circle.new_users_circle_request(passport=self.passport, circlename=circlename, members_list=members)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -551,12 +568,14 @@ class CircleMembersHandler(tornado.web.RequestHandler):
     @auth.authenticated
     def post(self, cid, member):
         response=circle.add_user_to_circle_request(passport=self.passport, cid=cid, member=member)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, cid, member):
         response=circle.delete_user_from_circle_request(passport=self.passport, cid=cid, member=member)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -600,6 +619,7 @@ class UserEventsResponsesHandler(tornado.web.RequestHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=events.event_response_request(passport=self.passport, seq=seq, data=req_data)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -640,6 +660,7 @@ class SignupHandler(tornado.web.RequestHandler):
         email=self.get_argument('email',default=None)
         invitation=self.get_argument('i',default=None)
         response=user.new_user_request(username=username,password=password,email=email,invitation=invitation, require_invitation=True)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
         self.render('signup_post.html', page_title='Komlog', response=response)
 
 class ForgetHandler(tornado.web.RequestHandler):
@@ -660,6 +681,7 @@ class ForgetHandler(tornado.web.RequestHandler):
             self.redirect('/forget')
         elif account != None:
             response=user.register_forget_request(account=account)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
             self.render('forget_post.html', page_title='Komlog', reset=False, response=response)
         else:
             response=user.reset_password_request(code=code, password=password)

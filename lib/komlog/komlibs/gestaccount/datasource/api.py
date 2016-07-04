@@ -256,3 +256,12 @@ def unhook_from_datasource(did, sid):
         raise exceptions.BadParametersException(error=Errors.E_GDA_UHFDS_ISID)
     return cassapidatasource.delete_datasource_hook(did=did, sid=sid)
 
+def get_datasource_hooks(did):
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_GDSH_IDID)
+    datasource=cassapidatasource.get_datasource(did=did)
+    if datasource is None:
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_GDA_GDSH_DSNF)
+    return cassapidatasource.get_datasource_hooks_sids(did=did)
+
+

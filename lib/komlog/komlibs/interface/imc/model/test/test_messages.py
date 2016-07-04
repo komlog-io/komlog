@@ -642,3 +642,66 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         self.assertTrue(isinstance(msg, messages.ForgetMailMessage))
         self.assertEqual(msg.type, messages.FORGET_MAIL_MESSAGE)
 
+    def test_UrisUpdatedMessage_failure_invalid_date(self):
+        ''' UrisUpdatedMessage creation should fail if date is invalid '''
+        dates=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4().hex, uuid.uuid4(), json.dumps('username'), 'user\nname','user\tname']
+        uris=[{'uri':'uri','type':'type','id':uuid.uuid4()}]
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.UrisUpdatedMessage(uris=uris, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_URUP_IDT)
+
+    def test_UrisUpdatedMessage_success(self):
+        ''' UrisUpdatedMessage creation should succeed '''
+        uris=[{'uri':'uri','type':'type','id':uuid.uuid4()}]
+        date=uuid.uuid1()
+        msg=messages.UrisUpdatedMessage(uris=uris, date=date)
+        self.assertTrue(isinstance(msg, messages.UrisUpdatedMessage))
+        self.assertEqual(msg.type, messages.URIS_UPDATED_MESSAGE)
+
+    def test_SendSessionDataMessage_failure_invalid_date(self):
+        ''' SendSessionDataMessage creation should fail if date is invalid '''
+        dates=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4().hex, uuid.uuid4(), json.dumps('username'), 'user\nname','user\tname']
+        data=[{'uri':'uri','content':'content'}]
+        sid=uuid.uuid4()
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.SendSessionDataMessage(sid=sid,data=data, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_SSDT_IDT)
+
+    def test_SendSessionDataMessage_failure_invalid_sid(self):
+        ''' SendSessionDataMessage creation should fail if sid is invalid '''
+        sids=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4().hex, uuid.uuid1(), json.dumps('username'), 'user\nname','user\tname']
+        data=[{'uri':'uri','content':'content'}]
+        date=uuid.uuid1()
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.SendSessionDataMessage(sid=sid,data=data, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_SSDT_ISID)
+
+    def test_SendSessionDataMessage_success(self):
+        ''' SendSessionDataMessage creation should succeed '''
+        data=[{'uri':'uri','content':'content'}]
+        sid=uuid.uuid4()
+        date=uuid.uuid1()
+        msg=messages.SendSessionDataMessage(sid=sid, data=data, date=date)
+        self.assertTrue(isinstance(msg, messages.SendSessionDataMessage))
+        self.assertEqual(msg.type, messages.SEND_SESSION_DATA_MESSAGE)
+
+    def test_ClearSessionHooksMessage_failure_invalid_sid(self):
+        ''' ClearSessionHooksMessage creation should fail if sid is invalid '''
+        sids=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4().hex, uuid.uuid1(), json.dumps('username'), 'user\nname','user\tname']
+        ids=[(uuid.uuid4(), 'd'),(uuid.uuid4(),'p')]
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.ClearSessionHooksMessage(sid=sid,ids=ids)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_CSH_ISID)
+
+    def test_ClearSessionHooksMessage_success(self):
+        ''' ClearSessionHooksMessage creation should succeed '''
+        sid=uuid.uuid4()
+        ids=[(uuid.uuid4(), 'd'),(uuid.uuid4(),'p')]
+        msg=messages.ClearSessionHooksMessage(sid=sid, ids=ids)
+        self.assertTrue(isinstance(msg, messages.ClearSessionHooksMessage))
+        self.assertEqual(msg.type, messages.CLEAR_SESSION_HOOKS_MESSAGE)
+

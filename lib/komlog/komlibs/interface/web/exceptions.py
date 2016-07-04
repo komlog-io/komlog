@@ -18,8 +18,6 @@ class BadParametersException(Exception):
 
 BAD_PARAMETERS_STATUS_EXCEPTION_LIST=(
     BadParametersException,
-    gestexcept.BadParametersException,
-    eventexcept.BadParametersException,
 )
 
 NOT_ALLOWED_STATUS_EXCEPTION_LIST=(
@@ -52,6 +50,7 @@ NOT_FOUND_STATUS_EXCEPTION_LIST=(
 )
 
 INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
+    gestexcept.BadParametersException,
     gestexcept.AgentCreationException,
     gestexcept.WidgetCreationException,
     gestexcept.UserConfirmationException,
@@ -65,6 +64,7 @@ INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
     gestexcept.DatasourceUploadContentException,
     gestexcept.CircleAddMemberException,
     gestexcept.CircleDeleteMemberException,
+    eventexcept.BadParametersException,
     eventexcept.UserEventCreationException,
 )
 

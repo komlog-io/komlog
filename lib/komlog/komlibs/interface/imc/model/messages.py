@@ -43,6 +43,9 @@ GENERATE_TEXT_SUMMARY_MESSAGE='GENTEXTSUMMARY'
 MISSING_DATAPOINT_MESSAGE='MISSINGDP'
 NEW_INV_MAIL_MESSAGE='NEWINV'
 FORGET_MAIL_MESSAGE='FORGETMAIL'
+URIS_UPDATED_MESSAGE='URISUPDT'
+SEND_SESSION_DATA_MESSAGE='SSDATA'
+CLEAR_SESSION_HOOKS_MESSAGE='CLSHOOKS'
 
 
 class StoreSampleMessage:
@@ -536,6 +539,70 @@ class ForgetMailMessage:
             self.code=code
             self.serialized_message='|'.join((self.type,self.email,self.code.hex))
 
+class UrisUpdatedMessage:
+    def __init__(self, serialized_message=None, uris=None, date=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,uris,date=self.serialized_message.split('|')
+            self.type=mtype
+            uris=json.loads(uris)
+            self.date=uuid.UUID(date)
+            self.uris=[]
+            for uri in uris:
+                uri['id']=uuid.UUID(uri['id'])
+                self.uris.append(uri)
+        else:
+            if not args.is_valid_date(date):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_URUP_IDT)
+            self.type=URIS_UPDATED_MESSAGE
+            self.uris=uris
+            self.date=date
+            uri_list=[]
+            for uri in uris:
+                uri_list.append({'uri':uri['uri'],'type':uri['type'],'id':uri['id'].hex})
+            s_uris=json.dumps(uri_list)
+            self.serialized_message='|'.join((self.type,s_uris,self.date.hex))
+
+class SendSessionDataMessage:
+    def __init__(self, serialized_message=None, sid=None, data=None, date=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,sid,data,date=self.serialized_message.split('|')
+            self.type=mtype
+            self.sid=uuid.UUID(sid)
+            self.data=json.loads(data)
+            self.date=uuid.UUID(date)
+        else:
+            if not args.is_valid_uuid(sid):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_SSDT_ISID)
+            if not args.is_valid_date(date):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_SSDT_IDT)
+            self.type=SEND_SESSION_DATA_MESSAGE
+            self.sid=sid
+            self.data=data
+            self.date=date
+            self.serialized_message='|'.join((self.type,self.sid.hex,json.dumps(self.data),self.date.hex))
+
+class ClearSessionHooksMessage:
+    def __init__(self, serialized_message=None, sid=None, ids=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,sid,ids=self.serialized_message.split('|')
+            self.type=mtype
+            self.sid=uuid.UUID(sid)
+            self.ids=[]
+            ids_array=json.loads(ids)
+            for id_hex, id_type in ids_array:
+                self.ids.append((uuid.UUID(id_hex),id_type))
+        else:
+            if not args.is_valid_uuid(sid):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_CSH_ISID)
+            self.type=CLEAR_SESSION_HOOKS_MESSAGE
+            self.sid=sid
+            self.ids=ids
+            ids_array=[(item[0].hex,item[1]) for item in self.ids]
+            self.serialized_message='|'.join((self.type,self.sid.hex,json.dumps(ids_array)))
+
 #MESSAGE MAPPINGS
 MESSAGE_TO_CLASS_MAPPING={
     STORE_SAMPLE_MESSAGE:StoreSampleMessage,
@@ -563,5 +630,8 @@ MESSAGE_TO_CLASS_MAPPING={
     MISSING_DATAPOINT_MESSAGE:MissingDatapointMessage,
     NEW_INV_MAIL_MESSAGE:NewInvitationMailMessage,
     FORGET_MAIL_MESSAGE:ForgetMailMessage,
+    URIS_UPDATED_MESSAGE:UrisUpdatedMessage,
+    SEND_SESSION_DATA_MESSAGE:SendSessionDataMessage,
+    CLEAR_SESSION_HOOKS_MESSAGE:ClearSessionHooksMessage,
 }
 

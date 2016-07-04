@@ -6,11 +6,32 @@ class ImcInterfaceResponse:
         self.error=error
         self.message_type=message_type
         self.message_params=message_params
-        self._msgoriginated=[]
+        self._routed_messages={}
+        self._unrouted_messages=[]
 
-    def add_msg_originated(self, msg, index=0):
-        array_position=index if index else len(self._msgoriginated)
-        self._msgoriginated.insert(array_position,msg)
+    @property
+    def routed_messages(self):
+        return self._routed_messages
 
-    def get_msg_originated(self):
-        return self._msgoriginated
+    @routed_messages.setter
+    def routed_messages(self, value):
+        raise TypeError
+
+    @property
+    def unrouted_messages(self):
+        return self._unrouted_messages
+
+    @unrouted_messages.setter
+    def unrouted_messages(self, value):
+        raise TypeError
+
+    def add_message(self, msg, dest=None):
+        if dest is not None:
+            try:
+                self._routed_messages[dest].append(msg)
+            except KeyError:
+                self._routed_messages[dest]=[msg]
+        else:
+            self._unrouted_messages.append(msg)
+        return True
+

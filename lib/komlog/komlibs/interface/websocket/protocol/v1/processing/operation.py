@@ -32,34 +32,29 @@ def process_operation(operation):
 
 def _process_operation_new_datasource(operation):
     if authupdate.update_resources(operation=operation.auth_operation, params=operation.params):
-        message=messages.UpdateQuotesMessage(operation=operation.auth_operation, params=operation.params)
-        msgapi.send_message(message)
-        message=messages.NewDSWidgetMessage(uid=operation.uid,did=operation.did)
-        msgapi.send_message(message)
-        message=messages.UserEventMessage(uid=operation.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':operation.did.hex})
-        msgapi.send_message(message)
-        return True
+        msgs=[]
+        msgs.append(messages.UpdateQuotesMessage(operation=operation.auth_operation, params=operation.params))
+        msgs.append(messages.NewDSWidgetMessage(uid=operation.uid,did=operation.did))
+        msgs.append(messages.UserEventMessage(uid=operation.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':operation.did.hex}))
+        return msgs
     else:
-        return False
+        raise exceptions.OperationExecutionException(error=Errors.E_IWSPV1PO_PONDS_EUR)
 
 def _process_operation_new_user_datapoint(operation):
     if authupdate.update_resources(operation=operation.auth_operation, params=operation.params):
-        message=messages.UpdateQuotesMessage(operation=operation.auth_operation, params=operation.params)
-        msgapi.send_message(message)
-        message=messages.NewDPWidgetMessage(uid=operation.uid,pid=operation.pid)
-        msgapi.send_message(message)
-        return True
+        msgs=[]
+        msgs.append(messages.UpdateQuotesMessage(operation=operation.auth_operation, params=operation.params))
+        msgs.append(messages.NewDPWidgetMessage(uid=operation.uid,pid=operation.pid))
+        return msgs
     else:
-        return False
+        raise exceptions.OperationValidationException(error=Errors.E_IWSPV1PO_PONUDP_EUR)
 
 def _process_operation_datasource_data_stored(operation):
-    message=messages.UpdateQuotesMessage(operation=operation.auth_operation,params=operation.params)
-    msgapi.send_message(message)
-    message=messages.GenerateTextSummaryMessage(did=operation.did,date=operation.date)
-    msgapi.send_message(message)
-    message=messages.MapVarsMessage(did=operation.did,date=operation.date)
-    msgapi.send_message(message)
-    return True
+    msgs=[]
+    msgs.append(messages.UpdateQuotesMessage(operation=operation.auth_operation,params=operation.params))
+    msgs.append(messages.GenerateTextSummaryMessage(did=operation.did,date=operation.date))
+    msgs.append(messages.MapVarsMessage(did=operation.did,date=operation.date))
+    return msgs
 
 _operation_funcs = {
     Operations.NEW_DATASOURCE:_process_operation_new_datasource,

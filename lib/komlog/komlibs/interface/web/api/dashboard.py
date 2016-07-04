@@ -7,7 +7,6 @@ This file defines the logic associated with web interface operations
 import uuid
 from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
-from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
 from komlog.komlibs.auth.passport import Passport
@@ -68,11 +67,10 @@ def new_dashboard_request(passport, data):
         params=webop.get_params()
         try:
             if authupdate.update_resources(operation=authop, params=params):
-                message=messages.UpdateQuotesMessage(operation=authop, params=params)
-                msgapi.send_message(message)
-                message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, parameters={'bid':dashboard['bid'].hex})
-                msgapi.send_message(message)
-                return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'bid':dashboard['bid'].hex})
+                resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'bid':dashboard['bid'].hex})
+                resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, parameters={'bid':dashboard['bid'].hex}))
+                return resp
             else:
                 deleteapi.delete_dashboard(bid=dashboard['bid'])
                 return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWADB_NDBR_AUTHERR)
@@ -88,9 +86,9 @@ def delete_dashboard_request(passport, bid):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_DDBR_IB)
     bid=uuid.UUID(bid)
     authorization.authorize_request(request=Requests.DELETE_DASHBOARD,passport=passport,bid=bid)
-    message=messages.DeleteDashboardMessage(bid=bid)
-    msgapi.send_message(msg=message)
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp.add_message(messages.DeleteDashboardMessage(bid=bid))
+    return resp
 
 @exceptions.ExceptionHandler
 def update_dashboard_config_request(passport, bid, data):

@@ -819,3 +819,12 @@ def unhook_from_datapoint(pid, sid):
         raise exceptions.BadParametersException(error=Errors.E_GPA_UHFDP_ISID)
     return cassapidatapoint.delete_datapoint_hook(pid=pid, sid=sid)
 
+def get_datapoint_hooks(pid):
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_GDPH_IPID)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    if datapoint is None:
+        raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_GDPH_DPNF)
+    return cassapidatapoint.get_datapoint_hooks_sids(pid=pid)
+
+

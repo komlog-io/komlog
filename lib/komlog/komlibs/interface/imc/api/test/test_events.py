@@ -21,6 +21,8 @@ class InterfaceImcApiEventsTest(unittest.TestCase):
         response=events.process_message_USEREV(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_INTERNAL_ERROR)
         self.assertEqual(response.error, eventserrors.E_EAU_IENNU_UNF)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_USEREV_success_new_agent_event(self):
         ''' process_message_USEREV should succeed with NEW_AGENT events '''
@@ -32,6 +34,8 @@ class InterfaceImcApiEventsTest(unittest.TestCase):
         response=events.process_message_USEREV(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_INTERNAL_ERROR)
         self.assertEqual(response.error, eventserrors.E_EAU_IENNA_UNF)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_USEREV_success_new_datasource_event(self):
         ''' process_message_USEREV should succeed with NEW_DATASOURCE events '''
@@ -44,6 +48,8 @@ class InterfaceImcApiEventsTest(unittest.TestCase):
         response=events.process_message_USEREV(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_INTERNAL_ERROR)
         self.assertEqual(response.error, eventserrors.E_EAU_IENNDS_UNF)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_USEREV_success_new_datapoint_event(self):
         ''' process_message_USEREV should succeed with NEW_DATAPOINT events '''
@@ -56,6 +62,8 @@ class InterfaceImcApiEventsTest(unittest.TestCase):
         response=events.process_message_USEREV(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_INTERNAL_ERROR)
         self.assertEqual(response.error, eventserrors.E_EAU_IENNDP_UNF)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_USEREV_success_new_widget_event(self):
         ''' process_message_USEREV should succeed with NEW_WIDGET events '''
@@ -67,6 +75,8 @@ class InterfaceImcApiEventsTest(unittest.TestCase):
         response=events.process_message_USEREV(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_INTERNAL_ERROR)
         self.assertEqual(response.error, eventserrors.E_EAU_IENNWG_UNF)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_USEREV_success_new_dashboard_event(self):
         ''' process_message_USEREV should succeed with NEW_DASHBOARD events '''
@@ -78,6 +88,8 @@ class InterfaceImcApiEventsTest(unittest.TestCase):
         response=events.process_message_USEREV(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_INTERNAL_ERROR)
         self.assertEqual(response.error, eventserrors.E_EAU_IENNDB_UNF)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_USEREV_success_new_circle_event(self):
         ''' process_message_USEREV should succeed with NEW_CIRCLE events '''
@@ -89,6 +101,8 @@ class InterfaceImcApiEventsTest(unittest.TestCase):
         response=events.process_message_USEREV(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_INTERNAL_ERROR)
         self.assertEqual(response.error, eventserrors.E_EAU_IENNC_UNF)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_USEREV_failure_unknown_event_type(self):
         ''' process_message_USEREV should fail if did does not exists '''
@@ -97,6 +111,8 @@ class InterfaceImcApiEventsTest(unittest.TestCase):
         message=messages.UserEventMessage(uid=uid, event_type=event_type)
         response=events.process_message_USEREV(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 
     def test_process_message_USEREVRESP_failure_event_not_found(self):
         ''' process_message_USEREVRESP should fail if event does not exist '''
@@ -107,4 +123,6 @@ class InterfaceImcApiEventsTest(unittest.TestCase):
         response=events.process_message_USEREVRESP(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
         self.assertEqual(response.error, eventserrors.E_EAUR_PEVRP_EVNF)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
 

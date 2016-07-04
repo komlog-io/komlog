@@ -21,6 +21,7 @@ from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
+from komlog.komlibs.interface.imc import status as imcstatus
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc.api import rescontrol
 from komlog.komimc import bus, routing
@@ -45,6 +46,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                msgresponse=msgapi.process_message(msg)
             response = loginapi.login_request(username=self.username, password=self.password)
             cookie=getattr(response, 'cookie',None)
             self.passport = passport.get_user_passport(cookie)
@@ -52,65 +55,22 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             aid = response.data['aid']
             cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
             self.agent_passport = passport.get_agent_passport(cookie)
-            msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            count=0
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-                self.assertIsNotNone(msg)
-                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==self.passport.uid and msg.params['aid']==self.agent_passport.aid):
-                    msgapi.send_message(msg)
-                    count+=1
-                    if count>=1000:
-                        break
-                else:
-                    break
-            self.assertFalse(count>=1000)
-            rescontrol.process_message_UPDQUO(msg)
+            for msg in response.unrouted_messages:
+                msgresponse=msgapi.process_message(msg)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
             datasourcename='datasource'
             response = datasourceapi.new_datasource_request(passport=self.agent_passport, datasourcename=datasourcename)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-            msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            count=0
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-                self.assertIsNotNone(msg)
-                if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_DATASOURCE or not (msg.params['uid']==self.agent_passport.uid and msg.params['aid']==self.agent_passport.aid and msg.params['did']==uuid.UUID(response.data['did'])):
-                    msgapi.send_message(msg)
-                    count+=1
-                    if count>=1000:
-                        break
-                else:
-                    break
-            self.assertFalse(count>=1000)
-            rescontrol.process_message_UPDQUO(msg)
-            msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-            count=0
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if not msg:
-                    break
-                if msg and msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==self.agent_passport.uid:
-                    rescontrol.process_message_UPDQUO(msg)
-                else:
-                    msgapi.send_message(msg)
-                    count+=1
-                    if count>=100:
-                        break
-            count=0
-            while True:
-                msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-                if not msg:
-                    break
-                if msg and msg.type==messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE and msg.operation==Operations.NEW_WIDGET_SYSTEM and msg.params['uid']==self.agent_passport.uid: 
-                    rescontrol.process_message_RESAUTH(message=msg)
-                else:
-                    msgapi.send_message(msg)
-                    count+=1
-                    if count>=100:
-                        break
-
+            msgs=response.unrouted_messages
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.unrouted_messages:
+                        msgs.append(msg2)
+                    self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response, 'cookie',None)
         self.passport = passport.get_user_passport(cookie)
@@ -135,20 +95,12 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.MON_VAR_MESSAGE or msg.did!=uuid.UUID(did):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
+        amsg=None
+        for msg in response.unrouted_messages:
+            if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
+                amsg=msg
                 break
-        #we put the message off the queue, but we process it manually calling the gestaccount directly
-        datapoint=gestdatapointapi.monitor_new_datapoint(did=msg.did, date=msg.date, position=msg.position, length=msg.length, datapointname=msg.datapointname)
+        datapoint=gestdatapointapi.monitor_new_datapoint(did=amsg.did, date=amsg.date, position=amsg.position, length=amsg.length, datapointname=amsg.datapointname)
         self.assertIsNotNone(datapoint)
         self.assertEqual(datapoint['datapointname'],'.'.join((datasource_config.data['datasourcename'],datapointname)))
         self.assertEqual(datapoint['did'],uuid.UUID(did))
@@ -294,20 +246,12 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][1]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.MON_VAR_MESSAGE or msg.did!=uuid.UUID(did):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
+        amsg=None
+        for msg in response.unrouted_messages:
+            if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
+                amsg=msg
                 break
-        #we put the message off the queue, but we process it manually calling the gestaccount directly
-        datapoint=gestdatapointapi.monitor_new_datapoint(did=msg.did, date=msg.date, position=msg.position, length=msg.length, datapointname=msg.datapointname)
+        datapoint=gestdatapointapi.monitor_new_datapoint(did=amsg.did, date=amsg.date, position=amsg.position, length=amsg.length, datapointname=amsg.datapointname)
         self.assertIsNotNone(datapoint)
         self.assertEqual(datapoint['datapointname'],'.'.join((datasource_config.data['datasourcename'],datapointname)))
         self.assertEqual(datapoint['did'],uuid.UUID(did))
@@ -329,33 +273,14 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         position,length=datasourcedata.data['variables'][2]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception as e:
-                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
         for datapoint in datasourceinfo.data['datapoints']:
@@ -382,33 +307,14 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         position,length=datasourcedata.data['variables'][3]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception as e:
-                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
         for datapoint in datasourceinfo.data['datapoints']:
@@ -435,33 +341,14 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         position,length=datasourcedata.data['variables'][4]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception as e:
-                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
         for datapoint in datasourceinfo.data['datapoints']:
@@ -489,33 +376,14 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         position,length=datasourcedata.data['variables'][5]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception as e:
-                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
         for datapoint in datasourcedata.data['datapoints']:
@@ -748,33 +616,14 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         position,length=datasourcedata.data['variables'][6]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception as e:
-                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
         for datapoint in datasourceinfo.data['datapoints']:
@@ -798,46 +647,14 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         position,length=datasourcedata.data['variables'][7]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception as e:
-                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.FILL_DATAPOINT_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
         for datapoint in datasourceinfo.data['datapoints']:
@@ -863,46 +680,14 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         position,length=datasourcedata.data['variables'][8]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception as e:
-                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.FILL_DATAPOINT_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
         for datapoint in datasourceinfo.data['datapoints']:
@@ -932,46 +717,14 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         position,length=datasourcedata.data['variables'][9]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception as e:
-                    logging.logger.debug('EXCEPTION '+str(e)+' '+str(msg.serialized_message))
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
-        msg_addr=routing.get_address(type=messages.FILL_DATAPOINT_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                try:
-                    msgresult=msgapi.process_message(msg)
-                    if msgresult:
-                        msgapi.process_msg_result(msgresult)
-                except Exception:
-                    pass
-            else:
-                break
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
         for datapoint in datasourceinfo.data['datapoints']:
@@ -1034,27 +787,20 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][10]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
         pid=None
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgs=msg_result.get_msg_originated()
-                        for msg in msgs:
-                            if msg.type==messages.UPDATE_QUOTES_MESSAGE:
-                                pid=msg.params['pid'].hex
+        for msg in response.unrouted_messages:
+            if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgs=msg_result.unrouted_messages
+                    for msg in msgs:
+                        if msg.type==messages.UPDATE_QUOTES_MESSAGE:
+                            pid=msg.params['pid'].hex
+                        msg_result=msgapi.process_message(msg)
                 else:
                     msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgs=msg_result.get_msg_originated()
-                    for msg in msgs:
-                        msgapi.process_message(msg)
             else:
-                break
+                msgapi.process_message(msg)
         self.assertIsNotNone(pid)
         datapoint_config=datapointapi.get_datapoint_config_request(passport=psp, pid=pid)
         self.assertEqual(datapoint_config.status, status.WEB_STATUS_OK)
@@ -1062,20 +808,14 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datapoint_config.data['did'], did)
         response=datapointapi.dissociate_datapoint_from_datasource_request(passport=psp, pid=pid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         found=False
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
-                    found=True
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgs=msg_result.get_msg_originated()
-                    for msg in msgs:
-                        msgapi.process_message(msg)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
+                found=True
+            msg_result=msgapi.process_message(msg)
+            msgs=msg_result.unrouted_messages
+            for amsg in msgs:
+                msgapi.process_message(amsg)
         self.assertTrue(found)
         datapoint_config=datapointapi.get_datapoint_config_request(passport=psp, pid=pid)
         self.assertEqual(datapoint_config.status, status.WEB_STATUS_OK)
@@ -1096,27 +836,20 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][10]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msg_addr=routing.get_address(type=messages.MON_VAR_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
         pid=None
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
-                    msg_result=msgapi.process_message(msg)
-                    if msg_result:
-                        msgs=msg_result.get_msg_originated()
-                        for msg in msgs:
-                            if msg.type==messages.UPDATE_QUOTES_MESSAGE:
-                                pid=msg.params['pid'].hex
+        for msg in response.unrouted_messages:
+            if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
+                msg_result=msgapi.process_message(msg)
+                if msg_result:
+                    msgs=msg_result.unrouted_messages
+                    for msg in msgs:
+                        if msg.type==messages.UPDATE_QUOTES_MESSAGE:
+                            pid=msg.params['pid'].hex
+                        msg_result=msgapi.process_message(msg)
                 else:
                     msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgs=msg_result.get_msg_originated()
-                    for msg in msgs:
-                        msgapi.process_message(msg)
             else:
-                break
+                msgapi.process_message(msg)
         self.assertIsNotNone(pid)
         datapoint_config=datapointapi.get_datapoint_config_request(passport=psp, pid=pid)
         self.assertEqual(datapoint_config.status, status.WEB_STATUS_OK)
@@ -1124,20 +857,14 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datapoint_config.data['did'], did)
         response=datapointapi.dissociate_datapoint_from_datasource_request(passport=psp, pid=pid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         found=False
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
-                    found=True
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgs=msg_result.get_msg_originated()
-                    for msg in msgs:
-                        msgapi.process_message(msg)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
+                found=True
+            msg_result=msgapi.process_message(msg)
+            msgs=msg_result.unrouted_messages
+            for amsg in msgs:
+                msgapi.process_message(amsg)
         self.assertTrue(found)
         datapoint_config=datapointapi.get_datapoint_config_request(passport=psp, pid=pid)
         self.assertEqual(datapoint_config.status, status.WEB_STATUS_OK)
@@ -1146,20 +873,14 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         #launch again over the dissociated datapoint
         response=datapointapi.dissociate_datapoint_from_datasource_request(passport=psp, pid=pid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
         found=False
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=1)
-            if msg:
-                if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
-                    found=True
-                msg_result=msgapi.process_message(msg)
-                if msg_result:
-                    msgs=msg_result.get_msg_originated()
-                    for msg in msgs:
-                        msgapi.process_message(msg)
-            else:
-                break
+        for msg in response.unrouted_messages:
+            if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
+                found=True
+            msg_result=msgapi.process_message(msg)
+            msgs=msg_result.unrouted_messages
+            for amsg in msgs:
+                msgapi.process_message(amsg)
         self.assertFalse(found)
         datapoint_config=datapointapi.get_datapoint_config_request(passport=psp, pid=pid)
         self.assertEqual(datapoint_config.status, status.WEB_STATUS_OK)

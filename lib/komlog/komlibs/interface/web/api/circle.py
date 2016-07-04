@@ -7,7 +7,6 @@ This file defines the logic associated with web interface operations
 import uuid
 from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
-from komlog.komimc import api as msgapi
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
 from komlog.komlibs.auth.passport import Passport
@@ -84,11 +83,10 @@ def new_users_circle_request(passport, circlename, members_list=None):
         params=webop.get_params()
         try:
             if authupdate.update_resources(operation=authop, params=params):
-                message=messages.UpdateQuotesMessage(operation=authop, params=params)
-                msgapi.send_message(message)
-                message=messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_CIRCLE, parameters={'cid':circle['cid'].hex})
-                msgapi.send_message(message)
-                return response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'cid':circle['cid'].hex})
+                resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'cid':circle['cid'].hex})
+                resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_CIRCLE, parameters={'cid':circle['cid'].hex}))
+                return resp
             else:
                 deleteapi.delete_circle(cid=circle['cid'])
                 return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR,error=Errors.E_IWACI_NUCR_AUTHERR)
@@ -127,9 +125,9 @@ def add_user_to_circle_request(passport, cid, member):
         webop=operation.UpdateCircleMembersOperation(uid=passport.uid, cid=cid)
         authop=webop.get_auth_operation()
         params=webop.get_params()
-        message=messages.UpdateQuotesMessage(operation=authop, params=params)
-        msgapi.send_message(message)
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+        return resp
     else:
         return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN)
 
@@ -147,9 +145,9 @@ def delete_user_from_circle_request(passport, cid, member):
         webop=operation.UpdateCircleMembersOperation(uid=passport.uid, cid=cid)
         authop=webop.get_auth_operation()
         params=webop.get_params()
-        message=messages.UpdateQuotesMessage(operation=authop, params=params)
-        msgapi.send_message(message)
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+        resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+        return resp
     else:
         return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN)
 

@@ -12,563 +12,655 @@ from komlog.komlibs.interface.websocket.protocol.v1.model.types import Messages
 class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     ''' komlibs.interface.websocket.protocol.v1.model.message tests '''
 
-    def test_new_SendDsDataMessage_failure_invalid_type(self):
-        ''' the creation of a SendDsDataMessage object should fail if message is not a dict '''
-        messages=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        for msg in messages:
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDsDataMessage(message=msg )
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IMT)
+    def test_KomlogMessage_failure_direct_instantiation_not_allowed(self):
+        ''' we cannot create a KomlogMessage object directly. we only are allowed to
+            create one of its derived classes '''
+        with self.assertRaises(TypeError) as cm:
+            msg=message.KomlogMessage()
+        self.assertEqual(str(cm.exception), '<KomlogMessage> cannot be instantiated directly')
 
-    def test_new_SendDsDataMessage_failure_version_not_found(self):
-        ''' the creation of a SendDsDataMessage object should fail if version is not found '''
-        msg={'action':Messages.SEND_DS_DATA.value,'payload':{'ts':time.time(),'content':'content','uri':'valid.uri'}}
+    def test_SendDsData_version_cannot_be_modified(self):
+        ''' if we create a new SendDsData message, the version param cannot be modified  '''
+        msg=message.SendDsData()
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DS_DATA)
+        self.assertFalse(getattr(msg,'payload', False))
+        with self.assertRaises(TypeError) as cm:
+            msg.v=3
+        self.assertEqual(str(cm.exception),'Version cannot be modified')
+
+    def test_SendDsData_action_cannot_be_modified(self):
+        ''' if we create a new SendDsData message, the action param cannot be modified  '''
+        msg=message.SendDsData()
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DS_DATA)
+        self.assertFalse(getattr(msg,'payload', False))
+        with self.assertRaises(TypeError) as cm:
+            msg.action=3
+        self.assertEqual(str(cm.exception),'Action cannot be modified')
+
+    def test_SendDsData_with_no_params_does_not_have_attributes_and_cannot_serialize_to_dict(self):
+        ''' if we create a new SendDsData message without params, it will has no attributes and
+            to_dict function will fail '''
+        msg=message.SendDsData()
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DS_DATA)
+        self.assertFalse(getattr(msg,'uri', False))
+        self.assertFalse(getattr(msg,'ts', False))
+        self.assertFalse(getattr(msg,'content', False))
+        with self.assertRaises(AttributeError) as cm:
+            msg.to_dict()
+
+    def test_SendDsData_success_generating_serializable_dict(self):
+        ''' SendDsData.to_dict() method should generate a valid serializable dict '''
+        msg=message.SendDsData(uri='uri',ts=1,content='content')
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DS_DATA)
+        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':1,'content':'content'}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_SendDsData_success_loading_from_dict(self):
+        ''' SendDsData.load_from_dict() method should generate a valid SendDsData object '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{'uri':'uri','ts':1,'content':'content'}
+        }
+        msg=message.SendDsData.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DS_DATA)
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_SendDsData_failure_loading_from_dict_invalid_version(self):
+        ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':2,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{'uri':'uri','ts':1,'content':'content'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDsDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IMT)
+            msg=message.SendDsData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ELFD)
 
-    def test_new_SendDsDataMessage_failure_action_not_found(self):
-        ''' the creation of a SendDsDataMessage object should fail if action is not found '''
-        msg={'v':1,'payload':{'ts':time.time(),'content':'content','uri':'valid.uri'}}
+    def test_SendDsData_failure_loading_from_dict_invalid_action(self):
+        ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'uri':'uri','ts':1,'content':'content'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDsDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IMT)
+            msg=message.SendDsData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ELFD)
 
-    def test_new_SendDsDataMessage_failure_payload_not_found(self):
-        ''' the creation of a SendDsDataMessage object should fail if payload is not found '''
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value}
+    def test_SendDsData_failure_loading_from_dict_invalid_payload_type(self):
+        ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':['uri','uri','ts',1,'content','content']
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDsDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IMT)
+            msg=message.SendDsData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ELFD)
 
-    def test_new_SendDsDataMessage_failure_invalid_version(self):
-        ''' the creation of a SendDsDataMessage object should fail if version is not 1 '''
-        versions=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        msg={'v':None,'action':Messages.SEND_DS_DATA.value,'payload':{}}
-        for version in versions:
-            msg['v']=version
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDsDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IV)
-
-    def test_new_SendDsDataMessage_failure_invalid_action(self):
-        ''' the creation of a SendDsDataMessage object should fail if action is not Messages.SEND_DS_DATA.value '''
-        actions=['adas',None,-2,1.1,1000000,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        msg={'v':1,'action':None,'payload':{}}
-        for action in actions:
-            msg['action']=action
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDsDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IA)
-
-    def test_new_SendDsDataMessage_failure_invalid_payload_no_uri(self):
-        ''' the creation of a SendDsDataMessage object should fail if payload has no uri field '''
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'ts':time.time(),'content':'content'}}
+    def test_SendDsData_failure_loading_from_dict_invalid_payload_uri_not_found(self):
+        ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{'ari':'uri','ts':1,'content':'content'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDsDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IPL)
+            msg=message.SendDsData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ELFD)
 
-    def test_new_SendDsDataMessage_failure_invalid_payload_no_ts(self):
-        ''' the creation of a SendDsDataMessage object should fail if payload has no ts field '''
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'valid.uri','content':'content'}}
+    def test_SendDsData_failure_loading_from_dict_invalid_payload_ts_not_found(self):
+        ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{'uri':'uri','its':1,'content':'content'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDsDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IPL)
+            msg=message.SendDsData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ELFD)
 
-    def test_new_SendDsDataMessage_failure_invalid_payload_no_content(self):
-        ''' the creation of a SendDsDataMessage object should fail if payload has no uri field '''
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'ts':time.time(),'uri':'uri'}}
+    def test_SendDsData_failure_loading_from_dict_invalid_payload_content_not_found(self):
+        ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{'uri':'uri','ts':'1','contents':'content'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDsDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IPL)
+            msg=message.SendDsData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ELFD)
 
-    def test_new_SendDsDataMessage_failure_invalid_payload_uri(self):
-        ''' the creation of a SendDsDataMessage object should fail if payload uri is invalid '''
-        uris=[None,-2,1.1,1000000,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),'asd...asdf']
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'ts':time.time(),'uri':None,'content':'content'}}
-        for uri in uris:
-            msg['payload']['uri']=uri
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDsDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IPL)
-
-    def test_new_SendDsDataMessage_failure_invalid_payload_ts(self):
-        ''' the creation of a SendDsDataMessage object should fail if payload ts is invalid '''
-        tss=[None,-2,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),'asd...asdf',{'a':'dict'}]
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'ts':None,'uri':'uri','content':'content'}}
-        for ts in tss:
-            msg['payload']['ts']=ts
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDsDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IPL)
-
-    def test_new_SendDsDataMessage_failure_invalid_payload_content(self):
-        ''' the creation of a SendDsDataMessage object should fail if payload content is invalid '''
-        contents=[None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),{'a':'dict'}]
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'ts':time.time(),'uri':'uri','content':None}}
-        for content in contents:
-            msg['payload']['content']=content
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDsDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSDM_IPL)
-
-    def test_new_SendDsDataMessage_success(self):
-        ''' the creation of a SendDsDataMessage object should succeed '''
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'ts':time.time(),'uri':'uri','content':'content'}}
-        modmsg=message.SendDsDataMessage(message=msg)
-        self.assertTrue(isinstance(modmsg,message.SendDsDataMessage))
-        self.assertEqual(modmsg.payload,msg['payload'])
-        self.assertEqual(modmsg.v,msg['v'])
-        self.assertEqual(modmsg.action,Messages.SEND_DS_DATA)
-
-    def test_new_SendDpDataMessage_failure_invalid_type(self):
-        ''' the creation of a SendDpDataMessage object should fail if message is not a dict '''
-        messages=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        for msg in messages:
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDpDataMessage(message=msg )
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IMT)
-
-    def test_new_SendDpDataMessage_failure_version_not_found(self):
-        ''' the creation of a SendDpDataMessage object should fail if version is not found '''
-        msg={'action':Messages.SEND_DP_DATA.value,'payload':{'ts':time.time(),'content':'content','uri':'valid.uri'}}
+    def test_SendDsData_failure_loading_from_dict_invalid_payload_uri_invalid(self):
+        ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{'uri':'ñññinvalid uri','ts':1,'content':'content'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDpDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IMT)
+            msg=message.SendDsData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_IURI)
 
-    def test_new_SendDpDataMessage_failure_action_not_found(self):
-        ''' the creation of a SendDpDataMessage object should fail if action is not found '''
-        msg={'v':1,'payload':{'ts':time.time(),'content':'content','uri':'valid.uri'}}
+    def test_SendDsData_failure_loading_from_dict_invalid_payload_ts_invalid(self):
+        ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{'uri':'uri','ts':'1','content':'content'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDpDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IMT)
+            msg=message.SendDsData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ITS)
 
-    def test_new_SendDpDataMessage_failure_payload_not_found(self):
-        ''' the creation of a SendDpDataMessage object should fail if payload is not found '''
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value}
+    def test_SendDsData_failure_loading_from_dict_invalid_payload_content_invalid(self):
+        ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{'uri':'uri','ts':1,'content':{'a':'dict'}}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDpDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IMT)
+            msg=message.SendDsData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ICNT)
 
-    def test_new_SendDpDataMessage_failure_invalid_version(self):
-        ''' the creation of a SendDpDataMessage object should fail if version is not 1 '''
-        versions=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        msg={'v':None,'action':Messages.SEND_DP_DATA.value,'payload':{}}
-        for version in versions:
-            msg['v']=version
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDpDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IV)
+    def test_SendDpData_with_no_params_does_not_have_attributes_and_cannot_serialize_to_dict(self):
+        ''' if we create a new SendDpData message without params, it will has no attributes and
+            to_dict function will fail '''
+        msg=message.SendDpData()
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DP_DATA)
+        self.assertFalse(getattr(msg,'uri', False))
+        self.assertFalse(getattr(msg,'ts', False))
+        self.assertFalse(getattr(msg,'content', False))
+        with self.assertRaises(AttributeError) as cm:
+            msg.to_dict()
 
-    def test_new_SendDpDataMessage_failure_invalid_action(self):
-        ''' the creation of a SendDpDataMessage object should fail if action is not Messages.SEND_DP_DATA.value '''
-        actions=['adas',None,-2,1.1,1000000,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        msg={'v':1,'action':None,'payload':{}}
-        for action in actions:
-            msg['action']=action
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDpDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IA)
+    def test_SendDpData_success_generating_serializable_dict(self):
+        ''' SendDpData.to_dict() method should generate a valid serializable dict '''
+        msg=message.SendDpData(uri='uri',ts=1,content='33.33')
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DP_DATA)
+        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':1,'content':'33.33'}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
-    def test_new_SendDpDataMessage_failure_invalid_payload_no_uri(self):
-        ''' the creation of a SendDpDataMessage object should fail if payload has no uri field '''
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'ts':time.time(),'content':'content'}}
+    def test_SendDpData_success_loading_from_dict(self):
+        ''' SendDpData.load_from_dict() method should generate a valid SendDpData object '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'uri':'uri','ts':1,'content':'33.33'}
+        }
+        msg=message.SendDpData.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DP_DATA)
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_SendDpData_failure_loading_from_dict_invalid_version(self):
+        ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':2,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'uri':'uri','ts':1,'content':'33.33'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDpDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IPL)
+            msg=message.SendDpData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ELFD)
 
-    def test_new_SendDpDataMessage_failure_invalid_payload_no_ts(self):
-        ''' the creation of a SendDpDataMessage object should fail if payload has no ts field '''
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'valid.uri','content':'content'}}
+    def test_SendDpData_failure_loading_from_dict_invalid_action(self):
+        ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{'uri':'uri','ts':1,'content':'33.33'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDpDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IPL)
+            msg=message.SendDpData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ELFD)
 
-    def test_new_SendDpDataMessage_failure_invalid_payload_no_content(self):
-        ''' the creation of a SendDpDataMessage object should fail if payload has no uri field '''
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'ts':time.time(),'uri':'uri'}}
+    def test_SendDpData_failure_loading_from_dict_invalid_payload_type(self):
+        ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':['uri','uri','ts',1,'content','33.33']
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendDpDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IPL)
+            msg=message.SendDpData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ELFD)
 
-    def test_new_SendDpDataMessage_failure_invalid_payload_uri(self):
-        ''' the creation of a SendDpDataMessage object should fail if payload uri is invalid '''
-        uris=[None,-2,1.1,1000000,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),'asd...asdf']
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'ts':time.time(),'uri':None,'content':'content'}}
-        for uri in uris:
-            msg['payload']['uri']=uri
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDpDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IPL)
-
-    def test_new_SendDpDataMessage_failure_invalid_payload_ts(self):
-        ''' the creation of a SendDpDataMessage object should fail if payload ts is invalid '''
-        tss=[None,-2,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),'asd...asdf',{'a':'dict'}]
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'ts':None,'uri':'uri','content':'content'}}
-        for ts in tss:
-            msg['payload']['ts']=ts
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDpDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IPL)
-
-    def test_new_SendDpDataMessage_failure_invalid_payload_content(self):
-        ''' the creation of a SendDpDataMessage object should fail if payload content is invalid '''
-        contents=[None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),{'a':'dict'}]
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'ts':time.time(),'uri':'uri','content':None}}
-        for content in contents:
-            msg['payload']['content']=content
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendDpDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPDM_IPL)
-
-    def test_new_SendDpDataMessage_success(self):
-        ''' the creation of a SendDpDataMessage object should succeed '''
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'ts':time.time(),'uri':'uri','content':'content'}}
-        modmsg=message.SendDpDataMessage(message=msg)
-        self.assertTrue(isinstance(modmsg,message.SendDpDataMessage))
-        self.assertEqual(modmsg.payload,msg['payload'])
-        self.assertEqual(modmsg.v,msg['v'])
-        self.assertEqual(modmsg.action,Messages.SEND_DP_DATA)
-
-    def test_new_SendMultiDataMessage_failure_invalid_type(self):
-        ''' the creation of a SendMultiDataMessage object should fail if message is not a dict '''
-        messages=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        for msg in messages:
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendMultiDataMessage(message=msg )
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IMT)
-
-    def test_new_SendMultiDataMessage_failure_version_not_found(self):
-        ''' the creation of a SendMultiDataMessage object should fail if version is not found '''
-        msg={'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time(),'uris':[]}}
+    def test_SendDpData_failure_loading_from_dict_invalid_payload_uri_not_found(self):
+        ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'ari':'uri','ts':1,'content':'33.33'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IMT)
+            msg=message.SendDpData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ELFD)
 
-    def test_new_SendMultiDataMessage_failure_action_not_found(self):
-        ''' the creation of a SendMultiDataMessage object should fail if action is not found '''
-        msg={'v':1,'payload':{'ts':time.time(),'uris':[]}}
+    def test_SendDpData_failure_loading_from_dict_invalid_payload_ts_not_found(self):
+        ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'uri':'uri','its':1,'content':'33.33'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IMT)
+            msg=message.SendDpData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ELFD)
 
-    def test_new_SendMultiDataMessage_failure_payload_not_found(self):
-        ''' the creation of a SendMultiDataMessage object should fail if payload is not found '''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value}
+    def test_SendDpData_failure_loading_from_dict_invalid_payload_content_not_found(self):
+        ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'uri':'uri','ts':'1','contents':'33.33'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IMT)
+            msg=message.SendDpData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ELFD)
 
-    def test_new_SendMultiDataMessage_failure_invalid_version(self):
-        ''' the creation of a SendMultiDataMessage object should fail if version is not 1 '''
-        versions=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        msg={'v':None,'action':Messages.SEND_MULTI_DATA.value,'payload':{}}
-        for version in versions:
-            msg['v']=version
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendMultiDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IV)
-
-    def test_new_SendMultiDataMessage_failure_invalid_action(self):
-        ''' the creation of a SendMultiDataMessage object should fail if action is not Messages.SEND_MULTI_DATA.value '''
-        actions=['adas',None,-2,1.1,1000000,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),Messages.SEND_DP_DATA.value, Messages.SEND_DS_DATA.value]
-        msg={'v':1,'action':None,'payload':{}}
-        for action in actions:
-            msg['action']=action
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendMultiDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IA)
-
-    def test_new_SendMultiDataMessage_failure_invalid_payload_no_ts(self):
-        ''' the creation of a SendMultiDataMessage object should fail if payload has no ts field '''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'uri','content':'content'}]}}
+    def test_SendDpData_failure_loading_from_dict_invalid_payload_uri_invalid(self):
+        ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'uri':'ñññinvalid uri','ts':1,'content':'33.33'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IPL)
+            msg=message.SendDpData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_IURI)
 
-    def test_new_SendMultiDataMessage_failure_invalid_payload_ts(self):
-        ''' the creation of a SendMultiDataMessage object should fail if payload ts is invalid '''
-        tss=[None,-2,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),'asd...asdf',{'a':'dict'}]
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':None,'uris':[{'uri':'a.uri','content':'content'}]}}
-        for ts in tss:
-            msg['payload']['ts']=ts
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendMultiDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IPL)
-
-    def test_new_SendMultiDataMessage_failure_invalid_payload_no_uris(self):
-        '''the creation of a SendMultiDataMessage object should fail if payload has no uris field'''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time()}}
+    def test_SendDpData_failure_loading_from_dict_invalid_payload_ts_invalid(self):
+        ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'uri':'uri','ts':'1','content':'33.33'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IPL)
+            msg=message.SendDpData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ITS)
 
-    def test_new_SendMultiDataMessage_failure_invalid_payload_invalid_uris_type(self):
-        '''the creation of a SendMultiDataMessage object should fail if payload uris is not list'''
-        uris=[None,-2,1.1,{'set','a'},('a','tuple'),uuid.uuid4(),{'a':'dict'}]
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time()}}
-        for uri in uris:
-            msg['payload']['uris']=uri
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.SendMultiDataMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IPL)
-
-    def test_new_SendMultiDataMessage_failure_invalid_payload_uris_length_0(self):
-        ''' the creation of a SendMultiDataMessage object should fail if payload has no uris '''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time()}}
+    def test_SendDpData_failure_loading_from_dict_invalid_payload_content_invalid(self):
+        ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'uri':'uri','ts':1,'content':{'a':'dict'}}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IPL)
+            msg=message.SendDpData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ICNT)
 
-    def test_new_SendMultiDataMessage_failure_invalid_payload_item_uri_not_found(self):
-        ''' the creation of a SendMultiDataMessage object should fail if a payload item has no uri'''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time()}}
-        uris=[{'uri':'a.valid.uri','content':'content'},{'content':'content'}]
-        msg['payload']['uris']=uris
+    def test_SendMultiData_with_no_params_does_not_have_attributes_and_cannot_serialize_to_dict(self):
+        ''' if we create a new SendMultiData message without params, it will has no attributes and
+            to_dict function will fail '''
+        msg=message.SendMultiData()
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
+        self.assertFalse(getattr(msg,'uris', False))
+        self.assertFalse(getattr(msg,'ts', False))
+        with self.assertRaises(AttributeError) as cm:
+            msg.to_dict()
+
+    def test_SendMultiData_success_generating_serializable_dict(self):
+        ''' SendMultiData.to_dict() method should generate a valid serializable dict '''
+        msg=message.SendMultiData(uris=[{'uri':'uri','content':'33.33'}],ts=1)
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
+        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'uri','content':'33.33'}],'ts':1}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_SendMultiData_success_loading_from_dict(self):
+        ''' SendMultiData.load_from_dict() method should generate a valid SendMultiData object '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{'uris':[{'uri':'uri','content':'33.33'}],'ts':1}
+        }
+        msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_SendMultiData_failure_loading_from_dict_invalid_version(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':2,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{'uris':[{'uri':'uri','content':'33.33'}],'ts':1}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IPL)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_ELFD)
 
-    def test_new_SendMultiDataMessage_failure_invalid_payload_items_uri_not_found(self):
-        ''' the creation of a SendMultiDataMessage object should fail if all payload items have no uri'''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time()}}
-        uris=[{'content':'content'},{'content':'content'}]
-        msg['payload']['uris']=uris
+    def test_SendMultiData_failure_loading_from_dict_invalid_action(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'uris':[{'uri':'uri','content':'33.33'}],'ts':1}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IPL)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_ELFD)
 
-    def test_new_SendMultiDataMessage_failure_invalid_payload_item_uri_is_invalid(self):
-        ''' the creation of a SendMultiDataMessage object should fail if a payload item uri is invalid'''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time()}}
-        uris=[{'uri':'in valid.uri','content':'content'},{'uri':'valid.uri','content':'content'}]
-        msg['payload']['uris']=uris
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_type(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':['uri','uri','ts',1,'content','33.33']
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IPL)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_ELFD)
 
-    def test_new_SendMultiDataMessage_failure_invalid_payload_item_content_not_found(self):
-        ''' the creation of a SendMultiDataMessage object should fail if a payload item has no content '''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time()}}
-        uris=[{'uri':'a.valid.uri','content':'content'},{'uri':'another.uri'}]
-        msg['payload']['uris']=uris
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_not_found(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{'aris':[{'uri':'uri','content':'33.33'}],'ts':1}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IPL)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_ELFD)
 
-    def test_new_SendMultiDataMessage_failure_invalid_payload_items_content_not_found(self):
-        ''' the creation of a SendMultiDataMessage object should fail if all payload items have no content '''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time()}}
-        uris=[{'uri':'a.valid.uri'},{'uri':'another.uri'}]
-        msg['payload']['uris']=uris
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_ts_not_found(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{'uris':[{'uri':'uri','content':'33.33'}],'its':1}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IPL)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_ELFD)
 
-    def test_new_SendMultiDataMessage_failure_invalid_payload_item_content_is_invalid(self):
-        ''' the creation of a SendMultiDataMessage object should fail if a payload item content is invalid'''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time()}}
-        uris=[{'uri':'valid.uri','content':'content'},{'uri':'valid.uri','content':4}]
-        msg['payload']['uris']=uris
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_invalid_type(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{'uris':{'uri':'uri','content':'33.33'},'ts':1}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.SendMultiDataMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTDM_IPL)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_IURIS)
 
-    def test_new_SendMultiDataMessage_success(self):
-        ''' the creation of a SendMultiDataMessage object should succeed '''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time()}}
-        uris=[{'uri':'valid.uri','content':'33232.2323'},{'uri':'valid.uri','content':'content'}]
-        msg['payload']['uris']=uris
-        modmsg=message.SendMultiDataMessage(message=msg)
-        self.assertTrue(isinstance(modmsg,message.SendMultiDataMessage))
-        self.assertEqual(modmsg.payload,msg['payload'])
-        self.assertEqual(modmsg.v,msg['v'])
-        self.assertEqual(modmsg.action,Messages.SEND_MULTI_DATA)
-
-    def test_new_SendMultiDataMessage_success_extra_fields_are_not_loaded(self):
-        ''' the creation of a SendMultiDataMessage object should succeed and any extra (not valid) field received is not propagated '''
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':time.time()}}
-        valid_uris=[{'uri':'valid.uri','content':'33232.2323'},{'uri':'valid.uri','content':'content'}]
-        extra_uris=[{'uri':'valid.uri','content':'33232.2323','extra':'something'},{'uri':'valid.uri','content':'content','wtf':['something','we','dont','expect']}]
-        msg['payload']['uris']=extra_uris
-        modmsg=message.SendMultiDataMessage(message=msg)
-        self.assertTrue(isinstance(modmsg,message.SendMultiDataMessage))
-        self.assertEqual(modmsg.payload['ts'],msg['payload']['ts'])
-        self.assertEqual(modmsg.payload['uris'],valid_uris)
-        self.assertEqual(modmsg.v,msg['v'])
-        self.assertEqual(modmsg.action,Messages.SEND_MULTI_DATA)
-
-    def test_new_HookToUriMessage_failure_invalid_type(self):
-        ''' the creation of a HookToUriMessage object should fail if message is not a dict '''
-        messages=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        for msg in messages:
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.HookToUriMessage(message=msg )
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IMT)
-
-    def test_new_HookToUriMessage_failure_version_not_found(self):
-        ''' the creation of a HookToUriMessage object should fail if version is not found '''
-        msg={'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri'}}
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_invalid_item_type(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{'uris':['string','other','trhee'],'ts':1}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.HookToUriMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IMT)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_IURIS)
 
-    def test_new_HookToUriMessage_failure_action_not_found(self):
-        ''' the creation of a HookToUriMessage object should fail if action is not found '''
-        msg={'v':1,'payload':{'uri':'uri'}}
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_without_uri(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{
+                'uris':[
+                    {'uri':'uri','content':'33.33'},
+                    {'content':'ds content'},
+                ],
+                'ts':1}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.HookToUriMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IMT)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_IURIS)
 
-    def test_new_HookToUriMessage_failure_payload_not_found(self):
-        ''' the creation of a HookToUriMessage object should fail if payload is not found '''
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value}
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_uri_invalid(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{
+                'uris':[
+                    {'uri':'uri','content':'33.33'},
+                    {'uri':'Ñot valid','content':'ds content'},
+                ],
+                'ts':1}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.HookToUriMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IMT)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_IURIS)
 
-    def test_new_HookToUriMessage_failure_invalid_version(self):
-        ''' the creation of a HookToUriMessage object should fail if version is not 1 '''
-        versions=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        msg={'v':None,'action':Messages.HOOK_TO_URI.value,'payload':{}}
-        for version in versions:
-            msg['v']=version
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.HookToUriMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IV)
-
-    def test_new_HookToUriMessage_failure_invalid_action(self):
-        ''' the creation of a HookToUriMessage object should fail if action is not Messages.HOOK_TO_URI.value '''
-        actions=['adas',None,-2,1.1,1000000,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),Messages.SEND_DP_DATA.value, Messages.SEND_DS_DATA.value]
-        msg={'v':1,'action':None,'payload':{}}
-        for action in actions:
-            msg['action']=action
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.HookToUriMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IA)
-
-    def test_new_HookToUriMessage_failure_invalid_payload_no_uri(self):
-        ''' the creation of a HookToUriMessage object should fail if payload has no uri field '''
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uris':[{'uri':'uri','content':'content'}]}}
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_no_content(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{
+                'uris':[
+                    {'uri':'uri','content':'33.33'},
+                    {'uri':'valid_uri'},
+                ],
+                'ts':1}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.HookToUriMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IPL)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_IURIS)
 
-    def test_new_HookToUriMessage_failure_invalid_payload_invalid_uri_type(self):
-        '''the creation of a HookToUriMessage object should fail if payload uri is not valid '''
-        uris=[None,-2,1.1,{'set','a'},('a','tuple'),uuid.uuid4(),{'a':'dict'},'In valid Uri','']
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':None}}
-        for uri in uris:
-            msg['payload']['uri']=uri
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.HookToUriMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTUM_IPL)
-
-    def test_new_HookToUriMessage_success(self):
-        ''' the creation of a HookToUriMessage object should succeed '''
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri'}}
-        modmsg=message.HookToUriMessage(message=msg)
-        self.assertTrue(isinstance(modmsg,message.HookToUriMessage))
-        self.assertEqual(modmsg.payload,msg['payload'])
-        self.assertEqual(modmsg.v,msg['v'])
-        self.assertEqual(modmsg.action,Messages.HOOK_TO_URI)
-
-    def test_new_HookToUriMessage_success_extra_fields_are_not_loaded(self):
-        ''' the creation of a HookToUriMessage object should succeed and any extra (not valid) field received in payload is not propagated '''
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{}}
-        valid_payload={'uri':'valid.uri'}
-        extra_payload={'uri':'valid.uri','content':'33232.2323'}
-        msg['payload']=extra_payload
-        modmsg=message.HookToUriMessage(message=msg)
-        self.assertTrue(isinstance(modmsg,message.HookToUriMessage))
-        self.assertEqual(modmsg.payload,valid_payload)
-        self.assertEqual(modmsg.v,msg['v'])
-        self.assertEqual(modmsg.action,Messages.HOOK_TO_URI)
-
-    def test_new_UnHookFromUriMessage_failure_invalid_type(self):
-        ''' the creation of a UnHookFromUriMessage object should fail if message is not a dict '''
-        messages=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        for msg in messages:
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.UnHookFromUriMessage(message=msg )
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IMT)
-
-    def test_new_UnHookFromUriMessage_failure_version_not_found(self):
-        ''' the creation of a UnHookFromUriMessage object should fail if version is not found '''
-        msg={'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri'}}
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_content_invalid(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{
+                'uris':[
+                    {'uri':'uri','content':'33.33'},
+                    {'uri':'valid_uri','content':132},
+                ],
+                'ts':1}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.UnHookFromUriMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IMT)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_IURIS)
 
-    def test_new_UnHookFromUriMessage_failure_action_not_found(self):
-        ''' the creation of a UnHookFromUriMessage object should fail if action is not found '''
-        msg={'v':1,'payload':{'uri':'uri'}}
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_ts_invalid(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{
+                'uris':[
+                    {'uri':'uri','content':'33.33'},
+                    {'uri':'valid_uri','content':'valid content'},
+                ],
+                'ts':'1'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.UnHookFromUriMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IMT)
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_ITS)
 
-    def test_new_UnHookFromUriMessage_failure_payload_not_found(self):
-        ''' the creation of a UnHookFromUriMessage object should fail if payload is not found '''
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value}
+    def test_HookToUri_with_no_params_does_not_have_attributes_and_cannot_serialize_to_dict(self):
+        ''' if we create a new HookToUri message without params, it will has no attributes and
+            to_dict function will fail '''
+        msg=message.HookToUri()
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.HOOK_TO_URI)
+        self.assertFalse(getattr(msg,'uri', False))
+        with self.assertRaises(AttributeError) as cm:
+            msg.to_dict()
+
+    def test_HookToUri_success_generating_serializable_dict(self):
+        ''' HookToUri.to_dict() method should generate a valid serializable dict '''
+        msg=message.HookToUri(uri='uri')
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.HOOK_TO_URI)
+        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri'}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_HookToUri_success_loading_from_dict(self):
+        ''' HookToUri.load_from_dict() method should generate a valid HookToUri object '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.HOOK_TO_URI.value,
+            'payload':{'uri':'uri'}
+        }
+        msg=message.HookToUri.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.HOOK_TO_URI)
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_HookToUri_failure_loading_from_dict_invalid_version(self):
+        ''' HookToUri.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':2,
+            'action':Messages.HOOK_TO_URI.value,
+            'payload':{'uri':'uri'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.UnHookFromUriMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IMT)
+            msg=message.HookToUri.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTU_ELFD)
 
-    def test_new_UnHookFromUriMessage_failure_invalid_version(self):
-        ''' the creation of a UnHookFromUriMessage object should fail if version is not 1 '''
-        versions=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4()]
-        msg={'v':None,'action':Messages.UNHOOK_FROM_URI.value,'payload':{}}
-        for version in versions:
-            msg['v']=version
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.UnHookFromUriMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IV)
-
-    def test_new_UnHookFromUriMessage_failure_invalid_action(self):
-        ''' the creation of a UnHookFromUriMessage object should fail if action is not Messages.UNHOOK_FROM_URI.value '''
-        actions=['adas',None,-2,1.1,1000000,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),Messages.SEND_DP_DATA.value, Messages.SEND_DS_DATA.value]
-        msg={'v':1,'action':None,'payload':{}}
-        for action in actions:
-            msg['action']=action
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.UnHookFromUriMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IA)
-
-    def test_new_UnHookFromUriMessage_failure_invalid_payload_no_uri(self):
-        ''' the creation of a UnHookFromUriMessage object should fail if payload has no uri field '''
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uris':[{'uri':'uri','content':'content'}]}}
+    def test_HookToUri_failure_loading_from_dict_invalid_action(self):
+        ''' HookToUri.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{'uri':'uri'}
+        }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            message.UnHookFromUriMessage(message=msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IPL)
+            msg=message.HookToUri.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTU_ELFD)
 
-    def test_new_UnHookFromUriMessage_failure_invalid_payload_invalid_uri_type(self):
-        '''the creation of a UnHookFromUriMessage object should fail if payload uri is not valid '''
-        uris=[None,-2,1.1,{'set','a'},('a','tuple'),uuid.uuid4(),{'a':'dict'},'In valid Uri','']
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':None}}
-        for uri in uris:
-            msg['payload']['uri']=uri
-            with self.assertRaises(exceptions.MessageValidationException) as cm:
-                message.UnHookFromUriMessage(message=msg)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFUM_IPL)
+    def test_HookToUri_failure_loading_from_dict_invalid_payload_type(self):
+        ''' HookToUri.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.HOOK_TO_URI.value,
+            'payload':['uri','uri']
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.HookToUri.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTU_ELFD)
 
-    def test_new_UnHookFromUriMessage_success(self):
-        ''' the creation of a UnHookFromUriMessage object should succeed '''
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri'}}
-        modmsg=message.UnHookFromUriMessage(message=msg)
-        self.assertTrue(isinstance(modmsg,message.UnHookFromUriMessage))
-        self.assertEqual(modmsg.payload,msg['payload'])
-        self.assertEqual(modmsg.v,msg['v'])
-        self.assertEqual(modmsg.action,Messages.UNHOOK_FROM_URI)
+    def test_HookToUri_failure_loading_from_dict_invalid_payload_uri_not_found(self):
+        ''' HookToUri.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.HOOK_TO_URI.value,
+            'payload':{'ari':'uri'}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.HookToUri.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTU_ELFD)
 
-    def test_new_UnHookFromUriMessage_success_extra_fields_are_not_loaded(self):
-        ''' the creation of a UnHookFromUriMessage object should succeed and any extra (not valid) field received in payload is not propagated '''
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{}}
-        valid_payload={'uri':'valid.uri'}
-        extra_payload={'uri':'valid.uri','content':'33232.2323'}
-        msg['payload']=extra_payload
-        modmsg=message.UnHookFromUriMessage(message=msg)
-        self.assertTrue(isinstance(modmsg,message.UnHookFromUriMessage))
-        self.assertEqual(modmsg.payload,valid_payload)
-        self.assertEqual(modmsg.v,msg['v'])
-        self.assertEqual(modmsg.action,Messages.UNHOOK_FROM_URI)
+    def test_HookToUri_failure_loading_from_dict_invalid_payload_uri_invalid(self):
+        ''' HookToUri.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.HOOK_TO_URI.value,
+            'payload':{'uri':['uri']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.HookToUri.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTU_IURI)
+
+    def test_UnHookFromUri_with_no_params_does_not_have_attributes_and_cannot_serialize_to_dict(self):
+        ''' if we create a new UnHookFromUri message without params, it will has no attributes and
+            to_dict function will fail '''
+        msg=message.UnHookFromUri()
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.UNHOOK_FROM_URI)
+        self.assertFalse(getattr(msg,'uri', False))
+        with self.assertRaises(AttributeError) as cm:
+            msg.to_dict()
+
+    def test_UnHookFromUri_success_generating_serializable_dict(self):
+        ''' UnHookFromUri.to_dict() method should generate a valid serializable dict '''
+        msg=message.UnHookFromUri(uri='uri')
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.UNHOOK_FROM_URI)
+        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri'}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_UnHookFromUri_success_loading_from_dict(self):
+        ''' UnHookFromUri.load_from_dict() method should generate a valid UnHookFromUri object '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.UNHOOK_FROM_URI.value,
+            'payload':{'uri':'uri'}
+        }
+        msg=message.UnHookFromUri.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.UNHOOK_FROM_URI)
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_UnHookFromUri_failure_loading_from_dict_invalid_version(self):
+        ''' UnHookFromUri.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':2,
+            'action':Messages.UNHOOK_FROM_URI.value,
+            'payload':{'uri':'uri'}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.UnHookFromUri.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFU_ELFD)
+
+    def test_UnHookFromUri_failure_loading_from_dict_invalid_action(self):
+        ''' UnHookFromUri.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.HOOK_TO_URI.value,
+            'payload':{'uri':'uri'}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.UnHookFromUri.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFU_ELFD)
+
+    def test_UnHookFromUri_failure_loading_from_dict_invalid_payload_type(self):
+        ''' UnHookFromUri.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.UNHOOK_FROM_URI.value,
+            'payload':['uri','uri']
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.UnHookFromUri.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFU_ELFD)
+
+    def test_UnHookFromUri_failure_loading_from_dict_invalid_payload_uri_not_found(self):
+        ''' UnHookFromUri.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.UNHOOK_FROM_URI.value,
+            'payload':{'ari':'uri'}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.UnHookFromUri.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFU_ELFD)
+
+    def test_UnHookFromUri_failure_loading_from_dict_invalid_payload_uri_invalid(self):
+        ''' UnHookFromUri.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.UNHOOK_FROM_URI.value,
+            'payload':{'uri':['uri']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.UnHookFromUri.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFU_IURI)
 

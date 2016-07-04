@@ -10,8 +10,8 @@ from komlog.komlibs.interface.web.api import user as userapi
 from komlog.komlibs.interface.web.api import agent as agentapi 
 from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status
-from komlog.komlibs.interface.imc.api import rescontrol
 from komlog.komlibs.interface.imc.model import messages
+from komlog.komlibs.interface.imc import status as imcstatus
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.general.time import timeuuid
@@ -36,6 +36,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
             creation = userapi.new_user_request(username=username, password=password, email=email)
             self.assertTrue(isinstance(creation , webresp.WebInterfaceResponse))
             self.assertEqual(creation .status, status.WEB_STATUS_OK)
+            for msg in creation.unrouted_messages:
+                msgresponse=msgapi.process_message(msg)
             response = loginapi.login_request(username=username, password=password)
             cookie=getattr(response,'cookie',None)
         self.passport=passport.get_user_passport(cookie)
@@ -49,20 +51,10 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==self.passport.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        #msg UPDQUO received OK
+        self.assertEqual(len(response.unrouted_messages),2)
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
 
     def test_new_agent_request_failure_invalid_passport(self):
         ''' new_agent_request should fail if username is invalid '''
@@ -122,21 +114,9 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_UPDQUO(msg)
-        #msg UPDQUO received OK
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response2.status, status.WEB_STATUS_ACCESS_DENIED)
 
@@ -150,20 +130,9 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_UPDQUO(msg)
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = agentapi.get_agent_config_request(passport=psp, aid=response.data['aid'])
         self.assertTrue(response2.status, status.WEB_STATUS_OK)
         self.assertEqual(response2.data['aid'],response.data['aid'])
@@ -211,27 +180,17 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_UPDQUO(msg)
-        #msg UPDQUO received OK
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         username2 = 'test_get_agent_config_failure_no_permission_over_this_agent_user'
         password = 'password'
         email2 = username2+'@komlog.org'
         response2 = userapi.new_user_request(username=username2, password=password, email=email2)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        for msg in response2.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
         response3 = loginapi.login_request(username=username2, password=password)
         cookie=getattr(response3,'cookie',None)
         psp2 = passport.get_user_passport(cookie)
@@ -249,20 +208,9 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response1, webresp.WebInterfaceResponse))
         self.assertEqual(response1.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response1.data['aid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response1.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_UPDQUO(msg)
+        for msg in response1.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         agentname2='test_get_agents_config_request_success_2'
         pubkey2 = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
@@ -270,20 +218,9 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response2.data['aid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response2.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_UPDQUO(msg)
+        for msg in response2.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response3 = agentapi.get_agents_config_request(passport=psp)
         self.assertTrue(response3.status, status.WEB_STATUS_OK)
         self.assertTrue(len(response3.data)>=2)
@@ -340,20 +277,9 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
-        msg_addr=routing.get_address(type=messages.UPDATE_QUOTES_MESSAGE, module_id=bus.msgbus.module_id, module_instance=bus.msgbus.module_instance, running_host=bus.msgbus.running_host)
-        count=0
-        while True:
-            msg=msgapi.retrieve_message_from(addr=msg_addr, timeout=5)
-            self.assertIsNotNone(msg)
-            if msg.type!=messages.UPDATE_QUOTES_MESSAGE or not msg.operation==Operations.NEW_AGENT or not (msg.params['uid']==psp.uid and msg.params['aid']==uuid.UUID(response.data['aid'])):
-                msgapi.send_message(msg)
-                count+=1
-                if count>=1000:
-                    break
-            else:
-                break
-        self.assertFalse(count>=1000)
-        rescontrol.process_message_UPDQUO(msg)
+        for msg in response.unrouted_messages:
+            msgresponse=msgapi.process_message(msg)
+            self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         new_agentname=agentname+'_new'
         data={'agentname':new_agentname}
         response2 = agentapi.update_agent_config_request(passport=psp, aid=response.data['aid'], data=data)
