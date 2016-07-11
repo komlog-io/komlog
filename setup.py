@@ -85,6 +85,9 @@ setup(name='komlog',
     scripts=[
        'bin/komlog',
        'bin/komlog-test',
+    ],
+    data_files=[
+        ('config',['etc/komlog.cfg'])
     ]
 )
 
