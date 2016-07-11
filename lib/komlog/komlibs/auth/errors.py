@@ -17,8 +17,9 @@ The range reserved for Errors.in this module is 50000 - 100000
 
 '''
 
-from enum import Enum
+from enum import Enum, unique
 
+@unique
 class Errors(Enum):
 #common to every Error class
 
@@ -188,4 +189,131 @@ class Errors(Enum):
 
     E_AS_GASI_ISID  =   58300       #: get_agent_session_info. invalid sid
     E_AS_GASI_SNF   =   58301       #: get_agent_session_info. session not found
+
+# auth.quotes.update
+
+    E_AQU_QUTA_UIDNF    =   59000   #: quo_user_total_agents. uid not found.
+    E_AQU_QUTA_USRNF    =   59001   #: quo_user_total_agents. user not found.
+
+    E_AQU_QUTDS_UIDNF   =   59010   #: quo_user_total_datasources. uid not found.
+    E_AQU_QUTDS_USRNF   =   59011   #: quo_user_total_datasources. user not found.
+
+    E_AQU_QUTDP_UIDNF   =   59020   #: quo_user_total_datapoints. uid not found.
+    E_AQU_QUTDP_USRNF   =   59021   #: quo_user_total_datapoints. user not found.
+
+    E_AQU_QUTW_UIDNF    =   59030   #: quo_user_total_widgets. uid not found.
+    E_AQU_QUTW_USRNF    =   59031   #: quo_user_total_widgets. user not found.
+
+    E_AQU_QUTDB_UIDNF   =   59040   #: quo_user_total_dashboards. uid not found.
+    E_AQU_QUTDB_USRNF   =   59041   #: quo_user_total_dashboards. user not found.
+
+    E_AQU_QATDS_AIDNF   =   59050   #: quo_agent_total_datasources. aid not found.
+    E_AQU_QATDS_AGNF    =   59051   #: quo_agent_total_datasources. agent not found.
+
+    E_AQU_QATDP_AIDNF   =   59060   #: quo_agent_total_datapoints. aid not found.
+    E_AQU_QATDP_AGNF    =   59061   #: quo_agent_total_datapoints. agent not found.
+
+    E_AQU_QDSTDP_DIDNF  =   59070   #: quo_datasource_total_datapoints. did not found.
+    E_AQU_QDSTDP_DSNF   =   59071   #: quo_datasource_total_datapoints. datasource not found.
+
+    E_AQU_QUTSN_UIDNF   =   59080   #: quo_user_total_snapshots. uid not found.
+    E_AQU_QUTSN_USRNF   =   59081   #: quo_user_total_snapshots. user not found.
+
+    E_AQU_QUTC_UIDNF    =   59090   #: quo_user_total_circles. uid not found.
+    E_AQU_QUTC_USRNF    =   59091   #: quo_user_total_circles. user not found.
+
+    E_AQU_QCTM_CIDNF    =   59100   #: quo_circle_total_members. cid not found.
+    E_AQU_QCTM_CRNF     =   59101   #: quo_circle_total_members. circle not found.
+
+    E_AQU_QDDSO_PNF     =   59110   #: quo_daily_datasource_occupation. param not found.
+    E_AQU_QDDSO_DSNF    =   59111   #: quo_daily_datasource_occupation. datasource not found.
+
+    E_AQU_QDUDSO_PNF    =   59120   #: quo_daily_user_datasources_occupation. param not found.
+    E_AQU_QDUDSO_DSNF   =   59121   #: quo_daily_user_datasources_occupation. datasource not found.
+    E_AQU_QDUDSO_USRNF  =   59122   #: quo_daily_user_datasources_occupation. user not found.
+
+    E_AQU_QUTO_DIDNF    =   59130   #: quo_user_total_occupation. did not found.
+    E_AQU_QUTO_DSNF     =   59131   #: quo_user_total_occupation. datasource not found.
+    E_AQU_QUTO_USRNF    =   59132   #: quo_user_total_occupation. user not found.
+
+# auth.quotes.compare
+
+    E_AQC_QUTA_UIDNF    =   60000   #: quo_user_total_agents. uid not found.
+    E_AQC_QUTA_USRNF    =   60001   #: quo_user_total_agents. user not found.
+
+    E_AQC_QUTDS_UIDNF   =   60010   #: quo_user_total_datasources. uid not found.
+    E_AQC_QUTDS_USRNF   =   60011   #: quo_user_total_datasources. user not found.
+
+    E_AQC_QUTDP_UIDNF   =   60020   #: quo_user_total_datapoints. uid not found.
+    E_AQC_QUTDP_USRNF   =   60021   #: quo_user_total_datapoints. user not found.
+
+    E_AQC_QUTW_UIDNF    =   60030   #: quo_user_total_widgets. uid not found.
+    E_AQC_QUTW_USRNF    =   60031   #: quo_user_total_widgets. user not found.
+
+    E_AQC_QUTDB_UIDNF   =   60040   #: quo_user_total_dashboards. uid not found.
+    E_AQC_QUTDB_USRNF   =   60041   #: quo_user_total_dashboards. user not found.
+
+    E_AQC_QATDS_PNF     =   60050   #: quo_agent_total_datasources. param not found.
+    E_AQC_QATDS_USRNF   =   60051   #: quo_agent_total_datasources. user not found.
+
+    E_AQC_QATDP_PNF     =   60060   #: quo_agent_total_datapoints. param not found.
+    E_AQC_QATDP_USRNF   =   60061   #: quo_agent_total_datapoints. user not found.
+
+    E_AQC_QDSTDP_PNF    =   60070   #: quo_datasource_total_datapoints. param not found.
+    E_AQC_QDSTDP_USRNF  =   60071   #: quo_datasource_total_datapoints. user not found.
+
+    E_AQC_QUTSN_UIDNF   =   60080   #: quo_user_total_snapshots. uid not found.
+    E_AQC_QUTSN_USRNF   =   60081   #: quo_user_total_snapshots. user not found.
+
+    E_AQC_QUTC_UIDNF    =   60090   #: quo_user_total_circles. uid not found.
+    E_AQC_QUTC_USRNF    =   60091   #: quo_user_total_circles. user not found.
+
+    E_AQC_QCTM_PNF      =   60100   #: quo_circle_total_members. param not found.
+    E_AQC_QCTM_USRNF    =   60101   #: quo_circle_total_members. user not found.
+
+    E_AQC_QDDSO_PNF     =   60110   #: quo_daily_datasource_occupation. param not found.
+    E_AQC_QDDSO_DSNF    =   60111   #: quo_daily_datasource_occupation. datasource not found.
+    E_AQC_QDDSO_USRNF   =   60112   #: quo_daily_datasource_occupation. user not found.
+
+    E_AQC_QDUDSO_PNF    =   60120   #: quo_daily_user_datasources_occupation. param not found.
+    E_AQC_QDUDSO_DSNF   =   60121   #: quo_daily_user_datasources_occupation. datasource not found.
+    E_AQC_QDUDSO_USRNF  =   60122   #: quo_daily_user_datasources_occupation. user not found.
+
+    E_AQC_QUTO_DIDNF    =   60130   #: quo_user_total_occupation. did not found.
+    E_AQC_QUTO_DSNF     =   60131   #: quo_user_total_occupation. datasource not found.
+    E_AQC_QUTO_USRNF    =   60132   #: quo_user_total_occupation. user not found.
+
+# auth.quotes.deny
+
+    E_AQD_QUTA_UIDNF    =   61000   #: quo_user_total_agents. uid not found.
+
+    E_AQD_QUTDS_UIDNF   =   61010   #: quo_user_total_datasources. uid not found.
+
+    E_AQD_QUTDP_UIDNF   =   61020   #: quo_user_total_datapoints. uid not found.
+
+    E_AQD_QUTW_UIDNF    =   61030   #: quo_user_total_widgets. uid not found.
+
+    E_AQD_QUTDB_UIDNF   =   61040   #: quo_user_total_dashboards. uid not found.
+
+    E_AQD_QATDS_PNF     =   61050   #: quo_agent_total_datasources. param not found.
+
+    E_AQD_QATDP_PNF     =   61060   #: quo_agent_total_datapoints. param not found.
+
+    E_AQD_QDSTDP_PNF    =   61070   #: quo_datasource_total_datapoints. param not found.
+
+    E_AQD_QUTSN_UIDNF   =   61080   #: quo_user_total_snapshots. uid not found.
+
+    E_AQD_QUTC_UIDNF    =   61090   #: quo_user_total_circles. uid not found.
+
+    E_AQD_QCTM_PNF      =   61100   #: quo_circle_total_members. param not found.
+
+    E_AQD_QDDSO_PNF     =   61110   #: quo_daily_datasource_occupation. param not found.
+    E_AQD_QDDSO_DSNF    =   61111   #: quo_daily_datasource_occupation. datasource not found.
+
+    E_AQD_QDUDSO_PNF    =   61120   #: quo_daily_user_datasources_occupation. param not found.
+    E_AQD_QDUDSO_DSNF   =   61121   #: quo_daily_user_datasources_occupation. datasource not found.
+
+    E_AQD_QUTO_DIDNF    =   61130   #: quo_user_total_occupation. did not found.
+    E_AQD_QUTO_DSNF     =   61131   #: quo_user_total_occupation. datasource not found.
+    E_AQD_QUTO_USRNF    =   61132   #: quo_user_total_occupation. user not found.
 

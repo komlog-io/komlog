@@ -65,3 +65,7 @@ class SessionNotFoundException(AuthException):
     def __init__(self, error):
         super().__init__(error=error)
 
+class CircleNotFoundException(AuthException):
+    def __init__(self, error):
+        super().__init__(error=error)
+

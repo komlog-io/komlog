@@ -1,8 +1,7 @@
-#coding: utf-8
 '''
 deny.py 
 
-This file implements functions to deny access to resourcess because of quotes configuration
+This file implements functions to deny access to resources because of quotes configuration
 
 
 @author: jcazor
@@ -15,6 +14,8 @@ from komlog.komcass.api import interface as cassapiiface
 from komlog.komcass.api import datasource as cassapidatasource
 from komlog.komcass.api import segment as cassapisegment
 from komlog.komcass.api import quote as cassapiquote
+from komlog.komlibs.auth import exceptions
+from komlog.komlibs.auth.errors import Errors
 from komlog.komlibs.auth.model import interfaces
 from komlog.komlibs.auth.model.quotes import Quotes
 from komlog.komlibs.general.time import timeuuid
@@ -23,9 +24,10 @@ from komlog.komfig import logging
 DEFAULT_PERM='A'
 
 def quo_user_total_agents(params,deny):
-    if 'uid' not in params:
-        return False
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QUTA_UIDNF)
     iface=interfaces.User_AgentCreation().value
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
@@ -36,9 +38,10 @@ def quo_user_total_agents(params,deny):
     return False
 
 def quo_user_total_datasources(params,deny):
-    if 'uid' not in params:
-        return False
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QUTDS_UIDNF)
     iface=interfaces.User_DatasourceCreation().value
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
@@ -49,9 +52,10 @@ def quo_user_total_datasources(params,deny):
     return False
 
 def quo_user_total_datapoints(params,deny):
-    if 'uid' not in params:
-        return False
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QUTDP_UIDNF)
     iface=interfaces.User_DatapointCreation().value
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
@@ -62,9 +66,10 @@ def quo_user_total_datapoints(params,deny):
     return False
 
 def quo_user_total_widgets(params,deny):
-    if 'uid' not in params:
-        return False
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QUTW_UIDNF)
     iface=interfaces.User_WidgetCreation().value
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
@@ -75,9 +80,10 @@ def quo_user_total_widgets(params,deny):
     return False
 
 def quo_user_total_dashboards(params,deny):
-    if 'uid' not in params:
-        return False
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QUTDB_UIDNF)
     iface=interfaces.User_DashboardCreation().value
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
@@ -88,9 +94,10 @@ def quo_user_total_dashboards(params,deny):
     return False
 
 def quo_user_total_circles(params,deny):
-    if 'uid' not in params:
-        return False
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QUTC_UIDNF)
     iface=interfaces.User_CircleCreation().value
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
@@ -101,10 +108,11 @@ def quo_user_total_circles(params,deny):
     return False
 
 def quo_agent_total_datasources(params,deny):
-    if 'aid' not in params or 'uid' not in params:
-        return False
-    aid=params['aid']
-    uid=params['uid']
+    try:
+        uid=params['uid']
+        aid=params['aid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QATDS_PNF)
     iface=interfaces.Agent_DatasourceCreation(aid).value
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
@@ -115,10 +123,11 @@ def quo_agent_total_datasources(params,deny):
     return False
 
 def quo_agent_total_datapoints(params,deny):
-    if 'aid' not in params or 'uid' not in params:
-        return False
-    aid=params['aid']
-    uid=params['uid']
+    try:
+        uid=params['uid']
+        aid=params['aid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QATDP_PNF)
     iface=interfaces.Agent_DatapointCreation(aid).value
     uid=uid
     if deny:
@@ -130,10 +139,11 @@ def quo_agent_total_datapoints(params,deny):
     return False
 
 def quo_datasource_total_datapoints(params,deny):
-    if 'did' not in params or 'uid' not in params:
-        return False
-    did=params['did']
-    uid=params['uid']
+    try:
+        uid=params['uid']
+        did=params['did']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QDSTDP_PNF)
     iface=interfaces.Datasource_DatapointCreation(did).value
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
@@ -144,9 +154,10 @@ def quo_datasource_total_datapoints(params,deny):
     return False
 
 def quo_user_total_snapshots(params,deny):
-    if 'uid' not in params:
-        return False
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QUTSN_UIDNF)
     iface=interfaces.User_SnapshotCreation().value
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
@@ -157,10 +168,11 @@ def quo_user_total_snapshots(params,deny):
     return False
 
 def quo_circle_total_members(params,deny):
-    if 'uid' not in params or 'cid' not in params:
-        return False
-    uid=params['uid']
-    cid=params['cid']
+    try:
+        uid=params['uid']
+        cid=params['cid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QCTM_PNF)
     iface=interfaces.User_AddMemberToCircle(cid).value
     if deny:
         if cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=DEFAULT_PERM):
@@ -171,14 +183,15 @@ def quo_circle_total_members(params,deny):
     return False
 
 def quo_daily_datasource_occupation(params, deny):
-    if 'did' not in params or 'date' not in params:
-        return False
-    did=params['did']
-    date=params['date']
+    try:
+        did=params['did']
+        date=params['date']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QDDSO_PNF)
     ts=timeuuid.get_day_timestamp(date)
     dsinfo=cassapidatasource.get_datasource(did=did)
     if not dsinfo or not dsinfo.uid:
-        return False
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQD_QDDSO_DSNF)
     uid=dsinfo.uid
     iface=interfaces.User_PostDatasourceDataDaily(did=did).value
     if deny:
@@ -190,14 +203,15 @@ def quo_daily_datasource_occupation(params, deny):
     return False
 
 def quo_daily_user_datasources_occupation(params, deny):
-    if 'did' not in params or 'date' not in params:
-        return False
-    did=params['did']
-    date=params['date']
+    try:
+        did=params['did']
+        date=params['date']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QDUDSO_PNF)
     ts=timeuuid.get_day_timestamp(date)
     dsinfo=cassapidatasource.get_datasource(did=did)
     if not dsinfo or not dsinfo.uid:
-        return False
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQD_QDUDSO_DSNF)
     uid=dsinfo.uid
     iface=interfaces.User_PostDatasourceDataDaily().value
     if deny:
@@ -213,15 +227,16 @@ def quo_user_total_occupation(params, deny):
         equals segment limit.
         if we received a False flag, the remove the deny interface.
     '''
-    if not 'did' in params:
-        return False
-    did=params['did']
+    try:
+        did=params['did']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQD_QUTO_DIDNF)
     dsinfo=cassapidatasource.get_datasource(did=did)
     if not dsinfo or not dsinfo.uid:
-        return False
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQD_QUTO_DSNF)
     user=cassapiuser.get_user(uid=dsinfo.uid)
     if not user:
-        return False
+        raise exceptions.UserNotFoundException(error=Errors.E_AQD_QUTO_USRNF)
     uid=user.uid
     quote=Quotes.quo_user_total_occupation.name
     iface=interfaces.User_DataRetrievalMinTimestamp().value

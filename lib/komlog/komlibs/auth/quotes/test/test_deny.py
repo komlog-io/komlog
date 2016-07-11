@@ -7,6 +7,8 @@ from komlog.komcass.api import quote as cassapiquote
 from komlog.komcass.api import segment as cassapisegment
 from komlog.komcass.model.orm import user as ormuser
 from komlog.komcass.model.orm import datasource as ormdatasource
+from komlog.komlibs.auth import exceptions
+from komlog.komlibs.auth.errors import Errors
 from komlog.komlibs.auth.quotes import deny
 from komlog.komlibs.auth.model import interfaces
 from komlog.komlibs.auth.model.quotes import Quotes
@@ -30,7 +32,9 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_user_total_agents should fail if no uid is passed '''
         params={}
         flag=True
-        self.assertFalse(deny.quo_user_total_agents(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_user_total_agents(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QUTA_UIDNF)
 
     def test_quo_user_total_agents_success(self):
         ''' quo_user_total_agents should succeed if deny flag is True and UID is set'''
@@ -57,7 +61,9 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_user_total_datasources should fail if no uid is passed '''
         params={}
         flag=True
-        self.assertFalse(deny.quo_user_total_datasources(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_user_total_datasources(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QUTDS_UIDNF)
 
     def test_quo_user_total_datasources_success(self):
         ''' quo_user_total_datasources should succeed if deny flag is True and UID is set '''
@@ -75,7 +81,9 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_user_total_datapoints should fail if no uid is passed '''
         params={}
         flag=True
-        self.assertFalse(deny.quo_user_total_datapoints(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_user_total_datapoints(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QUTDP_UIDNF)
 
     def test_quo_user_total_datapoints_success(self):
         ''' quo_user_total_datapoints should succeed if deny flag is True and UID is set '''
@@ -93,7 +101,9 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_user_total_widgets should fail if no uid is passed '''
         params={}
         flag=True
-        self.assertFalse(deny.quo_user_total_widgets(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_user_total_widgets(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QUTW_UIDNF)
 
     def test_quo_user_total_widgets_success(self):
         ''' quo_user_total_widgets should succeed if deny flag is True and UID is set '''
@@ -111,7 +121,9 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_user_total_dashboards should fail if no uid is passed '''
         params={}
         flag=True
-        self.assertFalse(deny.quo_user_total_dashboards(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_user_total_dashboards(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QUTDB_UIDNF)
 
     def test_quo_user_total_dashboards_success(self):
         ''' quo_user_total_dashboards should succeed if deny flag is True and UID is set '''
@@ -129,13 +141,17 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_agent_total_datasources should fail if no uid is passed '''
         params={'aid':self.user['uid']}
         flag=True
-        self.assertFalse(deny.quo_agent_total_datasources(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_agent_total_datasources(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QATDS_PNF)
 
     def test_quo_agent_total_datasources_no_aid(self):
         ''' quo_agent_total_datasources should fail if no aid is passed '''
         params={'uid':self.user['uid']}
         flag=True
-        self.assertFalse(deny.quo_agent_total_datasources(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_agent_total_datasources(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QATDS_PNF)
 
     def test_quo_agent_total_datasources_success(self):
         ''' quo_agent_total_datasources should succeed if deny flag is True and UID and AID are set '''
@@ -153,13 +169,17 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_agent_total_datapoints should fail if no uid is passed '''
         params={'aid':uuid.uuid4()}
         flag=True
-        self.assertFalse(deny.quo_agent_total_datapoints(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_agent_total_datapoints(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QATDP_PNF)
 
     def test_quo_agent_total_datapoints_no_aid(self):
         ''' quo_agent_total_datapoints should fail if no aid is passed '''
         params={'uid':self.user['uid']}
         flag=True
-        self.assertFalse(deny.quo_agent_total_datapoints(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_agent_total_datapoints(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QATDP_PNF)
 
     def test_quo_agent_total_datapoints_success(self):
         ''' quo_agent_total_datapoints should succeed if deny flag is True and UID and AID are set '''
@@ -177,13 +197,17 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_datasource_total_datapoints should fail if no uid is passed '''
         params={'did':uuid.uuid4()}
         flag=True
-        self.assertFalse(deny.quo_datasource_total_datapoints(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_datasource_total_datapoints(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QDSTDP_PNF)
 
     def test_quo_datasource_total_datapoints_no_did(self):
         ''' quo_datasource_total_datapoints should fail if no did is passed '''
         params={'uid':self.user['uid']}
         flag=True
-        self.assertFalse(deny.quo_datasource_total_datapoints(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_datasource_total_datapoints(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QDSTDP_PNF)
 
     def test_quo_datasource_total_datapoints_success(self):
         ''' quo_datasource_total_datapoints should succeed if deny flag is True and UID and DID are set '''
@@ -201,7 +225,9 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_user_total_snapshots should fail if no uid is passed '''
         params={}
         flag=True
-        self.assertFalse(deny.quo_user_total_snapshots(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_user_total_snapshots(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QUTSN_UIDNF)
 
     def test_quo_user_total_snapshots_success(self):
         ''' quo_user_total_snapshots should succeed if deny flag is True and UID is set '''
@@ -219,7 +245,9 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_user_total_circles should fail if no uid is passed '''
         params={}
         flag=True
-        self.assertFalse(deny.quo_user_total_circles(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_user_total_circles(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QUTC_UIDNF)
 
     def test_quo_user_total_circles_success(self):
         ''' quo_user_total_circles should succeed if deny flag is True and UID is set '''
@@ -237,13 +265,17 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_circle_total_members should fail if no uid is passed '''
         params={'cid':uuid.uuid4()}
         flag=True
-        self.assertFalse(deny.quo_circle_total_members(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_circle_total_members(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QCTM_PNF)
 
     def test_quo_circle_total_members_no_cid(self):
         ''' quo_circle_total_members should fail if no cid is passed '''
         params={'uid':uuid.uuid4()}
         flag=True
-        self.assertFalse(deny.quo_circle_total_members(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_circle_total_members(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QCTM_PNF)
 
     def test_quo_circle_total_members_success(self):
         ''' quo_circle_total_members should succeed if deny flag is True and UID is set '''
@@ -261,19 +293,25 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_daily_datasource_occupation should return False if params has no did '''
         params={'date':timeuuid.uuid1()}
         flag=True
-        self.assertFalse(deny.quo_daily_datasource_occupation(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_daily_datasource_occupation(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QDDSO_PNF)
 
     def test_quo_daily_datasource_occupation_failure_no_date(self):  
         ''' quo_daily_datasource_occupation should return False if params has no date '''
         params={'did':uuid.uuid4()}
         flag=True
-        self.assertFalse(deny.quo_daily_datasource_occupation(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_daily_datasource_occupation(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QDDSO_PNF)
 
     def test_quo_daily_datasource_occupation_failure_non_existing_datasource(self):  
         ''' quo_daily_datasource_occupation should return False if datasource does not exist '''
         params={'did':uuid.uuid4(), 'date':timeuuid.uuid1()}
         flag=True
-        self.assertFalse(deny.quo_daily_datasource_occupation(params,flag))
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            deny.quo_daily_datasource_occupation(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QDDSO_DSNF)
 
     def test_quo_daily_datasource_occupation_success_deny_true(self):  
         ''' quo_daily_datasource_occupation should return True and set the deny interface '''
@@ -317,19 +355,25 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_daily_user_datasources_occupation should return False if params has no did '''
         params={'date':timeuuid.uuid1()}
         flag=True
-        self.assertFalse(deny.quo_daily_user_datasources_occupation(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_daily_user_datasources_occupation(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QDUDSO_PNF)
 
     def test_quo_daily_user_datasources_occupation_failure_no_did(self):  
         ''' quo_daily_user_datasources_occupation should return False if params has no date '''
         params={'did':uuid.uuid4()}
         flag=True
-        self.assertFalse(deny.quo_daily_user_datasources_occupation(params,flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_daily_user_datasources_occupation(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QDUDSO_PNF)
 
     def test_quo_daily_user_datasources_occupation_failure_non_existing_datasource(self):  
         ''' quo_daily_user_datasources_occupation should return False if datasource does not exist '''
         params={'did':uuid.uuid4(), 'date':timeuuid.uuid1()}
         flag=True
-        self.assertFalse(deny.quo_daily_user_datasources_occupation(params,flag))
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            deny.quo_daily_user_datasources_occupation(params,flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QDUDSO_DSNF)
 
     def test_quo_daily_user_datasources_occupation_success_deny_true(self):  
         ''' quo_daily_user_datasources_occupation should return True and set the deny interface '''
@@ -373,14 +417,18 @@ class AuthQuotesDenyTest(unittest.TestCase):
         ''' quo_user_total_occupation should return False if no did parameter is passed '''
         params={}
         flag=False
-        self.assertFalse(deny.quo_user_total_occupation(params, flag))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            deny.quo_user_total_occupation(params, flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QUTO_DIDNF)
 
     def test_quo_user_total_occupation_no_datasource_found(self):
         ''' quo_user_total_occupation should return False if datasource does not exist '''
         did=uuid.uuid4()
         params={'did':did}
         flag=False
-        self.assertFalse(deny.quo_user_total_occupation(params, flag))
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            deny.quo_user_total_occupation(params, flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QUTO_DSNF)
 
     def test_quo_user_total_occupation_no_user_found(self):
         ''' quo_user_total_occupation should return False if user does not exist '''
@@ -393,7 +441,9 @@ class AuthQuotesDenyTest(unittest.TestCase):
         self.assertTrue(cassapidatasource.new_datasource(datasource))
         params={'did':did}
         flag=False
-        self.assertFalse(deny.quo_user_total_occupation(params,flag))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            deny.quo_user_total_occupation(params, flag)
+        self.assertEqual(cm.exception.error, Errors.E_AQD_QUTO_USRNF)
 
     def test_quo_user_total_occupation_success_deny_false(self):
         ''' quo_user_total_occupation should return True and delete the interface '''

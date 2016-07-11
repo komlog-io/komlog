@@ -6,6 +6,8 @@ from komlog.komcass.api import segment as cassapisegment
 from komlog.komcass.api import quote as cassapiquote
 from komlog.komcass.model.orm import user as ormuser
 from komlog.komcass.model.orm import datasource as ormdatasource
+from komlog.komlibs.auth import exceptions
+from komlog.komlibs.auth.errors import Errors
 from komlog.komlibs.auth.quotes import compare
 from komlog.komlibs.auth.model.quotes import Quotes
 from komlog.komlibs.gestaccount.user import api as userapi
@@ -27,12 +29,16 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_user_total_agents_no_uid(self):
         ''' quo_user_total_agents should fail if no uid is passed '''
         params={}
-        self.assertIsNone(compare.quo_user_total_agents(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_user_total_agents(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTA_UIDNF)
 
     def test_quo_user_total_agents_non_existent_user(self):
         ''' quo_user_total_agents should fail if uid does not exist on system '''
         params={'uid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_user_total_agents(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_user_total_agents(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTA_USRNF)
 
     def test_quo_user_total_agents_failure(self):
         ''' quo_user_total_agents should fail because user has no quote info yet '''
@@ -42,12 +48,16 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_user_total_datasources_no_uid(self):
         ''' quo_user_total_datasources should fail if no uid is passed '''
         params={}
-        self.assertIsNone(compare.quo_user_total_datasources(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_user_total_datasources(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTDS_UIDNF)
 
     def test_quo_user_total_datasources_non_existent_user(self):
         ''' quo_user_total_datasources should fail if uid does not exist on system '''
         params={'uid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_user_total_datasources(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_user_total_datasources(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTDS_USRNF)
 
     def test_quo_user_total_datasources_failure(self):
         ''' quo_user_total_datasources should fail because user has no quote info yet '''
@@ -57,12 +67,16 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_user_total_datapoints_no_uid(self):
         ''' quo_user_total_datapoints should fail if no uid is passed '''
         params={}
-        self.assertIsNone(compare.quo_user_total_datapoints(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_user_total_datapoints(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTDP_UIDNF)
 
     def test_quo_user_total_datapoints_non_existent_user(self):
         ''' quo_user_total_datapoints should fail if uid does not exist on system '''
         params={'uid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_user_total_datapoints(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_user_total_datapoints(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTDP_USRNF)
 
     def test_quo_user_total_datapoints_failure(self):
         ''' quo_user_total_datapoints should fail because user has no quote info yet '''
@@ -72,12 +86,16 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_user_total_widgets_no_uid(self):
         ''' quo_user_total_widgets should fail if no uid is passed '''
         params={}
-        self.assertIsNone(compare.quo_user_total_widgets(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_user_total_widgets(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTW_UIDNF)
 
     def test_quo_user_total_widgets_non_existent_user(self):
         ''' quo_user_total_widgets should fail if uid does not exist on system '''
         params={'uid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_user_total_widgets(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_user_total_widgets(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTW_USRNF)
 
     def test_quo_user_total_widgets_failure(self):
         ''' quo_user_total_widgets should fail because user has no quote info yet '''
@@ -87,12 +105,16 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_user_total_dashboards_no_uid(self):
         ''' quo_user_total_dashboards should fail if no uid is passed '''
         params={}
-        self.assertIsNone(compare.quo_user_total_dashboards(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_user_total_dashboards(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTDB_UIDNF)
 
     def test_quo_user_total_dashboards_non_existent_user(self):
         ''' quo_user_total_dashboards should fail if uid does not exist on system '''
         params={'uid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_user_total_dashboards(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_user_total_dashboards(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTDB_USRNF)
 
     def test_quo_user_total_dashboards_failure(self):
         ''' quo_user_total_dashboards should fail because user has no quote info yet '''
@@ -102,17 +124,23 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_agent_total_datasources_no_uid(self):
         ''' quo_agent_total_datasources should fail if no uid is passed '''
         params={'aid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_agent_total_datasources(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_agent_total_datasources(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QATDS_PNF)
 
     def test_quo_agent_total_datasources_no_aid(self):
         ''' quo_agent_total_datasources should fail if no aid is passed '''
         params={'uid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_agent_total_datasources(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_agent_total_datasources(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QATDS_PNF)
 
     def test_quo_agent_total_datasources_non_existent_user(self):
         ''' quo_agent_total_datasources should fail if uid does not exist on system '''
         params={'uid':uuid.uuid4(),'aid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_agent_total_datasources(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_agent_total_datasources(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QATDS_USRNF)
 
     def test_quo_agent_total_datasources_failure(self):
         ''' quo_agent_total_datasources should fail because agent does not exist '''
@@ -122,17 +150,23 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_agent_total_datapoints_no_uid(self):
         ''' quo_agent_total_datapoints should fail if no uid is passed '''
         params={'aid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_agent_total_datapoints(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_agent_total_datapoints(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QATDP_PNF)
 
     def test_quo_agent_total_datapoints_no_aid(self):
         ''' quo_agent_total_datapoints should fail if no aid is passed '''
         params={'uid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_agent_total_datapoints(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_agent_total_datapoints(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QATDP_PNF)
 
     def test_quo_agent_total_datapoints_non_existent_user(self):
         ''' quo_agent_total_datapoints should fail if uid does not exist on system '''
         params={'uid':uuid.uuid4(),'aid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_agent_total_datapoints(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_agent_total_datapoints(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QATDP_USRNF)
 
     def test_quo_agent_total_datapoints_failure(self):
         ''' quo_agent_total_datapoints should fail because agent does not exist '''
@@ -142,17 +176,23 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_datasource_total_datapoints_no_uid(self):
         ''' quo_datasource_total_datapoints should fail if no uid is passed '''
         params={'did':uuid.uuid4()}
-        self.assertIsNone(compare.quo_datasource_total_datapoints(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_datasource_total_datapoints(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QDSTDP_PNF)
 
     def test_quo_datasource_total_datapoints_no_did(self):
         ''' quo_datasource_total_datapoints should fail if no did is passed '''
         params={'uid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_datasource_total_datapoints(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_datasource_total_datapoints(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QDSTDP_PNF)
 
     def test_quo_datasource_total_datapoints_non_existent_user(self):
         ''' quo_datasource_total_datapoints should fail if uid does not exist on system '''
         params={'uid':uuid.uuid4(),'did':uuid.uuid4()}
-        self.assertIsNone(compare.quo_datasource_total_datapoints(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_datasource_total_datapoints(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QDSTDP_USRNF)
 
     def test_quo_datasource_total_datapoints_failure(self):
         ''' quo_datasource_total_datapoints should fail because datasource does not exist '''
@@ -162,12 +202,16 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_user_total_snapshots_no_uid(self):
         ''' quo_user_total_snapshots should fail if no uid is passed '''
         params={}
-        self.assertIsNone(compare.quo_user_total_snapshots(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_user_total_snapshots(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTSN_UIDNF)
 
     def test_quo_user_total_snapshots_non_existent_user(self):
         ''' quo_user_total_snapshots should fail if uid does not exist on system '''
         params={'uid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_user_total_snapshots(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_user_total_snapshots(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTSN_USRNF)
 
     def test_quo_user_total_snapshots_failure(self):
         ''' quo_user_total_snapshots should fail because user has no quote info yet '''
@@ -177,12 +221,16 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_user_total_circles_no_uid(self):
         ''' quo_user_total_circles should fail if no uid is passed '''
         params={}
-        self.assertIsNone(compare.quo_user_total_circles(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_user_total_circles(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTC_UIDNF)
 
     def test_quo_user_total_circles_non_existent_user(self):
         ''' quo_user_total_circles should fail if uid does not exist on system '''
         params={'uid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_user_total_circles(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_user_total_circles(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTC_USRNF)
 
     def test_quo_user_total_circles_failure(self):
         ''' quo_user_total_circles should fail because user has no quote info yet '''
@@ -192,37 +240,49 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_circle_total_members_no_uid(self):
         ''' quo_circle_total_members should fail if no uid is passed '''
         params={'cid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_circle_total_members(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_circle_total_members(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QCTM_PNF)
 
     def test_quo_circle_total_members_no_cid(self):
         ''' quo_circle_total_members should fail if no uid is passed '''
         params={'uid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_circle_total_members(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_circle_total_members(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QCTM_PNF)
 
     def test_quo_circle_total_members_non_existent_user(self):
         ''' quo_circle_total_members should fail if uid does not exist on system '''
         params={'uid':uuid.uuid4(),'cid':uuid.uuid4()}
-        self.assertIsNone(compare.quo_circle_total_members(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_circle_total_members(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QCTM_USRNF)
 
     def test_quo_circle_total_members_failure(self):
         ''' quo_circle_total_members should fail because circle has no quote info yet '''
-        params={'uid':self.user['uid']}
+        params={'uid':self.user['uid'],'cid':uuid.uuid4()}
         self.assertFalse(compare.quo_circle_total_members(params))
 
     def test_quo_daily_datasource_occupation_failure_no_did(self):
         ''' quo_daily_datasource_occupation should return None if params has no did '''
         params={'date':timeuuid.uuid1()}
-        self.assertIsNone(compare.quo_daily_datasource_occupation(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_daily_datasource_occupation(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QDDSO_PNF)
 
     def test_quo_daily_datasource_occupation_failure_no_date(self):
         ''' quo_daily_datasource_occupation should return None if params has no date '''
         params={'did':uuid.uuid4()}
-        self.assertIsNone(compare.quo_daily_datasource_occupation(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_daily_datasource_occupation(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QDDSO_PNF)
 
     def test_quo_daily_datasource_occupation_failure_non_existent_datasource(self):
         ''' quo_daily_datasource_occupation should return None if datasource does not exist '''
         params={'date':timeuuid.uuid1(), 'did':uuid.uuid4()}
-        self.assertIsNone(compare.quo_daily_datasource_occupation(params))
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            compare.quo_daily_datasource_occupation(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QDDSO_DSNF)
 
     def test_quo_daily_datasource_occupation_failure_non_existent_user(self):
         ''' quo_daily_datasource_occupation should return None if user does not exist '''
@@ -234,7 +294,9 @@ class AuthQuotesCompareTest(unittest.TestCase):
         datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
         self.assertTrue(cassapidatasource.new_datasource(datasource))
         params={'did':did, 'date':date}
-        self.assertIsNone(compare.quo_daily_datasource_occupation(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_daily_datasource_occupation(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QDDSO_USRNF)
 
     def test_quo_daily_datasource_occupation_non_existent_segment_quote(self):
         ''' quo_daily_datasource_occupation should return False if segment has not defined this quote '''
@@ -328,17 +390,23 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_daily_user_datasources_occupation_failure_no_did(self):
         ''' quo_daily_user_datasources_occupation should return None if params has no did '''
         params={'date':timeuuid.uuid1()}
-        self.assertIsNone(compare.quo_daily_user_datasources_occupation(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_daily_user_datasources_occupation(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QDUDSO_PNF)
 
     def test_quo_daily_user_datasources_occupation_failure_no_date(self):
         ''' quo_daily_user_datasources_occupation should return None if params has no date '''
         params={'did':uuid.uuid4()}
-        self.assertIsNone(compare.quo_daily_user_datasources_occupation(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_daily_user_datasources_occupation(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QDUDSO_PNF)
 
     def test_quo_daily_user_datasources_occupation_failure_non_existent_datasource(self):
         ''' quo_daily_user_datasources_occupation should return None if datasource does not exist '''
         params={'date':timeuuid.uuid1(), 'did':uuid.uuid4()}
-        self.assertIsNone(compare.quo_daily_user_datasources_occupation(params))
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            compare.quo_daily_user_datasources_occupation(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QDUDSO_DSNF)
 
     def test_quo_daily_user_datasources_occupation_failure_non_existent_user(self):
         ''' quo_daily_user_datasources_occupation should return None if user does not exist '''
@@ -350,7 +418,9 @@ class AuthQuotesCompareTest(unittest.TestCase):
         datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
         self.assertTrue(cassapidatasource.new_datasource(datasource))
         params={'did':did, 'date':date}
-        self.assertIsNone(compare.quo_daily_user_datasources_occupation(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_daily_user_datasources_occupation(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QDUDSO_USRNF)
 
     def test_quo_daily_user_datasources_occupation_non_existent_segment_quote(self):
         ''' quo_daily_user_datasources_occupation should return False if segment has not defined this quote '''
@@ -444,13 +514,17 @@ class AuthQuotesCompareTest(unittest.TestCase):
     def test_quo_user_total_occupation_no_did_param(self):
         ''' quo_user_total_occupation should return None if no did param is passed '''
         params={}
-        self.assertIsNone(compare.quo_user_total_occupation(params))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            compare.quo_user_total_occupation(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTO_DIDNF)
 
     def test_quo_user_total_occupation_no_datasource_found(self):
         ''' quo_user_total_occupation should return None if datasource does not exist '''
         did=uuid.uuid4()
         params={'did':did}
-        self.assertIsNone(compare.quo_user_total_occupation(params))
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            compare.quo_user_total_occupation(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTO_DSNF)
 
     def test_quo_user_total_occupation_no_user_found(self):
         ''' quo_user_total_occupation should return None if user does not exist '''
@@ -462,7 +536,9 @@ class AuthQuotesCompareTest(unittest.TestCase):
         datasource=ormdatasource.Datasource(uid=uid, did=did, datasourcename=datasourcename, aid=aid, creation_date=timeuuid.uuid1())
         self.assertTrue(cassapidatasource.new_datasource(datasource))
         params={'did':did}
-        self.assertIsNone(compare.quo_user_total_occupation(params))
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            compare.quo_user_total_occupation(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQC_QUTO_USRNF)
 
     def test_quo_user_total_occupation_no_segment_quo_stablished(self):
         ''' quo_user_total_occupation should return False if segment quote is not established '''

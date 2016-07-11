@@ -8,7 +8,6 @@
 
 '''
 
-from komlog.komfig import logging
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
 from komlog.komcass.api import datasource as cassapidatasource
@@ -18,174 +17,215 @@ from komlog.komcass.api import dashboard as cassapidashboard
 from komlog.komcass.api import snapshot as cassapisnapshot
 from komlog.komcass.api import circle as cassapicircle
 from komlog.komcass.api import quote as cassapiquote
+from komlog.komlibs.auth import exceptions
+from komlog.komlibs.auth.errors import Errors
 from komlog.komlibs.auth.model.quotes import Quotes
 from komlog.komlibs.general.time import timeuuid
 
 def quo_user_total_agents(params):
-    if 'uid' not in params:
-        return None
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QUTA_UIDNF)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_AQU_QUTA_USRNF)
     num_agents=cassapiagent.get_number_of_agents_by_uid(uid=uid)
     quote=Quotes.quo_user_total_agents.name
-    if cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_agents):
-        return num_agents
-    return None
+    cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_agents)
+    return num_agents
 
 def quo_user_total_datasources(params):
-    if 'uid' not in params:
-        return None
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QUTDS_UIDNF)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_AQU_QUTDS_USRNF)
     aids=cassapiagent.get_agents_aids(uid=uid)
     total_datasources=0
     for aid in aids:
         agent_datasources=cassapidatasource.get_number_of_datasources_by_aid(aid=aid)
-        total_datasources+=int(agent_datasources)
+        total_datasources+=agent_datasources
     quote=Quotes.quo_user_total_datasources.name
-    if cassapiquote.set_user_quote(uid=uid, quote=quote, value=total_datasources):
-        return total_datasources
-    return None
+    cassapiquote.set_user_quote(uid=uid, quote=quote, value=total_datasources)
+    return total_datasources
 
 def quo_user_total_datapoints(params):
-    if 'uid' not in params:
-        return None
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QUTDP_UIDNF)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_AQU_QUTDP_USRNF)
     total_datapoints=cassapidatapoint.get_number_of_datapoints_by_uid(uid=uid)
     quote=Quotes.quo_user_total_datapoints.name
-    if cassapiquote.set_user_quote(uid=uid, quote=quote, value=total_datapoints):
-        return total_datapoints
-    return None
+    cassapiquote.set_user_quote(uid=uid, quote=quote, value=total_datapoints)
+    return total_datapoints
 
 def quo_user_total_widgets(params):
-    if 'uid' not in params:
-        return None
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QUTW_UIDNF)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_AQU_QUTW_USRNF)
     num_widgets=cassapiwidget.get_number_of_widgets_by_uid(uid=uid)
     quote=Quotes.quo_user_total_widgets.name
-    if cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_widgets):
-        return num_widgets
-    return None
+    cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_widgets)
+    return num_widgets
 
 def quo_user_total_dashboards(params):
-    if 'uid' not in params:
-        return None
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QUTDB_UIDNF)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_AQU_QUTDB_USRNF)
     num_dashboards=cassapidashboard.get_number_of_dashboards_by_uid(uid=uid)
     quote=Quotes.quo_user_total_dashboards.name
-    if cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_dashboards):
-        return num_dashboards
-    return None
+    cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_dashboards)
+    return num_dashboards
 
 def quo_agent_total_datasources(params):
-    if 'aid' not in params:
-        return None
-    aid=params['aid']
+    try:
+        aid=params['aid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QATDS_AIDNF)
+    agent=cassapiagent.get_agent(aid=aid)
+    if not agent:
+        raise exceptions.AgentNotFoundException(Errors.E_AQU_QATDS_AGNF)
     num_datasources=cassapidatasource.get_number_of_datasources_by_aid(aid=aid)
     quote=Quotes.quo_agent_total_datasources.name
-    if cassapiquote.set_agent_quote(aid=aid, quote=quote, value=num_datasources):
-        return num_datasources
-    return None
+    cassapiquote.set_agent_quote(aid=aid, quote=quote, value=num_datasources)
+    return num_datasources
 
 def quo_agent_total_datapoints(params):
-    if 'aid' not in params:
-        return None
-    aid=params['aid']
+    try:
+        aid=params['aid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QATDP_AIDNF)
+    agent=cassapiagent.get_agent(aid=aid)
+    if not agent:
+        raise exceptions.AgentNotFoundException(Errors.E_AQU_QATDP_AGNF)
     total_datapoints=0
     dids=cassapidatasource.get_datasources_dids(aid=aid)
     for did in dids:
         num_datapoints=cassapidatapoint.get_number_of_datapoints_by_did(did=did)
-        total_datapoints+=int(num_datapoints)
+        total_datapoints+=num_datapoints
     quote=Quotes.quo_agent_total_datapoints.name
-    if cassapiquote.set_agent_quote(aid=aid, quote=quote, value=total_datapoints):
-        return total_datapoints
-    return None
+    cassapiquote.set_agent_quote(aid=aid, quote=quote, value=total_datapoints)
+    return total_datapoints
 
 def quo_datasource_total_datapoints(params):
-    if 'did' not in params:
-        return None
-    did=params['did']
+    try:
+        did=params['did']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QDSTDP_DIDNF)
+    ds=cassapidatasource.get_datasource(did=did)
+    if not ds:
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQU_QDSTDP_DSNF)
     total_datapoints=cassapidatapoint.get_number_of_datapoints_by_did(did=did)
     quote=Quotes.quo_datasource_total_datapoints.name
-    if cassapiquote.set_datasource_quote(did=did, quote=quote, value=total_datapoints):
-        return total_datapoints
-    return None
+    cassapiquote.set_datasource_quote(did=did, quote=quote, value=total_datapoints)
+    return total_datapoints
 
 def quo_user_total_snapshots(params):
-    if 'uid' not in params:
-        return None
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QUTSN_UIDNF)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_AQU_QUTSN_USRNF)
     num_snapshots=cassapisnapshot.get_number_of_snapshots(uid=uid)
     quote=Quotes.quo_user_total_snapshots.name
-    if cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_snapshots):
-        return num_snapshots
-    return None
+    cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_snapshots)
+    return num_snapshots
 
 def quo_user_total_circles(params):
-    if 'uid' not in params:
-        return None
-    uid=params['uid']
+    try:
+        uid=params['uid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QUTC_UIDNF)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_AQU_QUTC_USRNF)
     num_circles=cassapicircle.get_number_of_circles(uid=uid)
     quote=Quotes.quo_user_total_circles.name
-    if cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_circles):
-        return num_circles
-    return None
+    cassapiquote.set_user_quote(uid=uid, quote=quote, value=num_circles)
+    return num_circles
 
 def quo_circle_total_members(params):
-    if 'cid' not in params:
-        return None
-    cid=params['cid']
+    try:
+        cid=params['cid']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QCTM_CIDNF)
     circle=cassapicircle.get_circle(cid=cid)
     if not circle:
-        return '0'
+        raise exceptions.CircleNotFoundException(error=Errors.E_AQU_QCTM_CRNF)
     num_members=len(circle.members)
     quote=Quotes.quo_circle_total_members.name
-    if cassapiquote.set_circle_quote(cid=cid, quote=quote, value=num_members):
-        return num_members
-    return None
+    cassapiquote.set_circle_quote(cid=cid, quote=quote, value=num_members)
+    return num_members
 
 def quo_daily_datasource_occupation(params):
-    if not 'did' in params or not 'date' in params:
-        return None
-    did=params['did']
-    date=params['date']
+    try:
+        did=params['did']
+        date=params['date']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QDDSO_PNF)
     size=cassapidatasource.get_datasource_metadata_size_at(did=did,date=date)
-    if size is not None:
-        ts=timeuuid.get_day_timestamp(date)
-        quote=Quotes.quo_daily_datasource_occupation.name
-        new_size=cassapiquote.increment_datasource_ts_quote(did=did, quote=quote, ts=ts, value=size)
-        return new_size
-    else:
-        return None
+    if size is None:
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQU_QDDSO_DSNF)
+    ts=timeuuid.get_day_timestamp(date)
+    quote=Quotes.quo_daily_datasource_occupation.name
+    new_size=cassapiquote.increment_datasource_ts_quote(did=did, quote=quote, ts=ts, value=size)
+    return new_size
 
 def quo_daily_user_datasources_occupation(params):
-    if not 'did' in params or not 'date' in params:
-        return None
-    did=params['did']
-    date=params['date']
+    try:
+        did=params['did']
+        date=params['date']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QDUDSO_PNF)
     dsinfo=cassapidatasource.get_datasource(did=did)
-    if not dsinfo or not dsinfo.uid:
-        return None
-    uid=dsinfo.uid
-    size=cassapidatasource.get_datasource_metadata_size_at(did=did,date=date)
-    if size is not None:
-        ts=timeuuid.get_day_timestamp(date)
-        quote=Quotes.quo_daily_user_datasources_occupation.name
-        new_size=cassapiquote.increment_user_ts_quote(uid=uid, quote=quote, ts=ts, value=size)
-        return new_size
+    if dsinfo and dsinfo.uid:
+        uid=dsinfo.uid
     else:
-        return None
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQU_QDUDSO_DSNF)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_AQU_QDUDSO_USRNF)
+    size=cassapidatasource.get_datasource_metadata_size_at(did=did,date=date)
+    if size is None:
+        return 0
+    ts=timeuuid.get_day_timestamp(date)
+    quote=Quotes.quo_daily_user_datasources_occupation.name
+    new_size=cassapiquote.increment_user_ts_quote(uid=uid, quote=quote, ts=ts, value=size)
+    return new_size
 
 def quo_user_total_occupation(params):
-    ''' 
+    '''
         We calculate the total occupation user data. This quote is calculated once hourly at most.
         Right now, we only measure the datasources occupation.
     '''
-    if not 'did' in params:
-        return None
-    did=params['did']
+    try:
+        did=params['did']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QUTO_DIDNF)
     dsinfo=cassapidatasource.get_datasource(did=did)
-    if not dsinfo or not dsinfo.uid:
-        return None
-    uid=dsinfo.uid
+    if dsinfo and dsinfo.uid:
+        uid=dsinfo.uid
+    else:
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQU_QUTO_DSNF)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_AQU_QUTO_USRNF)
     quote=Quotes.quo_user_total_occupation.name
     ts=timeuuid.get_hour_timestamp(timeuuid.uuid1())
     value=0
