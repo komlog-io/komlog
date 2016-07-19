@@ -27,7 +27,7 @@ LAMBDAS='Lambdas'
 
 
 MESSAGE_TO_ADDRESS_MAPPING={
-    messages.STORE_SAMPLE_MESSAGE:STORING+'.%h',
+    messages.STORE_SAMPLE_MESSAGE:STORING,
     messages.MAP_VARS_MESSAGE:TEXTMINING,
     messages.MON_VAR_MESSAGE:GESTCONSOLE,
     messages.GDTREE_MESSAGE:TEXTMINING,
@@ -59,15 +59,15 @@ MESSAGE_TO_ADDRESS_MAPPING={
 
 #MODULE MAPPINGS
 MODULE_TO_ADDRESS_MAPPING={
-    VALIDATION:['%m.%h','%i.%m.%h'],
-    STORING:['%m.%h','%i.%m.%h'],
-    TEXTMINING:['%m','%i.%m.%h'],
-    GESTCONSOLE:['%m','%i.%m.%h'],
-    RESCONTROL:['%m','%i.%m.%h'],
-    EVENTS:['%m','%i.%m.%h'],
-    ANOMALIES:['%m','%i.%m.%h'],
-    WEBSOCKETSERVER: ['%i.%m.%h'],
-    LAMBDAS:['%m','%i.%m.%h'],
+    VALIDATION:['%m','%m.%i'],
+    STORING:['%m','%m.%i'],
+    TEXTMINING:['%m','%m.%i'],
+    GESTCONSOLE:['%m','%m.%i'],
+    RESCONTROL:['%m','%m.%i'],
+    EVENTS:['%m','%m.%i'],
+    ANOMALIES:['%m','%m.%i'],
+    WEBSOCKETSERVER: ['%m.%i'],
+    LAMBDAS:['%m','%m.%i'],
 }
 
 

@@ -883,16 +883,16 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         ''' store_user_datapoint_values should fail if content is invalid '''
         pid=uuid.uuid4()
         date=timeuuid.uuid1()
-        contents=[234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4()]
+        contents=[{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4()]
         for content in contents:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.store_user_datapoint_value(pid=pid, date=date, content=content)
             self.assertEqual(cm.exception.error, Errors.E_GPA_SDPSV_IC)
-        contents=['asdfasdf','a2','asdf 232.234','-l22','5m']
+        contents=['NaN','Infinity','-Infinity']
         for content in contents:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 api.store_user_datapoint_value(pid=pid, date=date, content=content)
-            self.assertEqual(cm.exception.error, Errors.E_GPA_SDPSV_CVNN)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_SDPSV_IC)
 
     def test_store_user_datapoint_value_failure_datapoint_not_found(self):
         ''' store_user_datapoint_values should fail if datapoint is not found '''

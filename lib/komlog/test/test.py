@@ -10,6 +10,7 @@ MODULES = [
     'komlog.komlibs.events.api.test.test_user_responses.EventsApiUserResponsesTest',
     'komlog.komlibs.events.api.test.test_summary.EventsApiSummaryTest',
     'komlog.komlibs.general.validation.test.test_arguments.GeneralValidationArgumentsTest',
+    'komlog.komlibs.general.time.test.test_timeuuid.GeneralTimeTimeuuidTest',
     'komlog.komlibs.graph.api.test.test_base.GraphApiBaseTest',
     'komlog.komlibs.graph.api.test.test_uri.GraphApiUriTest',
     'komlog.komlibs.graph.api.test.test_kin.GraphApiKinTest',

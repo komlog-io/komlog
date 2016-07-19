@@ -280,7 +280,8 @@ def get_variables_atts(text_hash):
 def get_numeric_value_from_string(string):
     try:
         value=Decimal(string)
-    except InvalidOperation:
+        int(value)
+    except (InvalidOperation, ValueError, OverflowError):
         return None
     else:
         return value

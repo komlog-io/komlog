@@ -113,5 +113,5 @@ class ExceptionHandler(object):
             error=getattr(e,'error',Errors.UNKNOWN)
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
-            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR)
+            return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR,error=error)
 

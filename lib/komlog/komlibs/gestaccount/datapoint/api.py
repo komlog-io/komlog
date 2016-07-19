@@ -470,7 +470,7 @@ def store_user_datapoint_value(pid, date, content):
         raise exceptions.BadParametersException(error=Errors.E_GPA_SDPSV_IP)
     if not args.is_valid_date(date):
         raise exceptions.BadParametersException(error=Errors.E_GPA_SDPSV_IDT)
-    if not args.is_valid_string(content):
+    if not args.is_valid_datapoint_content(content):
         raise exceptions.BadParametersException(error=Errors.E_GPA_SDPSV_IC)
     value=textmanvar.get_numeric_value_from_string(content)
     if value is None:

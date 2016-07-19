@@ -33,7 +33,7 @@ class WSConnectionHandler(websocket.WebSocketHandler):
         session.unset_session(passport=self.passport)
 
     def agent_callback(self, message):
-        self.write_message(message)
+        self.write_message(json.dumps(message))
 
 HANDLERS = [
     (r'/', WSConnectionHandler),

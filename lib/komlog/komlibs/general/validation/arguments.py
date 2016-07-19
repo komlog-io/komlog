@@ -6,6 +6,8 @@ This library is for implementing functions for argument validation
 
 import re
 import uuid
+import decimal
+import pandas as pd
 from komlog.komlibs.general.crypto import crypto
 
 
@@ -21,6 +23,7 @@ NUMBERS=re.compile('0-9')
 STRINGNUMBER=re.compile('^[+-]?([0-9]*\.)?[0-9]+([e|E][-|+]?[0-9]+)?(?!\s)$')
 EMAIL=re.compile('''^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$''')
 SEQUENCE=re.compile('^[a-fA-F0-9]{20}$')
+ISODATE=re.compile('^((?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$')
 
 def is_valid_username(argument):
     if not isinstance(argument,str):
@@ -91,9 +94,12 @@ def is_valid_datasource_content(argument):
     return False
 
 def is_valid_datapoint_content(argument):
-    if isinstance(argument, str) and STRINGNUMBER.search(argument) and len(argument.encode('utf-8'))<=2**7:
+    try:
+        num=decimal.Decimal(argument)
+        int(num)
         return True
-    return False
+    except (decimal.InvalidOperation, ValueError, TypeError, OverflowError):
+        return False
 
 def is_valid_string(argument):
     if not isinstance(argument,str):
@@ -158,6 +164,17 @@ def is_valid_hex_date(argument):
             return False
     except Exception:
         return False
+
+def is_valid_isodate(argument):
+    if isinstance(argument, str) and ISODATE.search(argument):
+        try:
+            t=pd.Timestamp(argument)
+            return True
+        except ValueError:
+            return False
+    elif isinstance(argument, pd.Timestamp):
+        return True
+    return False
 
 def is_valid_int(argument):
     if isinstance(argument, int) and argument>=0:

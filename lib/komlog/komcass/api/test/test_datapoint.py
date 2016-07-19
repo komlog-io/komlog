@@ -310,13 +310,22 @@ class KomcassApiDatapointTest(unittest.TestCase):
         ''' insert_datapoint_data should succeed '''
         pid=uuid.uuid4()
         date=timeuuid.uuid1()
-        value=decimal.Decimal(234223.2342342)
-        self.assertTrue(datapointapi.insert_datapoint_data(pid=pid, date=date, value=value))
-        data=datapointapi.get_datapoint_data_at(pid=pid, date=date)
-        self.assertEqual(data.date,date)
-        self.assertEqual(data.value,value)
-        self.assertEqual(data.pid,pid)
- 
+        values=[
+            #decimal.Decimal('NaN') not supported
+            #decimal.Decimal('Infinity') and other symbolic values not supported
+            decimal.Decimal(234223.2342342),
+            decimal.Decimal('1e7'),
+            decimal.Decimal('-1e-7'),
+            decimal.Decimal('321.322e400'),
+            decimal.Decimal('0.33E7')
+        ]
+        for value in values:
+            self.assertTrue(datapointapi.insert_datapoint_data(pid=pid, date=date, value=value))
+            data=datapointapi.get_datapoint_data_at(pid=pid, date=date)
+            self.assertEqual(data.date,date)
+            self.assertEqual(data.value,value)
+            self.assertEqual(data.pid,pid)
+
     def test_delete_datapoint_data_at_success_non_existent_data(self):
         ''' delete_datapoint_data_at should succeed even if data does not exist '''
         pid=uuid.uuid4()

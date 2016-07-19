@@ -71,7 +71,7 @@ def process_message_URISUPDT(message):
                             resauth.authorize_get_datasource_data(uid=session_info.uid,did=uri['id'])
                         elif uri['type'] == vertex.DATAPOINT:
                             resauth.authorize_get_datapoint_data(uid=session_info.uid,pid=uri['id'])
-                        data.append({'uri':uri['uri'],'content':contents[uri['id']]})
+                        data.append({'uri':uri['uri'],'type':uri['type'],'content':contents[uri['id']]})
                     except authexcept.AuthorizationException:
                         pass
                 if len(data)>0:
@@ -99,10 +99,10 @@ def process_message_CLSHOOKS(message):
 @exceptions.ExceptionHandler
 def process_message_SSDATA(message):
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
-    ts=timeuuid.get_unix_timestamp(message.date)
+    ts=timeuuid.get_isodate_from_uuid(message.date)
     msg=ws_message.SendMultiData(ts=ts, uris=message.data)
     try:
-        ws_session.agent_callback[message.sid].write_message(msg.to_dict())
+        ws_session.agent_callback[message.sid](message=msg.to_dict())
     except KeyError:
         try:
             session_info=session.get_agent_session_info(sid=message.sid)

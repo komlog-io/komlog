@@ -51,7 +51,7 @@ def _process_send_ds_data(passport, message):
         return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datasource', error=Errors.E_IWSPV1PM_PSDSD_IURI)
     try:
         dest_dir=config.get(options.SAMPLES_RECEIVED_PATH)
-        datasourceapi.upload_datasource_data(did=did, content=json.dumps({'content':message.content,'ts':message.ts}),dest_dir=dest_dir)
+        datasourceapi.upload_datasource_data(did=did, content=json.dumps({'content':message.content,'ts':message.ts.timestamp()}),dest_dir=dest_dir)
     except:
         if new_datasource:
             deleteapi.delete_datasource(did=datasource['did'])
@@ -75,7 +75,7 @@ def _process_send_ds_data(passport, message):
 def _process_send_dp_data(passport, message):
     message = modmsg.SendDpData.load_from_dict(message)
     new_datapoint=False
-    date=timeuuid.uuid1(seconds=message.ts)
+    date=timeuuid.get_uuid1_from_isodate(message.ts)
     msgs=[]
     uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
     if uri_info and uri_info['type']==vertex.DATAPOINT:
@@ -110,7 +110,7 @@ def _process_send_dp_data(passport, message):
 @exceptions.ExceptionHandler
 def _process_send_multi_data(passport, message):
     message = modmsg.SendMultiData.load_from_dict(message)
-    date=timeuuid.uuid1(seconds=message.ts)
+    date=timeuuid.get_uuid1_from_isodate(message.ts)
     existing_uris=[]
     pending_ds_creations=[]
     pending_dp_creations=[]
@@ -119,9 +119,9 @@ def _process_send_multi_data(passport, message):
     for item in message.uris:
         uri_info=graphuri.get_id(ido=passport.uid, uri=item['uri'])
         if uri_info is None or uri_info['type']==vertex.VOID:
-            if args.is_valid_datapoint_content(item['content']):
+            if item['type'] == vertex.DATAPOINT and args.is_valid_datapoint_content(item['content']):
                 pending_dp_creations.append(item)
-            elif args.is_valid_datasource_content(item['content']):
+            elif item['type'] == vertex.DATASOURCE and args.is_valid_datasource_content(item['content']):
                 pending_ds_creations.append(item)
             else:
                 return Response(status=status.PROTOCOL_ERROR, reason='invalid content for uri: '+item['uri'], error=Errors.E_IWSPV1PM_PSMTD_IUC)

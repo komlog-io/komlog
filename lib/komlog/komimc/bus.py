@@ -33,7 +33,7 @@ class MessageBus:
             self.local = await aioredis.create_redis(self.broker, encoding='utf-8')
             self.remotes[self.running_host]=self.local
         except Exception as e:
-            logging.logger.debug('Exception establishing connection with Redis Server: '+str(e))
+            logging.logger.error('Exception establishing connection with Redis Server: '+str(e))
             raise e
 
     async def stop(self):
@@ -67,7 +67,7 @@ class MessageBus:
             else:
                 return True
         except Exception as e:
-            logging.logger.exception('Exception sending message: '+str(e))
+            logging.logger.error('Exception sending message: '+str(e))
             return False
 
     async def retrieve_message(self, timeout):
@@ -75,7 +75,7 @@ class MessageBus:
             msg = await self.local.blpop(*self.addr_list, timeout=timeout)
             return msg
         except Exception as e:
-            logging.logger.exception('Exception retrieving message: '+str(e))
+            logging.logger.error('Exception retrieving message: '+str(e))
             return None
 
     async def send_message_to(self, remote_addr, komlog_message):
@@ -83,13 +83,16 @@ class MessageBus:
             host,addr=remote_addr.split(':')
             await self.remotes[host].rpush(addr,komlog_message.serialized_message.encode('utf-8'))
         except (KeyError, aioredis.RedisError):
+            logging.logger.error('exception sending message to '+host+' addr: '+addr)
             try:
                 self.remotes[host] = await aioredis.create_redis(host, encoding='utf-8')
                 await self.remotes[host].rpush(addr,komlog_message.serialized_message.encode('utf-8'))
-            except:
+                logging.logger.error('Success in retry sending message to '+host+' addr: '+addr)
+            except Exception:
+                logging.logger.error('Error in retry sending message to '+host+' addr: '+addr)
                 return False
         except Exception as e:
-            logging.logger.exception('Exception sending message: '+str(e))
+            logging.logger.error('Exception sending message: '+str(e))
             return False
         return True
 
@@ -98,7 +101,7 @@ class MessageBus:
             data = await self.local.blpop(addr,timeout=timeout)
             return data
         except Exception as e:
-            logging.logger.debug('Exception retrieving messages (timeout='+str(timeout)+') address_list: '+str(addr))
+            logging.logger.error('Exception retrieving messages (timeout='+str(timeout)+') address_list: '+str(addr))
             return None
 
 def initialize_msgbus(module_name, module_instance, hostname):

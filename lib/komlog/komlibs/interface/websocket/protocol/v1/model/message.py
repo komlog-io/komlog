@@ -1,4 +1,7 @@
 
+import decimal
+import pandas as pd
+from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
@@ -72,8 +75,8 @@ class SendDsData(KomlogMessage):
 
     @ts.setter
     def ts(self, ts):
-        if args.is_valid_timestamp(ts):
-            self._ts=ts
+        if args.is_valid_isodate(ts):
+            self._ts=pd.Timestamp(ts,tz='utc') if pd.Timestamp(ts).tz is None else pd.Timestamp(ts)
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSD_ITS)
 
@@ -115,7 +118,7 @@ class SendDsData(KomlogMessage):
             'action':self.action.value,
             'payload':{
                 'uri':self.uri,
-                'ts':self.ts,
+                'ts':self.ts.isoformat(),
                 'content':self.content
             }
         }
@@ -148,8 +151,8 @@ class SendDpData(KomlogMessage):
 
     @ts.setter
     def ts(self, ts):
-        if args.is_valid_timestamp(ts):
-            self._ts=ts
+        if args.is_valid_isodate(ts):
+            self._ts=pd.Timestamp(ts,tz='utc') if pd.Timestamp(ts).tz is None else pd.Timestamp(ts)
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_ITS)
 
@@ -160,7 +163,7 @@ class SendDpData(KomlogMessage):
     @content.setter
     def content(self, content):
         if args.is_valid_datapoint_content(content):
-            self._content=content
+            self._content=decimal.Decimal(content)
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_ICNT)
 
@@ -191,8 +194,8 @@ class SendDpData(KomlogMessage):
             'action':self.action.value,
             'payload':{
                 'uri':self.uri,
-                'ts':self.ts,
-                'content':self.content
+                'ts':self.ts.isoformat(),
+                'content':str(self.content)
             }
         }
 
@@ -215,9 +218,14 @@ class SendMultiData(KomlogMessage):
             and all(isinstance(item,dict) for item in uris)
             and all('uri' in item for item in uris)
             and all(args.is_valid_uri(item['uri']) for item in uris)
+            and all('type' in item for item in uris)
+            and all(item['type'] in (vertex.DATASOURCE,vertex.DATAPOINT) for item in uris)
             and all('content' in item for item in uris)
-            and all(args.is_valid_datasource_content(item['content']) for item in uris)):
-            self._uris=[{'uri':item['uri'],'content':item['content']} for item in uris]
+            and all(args.is_valid_datasource_content(item['content']) for item in uris if item['type'] == vertex.DATASOURCE)
+            and all(args.is_valid_datapoint_content(item['content']) for item in uris if item['type'] == vertex.DATAPOINT)):
+            ds_uris=[{'uri':item['uri'],'type':item['type'],'content':item['content']} for item in uris if item['type'] == vertex.DATASOURCE]
+            dp_uris=[{'uri':item['uri'],'type':item['type'],'content':decimal.Decimal(item['content'])} for item in uris if item['type'] == vertex.DATAPOINT]
+            self._uris=ds_uris+dp_uris
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTD_IURIS)
 
@@ -227,8 +235,8 @@ class SendMultiData(KomlogMessage):
 
     @ts.setter
     def ts(self, ts):
-        if args.is_valid_timestamp(ts):
-            self._ts=ts
+        if args.is_valid_isodate(ts):
+            self._ts=pd.Timestamp(ts,tz='utc') if pd.Timestamp(ts).tz is None else pd.Timestamp(ts)
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTD_ITS)
 
@@ -251,12 +259,14 @@ class SendMultiData(KomlogMessage):
 
     def to_dict(self):
         ''' returns a JSON serializable dict '''
+        ds_uris=[{'uri':item['uri'],'type':item['type'],'content':item['content']} for item in self._uris if item['type'] == vertex.DATASOURCE]
+        dp_uris=[{'uri':item['uri'],'type':item['type'],'content':str(item['content'])} for item in self._uris if item['type'] == vertex.DATAPOINT]
         return {
             'v':self.v,
             'action':self.action.value,
             'payload':{
-                'ts':self.ts,
-                'uris':self.uris
+                'ts':self.ts.isoformat(),
+                'uris':ds_uris+dp_uris
             }
         }
 

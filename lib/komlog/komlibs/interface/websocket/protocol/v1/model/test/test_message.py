@@ -2,7 +2,10 @@ import unittest
 import time
 import uuid
 import json
+import decimal
+import pandas as pd
 from komlog.komfig import logging
+from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model import message
@@ -53,18 +56,30 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_success_generating_serializable_dict(self):
         ''' SendDsData.to_dict() method should generate a valid serializable dict '''
-        msg=message.SendDsData(uri='uri',ts=1,content='content')
+        ts=pd.Timestamp('now',tz='utc')
+        msg=message.SendDsData(uri='uri',ts=ts,content='content')
         self.assertEqual(msg.v, message.VERSION)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':1,'content':'content'}})
+        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_SendDsData_success_generating_serializable_dict_with_no_timezone_ts(self):
+        ''' SendDsData.to_dict() method should generate a valid serializable dict '''
+        ts='2016-07-18T17:15:00'
+        ts2=pd.Timestamp(ts,tz='utc')
+        msg=message.SendDsData(uri='uri',ts=ts,content='content')
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DS_DATA)
+        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':ts2.isoformat(),'content':'content'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDsData_success_loading_from_dict(self):
         ''' SendDsData.load_from_dict() method should generate a valid SendDsData object '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DS_DATA.value,
-            'payload':{'uri':'uri','ts':1,'content':'content'}
+            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
         }
         msg=message.SendDsData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.VERSION)
@@ -72,12 +87,30 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
+    def test_SendDsData_success_loading_from_dict_with_no_timezone_ts(self):
+        ''' SendDsData.load_from_dict() method should generate a valid SendDsData object '''
+        ts='2016-07-18T17:15:00'
+        ts2=pd.Timestamp(ts, tz='utc')
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{'uri':'uri','ts':ts,'content':'content'}
+        }
+        msg=message.SendDsData.load_from_dict(dict_msg)
+        dict_msg['payload']['ts']=ts2.isoformat()
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DS_DATA)
+        self.assertEqual(msg.ts.timestamp(), ts2.timestamp())
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
     def test_SendDsData_failure_loading_from_dict_invalid_version(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':2,
             'action':Messages.SEND_DS_DATA.value,
-            'payload':{'uri':'uri','ts':1,'content':'content'}
+            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -85,10 +118,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_action(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DP_DATA.value,
-            'payload':{'uri':'uri','ts':1,'content':'content'}
+            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -96,10 +130,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_payload_type(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DS_DATA.value,
-            'payload':['uri','uri','ts',1,'content','content']
+            'payload':['uri','uri','ts',ts.isoformat(),'content','content']
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -107,10 +142,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_payload_uri_not_found(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DS_DATA.value,
-            'payload':{'ari':'uri','ts':1,'content':'content'}
+            'payload':{'ari':'uri','ts':ts.isoformat(),'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -129,10 +165,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_payload_content_not_found(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DS_DATA.value,
-            'payload':{'uri':'uri','ts':'1','contents':'content'}
+            'payload':{'uri':'uri','ts':ts.isoformat(),'contents':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -140,10 +177,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_payload_uri_invalid(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DS_DATA.value,
-            'payload':{'uri':'ñññinvalid uri','ts':1,'content':'content'}
+            'payload':{'uri':'ñññinvalid uri','ts':ts.isoformat(),'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -162,10 +200,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_payload_content_invalid(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DS_DATA.value,
-            'payload':{'uri':'uri','ts':1,'content':{'a':'dict'}}
+            'payload':{'uri':'uri','ts':ts.isoformat(),'content':{'a':'dict'}}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -185,18 +224,31 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_success_generating_serializable_dict(self):
         ''' SendDpData.to_dict() method should generate a valid serializable dict '''
-        msg=message.SendDpData(uri='uri',ts=1,content='33.33')
+        ts=pd.Timestamp('now',tz='utc')
+        msg=message.SendDpData(uri='uri',ts=ts,content='33.33')
         self.assertEqual(msg.v, message.VERSION)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':1,'content':'33.33'}})
+        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_SendDpData_success_generating_serializable_dict_with_no_timezone_ts(self):
+        ''' SendDpData.to_dict() method should generate a valid serializable dict '''
+        ts='2016-07-18T17:15:00'
+        ts2=pd.Timestamp(ts,tz='utc')
+        msg=message.SendDpData(uri='uri',ts=ts,content='33.33')
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DP_DATA)
+        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':ts2.isoformat(),'content':'33.33'}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
 
     def test_SendDpData_success_loading_from_dict(self):
         ''' SendDpData.load_from_dict() method should generate a valid SendDpData object '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DP_DATA.value,
-            'payload':{'uri':'uri','ts':1,'content':'33.33'}
+            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
         }
         msg=message.SendDpData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.VERSION)
@@ -204,12 +256,30 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
+    def test_SendDpData_success_loading_from_dict_with_no_timezone_ts(self):
+        ''' SendDpData.load_from_dict() method should generate a valid SendDpData object '''
+        ts='2016-07-18T17:15:00'
+        ts2=pd.Timestamp(ts,tz='utc')
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'uri':'uri','ts':ts,'content':'33.33'}
+        }
+        msg=message.SendDpData.load_from_dict(dict_msg)
+        dict_msg['payload']['ts']=ts2.isoformat()
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_DP_DATA)
+        self.assertEqual(msg.ts.timestamp(), ts2.timestamp())
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
     def test_SendDpData_failure_loading_from_dict_invalid_version(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':2,
             'action':Messages.SEND_DP_DATA.value,
-            'payload':{'uri':'uri','ts':1,'content':'33.33'}
+            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -217,10 +287,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_action(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DS_DATA.value,
-            'payload':{'uri':'uri','ts':1,'content':'33.33'}
+            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -228,10 +299,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_payload_type(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DP_DATA.value,
-            'payload':['uri','uri','ts',1,'content','33.33']
+            'payload':['uri','uri','ts',ts.isoformat(),'content','33.33']
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -239,10 +311,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_payload_uri_not_found(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DP_DATA.value,
-            'payload':{'ari':'uri','ts':1,'content':'33.33'}
+            'payload':{'ari':'uri','ts':ts.isoformat(),'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -261,10 +334,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_payload_content_not_found(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DP_DATA.value,
-            'payload':{'uri':'uri','ts':'1','contents':'33.33'}
+            'payload':{'uri':'uri','ts':ts.isoformat(),'contents':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -272,10 +346,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_payload_uri_invalid(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DP_DATA.value,
-            'payload':{'uri':'ñññinvalid uri','ts':1,'content':'33.33'}
+            'payload':{'uri':'ñññinvalid uri','ts':ts.isoformat(),'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -294,10 +369,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_payload_content_invalid(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DP_DATA.value,
-            'payload':{'uri':'uri','ts':1,'content':{'a':'dict'}}
+            'payload':{'uri':'uri','ts':ts.isoformat(),'content':{'a':'dict'}}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -316,18 +392,31 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_success_generating_serializable_dict(self):
         ''' SendMultiData.to_dict() method should generate a valid serializable dict '''
-        msg=message.SendMultiData(uris=[{'uri':'uri','content':'33.33'}],ts=1)
+        ts=pd.Timestamp('now',tz='utc')
+        msg=message.SendMultiData(uris=[{'uri':'uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],ts=ts)
         self.assertEqual(msg.v, message.VERSION)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'uri','content':'33.33'}],'ts':1}})
+        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_SendMultiData_success_generating_serializable_dict_with_no_timezone_ts(self):
+        ''' SendMultiData.to_dict() method should generate a valid serializable dict '''
+        ts='2016-07-18T17:15:00'
+        ts2=pd.Timestamp(ts, tz='utc')
+        msg=message.SendMultiData(uris=[{'uri':'uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],ts=ts)
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
+        self.assertEqual(msg.to_dict(), {'v':message.VERSION,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts2.isoformat()}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
 
     def test_SendMultiData_success_loading_from_dict(self):
         ''' SendMultiData.load_from_dict() method should generate a valid SendMultiData object '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_MULTI_DATA.value,
-            'payload':{'uris':[{'uri':'uri','content':'33.33'}],'ts':1}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
         }
         msg=message.SendMultiData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.VERSION)
@@ -335,12 +424,30 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
+    def test_SendMultiData_success_loading_from_dict_with_no_timezone_ts(self):
+        ''' SendMultiData.load_from_dict() method should generate a valid SendMultiData object '''
+        ts='2016-07-18T17:15:00'
+        ts2=pd.Timestamp(ts, tz='utc')
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts}
+        }
+        msg=message.SendMultiData.load_from_dict(dict_msg)
+        dict_msg['payload']['ts']=ts2.isoformat()
+        self.assertEqual(msg.v, message.VERSION)
+        self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
+        self.assertEqual(msg.ts.timestamp(),ts2.timestamp())
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
     def test_SendMultiData_failure_loading_from_dict_invalid_version(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':2,
             'action':Messages.SEND_MULTI_DATA.value,
-            'payload':{'uris':[{'uri':'uri','content':'33.33'}],'ts':1}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -348,10 +455,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_action(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_DP_DATA.value,
-            'payload':{'uris':[{'uri':'uri','content':'33.33'}],'ts':1}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -359,10 +467,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_type(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_MULTI_DATA.value,
-            'payload':['uri','uri','ts',1,'content','33.33']
+            'payload':['uri','uri','ts',ts.isoformat(),'content','33.33']
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -370,10 +479,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_not_found(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_MULTI_DATA.value,
-            'payload':{'aris':[{'uri':'uri','content':'33.33'}],'ts':1}
+            'payload':{'aris':[{'uri':'uri','type':vertex.DATAPOINT, 'content':'33.33'}],'ts':ts.isoformat()}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -384,7 +494,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_MULTI_DATA.value,
-            'payload':{'uris':[{'uri':'uri','content':'33.33'}],'its':1}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'its':1}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -392,10 +502,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_invalid_type(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_MULTI_DATA.value,
-            'payload':{'uris':{'uri':'uri','content':'33.33'},'ts':1}
+            'payload':{'uris':{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},'ts':ts.isoformat()}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -403,10 +514,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_invalid_item_type(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_MULTI_DATA.value,
-            'payload':{'uris':['string','other','trhee'],'ts':1}
+            'payload':{'uris':['string','other','trhee'],'ts':ts.isoformat()}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -414,15 +526,16 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_without_uri(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
-                    {'uri':'uri','content':'33.33'},
+                    {'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},
                     {'content':'ds content'},
                 ],
-                'ts':1}
+                'ts':ts.isoformat()}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -430,15 +543,16 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_uri_invalid(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
-                    {'uri':'uri','content':'33.33'},
-                    {'uri':'Ñot valid','content':'ds content'},
+                    {'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},
+                    {'uri':'Ñot valid','type':vertex.DATASOURCE,'content':'ds content'},
                 ],
-                'ts':1}
+                'ts':ts.isoformat()}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -446,15 +560,16 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_no_content(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
-                    {'uri':'uri','content':'33.33'},
-                    {'uri':'valid_uri'},
+                    {'uri':'uri','type':vertex.DATAPOINT, 'content':'33.33'},
+                    {'type':vertex.DATAPOINT, 'uri':'valid_uri'},
                 ],
-                'ts':1}
+                'ts':ts.isoformat()}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -462,15 +577,50 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_content_invalid(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
         dict_msg={
             'v':message.VERSION,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
-                    {'uri':'uri','content':'33.33'},
-                    {'uri':'valid_uri','content':132},
+                    {'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},
+                    {'uri':'valid_uri','type':vertex.DATAPOINT,'content':'non dp content'},
                 ],
-                'ts':1}
+                'ts':ts.isoformat()}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_IURIS)
+
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_no_type(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{
+                'uris':[
+                    {'uri':'uri','type':vertex.DATAPOINT, 'content':'33.33'},
+                    {'uri':'valid_uri', 'content':'5'},
+                ],
+                'ts':ts.isoformat()}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_IURIS)
+
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_type_invalid(self):
+        ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
+        ts=pd.Timestamp('now',tz='utc')
+        dict_msg={
+            'v':message.VERSION,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{
+                'uris':[
+                    {'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},
+                    {'uri':'valid_uri','type':vertex.USER,'content':'content'},
+                ],
+                'ts':ts.isoformat()}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -483,8 +633,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
-                    {'uri':'uri','content':'33.33'},
-                    {'uri':'valid_uri','content':'valid content'},
+                    {'uri':'uri','type':vertex.DATAPOINT, 'content':'33.33'},
+                    {'uri':'valid_uri','type':vertex.DATASOURCE, 'content':'valid ds content'},
                 ],
                 'ts':'1'}
         }

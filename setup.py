@@ -73,6 +73,7 @@ setup(name='komlog',
         'scikit-learn',
         'scipy',
         'numpy',
+        'pandas',
         'tornado'
     ],
     package_dir={ '': 'lib' },

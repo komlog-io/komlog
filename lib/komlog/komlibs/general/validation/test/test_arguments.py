@@ -1,5 +1,8 @@
 import unittest
 import uuid
+import decimal
+import pandas as pd
+import datetime
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.general.validation import arguments
@@ -314,4 +317,87 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
         params=['#BBCCDD','#aa0033','#AA0033','#FFFFFF','#FFffff','#000000','#FF0000','#00FF00','#0000FF','#FF00FF','#FFFF00','#00FFFF','#AABBCC','#001234','#99807F','#4A5F6E']
         for param in params:
             self.assertTrue(arguments.is_valid_hexcolor(param)) 
+
+    def test_is_valid_datapoint_content_invalid(self):
+        ''' is_valid_datapoint_content should return False if datapoint content has no decimal.Decimal representation or it is not numeric '''
+        params=[
+            ['a','list'],
+            ('a','tuple'),
+            uuid.uuid1(),
+            uuid.uuid4(),
+            uuid.uuid4().hex,
+            'NaN',
+            'Infinity',
+            '-Infinity',
+            pd.Timestamp('now'),
+            {'a':'dict'},
+            {'set'},
+            None,
+        ]
+        for param in params:
+            self.assertFalse(arguments.is_valid_datapoint_content(param))
+
+    def test_is_valid_datapoint_content_valid(self):
+        ''' is_valid_datapoint_content should return True if datapoint content has decimal.Decimal representation and it is numeric '''
+        params=[
+            1,
+            1.1,
+            '1e39',
+            '3E+4',
+            '-0.32e-12',
+        ]
+        for param in params:
+            self.assertTrue(arguments.is_valid_datapoint_content(param))
+
+    def test_is_valid_isodate_invalid(self):
+        ''' is_valid_isodate should return False if parameter is not a valid iso 8601 date or is not a pandas.Timestamp object or iso 8601 is not between the pandas.Timestamp valid range '''
+        params=[
+            ['a','list'],
+            ('a','tuple'),
+            uuid.uuid1(),
+            uuid.uuid4(),
+            uuid.uuid4().hex,
+            datetime.datetime.utcnow(),
+            'NaN',
+            'Infinity',
+            '-Infinity',
+            {'a':'dict'},
+            {'set'},
+            None,
+            '3016-07-18T17:07:00.002323Z', #year greater than max supported
+            '30160-07-18T17:07:00.002323Z', #year greater than max supported
+            '-2016-07-18T17:07:00.002323Z', #negative years not allowed
+            '1400-07-18T17:07:00.002323Z', #year lower than min supported
+            '2016-7-18T17:07:00.002323Z', #month without leading 0
+            '2016-07-38T17:07:00.002323Z', #day greater than 31
+            '2016-07-8T17:07:00.002323Z', #day without leading 0
+            '2016-07-18 17:07:00.002323Z', #no T Time separator
+            '2016-07-1817:07:00.002323Z', #no Time separator
+            '2016-07-18T24:07:00.002323Z', #hour 24 not valid
+            '2016-07-18T17:60:00.002323Z', #min 60 not valid
+            '2016-07-18T17:00:60.002323Z', #sec 60 not valid
+            '2016-07-18T17:07:00.002323z', #z not capital
+            '2016-07-18T17:07:00.002323+24:00',#24h tz offset not valid
+            '2016-07-18T17:07:00.002323-23:60', #60min tz offset not valid
+            '2016-07-18T17:07:00.002323-23:40:00', #seconds in tz offset not valid
+            '2016-07-18T17:07:00.002323+0000', #no colon in offset not valid
+            '2016/07/18T17:07:00.002323+0000', #no hyphen
+        ]
+        for param in params:
+            self.assertFalse(arguments.is_valid_isodate(param))
+
+    def test_is_valid_isodate_valid(self):
+        ''' is_valid_isodate should return True if parameter is a valid iso 8601 date or is a pandas.Timestamp object and iso 8601 is between the pandas.Timestamp valid range '''
+        params=[
+            pd.Timestamp('now'),
+            pd.Timestamp('now').isoformat(),
+            datetime.datetime.utcnow().isoformat(),
+            '2016-07-18T17:07:00.002323Z',
+            '2016-07-18T17:07:00.002323', #not tz allowed
+            '2016-07-18T17:07:00.002323+00:22',
+            '2016-07-18T17:07:00.002323-00:22',
+            '2016-07-18T17:07:00+00:22',
+        ]
+        for param in params:
+            self.assertTrue(arguments.is_valid_isodate(param))
 

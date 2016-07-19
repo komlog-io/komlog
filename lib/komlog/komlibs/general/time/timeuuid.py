@@ -1,6 +1,6 @@
 import uuid
 import time
-from datetime import datetime, timezone
+import pandas as pd
 from cassandra import util
 
 node=0x010000000000
@@ -23,6 +23,16 @@ def get_uuid1_from_custom_sequence(sequence):
     else:
         return value
 
+def get_uuid1_from_isodate(isodate):
+    date=pd.Timestamp(isodate)
+    if date.tz is None:
+        date=pd.Timestamp(isodate,tz='utc')
+    return uuid1(seconds=date.timestamp())
+
+def get_isodate_from_uuid(u):
+    ts=util.unix_time_from_uuid1(u)
+    date=pd.Timestamp(int(ts*10**6), unit='us',tz='utc')
+    return date.isoformat()
 
 def uuid1(clock_seq=None, seconds=None):
     global node
@@ -42,8 +52,8 @@ def get_day_timestamp(u):
         Because the date milliseconds is set to 0, the returned value
         is of type int '''
     ts=get_unix_timestamp(u)
-    date=datetime.fromtimestamp(ts)
-    date=date.replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+    date=pd.Timestamp(ts, unit='s', tz='utc')
+    date=date.replace(hour=0, minute=0, second=0, microsecond=0)
     timestamp=date.timestamp()
     return int(timestamp)
 
@@ -53,9 +63,8 @@ def get_hour_timestamp(u):
         Because the date milliseconds is set to 0, the returned value
         is of type int '''
     ts=get_unix_timestamp(u)
-    date=datetime.fromtimestamp(ts)
-    date=date.replace(minute=0, second=0, microsecond=0, tzinfo=timezone.utc)
+    date=pd.Timestamp(ts, unit='s', tz='utc')
+    date=date.replace(minute=0, second=0, microsecond=0)
     timestamp=date.timestamp()
     return int(timestamp)
-
 
