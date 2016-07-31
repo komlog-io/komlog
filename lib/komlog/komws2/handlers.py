@@ -19,7 +19,7 @@ from komlog.komlibs.interface.web.api import uri
 from komlog.komlibs.interface.web.api import events
 from komlog.komlibs.interface.web import status
 from komlog.komlibs.general.time import timeuuid
-from komlog.komfig import logging
+from komlog.komfig import logging, config, options
 from komlog.komws2 import auth
 
 class AgentsHandler(tornado.web.RequestHandler):
@@ -322,7 +322,7 @@ class LoginHandler(tornado.web.RequestHandler):
         else:
             response=login.login_request(username=username, password=password, pubkey=pubkey, challenge=challenge, signature=signature)
             if getattr(response,'cookie',None):
-                self.set_secure_cookie('kid',json.dumps(response.cookie), expires_days=7, httponly=True)#, secure=True)
+                self.set_secure_cookie('kid',json.dumps(response.cookie), expires_days=7, httponly=True, domain='.'+config.get(options.ROOT_DOMAIN))#, secure=True)
                 del response.cookie
             if isinstance(response.data, dict) and 'redirect' in response.data:
                 self.redirect(response.data['redirect'])

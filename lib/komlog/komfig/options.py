@@ -1,5 +1,6 @@
 MODULES = 'main:modules'
 RESTART_MODULES = 'main:restart_modules'
+ROOT_DOMAIN = 'main:domain'
 MODULE_ENABLED = 'enabled'
 MODULE_INSTANCES = 'instances'
 LOG_LEVEL='logging:level'

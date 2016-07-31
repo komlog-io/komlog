@@ -79,7 +79,9 @@ class ExceptionHandler(object):
     def __call__(self, *args, **kwargs):
         init=time.time()
         try:
+            logging.logger.debug('START processing: '+self.f.__module__+'.'+self.f.__name__)
             resp=self.f(*args, **kwargs)
+            logging.logger.debug('END processing: '+self.f.__module__+'.'+self.f.__name__)
             end=time.time()
             logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__name__,Errors.OK.name,str(init),str(end))))
             resp.error=resp.error.value

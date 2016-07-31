@@ -23,7 +23,6 @@ def agent_authenticated(method):
             logging.c_logger.info(','.join(('komlog.komwebsock.auth.agent_authenticated',e.error.name,str(now),str(now))))
             self.close(code=status.SERVICE_UNAVAILABLE)
         except Exception:
-            self.clear_cookie('kid')
             self.close(code=status.ACCESS_DENIED,reason='access denied')
             return
         else:

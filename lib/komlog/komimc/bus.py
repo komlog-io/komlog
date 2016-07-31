@@ -10,6 +10,7 @@ bus.py: Messages Bus implementation
 
 import asyncio
 import aioredis
+import traceback
 import os.path
 from komlog.komfig import logging, config, options
 from komlog.komimc import routing
@@ -30,11 +31,13 @@ class MessageBus:
 
     async def start(self):
         try:
-            self.local = await aioredis.create_redis(self.broker, encoding='utf-8')
+            self.local = await aioredis.create_pool(self.broker, encoding='utf-8')
             self.remotes[self.running_host]=self.local
-        except Exception as e:
-            logging.logger.error('Exception establishing connection with Redis Server: '+str(e))
-            raise e
+        except Exception:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
+            raise
 
     async def stop(self):
         for host in self.remotes.keys():
@@ -46,62 +49,81 @@ class MessageBus:
     async def send_message(self, komlog_message):
         try:
             addr=routing.get_address(komlog_message.type,self.module_id, self.module_instance, self.running_host)
-            await self.local.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+            with (await self.local) as redis:
+                await redis.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
             return True
         except aioredis.RedisError:
             try:
-                self.local = await aioredis.create_redis(self.broker,encoding='utf-8')
+                self.local = await aioredis.create_pool(self.broker,encoding='utf-8')
                 self.remotes[self.running_host]=self.local
-                await self.local.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+                with (await self.local) as redis:
+                    await redis.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
             except aioredis.RedisError:
                 #try on other running connections
                 connections=[item[0] for item in list(self.remotes.items()) if item[0] != self.running_host]
                 for host in connections:
                     try:
-                        await self.remotes[host].rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+                        with (await self.remotes[host]) as redis:
+                            await redis.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
                     except aioredis.RedisError:
+                        try:
+                            self.remotes[host].close()
+                        except Exception:
+                            pass
                         del self.remotes[host]
                     else:
                         return True
                 return False
             else:
                 return True
-        except Exception as e:
-            logging.logger.error('Exception sending message: '+str(e))
+        except Exception:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
             return False
 
     async def retrieve_message(self, timeout):
         try:
-            msg = await self.local.blpop(*self.addr_list, timeout=timeout)
+            with (await self.local) as redis:
+                msg = await redis.blpop(*self.addr_list, timeout=timeout)
             return msg
-        except Exception as e:
-            logging.logger.error('Exception retrieving message: '+str(e))
+        except Exception:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
             return None
 
     async def send_message_to(self, remote_addr, komlog_message):
         try:
             host,addr=remote_addr.split(':')
-            await self.remotes[host].rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+            with (await self.remotes[host]) as redis:
+                await redis.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
         except (KeyError, aioredis.RedisError):
             logging.logger.error('exception sending message to '+host+' addr: '+addr)
             try:
-                self.remotes[host] = await aioredis.create_redis(host, encoding='utf-8')
-                await self.remotes[host].rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+                self.remotes[host] = await aioredis.create_pool(host, encoding='utf-8')
+                with (await self.remotes[host]) as redis:
+                    await redis.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
                 logging.logger.error('Success in retry sending message to '+host+' addr: '+addr)
             except Exception:
                 logging.logger.error('Error in retry sending message to '+host+' addr: '+addr)
                 return False
-        except Exception as e:
-            logging.logger.error('Exception sending message: '+str(e))
+        except Exception:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
             return False
         return True
 
     async def retrieve_message_from(self, addr, timeout=0):
         try:
-            data = await self.local.blpop(addr,timeout=timeout)
+            with (await self.local) as redis:
+                data = await redis.blpop(addr,timeout=timeout)
             return data
-        except Exception as e:
-            logging.logger.error('Exception retrieving messages (timeout='+str(timeout)+') address_list: '+str(addr))
+        except Exception:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
             return None
 
 def initialize_msgbus(module_name, module_instance, hostname):
@@ -113,8 +135,10 @@ def initialize_msgbus(module_name, module_instance, hostname):
     if msgbus:
         try:
             loop.run_until_complete(msgbus.start())
-        except Exception as e:
-            logging.logger.error('Exception initializing message bus: '+str(e))
+        except Exception:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
             return False
         else:
             return True
@@ -126,8 +150,10 @@ def terminate_msgbus():
     try:
         if msgbus:
             loop.run_until_complete(msgbus.stop())
-    except Exception as e:
-        logging.logger.error('Exception stopping message bus: '+str(e))
+    except Exception:
+        ex_info=traceback.format_exc().splitlines()
+        for line in ex_info:
+            logging.logger.error(line)
         return False
     else:
         return True

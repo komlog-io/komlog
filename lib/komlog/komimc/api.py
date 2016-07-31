@@ -57,8 +57,10 @@ def process_message(message):
 async def send_response_messages(response):
     for addr,msgs in response.routed_messages.items():
         for msg in msgs:
+            logging.logger.debug('Sending message to redis server: '+msg.type)
             await msgbus.msgbus.send_message_to(addr, msg)
     for msg in response.unrouted_messages:
+        logging.logger.debug('Sending message to redis server: '+msg.type)
         await msgbus.msgbus.send_message(msg)
     return True
 
