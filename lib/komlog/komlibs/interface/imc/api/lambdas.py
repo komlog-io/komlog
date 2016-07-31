@@ -115,7 +115,7 @@ def process_message_SSDATA(message):
                 response.error=Errors.E_IIATM_SSDT_MRE
                 if session_info.imc_address is not None:
                     response.add_message(message,dest=session_info.imc_address)
-        except:
+        except Exception:
             response.error=Errors.E_IIATM_SSDT_SNF
         response.status=status.IMC_STATUS_NOT_FOUND
     else:

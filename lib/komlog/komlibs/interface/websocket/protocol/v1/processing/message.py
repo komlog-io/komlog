@@ -50,11 +50,16 @@ def _process_send_ds_data(passport, message):
     else:
         return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datasource', error=Errors.E_IWSPV1PM_PSDSD_IURI)
     try:
-        dest_dir=config.get(options.SAMPLES_RECEIVED_PATH)
-        datasourceapi.upload_datasource_data(did=did, content=json.dumps({'content':message.content,'ts':message.ts.timestamp()}),dest_dir=dest_dir)
+        date=timeuuid.get_uuid1_from_isodate(message.ts)
+        datasourceapi.store_datasource_data(did=did, date=date, content=message.content)
+        op=modop.DatasourceDataStoredOperation(did=did, date=date)
+        op_msgs=operation.process_operation(op)
+        for msg in op_msgs:
+            msgs.append(msg)
+        msgs.append(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATASOURCE,'id':did,'uri':message.uri}],date=date))
     except:
         if new_datasource:
-            deleteapi.delete_datasource(did=datasource['did'])
+            deleteapi.delete_datasource(did=did)
         raise
     else:
         if new_datasource:
@@ -66,7 +71,7 @@ def _process_send_ds_data(passport, message):
             except:
                 deleteapi.delete_datasource(did=datasource['did'])
                 raise
-        resp = Response(status=status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+        resp = Response(status=status.MESSAGE_EXECUTION_OK)
         for msg in msgs:
             resp.add_message(msg)
         return resp

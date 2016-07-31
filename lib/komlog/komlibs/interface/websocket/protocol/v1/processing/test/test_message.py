@@ -203,40 +203,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         authorization.authorize_request = auth_req_bck
         datasourceapi.create_datasource = ds_creation_bck
 
-    def test__process_send_ds_data_failure_error_path_not_found(self):
-        ''' _process_send_ds_data should fail if path to store data is not found '''
-        username='test_process_send_ds_data_failure_error_path_not_found'
-        password='password_for_the_user'
-        email=username+'@komlog.org'
-        user_reg=userapi.create_user(username=username, password=password, email=email)
-        self.assertIsNotNone(user_reg)
-        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
-        agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='agent_version'
-        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
-        self.assertIsNotNone(agent)
-        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.ds','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
-        auth_req_bck=authorization.authorize_request
-        option_bck=options.SAMPLES_RECEIVED_PATH
-        def auth_mock(request, passport):
-            return True
-        option_mock='anonexistentoption:intheconfigfile'
-        authorization.authorize_request = auth_mock
-        options.SAMPLES_RECEIVED_PATH=option_mock
-        resp=message._process_send_ds_data(psp, msg)
-        self.assertTrue(isinstance(resp, modresp.Response))
-        self.assertEqual(resp.error, gesterrors.E_GDA_UDD_IDD.value)
-        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
-        self.assertEqual(resp.routed_messages,{})
-        self.assertEqual(resp.unrouted_messages,[])
-        authorization.authorize_request = auth_req_bck
-        options.SAMPLES_RECEIVED_PATH=option_bck
-        uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
-        self.assertIsNone(uri_info)
-
     def test__process_send_ds_data_failure_processing_operation_exception(self):
         ''' _process_send_ds_data should fail if processing the post operation exception '''
         username='test_process_send_ds_data_failure_processing_operation_exception'
@@ -269,6 +235,40 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNone(uri_info)
 
+    def test__process_send_ds_data_failure_storing_data(self):
+        ''' _process_send_ds_data should fail if an error occurs while storing data '''
+        username='test_process_send_ds_data_failure_storing_data'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.ds','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
+        auth_req_bck=authorization.authorize_request
+        storing_bck=datasourceapi.store_datasource_data
+        def auth_mock(request, passport):
+            return True
+        def storing_mock(op):
+            uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
+            self.assertIsNotNone(uri_info)
+            raise Exception()
+        authorization.authorize_request = auth_mock
+        datasourceapi.store_datasource_data=storing_mock
+        resp=message._process_send_ds_data(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_ERROR)
+        authorization.authorize_request = auth_req_bck
+        datasourceapi.store_datasource_data=storing_bck
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
+        self.assertIsNone(uri_info)
+
     def test__process_send_ds_data_success_ds_did_not_exist_previously(self):
         ''' _process_send_ds_data should succeed and create the ds '''
         username='test_process_send_ds_data_success_ds_did_not_exist_previously'
@@ -290,15 +290,18 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.OK.value)
-        self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNotNone(uri_info)
         self.assertNotEqual(resp.unrouted_messages,[])
         self.assertEqual(resp.routed_messages,{})
         expected_messages={
-            messages.UPDATE_QUOTES_MESSAGE:1,
+            messages.UPDATE_QUOTES_MESSAGE:2,
             messages.NEW_DS_WIDGET_MESSAGE:1,
-            messages.USER_EVENT_MESSAGE:1
+            messages.USER_EVENT_MESSAGE:1,
+            messages.GENERATE_TEXT_SUMMARY_MESSAGE:1,
+            messages.MAP_VARS_MESSAGE:1,
+            messages.URIS_UPDATED_MESSAGE:1,
         }
         retrieved_messages={}
         msgs=resp.unrouted_messages
@@ -330,21 +333,21 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         operation_bck=operation.process_operation
         def auth_mock(request, passport, did):
             return True
-        def operation_mock(op):
-            return True
         authorization.authorize_request = auth_mock
-        operation.process_operation=operation_mock
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
-        self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
         self.assertEqual(resp.error, Errors.OK.value)
         authorization.authorize_request = auth_req_bck
-        operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNotNone(uri_info)
-        self.assertEqual(resp.unrouted_messages,[])
+        self.assertNotEqual(resp.unrouted_messages,[])
         self.assertEqual(resp.routed_messages,{})
         expected_messages={
+            messages.UPDATE_QUOTES_MESSAGE:1,
+            messages.GENERATE_TEXT_SUMMARY_MESSAGE:1,
+            messages.MAP_VARS_MESSAGE:1,
+            messages.URIS_UPDATED_MESSAGE:1,
         }
         retrieved_messages={}
         msgs=resp.unrouted_messages
