@@ -56,7 +56,6 @@ def _process_send_ds_data(passport, message):
         op_msgs=operation.process_operation(op)
         for msg in op_msgs:
             msgs.append(msg)
-        msgs.append(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATASOURCE,'id':did,'uri':message.uri}],date=date))
     except:
         if new_datasource:
             deleteapi.delete_datasource(did=did)
@@ -71,6 +70,9 @@ def _process_send_ds_data(passport, message):
             except:
                 deleteapi.delete_datasource(did=datasource['did'])
                 raise
+            msgs.append(messages.HookNewUrisMessage(uid=passport.uid, uris=[{'type':vertex.DATASOURCE,'id':did,'uri':message.uri}],date=date))
+        else:
+            msgs.append(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATASOURCE,'id':did,'uri':message.uri}],date=date))
         resp = Response(status=status.MESSAGE_EXECUTION_OK)
         for msg in msgs:
             resp.add_message(msg)
@@ -95,7 +97,7 @@ def _process_send_dp_data(passport, message):
             pid=datapoint['pid']
             try:
                 datapointapi.store_user_datapoint_value(pid=pid,date=date,content=message.content)
-                msgs.append(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATAPOINT,'id':pid,'uri':message.uri}],date=date))
+                msgs.append(messages.HookNewUrisMessage(uid=passport.uid, uris=[{'type':vertex.DATAPOINT,'id':pid,'uri':message.uri}],date=date))
                 op=modop.NewUserDatapointOperation(uid=passport.uid,aid=passport.aid,pid=pid)
                 op_msgs=operation.process_operation(op)
                 for msg in op_msgs:
@@ -175,6 +177,7 @@ def _process_send_multi_data(passport, message):
     #store content
     try:
         updated_uris=[]
+        updated_new_uris=[]
         for item in existing_uris:
             if item['type'] == vertex.DATAPOINT:
                 pid=item['id']
@@ -187,12 +190,15 @@ def _process_send_multi_data(passport, message):
         for item in new_ds:
             did=item['did']
             datasourceapi.store_datasource_data(did=did, date=date, content=item['content'])
-            updated_uris.append({'uri':item['uri'],'type':vertex.DATASOURCE,'id':did})
+            updated_new_uris.append({'uri':item['uri'],'type':vertex.DATASOURCE,'id':did})
         for item in new_dp:
             pid=item['pid']
             datapointapi.store_user_datapoint_value(pid=pid,date=date,content=item['content'])
-            updated_uris.append({'uri':item['uri'],'type':vertex.DATAPOINT,'id':pid})
-        msgs.append(messages.UrisUpdatedMessage(uris=updated_uris, date=date))
+            updated_new_uris.append({'uri':item['uri'],'type':vertex.DATAPOINT,'id':pid})
+        if len(updated_uris)>0:
+            msgs.append(messages.UrisUpdatedMessage(uris=updated_uris, date=date))
+        if len(updated_new_uris)>0:
+            msgs.append(messages.HookNewUrisMessage(uid=passport.uid, uris=updated_new_uris, date=date))
     except:
         for item in new_ds:
             deleteapi.delete_datasource(did=ds['did'])
@@ -247,8 +253,9 @@ def _process_send_multi_data(passport, message):
 def _process_hook_to_uri(passport, message):
     message = modmsg.HookToUri.load_from_dict(message)
     uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
-    if not uri_info:
-        return Response(status=status.RESOURCE_NOT_FOUND, reason='uri does not exist', error=Errors.E_IWSPV1PM_PHTU_UNF)
+    if not uri_info or uri_info['type'] == vertex.VOID:
+        userapi.register_pending_hook(uid=passport.uid, uri=message.uri, sid=passport.sid)
+        return Response(status=status.MESSAGE_EXECUTION_OK, reason='Hooked, but uri does not exist yet')
     elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
         return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PHTU_ONA)
     else:
@@ -258,14 +265,15 @@ def _process_hook_to_uri(passport, message):
         elif uri_info['type'] == vertex.DATAPOINT:
             authorization.authorize_request(request=Requests.HOOK_TO_DATAPOINT,passport=passport,pid=uri_info['id'])
             datapointapi.hook_to_datapoint(pid=uri_info['id'], sid=passport.sid)
-    return Response(status=status.MESSAGE_EXECUTION_OK)
+    return Response(status=status.MESSAGE_EXECUTION_OK, reason='Hooked successfully')
 
 @exceptions.ExceptionHandler
 def _process_unhook_from_uri(passport, message):
     message = modmsg.UnHookFromUri.load_from_dict(message)
     uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
-    if not uri_info:
-        return Response(status=status.RESOURCE_NOT_FOUND, reason='uri does not exist', error=Errors.E_IWSPV1PM_PUHFU_UNF)
+    if not uri_info or uri_info['type'] == vertex.VOID:
+        userapi.delete_pending_hook(uid=passport.uid, uri=message.uri, sid=passport.sid)
+        return Response(status=status.MESSAGE_EXECUTION_OK, reason='Unhooked, but uri does not exist yet')
     elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
         return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PUHFU_ONA)
     else:

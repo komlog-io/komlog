@@ -108,7 +108,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertTrue(deleteapi.delete_datasource(did=did))
 
     def test_delete_datasource_success(self):
-        ''' delete_datasource should succeed and delete datasource completely from db, even its associated widgets and datapoints, and these from its dashboards '''
+        ''' delete_datasource should succeed and delete datasource completely from db, even its associated widgets and datapoints, and these from its dashboards. it also has to register pending hooks if it had associated hooks '''
         uid=self.user['uid']
         agentname='test_delete_datasource_success'
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
@@ -118,6 +118,8 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         aid=agent['aid']
         datasourcename='test_delete_datasource_success'
         datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        sid=uuid.uuid4()
+        self.assertTrue(datasourceapi.hook_to_datasource(did=datasource['did'],sid=sid))
         date=timeuuid.uuid1()
         content='delete_datasource_success content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'], date=date, content=content))
@@ -136,12 +138,16 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertEqual(widget['wid'],widget2['wid'])
         self.assertEqual(widget['did'],widget2['did'])
         self.assertEqual(widget['type'],widget2['type'])
+        hooks=datasourceapi.get_datasource_hooks(did=datasource['did'])
+        self.assertEqual(hooks,[sid])
         self.assertTrue(deleteapi.delete_datasource(did=datasource['did']))
         self.assertIsNone(cassapidatasource.get_datasource(did=datasource['did']))
         self.assertIsNone(cassapidatasource.get_datasource_stats(did=datasource['did']))
         self.assertEqual(cassapidatasource.get_datasource_data(did=datasource['did'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
         self.assertEqual(cassapidatasource.get_datasource_maps(did=datasource['did'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
         self.assertEqual(cassapidatasource.get_datasource_text_summaries(did=datasource['did'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
+        self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[])
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=datasource['uid'],uri=datasource['datasourcename']),[sid])
 
     def test_delete_datapoint_failure_bad_parameters(self):
         ''' delete_datapoint should fail if we pass incorrect parameters '''
@@ -232,6 +238,45 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertEqual(cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid']),[])
         self.assertEqual(cassapidatapoint.get_datapoint_data(pid=datapoint['pid'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
         self.assertEqual(cassapidatasource.get_datasource_novelty_detectors_for_datapoint(pid=datapoint['pid'], did=datapoint['did']),[])
+
+    def test_delete_datapoint_success_register_pending_hooks(self):
+        ''' delete_datapoint should succeed, and register any hook is had as pending hooks '''
+        uid=self.user['uid']
+        agentname='test_delete_datapoint_success_register_pending_hooks'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename='test_delete_datapoint_success_register_pending_hooks'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='content 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 8 and length 2
+        position=8
+        length=2
+        datapointname='datapoint'
+        datapoint=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        sid=uuid.uuid4()
+        self.assertTrue(datapointapi.hook_to_datapoint(pid=datapoint['pid'],sid=sid))
+        widget=widgetapi.new_widget_datapoint(uid=uid, pid=datapoint['pid'])
+        self.assertTrue(datapointapi.store_datasource_values(did=did, date=date))
+        data=datapointapi.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        hooks=datapointapi.get_datapoint_hooks(pid=datapoint['pid'])
+        self.assertEqual(hooks,[sid])
+        self.assertTrue(deleteapi.delete_datapoint(pid=datapoint['pid']))
+        self.assertIsNone(cassapidatapoint.get_datapoint(pid=datapoint['pid']))
+        self.assertIsNone(cassapidatapoint.get_datapoint_stats(pid=datapoint['pid']))
+        self.assertIsNone(cassapiwidget.get_widget(wid=widget['wid']))
+        self.assertEqual(cassapidatapoint.get_datapoint_dtree_positives(pid=datapoint['pid']),[])
+        self.assertEqual(cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid']),[])
+        self.assertEqual(cassapidatapoint.get_datapoint_data(pid=datapoint['pid'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
+        self.assertEqual(cassapidatasource.get_datasource_novelty_detectors_for_datapoint(pid=datapoint['pid'], did=datapoint['did']),[])
+        self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[])
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=datapoint['uid'], uri=datapoint['datapointname']),[sid])
 
     def test_delete_widget_failure_bad_parameters(self):
         ''' delete_widget should fail if we pass incorrect parameters '''

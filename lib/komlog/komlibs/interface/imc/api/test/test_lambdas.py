@@ -13,6 +13,9 @@ from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
+from komlog.komlibs.gestaccount.common import delete as deleteapi
+from komlog.komlibs.gestaccount import exceptions as gestexcept
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.interface.web.model import operation
 from komlog.komlibs.interface.imc.api import lambdas
@@ -724,6 +727,295 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.routed_messages[session_info1.imc_address][1].data
         pairs = zip(sorted(recv_data, key=lambda x: x['uri']), sorted(data, key=lambda x: x['uri']))
         self.assertFalse(any(x != y for x,y in pairs))
+
+    def test_process_message_HOOKNEW_success_no_new_uris(self):
+        ''' process_message_HOOKNEW should succeed if there is no new uri '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        uris=[]
+        message=messages.HookNewUrisMessage(uid=uid, uris=uris, date=date)
+        response=lambdas.process_message_HOOKNEW(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.message_type, messages.HOOK_NEW_URIS_MESSAGE)
+        self.assertEqual(response.message_params, message.serialized_message)
+        self.assertEqual(response.routed_messages, {})
+        self.assertEqual(response.unrouted_messages, [])
+
+    def test_process_message_HOOKNEW_success_non_existent_user(self):
+        ''' process_message_HOOKNEW should succeed if user does not exist '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        uris=[
+            {'uri':'datapoint.uri','type':vertex.DATAPOINT,'id':uuid.uuid4()},
+            {'uri':'datasource.uri','type':vertex.DATASOURCE,'id':uuid.uuid4()},
+        ]
+        message=messages.HookNewUrisMessage(uid=uid, uris=uris, date=date)
+        response=lambdas.process_message_HOOKNEW(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.message_type, messages.HOOK_NEW_URIS_MESSAGE)
+        self.assertEqual(response.message_params, message.serialized_message)
+        self.assertEqual(response.routed_messages, {})
+        self.assertEqual(response.unrouted_messages, [])
+
+    def test_process_message_HOOKNEW_success_uri_exist_but_no_pending_hooks_registered(self):
+        ''' process_message_HOOKNEW should succeed if uri exist and no pending hooks existed,
+            but no action is requested '''
+        username='test_process_message_hooknew_success_uri_exist_but_no_pending_hooks_registered'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid,aid=aid,datasourcename=datasource_uri)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        uris=[
+            {'uri':datapoint['datapointname'],'type':vertex.DATAPOINT,'id':pid},
+            {'uri':datasource['datasourcename'],'type':vertex.DATASOURCE,'id':did},
+        ]
+        message=messages.HookNewUrisMessage(uid=uid, uris=uris, date=date)
+        response=lambdas.process_message_HOOKNEW(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.message_type, messages.HOOK_NEW_URIS_MESSAGE)
+        self.assertEqual(response.message_params, message.serialized_message)
+        self.assertEqual(response.routed_messages, {})
+        self.assertEqual(response.unrouted_messages, [])
+
+    def test_process_message_HOOKNEW_success_uri_exist_and_pending_hooks_registered(self):
+        ''' process_message_HOOKNEW should succeed if uri exist and pending hooks existed,
+            sending a UrisUpdatedMessage for the hooks '''
+        username='test_process_message_hooknew_success_uri_exist_and_pending_hooks_registered'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid,aid=aid,datasourcename=datasource_uri)
+        did=datasource['did']
+        sid=uuid.uuid4()
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=datapoint['datapointname'],sid=sid))
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=datasource['datasourcename'],sid=sid))
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datapoint['datapointname']),[sid])
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datasource['datasourcename']),[sid])
+        self.assertEqual(datapointapi.get_datapoint_hooks(pid=pid),[])
+        self.assertEqual(datasourceapi.get_datasource_hooks(did=did),[])
+        date=timeuuid.uuid1()
+        uris=[
+            {'uri':datapoint['datapointname'],'type':vertex.DATAPOINT,'id':pid},
+            {'uri':datasource['datasourcename'],'type':vertex.DATASOURCE,'id':did},
+        ]
+        message=messages.HookNewUrisMessage(uid=uid, uris=uris, date=date)
+        response=lambdas.process_message_HOOKNEW(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.message_type, messages.HOOK_NEW_URIS_MESSAGE)
+        self.assertEqual(response.message_params, message.serialized_message)
+        self.assertEqual(response.routed_messages, {})
+        self.assertEqual(len(response.unrouted_messages), 1)
+        self.assertEqual(response.unrouted_messages[0].type, messages.URIS_UPDATED_MESSAGE)
+        self.assertEqual(sorted(response.unrouted_messages[0].uris, key=lambda x: x['uri']), sorted(uris, key=lambda x:x['uri']))
+        self.assertEqual(response.unrouted_messages[0].date, date)
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datapoint['datapointname']),[])
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datasource['datasourcename']),[])
+        self.assertEqual(datapointapi.get_datapoint_hooks(pid=pid),[sid])
+        self.assertEqual(datasourceapi.get_datasource_hooks(did=did),[sid])
+
+    def test_process_message_HOOKNEW_success_some_uris_does_not_exist_and_have_pending_hooks(self):
+        ''' process_message_HOOKNEW should detect non existent uris with pending hooks,
+            by not requesting any accion over them. Every uri in a HookNewUris message should
+            exist, but some race conditions could happen that make this situation to consider '''
+        username='test_process_message_hooknew_success_some_uri_does_not_exist_and_have_pending_hooks'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid,aid=aid,datasourcename=datasource_uri)
+        did=datasource['did']
+        sid=uuid.uuid4()
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=datapoint['datapointname'],sid=sid))
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=datasource['datasourcename'],sid=sid))
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datapoint['datapointname']),[sid])
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datasource['datasourcename']),[sid])
+        self.assertEqual(datapointapi.get_datapoint_hooks(pid=pid),[])
+        self.assertEqual(datasourceapi.get_datasource_hooks(did=did),[])
+        self.assertTrue(deleteapi.delete_datapoint(pid=pid))
+        date=timeuuid.uuid1()
+        uris=[
+            {'uri':datapoint['datapointname'],'type':vertex.DATAPOINT,'id':pid},
+            {'uri':datasource['datasourcename'],'type':vertex.DATASOURCE,'id':did},
+        ]
+        message=messages.HookNewUrisMessage(uid=uid, uris=uris, date=date)
+        response=lambdas.process_message_HOOKNEW(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.HOOK_NEW_URIS_MESSAGE)
+        self.assertEqual(response.message_params, message.serialized_message)
+        self.assertEqual(response.routed_messages, {})
+        self.assertEqual(len(response.unrouted_messages), 1)
+        self.assertEqual(response.unrouted_messages[0].type, messages.URIS_UPDATED_MESSAGE)
+        self.assertEqual(response.unrouted_messages[0].uris,[{'uri':datasource['datasourcename'],'type':vertex.DATASOURCE,'id':did}])
+        self.assertEqual(response.unrouted_messages[0].date, date)
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datapoint['datapointname']),[sid])
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datasource['datasourcename']),[])
+        with self.assertRaises(gestexcept.DatapointNotFoundException) as cm:
+            datapointapi.get_datapoint_hooks(pid=pid)
+        self.assertEqual(cm.exception.error, gesterrors.E_GPA_GDPH_DPNF)
+        self.assertEqual(datasourceapi.get_datasource_hooks(did=did),[sid])
+
+    def test_process_message_HOOKNEW_success_some_uris_does_not_exist_and_have_pending_hooks_ds(self):
+        ''' process_message_HOOKNEW should detect non existent uris with pending hooks,
+            by not requesting any accion over them. Every uri in a HookNewUris message should
+            exist, but some race conditions could happen that make this situation to consider '''
+        username='test_process_message_hooknew_success_some_uri_does_not_exist_and_have_pending_hooks_ds'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid,aid=aid,datasourcename=datasource_uri)
+        did=datasource['did']
+        sid=uuid.uuid4()
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=datapoint['datapointname'],sid=sid))
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=datasource['datasourcename'],sid=sid))
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datapoint['datapointname']),[sid])
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datasource['datasourcename']),[sid])
+        self.assertEqual(datapointapi.get_datapoint_hooks(pid=pid),[])
+        self.assertEqual(datasourceapi.get_datasource_hooks(did=did),[])
+        self.assertTrue(deleteapi.delete_datasource(did=did))
+        date=timeuuid.uuid1()
+        uris=[
+            {'uri':datapoint['datapointname'],'type':vertex.DATAPOINT,'id':pid},
+            {'uri':datasource['datasourcename'],'type':vertex.DATASOURCE,'id':did},
+        ]
+        message=messages.HookNewUrisMessage(uid=uid, uris=uris, date=date)
+        response=lambdas.process_message_HOOKNEW(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.HOOK_NEW_URIS_MESSAGE)
+        self.assertEqual(response.message_params, message.serialized_message)
+        self.assertEqual(response.routed_messages, {})
+        self.assertEqual(len(response.unrouted_messages), 1)
+        self.assertEqual(response.unrouted_messages[0].type, messages.URIS_UPDATED_MESSAGE)
+        self.assertEqual(response.unrouted_messages[0].uris,[{'uri':datapoint['datapointname'],'type':vertex.DATAPOINT,'id':pid}])
+        self.assertEqual(response.unrouted_messages[0].date, date)
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datapoint['datapointname']),[])
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datasource['datasourcename']),[sid])
+        with self.assertRaises(gestexcept.DatasourceNotFoundException) as cm:
+            datasourceapi.get_datasource_hooks(did=did)
+        self.assertEqual(cm.exception.error, gesterrors.E_GDA_GDSH_DSNF)
+        self.assertEqual(datapointapi.get_datapoint_hooks(pid=pid),[sid])
+
+    def test_process_message_HOOKNEW_success_uris_do_not_exist_and_have_pending_hooks(self):
+        ''' process_message_HOOKNEW should detect non existent uris with pending hooks,
+            by not requesting any accion over them. Every uri in a HookNewUris message should
+            exist, but some race conditions could happen that make this situation to consider '''
+        username='test_process_message_hooknew_success_uris_do_not_exist_and_have_pending_hooks'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid,aid=aid,datasourcename=datasource_uri)
+        did=datasource['did']
+        sid=uuid.uuid4()
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=datapoint['datapointname'],sid=sid))
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=datasource['datasourcename'],sid=sid))
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datapoint['datapointname']),[sid])
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datasource['datasourcename']),[sid])
+        self.assertEqual(datapointapi.get_datapoint_hooks(pid=pid),[])
+        self.assertEqual(datasourceapi.get_datasource_hooks(did=did),[])
+        self.assertTrue(deleteapi.delete_datasource(did=did))
+        self.assertTrue(deleteapi.delete_datapoint(pid=pid))
+        date=timeuuid.uuid1()
+        uris=[
+            {'uri':datapoint['datapointname'],'type':vertex.DATAPOINT,'id':pid},
+            {'uri':datasource['datasourcename'],'type':vertex.DATASOURCE,'id':did},
+        ]
+        message=messages.HookNewUrisMessage(uid=uid, uris=uris, date=date)
+        response=lambdas.process_message_HOOKNEW(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.HOOK_NEW_URIS_MESSAGE)
+        self.assertEqual(response.message_params, message.serialized_message)
+        self.assertEqual(response.routed_messages, {})
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datapoint['datapointname']),[sid])
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid,uri=datasource['datasourcename']),[sid])
+        with self.assertRaises(gestexcept.DatasourceNotFoundException) as cm:
+            datasourceapi.get_datasource_hooks(did=did)
+        self.assertEqual(cm.exception.error, gesterrors.E_GDA_GDSH_DSNF)
+        with self.assertRaises(gestexcept.DatapointNotFoundException) as cm:
+            datapointapi.get_datapoint_hooks(pid=pid)
+        self.assertEqual(cm.exception.error, gesterrors.E_GPA_GDPH_DPNF)
 
     def test_process_message_CLSHOOKS_success_no_items(self):
         ''' process_message_CLSHOOKS should succeed if there is no item to clear '''

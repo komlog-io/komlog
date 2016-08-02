@@ -11,6 +11,7 @@ from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.gestaccount import exceptions as gestexcept
+from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.graph.relations import vertex
@@ -84,6 +85,36 @@ def process_message_URISUPDT(message):
     return response
 
 @exceptions.ExceptionHandler
+def process_message_HOOKNEW(message):
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    uid=message.uid
+    uris=message.uris
+    date=message.date
+    hooked=[]
+    for item in uris:
+        sids=userapi.get_uri_pending_hooks(uid=uid, uri=item['uri'])
+        if len(sids)>0:
+            try:
+                if item['type'] == vertex.DATASOURCE:
+                    for sid in sids:
+                        datasourceapi.hook_to_datasource(did=item['id'],sid=sid)
+                elif item['type'] == vertex.DATAPOINT:
+                    for sid in sids:
+                        datapointapi.hook_to_datapoint(pid=item['id'],sid=sid)
+            except (
+                gestexcept.DatapointNotFoundException,
+                gestexcept.DatasourceNotFoundException):
+                pass
+            else:
+                hooked.append(item)
+                userapi.delete_uri_pending_hooks(uid=uid, uri=item['uri'])
+    if len(hooked)>0:
+        msg=messages.UrisUpdatedMessage(uris=hooked, date=date)
+        response.add_message(msg)
+    response.status=status.IMC_STATUS_OK
+    return response
+
+@exceptions.ExceptionHandler
 def process_message_CLSHOOKS(message):
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
     sid=message.sid
@@ -93,6 +124,7 @@ def process_message_CLSHOOKS(message):
             datasourceapi.unhook_from_datasource(did=item[0], sid=sid)
         elif item[1] == vertex.DATAPOINT:
             datapointapi.unhook_from_datapoint(pid=item[0], sid=sid)
+    userapi.delete_session_pending_hooks(sid=sid)
     response.status=status.IMC_STATUS_OK
     return response
 

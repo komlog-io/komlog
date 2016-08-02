@@ -120,6 +120,23 @@ class Errors(Enum):
     E_GUA_RP_EUDB   = 180 #: reset_password. error updating database.
     E_GUA_RP_EGPWD  = 181 #: reset_password. error generating new password.
 
+    E_GUA_RPH_IUID  = 200 #: register_pending_hook. invalid uid
+    E_GUA_RPH_IURI  = 201 #: register_pending_hook. invalid uri
+    E_GUA_RPH_ISID  = 202 #: register_pending_hook. invalid sid
+    E_GUA_RPH_UNF   = 203 #: register_pending_hook. user not found
+
+    E_GUA_GUPH_IUID  = 210 #: get_uri_pending_hooks. invalid uid
+    E_GUA_GUPH_IURI  = 211 #: get_uri_pending_hooks. invalid uri
+
+    E_GUA_DSPH_ISID  = 220 #: delete_session_pending_hooks. invalid sid
+
+    E_GUA_DUPH_IUID  = 230 #: delete_uri_pending_hooks. invalid uid
+    E_GUA_DUPH_IURI  = 231 #: delete_uri_pending_hooks. invalid uri
+
+    E_GUA_DPH_IUID   = 240 #: delete_pending_hook. invalid uid
+    E_GUA_DPH_IURI   = 241 #: delete_pending_hook. invalid uri
+    E_GUA_DPH_ISID   = 242 #: delete_pending_hook. invalid sid
+
 #gestaccount agent api
 
     E_GAA_AUA_IA    = 2000

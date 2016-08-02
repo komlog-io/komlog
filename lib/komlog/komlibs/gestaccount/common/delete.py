@@ -19,6 +19,7 @@ from komlog.komcass.api import interface as cassapiiface
 from komlog.komcass.api import quote as cassapiquote
 from komlog.komcass.api import ticket as cassapiticket
 from komlog.komcass.api import permission as cassapiperm
+from komlog.komcass.model.orm import user as ormuser
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.gestaccount.widget import types as widgettypes
@@ -53,6 +54,7 @@ def delete_user(uid):
         delete_datasource(did=did)
     cassapiuser.delete_user(username=user.username)
     cassapiuser.delete_signup_info(username=user.username)
+    cassapiuser.delete_pending_hooks(uid=uid)
     inv_req=cassapiuser.get_invitation_request(email=user.email)
     if inv_req:
         cassapiuser.delete_invitation_request(email=user.email)
@@ -94,9 +96,17 @@ def delete_agent(aid):
     return True
 
 def delete_datasource(did, delete_datapoints=True):
-    ''' Delete all datasource config and data, related widgets, and datapoints too '''
+    ''' Delete all datasource config and data, related widgets, and datapoints too.
+        If datasource has hooks, we register pending hooks to the datasource uri. '''
     if not args.is_valid_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_GCD_DDS_ID)
+    datasource=cassapidatasource.get_datasource(did=did)
+    hooks=cassapidatasource.get_datasource_hooks_sids(did=did)
+    if len(hooks)>0 and datasource is not None:
+        for sid in hooks:
+            pending_hook=ormuser.PendingHook(uid=datasource.uid, uri=datasource.datasourcename, sid=sid)
+            cassapiuser.insert_pending_hook(pending_hook)
+    graphuri.dissociate_vertex(ido=did)
     pids=cassapidatapoint.get_datapoints_pids(did=did)
     widget=cassapiwidget.get_widget_ds(did=did)
     cassapidatasource.delete_datasource(did=did)
@@ -117,14 +127,19 @@ def delete_datasource(did, delete_datapoints=True):
             dissociate_datapoint(pid=pid)
     if widget:
         delete_widget(wid=widget.wid)
-    graphuri.dissociate_vertex(ido=did)
     return True
 
 def delete_datapoint(pid):
-    ''' Delete all datapoint info. '''
+    ''' Delete all datapoint info. 
+        If datapoint has hooks, we register pending hooks to the datapoint uri. '''
     if not args.is_valid_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_GCD_DDP_IP)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    hooks=cassapidatapoint.get_datapoint_hooks_sids(pid=pid)
+    if len(hooks)>0 and datapoint is not None:
+        for sid in hooks:
+            pending_hook=ormuser.PendingHook(uid=datapoint.uid,uri=datapoint.datapointname, sid=sid)
+            cassapiuser.insert_pending_hook(pending_hook)
     widget=cassapiwidget.get_widget_dp(pid=pid)
     if widget:
         related_widgets=graphkin.get_kin_widgets(ido=widget.wid)
@@ -133,6 +148,7 @@ def delete_datapoint(pid):
             if rel_w_conf and rel_w_conf.type==widgettypes.MULTIDP:
                 cassapiwidget.delete_datapoint_from_multidp(wid=related_widget['wid'],pid=pid)
         delete_widget(wid=widget.wid)
+    graphuri.dissociate_vertex(ido=pid)
     if datapoint and datapoint.did:
         cassapidatasource.delete_datasource_novelty_detector_for_datapoint(did=datapoint.did,pid=pid)
         fromdate=timeuuid.LOWEST_TIME_UUID
@@ -147,7 +163,6 @@ def delete_datapoint(pid):
     cassapidatapoint.delete_datapoint_dtree_negatives(pid=pid)
     cassapidatapoint.delete_datapoint_data(pid=pid)
     cassapiquote.delete_datapoint_quotes(pid=pid)
-    graphuri.dissociate_vertex(ido=pid)
     return True
 
 def dissociate_datapoint_from_datasource(pid):

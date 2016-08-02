@@ -694,3 +694,222 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertTrue(userapi.reset_password(code=code, password=new_password))
         self.assertTrue(userapi.auth_user(username, new_password))
 
+    def test_register_pending_hook_failure_invalid_uid(self):
+        ''' register_pending_hook should fail if uid is invalid '''
+        uids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'username', uuid.uuid4().hex, uuid.uuid1()]
+        uri='uri'
+        sid=uuid.uuid4()
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.register_pending_hook(uid=uid, uri=uri, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_RPH_IUID)
+
+    def test_register_pending_hook_failure_invalid_uri(self):
+        ''' register_pending_hook should fail if uri is invalid '''
+        uris=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), ' invalid uri ', uuid.uuid4(), uuid.uuid1()]
+        uid=uuid.uuid4()
+        sid=uuid.uuid4()
+        for uri in uris:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.register_pending_hook(uid=uid, uri=uri, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_RPH_IURI)
+
+    def test_register_pending_hook_failure_invalid_sid(self):
+        ''' register_pending_hook should fail if sid is invalid '''
+        sids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'username', uuid.uuid4().hex, uuid.uuid1()]
+        uri='uri'
+        uid=uuid.uuid4()
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.register_pending_hook(uid=uid, uri=uri, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_RPH_ISID)
+
+    def test_register_pending_hook_failure_non_existent_user(self):
+        ''' register_pending_hook should fail if user does not exist '''
+        uri='uri'
+        uid=uuid.uuid4()
+        sid=uuid.uuid4()
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            userapi.register_pending_hook(uid=uid, uri=uri, sid=sid)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_RPH_UNF)
+
+    def test_register_pending_hook_success(self):
+        ''' register_pending_hook should succeed and insert the pending hook successfully '''
+        uri='uri'
+        uid=self.userinfo['uid']
+        sid=uuid.uuid4()
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=uri, sid=sid))
+        pending_hooks=userapi.get_uri_pending_hooks(uid=uid, uri=uri)
+        self.assertEqual(pending_hooks, [sid])
+
+    def test_get_uri_pending_hooks_failure_invalid_uid(self):
+        ''' get_uri_pending_hooks should fail if uid is invalid '''
+        uids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'username', uuid.uuid4().hex, uuid.uuid1()]
+        uri='uri'
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.get_uri_pending_hooks(uid=uid, uri=uri)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_GUPH_IUID)
+
+    def test_get_uri_pending_hooks_failure_invalid_uri(self):
+        ''' get_uri_pending_hooks should fail if uri is invalid '''
+        uris=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'invalid uri ', uuid.uuid4(), uuid.uuid1()]
+        uid=uuid.uuid4()
+        for uri in uris:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.get_uri_pending_hooks(uid=uid, uri=uri)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_GUPH_IURI)
+
+    def test_get_uri_pending_hooks_success_none_found(self):
+        ''' get_uri_pending_hooks should return an empty list if no pending hooks are found '''
+        uid=uuid.uuid4()
+        uri='test_get_uri_pending_hooks_success_none_found'
+        self.assertEqual(userapi.get_uri_pending_hooks(uid=uid, uri=uri),[])
+
+    def test_get_uri_pending_hooks_success_some_found(self):
+        ''' get_uri_pending_hooks should return a list with the pending hooks sids '''
+        username = 'test_get_uri_pending_hooks_success_some_found'
+        password = 'password'
+        email = username+'@komlog.org'
+        userinfo = userapi.create_user(username=username, password=password, email=email)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        self.assertIsNotNone(userinfo['code'])
+        uri='uri'
+        uid=userinfo['uid']
+        sid=uuid.uuid4()
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=uri, sid=sid))
+        pending_hooks=userapi.get_uri_pending_hooks(uid=uid, uri=uri)
+        self.assertEqual(pending_hooks, [sid])
+
+    def test_delete_session_pending_hooks_failure_invalid_sid(self):
+        ''' delete_session_pending_hooks should fail if sid is invalid '''
+        sids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'username', uuid.uuid4().hex, uuid.uuid1()]
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.delete_session_pending_hooks(sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_DSPH_ISID)
+
+    def test_delete_session_pending_hooks_success_no_previous_hook_existed(self):
+        ''' delete_session_pending_hooks should succeed even if no previous hook existed '''
+        sid=uuid.uuid4()
+        self.assertTrue(userapi.delete_session_pending_hooks(sid=sid))
+
+    def test_delete_session_pending_hooks_success_previous_hook_existed(self):
+        ''' delete_session_pending_hooks should succeed if hook existed '''
+        username = 'test_delete_session_pending_hooks_success_previous_hook_existed'
+        password = 'password'
+        email = username+'@komlog.org'
+        userinfo = userapi.create_user(username=username, password=password, email=email)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        self.assertIsNotNone(userinfo['code'])
+        uri='uri'
+        uid=userinfo['uid']
+        sid=uuid.uuid4()
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=uri, sid=sid))
+        pending_hooks=userapi.get_uri_pending_hooks(uid=uid, uri=uri)
+        self.assertEqual(pending_hooks, [sid])
+        self.assertTrue(userapi.delete_session_pending_hooks(sid=sid))
+        pending_hooks=userapi.get_uri_pending_hooks(uid=uid, uri=uri)
+        self.assertEqual(pending_hooks, [])
+
+    def test_delete_uri_pending_hooks_failure_invalid_uid(self):
+        ''' delete_uri_pending_hooks should fail if uid is invalid '''
+        uids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'username', uuid.uuid4().hex, uuid.uuid1()]
+        uri='uri'
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.delete_uri_pending_hooks(uid=uid, uri=uri)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_DUPH_IUID)
+
+    def test_delete_uri_pending_hooks_failure_invalid_uri(self):
+        ''' delete_uri_pending_hooks should fail if uri is invalid '''
+        uris=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'invalid uri', uuid.uuid4(), uuid.uuid1()]
+        uid=uuid.uuid4()
+        for uri in uris:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.delete_uri_pending_hooks(uid=uid, uri=uri)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_DUPH_IURI)
+
+    def test_delete_uri_pending_hooks_success_no_previous_hook_existed(self):
+        ''' delete_uri_pending_hooks should succeed even if no previous hook existed '''
+        uid=uuid.uuid4()
+        uri='test_delete_uri_pending_hooks_success_no_previous_hook_existed'
+        self.assertTrue(userapi.delete_uri_pending_hooks(uid=uid, uri=uri))
+
+    def test_delete_uri_pending_hooks_success_previous_hook_existed(self):
+        ''' delete_uri_pending_hooks should succeed if previous hook existed '''
+        username = 'test_delete_uri_pending_hooks_success_previous_hook_existed'
+        password = 'password'
+        email = username+'@komlog.org'
+        userinfo = userapi.create_user(username=username, password=password, email=email)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        self.assertIsNotNone(userinfo['code'])
+        uri='test_delete_uri_pending_hooks_success_previous_hook_existed'
+        uid=userinfo['uid']
+        sid=uuid.uuid4()
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=uri, sid=sid))
+        pending_hooks=userapi.get_uri_pending_hooks(uid=uid, uri=uri)
+        self.assertEqual(pending_hooks, [sid])
+        self.assertTrue(userapi.delete_uri_pending_hooks(uid=uid, uri=uri))
+        pending_hooks=userapi.get_uri_pending_hooks(uid=uid, uri=uri)
+        self.assertEqual(pending_hooks, [])
+
+    def test_delete_pending_hook_failure_invalid_uid(self):
+        ''' delete_uri_pending_hooks should fail if uid is invalid '''
+        uids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'username', uuid.uuid4().hex, uuid.uuid1()]
+        uri='uri'
+        sid=uuid.uuid4()
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.delete_pending_hook(uid=uid, uri=uri, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_DPH_IUID)
+
+    def test_delete_pending_hook_failure_invalid_uri(self):
+        ''' delete_uri_pending_hooks should fail if uri is invalid '''
+        uris=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'invalid uri', uuid.uuid4(), uuid.uuid1()]
+        uid=uuid.uuid4()
+        sid=uuid.uuid4()
+        for uri in uris:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.delete_pending_hook(uid=uid, uri=uri, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_DPH_IURI)
+
+    def test_delete_pending_hook_failure_invalid_sid(self):
+        ''' delete_uri_pending_hooks should fail if sid is invalid '''
+        sids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'username', uuid.uuid4().hex, uuid.uuid1()]
+        uri='uri'
+        uid=uuid.uuid4()
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.delete_pending_hook(uid=uid, uri=uri, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_DPH_ISID)
+
+    def test_delete_pending_hook_success_no_previous_hook_existed(self):
+        ''' delete_pending_hook should succeed even if no previous hook existed '''
+        uid=uuid.uuid4()
+        sid=uuid.uuid4()
+        uri='test_delete_pending_hook_success_no_previous_hook_existed'
+        self.assertTrue(userapi.delete_pending_hook(uid=uid, uri=uri, sid=sid))
+
+    def test_delete_pending_hook_success_previous_hook_existed(self):
+        ''' delete_pending_hook should succeed if previous hook existed '''
+        username = 'test_delete_pending_hook_success_previous_hook_existed'
+        password = 'password'
+        email = username+'@komlog.org'
+        userinfo = userapi.create_user(username=username, password=password, email=email)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        self.assertIsNotNone(userinfo['code'])
+        uri='test_delete_pending_hook_success_previous_hook_existed'
+        uid=userinfo['uid']
+        sid=uuid.uuid4()
+        self.assertTrue(userapi.register_pending_hook(uid=uid, uri=uri, sid=sid))
+        pending_hooks=userapi.get_uri_pending_hooks(uid=uid, uri=uri)
+        self.assertEqual(pending_hooks, [sid])
+        self.assertTrue(userapi.delete_pending_hook(uid=uid, uri=uri, sid=sid))
+        pending_hooks=userapi.get_uri_pending_hooks(uid=uid, uri=uri)
+        self.assertEqual(pending_hooks, [])
+

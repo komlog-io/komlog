@@ -1,5 +1,6 @@
 import unittest
 import uuid
+import random
 from komlog.komlibs.general.time import timeuuid
 from komlog.komcass.api import user as userapi
 from komlog.komcass.model.orm import user as ormuser
@@ -553,4 +554,157 @@ class KomcassApiUserTest(unittest.TestCase):
         username='test_update_user_password_failed_user_not_found'
         password=b'temporal'
         self.assertFalse(userapi.update_user_password(username=username, password=password))
+
+    def test_get_pending_hooks_by_uid_no_hook_found(self):
+        ''' get_pending_hooks should return an empty array if no hook is found '''
+        uid=uuid.uuid4()
+        self.assertEqual(userapi.get_pending_hooks(uid=uid),[])
+
+    def test_get_pending_hooks_by_uid_and_uri_no_hook_found(self):
+        ''' get_pending_hooks should return an empty array if no hook is found '''
+        uid=uuid.uuid4()
+        uri='uri'
+        self.assertEqual(userapi.get_pending_hooks(uid=uid,uri=uri),[])
+
+    def test_get_pending_hooks_some_hooks_found(self):
+        ''' get_pending_hooks should return an array with the hooks found '''
+        uid=uuid.uuid4()
+        for uri in ('uri.ds','uri.dp'):
+            for i in range(1,11):
+                sid=uuid.uuid4()
+                pendinghook=ormuser.PendingHook(uid,uri,sid)
+                self.assertTrue(userapi.insert_pending_hook(pendinghook))
+        hooks_found=userapi.get_pending_hooks(uid=uid)
+        self.assertEqual(len(hooks_found),20)
+        hooks_found=userapi.get_pending_hooks(uid=uid,uri='uri.ds')
+        self.assertEqual(len(hooks_found),10)
+        hooks_found=userapi.get_pending_hooks(uid=uid,uri='uri.dp')
+        self.assertEqual(len(hooks_found),10)
+        hooks_found=userapi.get_pending_hooks(uid=uuid.uuid4(),uri='uri.dp')
+        self.assertEqual(len(hooks_found),0)
+
+    def test_get_pending_hooks_by_sid_no_hook_found(self):
+        ''' get_pending_hooks should return an empty array if no hook is found '''
+        sid=uuid.uuid4()
+        self.assertEqual(userapi.get_pending_hooks_by_sid(sid=sid),[])
+
+    def test_get_pending_hooks_by_sid_some_hooks_found(self):
+        ''' get_pending_hooks should return an array with the hooks found '''
+        sid1=uuid.uuid4()
+        for uid in (uuid.uuid4(),uuid.uuid4(),uuid.uuid4()):
+            for uri in ('uri.ds','uri.dp'):
+                for i in range(1,11):
+                    sid=uuid.uuid4()
+                    pendinghook=ormuser.PendingHook(uid,uri,sid)
+                    self.assertTrue(userapi.insert_pending_hook(pendinghook))
+                pendinghook=ormuser.PendingHook(uid,uri,sid1)
+                self.assertTrue(userapi.insert_pending_hook(pendinghook))
+        hooks_found=userapi.get_pending_hooks_by_sid(sid=sid1)
+        self.assertEqual(len(hooks_found),6)
+
+    def test_get_pending_hook_no_hook_found(self):
+        ''' get_pending_hook should return None if no hook is found '''
+        uid=uuid.uuid4()
+        uri='uri'
+        sid=uuid.uuid4()
+        self.assertIsNone(userapi.get_pending_hook(uid=uid, uri=uri, sid=sid))
+
+    def test_get_pending_hook_found(self):
+        ''' get_pending_hook should return the PendingHook object if found '''
+        uids=[uuid.uuid4() for i in range(1,10)]
+        sids=[uuid.uuid4() for i in range(1,10)]
+        uris=['.'.join(('uri',str(i))) for i in range(1,10)]
+        for uid in uids:
+            for uri in uris:
+                for sid in sids:
+                    pendinghook=ormuser.PendingHook(uid,uri,sid)
+                    self.assertTrue(userapi.insert_pending_hook(pendinghook))
+        uid_i=random.randint(0,8)
+        uri_i=random.randint(0,8)
+        sid_i=random.randint(0,8)
+        hook=userapi.get_pending_hook(uid=uids[uid_i],uri=uris[uri_i], sid=sids[sid_i])
+        self.assertIsNotNone(hook)
+        self.assertTrue(isinstance(hook,ormuser.PendingHook))
+        self.assertEqual(hook.uid, uids[uid_i])
+        self.assertEqual(hook.uri, uris[uri_i])
+        self.assertEqual(hook.sid, sids[sid_i])
+
+    def test_insert_pending_hook_failure_non_PendingHook_instance(self):
+        ''' insert_pending_hook should fail if pending_hook is not a PendingHook instance '''
+        hooks=[None, 123123, '2123123123', {'a':'dict'},['a','list']]
+        for hook in hooks:
+            self.assertFalse(userapi.insert_pending_hook(hook))
+
+    def test_insert_pending_hook_success(self):
+        ''' insert_pending_hook should succeed and return True '''
+        uid=uuid.uuid4()
+        uri='uri'
+        sid=uuid.uuid4()
+        pendinghook=ormuser.PendingHook(uid,uri,sid)
+        self.assertTrue(userapi.insert_pending_hook(pendinghook))
+        hook=userapi.get_pending_hook(uid=uid,uri=uri, sid=sid)
+        self.assertIsNotNone(hook)
+        self.assertTrue(isinstance(hook,ormuser.PendingHook))
+        self.assertEqual(hook.uid, uid)
+        self.assertEqual(hook.uri, uri)
+        self.assertEqual(hook.sid, sid)
+
+    def test_delete_pending_hooks_by_uid_no_previous_existing_hook(self):
+        ''' delete_pending_hooks should return true if no previous hook existed '''
+        uid=uuid.uuid4()
+        self.assertTrue(userapi.delete_pending_hooks(uid=uid))
+
+    def test_delete_pending_hooks_by_uid_and_uri_no_previous_existing_hook(self):
+        ''' delete_pending_hooks should return true if no previous hook existed '''
+        uid=uuid.uuid4()
+        uri='uri'
+        self.assertTrue(userapi.delete_pending_hooks(uid=uid, uri=uri))
+
+    def test_delete_pending_hooks_some_found(self):
+        ''' delete_pending_hooks should return True and delete the hooks requested '''
+        uids=[uuid.uuid4() for i in range(1,10)]
+        sids=[uuid.uuid4() for i in range(1,10)]
+        uris=['.'.join(('uri',str(i))) for i in range(1,10)]
+        for uid in uids:
+            for uri in uris:
+                for sid in sids:
+                    pendinghook=ormuser.PendingHook(uid,uri,sid)
+                    self.assertTrue(userapi.insert_pending_hook(pendinghook))
+        uid_i=random.randint(0,8)
+        hooks=userapi.get_pending_hooks(uid=uids[uid_i])
+        self.assertEqual(len(hooks),9*9)
+        uri_i=random.randint(0,8)
+        self.assertTrue(userapi.delete_pending_hooks(uid=uids[uid_i],uri=uris[uri_i]))
+        hooks=userapi.get_pending_hooks(uid=uids[uid_i])
+        self.assertEqual(len(hooks),9*8)
+        self.assertTrue(userapi.delete_pending_hooks(uid=uids[uid_i]))
+        hooks=userapi.get_pending_hooks(uid=uids[uid_i])
+        self.assertEqual(len(hooks),0)
+
+    def test_delete_pending_hook_no_previous_existing_hook(self):
+        ''' delete_pending_hook should return true if no previous hook existed '''
+        uid=uuid.uuid4()
+        uri='uri'
+        sid=uuid.uuid4()
+        self.assertTrue(userapi.delete_pending_hook(uid=uid, uri=uri, sid=sid))
+
+    def test_delete_pending_hook_found(self):
+        ''' delete_pending_hook should return True and delete the hook requested '''
+        uids=[uuid.uuid4() for i in range(1,10)]
+        sids=[uuid.uuid4() for i in range(1,10)]
+        uris=['.'.join(('uri',str(i))) for i in range(1,10)]
+        for uid in uids:
+            for uri in uris:
+                for sid in sids:
+                    pendinghook=ormuser.PendingHook(uid,uri,sid)
+                    self.assertTrue(userapi.insert_pending_hook(pendinghook))
+        uid_i=random.randint(0,8)
+        hooks=userapi.get_pending_hooks(uid=uids[uid_i])
+        self.assertEqual(len(hooks),9*9)
+        uri_i=random.randint(0,8)
+        sid_i=random.randint(0,8)
+        self.assertTrue(userapi.delete_pending_hook(uid=uids[uid_i],uri=uris[uri_i],sid=sids[sid_i]))
+        hooks=userapi.get_pending_hooks(uid=uids[uid_i])
+        self.assertEqual(len(hooks),(9*9)-1)
+        self.assertIsNone(userapi.get_pending_hook(uid=uids[uid_i],uri=uris[uri_i],sid=sids[sid_i]))
 

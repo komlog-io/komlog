@@ -419,3 +419,61 @@ def reset_password(code, password):
             raise
     raise exceptions.ForgetRequestException(error=Errors.E_GUA_RP_EGPWD)
 
+def register_pending_hook(uid, uri, sid):
+    ''' This function register a new pending hook with the associated parameters. The pending
+        hooks are hook requests over non existent uris. We register this requests so if the uri
+        is eventually created by the user, this pending hooks will be automatically transformed
+        into hooks to that uri, and notifications will be sent to the user on each update '''
+    if not args.is_valid_uuid(uid):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_RPH_IUID)
+    if not args.is_valid_uri(uri):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_RPH_IURI)
+    if not args.is_valid_uuid(sid):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_RPH_ISID)
+    user=cassapiuser.get_user(uid=uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_RPH_UNF)
+    pending_hook=ormuser.PendingHook(uid=uid, uri=uri, sid=sid)
+    cassapiuser.insert_pending_hook(pending_hook=pending_hook)
+    return True
+
+def get_uri_pending_hooks(uid, uri):
+    ''' This function returns a list of the pending hooks associated to the uid and uri passed
+        as arguments. We only return the sids in the list '''
+    if not args.is_valid_uuid(uid):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_GUPH_IUID)
+    if not args.is_valid_uri(uri):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_GUPH_IURI)
+    found=cassapiuser.get_pending_hooks(uid=uid, uri=uri)
+    sids=[item.sid for item in found]
+    return sids
+
+def delete_session_pending_hooks(sid):
+    ''' This function deletes all pending hooks associated to one session id '''
+    if not args.is_valid_uuid(sid):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_DSPH_ISID)
+    session_hooks=cassapiuser.get_pending_hooks_by_sid(sid=sid)
+    for hook in session_hooks:
+        cassapiuser.delete_pending_hook(uid=hook.uid, uri=hook.uri, sid=hook.sid)
+    return True
+
+def delete_uri_pending_hooks(uid, uri):
+    ''' This function deletes all pending hooks associated to one uri '''
+    if not args.is_valid_uuid(uid):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_DUPH_IUID)
+    if not args.is_valid_uri(uri):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_DUPH_IURI)
+    cassapiuser.delete_pending_hooks(uid=uid, uri=uri)
+    return True
+
+def delete_pending_hook(uid, uri, sid):
+    ''' This function deletes the pending hook requested in parameters '''
+    if not args.is_valid_uuid(uid):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_DPH_IUID)
+    if not args.is_valid_uri(uri):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_DPH_IURI)
+    if not args.is_valid_uuid(sid):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_DPH_ISID)
+    cassapiuser.delete_pending_hook(uid=uid, uri=uri, sid=sid)
+    return True
+

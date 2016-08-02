@@ -6,6 +6,7 @@ from komlog.komlibs.interface.imc.api import gestconsole
 from komlog.komlibs.interface.imc.api import rescontrol
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc import status
+from komlog.komlibs.interface.imc.errors import Errors
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.gestaccount.user import api as userapi
@@ -14,6 +15,7 @@ from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.widget import api as widgetapi
 from komlog.komlibs.gestaccount.dashboard import api as dashboardapi
+from komlog.komlibs.graph.relations import vertex
 
 
 class InterfaceImcApiGestconsoleTest(unittest.TestCase):
@@ -32,6 +34,55 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
         self.assertEqual(response.unrouted_messages,[])
         self.assertEqual(response.routed_messages,{})
+
+    def test_process_message_MONVAR_success_datapoint_did_not_exist_previously(self):
+        ''' process_message_MONVAR should succeed and generate all necesary messages if the datapoint did not exist previously'''
+        username='test_process_message_monvar_success_datapoint_did_not_exist_previously'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri) 
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        ds_content='content: 23'
+        ds_date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=ds_date))
+        position=9
+        length=2
+        datapoint_uri='datapoint_uri'
+        message=messages.MonitorVariableMessage(uid=uid, did=did, date=ds_date, position=position, length=length, datapointname=datapoint_uri)
+        response=gestconsole.process_message_MONVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.MON_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.serialized_message)
+        self.assertEqual(response.routed_messages, {})
+        self.assertNotEqual(response.unrouted_messages, [])
+        self.assertTrue(len(response.unrouted_messages) == 6)
+        expected_messages={
+            messages.UPDATE_QUOTES_MESSAGE:1,
+            messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:1,
+            messages.FILL_DATAPOINT_MESSAGE:1,
+            messages.USER_EVENT_MESSAGE:1,
+            messages.NEW_DP_WIDGET_MESSAGE:1,
+            messages.HOOK_NEW_URIS_MESSAGE:1,
+        }
+        retrieved_messages={}
+        msgs=response.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg.type]+=1
+            except KeyError:
+                retrieved_messages[msg.type]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
 
     def test_process_message_NEGVAR_failure_non_existent_datapoint(self):
         ''' process_message_NEGVAR should fail if datapoint does not exists '''

@@ -7,6 +7,7 @@ Gestconsole message definitions
 from komlog.komfig import logging
 from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.general.validation import arguments as args
+from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount.common import delete as deleteapi
 from komlog.komlibs.gestaccount.user import api as userapi
@@ -16,6 +17,7 @@ from komlog.komlibs.gestaccount.datasource import api as datasourceapi
 from komlog.komlibs.gestaccount.widget import api as widgetapi
 from komlog.komlibs.gestaccount.dashboard import api as dashboardapi
 from komlog.komlibs.gestaccount.widget import types as widgettypes
+from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.interface.imc import status, exceptions
 from komlog.komlibs.interface.imc.errors import Errors
 from komlog.komlibs.interface.imc.model import messages, responses
@@ -30,6 +32,7 @@ def process_message_MONVAR(message):
     - Comprobamos que la variable no pertenezca a un datapoint existente
     - Registramos el nuevo datapoint, marcando la variable como muestra positiva
     - creamos el widget dp
+    - solicitamos el hook al dp de los posibles hooks pendientes a esa uri
     '''
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
     uid=message.uid
@@ -51,6 +54,10 @@ def process_message_MONVAR(message):
             response.add_message(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':datapoint['pid'].hex}))
             if datapoint['previously_existed'] is False:
                 response.add_message(messages.NewDPWidgetMessage(uid=uid,pid=datapoint['pid']))
+                uris=[{'type':vertex.DATAPOINT, 'id':datapoint['pid'], 'uri':datapoint['datapointname']}]
+                #we add a fake date while datapoint values associated to datasources do not fire lambda executions
+                fakedate=timeuuid.uuid1()
+                response.add_message(messages.HookNewUrisMessage(uid=uid, uris=uris, date=fakedate))
             response.status=status.IMC_STATUS_OK
         else:
             logging.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position)+' length: '+str(length))

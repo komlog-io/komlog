@@ -46,6 +46,7 @@ FORGET_MAIL_MESSAGE='FORGETMAIL'
 URIS_UPDATED_MESSAGE='URISUPDT'
 SEND_SESSION_DATA_MESSAGE='SSDATA'
 CLEAR_SESSION_HOOKS_MESSAGE='CLSHOOKS'
+HOOK_NEW_URIS_MESSAGE='HOOKNEW'
 
 
 class StoreSampleMessage:
@@ -603,6 +604,34 @@ class ClearSessionHooksMessage:
             ids_array=[(item[0].hex,item[1]) for item in self.ids]
             self.serialized_message='|'.join((self.type,self.sid.hex,json.dumps(ids_array)))
 
+class HookNewUrisMessage:
+    def __init__(self, serialized_message=None, uid=None, uris=None, date=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,uid,uris,date=self.serialized_message.split('|')
+            self.type=mtype
+            self.uid=uuid.UUID(uid)
+            uris=json.loads(uris)
+            self.date=uuid.UUID(date)
+            self.uris=[]
+            for uri in uris:
+                uri['id']=uuid.UUID(uri['id'])
+                self.uris.append(uri)
+        else:
+            if not args.is_valid_uuid(uid):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_HNU_IUID)
+            if not args.is_valid_date(date):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_HNU_IDT)
+            self.type=HOOK_NEW_URIS_MESSAGE
+            self.uid=uid
+            self.uris=uris
+            self.date=date
+            uri_list=[]
+            for uri in uris:
+                uri_list.append({'uri':uri['uri'],'type':uri['type'],'id':uri['id'].hex})
+            s_uris=json.dumps(uri_list)
+            self.serialized_message='|'.join((self.type,self.uid.hex,s_uris,self.date.hex))
+
 #MESSAGE MAPPINGS
 MESSAGE_TO_CLASS_MAPPING={
     STORE_SAMPLE_MESSAGE:StoreSampleMessage,
@@ -633,5 +662,6 @@ MESSAGE_TO_CLASS_MAPPING={
     URIS_UPDATED_MESSAGE:UrisUpdatedMessage,
     SEND_SESSION_DATA_MESSAGE:SendSessionDataMessage,
     CLEAR_SESSION_HOOKS_MESSAGE:ClearSessionHooksMessage,
+    HOOK_NEW_URIS_MESSAGE:HookNewUrisMessage,
 }
 

@@ -705,3 +705,32 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         self.assertTrue(isinstance(msg, messages.ClearSessionHooksMessage))
         self.assertEqual(msg.type, messages.CLEAR_SESSION_HOOKS_MESSAGE)
 
+    def test_HookNewUrisMessage_failure_invalid_uid(self):
+        ''' HookNewUrisMessage creation should fail if uid is invalid '''
+        uids=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4().hex, uuid.uuid1(), json.dumps('username'), 'user\nname','user\tname']
+        uris=[]
+        date=timeuuid.uuid1()
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.HookNewUrisMessage(uid=uid,uris=uris, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_HNU_IUID)
+
+    def test_HookNewUrisMessage_failure_invalid_date(self):
+        ''' HookNewUrisMessage creation should fail if date is invalid '''
+        dates=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4(), uuid.uuid1().hex, json.dumps('username'), 'user\nname','user\tname']
+        uris=[]
+        uid=uuid.uuid4()
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.HookNewUrisMessage(uid=uid,uris=uris, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_HNU_IDT)
+
+    def test_HookNewUrisMessage_success(self):
+        ''' HookNewUrisMessage creation should succeed '''
+        uid=uuid.uuid4()
+        uris=[{'uri':'uri','type':'type','id':uuid.uuid4()}]
+        date=uuid.uuid1()
+        msg=messages.HookNewUrisMessage(uid=uid, uris=uris, date=date)
+        self.assertTrue(isinstance(msg, messages.HookNewUrisMessage))
+        self.assertEqual(msg.type, messages.HOOK_NEW_URIS_MESSAGE)
+

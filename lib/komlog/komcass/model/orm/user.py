@@ -43,3 +43,9 @@ class ForgetRequest:
         self.state=state
         self.uid=uid
 
+class PendingHook:
+    def __init__(self, uid, uri, sid):
+        self.uid = uid
+        self.uri = uri
+        self.sid = sid
+

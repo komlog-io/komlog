@@ -301,7 +301,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.USER_EVENT_MESSAGE:1,
             messages.GENERATE_TEXT_SUMMARY_MESSAGE:1,
             messages.MAP_VARS_MESSAGE:1,
-            messages.URIS_UPDATED_MESSAGE:1,
+            messages.HOOK_NEW_URIS_MESSAGE:1,
         }
         retrieved_messages={}
         msgs=resp.unrouted_messages
@@ -623,7 +623,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         expected_messages={
             messages.UPDATE_QUOTES_MESSAGE:1,
             messages.NEW_DP_WIDGET_MESSAGE:1,
-            messages.URIS_UPDATED_MESSAGE:1
+            messages.HOOK_NEW_URIS_MESSAGE:1
         }
         retrieved_messages={}
         msgs=resp.unrouted_messages
@@ -873,7 +873,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.USER_EVENT_MESSAGE:1,
             messages.GENERATE_TEXT_SUMMARY_MESSAGE:1,
             messages.MAP_VARS_MESSAGE:1,
-            messages.URIS_UPDATED_MESSAGE:1
+            messages.HOOK_NEW_URIS_MESSAGE:1
         }
         retrieved_messages={}
         msgs=resp.unrouted_messages
@@ -916,7 +916,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         expected_messages={
             messages.UPDATE_QUOTES_MESSAGE:1,
             messages.NEW_DP_WIDGET_MESSAGE:1,
-            messages.URIS_UPDATED_MESSAGE:1
+            messages.HOOK_NEW_URIS_MESSAGE:1
         }
         retrieved_messages={}
         msgs=resp.unrouted_messages
@@ -1101,7 +1101,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.USER_EVENT_MESSAGE:1,
             messages.GENERATE_TEXT_SUMMARY_MESSAGE:2,
             messages.MAP_VARS_MESSAGE:2,
-            messages.URIS_UPDATED_MESSAGE:1
+            messages.URIS_UPDATED_MESSAGE:1,
+            messages.HOOK_NEW_URIS_MESSAGE:1,
         }
         retrieved_messages={}
         msgs=resp.unrouted_messages
@@ -1110,6 +1111,15 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
                 retrieved_messages[item.type]+=1
             except KeyError:
                 retrieved_messages[item.type]=1
+        for item in msgs:
+            if item.type == messages.HOOK_NEW_URIS_MESSAGE:
+                self.assertEqual(len(item.uris),2)
+                self.assertTrue(any(reg['uri'] == 'uri.new_ds' for reg in item.uris))
+                self.assertTrue(any(reg['uri'] == 'uri.new_dp' for reg in item.uris))
+            elif item.type == messages.URIS_UPDATED_MESSAGE:
+                self.assertEqual(len(item.uris),2)
+                self.assertTrue(any(reg['uri'] == 'uri.ds' for reg in item.uris))
+                self.assertTrue(any(reg['uri'] == 'uri.dp' for reg in item.uris))
         self.assertEqual(sorted(retrieved_messages), sorted(expected_messages))
         did=datasource['did']
         existing_ds_stats=cassapidatasource.get_datasource_stats(did=did)
@@ -1219,14 +1229,37 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.routed_messages,{})
         self.assertEqual(resp.unrouted_messages,[])
 
-    def test__process_hook_to_uri_failure_uri_not_found(self):
-        ''' _process_hook_to_uri should fail if uri does not exist '''
+    def test__process_hook_to_uri_failure_user_not_found(self):
+        ''' _process_hook_to_uri should fail if user does not exist '''
         psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4())
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'system.ds'}}
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
-        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PHTU_UNF.value)
+        self.assertEqual(resp.error, gesterrors.E_GUA_RPH_UNF.value)
         self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
+
+    def test__process_hook_to_uri_success_uri_does_not_exist(self):
+        ''' _process_hook_to_uri should register a pending hook for the unexistent uri '''
+        username='test_process_hook_to_uri_success_uri_does_not_exist'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'system.ds'}}
+        resp=message._process_hook_to_uri(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.OK.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.reason, 'Hooked, but uri does not exist yet')
         self.assertEqual(resp.routed_messages,{})
         self.assertEqual(resp.unrouted_messages,[])
 
@@ -1491,14 +1524,14 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.routed_messages,{})
         self.assertEqual(resp.unrouted_messages,[])
 
-    def test__process_unhook_from_uri_failure_uri_not_found(self):
-        ''' _process_unhook_from_uri should fail if uri does not exist '''
+    def test__process_unhook_from_uri_success_uri_does_not_exist(self):
+        ''' _process_unhook_from_uri should succeed even if uri does not exist '''
         psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4())
         msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'system.ds'}}
         resp=message._process_unhook_from_uri(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
-        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PUHFU_UNF.value)
-        self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
+        self.assertEqual(resp.error, Errors.OK.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
         self.assertEqual(resp.routed_messages,{})
         self.assertEqual(resp.unrouted_messages,[])
 

@@ -213,3 +213,53 @@ def update_forget_request_state(code, new_state):
     resp=connection.session.execute(stmtuser.U_STATE_DATFORGETREQUEST_B_CODE,(new_state,code))
     return resp[0]['[applied]'] if resp else False
 
+@exceptions.ExceptionHandler
+def get_pending_hooks(uid, uri=None):
+    if uri is None:
+        row=connection.session.execute(stmtuser.S_A_MSTPENDINGHOOK_B_UID,(uid,))
+    else:
+        row=connection.session.execute(stmtuser.S_A_MSTPENDINGHOOK_B_UID_URI,(uid,uri))
+    data=[]
+    if row:
+        for d in row:
+            data.append(ormuser.PendingHook(**d))
+    return data
+
+@exceptions.ExceptionHandler
+def get_pending_hooks_by_sid(sid):
+    row=connection.session.execute(stmtuser.S_A_MSTPENDINGHOOK_B_SID,(sid,))
+    data=[]
+    if row:
+        for d in row:
+            data.append(ormuser.PendingHook(**d))
+    return data
+
+@exceptions.ExceptionHandler
+def get_pending_hook(uid, uri, sid):
+    row=connection.session.execute(stmtuser.S_A_MSTPENDINGHOOK_B_UID_URI_SID,(uid,uri,sid))
+    if row:
+        return ormuser.PendingHook(**row[0])
+    else:
+        return None
+
+@exceptions.ExceptionHandler
+def insert_pending_hook(pending_hook):
+    if not isinstance(pending_hook, ormuser.PendingHook):
+        return False
+    else:
+        connection.session.execute(stmtuser.I_A_MSTPENDINGHOOK,(pending_hook.uid,pending_hook.uri,pending_hook.sid))
+        return True
+
+@exceptions.ExceptionHandler
+def delete_pending_hooks(uid, uri=None):
+    if uri is None:
+        connection.session.execute(stmtuser.D_A_MSTPENDINGHOOK_B_UID,(uid,))
+    else:
+        connection.session.execute(stmtuser.D_A_MSTPENDINGHOOK_B_UID_URI,(uid,uri))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_pending_hook(uid, uri, sid):
+    connection.session.execute(stmtuser.D_A_MSTPENDINGHOOK_B_UID_URI_SID,(uid,uri,sid))
+    return True
+

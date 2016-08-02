@@ -203,3 +203,6 @@ class Errors(Enum):
 
     E_IIMM_CSH_ISID         = 262600    #: ClearSessionHooksMessage. Invalid sid
 
+    E_IIMM_HNU_IUID         = 262700    #: HookNewUrisMessage. invalid uid
+    E_IIMM_HNU_IDT          = 262701    #: HookNewUrisMessage. invalid date
+
