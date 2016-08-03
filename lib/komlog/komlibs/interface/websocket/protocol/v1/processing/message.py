@@ -71,8 +71,6 @@ def _process_send_ds_data(passport, message):
                 deleteapi.delete_datasource(did=datasource['did'])
                 raise
             msgs.append(messages.HookNewUrisMessage(uid=passport.uid, uris=[{'type':vertex.DATASOURCE,'id':did,'uri':message.uri}],date=date))
-        else:
-            msgs.append(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATASOURCE,'id':did,'uri':message.uri}],date=date))
         resp = Response(status=status.MESSAGE_EXECUTION_OK)
         for msg in msgs:
             resp.add_message(msg)

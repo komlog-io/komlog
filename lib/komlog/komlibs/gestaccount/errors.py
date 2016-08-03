@@ -353,7 +353,7 @@ class Errors(Enum):
 
     E_GPA_SDSV_ID   = 6710
     E_GPA_SDSV_IDT  = 6711
-    E_GPA_SDSV_DMNF = 6712
+    E_GPA_SDSV_DSNF = 6712  #: store_datasource_values. datasource not found
 
     E_GPA_DDP_IP    = 6720
     E_GPA_DDP_DNF   = 6721

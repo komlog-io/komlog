@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 Textmining message definitions
 
@@ -8,6 +7,7 @@ import json
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
+from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.interface.imc.model import messages, responses
 from komlog.komlibs.interface.imc import status, exceptions
 
@@ -70,8 +70,13 @@ def process_message_FILLDS(message):
     store_info=datapointapi.store_datasource_values(did=did, date=date)
     if store_info:
         response.status=status.IMC_STATUS_OK
-        if isinstance(store_info,dict) and 'dp_not_found' in store_info and len(store_info['dp_not_found'])>0:
+        if len(store_info['dp_not_found'])>0:
             response.add_message(messages.MissingDatapointMessage(did=did,date=date))
+        uris=[]
+        uris.append({'type':vertex.DATASOURCE,'id':did,'uri':store_info['ds_info']['uri']})
+        for dp in store_info['dp_found']:
+            uris.append({'type':vertex.DATAPOINT,'id':dp['pid'],'uri':dp['uri']})
+        response.add_message(messages.UrisUpdatedMessage(uris=uris,date=date))
     else:
         response.error=Errors.E_IAATM_FILLDS_ESDSV
         response.status=status.IMC_STATUS_INTERNAL_ERROR

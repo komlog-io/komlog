@@ -55,9 +55,7 @@ def process_message_MONVAR(message):
             if datapoint['previously_existed'] is False:
                 response.add_message(messages.NewDPWidgetMessage(uid=uid,pid=datapoint['pid']))
                 uris=[{'type':vertex.DATAPOINT, 'id':datapoint['pid'], 'uri':datapoint['datapointname']}]
-                #we add a fake date while datapoint values associated to datasources do not fire lambda executions
-                fakedate=timeuuid.uuid1()
-                response.add_message(messages.HookNewUrisMessage(uid=uid, uris=uris, date=fakedate))
+                response.add_message(messages.HookNewUrisMessage(uid=uid, uris=uris, date=date))
             response.status=status.IMC_STATUS_OK
         else:
             logging.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position)+' length: '+str(length))

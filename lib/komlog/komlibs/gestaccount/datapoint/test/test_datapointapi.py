@@ -997,6 +997,14 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         data=api.get_datapoint_data(pid=datapoint['pid'], fromdate=init_date, todate=date)
         self.assertEqual(len(data),60)
 
+    def test_store_datasource_values_failure_datasource_not_found(self):
+        ''' store_datasource_values should fail if datasource does not exist '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            api.store_datasource_values( did=did, date=date)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_SDSV_DSNF)
+
     def test_store_datasource_values_failure_datasource_data_not_found(self):
         ''' store_datasource_values should fail if datasource data is not found '''
         datasourcename='test_store_datasource_values_failure_datasource_data_not_found'
@@ -1021,7 +1029,10 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         length=2
         datapointname='test_store_datasource_values_success'
         datapoint=api.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
-        self.assertTrue(api.store_datasource_values(did=did, date=date))
+        store_info=api.store_datasource_values(did=did, date=date)
+        self.assertEqual(store_info['dp_not_found'],[])
+        self.assertEqual(store_info['dp_found'],[{'pid':datapoint['pid'],'uri':datapoint['datapointname']}])
+        self.assertEqual(store_info['ds_info'],{'did':did,'uri':datasourcename})
         data=api.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
         self.assertEqual(len(data),1)
 

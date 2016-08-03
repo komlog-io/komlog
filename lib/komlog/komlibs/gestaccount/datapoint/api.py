@@ -564,12 +564,16 @@ def store_datasource_values(did, date):
         raise exceptions.BadParametersException(error=Errors.E_GPA_SDSV_ID)
     if not args.is_valid_date(date):
         raise exceptions.BadParametersException(error=Errors.E_GPA_SDSV_IDT)
+    datasource=cassapidatasource.get_datasource(did=did)
+    if not datasource:
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_GPA_SDSV_DSNF)
+    ds_info={'did':datasource.did, 'uri':datasource.datasourcename}
     dshash=cassapidatasource.get_datasource_hash(did=did, date=date)
     if dshash==None:
         dshash=generate_datasource_hash(did=did, date=date)
     pids=cassapidatapoint.get_datapoints_pids(did=did)
     if pids==[]:
-        return True
+        return {'dp_not_found':pids, 'dp_found':pids,'ds_info':ds_info}
     datapoints_info={}
     for pid in pids:
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
@@ -594,6 +598,7 @@ def store_datasource_values(did, date):
                     }
     text_hash=json.loads(dshash.content)
     loop_pids=list(datapoints_info.keys())
+    dp_found=[]
     for element in text_hash['elements']:
         if 'type' in element and element['type']=='var':
             var_atts=textmanvar.get_variable_atts(text_hash=text_hash, text_pos=element['text_pos'])
@@ -610,10 +615,13 @@ def store_datasource_values(did, date):
                         if last_received is None or last_received.time < dshash.date.time:
                             cassapidatapoint.set_datapoint_last_received(pid=pid, last_received=dshash.date)
                         loop_pids.remove(pid)
+                        datapoint=cassapidatapoint.get_datapoint(pid=pid)
+                        if datapoint:
+                            dp_found.append({'pid':pid,'uri':datapoint.datapointname})
                         break
                     else:
                         break
-    return {'dp_not_found':loop_pids}
+    return {'dp_not_found':loop_pids, 'dp_found':dp_found,'ds_info':ds_info}
 
 def should_datapoint_match_any_sample_variable(pid, date):
     if not args.is_valid_uuid(pid):

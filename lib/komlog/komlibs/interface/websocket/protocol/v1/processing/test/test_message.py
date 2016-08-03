@@ -347,7 +347,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.UPDATE_QUOTES_MESSAGE:1,
             messages.GENERATE_TEXT_SUMMARY_MESSAGE:1,
             messages.MAP_VARS_MESSAGE:1,
-            messages.URIS_UPDATED_MESSAGE:1,
         }
         retrieved_messages={}
         msgs=resp.unrouted_messages
