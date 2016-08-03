@@ -15,8 +15,6 @@ BASE_IMC_ADDRESS = 'org.komlog.internal.imc.module'
 
 
 #MODULE LIST
-VALIDATION='Validation'
-STORING='Storing'
 TEXTMINING='Textmining'
 GESTCONSOLE='Gestconsole'
 RESCONTROL='Rescontrol'
@@ -27,7 +25,6 @@ LAMBDAS='Lambdas'
 
 
 MESSAGE_TO_ADDRESS_MAPPING={
-    messages.STORE_SAMPLE_MESSAGE:STORING,
     messages.MAP_VARS_MESSAGE:TEXTMINING,
     messages.MON_VAR_MESSAGE:GESTCONSOLE,
     messages.GDTREE_MESSAGE:TEXTMINING,
@@ -60,8 +57,6 @@ MESSAGE_TO_ADDRESS_MAPPING={
 
 #MODULE MAPPINGS
 MODULE_TO_ADDRESS_MAPPING={
-    VALIDATION:['%m','%m.%i'],
-    STORING:['%m','%m.%i'],
     TEXTMINING:['%m','%m.%i'],
     GESTCONSOLE:['%m','%m.%i'],
     RESCONTROL:['%m','%m.%i'],

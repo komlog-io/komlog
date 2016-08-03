@@ -71,21 +71,6 @@ def get_datasource_data_request(passport, did, seq=None, tid=None):
     return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datasource)
 
 @exceptions.ExceptionHandler
-def upload_datasource_data_request(passport, did, content, destination):
-    if not isinstance(passport, Passport):
-        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSDR_IPSP)
-    if not args.is_valid_hex_uuid(did):
-        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSDR_ID)
-    if not args.is_valid_datasource_content(content):
-        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSDR_IDC)
-    if not args.is_valid_string(destination):
-        raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSDR_IDST)
-    did=uuid.UUID(did)
-    authorization.authorize_request(request=Requests.POST_DATASOURCE_DATA,passport=passport,did=did)
-    destfile=datasourceapi.upload_datasource_data(did,content,destination)
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
-
-@exceptions.ExceptionHandler
 def get_datasources_config_request(passport):
     if not isinstance(passport, Passport):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSSCR_IPSP)

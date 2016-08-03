@@ -1,4 +1,4 @@
-MESSAGE_MODULES = ['validation','storing','textmining','gestconsole','rescontrol','events','lambdas']
+MESSAGE_MODULES = ['textmining','gestconsole','rescontrol','events','lambdas']
 
 import sys
 from komlog.komfig import logging

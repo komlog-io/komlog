@@ -53,7 +53,6 @@ MODULES = [
     'komlog.komlibs.interface.imc.model.test.test_messages.InterfaceImcModelMessagesTest',
     'komlog.komlibs.interface.imc.api.test.test_gestconsole.InterfaceImcApiGestconsoleTest',
     'komlog.komlibs.interface.imc.api.test.test_rescontrol.InterfaceImcApiRescontrolTest',
-    'komlog.komlibs.interface.imc.api.test.test_storing.InterfaceImcApiStoringTest',
     'komlog.komlibs.interface.imc.api.test.test_textmining.InterfaceImcApiTextminingTest',
     'komlog.komlibs.interface.imc.api.test.test_events.InterfaceImcApiEventsTest',
     'komlog.komlibs.interface.imc.api.test.test_anomalies.InterfaceImcApiAnomaliesTest',

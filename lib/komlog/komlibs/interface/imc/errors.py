@@ -76,17 +76,7 @@ class Errors(Enum):
 
     E_IIARC_RESAUTH_EUR     = 253100    #: proccess_message_RESAUTH. error updating resources
 
-# komlibs.interface.imc.api.storing
-
-    E_IIAST_STOSMP_ERF      = 254000    #: proccess_message_STOSMP. error in initial rename
-    E_IIAST_STOSMP_ERFALC   = 254001    #: proccess_message_STOSMP. error renaming after failed load
-    E_IIAST_STOSMP_ELFC     = 254002    #: proccess_message_STOSMP. error loading content
-    E_IIAST_STOSMP_ERFALC2  = 254003    #: proccess_message_STOSMP. error renaming after failed load
-    E_IIAST_STOSMP_ELJC     = 254004    #: proccess_message_STOSMP. error loading json content
-    E_IIAST_STOSMP_ERFACC   = 254005    #: proccess_message_STOSMP. error renaming after check fail 
-    E_IIAST_STOSMP_ECC      = 254006    #: proccess_message_STOSMP. error checking content
-    E_IIAST_STOSMP_ERFAFP   = 254007    #: proccess_message_STOSMP. error renaming after fail proc 
-    E_IIAST_STOSMP_ESDSD    = 254008    #: proccess_message_STOSMP. error storing ds data
+# komlibs.interface.imc.api.storing (deprecated 254000 - 254999 free)
 
 # komlibs.interface.imc.api.textmining
 
@@ -118,8 +108,6 @@ class Errors(Enum):
     E_IIATM_SSDT_SNF        = 256003    #: process_message_SSDATA. session not found
 
 # komlibs.interface.imc.model.messages
-
-    E_IIMM_SSM_ISF          = 260000    #: StoreSampleMessage. invalid sample file
 
     E_IIMM_MVM_IDID         = 260100    #: MapVarsMessage. invalid did
     E_IIMM_MVM_IDT          = 260101    #: MapVarsMessage. invalid date

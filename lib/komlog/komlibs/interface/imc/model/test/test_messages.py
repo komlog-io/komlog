@@ -12,14 +12,6 @@ from komlog.komlibs.general.time import timeuuid
 class InterfaceImcModelMessagesTest(unittest.TestCase):
     ''' komlibs.interface.imc.model.messages tests '''
 
-    def test_StoreSampleMessage_failure_invalid_sample_file(self):
-        ''' creation os a StoreSampleMessage object should fail if sample_file is invalid '''
-        sfs=[None, 23423, 2323.2342, {'a','dict'},['a','list'],('a','tuple'),uuid.uuid4(), uuid.uuid1()]
-        for sf in sfs:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                messages.StoreSampleMessage(sample_file=sf)
-            self.assertEqual(cm.exception.error, Errors.E_IIMM_SSM_ISF)
-
     def test_MapVarsMessage_failure_invalid_did(self):
         ''' MapVarsMessage creation should fail if did is invalid '''
         dids=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]

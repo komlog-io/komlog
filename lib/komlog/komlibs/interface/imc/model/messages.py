@@ -18,7 +18,6 @@ from komlog.komfig import logging
 
 
 #MESSAGE LIST
-STORE_SAMPLE_MESSAGE='STOSMP'
 MAP_VARS_MESSAGE='MAPVARS'
 MON_VAR_MESSAGE='MONVAR'
 GDTREE_MESSAGE='GDTREE'
@@ -48,19 +47,6 @@ SEND_SESSION_DATA_MESSAGE='SSDATA'
 CLEAR_SESSION_HOOKS_MESSAGE='CLSHOOKS'
 HOOK_NEW_URIS_MESSAGE='HOOKNEW'
 
-
-class StoreSampleMessage:
-    def __init__(self, serialized_message=None, sample_file=None):
-        if serialized_message:
-            self.serialized_message=serialized_message
-            self.type=self.serialized_message.split('|')[0]
-            self.sample_file=self.serialized_message.split('|')[1]
-        else:
-            if not args.is_valid_string(sample_file):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_SSM_ISF)
-            self.type=STORE_SAMPLE_MESSAGE
-            self.sample_file=sample_file
-            self.serialized_message=self.type+'|'+self.sample_file
 
 class MapVarsMessage:
     def __init__(self, serialized_message=None, did=None,date=None):
@@ -634,7 +620,6 @@ class HookNewUrisMessage:
 
 #MESSAGE MAPPINGS
 MESSAGE_TO_CLASS_MAPPING={
-    STORE_SAMPLE_MESSAGE:StoreSampleMessage,
     MAP_VARS_MESSAGE:MapVarsMessage,
     MON_VAR_MESSAGE:MonitorVariableMessage,
     GDTREE_MESSAGE:GenerateDTreeMessage,

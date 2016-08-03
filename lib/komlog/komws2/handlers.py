@@ -88,25 +88,6 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-    @auth.authenticated
-    def post(self,did):
-        try:
-            aid=self.agent
-            ctype=self.request.headers.get('Content-Type')
-            content=self.request.body.decode('utf-8')
-            dest_dir=self.application.dest_dir
-        except Exception:
-            self.set_status(400)
-            self.write(json.dumps({'message':'Bad parameters'}))
-        else:
-            if ctype.find('application/json')>=0:
-                response=datasource.upload_datasource_data_request(passport=self.passport, aid=aid, did=did, content=content, destination=dest_dir)
-                self.set_status(response.status)
-                self.write(json.dumps(response.data))
-            else:
-                self.set_status(400)
-                self.write(json.dumps({'message':'Bad Request'}))
-
 class DatasourceConfigHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
