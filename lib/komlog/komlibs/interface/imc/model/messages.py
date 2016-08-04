@@ -551,24 +551,20 @@ class UrisUpdatedMessage:
             self.serialized_message='|'.join((self.type,s_uris,self.date.hex))
 
 class SendSessionDataMessage:
-    def __init__(self, serialized_message=None, sid=None, data=None, date=None):
+    def __init__(self, serialized_message=None, sid=None, data=None):
         if serialized_message:
             self.serialized_message=serialized_message
-            mtype,sid,data,date=self.serialized_message.split('|')
+            mtype,sid,data=self.serialized_message.split('|')
             self.type=mtype
             self.sid=uuid.UUID(sid)
             self.data=json.loads(data)
-            self.date=uuid.UUID(date)
         else:
             if not args.is_valid_uuid(sid):
                 raise exceptions.BadParametersException(error=Errors.E_IIMM_SSDT_ISID)
-            if not args.is_valid_date(date):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_SSDT_IDT)
             self.type=SEND_SESSION_DATA_MESSAGE
             self.sid=sid
             self.data=data
-            self.date=date
-            self.serialized_message='|'.join((self.type,self.sid.hex,json.dumps(self.data),self.date.hex))
+            self.serialized_message='|'.join((self.type,self.sid.hex,json.dumps(self.data)))
 
 class ClearSessionHooksMessage:
     def __init__(self, serialized_message=None, sid=None, ids=None):

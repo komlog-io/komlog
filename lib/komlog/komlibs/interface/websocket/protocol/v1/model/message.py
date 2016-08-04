@@ -1,4 +1,3 @@
-
 import decimal
 import pandas as pd
 from komlog.komlibs.graph.relations import vertex
@@ -7,22 +6,24 @@ from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model.types import Messages
 
-VERSION = 1
+class Catalog(type):
+    def __init__(cls, name, bases, dct):
+        if hasattr(cls, '_action_'):
+            cls._catalog_[cls._action_.value]=cls
+        super().__init__(name, bases, dct)
 
-class KomlogMessage:
+class KomlogMessage(metaclass=Catalog):
+    _version_ = 1
+    _catalog_ = {}
 
     def __new__(cls, *args, **kwargs):
         if cls is KomlogMessage:
             raise TypeError('<KomlogMessage> cannot be instantiated directly')
         return object.__new__(cls)
 
-    def __init__(self, action):
-        self._v = VERSION
-        self._action = action
-
     @property
     def action(self):
-        return self._action
+        return self._action_
 
     @action.setter
     def action(self, value):
@@ -30,7 +31,7 @@ class KomlogMessage:
 
     @property
     def v(self):
-        return self._v
+        return self._version_
 
     @v.setter
     def v(self, value):
@@ -38,25 +39,23 @@ class KomlogMessage:
 
     @classmethod
     def load_from_dict(cls, msg):
-        ''' create instance from JSON loaded dict.
-            Must be implemented in derived classes. '''
-        raise NotImplementedError
-
-    def to_dict(self):
-        ''' returns JSON serializable dict.
-            Must be implemented in derived classes.'''
-        raise NotImplementedError
+        if cls is KomlogMessage:
+            if isinstance(msg, dict) and 'action' in msg:
+                try:
+                    return cls._catalog_[msg['action']].load_from_dict(msg)
+                except KeyError:
+                    raise TypeError('Unknown message type')
+            raise TypeError('Message not supported')
+        else:
+            raise NotImplementedError
 
 class SendDsData(KomlogMessage):
+    _action_ = Messages.SEND_DS_DATA
 
-    def __init__(self, uri=None, ts=None, content=None):
-        if uri is not None:
-            self.uri=uri
-        if ts is not None:
-            self.ts=ts
-        if content is not None:
-            self.content=content
-        super().__init__(action=Messages.SEND_DS_DATA)
+    def __init__(self, uri, ts, content):
+        self.uri=uri
+        self.ts=ts
+        self.content=content
 
     @property
     def uri(self):
@@ -98,8 +97,8 @@ class SendDsData(KomlogMessage):
             and 'v' in msg
             and 'action' in msg
             and 'payload' in msg
-            and args.is_valid_int(msg['v']) and msg['v']==VERSION
-            and args.is_valid_string(msg['action']) and msg['action']==Messages.SEND_DS_DATA.value
+            and args.is_valid_int(msg['v']) and msg['v']==cls._version_
+            and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']
             and 'ts' in msg['payload']
@@ -124,15 +123,12 @@ class SendDsData(KomlogMessage):
         }
 
 class SendDpData(KomlogMessage):
+    _action_ = Messages.SEND_DP_DATA
 
-    def __init__(self, uri=None, ts=None, content=None):
-        if uri is not None:
-            self.uri=uri
-        if ts is not None:
-            self.ts=ts
-        if content is not None:
-            self.content=content
-        super().__init__(action=Messages.SEND_DP_DATA)
+    def __init__(self, uri, ts, content):
+        self.uri=uri
+        self.ts=ts
+        self.content=content
 
     @property
     def uri(self):
@@ -174,8 +170,8 @@ class SendDpData(KomlogMessage):
             and 'v' in msg
             and 'action' in msg
             and 'payload' in msg
-            and args.is_valid_int(msg['v']) and msg['v']==VERSION
-            and args.is_valid_string(msg['action']) and msg['action']==Messages.SEND_DP_DATA.value
+            and args.is_valid_int(msg['v']) and msg['v']==cls._version_
+            and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']
             and 'ts' in msg['payload']
@@ -200,13 +196,11 @@ class SendDpData(KomlogMessage):
         }
 
 class SendMultiData(KomlogMessage):
+    _action_ = Messages.SEND_MULTI_DATA
 
     def __init__(self, ts=None, uris=None):
-        if ts is not None:
-            self.ts=ts
-        if uris is not None:
-            self.uris=uris
-        super().__init__(action=Messages.SEND_MULTI_DATA)
+        self.ts=ts
+        self.uris=uris
 
     @property
     def uris(self):
@@ -246,8 +240,8 @@ class SendMultiData(KomlogMessage):
             and 'v' in msg
             and 'action' in msg
             and 'payload' in msg
-            and args.is_valid_int(msg['v']) and msg['v']==VERSION
-            and args.is_valid_string(msg['action']) and msg['action']==Messages.SEND_MULTI_DATA.value
+            and args.is_valid_int(msg['v']) and msg['v']==cls._version_
+            and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'ts' in msg['payload']
             and 'uris' in msg['payload']):
@@ -271,11 +265,10 @@ class SendMultiData(KomlogMessage):
         }
 
 class HookToUri(KomlogMessage):
+    _action_  = Messages.HOOK_TO_URI
 
     def __init__(self, uri=None):
-        if uri is not None:
-            self.uri=uri
-        super().__init__(action=Messages.HOOK_TO_URI)
+        self.uri=uri
 
     @property
     def uri(self):
@@ -294,8 +287,8 @@ class HookToUri(KomlogMessage):
             and 'v' in msg
             and 'action' in msg
             and 'payload' in msg
-            and args.is_valid_int(msg['v']) and msg['v']==VERSION
-            and args.is_valid_string(msg['action']) and msg['action']==Messages.HOOK_TO_URI.value
+            and args.is_valid_int(msg['v']) and msg['v']==cls._version_
+            and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']):
             uri=msg['payload']['uri']
@@ -314,11 +307,10 @@ class HookToUri(KomlogMessage):
         }
 
 class UnHookFromUri(KomlogMessage):
+    _action_ = Messages.UNHOOK_FROM_URI
 
     def __init__(self, uri=None):
-        if uri is not None:
-            self.uri=uri
-        super().__init__(action=Messages.UNHOOK_FROM_URI)
+        self.uri=uri
 
     @property
     def uri(self):
@@ -337,8 +329,8 @@ class UnHookFromUri(KomlogMessage):
             and 'v' in msg
             and 'action' in msg
             and 'payload' in msg
-            and args.is_valid_int(msg['v']) and msg['v']==VERSION
-            and args.is_valid_string(msg['action']) and msg['action']==Messages.UNHOOK_FROM_URI.value
+            and args.is_valid_int(msg['v']) and msg['v']==cls._version_
+            and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']):
             uri=msg['payload']['uri']

@@ -651,32 +651,31 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         self.assertTrue(isinstance(msg, messages.UrisUpdatedMessage))
         self.assertEqual(msg.type, messages.URIS_UPDATED_MESSAGE)
 
-    def test_SendSessionDataMessage_failure_invalid_date(self):
-        ''' SendSessionDataMessage creation should fail if date is invalid '''
-        dates=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4().hex, uuid.uuid4(), json.dumps('username'), 'user\nname','user\tname']
-        data=[{'uri':'uri','content':'content'}]
-        sid=uuid.uuid4()
-        for date in dates:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                messages.SendSessionDataMessage(sid=sid,data=data, date=date)
-            self.assertEqual(cm.exception.error, Errors.E_IIMM_SSDT_IDT)
-
     def test_SendSessionDataMessage_failure_invalid_sid(self):
         ''' SendSessionDataMessage creation should fail if sid is invalid '''
         sids=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4().hex, uuid.uuid1(), json.dumps('username'), 'user\nname','user\tname']
         data=[{'uri':'uri','content':'content'}]
-        date=uuid.uuid1()
         for sid in sids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                messages.SendSessionDataMessage(sid=sid,data=data, date=date)
+                messages.SendSessionDataMessage(sid=sid,data=data)
             self.assertEqual(cm.exception.error, Errors.E_IIMM_SSDT_ISID)
 
     def test_SendSessionDataMessage_success(self):
         ''' SendSessionDataMessage creation should succeed '''
         data=[{'uri':'uri','content':'content'}]
         sid=uuid.uuid4()
-        date=uuid.uuid1()
-        msg=messages.SendSessionDataMessage(sid=sid, data=data, date=date)
+        msg=messages.SendSessionDataMessage(sid=sid, data=data)
+        self.assertTrue(isinstance(msg, messages.SendSessionDataMessage))
+        self.assertEqual(msg.type, messages.SEND_SESSION_DATA_MESSAGE)
+
+    def test_SendSessionDataMessage_from_serialized_message_success(self):
+        ''' creating a SendSessionDataMessage from its serialization should succeed  '''
+        data=[{'uri':'uri','content':'content'}]
+        sid=uuid.uuid4()
+        msg=messages.SendSessionDataMessage(sid=sid, data=data)
+        self.assertTrue(isinstance(msg, messages.SendSessionDataMessage))
+        self.assertEqual(msg.type, messages.SEND_SESSION_DATA_MESSAGE)
+        msg=messages.SendSessionDataMessage(serialized_message=msg.serialized_message)
         self.assertTrue(isinstance(msg, messages.SendSessionDataMessage))
         self.assertEqual(msg.type, messages.SEND_SESSION_DATA_MESSAGE)
 

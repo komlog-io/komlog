@@ -367,7 +367,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.unrouted_messages, [])
 
     def test_process_message_URISUPDT_failure_uris_and_data_existed_but_no_permission(self):
-        ''' process_message_URISUPDT should fail if user has no permission over elements '''
+        ''' process_message_URISUPDT should not generate any SSDATA message if user 
+            has no permission over uris to retrieve their data '''
         username='test_process_message_urisupdt_failure_uris_existed_but_no_permission'
         password='password'
         email=username+'@komlog.org'
@@ -419,12 +420,12 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             {'uri':datasource_uri,'content':ds_content},
             {'uri':datapoint_uri,'content':dp_content},
         ]
-        generated_message=messages.SendSessionDataMessage(sid=associated_sid, data=data, date=date)
         self.assertEqual(response.error, Errors.OK)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
         self.assertEqual(response.message_type, messages.URIS_UPDATED_MESSAGE)
         self.assertEqual(response.message_params, message.serialized_message)
         self.assertEqual(response.routed_messages, {})
+        self.assertEqual(response.unrouted_messages, [])
 
     def test_process_message_URISUPDT_success_uris_and_data_existed_but_permission_only_over_ds(self):
         ''' process_message_URISUPDT should succeed and generate messages only over elements with permissions '''
@@ -486,13 +487,12 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(len(response.routed_messages[session_info.imc_address]) == 1)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, associated_sid)
-        self.assertEqual(response.routed_messages[session_info.imc_address][0].date,date)
-        expected_data=[
+        ts=timeuuid.get_isodate_from_uuid(date)
+        expected_data=ws_message.SendMultiData(ts=ts, uris=[
             {'uri':datasource_uri,'type':vertex.DATASOURCE,'content':ds_content},
-        ]
+        ]).to_dict()
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        pairs = zip(sorted(recv_data, key=lambda x: x['uri']), sorted(expected_data, key=lambda x: x['uri']))
-        self.assertFalse(any(x != y for x,y in pairs))
+        self.assertEqual(expected_data, recv_data)
 
     def test_process_message_URISUPDT_success_uris_and_data_existed_but_permission_only_over_dp(self):
         ''' process_message_URISUPDT should succeed and generate messages only over elements with permissions '''
@@ -554,13 +554,12 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(len(response.routed_messages[session_info.imc_address]) == 1)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, associated_sid)
-        self.assertEqual(response.routed_messages[session_info.imc_address][0].date,date)
-        expected_data=[
+        ts=timeuuid.get_isodate_from_uuid(date)
+        expected_data=ws_message.SendMultiData(ts=ts, uris=[
             {'uri':datapoint_uri,'type':vertex.DATAPOINT,'content':dp_content},
-        ]
+        ]).to_dict()
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        pairs = zip(sorted(recv_data, key=lambda x: x['uri']), sorted(expected_data, key=lambda x: x['uri']))
-        self.assertFalse(any(x != y for x,y in pairs))
+        self.assertEqual(expected_data, recv_data)
 
     def test_process_message_URISUPDT_success_uris_and_data_existed_and_session_associated(self):
         ''' process_message_URISUPDT should succeed and generate the corresponding messages
@@ -620,7 +619,6 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             {'uri':datasource_uri,'type':vertex.DATASOURCE, 'content':ds_content},
             {'uri':datapoint_uri,'type':vertex.DATAPOINT, 'content':dp_content},
         ]
-        generated_message=messages.SendSessionDataMessage(sid=associated_sid, data=data, date=date)
         self.assertEqual(response.error, Errors.OK)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
         self.assertEqual(response.message_type, messages.URIS_UPDATED_MESSAGE)
@@ -631,10 +629,11 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(len(response.routed_messages[session_info.imc_address]) == 1)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, associated_sid)
-        self.assertEqual(response.routed_messages[session_info.imc_address][0].date,date)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        pairs = zip(sorted(recv_data, key=lambda x: x['uri']), sorted(data, key=lambda x: x['uri']))
-        self.assertFalse(any(x != y for x,y in pairs))
+        self.assertTrue(recv_data['action'],ws_message.SendMultiData._action_.value)
+        self.assertTrue(recv_data['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
+        self.assertEqual(sorted(recv_data['payload']['uris'], key=lambda x: x['uri']),sorted(data, key=lambda x: x['uri']))
+        valid_message=ws_message.KomlogMessage.load_from_dict(recv_data)
 
     def test_process_message_URISUPDT_success_uris_and_data_existed_and_sessions_associated(self):
         ''' process_message_URISUPDT should succeed and generate the corresponding messages
@@ -715,18 +714,21 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(session_info1.imc_address in response.routed_messages)
         self.assertTrue(len(response.routed_messages[session_info1.imc_address]) == 2)
         self.assertEqual(response.routed_messages[session_info1.imc_address][0].type, messages.SEND_SESSION_DATA_MESSAGE)
-        self.assertTrue(response.routed_messages[session_info1.imc_address][0].sid in (associated_sid1, associated_sid2))
-        self.assertEqual(response.routed_messages[session_info1.imc_address][0].date,date)
-        recv_data=response.routed_messages[session_info1.imc_address][0].data
-        pairs = zip(sorted(recv_data, key=lambda x: x['uri']), sorted(data, key=lambda x: x['uri']))
-        self.assertFalse(any(x != y for x,y in pairs))
         self.assertEqual(response.routed_messages[session_info1.imc_address][1].type, messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertTrue(response.routed_messages[session_info1.imc_address][0].sid in (associated_sid1, associated_sid2))
         self.assertTrue(response.routed_messages[session_info1.imc_address][1].sid in (associated_sid1, associated_sid2))
         self.assertNotEqual(response.routed_messages[session_info1.imc_address][0].sid,response.routed_messages[session_info1.imc_address][1].sid)
-        self.assertEqual(response.routed_messages[session_info1.imc_address][1].date,date)
-        recv_data=response.routed_messages[session_info1.imc_address][1].data
-        pairs = zip(sorted(recv_data, key=lambda x: x['uri']), sorted(data, key=lambda x: x['uri']))
-        self.assertFalse(any(x != y for x,y in pairs))
+        
+        msg1=response.routed_messages[session_info1.imc_address][0].data
+        msg2=response.routed_messages[session_info1.imc_address][1].data
+        self.assertEqual(msg1['action'],ws_message.SendMultiData._action_.value)
+        self.assertEqual(msg2['action'],ws_message.SendMultiData._action_.value)
+        self.assertEqual(msg1['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
+        self.assertEqual(msg2['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
+        self.assertEqual(sorted(msg1['payload']['uris'], key=lambda x: x['uri']),sorted(data, key=lambda x: x['uri']))
+        self.assertEqual(sorted(msg2['payload']['uris'], key=lambda x: x['uri']),sorted(data, key=lambda x: x['uri']))
+        valid_message=ws_message.KomlogMessage.load_from_dict(msg1)
+        valid_message=ws_message.KomlogMessage.load_from_dict(msg2)
 
     def test_process_message_HOOKNEW_success_no_new_uris(self):
         ''' process_message_HOOKNEW should succeed if there is no new uri '''
@@ -1125,12 +1127,13 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
     def test_process_message_SSDATA_failure_non_existing_session(self):
         ''' process_message_SSDATA should fail if sid is not associated to this module '''
         sid=uuid.uuid4()
-        date=uuid.uuid1()
+        ts=timeuuid.get_isodate_from_uuid(uuid.uuid1())
         data=[
             {'uri':'uri','type':vertex.DATASOURCE,'content':'content'},
             {'uri':'uri2','type':vertex.DATAPOINT, 'content':'2323.434'}
         ]
-        message=messages.SendSessionDataMessage(sid=sid, date=date, data=data)
+        msg=ws_message.SendMultiData(ts=ts, uris=data)
+        message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
         response=lambdas.process_message_SSDATA(message=message)
         self.assertEqual(response.error, Errors.E_IIATM_SSDT_SNF)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
@@ -1142,12 +1145,13 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
     def test_process_message_SSDATA_success(self):
         ''' process_message_SSDATA should succeed '''
         sid=uuid.uuid4()
-        date=uuid.uuid1()
+        ts=timeuuid.get_isodate_from_uuid(uuid.uuid1())
         data=[
             {'uri':'uri','type':vertex.DATASOURCE,'content':'content'},
             {'uri':'uri2','type':vertex.DATAPOINT, 'content':'333'}
         ]
-        message=messages.SendSessionDataMessage(sid=sid, date=date, data=data)
+        msg=ws_message.SendMultiData(ts=ts, uris=data)
+        message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
         class FakeWSSession:
             def __init__(self):
                 self.response_json=None
@@ -1164,6 +1168,6 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.message_params, message.serialized_message)
         self.assertEqual(response.routed_messages, {})
         self.assertEqual(response.unrouted_messages, [])
-        expected_msg=ws_message.SendMultiData(ts=timeuuid.get_isodate_from_uuid(date),uris=data)
+        expected_msg=ws_message.SendMultiData(ts=ts,uris=data)
         self.assertEqual(fake_callback.response_json, json.dumps(expected_msg.to_dict()))
 

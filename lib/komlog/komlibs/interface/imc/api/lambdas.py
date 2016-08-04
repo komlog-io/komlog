@@ -76,7 +76,9 @@ def process_message_URISUPDT(message):
                     except authexcept.AuthorizationException:
                         pass
                 if len(data)>0:
-                    message=messages.SendSessionDataMessage(sid=sid, date=date, data=data)
+                    ts=timeuuid.get_isodate_from_uuid(date)
+                    msg=ws_message.SendMultiData(ts=ts, uris=data)
+                    message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
                     response.add_message(message,dest=session_info.imc_address)
         except authexcept.SessionNotFoundException:
             message=messages.ClearSessionHooksMessage(sid=sid, ids=[(uri['id'],uri['type']) for uri in uris])
@@ -131,10 +133,8 @@ def process_message_CLSHOOKS(message):
 @exceptions.ExceptionHandler
 def process_message_SSDATA(message):
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
-    ts=timeuuid.get_isodate_from_uuid(message.date)
-    msg=ws_message.SendMultiData(ts=ts, uris=message.data)
     try:
-        ws_session.agent_callback[message.sid](message=msg.to_dict())
+        ws_session.agent_callback[message.sid](message=message.data)
     except KeyError:
         try:
             session_info=session.get_agent_session_info(sid=message.sid)
