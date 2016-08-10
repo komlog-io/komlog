@@ -39,34 +39,33 @@ def get_datasource_data_request(passport, did, seq=None, tid=None):
         ii=timeuuid.get_uuid1_from_custom_sequence(seq)
         ie=ii
     else:
+        ie=timeuuid.uuid1()
         ii=None
-        ie=None
     tid=uuid.UUID(tid) if tid else None
     try:
         authorization.authorize_request(request=Requests.GET_DATASOURCE_DATA,passport=passport,did=did,ii=ii,ie=ie, tid=tid)
     except authexcept.IntervalBoundsException as e:
         if ii and ii.time<e.data['date'].time:
-            raise e
-        elif ii:
-            data=datasourceapi.get_datasource_data(did,date=ii)
+            raise
         else:
-            data=datasourceapi.get_last_processed_datasource_data(did)
-            if data['date'].time<e.data['date'].time:
-                e.error=Errors.E_IWADS_GDSDR_LDBL
+            if ie.time < e.data['date'].time:
+                e.error=Errors.E_IWADS_GDSDR_ADIF
                 raise e
+            else:
+                data=datasourceapi.get_mapped_datasource_data(did, todate=ie, count=1)
+                if data[0]['date'].time < e.data['date'].time:
+                    e.error=Errors.E_IWADS_GDSDR_LDBL
+                    raise e
     else:
-        if ii:
-            data=datasourceapi.get_datasource_data(did,date=ii)
-        else:
-            data=datasourceapi.get_last_processed_datasource_data(did)
+        data=datasourceapi.get_mapped_datasource_data(did, fromdate=ii, todate=ie, count=1)
     datasource={}
-    datasource['did']=data['did'].hex
-    datasource['ts']=timeuuid.get_unix_timestamp(data['date'])
-    datasource['seq']=timeuuid.get_custom_sequence(data['date'])
-    datasource['variables']=data['variables']
-    datasource['content']=data['content']
+    datasource['did']=did.hex
+    datasource['ts']=timeuuid.get_unix_timestamp(data[0]['date'])
+    datasource['seq']=timeuuid.get_custom_sequence(data[0]['date'])
+    datasource['variables']=data[0]['variables']
+    datasource['content']=data[0]['content']
     datasource['datapoints']=[]
-    for datapoint in data['datapoints']:
+    for datapoint in data[0]['datapoints']:
         datasource['datapoints'].append({'pid':datapoint['pid'].hex,'index':datapoint['position']})
     return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datasource)
 

@@ -226,6 +226,164 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertTrue(isinstance(data,list))
         self.assertEqual(data,[])
 
+    def test_get_datasource_data_success_did_passed(self):
+        did=uuid.uuid4()
+        init_interval=100
+        end_interval=1000
+        init_subinterval=250
+        end_subinterval=750
+        for i in range(init_interval, end_interval):
+            data=ormdatasource.DatasourceData(did=did, date=timeuuid.uuid1(seconds=i), content=str(i))
+            self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=data))
+        data=datasourceapi.get_datasource_data(did=did)
+        self.assertEqual(len(data),end_interval-init_interval)
+
+    def test_get_datasource_data_success_did_and_count_passed(self):
+        did=uuid.uuid4()
+        init_interval=100
+        end_interval=1000
+        init_subinterval=250
+        end_subinterval=750
+        for i in range(init_interval, end_interval):
+            data=ormdatasource.DatasourceData(did=did, date=timeuuid.uuid1(seconds=i), content=str(i))
+            self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=data))
+        count=100
+        data=datasourceapi.get_datasource_data(did=did, count=count)
+        self.assertEqual(len(data),count)
+        min_date=timeuuid.min_uuid_from_time(end_interval-count)
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+
+    def test_get_datasource_data_success_did_and_fromdate_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            data=ormdatasource.DatasourceData(did=did, date=timeuuid.uuid1(seconds=i), content=str(i))
+            self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=data))
+        count=5
+        fromdate=timeuuid.min_uuid_from_time(end_interval-count)
+        data=datasourceapi.get_datasource_data(did=did, fromdate=fromdate)
+        self.assertEqual(len(data),count)
+        min_date=fromdate
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+
+    def test_get_datasource_data_success_did_and_fromdate_and_count_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            data=ormdatasource.DatasourceData(did=did, date=timeuuid.uuid1(seconds=i), content=str(i))
+            self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=data))
+        count=2
+        fromdate=timeuuid.min_uuid_from_time(end_interval-5)
+        data=datasourceapi.get_datasource_data(did=did, fromdate=fromdate, count=count)
+        self.assertEqual(len(data),count)
+        min_date=timeuuid.min_uuid_from_time(end_interval-count)
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+
+    def test_get_datasource_data_success_did_and_todate_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            data=ormdatasource.DatasourceData(did=did, date=timeuuid.uuid1(seconds=i), content=str(i))
+            self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=data))
+        count=5
+        todate=timeuuid.max_uuid_from_time(init_interval+count-1)
+        data=datasourceapi.get_datasource_data(did=did, todate=todate)
+        self.assertEqual(len(data),count)
+        max_date=todate
+        for item in data:
+            self.assertTrue(item.date.time<=max_date.time)
+
+    def test_get_datasource_data_success_did_and_todate_and_count_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            data=ormdatasource.DatasourceData(did=did, date=timeuuid.uuid1(seconds=i), content=str(i))
+            self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=data))
+        count=3
+        todate=timeuuid.max_uuid_from_time(end_interval-count)
+        data=datasourceapi.get_datasource_data(did=did, todate=todate, count=count)
+        self.assertEqual(len(data),count)
+        min_date=timeuuid.min_uuid_from_time(end_interval-count-count)
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+
+    def test_get_datasource_data_success_did_and_fromdate_todate_and_count_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            data=ormdatasource.DatasourceData(did=did, date=timeuuid.uuid1(seconds=i), content=str(i))
+            self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=data))
+        count=1
+        todate=timeuuid.max_uuid_from_time(end_interval-1)
+        fromdate=timeuuid.max_uuid_from_time(end_interval-5)
+        data=datasourceapi.get_datasource_data(did=did,fromdate=fromdate,todate=todate,count=count)
+        self.assertEqual(len(data),count)
+        min_date=timeuuid.min_uuid_from_time(end_interval-2)
+        max_date=todate
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+            self.assertTrue(item.date.time<=max_date.time)
+
+    def test_get_datasource_data_success_did_and_fromdate_todate_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            data=ormdatasource.DatasourceData(did=did, date=timeuuid.uuid1(seconds=i), content=str(i))
+            self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=data))
+        count=7
+        todate=timeuuid.max_uuid_from_time(end_interval)
+        fromdate=timeuuid.min_uuid_from_time(end_interval-count)
+        data=datasourceapi.get_datasource_data(did=did,fromdate=fromdate,todate=todate)
+        self.assertEqual(len(data),count)
+        min_date=fromdate
+        max_date=todate
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+            self.assertTrue(item.date.time<=max_date.time)
+
+    def test_get_datasource_data_success_same_fromdate_and_todate_passed(self):
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        content='content'
+        data=ormdatasource.DatasourceData(did=did, date=date, content=content)
+        self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=data))
+        todate=date
+        fromdate=date
+        data=datasourceapi.get_datasource_data(did=did,fromdate=fromdate,todate=todate)
+        self.assertEqual(len(data),1)
+        self.assertEqual(data[0].date,date)
+        self.assertEqual(data[0].did,did)
+        self.assertEqual(data[0].content,content)
+        date=timeuuid.min_uuid_from_time(1)
+        data=ormdatasource.DatasourceData(did=did, date=date, content=content)
+        self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=data))
+        todate=date
+        fromdate=date
+        data=datasourceapi.get_datasource_data(did=did,fromdate=fromdate,todate=todate)
+        self.assertEqual(len(data),1)
+        self.assertEqual(data[0].date,date)
+        self.assertEqual(data[0].did,did)
+        self.assertEqual(data[0].content,content)
+        date=timeuuid.max_uuid_from_time(50)
+        data=ormdatasource.DatasourceData(did=did, date=date, content=content)
+        self.assertTrue(datasourceapi.insert_datasource_data(dsdobj=data))
+        todate=date
+        fromdate=date
+        data=datasourceapi.get_datasource_data(did=did,fromdate=fromdate,todate=todate)
+        self.assertEqual(len(data),1)
+        self.assertEqual(data[0].date,date)
+        self.assertEqual(data[0].did,did)
+        self.assertEqual(data[0].content,content)
+
     def test_get_datasource_data_success_testing_interval_limits(self):
         did=uuid.uuid4()
         init_interval=100
@@ -398,6 +556,160 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         for amap in dsmaps_db:
             self.assertTrue(isinstance(amap,ormdatasource.DatasourceMap))
             self.assertEqual(amap.did, did)
+
+    def test_get_datasource_maps_success_did_passed(self):
+        did=uuid.uuid4()
+        init_interval=100
+        end_interval=1000
+        init_subinterval=250
+        end_subinterval=750
+        for i in range(init_interval, end_interval):
+            dsmap=ormdatasource.DatasourceMap(did=did, date=timeuuid.uuid1(seconds=i), variables={})
+            self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
+        data=datasourceapi.get_datasource_maps(did=did)
+        self.assertEqual(len(data),end_interval-init_interval)
+
+    def test_get_datasource_maps_success_did_and_count_passed(self):
+        did=uuid.uuid4()
+        init_interval=100
+        end_interval=1000
+        init_subinterval=250
+        end_subinterval=750
+        for i in range(init_interval, end_interval):
+            dsmap=ormdatasource.DatasourceMap(did=did, date=timeuuid.uuid1(seconds=i), variables={})
+            self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
+        count=100
+        data=datasourceapi.get_datasource_maps(did=did, count=count)
+        self.assertEqual(len(data),count)
+        min_date=timeuuid.min_uuid_from_time(end_interval-count)
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+
+    def test_get_datasource_maps_success_did_and_fromdate_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            dsmap=ormdatasource.DatasourceMap(did=did, date=timeuuid.uuid1(seconds=i), variables={})
+            self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
+        count=5
+        fromdate=timeuuid.min_uuid_from_time(end_interval-count)
+        data=datasourceapi.get_datasource_maps(did=did, fromdate=fromdate)
+        self.assertEqual(len(data),count)
+        min_date=fromdate
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+
+    def test_get_datasource_maps_success_did_and_fromdate_and_count_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            dsmap=ormdatasource.DatasourceMap(did=did, date=timeuuid.uuid1(seconds=i), variables={})
+            self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
+        count=2
+        fromdate=timeuuid.min_uuid_from_time(end_interval-5)
+        data=datasourceapi.get_datasource_maps(did=did, fromdate=fromdate, count=count)
+        self.assertEqual(len(data),count)
+        min_date=timeuuid.min_uuid_from_time(end_interval-count)
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+
+    def test_get_datasource_maps_success_did_and_todate_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            dsmap=ormdatasource.DatasourceMap(did=did, date=timeuuid.uuid1(seconds=i), variables={})
+            self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
+        count=5
+        todate=timeuuid.max_uuid_from_time(init_interval+count-1)
+        data=datasourceapi.get_datasource_maps(did=did, todate=todate)
+        self.assertEqual(len(data),count)
+        max_date=todate
+        for item in data:
+            self.assertTrue(item.date.time<=max_date.time)
+
+    def test_get_datasource_maps_success_did_and_todate_and_count_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            dsmap=ormdatasource.DatasourceMap(did=did, date=timeuuid.uuid1(seconds=i), variables={})
+            self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
+        count=3
+        todate=timeuuid.max_uuid_from_time(end_interval-count)
+        data=datasourceapi.get_datasource_maps(did=did, todate=todate, count=count)
+        self.assertEqual(len(data),count)
+        min_date=timeuuid.min_uuid_from_time(end_interval-count-count)
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+
+    def test_get_datasource_maps_success_did_and_fromdate_todate_and_count_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            dsmap=ormdatasource.DatasourceMap(did=did, date=timeuuid.uuid1(seconds=i), variables={})
+            self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
+        count=1
+        todate=timeuuid.max_uuid_from_time(end_interval-1)
+        fromdate=timeuuid.max_uuid_from_time(end_interval-5)
+        data=datasourceapi.get_datasource_maps(did=did,fromdate=fromdate,todate=todate,count=count)
+        self.assertEqual(len(data),count)
+        min_date=timeuuid.min_uuid_from_time(end_interval-2)
+        max_date=todate
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+            self.assertTrue(item.date.time<=max_date.time)
+
+    def test_get_datasource_maps_success_did_and_fromdate_todate_passed(self):
+        did=uuid.uuid4()
+        init_interval=1
+        end_interval=10
+        for i in range(init_interval, end_interval):
+            dsmap=ormdatasource.DatasourceMap(did=did, date=timeuuid.uuid1(seconds=i), variables={})
+            self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
+        count=7
+        todate=timeuuid.max_uuid_from_time(end_interval)
+        fromdate=timeuuid.min_uuid_from_time(end_interval-count)
+        data=datasourceapi.get_datasource_maps(did=did,fromdate=fromdate,todate=todate)
+        self.assertEqual(len(data),count)
+        min_date=fromdate
+        max_date=todate
+        for item in data:
+            self.assertTrue(item.date.time>=min_date.time)
+            self.assertTrue(item.date.time<=max_date.time)
+
+    def test_get_datasource_data_success_same_fromdate_and_todate_passed(self):
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        dsmap=ormdatasource.DatasourceMap(did=did, date=date, variables={})
+        self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
+        todate=date
+        fromdate=date
+        data=datasourceapi.get_datasource_maps(did=did,fromdate=fromdate,todate=todate)
+        self.assertEqual(len(data),1)
+        self.assertEqual(data[0].date,date)
+        self.assertEqual(data[0].did,did)
+        date=timeuuid.min_uuid_from_time(1)
+        dsmap=ormdatasource.DatasourceMap(did=did, date=date, variables={})
+        self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
+        todate=date
+        fromdate=date
+        data=datasourceapi.get_datasource_maps(did=did,fromdate=fromdate,todate=todate)
+        self.assertEqual(len(data),1)
+        self.assertEqual(data[0].date,date)
+        self.assertEqual(data[0].did,did)
+        date=timeuuid.max_uuid_from_time(50)
+        dsmap=ormdatasource.DatasourceMap(did=did, date=date, variables={})
+        self.assertTrue(datasourceapi.insert_datasource_map(dsmapobj=dsmap))
+        todate=date
+        fromdate=date
+        data=datasourceapi.get_datasource_maps(did=did,fromdate=fromdate,todate=todate)
+        self.assertEqual(len(data),1)
+        self.assertEqual(data[0].date,date)
+        self.assertEqual(data[0].did,did)
 
     def test_get_datasource_map_success_testing_interval_limits(self):
         did=uuid.uuid4()

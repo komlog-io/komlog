@@ -60,6 +60,11 @@ class Errors(Enum):
     E_IWSPV1PM_PUHFU_UNF    = 210500    #: process_unhook_from_uri: uri not found
     E_IWSPV1PM_PUHFU_ONA    = 210501    #: process_unhook_from_uri:operation not allowed on this uri
 
+    E_IWSPV1PM_PRDI_UNF     = 210600    #: process_request_data_interval: uri not found
+    E_IWSPV1PM_PRDI_ONA     = 210601    #: process_request_data_interval: operation not allowed on this uri
+    E_IWSPV1PM_PRDI_ANA     = 210602    #: process_request_data_interval:access to range not allowed
+    E_IWSPV1PM_PRDI_ALP     = 210603    #: process_request_data_interval:access to range limited partially
+
 # interface websocket protocol v1 model message
 
     E_IWSPV1MM_SDSD_IURI    = 220000      #: SendDsData. invalid uri
@@ -81,6 +86,17 @@ class Errors(Enum):
 
     E_IWSPV1MM_UHFU_IURI    = 220400      #: UnHookFromUri. invalid uri
     E_IWSPV1MM_UHFU_ELFD    = 220403      #: UnHookFromUri. error loading from dict
+
+    E_IWSPV1MM_RQDI_IURI    = 220500      #: RequestDataInterval. invalid uri
+    E_IWSPV1MM_RQDI_ISTART  = 220501      #: RequestDataInterval. invalid start
+    E_IWSPV1MM_RQDI_IEND    = 220502      #: RequestDataInterval. invalid end
+    E_IWSPV1MM_RQDI_ELFD    = 220503      #: RequestDataInterval. error loading from dict
+
+    E_IWSPV1MM_SDI_IURI     = 220600      #: SendDataInterval. invalid uri
+    E_IWSPV1MM_SDI_ISTART   = 220601      #: SendDataInterval. invalid start
+    E_IWSPV1MM_SDI_IEND     = 220602      #: SendDataInterval. invalid end
+    E_IWSPV1MM_SDI_IDATA    = 220603      #: SendDataInterval. invalid data
+    E_IWSPV1MM_SDI_ELFD     = 220604      #: SendDataInterval. error loading from dict
 
 # interface websocket protocol v1 model response
 

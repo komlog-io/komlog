@@ -447,7 +447,24 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         psp = self.passport
         did=self.agents[0]['dids'][0]
         content='get_datasource_data content 4 5 6'
-        date=timeuuid.uuid1()
+        date=timeuuid.uuid1(seconds=1000)
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date, content=content))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date))
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.uuid1(seconds=5000)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(psp.uid, iface, minTs.hex))
+        response=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_ALLOWED)
+        self.assertEqual(response.error, Errors.E_IWADS_GDSDR_LDBL.value)
+        self.assertEqual(response.data, {'error':Errors.E_IWADS_GDSDR_LDBL.value})
+        self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
+
+    def test_get_datasource_data_request_failure_date_requested_empty_but_limit_is_in_the_future(self):
+        ''' get_datasource_data_request should fail if date set in the interval bounds limit is in the future '''
+        psp = self.passport
+        did=self.agents[0]['dids'][0]
+        content='get_datasource_data content 4 5 6'
+        date=timeuuid.uuid1(seconds=1000)
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date, content=content))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date))
         iface=interfaces.User_DataRetrievalMinTimestamp().value
@@ -455,8 +472,8 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         self.assertTrue(cassapiiface.insert_user_iface_deny(psp.uid, iface, minTs.hex))
         response=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_ALLOWED)
-        self.assertEqual(response.error, Errors.E_IWADS_GDSDR_LDBL.value)
-        self.assertEqual(response.data, {'error':Errors.E_IWADS_GDSDR_LDBL.value})
+        self.assertEqual(response.error, Errors.E_IWADS_GDSDR_ADIF.value)
+        self.assertEqual(response.data, {'error':Errors.E_IWADS_GDSDR_ADIF.value})
         self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
 
     def test_get_datasource_data_request_success_date_requested_empty_but_last_processed_after_than_interval_bound_limit(self):
@@ -486,8 +503,8 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         seq=timeuuid.get_custom_sequence(date)
         response=datasourceapi.get_datasource_data_request(passport=psp, did=did, seq=seq)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, gesterrors.E_GDA_GDD_DDNF.value)
-        self.assertEqual(response.data, {'error':gesterrors.E_GDA_GDD_DDNF.value})
+        self.assertEqual(response.error, gesterrors.E_GDA_GMDD_DDNF.value)
+        self.assertEqual(response.data, {'error':gesterrors.E_GDA_GMDD_DDNF.value})
         self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
 
     def test_get_datasource_data_request_success_interval_bound_set_and_data_requested_after_limit_does_exist(self):

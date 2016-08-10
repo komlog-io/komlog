@@ -64,11 +64,6 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         self.assertEqual(datasource['uid'],uid)
         self.assertEqual(datasource['datasourcename'],datasourcename)
 
-    def test_get_last_processed_datasource_data_non_existent_datasource(self):
-        ''' get_last_processed_datasource_data should fail if did is not in system '''
-        did=uuid.uuid4()
-        self.assertRaises(exceptions.DatasourceNotFoundException, api.get_last_processed_datasource_data, did=did)
-
     def test_upload_datasource_data_non_existent_datasource(self):
         ''' upload_datasource_data should fail if did is not in system '''
         did=uuid.uuid4()
@@ -139,29 +134,57 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         self.assertTrue(api.update_datasource_config(did=datasource['did'], datasourcename=datasourcename))
 
     def test_get_datasource_data_success(self):
-        ''' store_datasource_data should should store the content successfully '''
+        ''' get_datasource_data should retrieve the content successfully '''
         did=uuid.uuid4()
         date=timeuuid.uuid1()
         content='store_datasource_data content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(api.store_datasource_data(did=did, date=date, content=content))
-        data=api.get_datasource_data(did=did, date=date)
-        self.assertIsNotNone(data)
-        self.assertEqual(data['did'], did)
-        self.assertEqual(data['date'], date)
-        self.assertEqual(data['content'], content)
+        data=api.get_datasource_data(did=did, fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        self.assertEqual(data[0]['date'], date)
+        self.assertEqual(data[0]['content'], content)
 
-    def test_get_datasource_data_non_existent_datasource(self):
-        ''' get_datasource_data should fail if did does not exist '''
-        did=uuid.uuid4()
-        date=timeuuid.uuid1()
-        self.assertRaises(exceptions.DatasourceDataNotFoundException, api.get_datasource_data, did=did, date=date)
-
-    def test_get_datasource_data_non_existent_data_at_this_date(self):
+    def test_get_datasource_data_no_data_found(self):
         ''' get_datasource_data should fail if there is no data '''
         did=uuid.uuid4()
-        date=timeuuid.uuid1()
-        content='store_datasource_data content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
-        self.assertRaises(exceptions.DatasourceDataNotFoundException, api.get_datasource_data, did=did, date=date)
+        with self.assertRaises(exceptions.DatasourceDataNotFoundException) as cm:
+            api.get_datasource_data(did=did)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_GDD_DDNF)
+
+    def test_get_datasource_data_failure_invalid_did(self):
+        ''' get_datasource_data should fail if did is not valid '''
+        dids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datasource_data(did=did)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GDD_ID)
+
+    def test_get_datasource_data_failure_invalid_fromdate(self):
+        ''' get_datasource_data should fail if fromdate is not valid '''
+        did=uuid.uuid4()
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        for fromdate in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datasource_data(did=did, fromdate=fromdate)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GDD_IFD)
+
+    def test_get_datasource_data_failure_invalid_todate(self):
+        ''' get_datasource_data should fail if todate is not valid '''
+        did=uuid.uuid4()
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        for todate in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datasource_data(did=did, todate=todate)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GDD_ITD)
+
+    def test_get_datasource_data_failure_invalid_count(self):
+        ''' get_datasource_data should fail if count is not valid '''
+        did=uuid.uuid4()
+        counts=['asdfasd',-234234,234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        for count in counts:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datasource_data(did=did, count=count)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GDD_ICNT)
 
     def test_generate_datasource_map_non_existent_datasource(self):
         ''' generate_datasource_map should fail if did does not exist '''
@@ -184,12 +207,71 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         date=timeuuid.uuid1()
         content='generate_datasource_map content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(api.store_datasource_data(did=did, date=date, content=content))
-        data=api.get_datasource_data(did=did, date=date)
-        self.assertIsNotNone(data)
-        self.assertEqual(data['did'], did)
-        self.assertEqual(data['date'], date)
-        self.assertEqual(data['content'], content)
+        data=api.get_datasource_data(did=did, fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        self.assertEqual(data[0]['date'], date)
+        self.assertEqual(data[0]['content'], content)
         self.assertTrue(api.generate_datasource_map(did=did, date=date))
+
+    def test_get_mapped_datasource_data_no_data_found(self):
+        ''' get_mapped_datasource_data should fail if there is no data '''
+        did=uuid.uuid4()
+        with self.assertRaises(exceptions.DatasourceDataNotFoundException) as cm:
+            api.get_mapped_datasource_data(did=did)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_GMDD_DDNF)
+
+    def test_get_mapped_datasource_data_failure_invalid_did(self):
+        ''' get_mapped_datasource_data should fail if did is not valid '''
+        dids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_mapped_datasource_data(did=did)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GMDD_ID)
+
+    def test_get_mapped_datasource_data_failure_invalid_fromdate(self):
+        ''' get_mapped_datasource_data should fail if fromdate is not valid '''
+        did=uuid.uuid4()
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        for fromdate in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_mapped_datasource_data(did=did, fromdate=fromdate)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GMDD_IFD)
+
+    def test_get_mapped_datasource_data_failure_invalid_todate(self):
+        ''' get_mapped_datasource_data should fail if todate is not valid '''
+        did=uuid.uuid4()
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        for todate in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_mapped_datasource_data(did=did, todate=todate)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GMDD_ITD)
+
+    def test_get_mapped_datasource_data_failure_invalid_count(self):
+        ''' get_mapped_datasource_data should fail if count is not valid '''
+        did=uuid.uuid4()
+        counts=['asdfasd',-234234,234234.234,{'a':'dict'},['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        for count in counts:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_mapped_datasource_data(did=did, count=count)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GMDD_ICNT)
+
+    def test_get_mapped_datasource_data_success(self):
+        ''' get_mapped_datasource_data should return the content '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        content='generate_datasource_map content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(api.store_datasource_data(did=did, date=date, content=content))
+        data=api.get_datasource_data(did=did, fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        self.assertEqual(data[0]['date'], date)
+        self.assertEqual(data[0]['content'], content)
+        self.assertTrue(api.generate_datasource_map(did=did, date=date))
+        data=api.get_mapped_datasource_data(did=did)
+        self.assertEqual(len(data),1)
+        self.assertEqual(data[0]['date'], date)
+        self.assertEqual(data[0]['content'], content)
+        self.assertEqual(len(data[0]['variables']), 3)
+        self.assertEqual(len(data[0]['datapoints']), 0)
 
     def test_hook_to_datasource_failure_invalid_did(self):
         ''' hook_to_datasource should fail if did is not valid '''

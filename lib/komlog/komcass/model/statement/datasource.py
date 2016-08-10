@@ -19,14 +19,26 @@ STATEMENTS={
     20005:'select count(*) from mst_datasource where aid=?',
     20100:'select * from mst_datasource_stats where did=?',
     20200:'select * from dat_datasource where did=? and date=?',
-    20201:'select * from dat_datasource where did=? and date>=? and date<=?',
-    20202:'select * from dat_datasource where did=? and date>=? and date<=? limit ?',
+    20201:'select * from dat_datasource where did=? and date>=? and date<=? limit ?',
+    20202:'select * from dat_datasource where did=? and date>=? and date<=?',
+    20203:'select * from dat_datasource where did=? and date>=? limit ?',
+    20204:'select * from dat_datasource where did=? and date>=?',
+    20205:'select * from dat_datasource where did=? and date<=? limit ?',
+    20206:'select * from dat_datasource where did=? and date<=?',
+    20207:'select * from dat_datasource where did=? limit ?',
+    20208:'select * from dat_datasource where did=?',
     20300:'select variables from dat_datasource_map where did=? and date=?',
     20301:'select datapoints from dat_datasource_map where did=? and date=?',
-    20302:'select * from dat_datasource_map where did=? and date=?',
-    20303:'select * from dat_datasource_map where did=? and date>=? and date<=?',
-    20304:'select date from dat_datasource_map where did=? and date>=? and date<=?',
-    20305:'select * from dat_datasource_map where did=? and date>=? and date<=? limit ?',
+    20302:'select date from dat_datasource_map where did=? and date>=? and date<=?',
+    20303:'select * from dat_datasource_map where did=? and date=?',
+    20304:'select * from dat_datasource_map where did=? and date>=? and date<=? limit ?',
+    20305:'select * from dat_datasource_map where did=? and date>=? and date<=?',
+    20306:'select * from dat_datasource_map where did=? and date>=? limit ?',
+    20307:'select * from dat_datasource_map where did=? and date>=?',
+    20308:'select * from dat_datasource_map where did=? and date<=? limit ?',
+    20309:'select * from dat_datasource_map where did=? and date<=?',
+    20310:'select * from dat_datasource_map where did=? limit ?',
+    20311:'select * from dat_datasource_map where did=?',
     20400:'select * from dat_datasource_text_summary where did=? and date=?',
     20401:'select * from dat_datasource_text_summary where did=? and date>=? and date<=?',
     20500:'select * from dat_datasource_novelty_detector_datapoint where did=? and pid=? limit 1',
@@ -90,17 +102,29 @@ S_A_MSTDATASOURCESTATS_B_DID=20100
 # dat_datasource
 
 S_A_DATDATASOURCE_B_DID_DATE=20200
-S_A_DATDATASOURCE_B_DID_INITDATE_ENDDATE=20201
-S_A_DATDATASOURCE_B_DID_INITDATE_ENDDATE_COUNT=20202
+S_A_DATDATASOURCE_B_DID_INITDATE_ENDDATE_COUNT=20201
+S_A_DATDATASOURCE_B_DID_INITDATE_ENDDATE=20202
+S_A_DATDATASOURCE_B_DID_INITDATE_COUNT=20203
+S_A_DATDATASOURCE_B_DID_INITDATE=20204
+S_A_DATDATASOURCE_B_DID_ENDDATE_COUNT=20205
+S_A_DATDATASOURCE_B_DID_ENDDATE=20206
+S_A_DATDATASOURCE_B_DID_COUNT=20207
+S_A_DATDATASOURCE_B_DID=20208
 
 # dat_datasource_map
 
 S_VARIABLES_DATDATASOURCEMAP_B_DID_DATE=20300
 S_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE=20301
-S_A_DATDATASOURCEMAP_B_DID_DATE=20302
-S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20303
-S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20304
-S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE_COUNT=20305
+S_DATE_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20302
+S_A_DATDATASOURCEMAP_B_DID_DATE=20303
+S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE_COUNT=20304
+S_A_DATDATASOURCEMAP_B_DID_INITDATE_ENDDATE=20305
+S_A_DATDATASOURCEMAP_B_DID_INITDATE_COUNT=20306
+S_A_DATDATASOURCEMAP_B_DID_INITDATE=20307
+S_A_DATDATASOURCEMAP_B_DID_ENDDATE_COUNT=20308
+S_A_DATDATASOURCEMAP_B_DID_ENDDATE=20309
+S_A_DATDATASOURCEMAP_B_DID_COUNT=20310
+S_A_DATDATASOURCEMAP_B_DID=20311
 
 # dat_datasource_text_summary
 

@@ -5,7 +5,7 @@ Lambda functionality related messages
 '''
 
 from komlog.komfig import logging, defaults
-from komlog.komlibs.auth import session
+from komlog.komlibs.auth import session, passport, authorization
 from komlog.komlibs.auth.resources import authorization as resauth
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.general.validation import arguments as args
@@ -35,8 +35,8 @@ def process_message_URISUPDT(message):
             if uri['type'] == vertex.DATASOURCE:
                 sids=datasourceapi.get_datasource_hooks(did=uri['id'])
                 if len(sids)>0:
-                    ds_data=datasourceapi.get_datasource_data(did=uri['id'], date=date)
-                    contents[uri['id']]=ds_data['content']
+                    ds_data=datasourceapi.get_datasource_data(did=uri['id'], fromdate=date, todate=date, count=1)
+                    contents[uri['id']]=ds_data[0]['content']
                     for sid in sids:
                         try:
                             hooks[sid].append(uri)
@@ -140,17 +140,94 @@ def process_message_SSDATA(message):
             session_info=session.get_agent_session_info(sid=message.sid)
             if session_info.imc_address==msgbus.msgbus.imc_address:
                 if session.unset_agent_session(sid=message.sid,last_update=message.date):
-                    response.error=Errors.E_IIATM_SSDT_SUS
+                    response.error=Errors.E_IIALD_SSDT_SUS
                 else:
-                    response.error=Errors.E_IIATM_SSDT_SUE
+                    response.error=Errors.E_IIALD_SSDT_SUE
             else:
-                response.error=Errors.E_IIATM_SSDT_MRE
+                response.error=Errors.E_IIALD_SSDT_MRE
                 if session_info.imc_address is not None:
                     response.add_message(message,dest=session_info.imc_address)
         except Exception:
-            response.error=Errors.E_IIATM_SSDT_SNF
+            response.error=Errors.E_IIALD_SSDT_SNF
         response.status=status.IMC_STATUS_NOT_FOUND
     else:
         response.status=status.IMC_STATUS_OK
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_DATINT(message):
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    sid=message.sid
+    session_info=session.get_agent_session_info(sid=sid)
+    if session_info.imc_address is None:
+        if timeuuid.get_unix_timestamp(session_info.last_update)+defaults.SESSION_INACTIVITY_EXPIRATION_SECONDS < timeuuid.get_unix_timestamp(timeuuid.uuid1()):
+            result=session.delete_agent_session(sid=sid, last_update=session_info.last_update)
+            response.error=Errors.E_IIALD_DATINT_SEXP
+        else:
+            response.error=Errors.E_IIALD_DATINT_NSA
+        response.status=status.IMC_STATUS_NOT_FOUND
+        return response
+    psp=passport.Passport(uid=session_info.uid, aid=session_info.aid, sid=session_info.sid)
+    try:
+        if message.uri['type'] == vertex.DATASOURCE:
+            authorization.authorize_get_datasource_data(psp, did=message.uri['id'], ii=message.ii, ie=message.ie, tid=None)
+        elif message.uri['type'] == vertex.DATAPOINT:
+            authorization.authorize_get_datapoint_data(psp, pid=message.uri['id'], ii=message.ii, ie=message.ie, tid=None)
+    except authexcept.IntervalBoundsException as e:
+        if message.ie.time<e.data['date'].time:
+            uri={'uri':message.uri['uri'],'type':message.uri['type']}
+            start=timeuuid.get_isodate_from_uuid(message.ii)
+            end=timeuuid.get_isodate_from_uuid(message.ie)
+            data=[]
+            msg=ws_message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+            imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
+            response.add_message(imc_message,dest=session_info.imc_address)
+        else:
+            uri={'uri':message.uri['uri'],'type':message.uri['type']}
+            start=timeuuid.get_isodate_from_uuid(message.ii)
+            limit=e.data['date']
+            end=timeuuid.get_isodate_from_uuid(limit)
+            msg=ws_message.SendDataInterval(uri=uri, start=start, end=end, data=[])
+            imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
+            response.add_message(imc_message,dest=session_info.imc_address)
+            imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=limit, ie=message.ie)
+            response.add_message(imc_message)
+    except (authexcept.DatapointNotFoundException,
+            authexcept.DatasourceNotFoundException):
+            uri={'uri':message.uri['uri'],'type':message.uri['type']}
+            start=timeuuid.get_isodate_from_uuid(ii)
+            end=timeuuid.get_isodate_from_uuid(ie)
+            data=[]
+            msg=ws_message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+            imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
+            response.add_message(imc_message,dest=session_info.imc_address)
+    else:
+        uri={'uri':message.uri['uri'],'type':message.uri['type']}
+        start=timeuuid.get_isodate_from_uuid(message.ii)
+        end=timeuuid.get_isodate_from_uuid(message.ie)
+        resp_data=[]
+        try:
+            if uri['type']==vertex.DATAPOINT:
+                count=1000
+                data=datapointapi.get_datapoint_data(pid=message.uri['id'],fromdate=message.ii, todate=message.ie, count=count)
+                for row in data:
+                    resp_data.append((timeuuid.get_isodate_from_uuid(row['date']),str(row['value'])))
+            elif uri['type']==vertex.DATASOURCE:
+                count=100
+                data=datasourceapi.get_datasource_data(did=message.uri['id'],fromdate=message.ii, todate=message.ie, count=count)
+                for row in data:
+                    resp_data.append((timeuuid.get_isodate_from_uuid(row['date']),str(row['content'])))
+        except (gestexcept.DatapointDataNotFoundException,
+            gestexcept.DatasourceDataNotFoundException):
+            pass
+        if len(resp_data)==count:
+            new_ie=data[-1]['date']
+            start=timeuuid.get_isodate_from_uuid(new_ie)
+            imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=message.ii, ie=new_ie)
+            response.add_message(imc_message)
+        msg=ws_message.SendDataInterval(uri=uri, start=start, end=end, data=resp_data)
+        imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
+        response.add_message(imc_message,dest=session_info.imc_address)
+    response.status=status.IMC_STATUS_OK
     return response
 

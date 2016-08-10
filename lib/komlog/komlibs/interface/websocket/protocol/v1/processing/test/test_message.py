@@ -8,11 +8,14 @@ from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
 from komlog.komcass.api import datapoint as cassapidatapoint
 from komlog.komcass.api import datasource as cassapidatasource
+from komlog.komcass.api import interface as cassapiiface
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.resources import update as resupdate
 from komlog.komlibs.auth.model.operations import Operations
+from komlog.komlibs.auth.model import interfaces
 from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.gestaccount import exceptions as gestexcept
@@ -32,6 +35,8 @@ from komlog.komlibs.interface.websocket.protocol.v1.model import message as modm
 from komlog.komlibs.interface.websocket.protocol.v1.model import response as modresp
 from komlog.komlibs.interface.websocket.protocol.v1.model.types import Messages
 
+
+pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
 
 class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
     ''' komlibs.interface.websocket.protocol.v1.processing.message tests '''
@@ -84,7 +89,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -107,7 +111,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -131,7 +134,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -155,7 +157,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -179,7 +180,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -212,7 +212,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -244,7 +243,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -278,7 +276,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -321,7 +318,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -416,7 +412,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -439,7 +434,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -463,7 +457,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -487,7 +480,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -511,7 +503,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -541,7 +532,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -568,7 +558,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -600,7 +589,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -642,7 +630,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -763,7 +750,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -787,7 +773,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -818,7 +803,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -849,7 +833,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -895,7 +878,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -938,7 +920,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -982,7 +963,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1023,7 +1003,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1054,7 +1033,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1156,7 +1134,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1247,7 +1224,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1271,7 +1247,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1295,7 +1270,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1324,7 +1298,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1353,7 +1326,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1403,7 +1375,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1434,7 +1405,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1465,7 +1435,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1543,7 +1512,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1567,7 +1535,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1594,7 +1561,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1663,7 +1629,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1694,7 +1659,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         agentname=username+'_agent'
-        pubkey = crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='agent_version'
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
@@ -1755,4 +1719,297 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.routed_messages,{})
         self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[])
+
+    def test__process_request_data_interval_failure_uri_does_not_exist(self):
+        ''' _process_request_data_interval should fail if uri does not exist '''
+        username='test_process_request_data_interval_failure_uri_does_not_exist'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'system.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat()}}
+        resp=message._process_request_data_interval(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_UNF.value)
+        self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
+        self.assertEqual(resp.reason, 'uri system.ds does not exist')
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
+
+    def test__process_request_data_interval_failure_operation_not_allowed_for_uri_type(self):
+        ''' _process_request_data_interval should fail if uri type is not valid '''
+        username='test_process_request_data_interval_failure_operation_not_allowed_for_uri_type'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.widget','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat()}}
+        resp=message._process_request_data_interval(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ONA.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.reason, 'operation not allowed on this uri: uri.widget')
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
+
+    def test__process_request_data_interval_failure_access_denied_to_ds_uri(self):
+        ''' _process_request_data_interval should fail if user has no access to uri'''
+        username='test_process_request_data_interval_failure_access_denied_to_ds_uri'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.ds',type=vertex.USER_DATASOURCE_RELATION))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat()}}
+        resp=message._process_request_data_interval(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, autherrors.E_ARA_AGDSD_RE.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.reason, 'msg exec denied')
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
+
+    def test__process_request_data_interval_failure_access_denied_to_dp_uri(self):
+        ''' _process_request_data_interval should fail if user has no access to uri'''
+        username='test_process_request_data_interval_failure_access_denied_to_dp_uri'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.dp',type=vertex.USER_DATAPOINT_RELATION))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.dp','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat()}}
+        resp=message._process_request_data_interval(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, autherrors.E_ARA_AGDPD_RE.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.reason, 'msg exec denied')
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(resp.unrouted_messages,[])
+
+    def test__process_request_data_interval_failure_access_to_data_range_not_allowed_ds(self):
+        ''' _process_request_data_interval should fail if user wants to access a non reachable data range because of limitations '''
+        username='test_process_request_data_interval_failure_access_to_data_range_not_allowed_ds'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
+        end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
+        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat()}}
+        datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
+        self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
+        #se the date limit for data retrieval
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        uid=user_reg['uid']
+        min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc')+pd.Timedelta('1d'))
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=min_ts.hex))
+        resp=message._process_request_data_interval(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ANA.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.reason, 'Your interval requested for uri uri.ds is older than your current limit: '+timeuuid.get_isodate_from_uuid(min_ts)+'. Access to data is not allowed before that limit.')
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(len(resp.unrouted_messages),1)
+        self.assertEqual(resp.unrouted_messages[0].type, messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(resp.unrouted_messages[0].sid, psp.sid)
+        self.assertEqual(resp.unrouted_messages[0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
+        self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
+        self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
+
+    def test__process_request_data_interval_failure_access_to_data_range_not_allowed_dp(self):
+        ''' _process_request_data_interval should fail if user wants to access a non reachable data range because of limitations '''
+        username='test_process_request_data_interval_failure_access_to_data_range_not_allowed_dp'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
+        end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
+        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat()}}
+        datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
+        self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
+        #se the date limit for data retrieval
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        uid=user_reg['uid']
+        min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc')+pd.Timedelta('2d'))
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=min_ts.hex))
+        resp=message._process_request_data_interval(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ANA.value)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.reason, 'Your interval requested for uri uri.dp is older than your current limit: '+timeuuid.get_isodate_from_uuid(min_ts)+'. Access to data is not allowed before that limit.')
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(len(resp.unrouted_messages),1)
+        self.assertEqual(resp.unrouted_messages[0].type, messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(resp.unrouted_messages[0].sid, psp.sid)
+        self.assertEqual(resp.unrouted_messages[0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
+        self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
+        self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
+
+    def test__process_request_data_interval_failure_access_to_data_range_limited_ds(self):
+        ''' _process_request_data_interval should fail if user wants to access a data range that has limitations within it '''
+        username='test_process_request_data_interval_failure_access_to_data_range_limited_ds'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
+        end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
+        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat()}}
+        datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
+        self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
+        #se the date limit for data retrieval
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        uid=user_reg['uid']
+        min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc'))
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=min_ts.hex))
+        resp=message._process_request_data_interval(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP.value)
+        self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(len(resp.unrouted_messages),1)
+        self.assertEqual(resp.unrouted_messages[0].type, messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(resp.unrouted_messages[0].sid, psp.sid)
+        self.assertEqual(resp.unrouted_messages[0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
+        self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
+        self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
+
+    def test__process_request_data_interval_failure_access_to_data_range_limited_dp(self):
+        ''' _process_request_data_interval should fail if user wants to access a data range with limitations within it '''
+        username='test_process_request_data_interval_failure_access_to_data_range_limited_dp'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
+        end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
+        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat()}}
+        datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
+        self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
+        #se the date limit for data retrieval
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        uid=user_reg['uid']
+        min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc'))
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=min_ts.hex))
+        resp=message._process_request_data_interval(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP.value)
+        self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(len(resp.unrouted_messages),1)
+        self.assertEqual(resp.unrouted_messages[0].type, messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(resp.unrouted_messages[0].sid, psp.sid)
+        self.assertEqual(resp.unrouted_messages[0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
+        self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
+        self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
+
+    def test__process_request_data_interval_success_no_limitations_ds(self):
+        ''' _process_request_data_interval should succeed if user want a data range than can access '''
+        username='test_process_request_data_interval_success_no_limitations_ds'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
+        end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
+        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat()}}
+        datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
+        self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
+        resp=message._process_request_data_interval(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.OK.value)
+        self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(len(resp.unrouted_messages),1)
+        self.assertEqual(resp.unrouted_messages[0].type, messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(resp.unrouted_messages[0].sid, psp.sid)
+        self.assertEqual(resp.unrouted_messages[0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
+        self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
+        self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
+
+    def test__process_request_data_interval_success_no_limitations_dp(self):
+        ''' _process_request_data_interval should success if user wants a data range without access limitations '''
+        username='test_process_request_data_interval_success_no_limitations_dp'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
+        end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
+        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat()}}
+        datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
+        self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
+        resp=message._process_request_data_interval(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.OK.value)
+        self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(len(resp.unrouted_messages),1)
+        self.assertEqual(resp.unrouted_messages[0].type, messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(resp.unrouted_messages[0].sid, psp.sid)
+        self.assertEqual(resp.unrouted_messages[0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
+        self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
+        self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
 

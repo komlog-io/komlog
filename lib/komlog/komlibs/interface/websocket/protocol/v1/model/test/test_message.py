@@ -6,6 +6,7 @@ import decimal
 import pandas as pd
 from komlog.komfig import logging
 from komlog.komlibs.graph.relations import vertex
+from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model import message
@@ -373,7 +374,6 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
         self.assertEqual(msg.to_dict(), {'v':message.KomlogMessage._version_,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts2.isoformat()}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
-
 
     def test_SendMultiData_success_loading_from_dict(self):
         ''' SendMultiData.load_from_dict() method should generate a valid SendMultiData object '''
@@ -758,4 +758,1029 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.UnHookFromUri.load_from_dict(dict_msg)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFU_IURI)
+
+    def test_RequestDataInterval_success(self):
+        ''' Creating a RequestDataInterval object should succeed '''
+        uri='valid.uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        msg=message.RequestDataInterval(uri=uri, start=start, end=end)
+        self.assertTrue(isinstance(msg, message.RequestDataInterval))
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.start, start)
+        self.assertEqual(msg.end, end)
+        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.action, Messages.REQUEST_DATA_INTERVAL)
+        expected_dict={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }
+        self.assertEqual(msg.to_dict(), expected_dict)
+
+    def test_RequestDataInterval_failure_invalid_uri(self):
+        ''' Creating a RequestDataInterval object fail if uri is invalid '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval(uri=uri, start=start, end=end)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_IURI)
+
+    def test_RequestDataInterval_failure_invalid_start(self):
+        ''' Creating a RequestDataInterval object fail if start is invalid '''
+        uri='valid.uri'
+        start=timeuuid.uuid1()
+        end=pd.Timestamp('now',tz='utc')
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval(uri=uri, start=start, end=end)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ISTART)
+
+    def test_RequestDataInterval_failure_invalid_end(self):
+        ''' Creating a RequestDataInterval object fail if end is invalid '''
+        uri='valid.uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=time.time()
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval(uri=uri, start=start, end=end)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_IEND)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_no_dict(self):
+        ''' Creating a RequestDataInterval object should fail if msg is not a dict '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial=[{
+            'v':message.KomlogMessage._version_,
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }]
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_no_version(self):
+        ''' Creating a RequestDataInterval object should fail if v is not found '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'va':message.KomlogMessage._version_,
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_no_action(self):
+        ''' Creating a RequestDataInterval object should fail if action is not found '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':message.KomlogMessage._version_,
+            'theaction':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_no_payload(self):
+        ''' Creating a RequestDataInterval object should fail if payload is not found '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'fayload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_invalid_version(self):
+        ''' Creating a RequestDataInterval object should fail if version is not an int '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':[message.KomlogMessage._version_],
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_wrong_version(self):
+        ''' Creating a RequestDataInterval object should fail if version is not the expected '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':9999999999999,
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_invalid_action(self):
+        ''' Creating a RequestDataInterval object should fail if action is invalid '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':[message.KomlogMessage._version_],
+            'action':[Messages.REQUEST_DATA_INTERVAL.value],
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_wrong_action(self):
+        ''' Creating a RequestDataInterval object should fail if action is not the expected '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':[message.KomlogMessage._version_],
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_invalid_payload(self):
+        ''' Creating a RequestDataInterval object should fail if payload is not a dict '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':[message.KomlogMessage._version_],
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':[{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }]
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_payload_uri_not_found(self):
+        ''' Creating a RequestDataInterval object should fail if payload uri is not found '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':[message.KomlogMessage._version_],
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':{
+                'ari':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_payload_start_not_found(self):
+        ''' Creating a RequestDataInterval object should fail if payload start is not found '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':[message.KomlogMessage._version_],
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'estart':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_failure_error_loading_from_dict_payload_end_not_found(self):
+        ''' Creating a RequestDataInterval object should fail if payload end is not found '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':[message.KomlogMessage._version_],
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'fin':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_RequestDataInterval_success_loading_from_dict(self):
+        ''' Creating a RequestDataInterval object should succeed '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':[message.KomlogMessage._version_],
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def test_SendDataInterval_success(self):
+        ''' Creating a SendDataInterval object should succeed '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertTrue(isinstance(msg, message.SendDataInterval))
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.start, start)
+        self.assertEqual(msg.end, end)
+        self.assertEqual(msg.data, data)
+        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.action, Messages.SEND_DATA_INTERVAL)
+        expected_dict={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        self.assertEqual(msg.to_dict(), expected_dict)
+
+    def test_SendDataInterval_failure_invalid_uri_type(self):
+        ''' Creating a SendDataInterval object should fail if uri is not a dict '''
+        uri=[{'uri':'valid.uri','type':vertex.DATAPOINT}]
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IURI)
+
+    def test_SendDataInterval_failure_invalid_uri_dict_has_no_uri(self):
+        ''' Creating a SendDataInterval object should fail if uri dict has no uri '''
+        uri={'ari':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IURI)
+
+    def test_SendDataInterval_failure_invalid_uri_dict_invalid_uri(self):
+        ''' Creating a SendDataInterval object should fail if uri dict has invalid uri '''
+        uri={'uri':'in valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IURI)
+
+    def test_SendDataInterval_failure_invalid_uri_dict_has_no_type(self):
+        ''' Creating a SendDataInterval object should fail if uri dict has no type '''
+        uri={'uri':'valid.uri','taip':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IURI)
+
+    def test_SendDataInterval_failure_invalid_uri_dict_has_invalid_type(self):
+        ''' Creating a SendDataInterval object should fail if uri dict has invalid type '''
+        uri={'uri':'valid.uri','type':vertex.WIDGET}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IURI)
+
+    def test_SendDataInterval_failure_invalid_start(self):
+        ''' Creating a SendDataInterval object should fail if start is invalid '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=timeuuid.uuid1()
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ISTART)
+
+    def test_SendDataInterval_failure_invalid_end(self):
+        ''' Creating a SendDataInterval object should fail if end is invalid '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=time.time()
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IEND)
+
+    def test_SendDataInterval_failure_invalid_data_not_a_list(self):
+        ''' Creating a SendDataInterval object should fail if data is not a list '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=(
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        )
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IDATA)
+
+    def test_SendDataInterval_failure_invalid_data_not_item_tuple(self):
+        ''' Creating a SendDataInterval object should fail if data has a non tuple item '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=(
+            [(pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'],
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        )
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IDATA)
+
+    def test_SendDataInterval_failure_invalid_data_tuple_not_two_elements(self):
+        ''' Creating a SendDataInterval object should fail if data has tuple without two items '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=(
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243','third'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        )
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IDATA)
+
+    def test_SendDataInterval_failure_invalid_data_item0_not_isodate(self):
+        ''' Creating a SendDataInterval object should fail if data an item[0] that is not an isodate '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=(
+            (time.time(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        )
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IDATA)
+
+    def test_SendDataInterval_failure_invalid_data_item0_not_isodate_string(self):
+        ''' Creating a SendDataInterval object should fail if data an item[0] isodate but not in string form '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=(
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            (pd.Timestamp('now',tz='utc')-pd.Timedelta('8m'),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        )
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IDATA)
+
+    def test_SendDataInterval_failure_invalid_data_item0_not_tz_in_isodate_string(self):
+        ''' Creating a SendDataInterval object should fail if data an item[0] isodate string without timezone '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=(
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        )
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IDATA)
+
+    def test_SendDataInterval_failure_invalid_data_item1_not_a_string(self):
+        ''' Creating a SendDataInterval object should fail if data an item[1] is not a string '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=(
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),243),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        )
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_IDATA)
+
+    def test_SendDataInterval_failure_load_from_dict_failure_not_a_dict(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg is not a dict '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial=[{
+            'v':message.KomlogMessage._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }]
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_failure_not_v(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg has no version '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'vi':message.KomlogMessage._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_failure_no_action(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg has no action '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.KomlogMessage._version_,
+            'theaction':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_failure_no_payload(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg has no payload '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'iipayload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_invalid_v(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg v is invalid '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':[message.KomlogMessage._version_],
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_wrong_v(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg v is not the expected '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.KomlogMessage._version_+1,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_invalid_action(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg action is invalid '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.SEND_DATA_INTERVAL,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_wrong_action(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg action is not the expected '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_payload_not_a_dict(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg payload is not a dict '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':[{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }]
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_payload_without_uri(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg payload has no uri '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'iuri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_payload_without_start(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg payload has no start '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'estart':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_payload_without_end(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg payload has no end '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'theend':end.isoformat(),
+                'data':data,
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_failure_load_from_dict_payload_without_data(self):
+        ''' Creating a SendDataInterval object from a dict should fail if msg payload has no data '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'idata':data,
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def test_SendDataInterval_success_load_from_dict(self):
+        ''' Creating a SendDataInterval object from a dict should succeed '''
+        uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertTrue(isinstance(msg, message.SendDataInterval))
+        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.action, Messages.SEND_DATA_INTERVAL)
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.start, start)
+        self.assertEqual(msg.end,end)
+        self.assertEqual(msg.data,data)
 

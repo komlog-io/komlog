@@ -102,10 +102,13 @@ class Errors(Enum):
 
 # komlibs.interface.imc.api.lambdas
 
-    E_IIATM_SSDT_MRE        = 256000    #: process_message_SSDATA. message routing error
-    E_IIATM_SSDT_SUS        = 256001    #: process_message_SSDATA. session unset successfully
-    E_IIATM_SSDT_SUE        = 256002    #: process_message_SSDATA. session unset error
-    E_IIATM_SSDT_SNF        = 256003    #: process_message_SSDATA. session not found
+    E_IIALD_SSDT_MRE        = 256000    #: process_message_SSDATA. message routing error
+    E_IIALD_SSDT_SUS        = 256001    #: process_message_SSDATA. session unset successfully
+    E_IIALD_SSDT_SUE        = 256002    #: process_message_SSDATA. session unset error
+    E_IIALD_SSDT_SNF        = 256003    #: process_message_SSDATA. session not found
+
+    E_IIALD_DATINT_NSA      = 256100    #: process_message_DATINT. session address not set
+    E_IIALD_DATINT_SEXP     = 256101    #: process_message_DATINT. session expired
 
 # komlibs.interface.imc.model.messages
 
@@ -193,4 +196,9 @@ class Errors(Enum):
 
     E_IIMM_HNU_IUID         = 262700    #: HookNewUrisMessage. invalid uid
     E_IIMM_HNU_IDT          = 262701    #: HookNewUrisMessage. invalid date
+
+    E_IIMM_DIRM_ISID        = 262800    #: DataIntervalRequestMessage. invalid sid
+    E_IIMM_DIRM_III         = 262801    #: DataIntervalRequestMessage. invalid interval init
+    E_IIMM_DIRM_IIE         = 262802    #: DataIntervalRequestMessage. invalid interval end
+    E_IIMM_DIRM_IURI        = 262803    #: DataIntervalRequestMessage. invalid uri
 

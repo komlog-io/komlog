@@ -9,6 +9,7 @@ import uuid
 import json
 from komlog.komfig import logging, config, options
 from komlog.komlibs.auth import authorization
+from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
@@ -282,4 +283,45 @@ def _process_unhook_from_uri(passport, message):
             authorization.authorize_request(request=Requests.UNHOOK_FROM_DATAPOINT,passport=passport, pid=uri_info['id'])
             datapointapi.unhook_from_datapoint(pid=uri_info['id'], sid=passport.sid)
     return Response(status=status.MESSAGE_EXECUTION_OK)
+
+@exceptions.ExceptionHandler
+def _process_request_data_interval(passport, message):
+    message = modmsg.RequestDataInterval.load_from_dict(message)
+    uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
+    if not uri_info or uri_info['type'] == vertex.VOID:
+        return Response(status=status.RESOURCE_NOT_FOUND, reason='uri '+message.uri+' does not exist', error=Errors.E_IWSPV1PM_PRDI_UNF)
+    elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
+        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PRDI_ONA)
+    else:
+        if message.start <= message.end:
+            ii=timeuuid.min_uuid_from_time(message.start.timestamp())
+            ie=timeuuid.max_uuid_from_time(message.end.timestamp())
+        else:
+            ii=timeuuid.min_uuid_from_time(message.end.timestamp())
+            ie=timeuuid.max_uuid_from_time(message.start.timestamp())
+        try:
+            if uri_info['type'] == vertex.DATASOURCE:
+                authorization.authorize_request(request=Requests.GET_DATASOURCE_DATA,passport=passport,did=uri_info['id'], ii=ii, ie=ie, tid=None)
+            elif uri_info['type'] == vertex.DATAPOINT:
+                authorization.authorize_request(request=Requests.GET_DATAPOINT_DATA,passport=passport,pid=uri_info['id'], ii=ii, ie=ie, tid=None)
+        except authexcept.IntervalBoundsException as e:
+            if ie.time < e.data['date'].time:
+                limit=timeuuid.get_isodate_from_uuid(e.data['date'])
+                reason = 'Your interval requested for uri '+message.uri+' is older than your current limit: '+limit+'. Access to data is not allowed before that limit.'
+                error=Errors.E_IWSPV1PM_PRDI_ANA
+                stat=status.MESSAGE_EXECUTION_DENIED
+                #however we will continue request and send an empty array so agent logic is simpler
+            else:
+                limit=timeuuid.get_isodate_from_uuid(e.data['date'])
+                reason = 'Your current interval limit is within the range requested for uri '+message.uri+'. Limit is stablished at: '+limit+'. Data interval retrieved will be modified for that reason.'
+                error=Errors.E_IWSPV1PM_PRDI_ALP
+                stat=status.MESSAGE_ACCEPTED_FOR_PROCESSING
+        else:
+            error=Errors.OK
+            reason='message accepted for processing'
+            stat=status.MESSAGE_ACCEPTED_FOR_PROCESSING
+        msg=messages.DataIntervalRequestMessage(sid=passport.sid, uri={'type':uri_info['type'],'id':uri_info['id'],'uri':message.uri}, ii=ii, ie=ie)
+        resp=Response(status=stat, reason=reason, error=error)
+        resp.add_message(msg)
+        return resp
 

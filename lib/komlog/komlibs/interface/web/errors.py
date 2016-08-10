@@ -104,6 +104,7 @@ class Errors(Enum):
     E_IWADS_GDSDR_IS   = 100402
     E_IWADS_GDSDR_IT   = 100403
     E_IWADS_GDSDR_LDBL = 100404  #: get_datasource_data_request. Last date retrieved is before allowed limit.
+    E_IWADS_GDSDR_ADIF = 100405  #: get_datasource_data_request. allowed date is in the future
 
     E_IWADS_UDSDR_IPSP=100410
     E_IWADS_UDSDR_IA=100411

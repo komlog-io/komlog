@@ -42,9 +42,9 @@ def set_agent_session(sid, aid, uid):
     return cassapiagent.insert_agent_session(session)
 
 def unset_agent_session(sid, last_update=None):
-    ''' dissociates aid from sid, indicating the session is orphaned, because the session 
-        does is not found in the module imc_address.
-        last_update indicate to delete the session if last_update field is less or equal than.
+    ''' dissociates aid from sid, indicating the session is orphaned, because the session
+        is not found in the module with imc_address.
+        last_update indicates to delete the session if last_update field is less or equal than it.
         This is to implement lightweight transactions and try to avoid race conditions.'''
     if not args.is_valid_uuid(sid):
         raise exceptions.BadParametersException(error=Errors.E_AS_USAGS_ISID)

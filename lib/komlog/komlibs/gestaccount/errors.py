@@ -207,10 +207,6 @@ class Errors(Enum):
     E_GDA_CRD_IDE   = 4405
     E_GDA_CRD_ADU   = 4406
 
-    E_GDA_GLPD_ID   = 4410
-    E_GDA_GLPD_DDNF = 4411
-    E_GDA_GLPD_DNF  = 4412
-
     E_GDA_UDD_ID    = 4420
     E_GDA_UDD_IDC   = 4421
     E_GDA_UDD_IDD   = 4422
@@ -218,9 +214,17 @@ class Errors(Enum):
     E_GDA_UDD_ESD   = 4424
     E_GDA_UDD_DNF   = 4425
 
-    E_GDA_GDD_ID    = 4430
-    E_GDA_GDD_IDT   = 4431
-    E_GDA_GDD_DDNF  = 4432
+    E_GDA_GDD_ID    = 4430  #: get_datasource_data. invalid did
+    E_GDA_GDD_IFD   = 4431  #: get_datasource_data. invalid fromdate
+    E_GDA_GDD_ITD   = 4432  #: get_datasource_data. invalid todate
+    E_GDA_GDD_ICNT  = 4433  #: get_datasource_data. invalid count
+    E_GDA_GDD_DDNF  = 4434  #: get_datasource_data. datasource data not found
+
+    E_GDA_GMDD_ID   = 4435  #: get_mapped_datasource_data. invalid did
+    E_GDA_GMDD_IFD  = 4436  #: get_mapped_datasource_data. invalid fromdate
+    E_GDA_GMDD_ITD  = 4437  #: get_mapped_datasource_data. invalid todate
+    E_GDA_GMDD_ICNT = 4438  #: get_mapped_datasource_data. invalid count
+    E_GDA_GMDD_DDNF = 4439  #: get_mapped_datasource_data. datasource data not found
 
     E_GDA_GDC_ID    = 4440
     E_GDA_GDC_DNF   = 4441

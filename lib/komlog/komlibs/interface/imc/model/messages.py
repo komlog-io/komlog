@@ -46,6 +46,7 @@ URIS_UPDATED_MESSAGE='URISUPDT'
 SEND_SESSION_DATA_MESSAGE='SSDATA'
 CLEAR_SESSION_HOOKS_MESSAGE='CLSHOOKS'
 HOOK_NEW_URIS_MESSAGE='HOOKNEW'
+DATA_INTERVAL_REQUEST_MESSAGE='DATINT'
 
 
 class MapVarsMessage:
@@ -614,6 +615,41 @@ class HookNewUrisMessage:
             s_uris=json.dumps(uri_list)
             self.serialized_message='|'.join((self.type,self.uid.hex,s_uris,self.date.hex))
 
+class DataIntervalRequestMessage:
+    def __init__(self, serialized_message=None, sid=None, uri=None, ii=None, ie=None):
+        if serialized_message:
+            self.serialized_message=serialized_message
+            mtype,sid,uri,ii,ie=self.serialized_message.split('|')
+            self.type=mtype
+            self.sid=uuid.UUID(sid)
+            self.ii=uuid.UUID(ii)
+            self.ie=uuid.UUID(ie)
+            uri=json.loads(uri)
+            uri['id']=uuid.UUID(uri['id'])
+            self.uri=uri
+        else:
+            if not args.is_valid_uuid(sid):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_ISID)
+            if not args.is_valid_date(ii):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_III)
+            if not args.is_valid_date(ie):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IIE)
+            if not (isinstance(uri,dict)
+                and 'type' in uri
+                and isinstance(uri['type'],str)
+                and 'uri' in uri
+                and args.is_valid_uri(uri['uri'])
+                and 'id' in uri
+                and args.is_valid_uuid(uri['id'])):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IURI)
+            self.type=DATA_INTERVAL_REQUEST_MESSAGE
+            self.sid=sid
+            self.uri=uri
+            self.ii=ii
+            self.ie=ie
+            s_uri=json.dumps({'uri':uri['uri'],'type':uri['type'],'id':uri['id'].hex})
+            self.serialized_message='|'.join((self.type,self.sid.hex,s_uri,self.ii.hex,self.ie.hex))
+
 #MESSAGE MAPPINGS
 MESSAGE_TO_CLASS_MAPPING={
     MAP_VARS_MESSAGE:MapVarsMessage,
@@ -644,5 +680,6 @@ MESSAGE_TO_CLASS_MAPPING={
     SEND_SESSION_DATA_MESSAGE:SendSessionDataMessage,
     CLEAR_SESSION_HOOKS_MESSAGE:ClearSessionHooksMessage,
     HOOK_NEW_URIS_MESSAGE:HookNewUrisMessage,
+    DATA_INTERVAL_REQUEST_MESSAGE:DataIntervalRequestMessage,
 }
 

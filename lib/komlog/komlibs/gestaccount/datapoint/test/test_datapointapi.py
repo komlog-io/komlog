@@ -591,8 +591,8 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         position=45
         length=2
         datapoints_to_update=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        dsdata=datasourceapi.get_datasource_data(did=did, date=date)
-        dsdatapoints=dsdata['datapoints']
+        dsdata=datasourceapi.get_mapped_datasource_data(did=did, fromdate=date, todate=date)
+        dsdatapoints=dsdata[0]['datapoints']
         self.assertTrue(len(dsdatapoints),1)
         self.assertEqual(dsdatapoints[0]['pid'],datapoint['pid'])
         self.assertEqual(dsdatapoints[0]['position'],position)
@@ -1245,11 +1245,10 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         date=timeuuid.uuid1()
         content='generate_datasource_text_summary content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
-        data=datasourceapi.get_datasource_data(did=did, date=date)
-        self.assertIsNotNone(data)
-        self.assertEqual(data['did'], did)
-        self.assertEqual(data['date'], date)
-        self.assertEqual(data['content'], content)
+        data=datasourceapi.get_datasource_data(did=did, fromdate=date, todate=date)
+        self.assertEqual(len(data),1)
+        self.assertEqual(data[0]['date'], date)
+        self.assertEqual(data[0]['content'], content)
         self.assertTrue(api.generate_datasource_text_summary(did=did, date=date))
 
     def test_generate_datasource_novelty_detector_for_datapoint_failure_invalid_pid(self):

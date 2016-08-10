@@ -58,26 +58,6 @@ def create_datasource(uid,aid,datasourcename):
         cassapidatasource.delete_datasource(did=did)
         raise
 
-def get_last_processed_datasource_data(did):
-    if not args.is_valid_uuid(did):
-        raise exceptions.BadParametersException(error=Errors.E_GDA_GLPD_ID)
-    datasource_stats=cassapidatasource.get_datasource_stats(did=did)
-    if not (datasource_stats and datasource_stats.last_mapped):
-        raise exceptions.DatasourceNotFoundException(error=Errors.E_GDA_GLPD_DNF)
-    last_mapped=datasource_stats.last_mapped
-    datasource_data=cassapidatasource.get_datasource_data_at(did=did,date=last_mapped)
-    if not datasource_data or not datasource_data.content:
-        raise exceptions.DatasourceDataNotFoundException(error=Errors.E_GDA_GLPD_DDNF)
-    dsmap=cassapidatasource.get_datasource_map(did=did,date=last_mapped)
-    data={}
-    data['did']=did
-    data['date']=last_mapped
-    data['content']=datasource_data.content
-    if dsmap:
-        data['variables']=[(pos,length) for pos,length in dsmap.variables.items()]
-        data['datapoints']=[{'pid':pid,'position':pos} for pid,pos in dsmap.datapoints.items()]
-    return data
-
 def upload_datasource_data(did,content,dest_dir):
     if not args.is_valid_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_GDA_UDD_ID)
@@ -105,24 +85,49 @@ def upload_datasource_data(did,content,dest_dir):
     else:
         raise exceptions.DatasourceNotFoundException(error=Errors.E_GDA_UDD_DNF)
 
-def get_datasource_data(did, date):
+def get_datasource_data(did, fromdate=None, todate=None, count=None):
     if not args.is_valid_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_GDA_GDD_ID)
-    if not args.is_valid_date(date):
-        raise exceptions.BadParametersException(error=Errors.E_GDA_GDD_IDT)
-    dsdata=cassapidatasource.get_datasource_data_at(did=did, date=date)
-    if dsdata:
-        dsmap=cassapidatasource.get_datasource_map(did=did,date=date)
-        data={}
-        data['did']=dsdata.did
-        data['date']=dsdata.date
-        data['content']=dsdata.content
-        if dsmap:
-            data['variables']=[(pos,length) for pos,length in dsmap.variables.items()]
-            data['datapoints']=[{'pid':pid,'position':pos} for pid,pos in dsmap.datapoints.items()]
-        return data
-    else:
+    if fromdate and not args.is_valid_date(fromdate):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_GDD_IFD)
+    if todate and not args.is_valid_date(todate):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_GDD_ITD)
+    if count and not args.is_valid_int(count):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_GDD_ICNT)
+    dsdata=cassapidatasource.get_datasource_data(did=did, fromdate=fromdate, todate=todate, count=count)
+    if len(dsdata) == 0:
         raise exceptions.DatasourceDataNotFoundException(error=Errors.E_GDA_GDD_DDNF)
+    data = []
+    for item in dsdata:
+        data.append({
+            'date':item.date,
+            'content':item.content
+        })
+    return data
+
+def get_mapped_datasource_data(did, fromdate=None, todate=None, count=None):
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_GMDD_ID)
+    if fromdate and not args.is_valid_date(fromdate):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_GMDD_IFD)
+    if todate and not args.is_valid_date(todate):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_GMDD_ITD)
+    if count and not args.is_valid_int(count):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_GMDD_ICNT)
+    mdsdata=cassapidatasource.get_datasource_maps(did=did, fromdate=fromdate, todate=todate, count=count)
+    data=[]
+    for item in mdsdata:
+        dsdata=cassapidatasource.get_datasource_data_at(did=did, date=item.date)
+        if dsdata:
+            data.append({
+                'date':item.date,
+                'content':dsdata.content,
+                'variables':[(pos,length) for pos,length in item.variables.items()],
+                'datapoints':[{'pid':pid, 'position':pos} for pid,pos in item.datapoints.items()]
+            })
+    if len(data) == 0:
+        raise exceptions.DatasourceDataNotFoundException(error=Errors.E_GDA_GMDD_DDNF)
+    return data
 
 def store_datasource_data(did, date, content):
     if not args.is_valid_uuid(did) or not args.is_valid_datasource_content(content) or not args.is_valid_date(date):

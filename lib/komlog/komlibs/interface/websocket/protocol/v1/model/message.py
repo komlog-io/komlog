@@ -198,7 +198,7 @@ class SendDpData(KomlogMessage):
 class SendMultiData(KomlogMessage):
     _action_ = Messages.SEND_MULTI_DATA
 
-    def __init__(self, ts=None, uris=None):
+    def __init__(self, ts, uris):
         self.ts=ts
         self.uris=uris
 
@@ -267,7 +267,7 @@ class SendMultiData(KomlogMessage):
 class HookToUri(KomlogMessage):
     _action_  = Messages.HOOK_TO_URI
 
-    def __init__(self, uri=None):
+    def __init__(self, uri):
         self.uri=uri
 
     @property
@@ -309,7 +309,7 @@ class HookToUri(KomlogMessage):
 class UnHookFromUri(KomlogMessage):
     _action_ = Messages.UNHOOK_FROM_URI
 
-    def __init__(self, uri=None):
+    def __init__(self, uri):
         self.uri=uri
 
     @property
@@ -345,6 +345,177 @@ class UnHookFromUri(KomlogMessage):
             'action':self.action.value,
             'payload':{
                 'uri':self.uri
+            }
+        }
+
+class RequestDataInterval(KomlogMessage):
+    _action_ = Messages.REQUEST_DATA_INTERVAL
+
+    def __init__(self, uri, start, end):
+        self.uri = uri
+        self.start = start
+        self.end = end 
+
+    @property
+    def uri(self):
+        return self._uri
+
+    @uri.setter
+    def uri(self, uri):
+        if args.is_valid_uri(uri):
+            self._uri=uri
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDI_IURI)
+
+    @property
+    def start(self):
+        return self._start
+
+    @start.setter
+    def start(self, start):
+        if args.is_valid_isodate(start):
+            self._start=pd.Timestamp(start,tz='utc') if pd.Timestamp(start).tz is None else pd.Timestamp(start)
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDI_ISTART)
+
+    @property
+    def end(self):
+        return self._end
+
+    @end.setter
+    def end(self, end):
+        if args.is_valid_isodate(end):
+            self._end=pd.Timestamp(end,tz='utc') if pd.Timestamp(end).tz is None else pd.Timestamp(end)
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDI_IEND)
+
+    @classmethod
+    def load_from_dict(cls, msg):
+        if (isinstance(msg,dict)
+            and 'v' in msg
+            and 'action' in msg
+            and 'payload' in msg
+            and args.is_valid_int(msg['v']) and msg['v']==cls._version_
+            and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
+            and args.is_valid_dict(msg['payload'])
+            and 'uri' in msg['payload']
+            and 'start' in msg['payload']
+            and 'end' in msg['payload']):
+            uri=msg['payload']['uri']
+            start=msg['payload']['start']
+            end=msg['payload']['end']
+            return cls(uri=uri, start=start, end=end)
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDI_ELFD)
+
+    def to_dict(self):
+        ''' returns a JSON serializable dict '''
+        return {
+            'v':self.v,
+            'action':self.action.value,
+            'payload':{
+                'uri':self.uri,
+                'start':self.start.isoformat(),
+                'end':self.end.isoformat(),
+            }
+        }
+
+class SendDataInterval(KomlogMessage):
+    _action_ = Messages.SEND_DATA_INTERVAL
+
+    def __init__(self, uri, start, end, data):
+        self.uri = uri
+        self.start = start
+        self.end = end 
+        self.data = data
+
+    @property
+    def uri(self):
+        return self._uri
+
+    @uri.setter
+    def uri(self, uri):
+        if (isinstance(uri,dict)
+            and 'uri' in uri
+            and args.is_valid_uri(uri['uri'])
+            and 'type' in uri
+            and uri['type'] in (vertex.DATASOURCE,vertex.DATAPOINT)):
+            self._uri={'uri':uri['uri'],'type':uri['type']}
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDI_IURI)
+
+    @property
+    def start(self):
+        return self._start
+
+    @start.setter
+    def start(self, start):
+        if args.is_valid_isodate(start):
+            self._start=pd.Timestamp(start,tz='utc') if pd.Timestamp(start).tz is None else pd.Timestamp(start)
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDI_ISTART)
+
+    @property
+    def end(self):
+        return self._end
+
+    @end.setter
+    def end(self, end):
+        if args.is_valid_isodate(end):
+            self._end=pd.Timestamp(end,tz='utc') if pd.Timestamp(end).tz is None else pd.Timestamp(end)
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDI_IEND)
+
+    @property
+    def data(self):
+        return self._data
+
+    @data.setter
+    def data(self, data):
+        if (isinstance(data, list)
+            and all(
+                isinstance(item,tuple)
+                and len(item)==2
+                and args.is_valid_isodate(item[0])
+                and isinstance(item[0],str)
+                and pd.Timestamp(item[0]).tz is not None
+                and isinstance(item[1],str) for item in data)
+            ):
+            self._data=data
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDI_IDATA)
+
+    @classmethod
+    def load_from_dict(cls, msg):
+        if (isinstance(msg,dict)
+            and 'v' in msg
+            and 'action' in msg
+            and 'payload' in msg
+            and args.is_valid_int(msg['v']) and msg['v']==cls._version_
+            and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
+            and args.is_valid_dict(msg['payload'])
+            and 'uri' in msg['payload']
+            and 'start' in msg['payload']
+            and 'end' in msg['payload']
+            and 'data' in msg['payload']):
+            uri=msg['payload']['uri']
+            start=msg['payload']['start']
+            end=msg['payload']['end']
+            data=msg['payload']['data']
+            return cls(uri=uri, start=start, end=end, data=data)
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDI_ELFD)
+
+    def to_dict(self):
+        ''' returns a JSON serializable dict '''
+        return {
+            'v':self.v,
+            'action':self.action.value,
+            'payload':{
+                'uri':self.uri,
+                'start':self.start.isoformat(),
+                'end':self.end.isoformat(),
+                'data':self.data
             }
         }
 

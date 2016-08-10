@@ -17,11 +17,13 @@ class AutoEnum(Enum):
 
 @unique
 class Messages(Enum):
-    HOOK_TO_URI='hook_to_uri'
-    SEND_MULTI_DATA='send_multi_data'
-    SEND_DP_DATA='send_dp_data'
-    SEND_DS_DATA='send_ds_data'
-    UNHOOK_FROM_URI='unhook_from_uri'
+    HOOK_TO_URI             = 'hook_to_uri'
+    SEND_MULTI_DATA         = 'send_multi_data'
+    SEND_DP_DATA            = 'send_dp_data'
+    SEND_DS_DATA            = 'send_ds_data'
+    UNHOOK_FROM_URI         = 'unhook_from_uri'
+    REQUEST_DATA_INTERVAL   = 'request_data_interval'
+    SEND_DATA_INTERVAL      = 'send_data_interval'
 
 # OPERATION TYPES
 

@@ -725,3 +725,73 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         self.assertTrue(isinstance(msg, messages.HookNewUrisMessage))
         self.assertEqual(msg.type, messages.HOOK_NEW_URIS_MESSAGE)
 
+    def test_DataIntervalRequestMessage_failure_invalid_sid(self):
+        ''' DataIntervalRequestMessage creation should fail if sid is invalid '''
+        sids=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4().hex, uuid.uuid1(), json.dumps('username'), 'user\nname','user\tname']
+        uri={'uri':'valid.uri','type':'type','id':uuid.uuid4()}
+        ii=timeuuid.uuid1()
+        ie=timeuuid.uuid1()
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_ISID)
+
+    def test_DataIntervalRequestMessage_failure_invalid_ii(self):
+        ''' DataIntervalRequestMessage creation should fail if ii is invalid '''
+        iis=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4(), uuid.uuid1().hex, json.dumps('username'), 'user\nname','user\tname']
+        uri={'uri':'valid.uri','type':'type','id':uuid.uuid4()}
+        sid=uuid.uuid4()
+        ie=timeuuid.uuid1()
+        for ii in iis:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_III)
+
+    def test_DataIntervalRequestMessage_failure_invalid_ie(self):
+        ''' DataIntervalRequestMessage creation should fail if ie is invalid '''
+        ies=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4(), uuid.uuid1().hex, json.dumps('username'), 'user\nname','user\tname']
+        uri={'uri':'valid.uri','type':'type','id':uuid.uuid4()}
+        sid=uuid.uuid4()
+        ii=timeuuid.uuid1()
+        for ie in ies:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_IIE)
+
+    def test_DataIntervalRequestMessage_failure_invalid_uri(self):
+        ''' DataIntervalRequestMessage creation should fail if ie is invalid '''
+        uri='uri'
+        sid=uuid.uuid4()
+        ii=timeuuid.uuid1()
+        ie=timeuuid.uuid1()
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_IURI)
+
+    def test_DataIntervalRequestMessage_success(self):
+        ''' DataIntervalRequestMessage creation should fail if ie is invalid '''
+        uri={'uri':'valid.uri','type':'type','id':uuid.uuid4()}
+        sid=uuid.uuid4()
+        ii=timeuuid.uuid1()
+        ie=timeuuid.uuid1()
+        msg=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie)
+        self.assertTrue(isinstance(msg, messages.DataIntervalRequestMessage))
+        self.assertEqual(msg.type, messages.DATA_INTERVAL_REQUEST_MESSAGE)
+
+    def test_DataIntervalRequestMessage_success_from_serialization(self):
+        ''' DataIntervalRequestMessage creation should fail if ie is invalid '''
+        uri={'uri':'valid.uri','type':'type','id':uuid.uuid4()}
+        sid=uuid.uuid4()
+        ii=timeuuid.uuid1()
+        ie=timeuuid.uuid1()
+        msg=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie)
+        self.assertTrue(isinstance(msg, messages.DataIntervalRequestMessage))
+        self.assertEqual(msg.type, messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        msg2=messages.DataIntervalRequestMessage(serialized_message=msg.serialized_message)
+        self.assertTrue(isinstance(msg2, messages.DataIntervalRequestMessage))
+        self.assertEqual(msg2.type, msg.type)
+        self.assertEqual(msg2.sid, msg.sid)
+        self.assertEqual(msg2.uri, msg.uri)
+        self.assertEqual(msg2.ii, msg.ii)
+        self.assertEqual(msg2.ie, msg.ie)
+
