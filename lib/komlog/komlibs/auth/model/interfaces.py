@@ -9,77 +9,77 @@ class Interface:
 
 class User_AgentCreation(Interface):
     def __init__(self):
-        value='/user/agentcreation/'
+        value='user.creation.agent'
         super().__init__(value)
 
 class User_DatasourceCreation(Interface):
     def __init__(self):
-        value='/user/dscreation/'
+        value='user.creation.datasource'
         super().__init__(value)
 
 class User_DatapointCreation(Interface):
     def __init__(self):
-        value='/user/dpcreation/'
+        value='user.creation.datapoint'
         super().__init__(value)
 
 class User_WidgetCreation(Interface):
     def __init__(self):
-        value='/user/wgcreation/'
+        value='user.creation.widget'
         super().__init__(value)
 
 class User_DashboardCreation(Interface):
     def __init__(self):
-        value='/user/dbcreation/'
+        value='user.creation.dashboard'
         super().__init__(value)
 
 class User_CircleCreation(Interface):
     def __init__(self):
-        value='/user/circlecreation/'
+        value='user.creation.circle'
         super().__init__(value)
 
 class User_SnapshotCreation(Interface):
     def __init__(self):
-        value='/user/snapshotcreation/'
+        value='user.creation.snapshot'
         super().__init__(value)
 
 class User_AddMemberToCircle(Interface):
     def __init__(self, cid):
-        value='/user/addmembertocircle/'+cid.hex
+        value='user.add.circle.member.'+cid.hex
         super().__init__(value)
 
 class User_PostDatasourceDataDaily(Interface):
     def __init__(self, did=None):
         if did:
-            value='/user/daily/postdsdata/'+did.hex
+            value='daily.user.add.data.datasource.'+did.hex
         else:
-            value='/user/daily/postdsdata/'
+            value='daily.user.add.data.datasource'
         super().__init__(value)
 
 class User_PostDatapointDataDaily(Interface):
     def __init__(self, pid=None):
         if pid:
-            value='/user/daily/postdpdata/'+pid.hex
+            value='daily.user.add.data.datapoint.'+pid.hex
         else:
-            value='/user/daily/postdpdata/'
+            value='daily.user.add.data.datapoint'
         super().__init__(value)
 
 class User_DataRetrievalMinTimestamp(Interface):
     def __init__(self):
-        value='/user/dataretrievalmints/'
+        value='user.get.data.min_ts'
         super().__init__(value)
 
 class Agent_DatasourceCreation(Interface):
     def __init__(self, aid):
-        value='/agent/dscreation/'+aid.hex
+        value='agent.creation.datasource.'+aid.hex
         super().__init__(value)
 
 class Agent_DatapointCreation(Interface):
     def __init__(self, aid):
-        value='/agent/dpcreation/'+aid.hex
+        value='agent.creation.datapoint.'+aid.hex
         super().__init__(value)
 
 class Datasource_DatapointCreation(Interface):
     def __init__(self, did):
-        value='/ds/dpcreation/'+did.hex
+        value='datasource.creation.datapoint.'+did.hex
         super().__init__(value)
 

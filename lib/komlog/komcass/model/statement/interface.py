@@ -17,14 +17,14 @@ STATEMENTS={
     70101:'select * from if_ts_user_deny where uid=? and interface=?',
     70102:'select * from if_ts_user_deny where uid=? and interface=? and ts=?',
     70103:'select * from if_ts_user_deny where uid=? and interface=? and ts>=? and ts<=?',
-    75000:'insert into if_user_deny (uid,interface,perm) values (?,?,?)',
-    75100:'insert into if_ts_user_deny (uid,interface,ts,perm) values (?,?,?,?)',
-    75101:'insert into if_ts_user_deny (uid,interface,ts,perm) values (?,?,?,?) if not exists',
-    77000:'delete from if_user_deny where uid=? and interface=?',
+    75000:'insert into if_user_deny (uid,interface,content) values (?,?,?)',
+    75100:'insert into if_ts_user_deny (uid,interface,ts,content) values (?,?,?,?)',
+    75101:'insert into if_ts_user_deny (uid,interface,ts,content) values (?,?,?,?) if not exists',
+    77000:'delete from if_user_deny where uid=? and interface=? if exists',
     77001:'delete from if_user_deny where uid=?',
     77100:'delete from if_ts_user_deny where uid=?',
     77101:'delete from if_ts_user_deny where uid=? and interface=?',
-    77102:'delete from if_ts_user_deny where uid=? and interface=? and ts=?',
+    77102:'delete from if_ts_user_deny where uid=? and interface=? and ts=? if exists',
     77103:'delete from if_ts_user_deny where uid=? and interface=? and ts>=? and ts<=?',
 }
 
@@ -57,14 +57,14 @@ I_A_IFTSUSERDENY_INE=75101
 
 # if_user_deny
 
-D_I_IFUSERDENY_B_UID_IFACE=77000
+D_I_IFUSERDENY_B_UID_IFACE_IE=77000
 D_I_IFUSERDENY_B_UID=77001
 
 # if_ts_user_deny
 
 D_A_IFTSUSERDENY_B_UID=77100
 D_A_IFTSUSERDENY_B_UID_INTERFACE=77101
-D_A_IFTSUSERDENY_B_UID_INTERFACE_TS=77102
+D_A_IFTSUSERDENY_B_UID_INTERFACE_TS_IE=77102
 D_A_IFTSUSERDENY_B_UID_INTERFACE_ITS_ETS=77103
 
 # Updates (79000 - 79999)

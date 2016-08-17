@@ -1833,7 +1833,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         uid=user_reg['uid']
         min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc')+pd.Timedelta('1d'))
-        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=min_ts.hex))
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, content=min_ts.hex))
         resp=message._process_request_data_interval(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ANA.value)
@@ -1869,7 +1869,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         uid=user_reg['uid']
         min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc')+pd.Timedelta('2d'))
-        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=min_ts.hex))
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, content=min_ts.hex))
         resp=message._process_request_data_interval(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ANA.value)
@@ -1905,7 +1905,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         uid=user_reg['uid']
         min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc'))
-        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=min_ts.hex))
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, content=min_ts.hex))
         resp=message._process_request_data_interval(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP.value)
@@ -1940,7 +1940,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         uid=user_reg['uid']
         min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc'))
-        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, perm=min_ts.hex))
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, content=min_ts.hex))
         resp=message._process_request_data_interval(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP.value)

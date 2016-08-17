@@ -61,7 +61,7 @@ def create_user(username, password, email):
             code=crypto.get_random_string(size=32)
             signup_info=ormuser.SignUp(username=user.username, code=code, email=user.email, creation_date=user.creation_date)
             if cassapiuser.insert_signup_info(signup_info=signup_info):
-                return {'uid':user.uid, 'email':user.email, 'code':signup_info.code, 'username':user.username}
+                return {'uid':user.uid, 'email':user.email, 'code':signup_info.code, 'username':user.username,'state':user.state, 'segment':user.segment}
             else:
                 cassapiuser.delete_user(username=user.username)
                 return None
@@ -159,6 +159,7 @@ def get_user_config(uid):
     data['uid']=user.uid
     data['username']=user.username
     data['state']=user.state
+    data['segment']=user.segment
     return data
 
 def get_uid(username):

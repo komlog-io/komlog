@@ -13,7 +13,7 @@ IF_USER_DENY='''
         CREATE TABLE if_user_deny (
             uid uuid,
             interface text,
-            perm text,
+            content text,
             PRIMARY KEY (uid,interface)
         );
     '''
@@ -23,7 +23,7 @@ IF_TS_USER_DENY='''
         uid uuid,
         interface text,
         ts int,
-        perm text,
+        content text,
         PRIMARY KEY (uid,interface,ts)
     ) WITH CLUSTERING ORDER BY (interface asc, ts desc);
 '''

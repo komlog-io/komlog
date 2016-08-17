@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 Created on 01/10/2014
 
@@ -29,13 +28,13 @@ def get_user_ifaces_deny(uid):
     return ifaces
 
 @exceptions.ExceptionHandler
-def insert_user_iface_deny(uid, iface, perm):
-    connection.session.execute(stmtiface.I_A_IFUSERDENY,(uid,iface,perm))
+def insert_user_iface_deny(uid, iface, content=None):
+    connection.session.execute(stmtiface.I_A_IFUSERDENY,(uid,iface,content))
     return True
 
 @exceptions.ExceptionHandler
 def delete_user_iface_deny(uid, iface):
-    connection.session.execute(stmtiface.D_I_IFUSERDENY_B_UID_IFACE,(uid,iface))
+    connection.session.execute(stmtiface.D_I_IFUSERDENY_B_UID_IFACE_IE,(uid,iface))
     return True
 
 @exceptions.ExceptionHandler
@@ -73,13 +72,13 @@ def get_user_ts_iface_deny_interval(uid, iface, its, ets):
     return data
 
 @exceptions.ExceptionHandler
-def insert_user_ts_iface_deny(uid, iface, ts, perm):
-    connection.session.execute(stmtiface.I_A_IFTSUSERDENY, (uid, iface, ts, perm))
+def insert_user_ts_iface_deny(uid, iface, ts, content=None):
+    connection.session.execute(stmtiface.I_A_IFTSUSERDENY, (uid, iface, ts, content))
     return True
 
 @exceptions.ExceptionHandler
-def new_user_ts_iface_deny(uid, iface, ts, perm):
-    resp=connection.session.execute(stmtiface.I_A_IFTSUSERDENY_INE, (uid, iface, ts, perm))
+def new_user_ts_iface_deny(uid, iface, ts, content=None):
+    resp=connection.session.execute(stmtiface.I_A_IFTSUSERDENY_INE, (uid, iface, ts, content))
     if not resp:
         return False
     else:
@@ -93,7 +92,7 @@ def delete_user_ts_ifaces_deny(uid):
 @exceptions.ExceptionHandler
 def delete_user_ts_iface_deny(uid, iface, ts=None):
     if ts:
-        connection.session.execute(stmtiface.D_A_IFTSUSERDENY_B_UID_INTERFACE_TS, (uid, iface, ts))
+        connection.session.execute(stmtiface.D_A_IFTSUSERDENY_B_UID_INTERFACE_TS_IE, (uid, iface, ts))
     else:
         connection.session.execute(stmtiface.D_A_IFTSUSERDENY_B_UID_INTERFACE, (uid, iface))
     return True

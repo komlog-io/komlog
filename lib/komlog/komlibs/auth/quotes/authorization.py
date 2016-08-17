@@ -123,7 +123,7 @@ def authorize_get_datasource_data(did, ii, ie):
     iface=interfaces.User_DataRetrievalMinTimestamp().value
     db_iface=cassapiiface.get_user_iface_deny(uid=datasource.uid, iface=iface)
     if db_iface:
-        min_date=uuid.UUID(db_iface.perm)
+        min_date=uuid.UUID(db_iface.content)
         if ii and ie and ii.time >= min_date.time and ie.time >= min_date.time:
             pass
         else:
@@ -142,7 +142,7 @@ def authorize_get_datapoint_data(pid, ii, ie):
     iface=interfaces.User_DataRetrievalMinTimestamp().value
     db_iface=cassapiiface.get_user_iface_deny(uid=datapoint.uid, iface=iface)
     if db_iface:
-        min_date=uuid.UUID(db_iface.perm)
+        min_date=uuid.UUID(db_iface.content)
         if ii and ie and ii.time >= min_date.time and ie.time >= min_date.time:
             pass
         else:

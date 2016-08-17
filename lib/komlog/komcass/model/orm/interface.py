@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 Created on 01/10/2014
 
@@ -7,16 +6,16 @@ Created on 01/10/2014
 
 class UserIfaceDeny:
     ''' This class is used to register interfaces whose access is denied to user requests'''
-    def __init__(self, uid, interface=None, perm=None):
+    def __init__(self, uid, interface, content=None):
         self.uid=uid
         self.interface=interface
-        self.perm=perm
+        self.content=content
 
 class UserIfaceTsDeny:
     ''' This class is used to register interfaces whose access is denied to user requests in different time intervals '''
-    def __init__(self, uid, interface, ts, perm):
+    def __init__(self, uid, interface, ts, content=None):
         self.uid=uid
         self.interface=interface
         self.ts=ts
-        self.perm=perm
+        self.content=content
 

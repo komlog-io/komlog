@@ -27,7 +27,6 @@ MODULES = [
     'komlog.komlibs.auth.test.test_passport.AuthPassportTest',
     'komlog.komlibs.auth.test.test_session.AuthSessionTest',
     'komlog.komlibs.auth.quotes.test.test_authorization.AuthQuotesAuthorizationTest',
-    'komlog.komlibs.auth.quotes.test.test_deny.AuthQuotesDenyTest',
     'komlog.komlibs.auth.quotes.test.test_compare.AuthQuotesCompareTest',
     'komlog.komlibs.auth.quotes.test.test_update.AuthQuotesUpdateTest',
     'komlog.komlibs.auth.resources.test.test_authorization.AuthResourcesAuthorizationTest',

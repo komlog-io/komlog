@@ -4,7 +4,6 @@ from komlog.komlibs.auth import exceptions
 from komlog.komlibs.auth.model import relations
 from komlog.komlibs.auth.quotes import update as quoup
 from komlog.komlibs.auth.quotes import compare as quocmp
-from komlog.komlibs.auth.quotes import deny as quodeny
 from komlog.komlibs.auth.resources import update as resup
 
 
@@ -19,9 +18,7 @@ def update_quotes(operation, params):
             result=f(params=params)
             if result is not None:
                 f=quocmp.quote_funcs[quo]
-                should_block=f(params=params)
-                f=quodeny.quote_funcs[quo]
-                f(params=params,deny=should_block)
+                f(params=params)
         except exceptions.AuthException as e:
             end=time.time()
             failures=True

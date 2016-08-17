@@ -12,8 +12,8 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         uid=uuid.uuid4()
         iface1='test_get_user_iface_deny_non_existing_iface_iface1'
         iface2='test_get_user_iface_deny_non_existing_iface_iface2'
-        perm='A'
-        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, perm=perm))
+        content='A'
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, content=content))
         self.assertIsNone(interfaceapi.get_user_iface_deny(uid=uid, iface=iface2))
 
     def test_get_user_iface_deny_non_existing_uid(self):
@@ -27,14 +27,14 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         uid=uuid.uuid4()
         iface1='test_get_user_iface_deny_success_iface1'
         iface2='test_get_user_iface_deny_success_iface2'
-        perm='A'
-        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, perm=perm))
-        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface2, perm=perm))
+        content='A'
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, content=content))
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface2, content=content))
         iface=interfaceapi.get_user_iface_deny(uid=uid, iface=iface2)
         self.assertTrue(isinstance(iface, orminterface.UserIfaceDeny))
         self.assertEqual(uid, iface.uid)
         self.assertEqual(iface2, iface.interface)
-        self.assertEqual(perm, iface.perm)
+        self.assertEqual(content, iface.content)
 
     def test_get_user_ifaces_deny_non_existing_uid(self):
         ''' get_user_ifaces_deny should return None if uid does not exist '''
@@ -47,9 +47,9 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         uid=uuid.uuid4()
         iface1='test_get_user_ifaces_deny_success_iface1'
         iface2='test_get_user_ifaces_deny_success_iface2'
-        perm='A'
-        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, perm=perm))
-        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface2, perm=perm))
+        content='A'
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, content=content))
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface2, content=content))
         ifaces=interfaceapi.get_user_ifaces_deny(uid=uid)
         self.assertTrue(isinstance(ifaces, list))
         self.assertEqual(len(ifaces), 2)
@@ -61,32 +61,50 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         uid=uuid.uuid4()
         iface1='test_insert_user_iface_deny_success_iface1'
         iface2='test_insert_user_iface_deny_success_iface2'
-        perm='A'
-        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, perm=perm))
-        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface2, perm=perm))
+        content='A'
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, content=content))
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface2, content=content))
         iface=interfaceapi.get_user_iface_deny(uid=uid, iface=iface2)
         self.assertTrue(isinstance(iface, orminterface.UserIfaceDeny))
         self.assertEqual(uid, iface.uid)
         self.assertEqual(iface2, iface.interface)
-        self.assertEqual(perm, iface.perm)
+        self.assertEqual(content, iface.content)
         iface=interfaceapi.get_user_iface_deny(uid=uid, iface=iface1)
         self.assertTrue(isinstance(iface, orminterface.UserIfaceDeny))
         self.assertEqual(uid, iface.uid)
         self.assertEqual(iface1, iface.interface)
-        self.assertEqual(perm, iface.perm)
+        self.assertEqual(content, iface.content)
+
+    def test_insert_user_iface_deny_success_content_none(self):
+        ''' insert_user_iface_deny should return True '''
+        uid=uuid.uuid4()
+        iface1='test_insert_user_iface_deny_success_iface1'
+        iface2='test_insert_user_iface_deny_success_iface2'
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1))
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface2))
+        iface=interfaceapi.get_user_iface_deny(uid=uid, iface=iface2)
+        self.assertTrue(isinstance(iface, orminterface.UserIfaceDeny))
+        self.assertEqual(uid, iface.uid)
+        self.assertEqual(iface2, iface.interface)
+        self.assertEqual(None, iface.content)
+        iface=interfaceapi.get_user_iface_deny(uid=uid, iface=iface1)
+        self.assertTrue(isinstance(iface, orminterface.UserIfaceDeny))
+        self.assertEqual(uid, iface.uid)
+        self.assertEqual(iface1, iface.interface)
+        self.assertEqual(None, iface.content)
 
     def test_delete_user_iface_deny_success(self):
         ''' delete_user_iface_deny should return True and delete successfully the iface passed '''
         uid=uuid.uuid4()
         iface1='test_delete_user_iface_deny_success_iface1'
         iface2='test_delete_user_iface_deny_success_iface2'
-        perm='A'
-        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, perm=perm))
+        content='A'
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, content=content))
         iface=interfaceapi.get_user_iface_deny(uid=uid, iface=iface1)
         self.assertTrue(isinstance(iface, orminterface.UserIfaceDeny))
         self.assertEqual(uid, iface.uid)
         self.assertEqual(iface1, iface.interface)
-        self.assertEqual(perm, iface.perm)
+        self.assertEqual(content, iface.content)
         self.assertTrue(interfaceapi.delete_user_iface_deny(uid=uid, iface=iface1))
         self.assertIsNone(interfaceapi.get_user_iface_deny(uid=uid, iface=iface1))
 
@@ -95,9 +113,9 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         uid=uuid.uuid4()
         iface1='test_delete_user_ifaces_deny_success_iface1'
         iface2='test_delete_user_ifaces_deny_success_iface2'
-        perm='A'
-        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, perm=perm))
-        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface2, perm=perm))
+        content='A'
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface1, content=content))
+        self.assertTrue(interfaceapi.insert_user_iface_deny(uid=uid, iface=iface2, content=content))
         ifaces=interfaceapi.get_user_ifaces_deny(uid=uid)
         self.assertTrue(isinstance(ifaces, list))
         self.assertEqual(len(ifaces), 2)
@@ -116,7 +134,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface=iface+str(i)
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         db_interfaces=interfaceapi.get_user_ts_ifaces_deny(uid=uid)
         self.assertEqual(len(db_interfaces),1000)
 
@@ -128,7 +146,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface=iface+str(i)
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         iface='test_interface'
         db_interfaces=interfaceapi.get_user_ts_ifaces_deny(uid=uid, iface=iface)
         self.assertEqual(len(db_interfaces),0)
@@ -139,7 +157,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         iface='test_interface500'
         db_interfaces=interfaceapi.get_user_ts_ifaces_deny(uid=uid, iface=iface)
         self.assertEqual(len(db_interfaces),1)
@@ -150,7 +168,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         iface='test_interface5000'
         interface=interfaceapi.get_user_ts_iface_deny(uid=uid, iface=iface, ts=500)
         self.assertIsNone(interface)
@@ -168,7 +186,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
@@ -177,7 +195,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
             self.assertEqual(interface.uid, uid)
             self.assertEqual(interface.interface, iface)
             self.assertEqual(interface.ts, ts)
-            self.assertEqual(interface.perm,'a')
+            self.assertEqual(interface.content,'a')
 
     def test_get_user_ts_iface_deny_interval_none_found(self):
         ''' get_user_ts_iface_deny_interval should return an empty list if no interface is found '''
@@ -185,7 +203,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         iface='test_interface5000'
         interfaces=interfaceapi.get_user_ts_iface_deny_interval(uid=uid, iface=iface, its=0,ets=5000)
         self.assertEqual(interfaces,[])
@@ -203,7 +221,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
@@ -212,7 +230,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
             self.assertEqual(interfaces[0].interface, iface)
             self.assertEqual(interfaces[0].uid,uid)
             self.assertEqual(interfaces[0].ts, ts)
-            self.assertEqual(interfaces[0].perm,'a')
+            self.assertEqual(interfaces[0].content,'a')
 
     def test_insert_user_ts_iface_deny_success(self):
         ''' insert_user_ts_iface_deny should insert the interface '''
@@ -220,7 +238,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
@@ -229,7 +247,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
             self.assertEqual(interface.uid, uid)
             self.assertEqual(interface.interface, iface)
             self.assertEqual(interface.ts, ts)
-            self.assertEqual(interface.perm,'a')
+            self.assertEqual(interface.content,'a')
 
     def test_new_user_ts_iface_deny_success(self):
         ''' new_user_ts_iface_deny should insert the interface if it does not exist previously '''
@@ -237,7 +255,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
-            self.assertTrue(interfaceapi.new_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.new_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
@@ -246,7 +264,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
             self.assertEqual(interface.uid, uid)
             self.assertEqual(interface.interface, iface)
             self.assertEqual(interface.ts, ts)
-            self.assertEqual(interface.perm,'a')
+            self.assertEqual(interface.content,'a')
 
     def test_new_user_ts_iface_deny_failure(self):
         ''' new_user_ts_iface_deny should fail inserting the interface if it existed previously '''
@@ -254,7 +272,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
-            self.assertTrue(interfaceapi.new_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.new_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
@@ -263,11 +281,11 @@ class KomcassApiInterfaceTest(unittest.TestCase):
             self.assertEqual(interface.uid, uid)
             self.assertEqual(interface.interface, iface)
             self.assertEqual(interface.ts, ts)
-            self.assertEqual(interface.perm,'a')
+            self.assertEqual(interface.content,'a')
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
-            self.assertFalse(interfaceapi.new_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertFalse(interfaceapi.new_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
 
     def test_delete_user_ts_ifaces_deny_none_existed_previously(self):
         ''' delete_user_ts_ifaces_deny should return True even if no interface existed '''
@@ -282,7 +300,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         self.assertEqual(len(interfaceapi.get_user_ts_ifaces_deny(uid=uid)),1000)
         self.assertTrue(interfaceapi.delete_user_ts_ifaces_deny(uid=uid))
         self.assertEqual(len(interfaceapi.get_user_ts_ifaces_deny(uid=uid)),0)
@@ -309,7 +327,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         for i in range(1,1001):
             ts=i
             iface='test_interface'+str(i)
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         self.assertEqual(len(interfaceapi.get_user_ts_ifaces_deny(uid=uid)),1000)
         self.assertTrue(interfaceapi.delete_user_ts_iface_deny(uid=uid, iface=iface))
         self.assertEqual(len(interfaceapi.get_user_ts_ifaces_deny(uid=uid)),999)
@@ -321,7 +339,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         iface='test_interface'
         for i in range(1,1001):
             ts=i
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         self.assertEqual(len(interfaceapi.get_user_ts_ifaces_deny(uid=uid)),1000)
         self.assertTrue(interfaceapi.delete_user_ts_iface_deny(uid=uid, iface=iface, ts=500))
         self.assertEqual(len(interfaceapi.get_user_ts_ifaces_deny(uid=uid)),999)
@@ -344,7 +362,7 @@ class KomcassApiInterfaceTest(unittest.TestCase):
         ets=199
         for i in range(1,1001):
             ts=i
-            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, perm='a'))
+            self.assertTrue(interfaceapi.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts, content='a'))
         self.assertEqual(len(interfaceapi.get_user_ts_iface_deny_interval(uid=uid, iface=iface, its=1, ets=1000)),1000)
         self.assertTrue(interfaceapi.delete_user_ts_iface_deny_interval(uid=uid, iface=iface, its=its, ets=ets))
         self.assertEqual(len(interfaceapi.get_user_ts_ifaces_deny(uid=uid)),900)
