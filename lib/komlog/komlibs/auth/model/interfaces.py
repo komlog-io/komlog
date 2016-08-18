@@ -47,6 +47,11 @@ class User_AddMemberToCircle(Interface):
         value='user.add.circle.member.'+cid.hex
         super().__init__(value)
 
+class User_PostDataDaily(Interface):
+    def __init__(self):
+        value='daily.user.add.data'
+        super().__init__(value)
+
 class User_PostDatasourceDataDaily(Interface):
     def __init__(self, did=None):
         if did:

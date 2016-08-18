@@ -48,6 +48,7 @@ operation_quotes = {
         Quotes.quo_circle_total_members
     ],
     Operations.DATASOURCE_DATA_STORED: [
+        Quotes.quo_daily_user_data_post_counter,
         Quotes.quo_daily_datasource_occupation,
         Quotes.quo_daily_user_datasources_occupation,
         Quotes.quo_user_total_occupation,

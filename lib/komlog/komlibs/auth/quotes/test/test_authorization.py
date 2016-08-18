@@ -301,6 +301,17 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
             authorization.authorize_post_datasource_data(uid=uid, did=did)
         self.assertEqual(cm.exception.error, Errors.E_AQA_APDSD_QE)
 
+    def test_authorize_post_datasource_data_failure_data_post_daily_quote_reached(self):
+        ''' authorize_post_datasource_data should fail if data post daily quote has been reached '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        ts=timeuuid.get_day_timestamp(timeuuid.uuid1())
+        iface=interfaces.User_PostDataDaily().value
+        self.assertTrue(cassapiiface.insert_user_ts_iface_deny(uid, iface, ts))
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_post_datasource_data(uid=uid, did=did)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_APDSD_QE)
+
     def test_authorize_get_datasource_data_failure_datasource_not_found(self):
         ''' authorize_get_datasource_data should fail if datasource does not exist '''
         did=uuid.uuid4()
@@ -365,6 +376,17 @@ class AuthQuotesAuthorizationTest(unittest.TestCase):
         self.assertTrue(cassapiiface.insert_user_ts_iface_deny(uid, iface, ts, 'A'))
         iface=interfaces.User_PostDatapointDataDaily().value
         self.assertTrue(cassapiiface.insert_user_ts_iface_deny(uid, iface, ts, 'A'))
+        with self.assertRaises(exceptions.AuthorizationException) as cm:
+            authorization.authorize_post_datapoint_data(uid=uid, pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_AQA_APDPD_QE)
+
+    def test_authorize_post_datapoint_data_failure_data_daily_quote_reached(self):
+        ''' authorize_post_datapoint_data should fail if data daily quote has been reached '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        ts=timeuuid.get_day_timestamp(timeuuid.uuid1())
+        iface=interfaces.User_PostDataDaily().value
+        self.assertTrue(cassapiiface.insert_user_ts_iface_deny(uid, iface, ts))
         with self.assertRaises(exceptions.AuthorizationException) as cm:
             authorization.authorize_post_datapoint_data(uid=uid, pid=pid)
         self.assertEqual(cm.exception.error, Errors.E_AQA_APDPD_QE)

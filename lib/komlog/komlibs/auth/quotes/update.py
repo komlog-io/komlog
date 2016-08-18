@@ -237,9 +237,30 @@ def quo_user_total_occupation(params):
             return n_val
     return None
 
+def quo_daily_user_data_post_counter(params):
+    ''' Increment the daily counter of samples posted. The day is the day associated to the data,
+        so a user could really send in a day more samples than the quote limit if the date of those
+        samples is from different days. '''
+    try:
+        did=params['did']
+        date=params['date']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QDUDPC_PNF)
+    dsinfo=cassapidatasource.get_datasource(did=did)
+    if not dsinfo or not dsinfo.uid:
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQU_QDUDPC_DSNF)
+    user=cassapiuser.get_user(uid=dsinfo.uid)
+    if not user:
+        raise exceptions.UserNotFoundException(error=Errors.E_AQU_QDUDPC_USRNF)
+    ts=timeuuid.get_day_timestamp(date)
+    quote=Quotes.quo_daily_user_data_post_counter.name
+    new_counter=cassapiquote.increment_user_ts_quote(uid=dsinfo.uid,quote=quote,ts=ts,value=1)
+    return new_counter
+
 quote_funcs = {
     Quotes.quo_daily_datasource_occupation:quo_daily_datasource_occupation,
     Quotes.quo_daily_user_datasources_occupation:quo_daily_user_datasources_occupation,
+    Quotes.quo_daily_user_data_post_counter:quo_daily_user_data_post_counter,
     Quotes.quo_agent_total_datapoints:quo_agent_total_datapoints,
     Quotes.quo_agent_total_datasources:quo_agent_total_datasources,
     Quotes.quo_circle_total_members:quo_circle_total_members,

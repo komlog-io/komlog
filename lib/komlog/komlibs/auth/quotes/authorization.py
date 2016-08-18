@@ -95,6 +95,7 @@ def authorize_add_member_to_circle(uid, cid):
 def authorize_post_datasource_data(uid, did):
     ts=timeuuid.get_day_timestamp(timeuuid.uuid1())
     ifaces=[]
+    ifaces.append(interfaces.User_PostDataDaily().value)
     ifaces.append(interfaces.User_PostDatasourceDataDaily().value)
     ifaces.append(interfaces.User_PostDatasourceDataDaily(did).value)
     for iface in ifaces:
@@ -104,6 +105,7 @@ def authorize_post_datasource_data(uid, did):
 def authorize_post_datapoint_data(uid, pid):
     ts=timeuuid.get_day_timestamp(timeuuid.uuid1())
     ifaces=[]
+    ifaces.append(interfaces.User_PostDataDaily().value)
     ifaces.append(interfaces.User_PostDatapointDataDaily().value)
     ifaces.append(interfaces.User_PostDatapointDataDaily(pid).value)
     for iface in ifaces:
