@@ -11,6 +11,26 @@ from komlog.komcass import connection, exceptions
 
 
 @exceptions.ExceptionHandler
+def get_user_segment(sid):
+    row=connection.session.execute(stmtsegment.S_A_MSTUSERSEGMENT_B_SID,(sid,))
+    if row:
+        return ormsegment.UserSegment(**row[0])
+    else:
+        return None
+
+@exceptions.ExceptionHandler
+def insert_user_segment(segment):
+    if not isinstance(segment, ormsegment.UserSegment):
+        return False
+    connection.session.execute(stmtsegment.I_A_MSTUSERSEGMENT,(segment.sid,segment.description))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_user_segment(sid):
+    connection.session.execute(stmtsegment.D_A_MSTUSERSEGMENT_B_SID,(sid,))
+    return True
+
+@exceptions.ExceptionHandler
 def get_user_segment_quotes(sid):
     quotes=[]
     rows=connection.session.execute(stmtsegment.S_A_PRMUSERSEGMENTQUO_B_SID,(sid,))

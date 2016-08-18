@@ -6,6 +6,61 @@ from komlog.komcass.model.orm import segment as ormsegment
 class KomcassApiSegmentTest(unittest.TestCase):
     ''' komlog.komcass.api.segment tests '''
 
+    def test_get_user_segment_non_found(self):
+        ''' get_user_segment should return None if sid is not found '''
+        self.assertIsNone(segmentapi.get_user_segment(sid=-1))
+
+    def test_get_user_segment_found(self):
+        ''' get_user_segment should return a UserSegment object with the segment '''
+        sid=99999999
+        description='Test segment'
+        segment=ormsegment.UserSegment(sid=sid, description=description)
+        self.assertTrue(segmentapi.insert_user_segment(segment))
+        db_segment=segmentapi.get_user_segment(sid=sid)
+        self.assertEqual(segment.sid, sid)
+        self.assertEqual(segment.description, description)
+        self.assertTrue(segmentapi.delete_user_segment(sid=sid))
+
+    def test_insert_user_segment_failure(self):
+        ''' insert_user_segment should fail if segment is not a UserSegment object '''
+        sid=999999990
+        description='Test segment'
+        segment=ormsegment.UserSegment(sid=sid, description=description)
+        self.assertTrue(segmentapi.insert_user_segment(segment))
+        db_segment=segmentapi.get_user_segment(sid=sid)
+        self.assertEqual(segment.sid, sid)
+        self.assertEqual(segment.description, description)
+        self.assertTrue(segmentapi.delete_user_segment(sid=sid))
+
+    def test_insert_user_segment_success(self):
+        ''' insert_user_segment should succeed and insert the object '''
+        sid=999999990
+        description='Test segment'
+        segment=ormsegment.UserSegment(sid=sid, description=description)
+        self.assertTrue(segmentapi.insert_user_segment(segment))
+        db_segment=segmentapi.get_user_segment(sid=sid)
+        self.assertEqual(segment.sid, sid)
+        self.assertEqual(segment.description, description)
+        self.assertTrue(segmentapi.delete_user_segment(sid=sid))
+
+    def test_delete_user_segment_success_non_existent_segment(self):
+        ''' delete_user_segment should return True even if segment does not exist '''
+        sid=999999900
+        self.assertIsNone(segmentapi.get_user_segment(sid=sid))
+        self.assertTrue(segmentapi.delete_user_segment(sid=sid))
+
+    def test_delete_user_segment_success_existent_segment(self):
+        ''' delete_user_segment should succeed and delete the segment '''
+        sid=999999890
+        description='Test segment'
+        segment=ormsegment.UserSegment(sid=sid, description=description)
+        self.assertTrue(segmentapi.insert_user_segment(segment))
+        db_segment=segmentapi.get_user_segment(sid=sid)
+        self.assertEqual(segment.sid, sid)
+        self.assertEqual(segment.description, description)
+        self.assertTrue(segmentapi.delete_user_segment(sid=sid))
+        self.assertIsNone(segmentapi.get_user_segment(sid=sid))
+
     def test_get_user_segment_quotes_non_existing_sid(self):
         ''' get_user_segment_quotes should return an empty array if sid does not exist '''
         sid=1000
