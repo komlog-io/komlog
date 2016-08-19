@@ -309,23 +309,20 @@ def quo_user_total_occupation(params):
 
 def quo_daily_user_data_post_counter(params):
     try:
-        did=params['did']
+        uid=params['uid']
         date=params['date']
     except KeyError:
         raise exceptions.BadParametersException(error=Errors.E_AQC_QDUDPC_PNF)
-    dsinfo=cassapidatasource.get_datasource(did=did)
-    if not dsinfo or not dsinfo.uid:
-        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQC_QDUDPC_DSNF)
-    user=cassapiuser.get_user(uid=dsinfo.uid)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=Errors.E_AQC_QDUDPC_USRNF)
     quote=Quotes.quo_daily_user_data_post_counter.name
     iface=interfaces.User_PostDataDaily().value
     segmentquo=cassapisegment.get_user_segment_quote(sid=user.segment, quote=quote)
     ts=timeuuid.get_day_timestamp(date)
-    userquo=cassapiquote.get_user_ts_quote(uid=dsinfo.uid, quote=quote, ts=ts)
+    userquo=cassapiquote.get_user_ts_quote(uid=uid, quote=quote, ts=ts)
     if segmentquo and userquo and userquo.value >= segmentquo.value:
-        cassapiiface.insert_user_ts_iface_deny(uid=dsinfo.uid, iface=iface, ts=ts)
+        cassapiiface.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts)
     return True
 
 quote_funcs = {

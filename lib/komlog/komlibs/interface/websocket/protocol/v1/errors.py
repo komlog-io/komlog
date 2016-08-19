@@ -120,6 +120,11 @@ class Errors(Enum):
 
     E_IWSPV1MO_DSDSTO_IDID   = 240300      #: DatasourceDataStoredOperation. invalid did
     E_IWSPV1MO_DSDSTO_IDATE  = 240301      #: DatasourceDataStoredOperation. invalid date
+    E_IWSPV1MO_DSDSTO_IUID   = 240302      #: DatasourceDataStoredOperation. invalid uid
+
+    E_IWSPV1MO_DPDSTO_IPID   = 240400      #: DatapointDataStoredOperation. invalid pid
+    E_IWSPV1MO_DPDSTO_IDATE  = 240401      #: DatapointDataStoredOperation. invalid date
+    E_IWSPV1MO_DPDSTO_IUID   = 240402      #: DatapointDataStoredOperation. invalid uid
 
 #interface websocket protocol v1 processing operation
 

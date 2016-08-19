@@ -32,5 +32,6 @@ class Operations(AutoEnum):
     NEW_DATASOURCE          = ()
     NEW_USER_DATAPOINT      = ()
     DATASOURCE_DATA_STORED  = ()
+    DATAPOINT_DATA_STORED   = ()
 
 

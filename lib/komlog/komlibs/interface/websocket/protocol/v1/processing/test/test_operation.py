@@ -68,13 +68,32 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
 
     def test_process_operation_datasource_data_stored_success(self):
         ''' _process_operation_datasource_data_stored should succeed and send the corresponding messages '''
+        uid=uuid.uuid4()
         did=uuid.uuid4()
         date=uuid.uuid1()
-        op=modop.DatasourceDataStoredOperation(did=did, date=date)
+        op=modop.DatasourceDataStoredOperation(uid=uid, did=did, date=date)
         msgs=operation.process_operation(operation=op)
         message_expected={messages.GENERATE_TEXT_SUMMARY_MESSAGE:1,
                           messages.UPDATE_QUOTES_MESSAGE:1,
                           messages.MAP_VARS_MESSAGE:1}
+        message_retrieved={}
+        for msg in msgs:
+            try:
+                message_retrieved[msg.type]+=1
+            except KeyError:
+                message_retrieved[msg.type]=1
+        self.assertEqual(sorted(message_retrieved), sorted(message_expected))
+
+    def test_process_operation_datapoint_data_stored_success(self):
+        ''' _process_operation_datapoint_data_stored should succeed and send the corresponding messages '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        date=uuid.uuid1()
+        op=modop.DatapointDataStoredOperation(uid=uid, pid=pid, date=date)
+        msgs=operation.process_operation(operation=op)
+        message_expected={
+            messages.UPDATE_QUOTES_MESSAGE:1,
+        }
         message_retrieved={}
         for msg in msgs:
             try:

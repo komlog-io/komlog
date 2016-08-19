@@ -56,9 +56,15 @@ def _process_operation_datasource_data_stored(operation):
     msgs.append(messages.MapVarsMessage(did=operation.did,date=operation.date))
     return msgs
 
+def _process_operation_datapoint_data_stored(operation):
+    msgs=[]
+    msgs.append(messages.UpdateQuotesMessage(operation=operation.auth_operation,params=operation.params))
+    return msgs
+
 _operation_funcs = {
     Operations.NEW_DATASOURCE:_process_operation_new_datasource,
     Operations.NEW_USER_DATAPOINT:_process_operation_new_user_datapoint,
     Operations.DATASOURCE_DATA_STORED:_process_operation_datasource_data_stored,
+    Operations.DATAPOINT_DATA_STORED:_process_operation_datapoint_data_stored,
 }
 

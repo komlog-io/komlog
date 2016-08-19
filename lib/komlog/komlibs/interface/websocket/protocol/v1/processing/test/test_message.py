@@ -307,7 +307,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
                 retrieved_messages[msg.type]+=1
             except KeyError:
                 retrieved_messages[msg.type]=1
-        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        self.assertEqual(expected_messages,retrieved_messages)
 
     def test__process_send_ds_data_success_ds_already_existed(self):
         ''' _process_send_ds_data should succeed and create the ds '''
@@ -351,7 +351,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
                 retrieved_messages[msg.type]+=1
             except KeyError:
                 retrieved_messages[msg.type]=1
-        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        self.assertEqual(expected_messages,retrieved_messages)
 
     def test__process_send_dp_data_failure_invalid_message(self):
         ''' _process_send_dp_data should fail if message is invalid '''
@@ -608,7 +608,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.routed_messages,{})
         self.assertNotEqual(resp.unrouted_messages,[])
         expected_messages={
-            messages.UPDATE_QUOTES_MESSAGE:1,
+            messages.UPDATE_QUOTES_MESSAGE:2,
             messages.NEW_DP_WIDGET_MESSAGE:1,
             messages.HOOK_NEW_URIS_MESSAGE:1
         }
@@ -619,7 +619,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
                 retrieved_messages[msg.type]+=1
             except KeyError:
                 retrieved_messages[msg.type]=1
-        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        self.assertEqual(expected_messages,retrieved_messages)
 
     def test__process_send_dp_data_success_dp_already_existed(self):
         ''' _process_send_dp_data should succeed using the existing datapoint '''
@@ -649,7 +649,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.routed_messages,{})
         self.assertNotEqual(resp.unrouted_messages,[])
         expected_messages={
-            messages.URIS_UPDATED_MESSAGE:1
+            messages.URIS_UPDATED_MESSAGE:1,
+            messages.UPDATE_QUOTES_MESSAGE:1
         }
         retrieved_messages={}
         msgs=resp.unrouted_messages
@@ -658,7 +659,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
                 retrieved_messages[item.type]+=1
             except KeyError:
                 retrieved_messages[item.type]=1
-        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        self.assertEqual(expected_messages,retrieved_messages)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNotNone(uri_info)
         self.assertEqual(uri_info['id'],datapoint['pid'])
@@ -864,7 +865,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
                 retrieved_messages[msg.type]+=1
             except KeyError:
                 retrieved_messages[msg.type]=1
-        self.assertEqual(sorted(retrieved_messages), sorted(expected_messages))
+        self.assertEqual(retrieved_messages,expected_messages)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
         self.assertIsNotNone(uri_info)
         self.assertEqual(uri_info['type'],vertex.DATASOURCE)
@@ -895,7 +896,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.routed_messages,{})
         self.assertNotEqual(resp.unrouted_messages,[])
         expected_messages={
-            messages.UPDATE_QUOTES_MESSAGE:1,
+            messages.UPDATE_QUOTES_MESSAGE:2,
             messages.NEW_DP_WIDGET_MESSAGE:1,
             messages.HOOK_NEW_URIS_MESSAGE:1
         }
@@ -906,7 +907,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
                 retrieved_messages[msg.type]+=1
             except KeyError:
                 retrieved_messages[msg.type]=1
-        self.assertEqual(sorted(retrieved_messages), sorted(expected_messages))
+        self.assertEqual(retrieved_messages, expected_messages)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.dp')
         self.assertIsNotNone(uri_info)
         self.assertEqual(uri_info['type'],vertex.DATAPOINT)
@@ -1072,7 +1073,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.routed_messages,{})
         self.assertNotEqual(resp.unrouted_messages,[])
         expected_messages={
-            messages.UPDATE_QUOTES_MESSAGE:4,
+            messages.UPDATE_QUOTES_MESSAGE:6,
             messages.NEW_DP_WIDGET_MESSAGE:1,
             messages.NEW_DS_WIDGET_MESSAGE:1,
             messages.USER_EVENT_MESSAGE:1,
@@ -1097,7 +1098,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
                 self.assertEqual(len(item.uris),2)
                 self.assertTrue(any(reg['uri'] == 'uri.ds' for reg in item.uris))
                 self.assertTrue(any(reg['uri'] == 'uri.dp' for reg in item.uris))
-        self.assertEqual(sorted(retrieved_messages), sorted(expected_messages))
+        self.assertEqual(retrieved_messages, expected_messages)
         did=datasource['did']
         existing_ds_stats=cassapidatasource.get_datasource_stats(did=did)
         date=existing_ds_stats.last_received

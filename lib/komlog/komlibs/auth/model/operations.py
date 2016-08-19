@@ -19,6 +19,7 @@ class AutoEnum(Enum):
 @unique
 class Operations(AutoEnum):
     DATASOURCE_DATA_STORED               = ()
+    DATAPOINT_DATA_STORED                = ()
     DELETE_AGENT                         = ()
     DELETE_CIRCLE                        = ()
     DELETE_DASHBOARD                     = ()

@@ -53,7 +53,7 @@ def _process_send_ds_data(passport, message):
     try:
         date=timeuuid.get_uuid1_from_isodate(message.ts)
         datasourceapi.store_datasource_data(did=did, date=date, content=message.content)
-        op=modop.DatasourceDataStoredOperation(did=did, date=date)
+        op=modop.DatasourceDataStoredOperation(uid=passport.uid, did=did, date=date)
         op_msgs=operation.process_operation(op)
         for msg in op_msgs:
             msgs.append(msg)
@@ -84,30 +84,37 @@ def _process_send_dp_data(passport, message):
     date=timeuuid.get_uuid1_from_isodate(message.ts)
     msgs=[]
     uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
-    if uri_info and uri_info['type']==vertex.DATAPOINT:
-        pid=uri_info['id']
-        authorization.authorize_request(request=Requests.POST_DATAPOINT_DATA,passport=passport,pid=pid)
-        datapointapi.store_user_datapoint_value(pid=pid,date=date,content=message.content)
-        msgs.append(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATAPOINT,'id':pid,'uri':message.uri}],date=date))
-    elif not uri_info or uri_info['type']==vertex.VOID:
+    if not uri_info or uri_info['type']==vertex.VOID:
         authorization.authorize_request(request=Requests.NEW_USER_DATAPOINT,passport=passport)
         datapoint=datapointapi.create_user_datapoint(uid=passport.uid, datapoint_uri=message.uri)
         if datapoint:
             pid=datapoint['pid']
-            try:
-                datapointapi.store_user_datapoint_value(pid=pid,date=date,content=message.content)
-                msgs.append(messages.HookNewUrisMessage(uid=passport.uid, uris=[{'type':vertex.DATAPOINT,'id':pid,'uri':message.uri}],date=date))
-                op=modop.NewUserDatapointOperation(uid=passport.uid,aid=passport.aid,pid=pid)
-                op_msgs=operation.process_operation(op)
-                for msg in op_msgs:
-                    msgs.append(msg)
-            except:
-                deleteapi.delete_datapoint(pid=datapoint['pid'])
-                raise
+            new_datapoint=True
         else:
             return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDPD_ECDP)
+    elif uri_info['type']==vertex.DATAPOINT:
+        pid=uri_info['id']
+        authorization.authorize_request(request=Requests.POST_DATAPOINT_DATA,passport=passport,pid=pid)
     else:
         return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datapoint', error=Errors.E_IWSPV1PM_PSDPD_IURI)
+    try:
+        datapointapi.store_user_datapoint_value(pid=pid,date=date,content=message.content)
+        op=modop.DatapointDataStoredOperation(uid=passport.uid, pid=pid, date=date)
+        op_msgs=operation.process_operation(op)
+        for msg in op_msgs:
+            msgs.append(msg)
+    except:
+        deleteapi.delete_datapoint(pid=pid)
+        raise
+    else:
+        if new_datapoint:
+            msgs.append(messages.HookNewUrisMessage(uid=passport.uid, uris=[{'type':vertex.DATAPOINT,'id':pid,'uri':message.uri}],date=date))
+            op=modop.NewUserDatapointOperation(uid=passport.uid,aid=passport.aid,pid=pid)
+            op_msgs=operation.process_operation(op)
+            for msg in op_msgs:
+                msgs.append(msg)
+        else:
+            msgs.append(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATAPOINT,'id':pid,'uri':message.uri}],date=date))
     resp = Response(status=status.MESSAGE_EXECUTION_OK)
     for msg in msgs:
         resp.add_message(msg)
@@ -216,7 +223,7 @@ def _process_send_multi_data(passport, message):
             op_msgs=operation.process_operation(op)
             for msg in op_msgs:
                 msgs.append(msg)
-            op=modop.DatasourceDataStoredOperation(did=ds['did'], date=date)
+            op=modop.DatasourceDataStoredOperation(uid=passport.uid, did=ds['did'], date=date)
             op_msgs=operation.process_operation(op)
             for msg in op_msgs:
                 msgs.append(msg)
@@ -225,9 +232,18 @@ def _process_send_multi_data(passport, message):
             op_msgs=operation.process_operation(op)
             for msg in op_msgs:
                 msgs.append(msg)
+            op=modop.DatapointDataStoredOperation(uid=passport.uid, pid=dp['pid'], date=date)
+            op_msgs=operation.process_operation(op)
+            for msg in op_msgs:
+                msgs.append(msg)
         for item in existing_uris:
             if item['type']==vertex.DATASOURCE:
-                op=modop.DatasourceDataStoredOperation(did=item['id'], date=date)
+                op=modop.DatasourceDataStoredOperation(uid=passport.uid, did=item['id'], date=date)
+                op_msgs=operation.process_operation(op)
+                for msg in op_msgs:
+                    msgs.append(msg)
+            elif item['type'] == vertex.DATAPOINT:
+                op=modop.DatapointDataStoredOperation(uid=passport.uid, pid=item['id'], date=date)
                 op_msgs=operation.process_operation(op)
                 for msg in op_msgs:
                     msgs.append(msg)

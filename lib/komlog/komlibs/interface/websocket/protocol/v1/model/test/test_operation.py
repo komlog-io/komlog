@@ -151,46 +151,119 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         self.assertEqual(op.pid, pid)
         self.assertEqual(op.params, {'uid':uid, 'aid':aid, 'pid':pid})
 
+    def test_new_DatasourceDataStoredOperation_failure_invalid_uid(self):
+        ''' the creation of a DatasourceDataStoredOperation object should fail if uid is not a UUID4 '''
+        uids=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid1()]
+        did=uuid.uuid4()
+        date=uuid.uuid1()
+        for uid in uids:
+            with self.assertRaises(exceptions.OperationValidationException) as cm:
+                operation.DatasourceDataStoredOperation(uid=uid, did=did, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_DSDSTO_IUID)
+
     def test_new_DatasourceDataStoredOperation_failure_invalid_did(self):
         ''' the creation of a DatasourceDataStoredOperation object should fail if did is not a UUID4 '''
         dids=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid1()]
+        uid=uuid.uuid4()
         date=uuid.uuid1()
         for did in dids:
             with self.assertRaises(exceptions.OperationValidationException) as cm:
-                operation.DatasourceDataStoredOperation(did=did, date=date)
+                operation.DatasourceDataStoredOperation(uid=uid, did=did, date=date)
             self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_DSDSTO_IDID)
 
     def test_new_DatasourceDataStoredOperation_failure_invalid_dates(self):
         ''' the creation of a DatasourceDataStoredOperation object should fail if date is not a UUID1'''
         dates=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),uuid.uuid1().hex]
         did=uuid.uuid4()
+        uid=uuid.uuid4()
         for date in dates:
             with self.assertRaises(exceptions.OperationValidationException) as cm:
-                operation.DatasourceDataStoredOperation(did=did, date=date)
+                operation.DatasourceDataStoredOperation(uid=uid, did=did, date=date)
             self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_DSDSTO_IDATE)
 
     def test_new_DatasourceDataStoredOperation_success_cannot_modify_params_property(self):
         ''' the creation of a DatasourceDataStoredOperation object should succeed and params property cannot be modified directly'''
+        uid=uuid.uuid4()
         did=uuid.uuid4()
         date=uuid.uuid1()
-        op=operation.DatasourceDataStoredOperation(did=did, date=date)
+        op=operation.DatasourceDataStoredOperation(uid=uid, did=did, date=date)
         self.assertTrue(isinstance(op, operation.DatasourceDataStoredOperation))
         self.assertEqual(op.oid, Operations.DATASOURCE_DATA_STORED)
         self.assertEqual(op.did, did)
         self.assertEqual(op.date, date)
-        self.assertEqual(op.params, {'did':did, 'date':date})
+        self.assertEqual(op.params, {'uid':uid, 'did':did, 'date':date})
         with self.assertRaises(exceptions.OperationValidationException) as cm:
-            op.params={'did':uuid.uuid4(),'what':'yes','number':3}
+            op.params={'uid':uuid.uuid4(), 'did':uuid.uuid4(),'what':'yes','number':3}
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_WSIO_PMNA)
 
     def test_new_DatasourceDataStoredOperation_success(self):
         ''' the creation of a DatasourceDataStoredOperation object should succeed '''
+        uid=uuid.uuid4()
         did=uuid.uuid4()
         date=uuid.uuid1()
-        op=operation.DatasourceDataStoredOperation(did=did, date=date)
+        op=operation.DatasourceDataStoredOperation(uid=uid, did=did, date=date)
         self.assertTrue(isinstance(op, operation.DatasourceDataStoredOperation))
         self.assertEqual(op.oid, Operations.DATASOURCE_DATA_STORED)
+        self.assertEqual(op.uid, uid)
         self.assertEqual(op.did, did)
         self.assertEqual(op.date, date)
-        self.assertEqual(op.params, {'did':did, 'date':date})
+        self.assertEqual(op.params, {'uid':uid, 'did':did, 'date':date})
+
+    def test_new_DatapointDataStoredOperation_failure_invalid_uid(self):
+        ''' the creation of a DatapointDataStoredOperation object should fail if uid is not a UUID4 '''
+        uids=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid1()]
+        pid=uuid.uuid4()
+        date=uuid.uuid1()
+        for uid in uids:
+            with self.assertRaises(exceptions.OperationValidationException) as cm:
+                operation.DatapointDataStoredOperation(uid=uid, pid=pid, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_DPDSTO_IUID)
+
+    def test_new_DatapointDataStoredOperation_failure_invalid_pid(self):
+        ''' the creation of a DatapointDataStoredOperation object should fail if pid is not a UUID4 '''
+        pids=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid1()]
+        date=uuid.uuid1()
+        uid=uuid.uuid4()
+        for pid in pids:
+            with self.assertRaises(exceptions.OperationValidationException) as cm:
+                operation.DatapointDataStoredOperation(uid=uid, pid=pid, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_DPDSTO_IPID)
+
+    def test_new_DatapointDataStoredOperation_failure_invalid_dates(self):
+        ''' the creation of a DatapointDataStoredOperation object should fail if date is not a UUID1'''
+        dates=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid4(),uuid.uuid1().hex]
+        pid=uuid.uuid4()
+        uid=uuid.uuid4()
+        for date in dates:
+            with self.assertRaises(exceptions.OperationValidationException) as cm:
+                operation.DatapointDataStoredOperation(uid=uid, pid=pid, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_DPDSTO_IDATE)
+
+    def test_new_DatapointDataStoredOperation_success_cannot_modify_params_property(self):
+        ''' the creation of a DatapointDataStoredOperation object should succeed and params property cannot be modified directly'''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        date=uuid.uuid1()
+        op=operation.DatapointDataStoredOperation(uid=uid, pid=pid, date=date)
+        self.assertTrue(isinstance(op, operation.DatapointDataStoredOperation))
+        self.assertEqual(op.oid, Operations.DATAPOINT_DATA_STORED)
+        self.assertEqual(op.pid, pid)
+        self.assertEqual(op.date, date)
+        self.assertEqual(op.params, {'uid':uid, 'pid':pid, 'date':date})
+        with self.assertRaises(exceptions.OperationValidationException) as cm:
+            op.params={'pid':uuid.uuid4(),'what':'yes','number':3}
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_WSIO_PMNA)
+
+    def test_new_DatapointDataStoredOperation_success(self):
+        ''' the creation of a DatapointDataStoredOperation object should succeed '''
+        uid=uuid.uuid4()
+        pid=uuid.uuid4()
+        date=uuid.uuid1()
+        op=operation.DatapointDataStoredOperation(uid=uid, pid=pid, date=date)
+        self.assertTrue(isinstance(op, operation.DatapointDataStoredOperation))
+        self.assertEqual(op.oid, Operations.DATAPOINT_DATA_STORED)
+        self.assertEqual(op.uid, uid)
+        self.assertEqual(op.pid, pid)
+        self.assertEqual(op.date, date)
+        self.assertEqual(op.params, {'uid':uid, 'pid':pid, 'date':date})
 

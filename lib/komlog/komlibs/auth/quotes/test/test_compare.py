@@ -1732,8 +1732,8 @@ class AuthQuotesCompareTest(unittest.TestCase):
         self.assertIsNone(db_iface)
         self.assertTrue(cassapisegment.delete_user_segment_quotes(sid=segment))
 
-    def test_quo_daily_user_data_post_counter_failure_did_param_not_found(self):
-        ''' quo_daily_user_data_post_count should fail if did param is not found '''
+    def test_quo_daily_user_data_post_counter_failure_uid_param_not_found(self):
+        ''' quo_daily_user_data_post_count should fail if uid param is not found '''
         params={'date':timeuuid.uuid1()}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             compare.quo_daily_user_data_post_counter(params)
@@ -1741,30 +1741,16 @@ class AuthQuotesCompareTest(unittest.TestCase):
 
     def test_quo_daily_user_data_post_counter_failure_date_param_not_found(self):
         ''' quo_daily_user_data_post_count should fail if date param is not found '''
-        params={'did':uuid.uuid4()}
+        params={'uid':uuid.uuid4()}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             compare.quo_daily_user_data_post_counter(params)
         self.assertEqual(cm.exception.error, Errors.E_AQC_QDUDPC_PNF)
 
-    def test_quo_daily_user_data_post_counter_failure_datasource_not_found(self):
-        ''' quo_daily_user_data_post_count should fail if datasource does not exist '''
-        params={'did':uuid.uuid4(), 'date':timeuuid.uuid1()}
-        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
-            compare.quo_daily_user_data_post_counter(params)
-        self.assertEqual(cm.exception.error, Errors.E_AQC_QDUDPC_DSNF)
-
     def test_quo_daily_user_data_post_counter_failure_user_not_found(self):
         ''' quo_daily_user_data_post_counter should fail if user does not exist '''
         uid=uuid.uuid4()
-        did=uuid.uuid4()
-        aid=uuid.uuid4()
         date=timeuuid.uuid1()
-        size=100
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename='datasourcename', creation_date=date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource=datasource))
-        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
-        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
-        params={'did':did, 'date':date}
+        params={'uid':uid, 'date':date}
         with self.assertRaises(exceptions.UserNotFoundException) as cm:
             compare.quo_daily_user_data_post_counter(params)
         self.assertEqual(cm.exception.error, Errors.E_AQC_QDUDPC_USRNF)
@@ -1777,19 +1763,8 @@ class AuthQuotesCompareTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         uid=user['uid']
-        agentname='agentname'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='Test Version'
-        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
-        aid=agent['aid']
-        datasourcename='ds.uri'
-        ds=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
-        did=ds['did']
         date=timeuuid.uuid1()
-        size=100
-        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
-        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
-        params={'did':did, 'date':date}
+        params={'uid':uid, 'date':date}
         self.assertTrue(compare.quo_daily_user_data_post_counter(params))
         iface=interfaces.User_PostDataDaily().value
         ts=timeuuid.get_day_timestamp(date)
@@ -1803,21 +1778,10 @@ class AuthQuotesCompareTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         uid=user['uid']
-        agentname='agentname'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='Test Version'
-        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
-        aid=agent['aid']
-        datasourcename='ds.uri'
-        ds=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
-        did=ds['did']
         date=timeuuid.uuid1()
-        size=100
-        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
-        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
         quote=Quotes.quo_daily_user_data_post_counter.name
         self.assertTrue(cassapisegment.insert_user_segment_quote(sid=user['segment'],quote=quote,value=0))
-        params={'did':did, 'date':date}
+        params={'uid':uid, 'date':date}
         self.assertTrue(compare.quo_daily_user_data_post_counter(params))
         iface=interfaces.User_PostDataDaily().value
         ts=timeuuid.get_day_timestamp(date)
@@ -1831,21 +1795,10 @@ class AuthQuotesCompareTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         uid=user['uid']
-        agentname='agentname'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='Test Version'
-        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
-        aid=agent['aid']
-        datasourcename='ds.uri'
-        ds=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
-        did=ds['did']
         date=timeuuid.uuid1()
-        size=100
-        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
-        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
         quote=Quotes.quo_daily_user_data_post_counter.name
         self.assertTrue(cassapisegment.insert_user_segment_quote(sid=user['segment'],quote=quote,value=2))
-        params={'did':did, 'date':date}
+        params={'uid':uid, 'date':date}
         self.assertTrue(quoupd.quo_daily_user_data_post_counter(params))
         self.assertTrue(compare.quo_daily_user_data_post_counter(params))
         iface=interfaces.User_PostDataDaily().value
@@ -1860,21 +1813,10 @@ class AuthQuotesCompareTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         uid=user['uid']
-        agentname='agentname'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='Test Version'
-        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
-        aid=agent['aid']
-        datasourcename='ds.uri'
-        ds=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
-        did=ds['did']
         date=timeuuid.uuid1()
-        size=100
-        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
-        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
         quote=Quotes.quo_daily_user_data_post_counter.name
         self.assertTrue(cassapisegment.insert_user_segment_quote(sid=user['segment'],quote=quote,value=1))
-        params={'did':did, 'date':date}
+        params={'uid':uid, 'date':date}
         self.assertTrue(quoupd.quo_daily_user_data_post_counter(params))
         self.assertTrue(compare.quo_daily_user_data_post_counter(params))
         iface=interfaces.User_PostDataDaily().value

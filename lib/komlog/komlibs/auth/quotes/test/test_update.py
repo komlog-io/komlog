@@ -601,8 +601,8 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         self.assertEqual(quotes[0].ts,ts)
         self.assertEqual(quotes[0].value,400)
 
-    def test_quo_daily_user_data_post_counter_failure_invalid_parameters_no_did(self):
-        ''' quo_daily_user_data_post_counter should fail if params has no did key '''
+    def test_quo_daily_user_data_post_counter_failure_invalid_parameters_no_uid(self):
+        ''' quo_daily_user_data_post_counter should fail if params has no uid key '''
         params={'date':timeuuid.uuid1()}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             update.quo_daily_user_data_post_counter(params)
@@ -610,30 +610,16 @@ class AuthQuotesUpdateTest(unittest.TestCase):
 
     def test_quo_daily_user_data_post_counter_failure_invalid_parameters_no_date(self):
         ''' quo_daily_user_data_post_counter should fail if params has no did key '''
-        params={'did':uuid.uuid4()}
+        params={'uid':uuid.uuid4()}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             update.quo_daily_user_data_post_counter(params)
         self.assertEqual(cm.exception.error, Errors.E_AQU_QDUDPC_PNF)
 
-    def test_quo_daily_user_data_post_counter_failure_datasource_not_found(self):
-        ''' quo_daily_user_data_post_counter should fail if datasource does not exist '''
-        params={'did':uuid.uuid4(), 'date':timeuuid.uuid1()}
-        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
-            update.quo_daily_user_data_post_counter(params)
-        self.assertEqual(cm.exception.error, Errors.E_AQU_QDUDPC_DSNF)
-
     def test_quo_daily_user_data_post_counter_failure_user_not_found(self):
         ''' quo_daily_user_data_post_counter should fail if user does not exist '''
         uid=uuid.uuid4()
-        did=uuid.uuid4()
-        aid=uuid.uuid4()
         date=timeuuid.uuid1()
-        size=100
-        datasource=ormdatasource.Datasource(did=did, uid=uid, aid=aid, datasourcename='datasourcename', creation_date=date)
-        self.assertTrue(cassapidatasource.new_datasource(datasource=datasource))
-        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
-        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
-        params={'did':did, 'date':date}
+        params={'uid':uid, 'date':date}
         with self.assertRaises(exceptions.UserNotFoundException) as cm:
             update.quo_daily_user_data_post_counter(params)
         self.assertEqual(cm.exception.error, Errors.E_AQU_QDUDPC_USRNF)
@@ -645,19 +631,8 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         uid=user['uid']
-        agentname='agentname'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='Test Version'
-        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
-        aid=agent['aid']
-        datasourcename='ds.uri'
-        ds=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
-        did=ds['did']
         date=timeuuid.uuid1()
-        size=100
-        metadata=ormdatasource.DatasourceMetadata(did=did, date=date, size=size)
-        self.assertTrue(cassapidatasource.insert_datasource_metadata(obj=metadata))
-        params={'did':did, 'date':date}
+        params={'uid':uid, 'date':date}
         counter=update.quo_daily_user_data_post_counter(params)
         self.assertEqual(counter, 1)
         counter=update.quo_daily_user_data_post_counter(params)

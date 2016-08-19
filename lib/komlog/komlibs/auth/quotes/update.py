@@ -242,19 +242,16 @@ def quo_daily_user_data_post_counter(params):
         so a user could really send in a day more samples than the quote limit if the date of those
         samples is from different days. '''
     try:
-        did=params['did']
+        uid=params['uid']
         date=params['date']
     except KeyError:
         raise exceptions.BadParametersException(error=Errors.E_AQU_QDUDPC_PNF)
-    dsinfo=cassapidatasource.get_datasource(did=did)
-    if not dsinfo or not dsinfo.uid:
-        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQU_QDUDPC_DSNF)
-    user=cassapiuser.get_user(uid=dsinfo.uid)
+    user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserNotFoundException(error=Errors.E_AQU_QDUDPC_USRNF)
     ts=timeuuid.get_day_timestamp(date)
     quote=Quotes.quo_daily_user_data_post_counter.name
-    new_counter=cassapiquote.increment_user_ts_quote(uid=dsinfo.uid,quote=quote,ts=ts,value=1)
+    new_counter=cassapiquote.increment_user_ts_quote(uid=uid,quote=quote,ts=ts,value=1)
     return new_counter
 
 quote_funcs = {

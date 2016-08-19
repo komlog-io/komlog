@@ -237,8 +237,7 @@ class Errors(Enum):
     E_AQU_QUTO_USRNF    =   59132   #: quo_user_total_occupation. user not found.
 
     E_AQU_QDUDPC_PNF    =   59140   #: quo_daily_user_data_post_counter invalid parameter
-    E_AQU_QDUDPC_DSNF   =   59141   #: quo_daily_user_data_post_counter datasource not found
-    E_AQU_QDUDPC_USRNF  =   59142   #: quo_daily_user_data_post_counter user not found
+    E_AQU_QDUDPC_USRNF  =   59141   #: quo_daily_user_data_post_counter user not found
 
 # auth.quotes.compare
 
