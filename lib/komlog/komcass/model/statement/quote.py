@@ -37,6 +37,12 @@ STATEMENTS={
     60803:'select * from quo_ts_datasource where did=? and quote=? and ts>=? and ts<=?',
     60804:'select * from quo_ts_datasource where did=? and quote=? limit ?',
     60805:'select sum(value) from quo_ts_datasource where did=? and quote=?',
+    60900:'select * from quo_ts_datapoint where pid=?',
+    60901:'select * from quo_ts_datapoint where pid=? and quote=?',
+    60902:'select * from quo_ts_datapoint where pid=? and quote=? and ts=?',
+    60903:'select * from quo_ts_datapoint where pid=? and quote=? and ts>=? and ts<=?',
+    60904:'select * from quo_ts_datapoint where pid=? and quote=? limit ?',
+    60905:'select sum(value) from quo_ts_datapoint where pid=? and quote=?',
     65000:'insert into quo_user (uid,quote,value) values (?,?,?)',
     65001:'insert into quo_user (uid,quote,value) values (?,?,?) if not exists',
     65100:'insert into quo_agent (aid,quote,value) values (?,?,?)',
@@ -55,6 +61,8 @@ STATEMENTS={
     65701:'insert into quo_ts_user (uid,quote,ts,value) values (?,?,?,?) if not exists',
     65800:'insert into quo_ts_datasource (did,quote,ts,value) values (?,?,?,?)',
     65801:'insert into quo_ts_datasource (did,quote,ts,value) values (?,?,?,?) if not exists',
+    65900:'insert into quo_ts_datapoint (pid,quote,ts,value) values (?,?,?,?)',
+    65901:'insert into quo_ts_datapoint (pid,quote,ts,value) values (?,?,?,?) if not exists',
     67000:'delete from quo_user where uid=?',
     67001:'delete from quo_user where uid=? and quote=?',
     67100:'delete from quo_agent where aid=?',
@@ -77,6 +85,10 @@ STATEMENTS={
     67801:'delete from quo_ts_datasource where did=? and quote=?',
     67802:'delete from quo_ts_datasource where did=? and quote=? and ts=?',
     67803:'delete from quo_ts_datasource where did=? and quote=? and ts>=? and ts<=?',
+    67900:'delete from quo_ts_datapoint where pid=?',
+    67901:'delete from quo_ts_datapoint where pid=? and quote=?',
+    67902:'delete from quo_ts_datapoint where pid=? and quote=? and ts=?',
+    67903:'delete from quo_ts_datapoint where pid=? and quote=? and ts>=? and ts<=?',
     69000:'update quo_user set value=? where uid=? and quote=? if value=?',
     69100:'update quo_agent set value=? where aid=? and quote=? if value=?',
     69200:'update quo_datasource set value=? where did=? and quote=? if value=?',
@@ -86,6 +98,7 @@ STATEMENTS={
     69600:'update quo_circle set value=? where cid=? and quote=? if value=?',
     69700:'update quo_ts_user set value=? where uid=? and quote=? and ts=? if value=?',
     69800:'update quo_ts_datasource set value=? where did=? and quote=? and ts=? if value=?',
+    69900:'update quo_ts_datapoint set value=? where pid=? and quote=? and ts=? if value=?',
 }
 
 # selects (60000 - 64999)
@@ -143,6 +156,15 @@ S_A_QUOTSDATASOURCE_B_DID_QUOTE_ITS_ETS=60803
 S_A_QUOTSDATASOURCE_B_DID_QUOTE_COUNT=60804
 S_SUMVALUE_QUOTSDATASOURCE_B_DID_QUOTE=60805
 
+# quo_ts_datapoint
+
+S_A_QUOTSDATAPOINT_B_PID=60900
+S_A_QUOTSDATAPOINT_B_PID_QUOTE=60901
+S_A_QUOTSDATAPOINT_B_PID_QUOTE_TS=60902
+S_A_QUOTSDATAPOINT_B_PID_QUOTE_ITS_ETS=60903
+S_A_QUOTSDATAPOINT_B_PID_QUOTE_COUNT=60904
+S_SUMVALUE_QUOTSDATAPOINT_B_PID_QUOTE=60905
+
 # Inserts (65000 - 66999)
 
 
@@ -191,6 +213,10 @@ I_A_QUOTSUSER_INE=65701
 I_A_QUOTSDATASOURCE=65800
 I_A_QUOTSDATASOURCE_INE=65801
 
+# quo_ts_datapoint
+
+I_A_QUOTSDATAPOINT=65900
+I_A_QUOTSDATAPOINT_INE=65901
 
 # Deletes (67000 - 68999)
 
@@ -244,6 +270,13 @@ D_A_QUOTSDATASOURCE_B_DID_QUOTE=67801
 D_A_QUOTSDATASOURCE_B_DID_QUOTE_TS=67802
 D_A_QUOTSDATASOURCE_B_DID_QUOTE_ITS_ETS=67803
 
+# quo_ts_datapoint
+
+D_A_QUOTSDATAPOINT_B_PID=67900
+D_A_QUOTSDATAPOINT_B_PID_QUOTE=67901
+D_A_QUOTSDATAPOINT_B_PID_QUOTE_TS=67902
+D_A_QUOTSDATAPOINT_B_PID_QUOTE_ITS_ETS=67903
+
 # Updates (69000 - 69999)
 
 
@@ -282,4 +315,8 @@ U_VALUE_QUOTSUSER_I_VALUE=69700
 # quo_ts_datasource
 
 U_VALUE_QUOTSDATASOURCE_I_VALUE=69800
+
+# quo_ts_datapoint
+
+U_VALUE_QUOTSDATAPOINT_I_VALUE=69900
 

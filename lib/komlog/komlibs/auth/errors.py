@@ -239,6 +239,12 @@ class Errors(Enum):
     E_AQU_QDUDPC_PNF    =   59140   #: quo_daily_user_data_post_counter invalid parameter
     E_AQU_QDUDPC_USRNF  =   59141   #: quo_daily_user_data_post_counter user not found
 
+    E_AQU_QDDSDPC_PNF   =   59150   #: quo_daily_datasource_data_post_counter invalid parameter
+    E_AQU_QDDSDPC_DSNF  =   59151   #: quo_daily_datasource_data_post_counter datasource not found
+
+    E_AQU_QDDPDPC_PNF   =   59160   #: quo_daily_datapoint_data_post_counter invalid parameter
+    E_AQU_QDDPDPC_DPNF  =   59161   #: quo_daily_datapoint_data_post_counter datapoint not found
+
 # auth.quotes.compare
 
     E_AQC_QUTA_UIDNF    =   60000   #: quo_user_total_agents. uid not found.

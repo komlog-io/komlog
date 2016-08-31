@@ -604,3 +604,97 @@ def increment_datasource_ts_quote(did, quote, ts, value):
                 n_val=cur_val+value
         return n_val
 
+@exceptions.ExceptionHandler
+def get_datapoint_ts_quotes(pid, quote=None, count=None):
+    data=[]
+    if quote:
+        if count:
+            rows=connection.session.execute(stmtquote.S_A_QUOTSDATAPOINT_B_PID_QUOTE_COUNT, (pid, quote, count))
+        else:
+            rows=connection.session.execute(stmtquote.S_A_QUOTSDATAPOINT_B_PID_QUOTE, (pid, quote))
+    else:
+        rows=connection.session.execute(stmtquote.S_A_QUOTSDATAPOINT_B_PID, (pid,))
+    if rows:
+        for row in rows:
+            data.append(ormquote.DatapointTsQuo(**row))
+    return data
+
+@exceptions.ExceptionHandler
+def get_datapoint_ts_quote(pid, quote, ts):
+    row=connection.session.execute(stmtquote.S_A_QUOTSDATAPOINT_B_PID_QUOTE_TS, (pid, quote, ts))
+    if row:
+        return ormquote.DatapointTsQuo(**row[0])
+    else:
+        return None
+
+@exceptions.ExceptionHandler
+def get_datapoint_ts_quote_interval(pid, quote, its, ets):
+    data=[]
+    rows=connection.session.execute(stmtquote.S_A_QUOTSDATAPOINT_B_PID_QUOTE_ITS_ETS, (pid, quote, its, ets))
+    if rows:
+        for row in rows:
+            data.append(ormquote.DatapointTsQuo(**row))
+    return data
+
+@exceptions.ExceptionHandler
+def get_datapoint_ts_quote_value_sum(pid, quote):
+    resp=connection.session.execute(stmtquote.S_SUMVALUE_QUOTSDATAPOINT_B_PID_QUOTE, (pid, quote))
+    return resp[0]['system.sum(value)'] if resp else None
+
+@exceptions.ExceptionHandler
+def insert_datapoint_ts_quote(pid, quote, ts, value):
+    connection.session.execute(stmtquote.I_A_QUOTSDATAPOINT, (pid, quote, ts, value))
+    return True
+
+@exceptions.ExceptionHandler
+def new_datapoint_ts_quote(pid, quote, ts, value):
+    resp=connection.session.execute(stmtquote.I_A_QUOTSDATAPOINT_INE, (pid, quote, ts, value))
+    if not resp:
+        return False
+    else:
+        return resp[0]['[applied]']
+
+@exceptions.ExceptionHandler
+def delete_datapoint_ts_quotes(pid):
+    connection.session.execute(stmtquote.D_A_QUOTSDATAPOINT_B_PID, (pid,))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_datapoint_ts_quote(pid, quote, ts=None):
+    if ts:
+        connection.session.execute(stmtquote.D_A_QUOTSDATAPOINT_B_PID_QUOTE_TS, (pid, quote, ts))
+    else:
+        connection.session.execute(stmtquote.D_A_QUOTSDATAPOINT_B_PID_QUOTE, (pid, quote))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_datapoint_ts_quote_interval(pid, quote, its, ets):
+    connection.session.execute(stmtquote.D_A_QUOTSDATAPOINT_B_PID_QUOTE_ITS_ETS, (pid, quote, its, ets))
+    return True
+
+@exceptions.ExceptionHandler
+def increment_datapoint_ts_quote(pid, quote, ts, value):
+    ''' we use lightweight transactions to increment quote values '''
+    resp=connection.session.execute(stmtquote.I_A_QUOTSDATAPOINT_INE,(pid, quote, ts, value))
+    if not resp:
+        return None
+    elif resp[0]['[applied]'] is True:
+        return value
+    else:
+        cur_val = resp[0]['value']
+        n_val=cur_val + value
+        applied = False
+        retries=0
+        while applied != True:
+            resp=connection.session.execute(stmtquote.U_VALUE_QUOTSDATAPOINT_I_VALUE,(n_val,pid,quote,ts,cur_val))
+            if not resp:
+                return None
+            applied=resp[0]['[applied]']
+            if not applied:
+                if retries>100:
+                    return None
+                retries+=1
+                cur_val=resp[0]['value']
+                n_val=cur_val+value
+        return n_val
+

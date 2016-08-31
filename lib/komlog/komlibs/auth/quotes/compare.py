@@ -325,8 +325,18 @@ def quo_daily_user_data_post_counter(params):
         cassapiiface.insert_user_ts_iface_deny(uid=uid, iface=iface, ts=ts)
     return True
 
+def quo_daily_datasource_data_post_counter(params):
+    ''' Right now, we do not deny interfaces based on this quote '''
+    pass
+
+def quo_daily_datapoint_data_post_counter(params):
+    ''' Right now, we do not deny interfaces based on this quote '''
+    pass
+
 quote_funcs = {
+    Quotes.quo_daily_datapoint_data_post_counter:quo_daily_datapoint_data_post_counter,
     Quotes.quo_daily_datasource_occupation:quo_daily_datasource_occupation,
+    Quotes.quo_daily_datasource_data_post_counter:quo_daily_datasource_data_post_counter,
     Quotes.quo_daily_user_datasources_occupation:quo_daily_user_datasources_occupation,
     Quotes.quo_daily_user_data_post_counter:quo_daily_user_data_post_counter,
     Quotes.quo_agent_total_datapoints:quo_agent_total_datapoints,

@@ -13,7 +13,9 @@ class AutoEnum(Enum):
         return obj
 
 class Quotes(AutoEnum):
+    quo_daily_datapoint_data_post_counter    = ()
     quo_daily_datasource_occupation          = ()
+    quo_daily_datasource_data_post_counter   = ()
     quo_daily_user_datasources_occupation    = ()
     quo_daily_user_data_post_counter         = ()
     quo_agent_total_datapoints               = ()

@@ -11,6 +11,7 @@ from komlog.komcass.api import circle as cassapicircle
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
+from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.circle import api as circleapi
 from komlog.komcass.model.orm import datasource as ormdatasource
 from komlog.komcass.model.orm import circle as ormcircle
@@ -637,3 +638,105 @@ class AuthQuotesUpdateTest(unittest.TestCase):
         self.assertEqual(counter, 1)
         counter=update.quo_daily_user_data_post_counter(params)
         self.assertEqual(counter, 2)
+
+    def test_quo_daily_datasource_data_post_counter_failure_invalid_parameters_no_did(self):
+        ''' quo_daily_datasource_data_post_counter should fail if params has no did key '''
+        params={'date':timeuuid.uuid1()}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            update.quo_daily_datasource_data_post_counter(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQU_QDDSDPC_PNF)
+
+    def test_quo_daily_datasource_data_post_counter_failure_invalid_parameters_no_date(self):
+        ''' quo_daily_datasource_data_post_counter should fail if params has no date key '''
+        params={'did':uuid.uuid4()}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            update.quo_daily_datasource_data_post_counter(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQU_QDDSDPC_PNF)
+
+    def test_quo_daily_datasource_data_post_counter_failure_datasource_not_found(self):
+        ''' quo_daily_datasource_data_post_counter should fail if datasource does not exist '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        params={'did':did, 'date':date}
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            update.quo_daily_datasource_data_post_counter(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQU_QDDSDPC_DSNF)
+
+    def test_quo_daily_datasource_data_post_counter_success(self):
+        ''' quo_daily_datasource_data_post_counter should succeed and increment the counter by 1 '''
+        username='test_quo_daily_datasource_data_post_counter_success'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        agentname='agentname'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        aid=agent['aid']
+        datasourcename='ds.uri'
+        ds=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        did=ds['did']
+        date=timeuuid.uuid1()
+        params={'did':did, 'date':date}
+        counter=update.quo_daily_datasource_data_post_counter(params)
+        self.assertEqual(counter, 1)
+        counter=update.quo_daily_datasource_data_post_counter(params)
+        self.assertEqual(counter, 2)
+        quote=Quotes.quo_daily_datasource_data_post_counter.name
+        ts=timeuuid.get_day_timestamp(date)
+        db_quote=cassapiquote.get_datasource_ts_quote(did=did, quote=quote, ts=ts)
+        self.assertIsNotNone(db_quote)
+        self.assertEqual(db_quote.did, did)
+        self.assertEqual(db_quote.quote,quote)
+        self.assertEqual(db_quote.ts,ts)
+        self.assertEqual(db_quote.value, 2)
+
+    def test_quo_daily_datapoint_data_post_counter_failure_invalid_parameters_no_pid(self):
+        ''' quo_daily_datasource_data_post_counter should fail if params has no pid key '''
+        params={'date':timeuuid.uuid1()}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            update.quo_daily_datapoint_data_post_counter(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQU_QDDPDPC_PNF)
+
+    def test_quo_daily_datapoint_data_post_counter_failure_invalid_parameters_no_date(self):
+        ''' quo_daily_datapoint_data_post_counter should fail if params has no date key '''
+        params={'pid':uuid.uuid4()}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            update.quo_daily_datapoint_data_post_counter(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQU_QDDPDPC_PNF)
+
+    def test_quo_daily_datapoint_data_post_counter_failure_datapoint_not_found(self):
+        ''' quo_daily_datapoint_data_post_counter should fail if datapoint does not exist '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        params={'pid':pid, 'date':date}
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            update.quo_daily_datapoint_data_post_counter(params)
+        self.assertEqual(cm.exception.error, Errors.E_AQU_QDDPDPC_DPNF)
+
+    def test_quo_daily_datapoint_data_post_counter_success(self):
+        ''' quo_daily_datapoint_data_post_counter should succeed and increment the counter by 1 '''
+        username='test_quo_daily_datapoint_data_post_counter_success'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        datapoint_uri='dp.uri'
+        dp=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        pid=dp['pid']
+        date=timeuuid.uuid1()
+        params={'pid':pid, 'date':date}
+        counter=update.quo_daily_datapoint_data_post_counter(params)
+        self.assertEqual(counter, 1)
+        counter=update.quo_daily_datapoint_data_post_counter(params)
+        self.assertEqual(counter, 2)
+        quote=Quotes.quo_daily_datapoint_data_post_counter.name
+        ts=timeuuid.get_day_timestamp(date)
+        db_quote=cassapiquote.get_datapoint_ts_quote(pid=pid, quote=quote, ts=ts)
+        self.assertIsNotNone(db_quote)
+        self.assertEqual(db_quote.pid, pid)
+        self.assertEqual(db_quote.quote,quote)
+        self.assertEqual(db_quote.ts,ts)
+        self.assertEqual(db_quote.value, 2)
+

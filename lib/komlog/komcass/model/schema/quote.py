@@ -14,6 +14,7 @@ OBJECTS=[
     'QUO_CIRCLE',
     'QUO_TS_USER',
     'QUO_TS_DATASOURCE',
+    'QUO_TS_DATAPOINT',
 ]
 
 QUO_USER='''
@@ -96,6 +97,16 @@ QUO_TS_DATASOURCE='''
         ts int,
         value varint,
         PRIMARY KEY (did,quote,ts)
+    ) WITH CLUSTERING ORDER BY (quote asc, ts desc);
+'''
+
+QUO_TS_DATAPOINT='''
+    CREATE TABLE quo_ts_datapoint (
+        pid uuid,
+        quote text,
+        ts int,
+        value varint,
+        PRIMARY KEY (pid,quote,ts)
     ) WITH CLUSTERING ORDER BY (quote asc, ts desc);
 '''
 

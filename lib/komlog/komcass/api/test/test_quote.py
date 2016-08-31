@@ -1681,6 +1681,16 @@ class KomcassApiQuoteTest(unittest.TestCase):
         quote='non_existent'
         self.assertEqual(quoteapi.get_datasource_ts_quote_value_sum(did=did, quote=quote), 0)
 
+    def test_get_datasource_ts_quote_value_sum_quote_found(self):
+        ''' get_datasource_ts_quote_value_sum should return the quote sum '''
+        did=uuid.uuid4()
+        quote='quote'
+        result=0
+        for i in range(1,100):
+            self.assertTrue(quoteapi.insert_datasource_ts_quote(did, quote, i,i))
+            result+=i
+        self.assertEqual(quoteapi.get_datasource_ts_quote_value_sum(did=did, quote=quote), result)
+
     def test_insert_datasource_ts_quote_success(self):
         ''' insert_datasource_ts_quote should succeed and insert the quote '''
         did=uuid.uuid4()
@@ -1829,6 +1839,278 @@ class KomcassApiQuoteTest(unittest.TestCase):
         self.assertEqual(value_set, value+100*value)
         quote_db=quoteapi.get_datasource_ts_quote(did=did, quote=quote, ts=1000)
         self.assertEqual(quote_db.did, did)
+        self.assertEqual(quote_db.quote,quote)
+        self.assertEqual(quote_db.ts,ts)
+        self.assertEqual(quote_db.value,value+100*value)
+
+    def test_get_datapoint_ts_quotes_none_found(self):
+        ''' get_datapoint_ts_quotes should return an empty array if no quote is found '''
+        pid=uuid.uuid4()
+        self.assertEqual(quoteapi.get_datapoint_ts_quotes(pid=pid),[])
+
+    def test_get_datapoint_ts_quotes_none_found_with_that_quote_name(self):
+        ''' get_datapoint_ts_quotes should return an empty array if no quote is found '''
+        pid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=1
+        self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, ts, value))
+        quotedb=quoteapi.get_datapoint_ts_quotes(pid=pid, quote=quote)
+        self.assertEqual(len(quotedb),1)
+        self.assertEqual(quotedb[0].pid, pid)
+        self.assertEqual(quotedb[0].quote,quote)
+        self.assertEqual(quotedb[0].ts,ts)
+        self.assertEqual(quotedb[0].value,value)
+        quote='quote2'
+        self.assertEqual(quoteapi.get_datapoint_ts_quotes(pid=pid, quote=quote),[])
+
+    def test_get_datapoint_ts_quotes_only_retrieve_last_one(self):
+        ''' get_datapoint_ts_quotes should retrieve the last ts of a quote if count is 1 
+            because quo_ts_datapoint table is created WITH CLUSTERING ORDER BY (quote asc,ts desc)
+        '''
+        pid=uuid.uuid4()
+        quote='quote'
+        for i in range(1,1001):
+            self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, i,i))
+        for i in range(2000,1001,-1):
+            self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, i,i))
+        db_quote=quoteapi.get_datapoint_ts_quotes(pid=pid, quote=quote, count=1)
+        self.assertEqual(len(db_quote),1)
+        self.assertEqual(db_quote[0].pid,pid)
+        self.assertEqual(db_quote[0].quote,quote)
+        self.assertEqual(db_quote[0].ts,2000)
+        self.assertEqual(db_quote[0].value,2000)
+
+    def test_get_datapoint_ts_quote_none_found(self):
+        ''' get_datapoint_ts_quote should return None if no quote is found '''
+        pid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, ts, value))
+        self.assertIsNotNone(quoteapi.get_datapoint_ts_quote(pid=pid, quote=quote, ts=ts))
+        self.assertIsNone(quoteapi.get_datapoint_ts_quote(pid=uuid.uuid4(), quote=quote, ts=ts))
+        self.assertIsNone(quoteapi.get_datapoint_ts_quote(pid=pid, quote='quote2', ts=ts))
+        self.assertIsNone(quoteapi.get_datapoint_ts_quote(pid=pid, quote=quote, ts=2))
+
+    def test_get_datapoint_ts_quote_found(self):
+        ''' get_datapoint_ts_quote should return the quote object '''
+        pid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, ts, value))
+        quotedb=quoteapi.get_datapoint_ts_quote(pid=pid, quote=quote, ts=ts)
+        self.assertTrue(isinstance(quotedb, ormquote.DatapointTsQuo))
+        self.assertEqual(quotedb.pid, pid)
+        self.assertEqual(quotedb.quote,quote)
+        self.assertEqual(quotedb.ts,ts)
+        self.assertEqual(quotedb.value,value)
+
+    def test_get_datapoint_ts_quote_interval_none_found(self):
+        ''' get_datapoint_ts_quotes should return an empty array if no quote is found '''
+        pid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, ts, value))
+        self.assertNotEqual(quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=50,ets=60),[])
+        self.assertEqual(quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=101, ets=200),[])
+        self.assertEqual(quoteapi.get_datapoint_ts_quote_interval(pid=uuid.uuid4(), quote=quote, its=10, ets=20),[])
+        self.assertEqual(quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote='quote2', its=10, ets=20),[])
+        self.assertEqual(quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=50, ets=10),[])
+
+    def test_get_datapoint_ts_quote_interval_found(self):
+        ''' get_datapoint_ts_quotes should return an empty array if no quote is found '''
+        pid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, ts, value))
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=11)
+        self.assertEqual(len(db_quotes),2)
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=1, ets=1000)
+        self.assertEqual(len(db_quotes),90)
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=10)
+        self.assertEqual(len(db_quotes),1)
+
+    def test_get_datapoint_ts_quote_value_sum_no_pid_found(self):
+        ''' get_datapoint_ts_quote_value_sum should return 0 if pid is not found '''
+        pid=uuid.uuid4()
+        quote='quote'
+        self.assertEqual(quoteapi.get_datapoint_ts_quote_value_sum(pid=pid, quote=quote), 0)
+
+    def test_get_datapoint_ts_quote_value_sum_no_quote_found(self):
+        ''' get_datapoint_ts_quote_value_sum should return 0 if quote is not found '''
+        pid=uuid.uuid4()
+        quote='quote'
+        for i in range(1,100):
+            self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, i,i))
+        quote='non_existent'
+        self.assertEqual(quoteapi.get_datapoint_ts_quote_value_sum(pid=pid, quote=quote), 0)
+
+    def test_get_datapoint_ts_quote_value_sum_quote_found(self):
+        ''' get_datapoint_ts_quote_value_sum should return the quote value sum '''
+        pid=uuid.uuid4()
+        quote='quote'
+        result=0
+        for i in range(1,100):
+            self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, i,i))
+            result+=i
+        self.assertEqual(quoteapi.get_datapoint_ts_quote_value_sum(pid=pid, quote=quote), result)
+
+    def test_insert_datapoint_ts_quote_success(self):
+        ''' insert_datapoint_ts_quote should succeed and insert the quote '''
+        pid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid=pid, quote=quote, ts=ts, value=value))
+        db_quote=quoteapi.get_datapoint_ts_quote(pid=pid, quote=quote, ts=ts)
+        self.assertTrue(isinstance(db_quote,ormquote.DatapointTsQuo))
+        self.assertEqual(db_quote.pid, pid)
+        self.assertEqual(db_quote.quote,quote)
+        self.assertEqual(db_quote.ts,ts)
+        self.assertEqual(db_quote.value,value)
+
+    def test_new_datapoint_ts_quote_success(self):
+        ''' new_datapoint_ts_quote should succeed if quote didnt exist previously '''
+        pid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.new_datapoint_ts_quote(pid=pid, quote=quote, ts=ts, value=value))
+        db_quote=quoteapi.get_datapoint_ts_quote(pid=pid, quote=quote, ts=ts)
+        self.assertTrue(isinstance(db_quote,ormquote.DatapointTsQuo))
+        self.assertEqual(db_quote.pid, pid)
+        self.assertEqual(db_quote.quote,quote)
+        self.assertEqual(db_quote.ts,ts)
+        self.assertEqual(db_quote.value,value)
+
+    def test_new_datapoint_ts_quote_failed(self):
+        ''' new_datapoint_ts_quote should fail if quote did exist previously '''
+        pid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        self.assertTrue(quoteapi.new_datapoint_ts_quote(pid=pid, quote=quote, ts=ts, value=value))
+        db_quote=quoteapi.get_datapoint_ts_quote(pid=pid, quote=quote, ts=ts)
+        self.assertTrue(isinstance(db_quote,ormquote.DatapointTsQuo))
+        self.assertEqual(db_quote.pid, pid)
+        self.assertEqual(db_quote.quote,quote)
+        self.assertEqual(db_quote.ts,ts)
+        self.assertEqual(db_quote.value,value)
+        self.assertFalse(quoteapi.new_datapoint_ts_quote(pid=pid, quote=quote, ts=ts, value=value))
+
+    def test_delete_datapoint_ts_quotes_no_previous_quotes(self):
+        ''' delete_datapoint_ts_quotes should succeed even if no quote existed '''
+        pid=uuid.uuid4()
+        self.assertTrue(quoteapi.delete_datapoint_ts_quotes(pid=pid))
+
+    def test_delete_datapoint_ts_quotes_previous_existing_quotes(self):
+        ''' delete_datapoint_ts_quotes should delete all pid ts quotes '''
+        pid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, ts, value))
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        self.assertTrue(quoteapi.delete_datapoint_ts_quotes(pid=pid))
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),0)
+
+    def test_delete_datapoint_ts_quote_no_previous_quote(self):
+        ''' delete_datapoint_ts_quote should succeed even if no quote existed '''
+        pid=uuid.uuid4()
+        quote='quote'
+        ts=1
+        self.assertTrue(quoteapi.delete_datapoint_ts_quote(pid=pid, quote=quote))
+        self.assertTrue(quoteapi.delete_datapoint_ts_quote(pid=pid, quote=quote, ts=ts))
+
+    def test_delete_datapoint_ts_quote_previous_existing_quote(self):
+        ''' delete_datapoint_ts_quote should delete the quote '''
+        pid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, ts, value))
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        self.assertTrue(quoteapi.delete_datapoint_ts_quote(pid=pid, quote=quote, ts=10))
+        self.assertIsNone(quoteapi.get_datapoint_ts_quote(pid=pid, quote=quote, ts=10))
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),89)
+        self.assertTrue(quoteapi.delete_datapoint_ts_quote(pid=pid, quote=quote))
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),0)
+
+    def test_delete_datapoint_ts_quote_interval_no_previous_quote(self):
+        ''' delete_datapoint_ts_quote_interval should succeed even if no quote existed '''
+        pid=uuid.uuid4()
+        quote='quote'
+        its=1
+        ets=1000
+        self.assertTrue(quoteapi.delete_datapoint_ts_quote_interval(pid=pid, quote=quote, its=its, ets=ets))
+
+    def test_delete_datapoint_ts_quote_interval_previously_existing_quote(self):
+        ''' delete_datapoint_ts_quote_interval should delete the quote interval '''
+        pid=uuid.uuid4()
+        quote='quote1'
+        ts=1
+        value=100
+        for ts in range(10,100):
+            self.assertTrue(quoteapi.insert_datapoint_ts_quote(pid, quote, ts, value))
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),90)
+        self.assertTrue(quoteapi.delete_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=19))
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),80)
+        self.assertTrue(quoteapi.delete_datapoint_ts_quote_interval(pid=pid, quote=quote, its=100, ets=190))
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),80)
+        self.assertTrue(quoteapi.delete_datapoint_ts_quote_interval(pid=pid, quote=quote, its=0, ets=190))
+        db_quotes=quoteapi.get_datapoint_ts_quote_interval(pid=pid, quote=quote, its=10, ets=99)
+        self.assertEqual(len(db_quotes),0)
+
+    def test_increment_datapoint_ts_quote_non_existent_quote(self):
+        ''' increment_datapoint_ts_quote should set the quote value if the quote pid not exist previously '''
+        pid = uuid.uuid4()
+        quote='quote'
+        ts=1000
+        value=5000
+        value_set=quoteapi.increment_datapoint_ts_quote(pid=pid, quote=quote, ts=ts, value=value)
+        self.assertEqual(value_set, value)
+        quote_db=quoteapi.get_datapoint_ts_quote(pid=pid, quote=quote, ts=1000)
+        self.assertEqual(quote_db.pid, pid)
+        self.assertEqual(quote_db.quote,quote)
+        self.assertEqual(quote_db.ts,ts)
+        self.assertEqual(quote_db.value,value)
+
+    def test_increment_datapoint_ts_quote_previously_existent_quote(self):
+        ''' increment_datapoint_ts_quote should add the value to the actual quote value '''
+        pid = uuid.uuid4()
+        quote='quote'
+        ts=1000
+        value=5000
+        value_set=quoteapi.increment_datapoint_ts_quote(pid=pid, quote=quote, ts=ts, value=value)
+        self.assertEqual(value_set, value)
+        quote_db=quoteapi.get_datapoint_ts_quote(pid=pid, quote=quote, ts=1000)
+        self.assertEqual(quote_db.pid, pid)
+        self.assertEqual(quote_db.quote,quote)
+        self.assertEqual(quote_db.ts,ts)
+        self.assertEqual(quote_db.value,value)
+        for i in range(0,100):
+            value_set=quoteapi.increment_datapoint_ts_quote(pid=pid, quote=quote, ts=ts, value=value)
+        self.assertEqual(value_set, value+100*value)
+        quote_db=quoteapi.get_datapoint_ts_quote(pid=pid, quote=quote, ts=1000)
+        self.assertEqual(quote_db.pid, pid)
         self.assertEqual(quote_db.quote,quote)
         self.assertEqual(quote_db.ts,ts)
         self.assertEqual(quote_db.value,value+100*value)

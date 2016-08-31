@@ -49,12 +49,14 @@ operation_quotes = {
     ],
     Operations.DATASOURCE_DATA_STORED: [
         Quotes.quo_daily_user_data_post_counter,
+        Quotes.quo_daily_datasource_data_post_counter,
         Quotes.quo_daily_datasource_occupation,
         Quotes.quo_daily_user_datasources_occupation,
         Quotes.quo_user_total_occupation,
     ],
     Operations.DATAPOINT_DATA_STORED: [
         Quotes.quo_daily_user_data_post_counter,
+        Quotes.quo_daily_datapoint_data_post_counter,
     ],
     Operations.DELETE_AGENT: [
         Quotes.quo_user_total_agents

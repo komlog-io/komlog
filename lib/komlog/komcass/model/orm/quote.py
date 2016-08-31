@@ -61,3 +61,10 @@ class DatasourceTsQuo:
         self.ts=ts
         self.value=value
 
+class DatapointTsQuo:
+    def __init__(self, pid, quote, ts, value):
+        self.pid=pid
+        self.quote=quote
+        self.ts=ts
+        self.value=value
+

@@ -254,8 +254,46 @@ def quo_daily_user_data_post_counter(params):
     new_counter=cassapiquote.increment_user_ts_quote(uid=uid,quote=quote,ts=ts,value=1)
     return new_counter
 
+def quo_daily_datasource_data_post_counter(params):
+    ''' Increment the daily counter of samples posted for this datasource.
+        The day is the day associated to the data, so a user could really send
+        in a day more samples than the quote limit if the date of those samples 
+        is from different days. '''
+    try:
+        did=params['did']
+        date=params['date']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QDDSDPC_PNF)
+    datasource=cassapidatasource.get_datasource(did=did)
+    if not datasource:
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_AQU_QDDSDPC_DSNF)
+    ts=timeuuid.get_day_timestamp(date)
+    quote=Quotes.quo_daily_datasource_data_post_counter.name
+    new_counter=cassapiquote.increment_datasource_ts_quote(did=did,quote=quote,ts=ts,value=1)
+    return new_counter
+
+def quo_daily_datapoint_data_post_counter(params):
+    ''' Increment the daily counter of samples posted for this datapoint.
+        The day is the day associated to the data, so a user could really send
+        in a day more samples than the quote limit if the date of those samples
+        is from different days. '''
+    try:
+        pid=params['pid']
+        date=params['date']
+    except KeyError:
+        raise exceptions.BadParametersException(error=Errors.E_AQU_QDDPDPC_PNF)
+    datapoint=cassapidatapoint.get_datapoint(pid=pid)
+    if not datapoint:
+        raise exceptions.DatapointNotFoundException(error=Errors.E_AQU_QDDPDPC_DPNF)
+    ts=timeuuid.get_day_timestamp(date)
+    quote=Quotes.quo_daily_datapoint_data_post_counter.name
+    new_counter=cassapiquote.increment_datapoint_ts_quote(pid=pid,quote=quote,ts=ts,value=1)
+    return new_counter
+
 quote_funcs = {
+    Quotes.quo_daily_datapoint_data_post_counter:quo_daily_datapoint_data_post_counter,
     Quotes.quo_daily_datasource_occupation:quo_daily_datasource_occupation,
+    Quotes.quo_daily_datasource_data_post_counter:quo_daily_datasource_data_post_counter,
     Quotes.quo_daily_user_datasources_occupation:quo_daily_user_datasources_occupation,
     Quotes.quo_daily_user_data_post_counter:quo_daily_user_data_post_counter,
     Quotes.quo_agent_total_datapoints:quo_agent_total_datapoints,
