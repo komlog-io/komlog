@@ -139,7 +139,7 @@ def process_message_SSDATA(message):
         try:
             session_info=session.get_agent_session_info(sid=message.sid)
             if session_info.imc_address==msgbus.msgbus.imc_address:
-                if session.unset_agent_session(sid=message.sid,last_update=message.date):
+                if session.unset_agent_session(sid=message.sid,last_update=session_info.last_update):
                     response.error=Errors.E_IIALD_SSDT_SUS
                 else:
                     response.error=Errors.E_IIALD_SSDT_SUE
@@ -147,7 +147,7 @@ def process_message_SSDATA(message):
                 response.error=Errors.E_IIALD_SSDT_MRE
                 if session_info.imc_address is not None:
                     response.add_message(message,dest=session_info.imc_address)
-        except Exception:
+        except authexcept.SessionNotFoundException:
             response.error=Errors.E_IIALD_SSDT_SNF
         response.status=status.IMC_STATUS_NOT_FOUND
     else:
