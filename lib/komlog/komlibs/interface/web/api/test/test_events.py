@@ -398,7 +398,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.USER_EVENT_RESPONSE_MESSAGE:
+                if msg.type == messages.Messages.USER_EVENT_RESPONSE_MESSAGE:
                     self.assertEqual(msg.uid, psp.uid)
                     self.assertEqual(msg.date, new_event['date'])
                 msgs.remove(msg)

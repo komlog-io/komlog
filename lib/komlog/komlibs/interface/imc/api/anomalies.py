@@ -16,7 +16,7 @@ from komlog.komlibs.interface.imc import status, exceptions
 
 @exceptions.ExceptionHandler
 def process_message_MISSINGDP(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     did=message.did
     date=message.date
     dp_classified=datapointapi.classify_missing_datapoints_in_sample(did=did, date=date)

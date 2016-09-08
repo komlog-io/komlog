@@ -97,7 +97,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         amsg=None
         for msg in response.unrouted_messages:
-            if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
+            if msg.type==messages.Messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
                 amsg=msg
                 break
         datapoint=gestdatapointapi.monitor_new_datapoint(did=amsg.did, date=amsg.date, position=amsg.position, length=amsg.length, datapointname=amsg.datapointname)
@@ -248,7 +248,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         amsg=None
         for msg in response.unrouted_messages:
-            if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
+            if msg.type==messages.Messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
                 amsg=msg
                 break
         datapoint=gestdatapointapi.monitor_new_datapoint(did=amsg.did, date=amsg.date, position=amsg.position, length=amsg.length, datapointname=amsg.datapointname)
@@ -789,12 +789,12 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         pid=None
         for msg in response.unrouted_messages:
-            if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
+            if msg.type==messages.Messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
                 msg_result=msgapi.process_message(msg)
                 if msg_result:
                     msgs=msg_result.unrouted_messages
                     for msg in msgs:
-                        if msg.type==messages.UPDATE_QUOTES_MESSAGE:
+                        if msg.type==messages.Messages.UPDATE_QUOTES_MESSAGE:
                             pid=msg.params['pid'].hex
                         msg_result=msgapi.process_message(msg)
                 else:
@@ -810,7 +810,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         found=False
         for msg in response.unrouted_messages:
-            if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
+            if msg.type==messages.Messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
                 found=True
             msg_result=msgapi.process_message(msg)
             msgs=msg_result.unrouted_messages
@@ -838,12 +838,12 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         pid=None
         for msg in response.unrouted_messages:
-            if msg.type==messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
+            if msg.type==messages.Messages.MON_VAR_MESSAGE and msg.did==uuid.UUID(did):
                 msg_result=msgapi.process_message(msg)
                 if msg_result:
                     msgs=msg_result.unrouted_messages
                     for msg in msgs:
-                        if msg.type==messages.UPDATE_QUOTES_MESSAGE:
+                        if msg.type==messages.Messages.UPDATE_QUOTES_MESSAGE:
                             pid=msg.params['pid'].hex
                         msg_result=msgapi.process_message(msg)
                 else:
@@ -859,7 +859,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         found=False
         for msg in response.unrouted_messages:
-            if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
+            if msg.type==messages.Messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
                 found=True
             msg_result=msgapi.process_message(msg)
             msgs=msg_result.unrouted_messages
@@ -875,7 +875,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         found=False
         for msg in response.unrouted_messages:
-            if msg.type==messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
+            if msg.type==messages.Messages.UPDATE_QUOTES_MESSAGE and msg.operation==Operations.DISSOCIATE_DATAPOINT_FROM_DATASOURCE and msg.params['pid'].hex == pid and msg.params['did'].hex == did:
                 found=True
             msg_result=msgapi.process_message(msg)
             msgs=msg_result.unrouted_messages

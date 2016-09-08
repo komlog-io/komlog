@@ -45,7 +45,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -81,7 +81,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -161,7 +161,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -192,7 +192,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -220,7 +220,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -270,7 +270,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -298,7 +298,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -325,7 +325,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -578,7 +578,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -634,7 +634,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_INV_MAIL_MESSAGE:
+                if msg.type == messages.Messages.NEW_INV_MAIL_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertEqual(msg.inv_id, uuid.UUID(response.data[0][1]))
                     self.assertTrue(args.is_valid_uuid(msg.inv_id))
@@ -688,7 +688,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -705,7 +705,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.FORGET_MAIL_MESSAGE:
+                if msg.type == messages.Messages.FORGET_MAIL_MESSAGE:
                     self.assertEqual(response3.data['code'],msg.code.hex)
                     found=True
                 msgs.remove(msg)
@@ -735,7 +735,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -752,7 +752,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.FORGET_MAIL_MESSAGE:
+                if msg.type == messages.Messages.FORGET_MAIL_MESSAGE:
                     self.assertEqual(response3.data['code'],msg.code.hex)
                     found=True
                 msgs.remove(msg)
@@ -797,7 +797,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -814,7 +814,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.FORGET_MAIL_MESSAGE:
+                if msg.type == messages.Messages.FORGET_MAIL_MESSAGE:
                     self.assertEqual(response3.data['code'],msg.code.hex)
                     found=True
                 msgs.remove(msg)
@@ -851,7 +851,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -868,7 +868,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.FORGET_MAIL_MESSAGE:
+                if msg.type == messages.Messages.FORGET_MAIL_MESSAGE:
                     self.assertEqual(response3.data['code'],msg.code.hex)
                     found=True
                 msgs.remove(msg)
@@ -928,7 +928,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.NEW_USR_NOTIF_MESSAGE:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     self.assertEqual(msg.email, email)
                     self.assertTrue(args.is_valid_code(msg.code))
                     found=True
@@ -945,7 +945,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         found=False
         while len(msgs)>0:
             for msg in msgs:
-                if msg.type == messages.FORGET_MAIL_MESSAGE:
+                if msg.type == messages.Messages.FORGET_MAIL_MESSAGE:
                     self.assertEqual(response3.data['code'],msg.code.hex)
                     found=True
                 msgs.remove(msg)

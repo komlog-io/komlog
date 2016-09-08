@@ -41,13 +41,13 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
         did=uuid.uuid4()
         op=modop.NewDatasourceOperation(uid=uid, aid=aid, did=did)
         msgs=operation.process_operation(operation=op)
-        message_expected={messages.UPDATE_QUOTES_MESSAGE:1,messages.NEW_DS_WIDGET_MESSAGE:1,messages.USER_EVENT_MESSAGE:1}
+        message_expected={messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,messages.Messages.NEW_DS_WIDGET_MESSAGE.value:1,messages.Messages.USER_EVENT_MESSAGE.value:1}
         message_retrieved={}
         for msg in msgs:
             try:
-                message_retrieved[msg.type]+=1
+                message_retrieved[msg._type_.value]+=1
             except KeyError:
-                message_retrieved[msg.type]=1
+                message_retrieved[msg._type_.value]=1
         self.assertEqual(sorted(message_retrieved), sorted(message_expected))
 
     def test_process_operation_new_user_datapoint_success(self):
@@ -57,13 +57,13 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
         pid=uuid.uuid4()
         op=modop.NewUserDatapointOperation(uid=uid, aid=aid, pid=pid)
         msgs=operation.process_operation(operation=op)
-        message_expected={messages.NEW_DP_WIDGET_MESSAGE:1,messages.UPDATE_QUOTES_MESSAGE:1}
+        message_expected={messages.Messages.NEW_DP_WIDGET_MESSAGE.value:1,messages.Messages.UPDATE_QUOTES_MESSAGE.value:1}
         message_retrieved={}
         for msg in msgs:
             try:
-                message_retrieved[msg.type]+=1
+                message_retrieved[msg._type_.value]+=1
             except KeyError:
-                message_retrieved[msg.type]=1
+                message_retrieved[msg._type_.value]=1
         self.assertEqual(sorted(message_retrieved), sorted(message_expected))
 
     def test_process_operation_datasource_data_stored_success(self):
@@ -73,15 +73,15 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
         date=uuid.uuid1()
         op=modop.DatasourceDataStoredOperation(uid=uid, did=did, date=date)
         msgs=operation.process_operation(operation=op)
-        message_expected={messages.GENERATE_TEXT_SUMMARY_MESSAGE:1,
-                          messages.UPDATE_QUOTES_MESSAGE:1,
-                          messages.MAP_VARS_MESSAGE:1}
+        message_expected={messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
+                          messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,
+                          messages.Messages.MAP_VARS_MESSAGE.value:1}
         message_retrieved={}
         for msg in msgs:
             try:
-                message_retrieved[msg.type]+=1
+                message_retrieved[msg._type_.value]+=1
             except KeyError:
-                message_retrieved[msg.type]=1
+                message_retrieved[msg._type_.value]=1
         self.assertEqual(sorted(message_retrieved), sorted(message_expected))
 
     def test_process_operation_datapoint_data_stored_success(self):
@@ -92,13 +92,13 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
         op=modop.DatapointDataStoredOperation(uid=uid, pid=pid, date=date)
         msgs=operation.process_operation(operation=op)
         message_expected={
-            messages.UPDATE_QUOTES_MESSAGE:1,
+            messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,
         }
         message_retrieved={}
         for msg in msgs:
             try:
-                message_retrieved[msg.type]+=1
+                message_retrieved[msg._type_.value]+=1
             except KeyError:
-                message_retrieved[msg.type]=1
+                message_retrieved[msg._type_.value]=1
         self.assertEqual(sorted(message_retrieved), sorted(message_expected))
 

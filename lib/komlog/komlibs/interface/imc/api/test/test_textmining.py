@@ -88,13 +88,13 @@ class InterfaceImcApiTextminingTest(unittest.TestCase):
         response=textmining.process_message_FILLDS(message=message)
         self.assertEqual(response.error, Errors.OK)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
-        self.assertEqual(response.message_type, messages.FILL_DATASOURCE_MESSAGE)
-        self.assertEqual(response.message_params, message.serialized_message)
+        self.assertEqual(response.message_type, messages.Messages.FILL_DATASOURCE_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.routed_messages, {})
         self.assertNotEqual(response.unrouted_messages, [])
         self.assertTrue(len(response.unrouted_messages) == 1)
         expected_messages={
-            messages.URIS_UPDATED_MESSAGE:1,
+            messages.Messages.URIS_UPDATED_MESSAGE:1,
         }
         retrieved_messages={}
         msgs=response.unrouted_messages
@@ -104,7 +104,7 @@ class InterfaceImcApiTextminingTest(unittest.TestCase):
             except KeyError:
                 retrieved_messages[msg.type]=1
         self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
-        self.assertEqual(msgs[0].type,messages.URIS_UPDATED_MESSAGE)
+        self.assertEqual(msgs[0].type,messages.Messages.URIS_UPDATED_MESSAGE)
         self.assertEqual(msgs[0].date,ds_date)
         uris=[item['uri'] for item in msgs[0].uris]
         self.assertEqual(sorted(uris),sorted(['datasource_uri','datasource_uri.datapoint_uri']))

@@ -15,7 +15,7 @@ from komlog.komlibs.interface.imc.model import messages, responses
 
 @exceptions.ExceptionHandler
 def process_message_UPDQUO(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     operation=message.operation
     params=message.params
     if update.update_quotes(operation=operation, params=params):
@@ -28,7 +28,7 @@ def process_message_UPDQUO(message):
 
 @exceptions.ExceptionHandler
 def process_message_RESAUTH(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     operation=message.operation
     params=message.params
     if update.update_resources(operation=operation, params=params):

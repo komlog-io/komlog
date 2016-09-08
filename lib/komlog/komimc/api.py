@@ -13,6 +13,7 @@ from komlog.komimc import bus as msgbus
 from komlog.komlibs.interface.imc import api as imcapi
 from komlog.komlibs.interface.imc import status
 from komlog.komlibs.interface.imc.model import messages
+from komlog.komlibs.interface.imc import exceptions as imcexcept
 
 
 loop = asyncio.get_event_loop()
@@ -24,12 +25,11 @@ def retrieve_message(timeout=0):
     data=loop.run_until_complete(msgbus.msgbus.retrieve_message(timeout))
     if data:
         addr, s_message = data
-        mtype = s_message.split('|')[0]
         try:
-            message=messages.MESSAGE_TO_CLASS_MAPPING[mtype](serialized_message=s_message)
-            return message
-        except Exception as e:
-            logging.logger.exception('Cannot map message.type to message Class: '+str(e))
+            msg = messages.IMCMessage.load_from_serialization(s_message)
+            return msg
+        except imcexcept.BadParametersException as e:
+            logging.logger.error('Error loading IMCMessage: '+e.error.name)
             return None
     else:
         return None
@@ -41,12 +41,11 @@ def retrieve_message_from(addr, timeout=0):
     data=loop.run_until_complete(msgbus.msgbus.retrieve_message_from(addr=addr, timeout=timeout))
     if data:
         addr, s_message = data
-        mtype = s_message.split('|')[0]
         try:
-            message=messages.MESSAGE_TO_CLASS_MAPPING[mtype](serialized_message=s_message)
-            return message
-        except Exception as e:
-            logging.logger.exception('Cannot map message.type to message Class: '+str(e))
+            msg = messages.IMCMessage.load_from_serialization(s_message)
+            return msg
+        except imcexcept.BadParametersException as e:
+            logging.logger.error('Error loading IMCMessage: '+e.error.name)
             return None
     else:
         return None
@@ -57,10 +56,10 @@ def process_message(message):
 async def send_response_messages(response):
     for addr,msgs in response.routed_messages.items():
         for msg in msgs:
-            logging.logger.debug('Sending message to redis server: '+msg.type)
+            logging.logger.debug('Sending message to redis server: '+msg._type_.value)
             await msgbus.msgbus.send_message_to(addr, msg)
     for msg in response.unrouted_messages:
-        logging.logger.debug('Sending message to redis server: '+msg.type)
+        logging.logger.debug('Sending message to redis server: '+msg._type_.value)
         await msgbus.msgbus.send_message(msg)
     return True
 
@@ -71,12 +70,11 @@ async def async_retrieve_message(timeout=0):
     data=await msgbus.msgbus.retrieve_message(timeout)
     if data:
         addr, s_message = data
-        mtype = s_message.split('|')[0]
         try:
-            message=messages.MESSAGE_TO_CLASS_MAPPING[mtype](serialized_message=s_message)
-            return message
-        except Exception as e:
-            logging.logger.exception('Cannot map message.type to message Class: '+str(e))
+            msg = messages.IMCMessage.load_from_serialization(s_message)
+            return msg
+        except imcexcept.BadParametersException as e:
+            logging.logger.error('Error loading IMCMessage: '+e.error.name)
             return None
     else:
         return None
@@ -88,12 +86,11 @@ async def async_retrieve_message_from(addr, timeout=0):
     data=await msgbus.msgbus.retrieve_message_from(addr=addr, timeout=timeout)
     if data:
         addr, s_message = data
-        mtype = s_message.split('|')[0]
         try:
-            message=messages.MESSAGE_TO_CLASS_MAPPING[mtype](serialized_message=s_message)
-            return message
-        except Exception as e:
-            logging.logger.exception('Cannot map message.type to message Class: '+str(e))
+            msg = messages.IMCMessage.load_from_serialization(s_message)
+            return msg
+        except imcexcept.BadParametersException as e:
+            logging.logger.error('Error loading IMCMessage: '+e.error.name)
             return None
     else:
         return None

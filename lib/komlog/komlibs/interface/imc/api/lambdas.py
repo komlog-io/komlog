@@ -25,7 +25,7 @@ from komlog.komimc import bus as msgbus
 
 @exceptions.ExceptionHandler
 def process_message_URISUPDT(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     uris=message.uris
     date=message.date
     hooks={}
@@ -88,7 +88,7 @@ def process_message_URISUPDT(message):
 
 @exceptions.ExceptionHandler
 def process_message_HOOKNEW(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     uid=message.uid
     uris=message.uris
     date=message.date
@@ -118,7 +118,7 @@ def process_message_HOOKNEW(message):
 
 @exceptions.ExceptionHandler
 def process_message_CLSHOOKS(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     sid=message.sid
     ids=message.ids
     for item in ids:
@@ -132,7 +132,7 @@ def process_message_CLSHOOKS(message):
 
 @exceptions.ExceptionHandler
 def process_message_SSDATA(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     try:
         ws_session.agent_callback[message.sid](message=message.data)
     except KeyError:
@@ -156,7 +156,7 @@ def process_message_SSDATA(message):
 
 @exceptions.ExceptionHandler
 def process_message_DATINT(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     sid=message.sid
     session_info=session.get_agent_session_info(sid=sid)
     if session_info.imc_address is None:

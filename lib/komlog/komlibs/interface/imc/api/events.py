@@ -17,7 +17,7 @@ from komlog.komlibs.interface.imc.model import messages, responses
 
 @exceptions.ExceptionHandler
 def process_message_USEREV(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     uid=message.uid
     event_type=message.event_type
     parameters=message.parameters
@@ -30,7 +30,7 @@ def process_message_USEREV(message):
 
 @exceptions.ExceptionHandler
 def process_message_USEREVRESP(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     uid=message.uid
     date=message.date
     parameters=message.parameters

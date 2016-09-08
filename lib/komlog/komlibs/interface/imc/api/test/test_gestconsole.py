@@ -62,26 +62,26 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         response=gestconsole.process_message_MONVAR(message=message)
         self.assertEqual(response.error, Errors.OK)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
-        self.assertEqual(response.message_type, messages.MON_VAR_MESSAGE)
-        self.assertEqual(response.message_params, message.serialized_message)
+        self.assertEqual(response.message_type, messages.Messages.MON_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.routed_messages, {})
         self.assertNotEqual(response.unrouted_messages, [])
         self.assertTrue(len(response.unrouted_messages) == 6)
         expected_messages={
-            messages.UPDATE_QUOTES_MESSAGE:1,
-            messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE:1,
-            messages.FILL_DATAPOINT_MESSAGE:1,
-            messages.USER_EVENT_MESSAGE:1,
-            messages.NEW_DP_WIDGET_MESSAGE:1,
-            messages.HOOK_NEW_URIS_MESSAGE:1,
+            messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
+            messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
+            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
+            messages.Messages.USER_EVENT_MESSAGE.name:1,
+            messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
+            messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
         }
         retrieved_messages={}
         msgs=response.unrouted_messages
         for msg in msgs:
             try:
-                retrieved_messages[msg.type]+=1
+                retrieved_messages[msg._type_.name]+=1
             except KeyError:
-                retrieved_messages[msg.type]=1
+                retrieved_messages[msg._type_.name]=1
         self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
 
     def test_process_message_NEGVAR_failure_non_existent_datapoint(self):

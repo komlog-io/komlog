@@ -50,21 +50,21 @@ class MessageBus:
         try:
             addr=routing.get_address(komlog_message.type,self.module_id, self.module_instance, self.running_host)
             with (await self.local) as redis:
-                await redis.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+                await redis.rpush(addr,komlog_message.to_serialization().encode('utf-8'))
             return True
         except aioredis.RedisError:
             try:
                 self.local = await aioredis.create_pool(self.broker,encoding='utf-8')
                 self.remotes[self.running_host]=self.local
                 with (await self.local) as redis:
-                    await redis.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+                    await redis.rpush(addr,komlog_message.to_serialization().encode('utf-8'))
             except aioredis.RedisError:
                 #try on other running connections
                 connections=[item[0] for item in list(self.remotes.items()) if item[0] != self.running_host]
                 for host in connections:
                     try:
                         with (await self.remotes[host]) as redis:
-                            await redis.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+                            await redis.rpush(addr,komlog_message.to_serialization().encode('utf-8'))
                     except aioredis.RedisError:
                         try:
                             self.remotes[host].close()
@@ -97,13 +97,13 @@ class MessageBus:
         try:
             host,addr=remote_addr.split(':')
             with (await self.remotes[host]) as redis:
-                await redis.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+                await redis.rpush(addr,komlog_message.to_serialization().encode('utf-8'))
         except (KeyError, aioredis.RedisError):
             logging.logger.error('exception sending message to '+host+' addr: '+addr)
             try:
                 self.remotes[host] = await aioredis.create_pool(host, encoding='utf-8')
                 with (await self.remotes[host]) as redis:
-                    await redis.rpush(addr,komlog_message.serialized_message.encode('utf-8'))
+                    await redis.rpush(addr,komlog_message.to_serialization().encode('utf-8'))
                 logging.logger.error('Success in retry sending message to '+host+' addr: '+addr)
             except Exception:
                 logging.logger.error('Error in retry sending message to '+host+' addr: '+addr)

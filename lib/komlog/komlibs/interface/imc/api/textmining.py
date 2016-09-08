@@ -13,7 +13,7 @@ from komlog.komlibs.interface.imc import status, exceptions
 
 @exceptions.ExceptionHandler
 def process_message_GDTREE(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     pid=message.pid
     if not args.is_valid_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_IAATM_GDTREE_IP)
@@ -26,7 +26,7 @@ def process_message_GDTREE(message):
 
 @exceptions.ExceptionHandler
 def process_message_MAPVARS(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     did=message.did
     date=message.date
     if not args.is_valid_uuid(did):
@@ -44,7 +44,7 @@ def process_message_MAPVARS(message):
 
 @exceptions.ExceptionHandler
 def process_message_FILLDP(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     pid=message.pid
     date=message.date
     if not args.is_valid_uuid(pid):
@@ -60,7 +60,7 @@ def process_message_FILLDP(message):
 
 @exceptions.ExceptionHandler
 def process_message_FILLDS(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     did=message.did
     date=message.date
     if not args.is_valid_uuid(did):
@@ -84,7 +84,7 @@ def process_message_FILLDS(message):
 
 @exceptions.ExceptionHandler
 def process_message_GENTEXTSUMMARY(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message.type, message_params=message.serialized_message)
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     did=message.did
     date=message.date
     if not args.is_valid_uuid(did):
