@@ -62,11 +62,10 @@ def _process_event_response_user_event_intervention_datapoint_identification(eve
         pid=uuid.UUID(dp)
         processing_result['missing'].add(pid)
         if pid in datasource_config['pids']:
-            to_update=datapointapi.mark_missing_datapoint(pid=pid, date=ds_date)
-            if to_update:
-                for pid in to_update:
-                    processing_result['dp_to_update'].add(pid)
-            elif to_update is None:
+            mark_result=datapointapi.mark_missing_datapoint(pid=pid, date=ds_date)
+            for pid in mark_result['dtree_gen_success']:
+                processing_result['dp_to_update'].add(pid)
+            for pid in mark_result['dtree_gen_failed']:
                 processing_result['dp_updated_failed'].add(pid)
         else:
             processing_result['dp_not_belonging'].add(pid)
@@ -76,11 +75,10 @@ def _process_event_response_user_event_intervention_datapoint_identification(eve
         l=dp_info['l']
         processing_result['identified'][pid]=p
         if pid in datasource_config['pids']:
-            to_update=datapointapi.mark_positive_variable(pid=pid, date=ds_date, position=p, length=l)
-            if to_update:
-                for pid in to_update:
-                    processing_result['dp_to_update'].add(pid)
-            elif to_update is None:
+            mark_result=datapointapi.mark_positive_variable(pid=pid, date=ds_date, position=p, length=l)
+            for pid in mark_result['dtree_gen_success']:
+                processing_result['dp_to_update'].add(pid)
+            for pid in mark_result['dtree_gen_failed']:
                 processing_result['dp_updated_failed'].add(pid)
         else:
             processing_result['dp_not_belonging'].add(pid)

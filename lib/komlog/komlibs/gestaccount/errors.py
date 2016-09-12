@@ -285,67 +285,69 @@ class Errors(Enum):
     E_GPA_CMDIS_DSMNF   = 6202
     E_GPA_CMDIS_DSTSNF  = 6203
 
-    E_GPA_GDD_IP    = 6600
-    E_GPA_GDD_ITD   = 6601
-    E_GPA_GDD_IFD   = 6602
-    E_GPA_GDD_DDNF  = 6603
-    E_GPA_GDD_ICNT  = 6604 #: Invalid count parameter
+    E_GPA_GDD_IP    = 6250
+    E_GPA_GDD_ITD   = 6251
+    E_GPA_GDD_IFD   = 6252
+    E_GPA_GDD_DDNF  = 6253
+    E_GPA_GDD_ICNT  = 6254 #: Invalid count parameter
 
-    E_GPA_CRD_ID    = 6610
-    E_GPA_CRD_IDU   = 6611 #: Invalid datapoint uri
-    E_GPA_CRD_DNF   = 6612
-    E_GPA_CRD_IDE   = 6613
-    E_GPA_CRD_ADU   = 6614 #: Uri selected already used
-    E_GPA_CRD_AAD   = 6615 #: Datapoint already associated to a datasource
-    E_GPA_CRD_UDE   = 6616 #: Error updating datapoint row in database
-    E_GPA_CRD_INF   = 6617 #: Data inconsistency found
+    E_GPA_CRD_ID    = 6300
+    E_GPA_CRD_IDU   = 6301 #: Invalid datapoint uri
+    E_GPA_CRD_DNF   = 6302
+    E_GPA_CRD_IDE   = 6303
+    E_GPA_CRD_ADU   = 6304 #: Uri selected already used
+    E_GPA_CRD_AAD   = 6305 #: Datapoint already associated to a datasource
+    E_GPA_CRD_UDE   = 6306 #: Error updating datapoint row in database
+    E_GPA_CRD_INF   = 6307 #: Data inconsistency found
 
-    E_GPA_GDC_IP    = 6620
-    E_GPA_GDC_DNF   = 6621
+    E_GPA_GDC_IP    = 6350
+    E_GPA_GDC_DNF   = 6351
 
-    E_GPA_UDC_IP    = 6630
-    E_GPA_UDC_IDN   = 6631
-    E_GPA_UDC_IC    = 6632
-    E_GPA_UDC_EMP   = 6633
-    E_GPA_UDC_IDE   = 6634
-    E_GPA_UDC_DNF   = 6635
+    E_GPA_UDC_IP    = 6400
+    E_GPA_UDC_IDN   = 6401
+    E_GPA_UDC_IC    = 6402
+    E_GPA_UDC_EMP   = 6403
+    E_GPA_UDC_IDE   = 6404
+    E_GPA_UDC_DNF   = 6405
 
-    E_GPA_MNV_IP    = 6640
-    E_GPA_MNV_IDT   = 6641
-    E_GPA_MNV_IPO   = 6642
-    E_GPA_MNV_IL    = 6643
-    E_GPA_MNV_DNF   = 6644
-    E_GPA_MNV_DMNF  = 6645
-    E_GPA_MNV_VLNF  = 6646
-    E_GPA_MNV_VPNF  = 6647
-    E_GPA_MNV_DSNF  = 6648 #: Datapoint is not associated to a datasource
+    E_GPA_MNV_IP    = 6450
+    E_GPA_MNV_IDT   = 6451
+    E_GPA_MNV_IPO   = 6452
+    E_GPA_MNV_IL    = 6453
+    E_GPA_MNV_DNF   = 6454
+    E_GPA_MNV_DMNF  = 6455
+    E_GPA_MNV_VLNF  = 6456
+    E_GPA_MNV_VPNF  = 6457
+    E_GPA_MNV_DSNF  = 6458 #: Datapoint is not associated to a datasource
 
-    E_GPA_MPV_IP    = 6660
-    E_GPA_MPV_IDT   = 6661
-    E_GPA_MPV_IPO   = 6662
-    E_GPA_MPV_IL    = 6663
-    E_GPA_MPV_DNF   = 6664
-    E_GPA_MPV_DMNF  = 6665
-    E_GPA_MPV_VLNF  = 6666
-    E_GPA_MPV_VPNF  = 6667
-    E_GPA_MPV_VAE   = 6668
-    E_GPA_MPV_DSNF  = 6669 #: datapoint is not associated to a datasource
+    E_GPA_MPV_IP    = 6500
+    E_GPA_MPV_IDT   = 6501
+    E_GPA_MPV_IPO   = 6502
+    E_GPA_MPV_IL    = 6503
+    E_GPA_MPV_DNF   = 6504
+    E_GPA_MPV_DMNF  = 6505
+    E_GPA_MPV_VLNF  = 6506
+    E_GPA_MPV_VPNF  = 6507
+    E_GPA_MPV_VAE   = 6508
+    E_GPA_MPV_DSNF  = 6509 #: datapoint is not associated to a datasource
 
-    E_GPA_GDT_IP    = 6680
-    E_GPA_GDT_DNF   = 6681
-    E_GPA_GDT_ETS   = 6682
-    E_GPA_GDT_DSNF  = 6683 #: datapoint is not associated to a datasource
+    E_GPA_GDT_IP    = 6550
+    E_GPA_GDT_DNF   = 6551
+    E_GPA_GDT_ETS   = 6552 #: generate_decision_tree: empty training set
+    E_GPA_GDT_DSNF  = 6553 #: generate_decision_tree: datapoint is not associated to a datasource
+    E_GPA_GDT_EGDT  = 6554 #: generate_decision_tree: error generating decision tree
 
-    E_GPA_GIDT_IP   = 6686
-    E_GPA_GIDT_DNF  = 6687
-    E_GPA_GIDT_ETS  = 6688
-    E_GPA_GIDT_DSNF = 6689 #: datapoint is not associated to a datasource
+    E_GPA_GIDT_IP   = 6600
+    E_GPA_GIDT_DNF  = 6601
+    E_GPA_GIDT_ETS  = 6602
+    E_GPA_GIDT_DSNF = 6603 #: generate_inverse_decision_tree: datapoint not associated to a ds
+    E_GPA_GIDT_EGDT = 6604 #: generate_inverse_decision_tree: error generating decision tree
 
-    E_GPA_MND_ID    = 6690
-    E_GPA_MND_IDT   = 6691
-    E_GPA_MND_IPO   = 6692
-    E_GPA_MND_IL    = 6693
-    E_GPA_MND_IDN   = 6694
+    E_GPA_MND_ID    = 6650
+    E_GPA_MND_IDT   = 6651
+    E_GPA_MND_IPO   = 6652
+    E_GPA_MND_IL    = 6653
+    E_GPA_MND_IDN   = 6654
 
     E_GPA_SDPV_IP   = 6700
     E_GPA_SDPV_IDT  = 6701
@@ -355,48 +357,48 @@ class Errors(Enum):
     E_GPA_SDPV_IDDE = 6705
     E_GPA_SDPV_DSNF = 6706 #: datapoint is not associated to a datasource
 
-    E_GPA_SDSV_ID   = 6710
-    E_GPA_SDSV_IDT  = 6711
-    E_GPA_SDSV_DSNF = 6712  #: store_datasource_values. datasource not found
+    E_GPA_SDSV_ID   = 6750
+    E_GPA_SDSV_IDT  = 6751
+    E_GPA_SDSV_DSNF = 6752  #: store_datasource_values. datasource not found
 
-    E_GPA_DDP_IP    = 6720
-    E_GPA_DDP_DNF   = 6721
+    E_GPA_DDP_IP    = 6800
+    E_GPA_DDP_DNF   = 6801
 
-    E_GPA_SDMSV_IP      = 6740
-    E_GPA_SDMSV_IDT     = 6741
-    E_GPA_SDMSV_DNF     = 6742
-    E_GPA_SDMSV_DPDTNF  = 6743
-    E_GPA_SDMSV_DSMNF   = 6744
-    E_GPA_SDMSV_DSNF    = 6745 #: datapoint is not associated to a datasource
+    E_GPA_SDMSV_IP      = 6850
+    E_GPA_SDMSV_IDT     = 6851
+    E_GPA_SDMSV_DNF     = 6852
+    E_GPA_SDMSV_DPDTNF  = 6853
+    E_GPA_SDMSV_DSMNF   = 6854
+    E_GPA_SDMSV_DSNF    = 6855 #: datapoint is not associated to a datasource
 
-    E_GPA_MMDP_IP   = 6750
-    E_GPA_MMDP_IDT  = 6751
-    E_GPA_MMDP_DNF  = 6752
-    E_GPA_MMDP_DMNF = 6753
-    E_GPA_MMDP_DSNF = 6754 #: datapoint is not associated to a datasource
+    E_GPA_MMDP_IP   = 6900
+    E_GPA_MMDP_IDT  = 6901
+    E_GPA_MMDP_DNF  = 6902
+    E_GPA_MMDP_DMNF = 6903
+    E_GPA_MMDP_DSNF = 6904 #: datapoint is not associated to a datasource
 
-    E_GPA_GDH_IDID  = 6760 #: generate_datasource_hash. invalid datasource id
-    E_GPA_GDH_IDT   = 6761 #: generate_datasource_hash. invalid date
-    E_GPA_GDH_DDNF  = 6762 #: generate_datasource_hash. datasource data not found
-    E_GPA_GDH_EIDB  = 6763 #: generate_datasource_hash. error inserting in database
-    E_GPA_GDH_NHO   = 6764 #: generate_datasource_hash. no hashed obtained
+    E_GPA_GDH_IDID  = 6950 #: generate_datasource_hash. invalid datasource id
+    E_GPA_GDH_IDT   = 6951 #: generate_datasource_hash. invalid date
+    E_GPA_GDH_DDNF  = 6952 #: generate_datasource_hash. datasource data not found
+    E_GPA_GDH_EIDB  = 6953 #: generate_datasource_hash. error inserting in database
+    E_GPA_GDH_NHO   = 6954 #: generate_datasource_hash. no hashed obtained
 
-    E_GPA_SDPSV_IP   = 6800 #: store_user_datapoint_value. Invalid pid
-    E_GPA_SDPSV_IDT  = 6801 #: store_user_datapoint_value. Invalid date
-    E_GPA_SDPSV_IC   = 6802 #: store_user_datapoint_value. Invalid content
-    E_GPA_SDPSV_CVNN = 6803 #: store_user_datapoint_value. content value not numeric
-    E_GPA_SDPSV_DNF  = 6804 #: store_user_datapoint_value. datapoint not found
-    E_GPA_SDPSV_IDDE = 6805 #: store_user_datapoint_value. insert datapoint data error
+    E_GPA_SDPSV_IP   = 7000 #: store_user_datapoint_value. Invalid pid
+    E_GPA_SDPSV_IDT  = 7001 #: store_user_datapoint_value. Invalid date
+    E_GPA_SDPSV_IC   = 7002 #: store_user_datapoint_value. Invalid content
+    E_GPA_SDPSV_CVNN = 7003 #: store_user_datapoint_value. content value not numeric
+    E_GPA_SDPSV_DNF  = 7004 #: store_user_datapoint_value. datapoint not found
+    E_GPA_SDPSV_IDDE = 7005 #: store_user_datapoint_value. insert datapoint data error
 
-    E_GPA_HTDP_IPID     =   6850    #: hook_to_datapoint. invalid pid
-    E_GPA_HTDP_ISID     =   6851    #: hook_to_datapoint. invalid sid
-    E_GPA_HTDP_DPNF     =   6852    #: hook_to_datapoint. datapoint not found
+    E_GPA_HTDP_IPID     =   7050    #: hook_to_datapoint. invalid pid
+    E_GPA_HTDP_ISID     =   7051    #: hook_to_datapoint. invalid sid
+    E_GPA_HTDP_DPNF     =   7052    #: hook_to_datapoint. datapoint not found
 
-    E_GPA_UHFDP_IPID    =   6900    #: unhook_from_datapoint. invalid pid
-    E_GPA_UHFDP_ISID    =   6901    #: unhook_from_datapoint. invalid sid
+    E_GPA_UHFDP_IPID    =   7100    #: unhook_from_datapoint. invalid pid
+    E_GPA_UHFDP_ISID    =   7101    #: unhook_from_datapoint. invalid sid
 
-    E_GPA_GDPH_IPID     =   6950    #: get_datapoint_hooks. invalid pid
-    E_GPA_GDPH_DPNF     =   6951    #: get_datapoint_hooks. datapoint not found
+    E_GPA_GDPH_IPID     =   7150    #: get_datapoint_hooks. invalid pid
+    E_GPA_GDPH_DPNF     =   7151    #: get_datapoint_hooks. datapoint not found
 
 # gestaccount widget api
 

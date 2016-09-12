@@ -102,6 +102,10 @@ class DatapointDTreeNotFoundException(GestaccountException):
     def __init__(self, error):
         super().__init__(error=error)
 
+class DatapointDTreeGenerationException(GestaccountException):
+    def __init__(self, error):
+        super().__init__(error=error)
+
 class DatapointUnsupportedOperationException(GestaccountException):
     def __init__(self, error):
         super().__init__(error=error)

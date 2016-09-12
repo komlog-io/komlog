@@ -29,15 +29,16 @@ class DatapointData:
         self.value=value
 
 class DatapointDtreePositives:
-    def __init__(self, pid=None, date=None, position=None, length=None):
+    def __init__(self, pid, date, position, length):
         self.pid=pid
         self.date=date
         self.position=position
         self.length=length
 
 class DatapointDtreeNegatives:
-    def __init__(self, pid=None, date=None, coordinates=None):
+    def __init__(self, pid, date, position, length):
         self.pid=pid
         self.date=date
-        self.coordinates=coordinates
+        self.position=position
+        self.length=length
 

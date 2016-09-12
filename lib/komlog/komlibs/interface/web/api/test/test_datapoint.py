@@ -29,6 +29,8 @@ from komlog.komimc import api as msgapi
 from komlog.komfig import logging
 
 
+pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
+
 class InterfaceWebApiDatapointTest(unittest.TestCase):
     ''' komlibs.interface.web.api.datapoint tests '''
 
@@ -37,7 +39,6 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.username = 'test_komlibs.interface.web.api.datapoint_user'
         self.password = 'password'
         agentname='test_komlibs.interface.web.api.datapoint_agent'
-        pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response, 'cookie',None)
@@ -484,6 +485,50 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             response=datapointapi.mark_positive_variable_request(passport=psp, pid=pid, sequence=sequence, position=position, length=length)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
+    def test_mark_positive_variable_request_failure_non_existing_datapoint(self):
+        ''' mark_positive_variable_request should fail if datapoint does not exist '''
+        psp = self.passport
+        pid=uuid.uuid4().hex
+        sequence='23423234565432345678'
+        position=1
+        length=1
+        response=datapointapi.mark_positive_variable_request(passport=psp, pid=pid, sequence=sequence, position=position, length=length)
+        self.assertEqual(response.error, autherrors.E_ARA_AMPOSV_RE.value)
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+
+    def test_mark_positive_variable_request_success(self):
+        ''' mark_positive_variable_request should succeed '''
+        psp = self.passport
+        did=uuid.UUID(self.agents[0]['dids'][0])
+        ds_content='x: 23, y: 45'
+        ds_date=timeuuid.uuid1()
+        sequence=timeuuid.get_custom_sequence(ds_date)
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=did, date=ds_date))
+        position=3
+        length=2
+        datapoint_uri='positive_datapoint_x'
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did.hex, sequence=sequence, position=position, length=length, datapointname=datapoint_uri)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msgs=response.unrouted_messages
+        pid = None
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+                    pid = msg.pid
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        response=datapointapi.mark_positive_variable_request(passport=psp, pid=pid.hex, sequence=sequence, position=position, length=length)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msgs=response.unrouted_messages
+        self.assertEqual(len(msgs),1)
+        self.assertEqual(msgs[0]._type_, messages.Messages.POS_VAR_MESSAGE)
+
     def test_mark_negative_variable_request_failure_invalid_passport(self):
         ''' mark_negative_variable_request should fail if passport is invalid '''
         passports=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
@@ -538,6 +583,50 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         for length in lengths:
             response=datapointapi.mark_negative_variable_request(passport=psp, pid=pid, sequence=sequence, position=position, length=length)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_mark_negative_variable_request_failure_non_existing_datapoint(self):
+        ''' mark_negative_variable_request should fail if datapoint does not exist '''
+        psp = self.passport
+        pid=uuid.uuid4().hex
+        sequence='23423234565432345678'
+        position=1
+        length=1
+        response=datapointapi.mark_negative_variable_request(passport=psp, pid=pid, sequence=sequence, position=position, length=length)
+        self.assertEqual(response.error, autherrors.E_ARA_AMNEGV_RE.value)
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+
+    def test_mark_negative_variable_request_success(self):
+        ''' mark_negative_variable_request should succeed '''
+        psp = self.passport
+        did=uuid.UUID(self.agents[0]['dids'][0])
+        ds_content='x: 23, y: 45'
+        ds_date=timeuuid.uuid1()
+        sequence=timeuuid.get_custom_sequence(ds_date)
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=did, date=ds_date))
+        position=3
+        length=2
+        datapoint_uri='negative_datapoint_x'
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did.hex, sequence=sequence, position=position, length=length, datapointname=datapoint_uri)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msgs=response.unrouted_messages
+        pid = None
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+                    pid = msg.pid
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        response=datapointapi.mark_negative_variable_request(passport=psp, pid=pid.hex, sequence=sequence, position=position, length=length)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
+        msgs=response.unrouted_messages
+        self.assertEqual(len(msgs),1)
+        self.assertEqual(msgs[0]._type_, messages.Messages.NEG_VAR_MESSAGE)
 
     def test_get_datapoint_data_request_failure_invalid_passport(self):
         ''' get_datapoint_data_request should fail if passport is invalid '''

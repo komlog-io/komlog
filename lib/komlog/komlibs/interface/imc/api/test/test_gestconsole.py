@@ -9,6 +9,7 @@ from komlog.komlibs.interface.imc import status
 from komlog.komlibs.interface.imc.errors import Errors
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
@@ -16,7 +17,10 @@ from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.widget import api as widgetapi
 from komlog.komlibs.gestaccount.dashboard import api as dashboardapi
 from komlog.komlibs.graph.relations import vertex
+from komlog.komcass.api import datapoint as cassapidatapoint
 
+
+pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
 
 class InterfaceImcApiGestconsoleTest(unittest.TestCase):
     ''' komlibs.interface.imc.api.gestconsole tests '''
@@ -42,7 +46,6 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname=username+'_agent'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='v'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         uid=user['uid']
@@ -84,6 +87,138 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
                 retrieved_messages[msg._type_.name]=1
         self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
 
+    def test_process_message_MONVAR_success_ds_had_already_others_datapoints(self):
+        ''' process_message_MONVAR should succeed and generate all necesary messages if others datapoint already existed previously'''
+        username='test_process_message_monvar_success_ds_had_already_others_datapoints'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri) 
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        ds_content='x: 23, y: 45'
+        ds_date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=ds_date))
+        position=3
+        length=2
+        datapoint_uri='datapoint_x'
+        message=messages.MonitorVariableMessage(uid=uid, did=did, date=ds_date, position=position, length=length, datapointname=datapoint_uri)
+        response=gestconsole.process_message_MONVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.MON_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertNotEqual(response.unrouted_messages, [])
+        self.assertTrue(len(response.unrouted_messages) == 6)
+        expected_messages={
+            messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
+            messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
+            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
+            messages.Messages.USER_EVENT_MESSAGE.name:1,
+            messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
+            messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
+        }
+        retrieved_messages={}
+        msgs=response.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg._type_.name]+=1
+            except KeyError:
+                retrieved_messages[msg._type_.name]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        #now monitor a new datapoint associated to the same did
+        position=10
+        length=2
+        datapoint_uri='datapoint_y'
+        message=messages.MonitorVariableMessage(uid=uid, did=did, date=ds_date, position=position, length=length, datapointname=datapoint_uri)
+        response=gestconsole.process_message_MONVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.MON_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertNotEqual(response.unrouted_messages, [])
+        #the main change is that two FILLDP messages are generated
+        self.assertTrue(len(response.unrouted_messages) == 7)
+        expected_messages={
+            messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
+            messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
+            messages.Messages.FILL_DATAPOINT_MESSAGE.name:2,
+            messages.Messages.USER_EVENT_MESSAGE.name:1,
+            messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
+            messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
+        }
+        retrieved_messages={}
+        msgs=response.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg._type_.name]+=1
+            except KeyError:
+                retrieved_messages[msg._type_.name]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+
+    def test_process_message_MONVAR_failure_message_requested_twice(self):
+        ''' process_message_MONVAR should fail if message is requested twice '''
+        username='test_process_message_monvar_failure_message_requested_twice'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri) 
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        ds_content='x: 23, y: 45'
+        ds_date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=ds_date))
+        position=3
+        length=2
+        datapoint_uri='datapoint_x'
+        message=messages.MonitorVariableMessage(uid=uid, did=did, date=ds_date, position=position, length=length, datapointname=datapoint_uri)
+        response=gestconsole.process_message_MONVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.MON_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertNotEqual(response.unrouted_messages, [])
+        self.assertTrue(len(response.unrouted_messages) == 6)
+        expected_messages={
+            messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
+            messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
+            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
+            messages.Messages.USER_EVENT_MESSAGE.name:1,
+            messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
+            messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
+        }
+        retrieved_messages={}
+        msgs=response.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg._type_.name]+=1
+            except KeyError:
+                retrieved_messages[msg._type_.name]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        message=messages.MonitorVariableMessage(uid=uid, did=did, date=ds_date, position=position, length=length, datapointname=datapoint_uri)
+        response=gestconsole.process_message_MONVAR(message=message)
+        self.assertEqual(response.error, gesterrors.E_GPA_CRD_AAD)
+        self.assertEqual(response.status, status.IMC_STATUS_INTERNAL_ERROR)
+        self.assertEqual(response.routed_messages, {})
+        self.assertEqual(response.unrouted_messages, [])
+
     def test_process_message_NEGVAR_failure_non_existent_datapoint(self):
         ''' process_message_NEGVAR should fail if datapoint does not exists '''
         pid=uuid.uuid4()
@@ -96,6 +231,156 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.unrouted_messages,[])
         self.assertEqual(response.routed_messages,{})
 
+    def test_process_message_NEGVAR_success(self):
+        ''' process_message_NEGVAR should succeed '''
+        username='test_process_message_negvar_success'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri) 
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        ds_content='x: 23, y: 45'
+        ds_date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=ds_date))
+        position=3
+        length=2
+        datapoint_uri='datapoint_x'
+        message=messages.MonitorVariableMessage(uid=uid, did=did, date=ds_date, position=position, length=length, datapointname=datapoint_uri)
+        response=gestconsole.process_message_MONVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.MON_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertNotEqual(response.unrouted_messages, [])
+        self.assertTrue(len(response.unrouted_messages) == 6)
+        expected_messages={
+            messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
+            messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
+            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
+            messages.Messages.USER_EVENT_MESSAGE.name:1,
+            messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
+            messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
+        }
+        retrieved_messages={}
+        pid = None
+        msgs=response.unrouted_messages
+        for msg in msgs:
+            if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+                pid = msg.pid
+            try:
+                retrieved_messages[msg._type_.name]+=1
+            except KeyError:
+                retrieved_messages[msg._type_.name]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        message=messages.NegativeVariableMessage(pid=pid, date=ds_date, position=position, length=length)
+        response=gestconsole.process_message_NEGVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.NEG_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertNotEqual(response.unrouted_messages, [])
+        self.assertTrue(len(response.unrouted_messages) == 1)
+        expected_messages={
+            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
+        }
+        retrieved_messages={}
+        msgs=response.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg._type_.name]+=1
+            except KeyError:
+                retrieved_messages[msg._type_.name]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+
+    def test_process_message_NEGVAR_success_requested_twice(self):
+        ''' process_message_NEGVAR should succeed, and if requested twice, dont request FILLDP if now new info is added '''
+        username='test_process_message_negvar_success_requested_twice'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri) 
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        ds_content='x: 23, y: 45'
+        ds_date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=ds_date))
+        position=3
+        length=2
+        datapoint_uri='datapoint_x'
+        message=messages.MonitorVariableMessage(uid=uid, did=did, date=ds_date, position=position, length=length, datapointname=datapoint_uri)
+        response=gestconsole.process_message_MONVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.MON_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertNotEqual(response.unrouted_messages, [])
+        self.assertTrue(len(response.unrouted_messages) == 6)
+        expected_messages={
+            messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
+            messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
+            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
+            messages.Messages.USER_EVENT_MESSAGE.name:1,
+            messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
+            messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
+        }
+        retrieved_messages={}
+        pid = None
+        msgs=response.unrouted_messages
+        for msg in msgs:
+            if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+                pid = msg.pid
+            try:
+                retrieved_messages[msg._type_.name]+=1
+            except KeyError:
+                retrieved_messages[msg._type_.name]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        message=messages.NegativeVariableMessage(pid=pid, date=ds_date, position=position, length=length)
+        response=gestconsole.process_message_NEGVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.NEG_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertNotEqual(response.unrouted_messages, [])
+        self.assertTrue(len(response.unrouted_messages) == 1)
+        expected_messages={
+            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
+        }
+        retrieved_messages={}
+        msgs=response.unrouted_messages
+        for msg in msgs:
+            try:
+                retrieved_messages[msg._type_.name]+=1
+            except KeyError:
+                retrieved_messages[msg._type_.name]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        message=messages.NegativeVariableMessage(pid=pid, date=ds_date, position=position, length=length)
+        response=gestconsole.process_message_NEGVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.NEG_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertEqual(response.unrouted_messages, [])
+
     def test_process_message_POSVAR_failure_non_existent_datapoint(self):
         ''' process_message_POSVAR should fail if datapoint does not exists '''
         pid=uuid.uuid4()
@@ -107,6 +392,134 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
         self.assertEqual(response.unrouted_messages,[])
         self.assertEqual(response.routed_messages,{})
+
+    def test_process_message_POSVAR_success_requested_twice(self):
+        ''' process_message_POSVAR should succeed, and if requested twice, dont request FILLDP if now new info is added '''
+        username='test_process_message_posvar_success_requested_twice'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri) 
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        ds_content='x: 23, y: 45'
+        ds_date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=ds_date))
+        position=3
+        length=2
+        datapoint_uri='datapoint_x'
+        message=messages.MonitorVariableMessage(uid=uid, did=did, date=ds_date, position=position, length=length, datapointname=datapoint_uri)
+        response=gestconsole.process_message_MONVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.MON_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertNotEqual(response.unrouted_messages, [])
+        self.assertTrue(len(response.unrouted_messages) == 6)
+        expected_messages={
+            messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
+            messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
+            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
+            messages.Messages.USER_EVENT_MESSAGE.name:1,
+            messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
+            messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
+        }
+        retrieved_messages={}
+        pid = None
+        msgs=response.unrouted_messages
+        for msg in msgs:
+            if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+                pid = msg.pid
+            try:
+                retrieved_messages[msg._type_.name]+=1
+            except KeyError:
+                retrieved_messages[msg._type_.name]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        message=messages.PositiveVariableMessage(pid=pid, date=ds_date, position=position, length=length)
+        #in this case, launching posvar after monvar is the same as launching posvar twice
+        response=gestconsole.process_message_POSVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.POS_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertEqual(response.unrouted_messages, [])
+
+    def test_process_message_POSVAR_error_in_positive_identification(self):
+        ''' process_message_POSVAR should realize the dtree could not be generated '''
+        username='test_process_message_posvar_error_in_positive_identification'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri) 
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        ds_content='x: 23, y: 45'
+        ds_date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=ds_date))
+        position=3
+        length=2
+        datapoint_uri='datapoint_x'
+        message=messages.MonitorVariableMessage(uid=uid, did=did, date=ds_date, position=position, length=length, datapointname=datapoint_uri)
+        response=gestconsole.process_message_MONVAR(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.MON_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertNotEqual(response.unrouted_messages, [])
+        self.assertTrue(len(response.unrouted_messages) == 6)
+        expected_messages={
+            messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
+            messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
+            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
+            messages.Messages.USER_EVENT_MESSAGE.name:1,
+            messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
+            messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
+        }
+        retrieved_messages={}
+        pid = None
+        msgs=response.unrouted_messages
+        for msg in msgs:
+            if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+                pid = msg.pid
+            try:
+                retrieved_messages[msg._type_.name]+=1
+            except KeyError:
+                retrieved_messages[msg._type_.name]=1
+        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        #in this case, we say x datapoint is 45, introducing an error
+        ds_content='x: 23, y: 45'
+        ds_date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=ds_date))
+        position=10
+        length=2
+        message=messages.PositiveVariableMessage(pid=pid, date=ds_date, position=position, length=length)
+        response=gestconsole.process_message_POSVAR(message=message)
+        pid_stats = cassapidatapoint.get_datapoint_stats(pid=pid)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.POS_VAR_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        #in the future a new message will be generated to analize the error and generate a notification for the user to be able to identify again the right variable
+        self.assertEqual(response.unrouted_messages, [])
 
     def test_process_message_NEWDSW_failure_non_existent_user(self):
         ''' process_message_NEWDSW should fail if user does not exist '''
@@ -153,7 +566,6 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_process_message_delagent_success'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         aid=agent['aid']
@@ -183,7 +595,6 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_process_message_delds_success'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         aid=agent['aid']
@@ -215,7 +626,6 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         email=username+'@komlog.org'
         user=userapi.create_user(username=username, password=password, email=email)
         agentname='test_process_message_delds_success'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='Test Version'
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         aid=agent['aid']

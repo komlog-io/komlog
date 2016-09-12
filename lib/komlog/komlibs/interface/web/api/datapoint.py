@@ -138,19 +138,11 @@ def mark_positive_variable_request(passport, pid, sequence, position, length):
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_MPVR_IP)
     pid=uuid.UUID(pid)
-    authorization.authorize_request(request=Requests.MARK_POSITIVE_VARIABLE,passport=passport,pid=pid)
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
-    datapoints_to_update=datapointapi.mark_positive_variable(pid=pid, date=date, position=position, length=length)
-    if datapoints_to_update!=None:
-        msgs=[]
-        for datapoint in datapoints_to_update:
-            msgs.append(messages.FillDatapointMessage(pid=pid, date=date))
-        resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
-        for msg in msgs:
-            resp.add_message(msg)
-        return resp
-    else:
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, errors=Errors.UNKNOWN)
+    authorization.authorize_request(request=Requests.MARK_POSITIVE_VARIABLE,passport=passport,pid=pid)
+    resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp.add_message(messages.PositiveVariableMessage(pid=pid, date=date, position=position, length=length))
+    return resp
 
 @exceptions.ExceptionHandler
 def mark_negative_variable_request(passport, pid, sequence, position, length):
@@ -165,19 +157,11 @@ def mark_negative_variable_request(passport, pid, sequence, position, length):
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_MNVR_IP)
     pid=uuid.UUID(pid)
-    authorization.authorize_request(request=Requests.MARK_NEGATIVE_VARIABLE,passport=passport,pid=pid)
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
-    datapoints_to_update=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
-    if datapoints_to_update!=None:
-        msgs=[]
-        for datapoint in datapoints_to_update:
-            msgs.append(messages.FillDatapointMessage(pid=pid, date=date))
-        resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
-        for msg in msgs:
-            resp.add_message(msg)
-        return resp
-    else:
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, errors=Errors.UNKNOWN)
+    authorization.authorize_request(request=Requests.MARK_NEGATIVE_VARIABLE,passport=passport,pid=pid)
+    resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
+    resp.add_message(messages.NegativeVariableMessage(pid=pid, date=date, position=position, length=length))
+    return resp
 
 @exceptions.ExceptionHandler
 def delete_datapoint_request(passport, pid):

@@ -69,9 +69,10 @@ DAT_DATAPOINT_DTREE_NEGATIVES='''
     CREATE TABLE dat_datapoint_dtree_negatives (
         pid uuid,
         date timeuuid,
-        coordinates map<int,int>,
-        PRIMARY KEY (pid,date)
-    ) WITH CLUSTERING ORDER BY (date desc);
+        position int,
+        length int,
+        PRIMARY KEY (pid,date,position)
+    ) WITH CLUSTERING ORDER BY (date desc,position asc);
 '''
 
 MST_DATAPOINT_HOOKS='''

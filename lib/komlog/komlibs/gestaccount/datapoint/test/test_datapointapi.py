@@ -421,13 +421,59 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(datapoint_config['color'],new_color)
         self.assertEqual(datapoint_config['datapointname'],new_datapointname)
 
+    def test_mark_negative_variable_failure_invalid_pid(self):
+        ''' mark_negative_variable should fail if pid is not valid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        date=uuid.uuid1()
+        position=1
+        length=1
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.mark_negative_variable(pid=pid, date=date, position=position, length=length)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_IP)
+
+    def test_mark_negative_variable_failure_invalid_date(self):
+        ''' mark_negative_variable should fail if date is not valid '''
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        pid=uuid.uuid4()
+        position=1
+        length=1
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.mark_negative_variable(pid=pid, date=date, position=position, length=length)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_IDT)
+
+    def test_mark_negative_variable_failure_invalid_position(self):
+        ''' mark_negative_variable should fail if position is not valid '''
+        positions=['asdfasd',-234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        pid=uuid.uuid4()
+        date=uuid.uuid1()
+        length=1
+        for position in positions:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.mark_negative_variable(pid=pid, date=date, position=position, length=length)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_IPO)
+
+    def test_mark_negative_variable_failure_invalid_length(self):
+        ''' mark_negative_variable should fail if length is not valid '''
+        lenghts=['asdfasd',-234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        date=uuid.uuid1()
+        pid=uuid.uuid4()
+        position=1
+        for length in lenghts:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.mark_negative_variable(pid=pid, date=date, position=position, length=length)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_IL)
+
     def test_mark_negative_variable_failure_non_existent_datapoint(self):
         ''' mark_negative_variable should fail if datapoint does not exist '''
         pid=uuid.uuid4()
         date=timeuuid.uuid1()
         position=1
         length=1
-        self.assertRaises(exceptions.DatapointNotFoundException, api.mark_negative_variable, pid=pid, date=date, position=position, length=length)
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            api.mark_negative_variable(pid=pid, date=date, position=position, length=length)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_DNF)
 
     def test_mark_negative_variable_failure_no_variables_in_datasource_map(self):
         ''' mark_negative_variable should fail if datasource map has no variables '''
@@ -437,7 +483,9 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         date=timeuuid.uuid1()
         position=1
         length=1
-        self.assertRaises(exceptions.DatasourceMapNotFoundException, api.mark_negative_variable, pid=datapoint['pid'], date=date, position=position, length=length)
+        with self.assertRaises(exceptions.DatasourceMapNotFoundException) as cm:
+            api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_DMNF)
 
     def test_mark_negative_variable_failure_invalid_variable_length(self):
         ''' mark_negative_variable should fail if variable length does not match with the value in db'''
@@ -451,7 +499,9 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         #first var should be a position 45 and length 2
         position=45
         length=1
-        self.assertRaises(exceptions.DatasourceVariableNotFoundException, api.mark_negative_variable, pid=datapoint['pid'], date=date, position=position, length=length)
+        with self.assertRaises(exceptions.DatasourceVariableNotFoundException) as cm:
+            api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_VLNF)
 
     def test_mark_negative_variable_failure_invalid_variable_position(self):
         ''' mark_negative_variable should fail if variable position does not match with the value in db'''
@@ -465,7 +515,9 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         #first var should be a position 45 and length 2
         position=46
         length=2
-        self.assertRaises(exceptions.DatasourceVariableNotFoundException, api.mark_negative_variable, pid=datapoint['pid'], date=date, position=position, length=length)
+        with self.assertRaises(exceptions.DatasourceVariableNotFoundException) as cm:
+            api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_VPNF)
 
     def test_mark_negative_variable_failure_unsupported_operation(self):
         ''' mark_negative_variable should fail if the datapoint is not associated
@@ -496,8 +548,55 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         #first var should be a position 45 and length 2
         position=45
         length=2
-        datapoints_to_update=api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        self.assertEqual(datapoints_to_update, [datapoint['pid'],])
+        mark_result=api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']]})
+        #the dtree should not be generated twice if no change detected
+        mark_result=api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[]})
+
+    def test_mark_positive_variable_failure_invalid_pid(self):
+        ''' mark_positive_variable should fail if pid is not valid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        date=uuid.uuid1()
+        position=1
+        length=1
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.mark_positive_variable(pid=pid, date=date, position=position, length=length)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MPV_IP)
+
+    def test_mark_positive_variable_failure_invalid_date(self):
+        ''' mark_positive_variable should fail if date is not valid '''
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        pid=uuid.uuid4()
+        position=1
+        length=1
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.mark_positive_variable(pid=pid, date=date, position=position, length=length)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MPV_IDT)
+
+    def test_mark_positive_variable_failure_invalid_position(self):
+        ''' mark_positive_variable should fail if position is not valid '''
+        positions=['asdfasd',-234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        pid=uuid.uuid4()
+        date=uuid.uuid1()
+        length=1
+        for position in positions:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.mark_positive_variable(pid=pid, date=date, position=position, length=length)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MPV_IPO)
+
+    def test_mark_positive_variable_failure_invalid_length(self):
+        ''' mark_positive_variable should fail if length is not valid '''
+        lenghts=['asdfasd',-234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        date=uuid.uuid1()
+        pid=uuid.uuid4()
+        position=1
+        for length in lenghts:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.mark_positive_variable(pid=pid, date=date, position=position, length=length)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MPV_IL)
 
     def test_mark_positive_variable_failure_non_existent_datapoint(self):
         ''' mark_positive_variable should fail if datapoint does not exist '''
@@ -505,45 +604,9 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         date=timeuuid.uuid1()
         position=1
         length=1
-        self.assertRaises(exceptions.DatapointNotFoundException, api.mark_positive_variable, pid=pid, date=date, position=position, length=length)
-
-    def test_mark_positive_variable_failure_no_variables_in_datasource_map(self):
-        ''' mark_positive_variable should fail if datasource map has no variables '''
-        did=self.datasource['did']
-        datapointname='test_mark_positive_variable_failure_no_variables_in_datasource_map'
-        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
-        date=timeuuid.uuid1()
-        position=1
-        length=1
-        self.assertRaises(exceptions.DatasourceMapNotFoundException, api.mark_positive_variable, pid=datapoint['pid'], date=date, position=position, length=length)
-
-    def test_mark_positive_variable_failure_invalid_variable_length(self):
-        ''' mark_positive_variable should fail if variable length does not match with the value in db'''
-        did=self.datasource['did']
-        datapointname='test_mark_positive_variable_failure_invalid_variable_length'
-        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
-        date=timeuuid.uuid1()
-        content='mark_positive_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
-        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
-        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
-        #first var should be a position 45 and length 2
-        position=45
-        length=1
-        self.assertRaises(exceptions.DatasourceVariableNotFoundException, api.mark_positive_variable, pid=datapoint['pid'], date=date, position=position, length=length)
-
-    def test_mark_positive_variable_failure_invalid_variable_position(self):
-        ''' mark_positive_variable should fail if variable position does not match with the value in db'''
-        did=self.datasource['did']
-        datapointname='test_mark_positive_variable_failure_invalid_variable_position'
-        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
-        date=timeuuid.uuid1()
-        content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
-        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
-        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
-        #first var should be a position 45 and length 2
-        position=46
-        length=2
-        self.assertRaises(exceptions.DatasourceVariableNotFoundException, api.mark_positive_variable, pid=datapoint['pid'], date=date, position=position, length=length)
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            api.mark_positive_variable(pid=pid, date=date, position=position, length=length)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MPV_DNF)
 
     def test_mark_positive_variable_failure_unsupported_operation(self):
         ''' mark_positive_variable should fail if the datapoint is not associated
@@ -562,6 +625,50 @@ class GestaccountDatapointApiTest(unittest.TestCase):
             api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
         self.assertEqual(cm.exception.error, Errors.E_GPA_MPV_DSNF)
 
+    def test_mark_positive_variable_failure_no_variables_in_datasource_map(self):
+        ''' mark_positive_variable should fail if datasource map has no variables '''
+        did=self.datasource['did']
+        datapointname='test_mark_positive_variable_failure_no_variables_in_datasource_map'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        position=1
+        length=1
+        with self.assertRaises(exceptions.DatasourceMapNotFoundException) as cm:
+            api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MPV_DMNF)
+
+    def test_mark_positive_variable_failure_invalid_variable_length(self):
+        ''' mark_positive_variable should fail if variable length does not match with the value in db'''
+        did=self.datasource['did']
+        datapointname='test_mark_positive_variable_failure_invalid_variable_length'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        content='mark_positive_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 45 and length 2
+        position=45
+        length=1
+        with self.assertRaises(exceptions.DatasourceVariableNotFoundException) as cm:
+            api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MPV_VLNF)
+
+    def test_mark_positive_variable_failure_invalid_variable_position(self):
+        ''' mark_positive_variable should fail if variable position does not match with the value in db'''
+        did=self.datasource['did']
+        datapointname='test_mark_positive_variable_failure_invalid_variable_position'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 45 and length 2
+        position=46
+        length=2
+        with self.assertRaises(exceptions.DatasourceVariableNotFoundException) as cm:
+            api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MPV_VPNF)
+
     def test_mark_positive_variable_success_no_other_datapoint_matched(self):
         ''' mark_positive_variable should succeed in this case, no other datapoint matched '''
         did=self.datasource['did']
@@ -574,7 +681,8 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         #first var should be a position 45 and length 2
         position=45
         length=2
-        self.assertTrue(api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length))
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']]})
 
     def test_mark_positive_variable_success_one_other_datapoint_matched(self):
         ''' mark_positive_variable should succeed if other datapoint matched '''
@@ -598,8 +706,58 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(dsdatapoints[0]['position'],position)
         datapointname='test_mark_positive_variable_success_one_other_datapoint_matched_2'
         datapoint2=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
-        dtp_to_update=api.mark_positive_variable(pid=datapoint2['pid'], date=date, position=position, length=length)
-        self.assertEqual(sorted(dtp_to_update),sorted([datapoint2['pid'],datapoint['pid']]))
+        mark_result=api.mark_positive_variable(pid=datapoint2['pid'], date=date, position=position, length=length)
+        self.assertEqual(sorted(mark_result['dtree_gen_success']),sorted([datapoint2['pid'],datapoint['pid']]))
+        self.assertIsNone(cassapidatapoint.get_datapoint_dtree_positive(pid=datapoint['pid'], date=date))
+        self.assertIsNotNone(cassapidatapoint.get_datapoint_dtree_negative(pid=datapoint['pid'], date=date, position=position))
+        self.assertIsNotNone(cassapidatapoint.get_datapoint_dtree_positive(pid=datapoint2['pid'], date=date))
+        self.assertIsNone(cassapidatapoint.get_datapoint_dtree_negative(pid=datapoint2['pid'], date=date, position=position))
+
+    def test_mark_positive_variable_failure_generating_dtree_ambiguous_positives(self):
+        ''' mark_positive_variable should fail generating dtree if ambigous information is found in positives and negatives of this datapoint '''
+        did=self.datasource['did']
+        datapointname='test_mark_positive_variable_failure_generating_dtree_ambiguous_positives'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        content='x: 1, y: 0'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first we say datapoint is x value
+        position=3
+        length=1
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']]})
+        date=timeuuid.uuid1()
+        content='x: 1, y: 0'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #now we say datapoint is y value
+        position=9
+        length=1
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[datapoint['pid']],'dtree_gen_success':[]})
+
+    def test_mark_missing_datapoint_failure_invalid_pid(self):
+        ''' mark_missing_datapoint should fail if pid is not valid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        date=uuid.uuid1()
+        position=1
+        length=1
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.mark_missing_datapoint(pid=pid, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MMDP_IP)
+
+    def test_mark_missing_datapoint_failure_invalid_date(self):
+        ''' mark_missing_datapoint should fail if date is not valid '''
+        dates=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1().hex,uuid.uuid4()]
+        pid=uuid.uuid4()
+        position=1
+        length=1
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.mark_missing_datapoint(pid=pid, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_MMDP_IDT)
 
     def test_mark_missing_datapoint_failure_non_existent_datapoint(self):
         ''' mark_missing_datapoint should fail if datapoint does not exist '''
@@ -610,18 +768,6 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
             api.mark_missing_datapoint(pid=pid, date=date)
         self.assertEqual(cm.exception.error, Errors.E_GPA_MMDP_DNF)
-
-    def test_mark_missing_datapoint_failure_no_variables_in_datasource_map(self):
-        ''' mark_missing_datapoint should fail if datasource map has no variables '''
-        did=self.datasource['did']
-        datapointname='test_mark_missing_datapoint_failure_no_variables_in_datasource_map'
-        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
-        date=timeuuid.uuid1()
-        position=1
-        length=1
-        with self.assertRaises(exceptions.DatasourceMapNotFoundException) as cm:
-            api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
-        self.assertEqual(cm.exception.error, Errors.E_GPA_MMDP_DMNF)
 
     def test_mark_missing_datapoint_failure_unsupported_operation(self):
         ''' mark_missing_datapoint should fail if the datapoint is not associated
@@ -637,6 +783,50 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
             api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
         self.assertEqual(cm.exception.error, Errors.E_GPA_MMDP_DSNF)
+
+    def test_mark_missing_datapoint_failure_no_variables_in_datasource_map(self):
+        ''' mark_missing_datapoint should fail if datasource map has no variables '''
+        did=self.datasource['did']
+        datapointname='test_mark_missing_datapoint_failure_no_variables_in_datasource_map'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        position=1
+        length=1
+        with self.assertRaises(exceptions.DatasourceMapNotFoundException) as cm:
+            api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MMDP_DMNF)
+
+    def test_mark_missing_datapoint_success(self):
+        ''' mark_missing_datapoint should succeed '''
+        did=self.datasource['did']
+        datapointname='test_mark_missing_datapoint_success'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        content='mark_missing_datapoint content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 45 and length 2
+        position=45
+        length=2
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']]})
+        positives=cassapidatapoint.get_datapoint_dtree_positives(pid=datapoint['pid'])
+        self.assertEqual(len(positives),1)
+        self.assertEqual(positives[0].pid,datapoint['pid'])
+        self.assertEqual(positives[0].date,date)
+        self.assertEqual(positives[0].position,position)
+        self.assertEqual(positives[0].length,length)
+        negatives=cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid'])
+        self.assertEqual(len(negatives),0)
+        mark_result=api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']]})
+        positives=cassapidatapoint.get_datapoint_dtree_positives(pid=datapoint['pid'])
+        self.assertEqual(len(positives),0)
+        negatives=cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid'])
+        self.assertEqual(len(negatives),3)
+        #if no info has been modified, dtree should not be recalculated
+        mark_result=api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[]})
 
     def test_generate_decision_tree_failure_invalid_pid(self):
         ''' generate_tree should fail if pid does not exists '''
@@ -691,7 +881,8 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         #first var should be a position 50 and length 2
         position=50
         length=2
-        self.assertEqual(api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length), [pid,])
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[pid]})
         self.assertTrue(api.generate_decision_tree(pid=pid))
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
         dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
@@ -702,6 +893,38 @@ class GestaccountDatapointApiTest(unittest.TestCase):
             variables_atts=textmanvar.get_variables_atts(text_hash)
             for var in variables_atts:
                 self.assertFalse(dtree.evaluate_row(var['atts'])) if var['text_pos']!=position else self.assertTrue(dtree.evaluate_row(var['atts']))
+
+    def test_generate_decision_tree_failure_error_in_generation(self):
+        ''' generate_decision_tree should fail if dtree generation fails '''
+        datasourcename='test_generate_decision_tree_failure_error_in_generation'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        datapointname='test_generate_decision_tree_success_datapoint'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        pid=datapoint['pid']
+        date=timeuuid.uuid1()
+        content='x: 1, y: 2'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #we say datapoint is x in this sample
+        position=3
+        length=1
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[pid]})
+        date=timeuuid.uuid1()
+        content='x: 1, y: 2'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #but now, we say datapoint is y
+        position=9
+        length=1
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        #error has arised already marking it positive
+        self.assertEqual(mark_result,{'dtree_gen_failed':[pid],'dtree_gen_success':[]})
+        #generating again fails
+        with self.assertRaises(exceptions.DatapointDTreeGenerationException) as cm:
+            api.generate_decision_tree(pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GDT_EGDT)
 
     def test_generate_inverse_decision_tree_failure_invalid_pid(self):
         ''' generate_decision_tree should fail if pid does not exists '''
@@ -760,7 +983,8 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         #first var should be a position 50 and length 2
         position=50
         length=2
-        self.assertEqual(api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length), [pid,])
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[pid]})
         self.assertTrue(api.generate_inverse_decision_tree(pid=pid))
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
         dtree_inv=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree_inv)

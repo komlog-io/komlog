@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 Created on 01/10/2014
 
@@ -73,7 +72,7 @@ def get_datapoint_dtree_positives(pid):
     return data
 
 @exceptions.ExceptionHandler
-def get_datapoint_dtree_positives_at(pid, date):
+def get_datapoint_dtree_positive(pid, date):
     row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINTDTREEPOSITIVES_B_PID_DATE,(pid,date))
     if not row:
         return None
@@ -81,8 +80,11 @@ def get_datapoint_dtree_positives_at(pid, date):
         return ormdatapoint.DatapointDtreePositives(**row[0])
 
 @exceptions.ExceptionHandler
-def get_datapoint_dtree_negatives(pid):
-    row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINTDTREENEGATIVES_B_PID,(pid,))
+def get_datapoint_dtree_negatives(pid, date=None):
+    if date != None:
+        row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINTDTREENEGATIVES_B_PID_DATE,(pid,date))
+    else:
+        row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINTDTREENEGATIVES_B_PID,(pid,))
     data=[]
     if row:
         for r in row:
@@ -90,7 +92,7 @@ def get_datapoint_dtree_negatives(pid):
     return data
 
 @exceptions.ExceptionHandler
-def get_datapoint_dtree_negatives_at(pid, date):
+def get_datapoint_dtree_negative(pid, date, position):
     row=connection.session.execute(stmtdatapoint.S_A_DATDATAPOINTDTREENEGATIVES_B_PID_DATE,(pid,date))
     if not row:
         return None
@@ -182,14 +184,60 @@ def set_datapoint_dtree_positive_at(pid, date, position, length):
     return True
 
 @exceptions.ExceptionHandler
+def update_datapoint_dtree_positive(pid, date, position, length):
+    ''' This function sets the specified row in database. It will return True only if the row 
+        is created or updated. In case the row already existed with the same values, the row will
+        not be updated and the function will return False.
+    '''
+    result = connection.session.execute(stmtdatapoint.I_A_DATDATAPOINTDTREEPOSITIVES_INE, (pid, date, position, length))
+    if result:
+        if result[0]['[applied]'] is False:
+            value = False
+            result = connection.session.execute(stmtdatapoint.U_POSITION_DATDATAPOINTDTREEPOSITIVES_B_PID_DATE_POSITION_INEQ, (position, pid, date, position))
+            if result:
+                value = result[0]['[applied]']
+            result = connection.session.execute(stmtdatapoint.U_LENGTH_DATDATAPOINTDTREEPOSITIVES_B_PID_DATE_LENGTH_INEQ, (length, pid, date, length))
+            if value == False and result:
+                value = result[0]['[applied]']
+            return value
+        else:
+            return True
+    return False
+
+@exceptions.ExceptionHandler
 def add_datapoint_dtree_negative_at(pid, date, position, length):
-    connection.session.execute(stmtdatapoint.U_R_DATDATAPOINTDTREENEGATIVES_B_POS_LEN_PID_DATE,(position, length, pid,date))
+    connection.session.execute(stmtdatapoint.U_LENGTH_DATDATAPOINTDTREENEGATIVES_B_PID_DATE_POSITION,(length, pid, date, position))
     return True
 
 @exceptions.ExceptionHandler
-def delete_datapoint_dtree_positive_at(pid, date):
-    connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREEPOSITIVES_B_PID_DATE,(pid, date))
-    return True
+def update_datapoint_dtree_negative(pid, date, position, length):
+    ''' This function sets the specified row in database. It will return True only if the row 
+        is created or updated. In case the row already existed with the same values, the row will
+        not be updated and the function will return False.
+    '''
+    result = connection.session.execute(stmtdatapoint.I_A_DATDATAPOINTDTREENEGATIVES_INE, (pid, date, position, length))
+    if result:
+        if result[0]['[applied]'] is False:
+            result = connection.session.execute(stmtdatapoint.U_LENGTH_DATDATAPOINTDTREENEGATIVES_B_PID_DATE_POSITION_LENGTH_INEQ, (length, pid, date, position, length))
+            if result:
+                return result[0]['[applied]']
+        else:
+            return True
+    return False
+
+@exceptions.ExceptionHandler
+def delete_datapoint_dtree_positive(pid, date, position=None):
+    ''' if position is None, the delete statement is executed if row exists and the function
+        returns True or False whether it was executed or not.
+        if position is not None, the delete statement is executed only if the row exists and
+        position is the value passed. The function returns if the statement was executed or not.
+    '''
+    if position != None:
+        result = connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREEPOSITIVES_B_PID_DATE_POSITION,(pid, date, position))
+        return result[0]['[applied]'] if result else False
+    else:
+        result = connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREEPOSITIVES_B_PID_DATE_IE,(pid, date))
+        return result[0]['[applied]'] if result else False
 
 @exceptions.ExceptionHandler
 def delete_datapoint_dtree_positives(pid):
@@ -197,18 +245,19 @@ def delete_datapoint_dtree_positives(pid):
     return True
 
 @exceptions.ExceptionHandler
-def delete_datapoint_dtree_negatives_at(pid, date):
-    connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREENEGATIVES_B_PID_DATE,(pid, date))
-    return True
+def delete_datapoint_dtree_negative(pid, date, position):
+    ''' the delete statement is executed only if row exists. The function returns whether the
+        delete statement was executed or not.
+    '''
+    result = connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREENEGATIVES_B_PID_DATE_POSITION_IE,(pid, date, position))
+    return result[0]['[applied]'] if result else False
 
 @exceptions.ExceptionHandler
-def delete_datapoint_dtree_negative_at(pid, date, position):
-    connection.session.execute(stmtdatapoint.D_R_DATDATAPOINTDTREENEGATIVES_B_POS_PID_DATE,(position, pid, date))
-    return True
-
-@exceptions.ExceptionHandler
-def delete_datapoint_dtree_negatives(pid):
-    connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREENEGATIVES_B_PID,(pid,))
+def delete_datapoint_dtree_negatives(pid, date=None):
+    if date != None:
+        connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREENEGATIVES_B_PID_DATE,(pid, date))
+    else:
+        connection.session.execute(stmtdatapoint.D_A_DATDATAPOINTDTREENEGATIVES_B_PID,(pid,))
     return True
 
 @exceptions.ExceptionHandler

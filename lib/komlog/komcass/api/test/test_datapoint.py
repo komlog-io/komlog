@@ -144,8 +144,8 @@ class KomcassApiDatapointTest(unittest.TestCase):
         self.assertTrue(isinstance(datapoint_dtree_positives,list))
         self.assertEqual(len(datapoint_dtree_positives),0)
 
-    def test_get_datapoint_dtree_positives_at_existing_pid_one_positive(self):
-        ''' get_datapoint_dtree_positives_at should succeed if we pass an existing pid '''
+    def test_get_datapoint_dtree_positive_existing_pid_one_positive(self):
+        ''' get_datapoint_dtree_positive should succeed if we pass an existing pid '''
         pid=uuid.uuid4()
         date=timeuuid.uuid1()
         position=0
@@ -155,12 +155,15 @@ class KomcassApiDatapointTest(unittest.TestCase):
         position=45
         length=1
         datapointapi.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length)
-        datapoint_dtree_positives=datapointapi.get_datapoint_dtree_positives_at(pid=pid, date=date)
-        self.assertTrue(isinstance(datapoint_dtree_positives,ormdatapoint.DatapointDtreePositives))
-        self.assertEqual(datapoint_dtree_positives.pid, pid)
+        datapoint_dtree_positive=datapointapi.get_datapoint_dtree_positive(pid=pid, date=date)
+        self.assertTrue(isinstance(datapoint_dtree_positive,ormdatapoint.DatapointDtreePositives))
+        self.assertEqual(datapoint_dtree_positive.pid, pid)
+        self.assertEqual(datapoint_dtree_positive.date, date)
+        self.assertEqual(datapoint_dtree_positive.position, position)
+        self.assertEqual(datapoint_dtree_positive.length, length)
 
-    def test_get_datapoint_dtree_positives_at_existing_pid_no_positive(self):
-        ''' get_datapoint_dtree_positives_at should succeed if we pass an existing pid, but return None if no positive is found at that date'''
+    def test_get_datapoint_dtree_positive_existing_pid_no_positive(self):
+        ''' get_datapoint_dtree_positive should succeed if we pass an existing pid, but return None if no positive is found at that date'''
         pid=uuid.uuid4()
         date=timeuuid.uuid1()
         position=0
@@ -171,43 +174,73 @@ class KomcassApiDatapointTest(unittest.TestCase):
         length=1
         datapointapi.set_datapoint_dtree_positive_at(pid=pid, date=date, position=position, length=length)
         date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-1200)
-        datapoint_dtree_positives=datapointapi.get_datapoint_dtree_positives_at(pid=pid, date=date)
-        self.assertIsNone(datapoint_dtree_positives)
+        datapoint_dtree_positive=datapointapi.get_datapoint_dtree_positive(pid=pid, date=date)
+        self.assertIsNone(datapoint_dtree_positive)
 
-    def test_get_datapoint_dtree_positives_non_existing_pid(self):
-        ''' get_datapoint_dtree_positives_at should return None if we pass a non existing pid '''
+    def test_get_datapoint_dtree_positive_non_existing_pid(self):
+        ''' get_datapoint_dtree_positive should return None if we pass a non existing pid '''
         pid=uuid.uuid4()
         date=timeuuid.uuid1()
-        datapoint_dtree_positives=datapointapi.get_datapoint_dtree_positives_at(pid=pid, date=date)
-        self.assertIsNone(datapoint_dtree_positives)
+        datapoint_dtree_positive=datapointapi.get_datapoint_dtree_positive(pid=pid, date=date)
+        self.assertIsNone(datapoint_dtree_positive)
 
-    def test_get_datapoint_dtree_negatives_existing_pid(self):
+    def test_get_datapoint_dtree_negatives_only_pid_existing_rows(self):
         ''' get_datapoint_dtree_negatives should succeed if we pass an existing pid '''
         pid=uuid.uuid4()
-        date=timeuuid.uuid1()
-        position=0
-        length=1
-        datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
-        datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position+10, length=length)
-        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-600)
-        position=45
-        length=1
-        datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
+        for i in range(1,1000):
+            date=timeuuid.uuid1()
+            position=i
+            length=i
+            datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
         datapoint_dtree_negatives=datapointapi.get_datapoint_dtree_negatives(pid=pid)
         self.assertTrue(isinstance(datapoint_dtree_negatives,list))
-        self.assertEqual(len(datapoint_dtree_negatives),2)
+        self.assertEqual(len(datapoint_dtree_negatives),999)
         for negative in datapoint_dtree_negatives:
             self.assertTrue(isinstance(negative, ormdatapoint.DatapointDtreeNegatives))
 
-    def test_get_datapoint_dtree_negatives_non_existing_pid(self):
+    def test_get_datapoint_dtree_negatives_only_pid_non_existing_rows(self):
         ''' get_datapoint_dtree_negatives should return an empty list if we pass a non existing pid '''
         pid=uuid.uuid4()
         datapoint_dtree_negatives=datapointapi.get_datapoint_dtree_negatives(pid=pid)
         self.assertTrue(isinstance(datapoint_dtree_negatives,list))
         self.assertEqual(len(datapoint_dtree_negatives),0)
 
-    def test_get_datapoint_dtree_negatives_at_existing_pid_one_negative(self):
-        ''' get_datapoint_dtree_negatives_at should succeed if we pass an existing pid '''
+    def test_get_datapoint_dtree_negatives_pid_and_date_existing_rows(self):
+        ''' get_datapoint_dtree_negatives should succeed if we pass an existing pid and date '''
+        pid=uuid.uuid4()
+        for i in range(1,100):
+            date=timeuuid.uuid1()
+            position=i
+            length=i
+            datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
+        #insert 999 rows for the last date
+        for i in range(1,100):
+            position=i
+            length=i
+            datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
+        all_negatives=datapointapi.get_datapoint_dtree_negatives(pid=pid)
+        self.assertTrue(isinstance(all_negatives,list))
+        self.assertEqual(len(all_negatives),197)
+        success=0
+        for negative in all_negatives:
+            more_negatives=datapointapi.get_datapoint_dtree_negatives(pid=pid, date=negative.date)
+            if more_negatives[0].date == date:
+                self.assertTrue(len(more_negatives),99)
+                success+=1
+            else:
+                self.assertTrue(len(more_negatives),1)
+        self.assertEqual(success, 99)
+
+    def test_get_datapoint_dtree_negatives_pid_and_date_non_existing_rows(self):
+        ''' get_datapoint_dtree_negatives should return an empty list if we pass a non existing pid '''
+        pid=uuid.uuid4()
+        date=uuid.uuid1()
+        datapoint_dtree_negatives=datapointapi.get_datapoint_dtree_negatives(pid=pid, date=date)
+        self.assertTrue(isinstance(datapoint_dtree_negatives,list))
+        self.assertEqual(len(datapoint_dtree_negatives),0)
+
+    def test_get_datapoint_dtree_negativeexisting_row(self):
+        ''' get_datapoint_dtree_negatives_at should succeed if we pass an existing row '''
         pid=uuid.uuid4()
         date=timeuuid.uuid1()
         position=0
@@ -218,32 +251,20 @@ class KomcassApiDatapointTest(unittest.TestCase):
         length=1
         datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
         datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position+4, length=length)
-        datapoint_dtree_negatives=datapointapi.get_datapoint_dtree_negatives_at(pid=pid, date=date)
-        self.assertTrue(isinstance(datapoint_dtree_negatives,ormdatapoint.DatapointDtreeNegatives))
-        self.assertEqual(datapoint_dtree_negatives.pid, pid)
-        self.assertEqual(datapoint_dtree_negatives.coordinates,{position:length,position+4:length})
+        datapoint_dtree_negative=datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position)
+        self.assertTrue(isinstance(datapoint_dtree_negative,ormdatapoint.DatapointDtreeNegatives))
+        self.assertEqual(datapoint_dtree_negative.pid, pid)
+        self.assertEqual(datapoint_dtree_negative.date, date)
+        self.assertEqual(datapoint_dtree_negative.position, position)
+        self.assertEqual(datapoint_dtree_negative.length, length)
 
-    def test_get_datapoint_dtree_negatives_at_existing_pid_no_negatives(self):
-        ''' get_datapoint_dtree_negatives_at should succeed if we pass an existing pid, but return None if no positive is found at that date'''
-        pid=uuid.uuid4()
-        date=timeuuid.uuid1()
-        position=0
-        length=1
-        datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
-        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-600)
-        position=45
-        length=1
-        datapointapi.add_datapoint_dtree_negative_at(pid=pid, date=date, position=position, length=length)
-        date=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(date)-1200)
-        datapoint_dtree_negatives=datapointapi.get_datapoint_dtree_negatives_at(pid=pid, date=date)
-        self.assertIsNone(datapoint_dtree_negatives)
-
-    def test_get_datapoint_dtree_negatives_non_existing_pid(self):
+    def test_get_datapoint_dtree_negative_non_existing_row(self):
         ''' get_datapoint_dtree_negatives_at should return None if we pass a non existing pid '''
         pid=uuid.uuid4()
         date=timeuuid.uuid1()
-        datapoint_dtree_negatives=datapointapi.get_datapoint_dtree_negatives_at(pid=pid, date=date)
-        self.assertIsNone(datapoint_dtree_negatives)
+        position=0
+        datapoint_dtree_negative=datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position)
+        self.assertIsNone(datapoint_dtree_negative)
 
     def test_new_datapoint_no_datapoint_object(self):
         ''' new_datapoint should fail if no datapoint object is passed '''
@@ -404,6 +425,69 @@ class KomcassApiDatapointTest(unittest.TestCase):
         length=1
         self.assertTrue(datapointapi.set_datapoint_dtree_positive_at(pid=pid,date=date,position=position,length=length))
 
+    def test_update_datapoint_dtree_positive_success_did_not_exist_previously(self):
+        ''' update_datapoint_dtree_positive should succeed and insert the row if it does not exists
+            previously '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        position=0
+        length=1
+        self.assertTrue(datapointapi.update_datapoint_dtree_positive(pid=pid,date=date,position=position,length=length))
+        dtreepositive=datapointapi.get_datapoint_dtree_positive(pid=pid, date=date)
+        self.assertIsNotNone(dtreepositive.pid, pid)
+        self.assertIsNotNone(dtreepositive.date, date)
+        self.assertIsNotNone(dtreepositive.position, position)
+        self.assertIsNotNone(dtreepositive.length, length)
+
+    def test_update_datapoint_dtree_positive_success_did_exist_previously(self):
+        ''' update_datapoint_dtree_positive should succeed and update the row if it was different '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        position=0
+        length=1
+        self.assertTrue(datapointapi.update_datapoint_dtree_positive(pid=pid,date=date,position=position,length=length))
+        dtreepositive=datapointapi.get_datapoint_dtree_positive(pid=pid, date=date)
+        self.assertIsNotNone(dtreepositive.pid, pid)
+        self.assertIsNotNone(dtreepositive.date, date)
+        self.assertIsNotNone(dtreepositive.position, position)
+        self.assertIsNotNone(dtreepositive.length, length)
+        position = 1
+        self.assertTrue(datapointapi.update_datapoint_dtree_positive(pid=pid,date=date,position=position,length=length))
+        dtreepositive=datapointapi.get_datapoint_dtree_positive(pid=pid, date=date)
+        self.assertIsNotNone(dtreepositive.pid, pid)
+        self.assertIsNotNone(dtreepositive.date, date)
+        self.assertIsNotNone(dtreepositive.position, position)
+        self.assertIsNotNone(dtreepositive.length, length)
+        length = 2
+        self.assertTrue(datapointapi.update_datapoint_dtree_positive(pid=pid,date=date,position=position,length=length))
+        dtreepositive=datapointapi.get_datapoint_dtree_positive(pid=pid, date=date)
+        self.assertIsNotNone(dtreepositive.pid, pid)
+        self.assertIsNotNone(dtreepositive.date, date)
+        self.assertIsNotNone(dtreepositive.position, position)
+        self.assertIsNotNone(dtreepositive.length, length)
+        position = 3
+        length = 4
+        self.assertTrue(datapointapi.update_datapoint_dtree_positive(pid=pid,date=date,position=position,length=length))
+        dtreepositive=datapointapi.get_datapoint_dtree_positive(pid=pid, date=date)
+        self.assertIsNotNone(dtreepositive.pid, pid)
+        self.assertIsNotNone(dtreepositive.date, date)
+        self.assertIsNotNone(dtreepositive.position, position)
+        self.assertIsNotNone(dtreepositive.length, length)
+
+    def test_update_datapoint_dtree_positive_failure_did_not_modify_existent_row(self):
+        ''' update_datapoint_dtree_positive should fail if row was equal the values in update '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        position=0
+        length=1
+        self.assertTrue(datapointapi.update_datapoint_dtree_positive(pid=pid,date=date,position=position,length=length))
+        dtreepositive=datapointapi.get_datapoint_dtree_positive(pid=pid, date=date)
+        self.assertIsNotNone(dtreepositive.pid, pid)
+        self.assertIsNotNone(dtreepositive.date, date)
+        self.assertIsNotNone(dtreepositive.position, position)
+        self.assertIsNotNone(dtreepositive.length, length)
+        self.assertFalse(datapointapi.update_datapoint_dtree_positive(pid=pid,date=date,position=position,length=length))
+
     def test_add_datapoint_dtree_negative_at_success(self):
         ''' add_datapoint_dtree_negative_at should succeed even if pid does not exist '''
         pid=uuid.uuid4()
@@ -412,24 +496,158 @@ class KomcassApiDatapointTest(unittest.TestCase):
         length=1
         self.assertTrue(datapointapi.add_datapoint_dtree_negative_at(pid=pid,date=date,position=position,length=length))
 
-    def test_delete_datapoint_dtree_positive_at_success(self):
-        ''' delete_datapoint_dtree_positive_at should succeed even if pid does not exist '''
-        pid=uuid.uuid4()
-        date=timeuuid.uuid1()
-        self.assertTrue(datapointapi.delete_datapoint_dtree_positive_at(pid=pid,date=date))
-
-    def test_delete_datapoint_dtree_negatives_at_success(self):
-        ''' delete_datapoint_dtree_negatives_at should succeed even if pid does not exist '''
-        pid=uuid.uuid4()
-        date=timeuuid.uuid1()
-        self.assertTrue(datapointapi.delete_datapoint_dtree_negatives_at(pid=pid,date=date))
-
-    def test_delete_datapoint_dtree_negative_at_success(self):
-        ''' delete_datapoint_dtree_negative_at should succeed even if pid does not exist '''
+    def test_update_datapoint_dtree_negative_success_did_not_exist_previously(self):
+        ''' update_datapoint_dtree_negative should succeed and insert the row if it does not exists
+            previously '''
         pid=uuid.uuid4()
         date=timeuuid.uuid1()
         position=0
-        self.assertTrue(datapointapi.delete_datapoint_dtree_negative_at(pid=pid,date=date,position=position))
+        length=1
+        self.assertTrue(datapointapi.update_datapoint_dtree_negative(pid=pid,date=date,position=position,length=length))
+        dtreenegative=datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position)
+        self.assertIsNotNone(dtreenegative.pid, pid)
+        self.assertIsNotNone(dtreenegative.date, date)
+        self.assertIsNotNone(dtreenegative.position, position)
+        self.assertIsNotNone(dtreenegative.length, length)
+
+    def test_update_datapoint_dtree_negative_success_did_exist_previously(self):
+        ''' update_datapoint_dtree_negative should succeed and update the row if it was different '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        position=0
+        length=1
+        self.assertTrue(datapointapi.update_datapoint_dtree_negative(pid=pid,date=date,position=position,length=length))
+        dtreenegative=datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position)
+        self.assertIsNotNone(dtreenegative.pid, pid)
+        self.assertIsNotNone(dtreenegative.date, date)
+        self.assertIsNotNone(dtreenegative.position, position)
+        self.assertIsNotNone(dtreenegative.length, length)
+        position = 1
+        self.assertTrue(datapointapi.update_datapoint_dtree_negative(pid=pid,date=date,position=position,length=length))
+        dtreenegative=datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position)
+        self.assertIsNotNone(dtreenegative.pid, pid)
+        self.assertIsNotNone(dtreenegative.date, date)
+        self.assertIsNotNone(dtreenegative.position, position)
+        self.assertIsNotNone(dtreenegative.length, length)
+        length = 2
+        self.assertTrue(datapointapi.update_datapoint_dtree_negative(pid=pid,date=date,position=position,length=length))
+        dtreenegative=datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position)
+        self.assertIsNotNone(dtreenegative.pid, pid)
+        self.assertIsNotNone(dtreenegative.date, date)
+        self.assertIsNotNone(dtreenegative.position, position)
+        self.assertIsNotNone(dtreenegative.length, length)
+        position = 3
+        length = 4
+        self.assertTrue(datapointapi.update_datapoint_dtree_negative(pid=pid,date=date,position=position,length=length))
+        dtreenegative=datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position)
+        self.assertIsNotNone(dtreenegative.pid, pid)
+        self.assertIsNotNone(dtreenegative.date, date)
+        self.assertIsNotNone(dtreenegative.position, position)
+        self.assertIsNotNone(dtreenegative.length, length)
+
+    def test_update_datapoint_dtree_negative_failure_did_not_modify_existent_row(self):
+        ''' update_datapoint_dtree_negative should fail if row was equal the values in update '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        position=0
+        length=1
+        self.assertTrue(datapointapi.update_datapoint_dtree_negative(pid=pid,date=date,position=position,length=length))
+        dtreenegative=datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position)
+        self.assertIsNotNone(dtreenegative.pid, pid)
+        self.assertIsNotNone(dtreenegative.date, date)
+        self.assertIsNotNone(dtreenegative.position, position)
+        self.assertIsNotNone(dtreenegative.length, length)
+        self.assertFalse(datapointapi.update_datapoint_dtree_negative(pid=pid,date=date,position=position,length=length))
+
+    def test_delete_datapoint_dtree_positive_success(self):
+        ''' delete_datapoint_dtree_positive should fail if pid and date does not exist '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertFalse(datapointapi.delete_datapoint_dtree_positive(pid=pid,date=date))
+
+    def test_delete_datapoint_dtree_positive_success_row_exists(self):
+        ''' delete_datapoint_dtree_positive should succeed if pid and date exist '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        position=40
+        length=9
+        self.assertTrue(datapointapi.update_datapoint_dtree_positive(pid=pid, date=date, position=position, length=length))
+        self.assertIsNotNone(datapointapi.get_datapoint_dtree_positive(pid=pid, date=date))
+        self.assertTrue(datapointapi.delete_datapoint_dtree_positive(pid=pid,date=date))
+        self.assertIsNone(datapointapi.get_datapoint_dtree_positive(pid=pid, date=date))
+
+    def test_delete_datapoint_dtree_positive_success_row_exists_and_position_matchs(self):
+        ''' delete_datapoint_dtree_positive should succeed if row exists and position is equal '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        position=40
+        length=9
+        self.assertTrue(datapointapi.update_datapoint_dtree_positive(pid=pid, date=date, position=position, length=length))
+        self.assertIsNotNone(datapointapi.get_datapoint_dtree_positive(pid=pid, date=date))
+        self.assertTrue(datapointapi.delete_datapoint_dtree_positive(pid=pid,date=date, position=position))
+        self.assertIsNone(datapointapi.get_datapoint_dtree_positive(pid=pid, date=date))
+
+    def test_delete_datapoint_dtree_positive_fail_row_exists_but_position_does_not_match(self):
+        ''' delete_datapoint_dtree_positive should fail if row exists and position is not equal '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        position=40
+        length=9
+        self.assertTrue(datapointapi.update_datapoint_dtree_positive(pid=pid, date=date, position=position, length=length))
+        self.assertIsNotNone(datapointapi.get_datapoint_dtree_positive(pid=pid, date=date))
+        self.assertFalse(datapointapi.delete_datapoint_dtree_positive(pid=pid,date=date, position=1))
+        self.assertIsNotNone(datapointapi.get_datapoint_dtree_positive(pid=pid, date=date))
+
+    def test_delete_datapoint_dtree_negatives_success_only_pid_did_not_exist(self):
+        ''' delete_datapoint_dtree_negatives_at should succeed even if pid does not exist '''
+        pid=uuid.uuid4()
+        self.assertTrue(datapointapi.delete_datapoint_dtree_negatives(pid=pid))
+
+    def test_delete_datapoint_dtree_negatives_success_only_pid_did_exist(self):
+        ''' delete_datapoint_dtree_negatives_at should succeed if pid did exist '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        position=40
+        length=9
+        self.assertTrue(datapointapi.update_datapoint_dtree_negative(pid=pid, date=date, position=position, length=length))
+        self.assertIsNotNone(datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position))
+        self.assertTrue(datapointapi.delete_datapoint_dtree_negatives(pid=pid))
+        self.assertIsNone(datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position))
+
+    def test_delete_datapoint_dtree_negatives_success_pid_and_date_did_not_exist(self):
+        ''' delete_datapoint_dtree_negatives_at should succeed even if pid and date do not exist '''
+        pid=uuid.uuid4()
+        date=uuid.uuid1()
+        self.assertTrue(datapointapi.delete_datapoint_dtree_negatives(pid=pid, date=date))
+
+    def test_delete_datapoint_dtree_negatives_success_pid_and_date_did_exist(self):
+        ''' delete_datapoint_dtree_negatives_at should succeed even if pid and date exist '''
+        pid=uuid.uuid4()
+        date=uuid.uuid1()
+        position=40
+        length=9
+        self.assertTrue(datapointapi.update_datapoint_dtree_negative(pid=pid, date=date, position=position, length=length))
+        self.assertIsNotNone(datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position))
+        self.assertTrue(datapointapi.delete_datapoint_dtree_negatives(pid=pid, date=date))
+        self.assertIsNone(datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position))
+
+    def test_delete_datapoint_dtree_negative_failure_row_did_not_exist(self):
+        ''' delete_datapoint_dtree_negative should fail if row does not exist '''
+        pid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        position=0
+        self.assertFalse(datapointapi.delete_datapoint_dtree_negative(pid=pid,date=date,position=position))
+
+    def test_delete_datapoint_dtree_negative_success_row_did_exist(self):
+        ''' delete_datapoint_dtree_negative should fail if row does not exist '''
+        pid=uuid.uuid4()
+        date=uuid.uuid1()
+        position=40
+        length=9
+        self.assertTrue(datapointapi.update_datapoint_dtree_negative(pid=pid, date=date, position=position, length=length))
+        self.assertIsNotNone(datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position))
+        self.assertTrue(datapointapi.delete_datapoint_dtree_negative(pid=pid, date=date, position=position))
+        self.assertIsNone(datapointapi.get_datapoint_dtree_negative(pid=pid, date=date, position=position))
 
     def test_delete_datapoint_stats_success_non_existent_pid(self):
         ''' delete_datapoint_stats should succeed even if pid does not exist '''

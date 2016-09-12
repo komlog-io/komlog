@@ -19,8 +19,11 @@ def generate_decision_tree(training_set):
                 keys.add(key)
     if 'result' in keys:
         keys.remove('result')
-    tree_nodes=_learn_tree(rows=training_set, attributes=keys)
-    return decisiontree.DecisionTree(nodes=tree_nodes)
+    try:
+        tree_nodes =_learn_tree(rows=training_set, attributes=keys)
+        return decisiontree.DecisionTree(nodes=tree_nodes)
+    except Exception:
+        return None
 
 def get_decision_tree_from_serialized_data(serialization):
     dtree=decisiontree.DecisionTree(serialization=serialization)

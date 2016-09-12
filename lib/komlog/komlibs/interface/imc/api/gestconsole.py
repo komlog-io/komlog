@@ -41,46 +41,38 @@ def process_message_MONVAR(message):
     position=message.position
     length=message.length
     datapointname=message.datapointname
-    datapoint=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
-    if datapoint:
-        datasource=datasourceapi.get_datasource_config(did=did)
-        webop=operation.NewDatasourceDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=datapoint['pid'])
-        authop=webop.get_auth_operation()
-        params=webop.get_params()
-        response.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
-        response.add_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
-        response.add_message(messages.FillDatapointMessage(pid=datapoint['pid'],date=date))
-        response.add_message(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':datapoint['pid'].hex}))
-        if datapoint['previously_existed'] is False:
-            response.add_message(messages.NewDPWidgetMessage(uid=uid,pid=datapoint['pid']))
-            uris=[{'type':vertex.DATAPOINT, 'id':datapoint['pid'], 'uri':datapoint['datapointname']}]
-            response.add_message(messages.HookNewUrisMessage(uid=uid, uris=uris, date=date))
-        response.status=status.IMC_STATUS_OK
-    else:
-        logging.logger.error('Error registering datapoint in database. did: '+did.hex+' date: '+date.hex+' position: '+str(position)+' length: '+str(length))
-        response.error=Errors.E_IIAG_MONVAR_EMV
-        response.status=status.IMC_STATUS_INTERNAL_ERROR
+    result=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+    datasource=datasourceapi.get_datasource_config(did=did)
+    webop=operation.NewDatasourceDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=result['pid'])
+    authop=webop.get_auth_operation()
+    params=webop.get_params()
+    response.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+    response.add_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
+    response.add_message(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':result['pid'].hex}))
+    for pid in result['dtree_gen_success']:
+        response.add_message(messages.FillDatapointMessage(pid=pid,date=date))
+    if result['previously_existed'] is False:
+        response.add_message(messages.NewDPWidgetMessage(uid=uid,pid=result['pid']))
+        uris=[{'type':vertex.DATAPOINT, 'id':result['pid'], 'uri':result['datapointname']}]
+        response.add_message(messages.HookNewUrisMessage(uid=uid, uris=uris, date=date))
+    response.status=status.IMC_STATUS_OK
     return response
 
 @exceptions.ExceptionHandler
 def process_message_NEGVAR(message):
     ''' Los pasos son los siguientes:
     - marcamos la variable como negativa
-    - si se marca correctamente, solicitamos la regeneracion del arbol de decision con el mensaje GDTREE, si no devolvemos error.
+    - si se marca correctamente, solicitamos la actualización del valor de los datapoints indicados.
     '''
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
     date=message.date
     position=message.position
     length=message.length
     pid=message.pid
-    datapoints=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
-    if datapoints:
-        for a_pid in datapoints:
-            response.add_message(messages.FillDatapointMessage(pid=a_pid,date=date))
-        response.status=status.IMC_STATUS_OK
-    else:
-        response.error=Errors.E_IIAG_NEGVAR_EMNV
-        response.status=status.IMC_STATUS_INTERNAL_ERROR
+    result=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
+    for a_pid in result['dtree_gen_success']:
+        response.add_message(messages.FillDatapointMessage(pid=a_pid,date=date))
+    response.status=status.IMC_STATUS_OK
     return response
 
 @exceptions.ExceptionHandler
@@ -95,14 +87,10 @@ def process_message_POSVAR(message):
     position=message.position
     length=message.length
     pid=message.pid
-    datapoints=datapointapi.mark_positive_variable(date=date, position=position, length=length, pid=pid)
-    if datapoints:
-        for a_pid in datapoints:
-            response.add_message(messages.FillDatapointMessage(pid=a_pid,date=date))
-        response.status=status.IMC_STATUS_OK
-    else:
-        response.error=Errors.E_IIAG_POSVAR_EMPV
-        response.status=status.IMC_STATUS_INTERNAL_ERROR
+    result=datapointapi.mark_positive_variable(date=date, position=position, length=length, pid=pid)
+    for a_pid in result['dtree_gen_success']:
+        response.add_message(messages.FillDatapointMessage(pid=a_pid,date=date))
+    response.status=status.IMC_STATUS_OK
     return response
 
 @exceptions.ExceptionHandler
