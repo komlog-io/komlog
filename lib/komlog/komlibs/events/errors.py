@@ -99,50 +99,56 @@ class Errors(Enum):
     E_EAU_IENNC_DBIE=151804
     E_EAU_IENNC_UNF=151805
 
-    E_EAU_IEIDPI_IUID=151900
-    E_EAU_IEIDPI_IP=151901
-    E_EAU_IEIDPI_IPDID=151902
-    E_EAU_IEIDPI_IPDATE=151903
-    E_EAU_IEIDPI_IPDBT=151904
-    E_EAU_IEIDPI_IPDISC=151905
-    E_EAU_IEIDPI_IIDBT=151906
-    E_EAU_IEIDPI_IIDISC=151907
-    E_EAU_IEIDPI_DBIE=151908
-    E_EAU_IEIDPI_UNF=151909
-    E_EAU_IEIDPI_DNF=151910
+    E_EAU_IEIDPI_IUID       = 151900 #: invalid uid
+    E_EAU_IEIDPI_IP         = 151901 #: invalid parameters
+    E_EAU_IEIDPI_IPPID      = 151902 #: invalid pid
+    E_EAU_IEIDPI_IPDID      = 151903 #: invalid did
+    E_EAU_IEIDPI_IPDATES    = 151904 #: invalid dates
+    E_EAU_IEIDPI_IIDATE     = 151905 #: invalid item date
+    E_EAU_IEIDPI_UNF        = 151906 #: user not found
+    E_EAU_IEIDPI_DPNF       = 151907 #: datapoint not found
+    E_EAU_IEIDPI_DPHNDID    = 151908 #: datapoint has no associated did
+    E_EAU_IEIDPI_IDID       = 151909 #: datapoint did is not equal as parameters did
+    E_EAU_IEIDPI_NODATES    = 151910 #: no dates received
+    E_EAU_IEIDPI_DSNF       = 151911 #: datasource not found
 
-    E_EAU_IENNSS_IU=152000
-    E_EAU_IENNSS_IP=152001
-    E_EAU_IENNSS_IPNID=152002
-    E_EAU_IENNSS_IPTID=152003
-    E_EAU_IENNSS_UNF=152004
-    E_EAU_IENNSS_NNF=152005
-    E_EAU_IENNSS_TNF=152006
-    E_EAU_IENNSS_DBIIE=152007
-    E_EAU_IENNSS_DBPIE=152008
+    E_EAU_IENNSS_IU         = 152000
+    E_EAU_IENNSS_IP         = 152001
+    E_EAU_IENNSS_IPNID      = 152002
+    E_EAU_IENNSS_IPTID      = 152003
+    E_EAU_IENNSS_UNF        = 152004
+    E_EAU_IENNSS_NNF        = 152005
+    E_EAU_IENNSS_TNF        = 152006
+    E_EAU_IENNSS_DBIIE      = 152007
+    E_EAU_IENNSS_DBPIE      = 152008
 
 # events api user_responses
 
-    E_EAUR_PEVRP_IUID=160000 #: process_event_response invalid uid
-    E_EAUR_PEVRP_IDT=160001 #: process_event_response invalid date
-    E_EAUR_PEVRP_IDAT=160002 #: process_event_response data is not dict
-    E_EAUR_PEVRP_EVNF=160003 #: process_event_response event not found
+    E_EAUR_PEVRP_IUID       = 160000 #: invalid uid
+    E_EAUR_PEVRP_IDT        = 160001 #: invalid date
+    E_EAUR_PEVRP_EVNF       = 160002 #: event not found
+    E_EAUR_PEVRP_IEVT       = 160003 #: invalid event type
 
-    E_EAUR_PEVRPUEIDI_IRD=160100 #: _process_event_response_user_event_intervention_datapoint_identification data is not dict
-    E_EAUR_PEVRPUEIDI_IIDP=160101 #: _process_event_response_user_event_intervention_datapoint_identification invalid identified data parameter
-    E_EAUR_PEVRPUEIDI_IMSP=160102 #: _process_event_response_user_event_intervention_datapoint_identification invalid missing data parameter
-    E_EAUR_PEVRPUEIDI_IIDI=160103 #: _process_event_response_user_event_intervention_datapoint_identification invalid identified item type
-    E_EAUR_PEVRPUEIDI_IDPI=160104 #: _process_event_response_user_event_intervention_datapoint_identification invalid datapoint item parameter
-    E_EAUR_PEVRPUEIDI_IPI=160105 #: _process_event_response_user_event_intervention_datapoint_identification invalid position item parameter
-    E_EAUR_PEVRPUEIDI_ILI=160106 #: _process_event_response_user_event_intervention_datapoint_identification invalid length item parameter
-    E_EAUR_PEVRPUEIDI_IMSI=160107 #: _process_event_response_user_event_intervention_datapoint_identification invalid missing item
+    E_EAUR_PEVRPUEIDI_IEVT  = 160100 #: invalid event type
+    E_EAUR_PEVRPUEIDI_IRD   = 160101 #: data is not dict
+    E_EAUR_PEVRPUEIDI_IDFNF = 160102 #: identified not found
+    E_EAUR_PEVRPUEIDI_IDFTI = 160103 #: identified type invalid
+    E_EAUR_PEVRPUEIDI_IIDI  = 160104 #: invalid identified item type
+    E_EAUR_PEVRPUEIDI_ISEQI = 160105 #: invalid sequence item parameter
+    E_EAUR_PEVRPUEIDI_IPI   = 160106 #: invalid position item parameter
+    E_EAUR_PEVRPUEIDI_ILI   = 160107 #: invalid length item parameter
 
 # events api summary
 
-    E_EAS_GUEGSD_IUID=170000 #: get_user_event_graph_summary_data invalid uid
-    E_EAS_GUEGSD_IDATE=170001 #: get_user_event_graph_summary_data invalid date
+    E_EAS_GUEDS_IUID        = 170000 #: invalid uid
+    E_EAS_GUEDS_IDATE       = 170001 #: invalid date
 
-    E_EAS_GGSDUENNSS_NPNF=170100 #: _generate_graph_summary_data_UENNSS nid parameter not found.
-    E_EAS_GGSDUENNSS_INID=170101 #: _generate_graph_summary_data_UENNSS invalid nid parameter.
-    E_EAS_GGSDUENNSS_NIDNF=170102 #: _generate_graph_summary_data_UENNSS snapshot not found.
+    E_EAS_GDSUENNSS_NPNF   = 170100 #: nid parameter not found.
+    E_EAS_GDSUENNSS_INID   = 170101 #: invalid nid parameter.
+    E_EAS_GDSUENNSS_NIDNF  = 170102 #: snapshot not found.
+
+    E_EAS_GDSUEIDPI_IDID   = 170200 #: invalid did parameter
+    E_EAS_GDSUEIDPI_IDATES = 170201 #: invalid dates parameter
+    E_EAS_GDSUEIDPI_DSVNF  = 170202 #: datasource variables not found
+    E_EAS_GDSUEIDPI_DSDNF  = 170203 #: datasource data not found
 

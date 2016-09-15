@@ -213,11 +213,10 @@ class KomcassApiEventsTest(unittest.TestCase):
         ''' get_user_event should succeed if event exists '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[uuid.uuid4(), uuid.uuid4()]
-        doubts=[uuid.uuid4(), uuid.uuid4()]
-        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        pid = uuid.uuid4()
+        datasourcename='datasourcename'
+        datapointname='datapointname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid,datasourcename=datasourcename,datapointname=datapointname)
         self.assertTrue(eventsapi.insert_user_event(event))
         db_user_event=eventsapi.get_user_event(uid=uid, date=date)
         self.assertIsNotNone(db_user_event)
@@ -226,10 +225,9 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(event.priority,db_user_event.priority)
         self.assertEqual(event.type,types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
         self.assertEqual(event.type,db_user_event.type)
-        self.assertEqual(event.did,db_user_event.did)
-        self.assertEqual(event.ds_date,db_user_event.ds_date)
-        self.assertEqual(sorted(event.doubts),sorted(db_user_event.doubts))
-        self.assertEqual(sorted(event.discarded),sorted(db_user_event.discarded))
+        self.assertEqual(event.pid,db_user_event.pid)
+        self.assertEqual(event.datasourcename, db_user_event.datasourcename)
+        self.assertEqual(event.datapointname, db_user_event.datapointname)
 
     def test_get_disabled_user_event_non_existing_uid(self):
         ''' get_disabled_user_event should return None if uid does not exist '''
@@ -445,11 +443,10 @@ class KomcassApiEventsTest(unittest.TestCase):
         ''' get_disabled_user_event should succeed if event exists '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[uuid.uuid4(), uuid.uuid4()]
-        doubts=[uuid.uuid4(), uuid.uuid4()]
-        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        pid = uuid.uuid4()
+        datasourcename='datasourcename'
+        datapointname='datapointname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid,datasourcename=datasourcename,datapointname=datapointname)
         self.assertTrue(eventsapi.insert_user_event(event))
         self.assertTrue(eventsapi.disable_user_event(event))
         db_user_event=eventsapi.get_disabled_user_event(uid=uid, date=date)
@@ -459,10 +456,9 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(event.priority,db_user_event.priority)
         self.assertEqual(event.type,types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
         self.assertEqual(event.type,db_user_event.type)
-        self.assertEqual(event.did,db_user_event.did)
-        self.assertEqual(event.ds_date,db_user_event.ds_date)
-        self.assertEqual(sorted(event.doubts),sorted(db_user_event.doubts))
-        self.assertEqual(sorted(event.discarded),sorted(db_user_event.discarded))
+        self.assertEqual(event.pid,db_user_event.pid)
+        self.assertEqual(event.datasourcename, db_user_event.datasourcename)
+        self.assertEqual(event.datapointname, db_user_event.datapointname)
 
     def test_get_user_events_non_existing_uid(self):
         ''' get_user_events should return an empty array if uid does not exist '''
@@ -786,11 +782,10 @@ class KomcassApiEventsTest(unittest.TestCase):
         ''' insert_user_event should succeed if event exists '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[uuid.uuid4(), uuid.uuid4()]
-        doubts=[uuid.uuid4(), uuid.uuid4()]
-        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        pid = uuid.uuid4()
+        datasourcename='datasourcename'
+        datapointname='datapointname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid,datasourcename=datasourcename,datapointname=datapointname)
         self.assertTrue(eventsapi.insert_user_event(event))
         db_user_event=eventsapi.get_user_event(uid=uid, date=date)
         self.assertIsNotNone(db_user_event)
@@ -799,10 +794,9 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(event.priority,db_user_event.priority)
         self.assertEqual(event.type,types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
         self.assertEqual(event.type,db_user_event.type)
-        self.assertEqual(event.did,db_user_event.did)
-        self.assertEqual(event.ds_date,db_user_event.ds_date)
-        self.assertEqual(sorted(event.doubts),sorted(db_user_event.doubts))
-        self.assertEqual(sorted(event.discarded),sorted(db_user_event.discarded))
+        self.assertEqual(event.pid,db_user_event.pid)
+        self.assertEqual(event.datasourcename, db_user_event.datasourcename)
+        self.assertEqual(event.datapointname, db_user_event.datapointname)
 
     def test_delete_user_events_success(self):
         ''' delete_user_events should True and delete all the user events '''
@@ -932,15 +926,14 @@ class KomcassApiEventsTest(unittest.TestCase):
         ''' get_user_event_responses should return an array with the responses '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[uuid.uuid4(), uuid.uuid4()]
-        doubts=[uuid.uuid4(), uuid.uuid4()]
-        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        pid=uuid.uuid4()
+        datapointname='dpname'
+        datasourcename='dsname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid, datapointname=datapointname, datasourcename=datasourcename)
         self.assertTrue(eventsapi.insert_user_event(event))
-        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1(), data='some data')
         self.assertTrue(eventsapi.insert_user_event_response(response1))
-        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1(), data='next data')
         self.assertTrue(eventsapi.insert_user_event_response(response2))
         responses=eventsapi.get_user_event_responses(event=event)
         self.assertEqual(len(responses),2)
@@ -951,15 +944,14 @@ class KomcassApiEventsTest(unittest.TestCase):
         ''' _get_user_event_responses_intervention_datapoint_identification should return an array with the responses '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[uuid.uuid4(), uuid.uuid4()]
-        doubts=[uuid.uuid4(), uuid.uuid4()]
-        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        pid=uuid.uuid4()
+        datapointname='dpname'
+        datasourcename='dsname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid, datapointname=datapointname, datasourcename=datasourcename)
         self.assertTrue(eventsapi.insert_user_event(event))
-        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1(),data=None)
         self.assertTrue(eventsapi.insert_user_event_response(response1))
-        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1(),data=None)
         self.assertTrue(eventsapi.insert_user_event_response(response2))
         responses=eventsapi._get_user_event_responses_intervention_datapoint_identification(event=event)
         self.assertEqual(len(responses),2)
@@ -969,9 +961,9 @@ class KomcassApiEventsTest(unittest.TestCase):
     def test_get_user_events_responses_intervention_datapoint_identification_success_some_responses_found(self):
         ''' get_user_events_responses_intervention_datapoint_identification should return an array with the responses '''
         uid=uuid.uuid4()
-        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1())
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1(), data='some data')
         self.assertTrue(eventsapi.insert_user_event_response(response1))
-        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1())
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1(), data=None)
         self.assertTrue(eventsapi.insert_user_event_response(response2))
         responses=eventsapi.get_user_events_responses_intervention_datapoint_identification(uid=uid)
         self.assertEqual(len(responses),2)
@@ -997,22 +989,22 @@ class KomcassApiEventsTest(unittest.TestCase):
         ''' insert_user_event_response should succeed '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        response=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        response=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1(),data='some data')
         self.assertTrue(eventsapi.insert_user_event_response(response))
 
     def test__insert_user_event_response_intervention_datapoint_identification_success(self):
         ''' _insert_user_event_response should succeed '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        response=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        response=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1(), data=None)
         self.assertTrue(eventsapi._insert_user_event_response_intervention_datapoint_identification(response))
 
     def test_delete_user_events_responses_intervention_datapoint_identification_success_some_responses_found(self):
         ''' get_user_events_responses_intervention_datapoint_identification should return an array with the responses '''
         uid=uuid.uuid4()
-        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1())
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1(),data='somedata')
         self.assertTrue(eventsapi.insert_user_event_response(response1))
-        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1())
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=timeuuid.uuid1(), response_date=timeuuid.uuid1(),data='other data')
         self.assertTrue(eventsapi.insert_user_event_response(response2))
         responses=eventsapi.get_user_events_responses_intervention_datapoint_identification(uid=uid)
         self.assertEqual(len(responses),2)
@@ -1023,34 +1015,34 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(len(responses),0)
 
 
-    def test_get_user_event_graph_summary_non_existing_uid(self):
-        ''' get_user_event_graph_summary should return None if uid does not exist '''
+    def test_get_user_event_data_summary_non_existing_uid(self):
+        ''' get_user_event_data_summary should return None if uid does not exist '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        self.assertIsNone(eventsapi.get_user_event_graph_summary(uid=uid, date=date))
+        self.assertIsNone(eventsapi.get_user_event_data_summary(uid=uid, date=date))
 
-    def test_get_user_event_graph_summary_non_existing_date(self):
-        ''' get_user_event_graph_summary should return None if event at the specified date does not exist '''
+    def test_get_user_event_data_summary_non_existing_date(self):
+        ''' get_user_event_data_summary should return None if event at the specified date does not exist '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
         summary={'a':'text','b':23234,'c':[234,'234234',242,'afaAA33']}
-        graph_summary=ormevents.UserEventGraphSummary(uid=uid,date=date,summary=summary)
-        self.assertTrue(eventsapi.insert_user_event_graph_summary(graph_summary))
+        data_summary=ormevents.UserEventDataSummary(uid=uid,date=date,summary=summary)
+        self.assertTrue(eventsapi.insert_user_event_data_summary(data_summary))
         new_date=timeuuid.uuid1()
-        self.assertIsNone(eventsapi.get_user_event_graph_summary(uid=uid, date=new_date))
+        self.assertIsNone(eventsapi.get_user_event_data_summary(uid=uid, date=new_date))
 
-    def test_get_user_event_graph_summary_success(self):
-        ''' get_user_event_graph_summary should succeed if event exists '''
+    def test_get_user_event_data_summary_success(self):
+        ''' get_user_event_data_summary should succeed if event exists '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
         summary={'a':'text','b':23234,'c':[234,'234234',242,'afaAA33']}
-        graph_summary=ormevents.UserEventGraphSummary(uid=uid,date=date,summary=summary)
-        self.assertTrue(eventsapi.insert_user_event_graph_summary(graph_summary))
-        db_graph_summary=eventsapi.get_user_event_graph_summary(uid=uid, date=date)
-        self.assertIsNotNone(db_graph_summary)
-        self.assertEqual(graph_summary.uid,db_graph_summary.uid)
-        self.assertEqual(graph_summary.date,db_graph_summary.date)
-        self.assertEqual(graph_summary.summary,db_graph_summary.summary)
+        data_summary=ormevents.UserEventDataSummary(uid=uid,date=date,summary=summary)
+        self.assertTrue(eventsapi.insert_user_event_data_summary(data_summary))
+        db_data_summary=eventsapi.get_user_event_data_summary(uid=uid, date=date)
+        self.assertIsNotNone(db_data_summary)
+        self.assertEqual(data_summary.uid,db_data_summary.uid)
+        self.assertEqual(data_summary.date,db_data_summary.date)
+        self.assertEqual(data_summary.summary,db_data_summary.summary)
 
     def test_delete_user_event_failure_non_UserEvent_instance(self):
         ''' delete_user_event should return False if event is not an instance of UserEvent '''
@@ -1263,11 +1255,10 @@ class KomcassApiEventsTest(unittest.TestCase):
         ''' delete_user_event should succeed if event exists '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[uuid.uuid4(), uuid.uuid4()]
-        doubts=[uuid.uuid4(), uuid.uuid4()]
-        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        pid = uuid.uuid4()
+        datasourcename='datasourcename'
+        datapointname='datapointname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid,datasourcename=datasourcename,datapointname=datapointname)
         self.assertTrue(eventsapi.insert_user_event(event))
         db_user_event=eventsapi.get_user_event(uid=uid, date=date)
         self.assertIsNotNone(db_user_event)
@@ -1276,27 +1267,24 @@ class KomcassApiEventsTest(unittest.TestCase):
         self.assertEqual(event.priority,db_user_event.priority)
         self.assertEqual(event.type,types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
         self.assertEqual(event.type,db_user_event.type)
-        self.assertEqual(event.did,db_user_event.did)
-        self.assertEqual(event.ds_date,db_user_event.ds_date)
-        self.assertEqual(sorted(event.doubts),sorted(db_user_event.doubts))
-        self.assertEqual(sorted(event.discarded),sorted(db_user_event.discarded))
+        self.assertEqual(event.pid,db_user_event.pid)
+        self.assertEqual(event.datasourcename, db_user_event.datasourcename)
+        self.assertEqual(event.datapointname, db_user_event.datapointname)
         self.assertTrue(eventsapi.delete_user_event(event))
         self.assertIsNone(eventsapi.get_user_event(uid=uid, date=date))
-
 
     def test_delete_user_event_response_success_intervention_datapoint_identification(self):
         ''' delete_user_event_response should delete the indicated response '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[uuid.uuid4(), uuid.uuid4()]
-        doubts=[uuid.uuid4(), uuid.uuid4()]
-        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        pid=uuid.uuid4()
+        datapointname='dpname'
+        datasourcename='dsname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid, datapointname=datapointname, datasourcename=datasourcename)
         self.assertTrue(eventsapi.insert_user_event(event))
-        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1(),data='some data')
         self.assertTrue(eventsapi.insert_user_event_response(response1))
-        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1(),data=None)
         self.assertTrue(eventsapi.insert_user_event_response(response2))
         responses=eventsapi.get_user_event_responses(event)
         self.assertEqual(len(responses),2)
@@ -1316,22 +1304,20 @@ class KomcassApiEventsTest(unittest.TestCase):
         ''' delete_user_event_responses should return True if no event is found '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[uuid.uuid4(), uuid.uuid4()]
-        doubts=[uuid.uuid4(), uuid.uuid4()]
-        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        pid=uuid.uuid4()
+        datapointname='dpname'
+        datasourcename='dsname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid, datapointname=datapointname, datasourcename=datasourcename)
         self.assertTrue(eventsapi.delete_user_event_responses(event))
 
     def test_delete_user_event_responses_success_no_response_found(self):
         ''' delete_user_event_responses should return True if event has no responses '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[uuid.uuid4(), uuid.uuid4()]
-        doubts=[uuid.uuid4(), uuid.uuid4()]
-        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        pid=uuid.uuid4()
+        datapointname='dpname'
+        datasourcename='dsname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid, datapointname=datapointname, datasourcename=datasourcename)
         self.assertTrue(eventsapi.insert_user_event(event))
         responses=eventsapi.get_user_event_responses(event)
         self.assertEqual(len(responses),0)
@@ -1343,15 +1329,14 @@ class KomcassApiEventsTest(unittest.TestCase):
         ''' delete_user_event_responses should delete the event responses '''
         uid=uuid.uuid4()
         date=timeuuid.uuid1()
-        did=uuid.uuid4()
-        ds_date=timeuuid.uuid1()
-        discarded=[uuid.uuid4(), uuid.uuid4()]
-        doubts=[uuid.uuid4(), uuid.uuid4()]
-        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1,did=did, ds_date=ds_date,doubts=doubts,discarded=discarded)
+        pid=uuid.uuid4()
+        datapointname='dpname'
+        datasourcename='dsname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid, datapointname=datapointname, datasourcename=datasourcename)
         self.assertTrue(eventsapi.insert_user_event(event))
-        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        response1=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1(),data='some data')
         self.assertTrue(eventsapi.insert_user_event_response(response1))
-        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1())
+        response2=ormevents.UserEventResponseInterventionDatapointIdentification(uid=uid, date=date, response_date=timeuuid.uuid1(),data='other data')
         self.assertTrue(eventsapi.insert_user_event_response(response2))
         responses=eventsapi.get_user_event_responses(event)
         self.assertEqual(len(responses),2)

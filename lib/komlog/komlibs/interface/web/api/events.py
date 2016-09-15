@@ -72,25 +72,20 @@ def event_response_request(passport, seq, data):
     date=timeuuid.get_uuid1_from_custom_sequence(seq)
     event=userevents.get_event(uid=passport.uid, date=date)
     if event['type']==eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION:
-        parameters={'missing':[],'identified':[]}
-        if not 'missing' in data or not isinstance(data['missing'],list):
-            raise exceptions.BadParametersException(error=Errors.E_IWAEV_EVRPR_IMSF)
+        parameters={'identified':[]}
         if not 'identified' in data or not isinstance(data['identified'],list):
             raise exceptions.BadParametersException(error=Errors.E_IWAEV_EVRPR_IIDF)
-        for dp in data['missing']:
-            if not args.is_valid_hex_uuid(dp):
-                raise exceptions.BadParametersException(error=Errors.E_IWAEV_EVRPR_IMSIT)
-            else:
-                parameters['missing'].append(dp)
-        for dp_info in data['identified']:
-            if not isinstance(dp_info, dict) or not 'pid' in dp_info \
-                or not 'p' in dp_info or not 'l' in dp_info \
-                or not args.is_valid_hex_uuid(dp_info['pid']) \
-                or not args.is_valid_int(dp_info['p']) \
-                or not args.is_valid_int(dp_info['l']):
+        for reg in data['identified']:
+            if not (isinstance(reg, dict)
+                and 'p' in reg
+                and 'l' in reg
+                and 's' in reg
+                and (reg['p'] is None or args.is_valid_int(reg['p']))
+                and (reg['l'] is None or args.is_valid_int(reg['l']))
+                and args.is_valid_sequence(reg['s'])):
                 raise exceptions.BadParametersException(error=Errors.E_IWAEV_EVRPR_IIDIT)
             else:
-                parameters['identified'].append({'pid':dp_info['pid'],'p':dp_info['p'],'l':dp_info['l']})
+                parameters['identified'].append({'s':reg['s'],'p':reg['p'],'l':reg['l']})
         resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
         resp.add_message(messages.UserEventResponseMessage(uid=passport.uid,date=date,parameters=parameters))
         return resp

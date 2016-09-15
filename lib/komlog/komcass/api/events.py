@@ -146,7 +146,7 @@ def _get_user_event_notification_new_snapshot_shared_with_me(event):
 def _get_user_event_intervention_datapoint_identification(event):
     event_info=connection.session.execute(stmtevents.S_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE,(event.uid, event.date))
     if event_info:
-        return ormevents.UserEventInterventionDatapointIdentification(uid=event.uid, date=event.date, priority=event.priority, did=event_info[0]['did'], ds_date=event_info[0]['ds_date'], doubts=event_info[0]['doubts'], discarded=event_info[0]['discarded'])
+        return ormevents.UserEventInterventionDatapointIdentification(uid=event.uid, date=event.date, priority=event.priority, pid=event_info[0]['pid'], datasourcename=event_info[0]['datasourcename'], datapointname=event_info[0]['datapointname'])
     else:
         return None
 
@@ -228,7 +228,7 @@ def _insert_user_event_intervention_datapoint_identification(event):
         return False
     else:
         connection.session.execute(stmtevents.I_A_DATUSEREVENTS,(event.uid,event.date,event.priority,types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION))
-        connection.session.execute(stmtevents.I_A_DATUEINTERVDPIDENTIFICATION, (event.uid, event.date, event.did, event.ds_date, event.doubts, event.discarded))
+        connection.session.execute(stmtevents.I_A_DATUEINTERVDPIDENTIFICATION, (event.uid, event.date, event.pid, event.datasourcename, event.datapointname))
         return True
 
 @exceptions.ExceptionHandler
@@ -253,7 +253,7 @@ def _insert_user_event_notification_new_snapshot_shared_with_me(event):
 def delete_user_events(uid):
     connection.session.execute(stmtevents.D_A_DATUSEREVENTS_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUSEREVENTSDISABLED_B_UID,(uid,))
-    connection.session.execute(stmtevents.D_A_DATUSEREVENTSGRAPHSUMMARY_B_UID,(uid,))
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTSDATASUMMARY_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWUSER_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWAGENT_B_UID,(uid,))
     connection.session.execute(stmtevents.D_A_DATUENOTIFNEWDATASOURCE_B_UID,(uid,))
@@ -308,7 +308,7 @@ def _get_user_event_responses_intervention_datapoint_identification(event):
     row=connection.session.execute(stmtevents.S_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE,(event.uid,event.date))
     if row:
         for r in row:
-            responses.append(ormevents.UserEventResponseInterventionDatapointIdentification(uid=r['uid'],date=r['date'],response_date=r['response_date'],missing=r['missing'],identified=r['identified'],not_belonging=r['not_belonging'],to_update=r['to_update'],update_failed=r['update_failed'],update_success=r['update_success']))
+            responses.append(ormevents.UserEventResponseInterventionDatapointIdentification(uid=r['uid'],date=r['date'],response_date=r['response_date'],data=r['data']))
     return responses
 
 @exceptions.ExceptionHandler
@@ -317,7 +317,7 @@ def get_user_events_responses_intervention_datapoint_identification(uid):
     row=connection.session.execute(stmtevents.S_A_DATUERINTERVDPIDENTIFICATION_B_UID,(uid,))
     if row:
         for r in row:
-            responses.append(ormevents.UserEventResponseInterventionDatapointIdentification(uid=r['uid'],date=r['date'],response_date=r['response_date'],missing=r['missing'],identified=r['identified'],not_belonging=r['not_belonging'],to_update=r['to_update'],update_failed=r['update_failed'],update_success=r['update_success']))
+            responses.append(ormevents.UserEventResponseInterventionDatapointIdentification(uid=r['uid'],date=r['date'],response_date=r['response_date'],data=r['data']))
     return responses
 
 def insert_user_event_response(response):
@@ -331,39 +331,37 @@ def insert_user_event_response(response):
 
 @exceptions.ExceptionHandler
 def _insert_user_event_response_intervention_datapoint_identification(response):
-    connection.session.execute(stmtevents.I_A_DATUERINTERVDPIDENTIFICATION, (response.uid,response.date,response.response_date, response.missing, response.identified, response.not_belonging, response.to_update, response.update_failed, response.update_success))
+    connection.session.execute(stmtevents.I_A_DATUERINTERVDPIDENTIFICATION, (response.uid,response.date,response.response_date, response.data))
     return True
 
 @exceptions.ExceptionHandler
 def delete_user_events_responses_intervention_datapoint_identification(uid):
-    responses=get_user_events_responses_intervention_datapoint_identification(uid=uid)
-    for resp in responses:
-        connection.session.execute(stmtevents.D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE,(resp.uid,resp.date))
+    connection.session.execute(stmtevents.D_A_DATUERINTERVDPIDENTIFICATION_B_UID,(uid,))
     return True
 
 @exceptions.ExceptionHandler
-def get_user_event_graph_summary(uid, date):
-    row=connection.session.execute(stmtevents.S_A_DATUSEREVENTSGRAPHSUMMARY_B_UID_DATE,(uid,date))
+def get_user_event_data_summary(uid, date):
+    row=connection.session.execute(stmtevents.S_A_DATUSEREVENTSDATASUMMARY_B_UID_DATE,(uid,date))
     if row:
-        return ormevents.UserEventGraphSummary(**row[0])
+        return ormevents.UserEventDataSummary(**row[0])
     else:
         return None
 
 @exceptions.ExceptionHandler
-def insert_user_event_graph_summary(summary):
-    if not isinstance(summary, ormevents.UserEventGraphSummary):
+def insert_user_event_data_summary(summary):
+    if not isinstance(summary, ormevents.UserEventDataSummary):
         return False
     else:
         try:
             text_summary=json.dumps(summary.summary) if isinstance(summary.summary,dict) else summary.summary
-            connection.session.execute(stmtevents.I_A_DATUSEREVENTSGRAPHSUMMARY, (summary.uid,summary.date,text_summary))
+            connection.session.execute(stmtevents.I_A_DATUSEREVENTSDATASUMMARY, (summary.uid,summary.date,text_summary))
             return True
         except TypeError:
             return False
 
 @exceptions.ExceptionHandler
-def delete_user_event_graph_summary(uid, date):
-    connection.session.execute(stmtevents.D_A_DATUSEREVENTSGRAPHSUMMARY_B_UID_DATE,(uid,date))
+def delete_user_event_data_summary(uid, date):
+    connection.session.execute(stmtevents.D_A_DATUSEREVENTSDATASUMMARY_B_UID_DATE,(uid,date))
     return True
 
 def delete_user_event(event):
@@ -446,14 +444,8 @@ def delete_user_event_responses(event):
         return False
     else:
         responses=get_user_event_responses(event)
-        deleted=[]
         for response in responses:
-            if delete_user_event_response(response):
-                deleted.append(response)
-            else:
-                for d_response in deleted:
-                    insert_user_event_response(d_response)
-                return False
+            delete_user_event_response(response)
         return True
 
 def delete_user_event_response(response):

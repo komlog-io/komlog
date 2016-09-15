@@ -13,7 +13,7 @@ class UserEvent:
         self.priority=priority
         self.type=type
 
-class UserEventGraphSummary:
+class UserEventDataSummary:
     def __init__(self, uid, date, summary=None):
         self.uid=uid
         self.date=date
@@ -81,11 +81,10 @@ class UserEventNotificationNewSnapshotSharedWithMe(UserEvent):
         super(UserEventNotificationNewSnapshotSharedWithMe, self).__init__(uid=uid, date=date, priority=priority, type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME)
 
 class UserEventInterventionDatapointIdentification(UserEvent):
-    def __init__(self, uid, date, priority, did, ds_date, doubts, discarded):
-        self.did=did
-        self.ds_date=ds_date
-        self.doubts=doubts if doubts else set()
-        self.discarded=discarded if discarded else set()
+    def __init__(self, uid, date, priority, pid, datasourcename, datapointname):
+        self.pid=pid
+        self.datasourcename=datasourcename
+        self.datapointname=datapointname
         super(UserEventInterventionDatapointIdentification, self).__init__(uid=uid, date=date, priority=priority, type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
 
 
@@ -100,12 +99,7 @@ class UserEventResponse:
         self.type=type
 
 class UserEventResponseInterventionDatapointIdentification(UserEventResponse):
-    def __init__(self, uid, date, response_date, missing=None, identified=None, not_belonging=None, to_update=None, update_failed=None, update_success=None):
-        self.missing=missing if missing else set()
-        self.identified=identified if identified else dict()
-        self.not_belonging=not_belonging if not_belonging else set()
-        self.to_update=to_update if to_update else set()
-        self.update_failed=update_failed if update_failed else set()
-        self.update_success=update_success if update_success else set()
+    def __init__(self, uid, date, response_date, data):
+        self.data=data
         super(UserEventResponseInterventionDatapointIdentification, self).__init__(uid=uid, date=date, response_date=response_date, type=types.USER_EVENT_RESPONSE_INTERVENTION_DATAPOINT_IDENTIFICATION)
 

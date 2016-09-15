@@ -175,7 +175,7 @@ def update_datapoint_config(pid, datapointname=None, color=None):
     else:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_UDC_DNF)
 
-def mark_negative_variable(pid, date, position, length):
+def mark_negative_variable(pid, date, position, length, dtree_update=True):
     ''' Los pasos son los siguientes:
     - Comprobamos que la variable exista en el sample (ds en un dtdo momento)
     - Añadimos la variable a la lista de negativos del datapoint
@@ -215,7 +215,8 @@ def mark_negative_variable(pid, date, position, length):
         cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did,date=date,pid=pid)
     dtree_gen_failed=[]
     dtree_gen_success=[]
-    if updated:
+    dtree_pending=[]
+    if updated and dtree_update:
         try:
             generate_decision_tree(pid=pid)
             generate_inverse_decision_tree(pid=pid)
@@ -223,9 +224,11 @@ def mark_negative_variable(pid, date, position, length):
             dtree_gen_failed.append(pid)
         else:
             dtree_gen_success.append(pid)
-    return {'dtree_gen_failed':dtree_gen_failed,'dtree_gen_success':dtree_gen_success}
+    elif updated:
+        dtree_pending.append(pid)
+    return {'dtree_gen_failed':dtree_gen_failed,'dtree_gen_success':dtree_gen_success,'dtree_pending':dtree_pending}
 
-def mark_positive_variable(pid, date, position, length):
+def mark_positive_variable(pid, date, position, length, dtree_update=True):
     ''' Los pasos son los siguientes:
     - Comprobamos que la variable exista en el sample (ds en un dtdo momento)
     - Establecemos la variable como positiva
@@ -287,17 +290,22 @@ def mark_positive_variable(pid, date, position, length):
     cassapidatasource.add_datapoint_to_datasource_map(did=did,date=date,pid=pid,position=position)
     dtree_gen_failed=[]
     dtree_gen_success=[]
-    for pid in dtrees_to_gen:
-        try:
-            generate_decision_tree(pid=pid)
-            generate_inverse_decision_tree(pid=pid)
-        except exceptions.GestaccountException:
-            dtree_gen_failed.append(pid)
-        else:
-            dtree_gen_success.append(pid)
-    return {'dtree_gen_failed':dtree_gen_failed,'dtree_gen_success':dtree_gen_success}
+    dtree_pending=[]
+    if dtree_update:
+        for pid in dtrees_to_gen:
+            try:
+                generate_decision_tree(pid=pid)
+                generate_inverse_decision_tree(pid=pid)
+            except exceptions.GestaccountException:
+                dtree_gen_failed.append(pid)
+            else:
+                dtree_gen_success.append(pid)
+    else:
+        for pid in dtrees_to_gen:
+            dtree_pending.append(pid)
+    return {'dtree_gen_failed':dtree_gen_failed,'dtree_gen_success':dtree_gen_success,'dtree_pending':dtree_pending}
 
-def mark_missing_datapoint(pid, date):
+def mark_missing_datapoint(pid, date, dtree_update=True):
     ''' Se utiliza para indicar que un dp no aparece en una muestra. Los pasos son:
     - Seleccionamos todas las variables de la muestra
     - Añadimos las variables a la lista de negativos del datapoint, eliminando cualquier positivo de esa muestra si lo hubiera.
@@ -326,7 +334,8 @@ def mark_missing_datapoint(pid, date):
     cassapidatasource.delete_datapoint_from_datasource_map(did=datapoint.did, date=date, pid=pid)
     dtree_gen_failed=[]
     dtree_gen_success=[]
-    if updated:
+    dtree_pending=[]
+    if updated and dtree_update:
         try:
             generate_decision_tree(pid=pid)
             generate_inverse_decision_tree(pid=pid)
@@ -334,7 +343,9 @@ def mark_missing_datapoint(pid, date):
             dtree_gen_failed.append(pid)
         else:
             dtree_gen_success.append(pid)
-    return {'dtree_gen_failed':dtree_gen_failed,'dtree_gen_success':dtree_gen_success}
+    elif updated:
+        dtree_pending.append(pid)
+    return {'dtree_gen_failed':dtree_gen_failed,'dtree_gen_success':dtree_gen_success,'dtree_pending':dtree_pending}
 
 def generate_decision_tree(pid):
     '''

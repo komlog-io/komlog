@@ -19,7 +19,7 @@ STATEMENTS={
             150101:'select * from dat_user_events_disabled where uid=? and date<=? limit ?',
             150102:'select * from dat_user_events_disabled where uid=? and date<=? and date>=?',
             150103:'select * from dat_user_events_disabled where uid=? and date>=?',
-            150150:'select * from dat_user_events_graph_summary where uid=? and date=?',
+            150150:'select * from dat_user_events_data_summary where uid=? and date=?',
             150200:'select * from dat_ue_notif_new_user where uid=? and date=?',
             150300:'select * from dat_ue_notif_new_agent where uid=? and date=?',
             150400:'select * from dat_ue_notif_new_datasource where uid=? and date=?',
@@ -34,7 +34,7 @@ STATEMENTS={
             151200:'select * from dat_ue_notif_new_snapshot_shared_with_me where uid=? and date=?',
             155000:'insert into dat_user_events (uid,date,priority,type) values (?,?,?,?)',
             155100:'insert into dat_user_events_disabled (uid,date,priority,type) values (?,?,?,?)',
-            155150:'insert into dat_user_events_graph_summary (uid,date,summary) values (?,?,?)',
+            155150:'insert into dat_user_events_data_summary (uid,date,summary) values (?,?,?)',
             155200:'insert into dat_ue_notif_new_user (uid,date,username) values (?,?,?)',
             155300:'insert into dat_ue_notif_new_agent (uid,date,aid,agentname) values (?,?,?,?)',
             155400:'insert into dat_ue_notif_new_datasource (uid,date,aid,did,datasourcename) values (?,?,?,?,?)',
@@ -42,16 +42,16 @@ STATEMENTS={
             155600:'insert into dat_ue_notif_new_widget (uid,date,wid,widgetname) values (?,?,?,?)',
             155700:'insert into dat_ue_notif_new_dashboard (uid,date,bid,dashboardname) values (?,?,?,?)',
             155800:'insert into dat_ue_notif_new_circle (uid,date,cid,circlename) values (?,?,?,?)',
-            155900:'insert into dat_ue_interv_dp_identification (uid,date,did,ds_date,doubts,discarded) values (?,?,?,?,?,?)',
-            156000:'insert into dat_uer_interv_dp_identification (uid,date,response_date,missing,identified,not_belonging,to_update,update_failed,update_success) values (?,?,?,?,?,?,?,?,?)',
+            155900:'insert into dat_ue_interv_dp_identification (uid,date,pid,datasourcename,datapointname) values (?,?,?,?,?)',
+            156000:'insert into dat_uer_interv_dp_identification (uid,date,response_date,data) values (?,?,?,?)',
             156100:'insert into dat_ue_notif_new_snapshot_shared (uid,date,nid,tid,widgetname,shared_with_users,shared_with_circles) values (?,?,?,?,?,?,?)',
             156200:'insert into dat_ue_notif_new_snapshot_shared_with_me (uid,date,nid,tid,username,widgetname) values (?,?,?,?,?,?)',
             157000:'delete from dat_user_events where uid=?',
             157001:'delete from dat_user_events where uid=? and date=?',
             157100:'delete from dat_user_events_disabled where uid=?',
             157101:'delete from dat_user_events_disabled where uid=? and date=?',
-            157150:'delete from dat_user_events_graph_summary where uid=?',
-            157151:'delete from dat_user_events_graph_summary where uid=? and date=?',
+            157150:'delete from dat_user_events_data_summary where uid=?',
+            157151:'delete from dat_user_events_data_summary where uid=? and date=?',
             157200:'delete from dat_ue_notif_new_user where uid=?',
             157201:'delete from dat_ue_notif_new_user where uid=? and date=?',
             157300:'delete from dat_ue_notif_new_agent where uid=?',
@@ -68,8 +68,9 @@ STATEMENTS={
             157801:'delete from dat_ue_notif_new_circle where uid=? and date=?',
             157900:'delete from dat_ue_interv_dp_identification where uid=?',
             157901:'delete from dat_ue_interv_dp_identification where uid=? and date=?',
-            158000:'delete from dat_uer_interv_dp_identification where uid=? and date=?',
-            158001:'delete from dat_uer_interv_dp_identification where uid=? and date=? and response_date=?',
+            158000:'delete from dat_uer_interv_dp_identification where uid=?',
+            158001:'delete from dat_uer_interv_dp_identification where uid=? and date=?',
+            158002:'delete from dat_uer_interv_dp_identification where uid=? and date=? and response_date=?',
             158100:'delete from dat_ue_notif_new_snapshot_shared where uid=?',
             158101:'delete from dat_ue_notif_new_snapshot_shared where uid=? and date=?',
             158200:'delete from dat_ue_notif_new_snapshot_shared_with_me where uid=?',
@@ -92,9 +93,9 @@ S_A_DATUSEREVENTSDISABLED_B_UID_ENDDATE_COUNT=150101
 S_A_DATUSEREVENTSDISABLED_B_UID_ENDDATE_FROMDATE=150102
 S_A_DATUSEREVENTSDISABLED_B_UID_FROMDATE=150103
 
-# dat_user_events_graph_summary
+# dat_user_events_data_summary
 
-S_A_DATUSEREVENTSGRAPHSUMMARY_B_UID_DATE=150150
+S_A_DATUSEREVENTSDATASUMMARY_B_UID_DATE=150150
 
 # dat_ue_notif_new_user
 
@@ -151,9 +152,9 @@ I_A_DATUSEREVENTS=155000
 
 I_A_DATUSEREVENTSDISABLED=155100
 
-# dat_user_events_graph_summary
+# dat_user_events_data_summary
 
-I_A_DATUSEREVENTSGRAPHSUMMARY=155150
+I_A_DATUSEREVENTSDATASUMMARY=155150
 
 # dat_ue_notif_new_user
 
@@ -212,10 +213,10 @@ D_A_DATUSEREVENTS_B_UID_DATE=157001
 D_A_DATUSEREVENTSDISABLED_B_UID=157100
 D_A_DATUSEREVENTSDISABLED_B_UID_DATE=157101
 
-# dat_user_events_graph_summary
+# dat_user_events_data_summary
 
-D_A_DATUSEREVENTSGRAPHSUMMARY_B_UID=157150
-D_A_DATUSEREVENTSGRAPHSUMMARY_B_UID_DATE=157151
+D_A_DATUSEREVENTSDATASUMMARY_B_UID=157150
+D_A_DATUSEREVENTSDATASUMMARY_B_UID_DATE=157151
 
 # dat_ue_notif_new_user
 
@@ -259,8 +260,9 @@ D_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE=157901
 
 # dat_uer_intervention_datapoint_identification
 
-D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE=158000
-D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE_RESPDATE=158001
+D_A_DATUERINTERVDPIDENTIFICATION_B_UID=158000
+D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE=158001
+D_A_DATUERINTERVDPIDENTIFICATION_B_UID_DATE_RESPDATE=158002
 
 # dat_ue_notif_new_snapshot_shared
 

@@ -475,6 +475,23 @@ class GestaccountDatapointApiTest(unittest.TestCase):
             api.mark_negative_variable(pid=pid, date=date, position=position, length=length)
         self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_DNF)
 
+    def test_mark_negative_variable_failure_unsupported_operation(self):
+        ''' mark_negative_variable should fail if the datapoint is not associated
+            to any datasource '''
+        username='test_mark_negative_variable_failure_unsupported_operation'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
+        self.assertIsNotNone(datapoint)
+        date=timeuuid.uuid1()
+        position=1
+        length=1
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_DSNF)
+
     def test_mark_negative_variable_failure_no_variables_in_datasource_map(self):
         ''' mark_negative_variable should fail if datasource map has no variables '''
         did=self.datasource['did']
@@ -519,23 +536,6 @@ class GestaccountDatapointApiTest(unittest.TestCase):
             api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
         self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_VPNF)
 
-    def test_mark_negative_variable_failure_unsupported_operation(self):
-        ''' mark_negative_variable should fail if the datapoint is not associated
-            to any datasource '''
-        username='test_mark_negative_variable_failure_unsupported_operation'
-        password='password'
-        email=username+'@komlog.org'
-        user=userapi.create_user(username=username, password=password, email=email)
-        datapoint_uri='datapoint_uri'
-        datapoint=api.create_user_datapoint(uid=user['uid'], datapoint_uri=datapoint_uri)
-        self.assertIsNotNone(datapoint)
-        date=timeuuid.uuid1()
-        position=1
-        length=1
-        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
-            api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        self.assertEqual(cm.exception.error, Errors.E_GPA_MNV_DSNF)
-
     def test_mark_negative_variable_success(self):
         ''' mark_negative_variable should succeed '''
         did=self.datasource['did']
@@ -549,10 +549,28 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         position=45
         length=2
         mark_result=api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']],'dtree_pending':[]})
         #the dtree should not be generated twice if no change detected
         mark_result=api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[],'dtree_pending':[]})
+
+    def test_mark_negative_variable_success_dont_update_dtree(self):
+        ''' mark_negative_variable should succeed and return the pid list of modified datapoints without updating decision trees '''
+        did=self.datasource['did']
+        datapointname='test_mark_negative_variable_success_dont_update_dtree'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        content='mark_negative_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 45 and length 2
+        position=45
+        length=2
+        mark_result=api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length, dtree_update=False)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_pending':[datapoint['pid']],'dtree_gen_success':[]})
+        #the dtree should not be generated twice if no change detected
+        mark_result=api.mark_negative_variable(pid=datapoint['pid'], date=date, position=position, length=length, dtree_update=False)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[],'dtree_pending':[]})
 
     def test_mark_positive_variable_failure_invalid_pid(self):
         ''' mark_positive_variable should fail if pid is not valid '''
@@ -682,7 +700,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         position=45
         length=2
         mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']],'dtree_pending':[]})
 
     def test_mark_positive_variable_success_one_other_datapoint_matched(self):
         ''' mark_positive_variable should succeed if other datapoint matched '''
@@ -713,6 +731,35 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertIsNotNone(cassapidatapoint.get_datapoint_dtree_positive(pid=datapoint2['pid'], date=date))
         self.assertIsNone(cassapidatapoint.get_datapoint_dtree_negative(pid=datapoint2['pid'], date=date, position=position))
 
+    def test_mark_positive_variable_success_one_other_datapoint_matched_dont_update_dtrees(self):
+        ''' mark_positive_variable should succeed if other datapoint matched and return the modified datapoints without updating their dtrees '''
+        datasourcename='test_mark_positive_variable_success_one_other_datapoint_matched_datasource_dont_update_dtrees'
+        datasource=datasourceapi.create_datasource(uid=self.user['uid'], aid=self.agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        datapointname='test_mark_positive_variable_success_one_other_datapoint_matched'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        content='mark_positive_variable content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 45 and length 2
+        position=45
+        length=2
+        datapoints_to_update=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length, dtree_update=False)
+        dsdata=datasourceapi.get_mapped_datasource_data(did=did, fromdate=date, todate=date)
+        dsdatapoints=dsdata[0]['datapoints']
+        self.assertTrue(len(dsdatapoints),1)
+        self.assertEqual(dsdatapoints[0]['pid'],datapoint['pid'])
+        self.assertEqual(dsdatapoints[0]['position'],position)
+        datapointname='test_mark_positive_variable_success_one_other_datapoint_matched_2'
+        datapoint2=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        mark_result=api.mark_positive_variable(pid=datapoint2['pid'], date=date, position=position, length=length, dtree_update=False)
+        self.assertEqual(sorted(mark_result['dtree_pending']),sorted([datapoint2['pid'],datapoint['pid']]))
+        self.assertIsNone(cassapidatapoint.get_datapoint_dtree_positive(pid=datapoint['pid'], date=date))
+        self.assertIsNotNone(cassapidatapoint.get_datapoint_dtree_negative(pid=datapoint['pid'], date=date, position=position))
+        self.assertIsNotNone(cassapidatapoint.get_datapoint_dtree_positive(pid=datapoint2['pid'], date=date))
+        self.assertIsNone(cassapidatapoint.get_datapoint_dtree_negative(pid=datapoint2['pid'], date=date, position=position))
+
     def test_mark_positive_variable_failure_generating_dtree_ambiguous_positives(self):
         ''' mark_positive_variable should fail generating dtree if ambigous information is found in positives and negatives of this datapoint '''
         did=self.datasource['did']
@@ -726,7 +773,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         position=3
         length=1
         mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']],'dtree_pending':[]})
         date=timeuuid.uuid1()
         content='x: 1, y: 0'
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
@@ -735,7 +782,34 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         position=9
         length=1
         mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        self.assertEqual(mark_result,{'dtree_gen_failed':[datapoint['pid']],'dtree_gen_success':[]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[datapoint['pid']],'dtree_gen_success':[],'dtree_pending':[]})
+
+    def test_mark_positive_variable_failure_generating_dtree_ambiguous_positives_dont_update_dtrees(self):
+        ''' mark_positive_variable should fail generating dtree if ambigous information is found in positives and negatives of this datapoint. This fail will not be reported in mark function if dtree_update is False. '''
+        did=self.datasource['did']
+        datapointname='test_mark_positive_variable_failure_generating_dtree_ambiguous_positives_dont_update_dtrees'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        content='x: 1, y: 0'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first we say datapoint is x value
+        position=3
+        length=1
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']],'dtree_pending':[]})
+        date=timeuuid.uuid1()
+        content='x: 1, y: 0'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #now we say datapoint is y value
+        position=9
+        length=1
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length, dtree_update=False)
+        self.assertEqual(mark_result,{'dtree_pending':[datapoint['pid']],'dtree_gen_success':[],'dtree_gen_failed':[]})
+        with self.assertRaises(exceptions.DatapointDTreeGenerationException) as cm:
+            api.generate_decision_tree(pid=datapoint['pid'])
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GDT_EGDT)
 
     def test_mark_missing_datapoint_failure_invalid_pid(self):
         ''' mark_missing_datapoint should fail if pid is not valid '''
@@ -809,7 +883,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         position=45
         length=2
         mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']],'dtree_pending':[]})
         positives=cassapidatapoint.get_datapoint_dtree_positives(pid=datapoint['pid'])
         self.assertEqual(len(positives),1)
         self.assertEqual(positives[0].pid,datapoint['pid'])
@@ -819,14 +893,46 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         negatives=cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid'])
         self.assertEqual(len(negatives),0)
         mark_result=api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
-        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']],'dtree_pending':[]})
         positives=cassapidatapoint.get_datapoint_dtree_positives(pid=datapoint['pid'])
         self.assertEqual(len(positives),0)
         negatives=cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid'])
         self.assertEqual(len(negatives),3)
         #if no info has been modified, dtree should not be recalculated
         mark_result=api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
-        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[],'dtree_pending':[]})
+
+    def test_mark_missing_datapoint_success_dont_update_dtree(self):
+        ''' mark_missing_datapoint should succeed and return the list of modified datapoints without updating their decision trees. '''
+        did=self.datasource['did']
+        datapointname='test_mark_missing_datapoint_success_dont_update_dtree'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        date=timeuuid.uuid1()
+        content='mark_missing_datapoint content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        #first var should be a position 45 and length 2
+        position=45
+        length=2
+        mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[datapoint['pid']],'dtree_pending':[]})
+        positives=cassapidatapoint.get_datapoint_dtree_positives(pid=datapoint['pid'])
+        self.assertEqual(len(positives),1)
+        self.assertEqual(positives[0].pid,datapoint['pid'])
+        self.assertEqual(positives[0].date,date)
+        self.assertEqual(positives[0].position,position)
+        self.assertEqual(positives[0].length,length)
+        negatives=cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid'])
+        self.assertEqual(len(negatives),0)
+        mark_result=api.mark_missing_datapoint(pid=datapoint['pid'], date=date, dtree_update=False)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_pending':[datapoint['pid']],'dtree_gen_success':[]})
+        positives=cassapidatapoint.get_datapoint_dtree_positives(pid=datapoint['pid'])
+        self.assertEqual(len(positives),0)
+        negatives=cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid'])
+        self.assertEqual(len(negatives),3)
+        #if no info has been modified, dtree should not be recalculated
+        mark_result=api.mark_missing_datapoint(pid=datapoint['pid'], date=date)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[],'dtree_pending':[]})
 
     def test_generate_decision_tree_failure_invalid_pid(self):
         ''' generate_tree should fail if pid does not exists '''
@@ -882,7 +988,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         position=50
         length=2
         mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[pid]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[pid],'dtree_pending':[]})
         self.assertTrue(api.generate_decision_tree(pid=pid))
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
         dtree=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree)
@@ -910,7 +1016,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         position=3
         length=1
         mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[pid]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[pid],'dtree_pending':[]})
         date=timeuuid.uuid1()
         content='x: 1, y: 2'
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
@@ -920,7 +1026,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         length=1
         mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
         #error has arised already marking it positive
-        self.assertEqual(mark_result,{'dtree_gen_failed':[pid],'dtree_gen_success':[]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[pid],'dtree_gen_success':[],'dtree_pending':[]})
         #generating again fails
         with self.assertRaises(exceptions.DatapointDTreeGenerationException) as cm:
             api.generate_decision_tree(pid=pid)
@@ -984,7 +1090,7 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         position=50
         length=2
         mark_result=api.mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
-        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[pid]})
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[pid],'dtree_pending':[]})
         self.assertTrue(api.generate_inverse_decision_tree(pid=pid))
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
         dtree_inv=dtreeapi.get_decision_tree_from_serialized_data(serialization=datapoint_stats.dtree_inv)

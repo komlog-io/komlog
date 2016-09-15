@@ -5,6 +5,7 @@ Methods for manipulating User Events
 '''
 
 import uuid
+import json
 from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import events as cassapievents
 from komlog.komcass.api import user as cassapiuser
@@ -71,7 +72,7 @@ def _get_event_data(event, params_serializable=False, html_content=False):
         else:
             if html_content and params_serializable:
                 event_data['html']=_get_event_html_template(event_type=event.type, parameters=event_data['parameters'])
-                event_data['summary']=summary.get_user_event_graph_summary_data(uid=event.uid, date=event.date)
+                event_data['summary']=summary.get_user_event_data_summary(uid=event.uid, date=event.date)
             return event_data
 
 def _get_event_data_notification_new_user(event,params_serializable):
@@ -111,11 +112,8 @@ def _get_event_data_notification_new_circle(event, params_serializable):
     return event_data
 
 def _get_event_data_intervention_datapoint_identification(event, params_serializable):
-    did=event.did.hex if params_serializable else event.did
-    ds_seq=timeuuid.get_custom_sequence(event.ds_date)
-    doubts=[pid.hex for pid in event.doubts] if params_serializable else [pid for pid in event.doubts]
-    discarded=[pid.hex for pid in event.discarded] if params_serializable else [pid for pid in event.discarded]
-    event_data={'uid':event.uid, 'date':event.date, 'type':event.type, 'priority':event.priority, 'parameters':{'did':did, 'ds_seq':ds_seq, 'doubts':doubts, 'discarded':discarded}}
+    pid=event.pid.hex if params_serializable else event.pid
+    event_data={'uid':event.uid, 'date':event.date, 'type':event.type, 'priority':event.priority, 'parameters':{'pid':pid, 'datasourcename':event.datasourcename, 'datapointname':event.datapointname}}
     return event_data
 
 def _get_event_data_notification_new_snapshot_shared(event, params_serializable):
@@ -364,40 +362,50 @@ def _insert_event_intervention_datapoint_identification(uid, parameters):
         raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IUID)
     if not args.is_valid_dict(parameters):
         raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IP)
+    if not 'pid' in parameters or not args.is_valid_hex_uuid(parameters['pid']):
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IPPID)
     if not 'did' in parameters or not args.is_valid_hex_uuid(parameters['did']):
         raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IPDID)
-    if not 'date' in parameters or not args.is_valid_hex_date(parameters['date']):
-        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IPDATE)
-    if not 'doubts' in parameters or not isinstance(parameters['doubts'],list):
-        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IPDBT)
-    if not 'discarded' in parameters or not isinstance(parameters['discarded'],list):
-        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IPDISC)
-    for pid in parameters['doubts']:
-        if not args.is_valid_hex_uuid(pid):
-            raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IIDBT)
-    for pid in parameters['discarded']:
-        if not args.is_valid_hex_uuid(pid):
-            raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IIDISC)
+    if not 'dates' in parameters or not isinstance(parameters['dates'],list):
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IPDATES)
+    if len(parameters['dates']) == 0:
+        raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_NODATES)
+    for date in parameters['dates']:
+        if not args.is_valid_hex_date(date):
+            raise exceptions.BadParametersException(error=Errors.E_EAU_IEIDPI_IIDATE)
     now=timeuuid.uuid1()
+    pid = uuid.UUID(parameters['pid'])
+    did=uuid.UUID(parameters['did'])
     user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_UNF)
-    did=uuid.UUID(parameters['did'])
-    ds_date=uuid.UUID(parameters['date'])
-    datasource_map=cassapidatasource.get_datasource_map(did=did, date=ds_date)
-    if not datasource_map:
-        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_DNF)
-    doubts=[uuid.UUID(pid) for pid in parameters['doubts']]
-    discarded=[uuid.UUID(pid) for pid in parameters['discarded']]
-    event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, did=did, ds_date=ds_date, doubts=doubts, discarded=discarded)
+    datasource = cassapidatasource.get_datasource(did=did)
+    if datasource == None:
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_DSNF)
+    datapoint = cassapidatapoint.get_datapoint(pid=pid)
+    if datapoint == None:
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_DPNF)
+    if datapoint.did == None:
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_DPHNDID)
+    if datapoint.did != did:
+        raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_IDID)
     try:
-        if cassapievents.insert_user_event(event):
-            return {'uid':uid, 'date':now}
-        else:
-            raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_DBIE)
+        datapointname=datapoint.datapointname.split(datasource.datasourcename+'.')[1]
+    except IndexError:
+        datapointname=datapoint.datapointname
+    summary_params = {'dates':[uuid.UUID(date) for date in parameters['dates']], 'did':did}
+    summary_data = summary.generate_user_event_data_summary(event_type = types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters=summary_params)
+    event=ormevents.UserEventInterventionDatapointIdentification(uid=uid, date=now, priority=priorities.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, pid=pid, datasourcename=datasource.datasourcename, datapointname=datapointname)
+    event_summary = ormevents.UserEventDataSummary(uid=uid, date=now, summary = summary_data)
+    try:
+        cassapievents.insert_user_event(event)
+        cassapievents.insert_user_event_data_summary(event_summary)
     except cassexcept.KomcassException:
         cassapievents.delete_user_event(event)
+        cassapievents.delete_user_event_data_summary(uid=uid, date=now)
         raise
+    else:
+        return {'uid':uid, 'date':now}
 
 def _insert_event_notification_new_snapshot_shared(uid, parameters):
     if not args.is_valid_uuid(uid):
@@ -437,47 +445,47 @@ def _insert_event_notification_new_snapshot_shared(uid, parameters):
                     shared_uids.add(shared_user.uid)
             circles_info[shared_circle.cid]=shared_circle.circlename
     shared_event=ormevents.UserEventNotificationNewSnapshotShared(uid=user.uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, widgetname=snapshot.widgetname, nid=snapshot.nid, tid=ticket.tid, shared_with_users=users_info, shared_with_circles=circles_info)
-    summary_data=summary.generate_user_event_graph_summary_data(event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters=parameters)
+    summary_data=summary.generate_user_event_data_summary(event_type=types.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters=parameters)
     op_failed=False
-    graph_summary=ormevents.UserEventGraphSummary(uid=user.uid, date=now, summary=summary_data)
+    data_summary=ormevents.UserEventDataSummary(uid=user.uid, date=now, summary=summary_data)
     shared_with_me_events=[]
-    shared_with_me_graph_summaries=[]
+    shared_with_me_data_summaries=[]
     for uid in shared_uids:
         shared_with_me_events.append(ormevents.UserEventNotificationNewSnapshotSharedWithMe(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME, username=user.username, widgetname=snapshot.widgetname, nid=snapshot.nid, tid=ticket.tid))
-        shared_with_me_graph_summaries.append(ormevents.UserEventGraphSummary(uid=uid, date=now, summary=summary_data))
+        shared_with_me_data_summaries.append(ormevents.UserEventDataSummary(uid=uid, date=now, summary=summary_data))
     events_inserted=[]
-    graph_summaries_inserted=[]
+    data_summaries_inserted=[]
     try:
-        if cassapievents.insert_user_event(shared_event) and cassapievents.insert_user_event_graph_summary(graph_summary):
+        if cassapievents.insert_user_event(shared_event) and cassapievents.insert_user_event_data_summary(data_summary):
             events_inserted.append(shared_event)
-            graph_summaries_inserted.append(graph_summary)
+            data_summaries_inserted.append(data_summary)
             for event in shared_with_me_events:
                 if not cassapievents.insert_user_event(event):
                     op_failed=True
                     break
                 events_inserted.append(event)
-            for graph_summary in shared_with_me_graph_summaries:
-                if not cassapievents.insert_user_event_graph_summary(graph_summary):
+            for data_summary in shared_with_me_data_summaries:
+                if not cassapievents.insert_user_event_data_summary(data_summary):
                     op_failed=True
                     break
-                graph_summaries_inserted.append(graph_summary)
+                data_summaries_inserted.append(data_summary)
         else:
             cassapievents.delete_user_event(event=shared_event)
-            cassapievents.delete_user_event_graph_summary(uid=graph_summary.uid, date=graph_summary.date)
+            cassapievents.delete_user_event_data_summary(uid=data_summary.uid, date=data_summary.date)
             raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNSS_DBIIE)
         if op_failed:
             for event in events_inserted:
                 cassapievents.delete_user_event(event=event)
-            for graph_summary in graph_summaries_inserted:
-                cassapievents.delete_user_event_graph_summary(uid=graph_summary.uid, date=graph_summary.date)
+            for data_summary in data_summaries_inserted:
+                cassapievents.delete_user_event_data_summary(uid=data_summary.uid, date=data_summary.date)
             raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNSS_DBPIE)
         else:
             return {'uid':uid, 'date':now}
     except cassexcept.KomcassException:
         for event in events_inserted:
             cassapievents.delete_user_event(event=event)
-        for graph_summary in graph_summaries_inserted:
-            cassapievents.delete_user_event_graph_summary(uid=graph_summary.uid, date=graph_summary.date)
+        for data_summary in data_summaries_inserted:
+            cassapievents.delete_user_event_data_summary(uid=data_summary.uid, date=data_summary.date)
         raise
 
 

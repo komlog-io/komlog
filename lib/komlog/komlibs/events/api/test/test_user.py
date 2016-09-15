@@ -218,8 +218,6 @@ class EventsApiUserTest(unittest.TestCase):
         email=username+'@komlog.org'
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         date=uuid.uuid1()
-        doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
-        discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
         agentname='test_get_event_intervention_datapoint_identification_success_agent'
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
@@ -230,10 +228,12 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
-        content='datasource content'
+        content='1 datasource content'
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
         self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
-        parameters={'did':datasource['did'].hex,'date':date.hex,'doubts':doubts,'discarded':discarded}
+        datapointname='datapoint_name'
+        datapoint=datapointapi.monitor_new_datapoint(did=datasource['did'],date=date, position=0, length = 1,datapointname=datapointname)
+        parameters={'did':datasource['did'].hex,'dates':[date.hex],'pid':datapoint['pid'].hex}
         event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
         self.assertIsNotNone(event)
         db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
@@ -242,10 +242,9 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertEqual(db_event['date'],event['date'])
         self.assertEqual(db_event['type'],types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
         self.assertTrue(isinstance(db_event, dict))
-        self.assertEqual(db_event['parameters']['did'],datasource['did'])
-        self.assertEqual(db_event['parameters']['ds_seq'],timeuuid.get_custom_sequence(date))
-        self.assertEqual(sorted(db_event['parameters']['doubts']),sorted([uuid.UUID(pid) for pid in doubts]))
-        self.assertEqual(sorted(db_event['parameters']['discarded']),sorted([uuid.UUID(pid) for pid in discarded]))
+        self.assertEqual(db_event['parameters']['pid'],datapoint['pid'])
+        self.assertEqual(db_event['parameters']['datasourcename'],datasourcename)
+        self.assertEqual(db_event['parameters']['datapointname'],datapointname)
 
     def test_get_event_success_notification_new_snapshot_shared(self):
         ''' get_event should return the event '''
@@ -1110,14 +1109,52 @@ class EventsApiUserTest(unittest.TestCase):
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
             self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_IP)
 
-    def test_new_event_intervention_datapoint_identification_failure_no_did_parameter_passed(self):
-        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and no did parameter is passed '''
+    def test_new_event_intervention_datapoint_identification_failure_no_pid_parameter_passed(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and no pid parameter is passed '''
         uid=uuid.uuid4()
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         parameters={}
         with self.assertRaises(exceptions.BadParametersException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_IPPID)
+
+    def test_new_event_intervention_datapoint_identification_failure_no_did_parameter_passed(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and no did parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'pid':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
         self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_IPDID)
+
+    def test_new_event_intervention_datapoint_identification_failure_no_dates_parameter_passed(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and no dates parameter is passed '''
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'pid':uuid.uuid4().hex,'did':uuid.uuid4().hex}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_IPDATES)
+
+    def test_new_event_intervention_datapoint_identification_failure_no_dates_items_passed(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and dates parameter has no items '''
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'pid':uuid.uuid4().hex,'did':uuid.uuid4().hex, 'dates':[]}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_NODATES)
+
+    def test_new_event_intervention_datapoint_identification_failure_invalid_pid_parameter_passed(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and pid parameter is invalid '''
+        uid=uuid.uuid4()
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        pids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        for pid in pids:
+            parameters={'pid':pid}
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
+            self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_IPPID)
 
     def test_new_event_intervention_datapoint_identification_failure_invalid_did_parameter_passed(self):
         ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and did parameter is invalid '''
@@ -1125,7 +1162,7 @@ class EventsApiUserTest(unittest.TestCase):
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         dids=[None,234234, 234234.234234, 'astring',uuid.uuid4(), uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
         for did in dids:
-            parameters={'did':did}
+            parameters={'did':did,'pid':uuid.uuid4().hex}
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
             self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_IPDID)
@@ -1134,57 +1171,205 @@ class EventsApiUserTest(unittest.TestCase):
         ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and user does not exist '''
         uid=uuid.uuid4()
         did=uuid.uuid4()
-        date=uuid.uuid1()
-        doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
-        discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
+        pid=uuid.uuid4()
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        parameters={'did':did.hex,'date':date.hex,'doubts':doubts,'discarded':discarded}
+        parameters={'did':did.hex,'pid':pid.hex,'dates':[uuid.uuid1().hex]}
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=uid, event_type=event_type, parameters=parameters)
         self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_UNF)
 
     def test_new_event_intervention_datapoint_identification_failure_non_existent_datasource(self):
-        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and circle does not exist '''
-        username='test_new_event_intervention_datapoint_identirication_failure_non_existent_datasource'
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and datasource does not exist '''
+        username='test_new_event_intervention_datapoint_identification_failure_non_existent_datasource'
         password='temporal'
         email=username+'@komlog.org'
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         did=uuid.uuid4()
-        date=uuid.uuid1()
-        doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
-        discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
-        parameters={'did':did.hex,'date':date.hex,'doubts':doubts,'discarded':discarded}
+        pid=uuid.uuid4()
+        dates=[uuid.uuid1().hex]
+        datasourcename='dsname'
+        datapointname='dsname'
+        parameters={'did':did.hex,'pid':pid.hex, 'dates':dates}
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         with self.assertRaises(exceptions.UserEventCreationException) as cm:
             eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
-        self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_DNF)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_DSNF)
 
-    def test_new_event_intervention_datapoint_identification_success(self):
-        ''' new_event should succeed '''
-        username='test_new_event_intervention_datapoint_identirication'
+    def test_new_event_intervention_datapoint_identification_failure_non_existent_datapoint(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and datapoint does not exist '''
+        username='test_new_event_intervention_datapoint_identification_failure_non_existent_datapoint'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agentname='agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename='dsname'
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        pid=uuid.uuid4()
+        datapointname='datapointname'
+        dates=[uuid.uuid1().hex]
+        parameters={'did':datasource['did'].hex,'pid':pid.hex, 'dates':dates}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_DPNF)
+
+    def test_new_event_intervention_datapoint_identification_failure_datapoint_has_no_did(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and datapoint has no associated datasource '''
+        username='test_new_event_intervention_datapoint_identification_failure_datapoint_has_no_ds'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agentname='agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename='dsname'
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        datapointname='user_datapoint'
+        datapoint=datapointapi.create_user_datapoint(uid=user['uid'],datapoint_uri=datapointname)
+        self.assertIsNotNone(datapoint)
+        dates=[uuid.uuid1().hex]
+        parameters={'did':datasource['did'].hex,'pid':datapoint['pid'].hex, 'dates':dates}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_DPHNDID)
+
+    def test_new_event_intervention_datapoint_identification_failure_datapoint_has_dff_did(self):
+        ''' new_event should fail if event_type is INTERVENTION_DATAPOINT_IDENTIFICATION and datapoint has different did '''
+        username='test_new_event_intervention_datapoint_identification_failure_datapoint_has_df_ds'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agentname='agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename='dsname'
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        datapointname='datapointname'
+        datasourcename2='datasourcename_2'
+        datasource2=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename2)
+        datapoint=datapointapi.create_datasource_datapoint(did=datasource2['did'],datapoint_uri=datapointname)
+        self.assertIsNotNone(datapoint)
+        dates=[uuid.uuid1().hex]
+        parameters={'did':datasource['did'].hex,'pid':datapoint['pid'].hex, 'dates':dates}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, Errors.E_EAU_IEIDPI_IDID)
+
+    def test_new_event_intervention_datapoint_identification_failure_content_not_found(self):
+        ''' new_event should fail if datasource map or data does not exist '''
+        username='test_new_event_intervention_datapoint_identification_failure_content_not_found'
         password='temporal'
         email=username+'@komlog.org'
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
         date=uuid.uuid1()
         doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
         discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
-        agentname='test_new_event_intervention_datapoint_identification_success_agent'
+        agentname='agent'
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
-        datasourcename='test_new_event_intervention_datapoint_identification_success_datasource'
+        datasourcename='datasource'
         user=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user)
         agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
         self.assertIsNotNone(datasource)
-        content='datasource content'
+        content='1 datasource content'
         self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
         self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
-        parameters={'did':datasource['did'].hex,'date':date.hex,'doubts':doubts,'discarded':discarded}
+        datapointname='datapoint_name'
+        datapoint=datapointapi.monitor_new_datapoint(did=datasource['did'],date=date, position=0, length = 1,datapointname=datapointname)
+        parameters={'did':datasource['did'].hex,'dates':[uuid.uuid1().hex],'pid':datapoint['pid'].hex}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, Errors.E_EAS_GDSUEIDPI_DSDNF)
+
+    def test_new_event_intervention_datapoint_identification_failure_content_without_vars(self):
+        ''' new_event should fail if content has no vars '''
+        username='test_new_event_intervention_datapoint_identification_failure_cnt_without_vars'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        date=uuid.uuid1()
+        doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
+        discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
+        agentname='agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        datasourcename='datasource'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='1 datasource content'
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        datapointname='datapoint_name'
+        datapoint=datapointapi.monitor_new_datapoint(did=datasource['did'],date=date, position=0, length = 1,datapointname=datapointname)
+        content='datasource content'
+        date=uuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        parameters={'did':datasource['did'].hex,'dates':[date.hex],'pid':datapoint['pid'].hex}
+        with self.assertRaises(exceptions.UserEventCreationException) as cm:
+            eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertEqual(cm.exception.error, Errors.E_EAS_GDSUEIDPI_DSVNF)
+
+    def test_new_event_intervention_datapoint_identification_success(self):
+        ''' new_event should succeed '''
+        username='test_new_event_intervention_datapoint_identification_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        date=uuid.uuid1()
+        doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
+        discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
+        agentname='agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        datasourcename='datasource'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='1 datasource content'
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        datapointname='datapoint_name'
+        datapoint=datapointapi.monitor_new_datapoint(did=datasource['did'],date=date, position=0, length = 1,datapointname=datapointname)
+        parameters={'did':datasource['did'].hex,'dates':[date.hex],'pid':datapoint['pid'].hex}
         event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
         self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
+        self.assertTrue(isinstance(db_event, dict))
+        self.assertEqual(db_event['parameters']['pid'],datapoint['pid'])
+        self.assertEqual(db_event['parameters']['datasourcename'],datasourcename)
+        self.assertEqual(db_event['parameters']['datapointname'],datapointname)
 
     def test_new_event_notification_new_snapshot_shared_failure_invalid_uid(self):
         ''' new_event should fail if uid is invalid  '''

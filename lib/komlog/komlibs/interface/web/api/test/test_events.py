@@ -18,7 +18,9 @@ from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
+from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.interface.imc.model import messages
+from komlog.komlibs.interface.imc import status as imcstatus
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
 from komlog.komlibs.general.time import timeuuid
@@ -174,190 +176,11 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
         self.assertEqual(response.error, eventerrors.E_EAU_GEV_EVNF.value)
 
-    def test_event_response_request_failure_no_missing_parameter_found(self):
-        ''' event_response_request should fail if no missing parameter is found '''
+    def test_event_response_request_failure_invalid_event_type(self):
+        ''' event_response_request should fail if event type responses are not supported '''
         psp = self.passport
-        agentname='test_event_response_request_failure_no_missing_parameter_found'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='version'
-        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertIsNotNone(agent)
-        datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
-        datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
-        self.assertIsNotNone(datasource)
-        content='content'
-        date=timeuuid.uuid1()
-        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
-        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
-        did=datasource['did']
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
-        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
-        self.assertIsNotNone(new_event)
-        seq=timeuuid.get_custom_sequence(new_event['date'])
-        data={}
-        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IMSF.value)
-
-    def test_event_response_request_failure_invalid_missing_parameter_type(self):
-        ''' event_response_request should fail if no missing parameter is found '''
-        psp = self.passport
-        agentname='test_event_response_request_failure_invalid_missing_parameter_type'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='version'
-        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertIsNotNone(agent)
-        datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
-        datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
-        self.assertIsNotNone(datasource)
-        content='content'
-        date=timeuuid.uuid1()
-        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
-        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
-        did=datasource['did']
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
-        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
-        self.assertIsNotNone(new_event)
-        seq=timeuuid.get_custom_sequence(new_event['date'])
-        data={'missing':23234}
-        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IMSF.value)
-
-    def test_event_response_request_failure_no_identified_parameter_found(self):
-        ''' event_response_request should fail if no missing parameter is found '''
-        psp = self.passport
-        agentname='test_event_response_request_failure_noidentified_parameter_found'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='version'
-        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertIsNotNone(agent)
-        datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
-        datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
-        self.assertIsNotNone(datasource)
-        content='content'
-        date=timeuuid.uuid1()
-        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
-        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
-        did=datasource['did']
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
-        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
-        self.assertIsNotNone(new_event)
-        seq=timeuuid.get_custom_sequence(new_event['date'])
-        data={'missing':[]}
-        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDF.value)
-
-    def test_event_response_request_failure_invalid_identified_parameter_type(self):
-        ''' event_response_request should fail if no identified parameter is found '''
-        psp = self.passport
-        agentname='test_event_response_request_failure_invalid_identified_parameter_type'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='version'
-        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertIsNotNone(agent)
-        datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
-        datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
-        self.assertIsNotNone(datasource)
-        content='content'
-        date=timeuuid.uuid1()
-        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
-        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
-        did=datasource['did']
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
-        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
-        self.assertIsNotNone(new_event)
-        seq=timeuuid.get_custom_sequence(new_event['date'])
-        data={'missing':[],'identified':23234}
-        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDF.value)
-
-    def test_event_response_request_failure_invalid_missing_item(self):
-        ''' event_response_request should fail if missing items are invalid '''
-        psp = self.passport
-        agentname='test_event_response_request_failure_invalid_missing_item'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='version'
-        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertIsNotNone(agent)
-        datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
-        datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
-        self.assertIsNotNone(datasource)
-        content='content'
-        date=timeuuid.uuid1()
-        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
-        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
-        did=datasource['did']
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
-        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
-        self.assertIsNotNone(new_event)
-        seq=timeuuid.get_custom_sequence(new_event['date'])
-        data={'missing':[uuid.uuid4()], 'identified':[]}
-        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IMSIT.value)
-
-    def test_event_response_request_failure_invalid_identified_item(self):
-        ''' event_response_request should fail if identified items are invalid '''
-        psp = self.passport
-        agentname='test_event_response_request_failure_invalid_identified_item'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='version'
-        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertIsNotNone(agent)
-        datasourcename='test_event_response_request_failure_invalid_identified_item'
-        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
-        datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
-        self.assertIsNotNone(datasource)
-        content='content'
-        date=timeuuid.uuid1()
-        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
-        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
-        did=datasource['did']
-        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
-        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
-        self.assertIsNotNone(new_event)
-        seq=timeuuid.get_custom_sequence(new_event['date'])
-        data={'missing':[],'identified':[uuid.uuid4()]}
-        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
-        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDIT.value)
-
-    def test_event_response_request_failure_non_supported_event_type(self):
-        ''' event_response_request should succeed and send message '''
-        psp = self.passport
-        agentname='test_event_response_request_failure_non_supported_event_type'
-        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
-        version='version'
-        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
-        self.assertIsNotNone(agent)
-        event_type=types.USER_EVENT_NOTIFICATION_NEW_AGENT
-        parameters={'aid':agent['aid'].hex}
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_USER
+        parameters = {}
         new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
         self.assertIsNotNone(new_event)
         seq=timeuuid.get_custom_sequence(new_event['date'])
@@ -366,44 +189,328 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
         self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IEVT.value)
 
-    def test_event_response_request_success_message_sent(self):
-        ''' event_response_request should succeed and send message '''
+    def test_event_response_request_failure_no_identified_parameter_found(self):
+        ''' event_response_request should fail if no identified parameter is found '''
         psp = self.passport
-        agentname='test_event_response_request_success_message_sent'
+        agentname='test_event_response_request_failure_noidentified_parameter_found'
         pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
         version='version'
         agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         datasourcename=agentname
-        psp_agent = passport.get_agent_passport({'user':self.username,'sid':uuid.uuid4().hex, 'aid':agent['aid'].hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())})
-        datasource=datasourceapi.create_datasource(uid=psp.uid,aid=agent['aid'],datasourcename=datasourcename)
-        self.assertIsNotNone(datasource)
-        content='content'
-        date=timeuuid.uuid1()
-        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
-        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        datasource=datasourceapi.create_datasource(uid=psp.uid, aid=agent['aid'], datasourcename=datasourcename)
         did=datasource['did']
+        date=timeuuid.uuid1()
+        content='x = 1'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        position=4
+        length=1
+        datapointname='x'
+        datapoint1=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(datapointapi.store_datapoint_values(pid=datapoint1['pid'], date=date))
+        pid = datapoint1['pid']
+        dates=[date.hex]
         event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
-        doubts=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        discarded=[uuid.uuid4().hex, uuid.uuid4().hex, ]
-        parameters={'did':did.hex, 'date':date.hex, 'doubts':doubts, 'discarded':discarded}
+        parameters={'did':did.hex, 'pid':pid.hex, 'dates':dates}
         new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
         self.assertIsNotNone(new_event)
         seq=timeuuid.get_custom_sequence(new_event['date'])
-        missing_pid=uuid.uuid4()
-        identified_entry={'pid':uuid.uuid4().hex,'p':23,'l':2}
-        data={'missing':[missing_pid.hex],'identified':[identified_entry]}
+        data={'no_identified':[]}
+        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDF.value)
+
+    def test_event_response_request_failure_invalid_identified_parameter_found(self):
+        ''' event_response_request should fail if identified parameter type is invalid '''
+        psp = self.passport
+        agentname='test_event_response_request_failure_invalid_identified_parameter_found'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=psp.uid, aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='x = 1'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        position=4
+        length=1
+        datapointname='x'
+        datapoint1=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(datapointapi.store_datapoint_values(pid=datapoint1['pid'], date=date))
+        pid = datapoint1['pid']
+        dates=[date.hex]
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':did.hex, 'pid':pid.hex, 'dates':dates}
+        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(new_event)
+        seq=timeuuid.get_custom_sequence(new_event['date'])
+        data={'identified':{}}
+        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDF.value)
+
+    def test_event_response_request_failure_invalid_identified_item_type(self):
+        ''' event_response_request should fail if identified parameter item type is invalid '''
+        psp = self.passport
+        agentname='test_event_response_request_failure_invalid_identified_item_type'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=psp.uid, aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='x = 1'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        position=4
+        length=1
+        datapointname='x'
+        datapoint1=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(datapointapi.store_datapoint_values(pid=datapoint1['pid'], date=date))
+        pid = datapoint1['pid']
+        dates=[date.hex]
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':did.hex, 'pid':pid.hex, 'dates':dates}
+        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(new_event)
+        seq=timeuuid.get_custom_sequence(new_event['date'])
+        data={'identified':[1]}
+        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDIT.value)
+
+    def test_event_response_request_failure_invalid_identified_item_p_not_found(self):
+        ''' event_response_request should fail if identified parameter item has no p param '''
+        psp = self.passport
+        agentname='test_event_response_request_failure_invalid_identified_item_p_not_found'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=psp.uid, aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='x = 1'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        position=4
+        length=1
+        datapointname='x'
+        datapoint1=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(datapointapi.store_datapoint_values(pid=datapoint1['pid'], date=date))
+        pid = datapoint1['pid']
+        dates=[date.hex]
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':did.hex, 'pid':pid.hex, 'dates':dates}
+        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(new_event)
+        seq=timeuuid.get_custom_sequence(new_event['date'])
+        data={'identified':[{'s':timeuuid.get_custom_sequence(date),'l':1,'ap':4}]}
+        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDIT.value)
+
+    def test_event_response_request_failure_invalid_identified_item_p_invalid(self):
+        ''' event_response_request should fail if identified parameter item has no p param '''
+        psp = self.passport
+        agentname='test_event_response_request_failure_invalid_identified_item_p_invalid'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=psp.uid, aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='x = 1'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        position=4
+        length=1
+        datapointname='x'
+        datapoint1=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(datapointapi.store_datapoint_values(pid=datapoint1['pid'], date=date))
+        pid = datapoint1['pid']
+        dates=[date.hex]
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':did.hex, 'pid':pid.hex, 'dates':dates}
+        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(new_event)
+        seq=timeuuid.get_custom_sequence(new_event['date'])
+        data={'identified':[{'s':timeuuid.get_custom_sequence(date),'l':1,'ap':4}]}
+        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDIT.value)
+
+    def test_event_response_request_failure_invalid_identified_item_l_not_found(self):
+        ''' event_response_request should fail if identified parameter item has no p param '''
+        psp = self.passport
+        agentname='test_event_response_request_failure_invalid_identified_item_l_not_found'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=psp.uid, aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='x = 1'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        position=4
+        length=1
+        datapointname='x'
+        datapoint1=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(datapointapi.store_datapoint_values(pid=datapoint1['pid'], date=date))
+        pid = datapoint1['pid']
+        dates=[date.hex]
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':did.hex, 'pid':pid.hex, 'dates':dates}
+        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(new_event)
+        seq=timeuuid.get_custom_sequence(new_event['date'])
+        data={'identified':[{'s':timeuuid.get_custom_sequence(date),'l':1,'ap':4}]}
+        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDIT.value)
+
+    def test_event_response_request_failure_invalid_identified_item_l_invalid(self):
+        ''' event_response_request should fail if identified parameter item has invalid l '''
+        psp = self.passport
+        agentname='test_event_response_request_failure_invalid_identified_item_l_invalid'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=psp.uid, aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='x = 1'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        position=4
+        length=1
+        datapointname='x'
+        datapoint1=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(datapointapi.store_datapoint_values(pid=datapoint1['pid'], date=date))
+        pid = datapoint1['pid']
+        dates=[date.hex]
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':did.hex, 'pid':pid.hex, 'dates':dates}
+        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(new_event)
+        seq=timeuuid.get_custom_sequence(new_event['date'])
+        data={'identified':[{'s':timeuuid.get_custom_sequence(date),'l':1,'ap':4}]}
+        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDIT.value)
+
+    def test_event_response_request_failure_invalid_identified_item_s_not_found(self):
+        ''' event_response_request should fail if identified parameter item has no s param '''
+        psp = self.passport
+        agentname='test_event_response_request_failure_invalid_identified_item_s_not_found'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=psp.uid, aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='x = 1'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        position=4
+        length=1
+        datapointname='x'
+        datapoint1=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(datapointapi.store_datapoint_values(pid=datapoint1['pid'], date=date))
+        pid = datapoint1['pid']
+        dates=[date.hex]
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':did.hex, 'pid':pid.hex, 'dates':dates}
+        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(new_event)
+        seq=timeuuid.get_custom_sequence(new_event['date'])
+        data={'identified':[{'s':timeuuid.get_custom_sequence(date),'l':1,'ap':4}]}
+        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDIT.value)
+
+    def test_event_response_request_failure_invalid_identified_item_s_invalid(self):
+        ''' event_response_request should fail if identified parameter item has invalid s param '''
+        psp = self.passport
+        agentname='test_event_response_request_failure_invalid_identified_item_s_invalid'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=psp.uid, aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='x = 1'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        position=4
+        length=1
+        datapointname='x'
+        datapoint1=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(datapointapi.store_datapoint_values(pid=datapoint1['pid'], date=date))
+        pid = datapoint1['pid']
+        dates=[date.hex]
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':did.hex, 'pid':pid.hex, 'dates':dates}
+        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(new_event)
+        seq=timeuuid.get_custom_sequence(new_event['date'])
+        data={'identified':[{'s':date.hex,'l':1,'p':4}]}
+        response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDIT.value)
+
+    def test_event_response_request_success_message_generated(self):
+        ''' event_response_request should succeed and generate the imc message '''
+        psp = self.passport
+        agentname='test_event_response_request_success_message_generated'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        agent=agentapi.create_agent(uid=psp.uid, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasourcename=agentname
+        datasource=datasourceapi.create_datasource(uid=psp.uid, aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        date=timeuuid.uuid1()
+        content='x = 1'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date))
+        position=4
+        length=1
+        datapointname='x'
+        datapoint1=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+        self.assertTrue(datapointapi.store_datapoint_values(pid=datapoint1['pid'], date=date))
+        pid = datapoint1['pid']
+        dates=[date.hex]
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        parameters={'did':did.hex, 'pid':pid.hex, 'dates':dates}
+        new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(new_event)
+        seq=timeuuid.get_custom_sequence(new_event['date'])
+        data={'identified':[{'s':timeuuid.get_custom_sequence(date),'l':1,'p':4}]}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
-        while len(msgs)>0:
-            for msg in msgs:
-                if msg.type == messages.Messages.USER_EVENT_RESPONSE_MESSAGE:
-                    self.assertEqual(msg.uid, psp.uid)
-                    self.assertEqual(msg.date, new_event['date'])
-                msgs.remove(msg)
-                msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
-                    msgs.append(msg2)
-                    self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        self.assertEqual(response.error, Errors.OK.value)
+        self.assertEqual(len(response.unrouted_messages),1)
+        self.assertEqual(response.unrouted_messages[0]._type_,messages.Messages.USER_EVENT_RESPONSE_MESSAGE)
+        self.assertEqual(response.unrouted_messages[0].parameters,{'identified':data['identified']})
+        msgresponse=msgapi.process_message(response.unrouted_messages[0])
+        self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
 
