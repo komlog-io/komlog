@@ -3503,3 +3503,71 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         self.assertTrue(isinstance(obj2, messages.DataIntervalRequestMessage))
         self.assertTrue(isinstance(obj2, messages.IMCMessage))
 
+    def test_AnalyzeDTreeMessage_failure_invalid_pid(self):
+        ''' AnalyzeDTreeMessage creation should fail if pid is invalid '''
+        pids=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.AnalyzeDTreeMessage(pid=pid)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_ADTREE_IPID)
+
+    def test_AnalyzeDTreeMessage_failure_load_from_serialization_invalid_field_number(self):
+        ''' AnalyzeDTreeMessage creation should fail if we pass a string without the exact number of fields '''
+        msg='|'.join((messages.AnalyzeDTreeMessage._type_.value,))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.AnalyzeDTreeMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_ADTREE_ELFS)
+
+    def test_AnalyzeDTreeMessage_failure_load_from_serialization_invalid_message(self):
+        ''' AnalyzeDTreeMessage creation should fail if we pass a non string message '''
+        msg=['not a string']
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.AnalyzeDTreeMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_ADTREE_MINS)
+
+    def test_AnalyzeDTreeMessage_failure_load_from_serialization_invalid_serialization_type(self):
+        ''' AnalyzeDTreeMessage creation should fail if we pass a string with not the expected type '''
+        msg='|'.join(('WHATEVER','1'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.AnalyzeDTreeMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_ADTREE_IST)
+
+    def test_AnalyzeDTreeMessage_failure_load_from_serialization_invalid_hex_pid(self):
+        ''' AnalyzeDTreeMessage creation should fail if we pass a string with invalid pid '''
+        pid=uuid.uuid4()
+        msg='|'.join((messages.AnalyzeDTreeMessage._type_.value,'pid.hex'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.AnalyzeDTreeMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_ADTREE_IHPID)
+
+    def test_AnalyzeDTreeMessage_success_load_from_serialization(self):
+        ''' AnalyzeDTreeMessage creation should succeed calling the classmethod load_from_serialization '''
+        pid=uuid.uuid4()
+        msg='|'.join((messages.AnalyzeDTreeMessage._type_.value,pid.hex))
+        obj=messages.AnalyzeDTreeMessage.load_from_serialization(msg)
+        self.assertEqual(obj.pid, pid)
+        self.assertEqual(obj._type_, messages.Messages.ANALYZE_DTREE_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.AnalyzeDTreeMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_AnalyzeDTreeMessage_success_load_from_serialization_base_class(self):
+        '''  AnalyzeDTreeMessage creation should succeed calling the classmethod load_from_serialization from the base class '''
+        pid=uuid.uuid4()
+        msg='|'.join((messages.AnalyzeDTreeMessage._type_.value,pid.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.pid, pid)
+        self.assertEqual(obj._type_, messages.Messages.ANALYZE_DTREE_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.AnalyzeDTreeMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_AnalyzeDTreeMessage_to_serialization_success(self):
+        ''' AnalyzeDTreeMessage.to_serialization should succeed '''
+        pid=uuid.uuid4()
+        msg='|'.join((messages.AnalyzeDTreeMessage._type_.value, pid.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.pid, pid)
+        self.assertEqual(obj._type_, messages.Messages.ANALYZE_DTREE_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.AnalyzeDTreeMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+        self.assertEqual(obj.to_serialization(),msg)
+

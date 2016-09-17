@@ -303,7 +303,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
 
     def test_process_message_NEGVAR_success_requested_twice(self):
-        ''' process_message_NEGVAR should succeed, and if requested twice, dont request FILLDP if now new info is added '''
+        ''' process_message_NEGVAR should succeed, and if requested twice, dont request FILLDP if no new info is added '''
         username='test_process_message_negvar_success_requested_twice'
         password='password'
         email=username+'@komlog.org'
@@ -394,7 +394,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.routed_messages,{})
 
     def test_process_message_POSVAR_success_requested_twice(self):
-        ''' process_message_POSVAR should succeed, and if requested twice, dont request FILLDP if now new info is added '''
+        ''' process_message_POSVAR should succeed, and if requested twice, dont request FILLDP if no new info is added '''
         username='test_process_message_posvar_success_requested_twice'
         password='password'
         email=username+'@komlog.org'
@@ -519,7 +519,8 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.routed_messages, {})
         #in the future a new message will be generated to analize the error and generate a notification for the user to be able to identify again the right variable
-        self.assertEqual(response.unrouted_messages, [])
+        self.assertEqual(len(response.unrouted_messages), 1)
+        self.assertEqual(response.unrouted_messages[0]._type_, messages.Messages.ANALYZE_DTREE_MESSAGE)
 
     def test_process_message_NEWDSW_failure_non_existent_user(self):
         ''' process_message_NEWDSW should fail if user does not exist '''

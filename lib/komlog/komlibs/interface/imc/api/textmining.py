@@ -4,6 +4,7 @@ Textmining message definitions
 '''
 
 import json
+from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.gestaccount.datapoint import api as datapointapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
@@ -96,5 +97,16 @@ def process_message_GENTEXTSUMMARY(message):
     else:
         response.error=Errors.E_IAATM_GTXS_EGDSTXS
         response.status=status.IMC_STATUS_INTERNAL_ERROR
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_ADTREE(message):
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
+    result = datapointapi.get_datapoint_controversial_samples(pid=message.pid)
+    if 'controversial_samples' in result and len(result['controversial_samples'])>0:
+        params={'pid':message.pid.hex, 'did':result['did'].hex, 'dates':[date.hex for date in result['controversial_samples']]}
+        msg=messages.UserEventMessage(uid=result['uid'], event_type=eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters=params)
+        response.add_message(msg)
+    response.status=status.IMC_STATUS_OK
     return response
 

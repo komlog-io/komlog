@@ -51,6 +51,8 @@ def process_message_MONVAR(message):
     response.add_message(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':result['pid'].hex}))
     for pid in result['dtree_gen_success']:
         response.add_message(messages.FillDatapointMessage(pid=pid,date=date))
+    for pid in result['dtree_gen_failed']:
+        response.add_message(messages.AnalyzeDTreeMessage(pid=pid))
     if result['previously_existed'] is False:
         response.add_message(messages.NewDPWidgetMessage(uid=uid,pid=result['pid']))
         uris=[{'type':vertex.DATAPOINT, 'id':result['pid'], 'uri':result['datapointname']}]
@@ -72,6 +74,8 @@ def process_message_NEGVAR(message):
     result=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
     for a_pid in result['dtree_gen_success']:
         response.add_message(messages.FillDatapointMessage(pid=a_pid,date=date))
+    for a_pid in result['dtree_gen_failed']:
+        response.add_message(messages.AnalyzeDTreeMessage(pid=a_pid))
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -90,6 +94,8 @@ def process_message_POSVAR(message):
     result=datapointapi.mark_positive_variable(date=date, position=position, length=length, pid=pid)
     for a_pid in result['dtree_gen_success']:
         response.add_message(messages.FillDatapointMessage(pid=a_pid,date=date))
+    for a_pid in result['dtree_gen_failed']:
+        response.add_message(messages.AnalyzeDTreeMessage(pid=a_pid))
     response.status=status.IMC_STATUS_OK
     return response
 

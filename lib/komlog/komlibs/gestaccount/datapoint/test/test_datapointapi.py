@@ -2092,3 +2092,78 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         pid_hooks=api.get_datapoint_hooks(pid=pid)
         self.assertEqual(pid_hooks,[])
 
+    def test_get_datapoint_controversial_samples_failure_invalid_pid(self):
+        '''  test_get_datapoint_controversial_samples should fail if pid is invalid '''
+        pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datapoint_controversial_samples(pid=pid)
+            self.assertEqual(cm.exception.error, Errors.E_GPA_GDCS_IPID)
+
+    def test_get_datapoint_controversial_samples_failure_datapoint_not_found(self):
+        '''  test_get_datapoint_controversial_samples should fail if datapoint does not exist '''
+        pid=uuid.uuid4()
+        with self.assertRaises(exceptions.DatapointNotFoundException) as cm:
+            api.get_datapoint_controversial_samples(pid=pid)
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GDCS_DPNF)
+
+    def test_get_datapoint_controversial_samples_failure_datapoint_has_no_datasource(self):
+        '''  test_get_datapoint_controversial_samples should fail if datapoint has no ds associated  '''
+        username='test_get_datapoint_controversial_samples_failure_datapoint_has_no_datasource'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        datapoint_uri='datapoint_uri'
+        datapoint=api.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        with self.assertRaises(exceptions.DatapointUnsupportedOperationException) as cm:
+            api.get_datapoint_controversial_samples(pid=datapoint['pid'])
+        self.assertEqual(cm.exception.error, Errors.E_GPA_GDCS_DSNF)
+
+    def test_get_datapoint_controversial_samples_success(self):
+        '''  test_get_datapoint_controversial_samples should detect controversial samples '''
+        username='test_get_datapoint_controversial_samples_success'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        uid=user['uid']
+        agentname='agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=agentapi.create_agent(uid=uid, agentname=agentname, pubkey=pubkey, version=version)
+        aid=agent['aid']
+        datasourcename='datasourcename'
+        datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
+        did=datasource['did']
+        datapointname='datapointname'
+        datapoint=api.create_datasource_datapoint(did=did,datapoint_uri=datapointname)
+        pid=datapoint['pid']
+        date1=timeuuid.uuid1()
+        content='x: 1, y: 0'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date1, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date1))
+        #first we say datapoint is x value
+        position=3
+        length=1
+        mark_result=api.mark_positive_variable(pid=pid, date=date1, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[],'dtree_gen_success':[pid],'dtree_pending':[]})
+        date2=timeuuid.uuid1()
+        content='x: 1, y: 0'
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date2, content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=date2))
+        #now we say datapoint is y value
+        position=9
+        length=1
+        mark_result=api.mark_positive_variable(pid=pid, date=date2, position=position, length=length)
+        self.assertEqual(mark_result,{'dtree_gen_failed':[pid],'dtree_gen_success':[],'dtree_pending':[]})
+        #get_controversial_samples should return both dates
+        result = api.get_datapoint_controversial_samples(pid=pid)
+        self.assertEqual(result['pid'],pid)
+        self.assertEqual(result['did'],did)
+        self.assertEqual(result['uid'],uid)
+        self.assertEqual(sorted(result['controversial_samples']),sorted([date1,date2]))
+

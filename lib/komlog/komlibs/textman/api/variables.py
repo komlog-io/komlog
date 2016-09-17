@@ -286,3 +286,26 @@ def get_numeric_value_from_string(string):
     else:
         return value
 
+def get_variables_distance(var1, var2):
+    ''' this function returns a value indicating similitude between two variables.
+        0 indicates they are equal
+    '''
+    keys=set()
+    for key in var1.keys():
+        keys.add(key)
+    for key in var2.keys():
+        keys.add(key)
+    try:
+        keys.remove('result')
+    except KeyError:
+        pass
+    result = 0
+    for key in keys:
+        key_module=abs(int(key.split('_')[1]))+0.1
+        try:
+            if var1[key] != var2[key]:
+                result+=0.5/key_module
+        except KeyError:
+            result+=1.0/key_module
+    return result
+

@@ -49,6 +49,7 @@ class Messages(Enum):
     CLEAR_SESSION_HOOKS_MESSAGE             = 'CLSHOOKS'
     HOOK_NEW_URIS_MESSAGE                   = 'HOOKNEW'
     DATA_INTERVAL_REQUEST_MESSAGE           = 'DATINT'
+    ANALYZE_DTREE_MESSAGE                   = 'ADTREE'
 
 class Catalog(type):
     def __init__(cls, name, bases, dct):
@@ -1725,4 +1726,41 @@ class DataIntervalRequestMessage(IMCMessage):
     def to_serialization(self):
         uri = {'uri':self._uri['uri'],'type':self._uri['type'],'id':self._uri['id'].hex}
         return '|'.join((self._type_.value, self._sid.hex, self._ii.hex, self._ie.hex, json.dumps(uri)))
+
+class AnalyzeDTreeMessage(IMCMessage):
+    _type_ = Messages.ANALYZE_DTREE_MESSAGE
+
+    def __init__(self, pid):
+        self.pid = pid
+
+    @property
+    def pid(self):
+        return self._pid
+
+    @pid.setter
+    def pid(self, pid):
+        if args.is_valid_uuid(pid):
+            self._pid = pid
+        else:
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_ADTREE_IPID)
+
+    @classmethod
+    def load_from_serialization(cls, msg):
+        try:
+            m_type, h_pid = msg.split('|')
+        except ValueError:
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_ADTREE_ELFS)
+        except AttributeError:
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_ADTREE_MINS)
+        else:
+            if not m_type == cls._type_.value:
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_ADTREE_IST)
+            if not args.is_valid_hex_uuid(h_pid):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_ADTREE_IHPID)
+            pid = uuid.UUID(h_pid)
+            return cls(pid=pid)
+
+    def to_serialization(self):
+        return '|'.join((self._type_.value, self._pid.hex))
+
 

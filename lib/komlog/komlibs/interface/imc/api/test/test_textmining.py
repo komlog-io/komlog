@@ -3,6 +3,7 @@ import uuid
 from komlog.komfig import logging
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
+from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.datasource import api as datasourceapi
@@ -116,6 +117,16 @@ class InterfaceImcApiTextminingTest(unittest.TestCase):
         message=messages.GenerateTextSummaryMessage(did=did,date=date)
         response=textmining.process_message_GENTEXTSUMMARY(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.unrouted_messages,[])
+        self.assertEqual(response.routed_messages,{})
+
+    def test_process_message_ADTREE_failure_non_existent_pid(self):
+        ''' process_message_ADTREE should fail if pid does not exist '''
+        pid=uuid.uuid4()
+        message=messages.AnalyzeDTreeMessage(pid=pid)
+        response=textmining.process_message_ADTREE(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GPA_GDCS_DPNF)
         self.assertEqual(response.unrouted_messages,[])
         self.assertEqual(response.routed_messages,{})
 

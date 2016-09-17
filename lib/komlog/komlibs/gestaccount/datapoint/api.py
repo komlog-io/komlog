@@ -489,7 +489,22 @@ def monitor_new_datapoint(did, date, position, length, datapointname):
         widgets_related=False
         datapoint={}
         datapoint=create_datasource_datapoint(did=did, datapoint_uri=datapointname)
-        mark_result=mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length)
+        mark_result=mark_positive_variable(pid=datapoint['pid'], date=date, position=position, length=length, dtree_update=False)
+        #add positives from already existing datapoints as negatives to the new one.
+        ds_pids = cassapidatapoint.get_datapoints_pids(did=did)
+        ds_pids.remove(datapoint['pid'])
+        for pid in ds_pids:
+            dp_positives = cassapidatapoint.get_datapoint_dtree_positives(pid=pid)
+            for positive in dp_positives:
+                cassapidatapoint.add_datapoint_dtree_negative_at(datapoint['pid'],date=positive.date, position=positive.position, length=positive.length)
+        for pid in mark_result['dtree_pending']:
+            try:
+                generate_decision_tree(pid=pid)
+                generate_inverse_decision_tree(pid=pid)
+            except exceptions.GestaccountException:
+                mark_result['dtree_gen_failed'].append(pid)
+            else:
+                mark_result['dtree_gen_success'].append(pid)
         if datapoint['previously_existed']:
             dswidget=cassapiwidget.get_widget_ds(did=did)
             dpwidget=cassapiwidget.get_widget_dp(pid=datapoint['pid'])
@@ -878,4 +893,83 @@ def get_datapoint_hooks(pid):
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_GDPH_DPNF)
     return cassapidatapoint.get_datapoint_hooks_sids(pid=pid)
 
+def get_datapoint_controversial_samples(pid):
+    ''' Analize the datapoint decision tree training set to identify controversial samples
+        that may prevent the decision tree from generating successfully '''
+    if not args.is_valid_uuid(pid):
+        raise exceptions.BadParametersException(error=Errors.E_GPA_GDCS_IPID)
+    datapoint = cassapidatapoint.get_datapoint(pid=pid)
+    if datapoint is None:
+        raise exceptions.DatapointNotFoundException(error = Errors.E_GPA_GDCS_DPNF)
+    if datapoint.did is None:
+        raise exceptions.DatapointUnsupportedOperationException(error=Errors.E_GPA_GDCS_DSNF)
+    did=datapoint.did
+    result={'pid':pid, 'did':did, 'uid':datapoint.uid, 'controversial_samples':[]}
+    dates_to_get=[]
+    positive_samples={}
+    negative_samples={}
+    dtp_positives=cassapidatapoint.get_datapoint_dtree_positives(pid=pid)
+    dtp_negatives=cassapidatapoint.get_datapoint_dtree_negatives(pid=pid)
+    dtree_training_set=[]
+    if dtp_positives:
+        for dtp_positive in dtp_positives:
+            positive_samples[dtp_positive.date]=(dtp_positive.position,dtp_positive.length)
+            dates_to_get.append(dtp_positive.date)
+    if dtp_negatives:
+        for dtp_negative in dtp_negatives:
+            try:
+                negative_samples[dtp_negative.date][dtp_negative.position]=dtp_negative.length
+            except KeyError:
+                negative_samples[dtp_negative.date]={dtp_negative.position:dtp_negative.length}
+            dates_to_get.append(dtp_negative.date)
+    dates_to_get=sorted(set(dates_to_get))
+    dshashes=[]
+    positive_variables_atts={}
+    negative_variables_atts={}
+    for date in dates_to_get:
+        dshash=cassapidatasource.get_datasource_hash(did=did, date=date)
+        if not dshash:
+            dshash=generate_datasource_hash(did=did, date=date)
+        text_hash=json.loads(dshash.content)
+        variable_list=textmanvar.get_variables_atts(text_hash=text_hash)
+        if date in positive_samples:
+            position,length=positive_samples[date]
+            for var in variable_list:
+                if var['text_pos']==position:
+                    positive_variables_atts['-'.join((date.hex,str(var['text_pos'])))]=var['atts']
+                    var['atts']['result']=True
+                else:
+                    negative_variables_atts['-'.join((date.hex,str(var['text_pos'])))]=var['atts']
+                    var['atts']['result']=False
+                dtree_training_set.append(var['atts'])
+        if date in negative_samples and date not in positive_samples:
+            negative_coordinates=negative_samples[date]
+            for var in variable_list:
+                if var['text_pos'] in iter(negative_coordinates.keys()):
+                    negative_variables_atts['-'.join((date.hex,str(var['text_pos'])))]=var['atts']
+                    var['atts']['result']=False
+                    dtree_training_set.append(var['atts'])
+    if len(dtree_training_set) == 0:
+        return {}
+    #before continuing, confirm decision tree generation fails
+    dtree=dtreeapi.generate_decision_tree(training_set=dtree_training_set)
+    if dtree != None:
+        return result
+    # now calculate distances between positive and negative variables
+    distances={}
+    for var1 in positive_variables_atts.keys():
+        for var2 in negative_variables_atts.keys():
+            distance  = textmanvar.get_variables_distance(positive_variables_atts[var1], negative_variables_atts[var2])
+            key='|'.join((var1,var2))
+            distances[key]=distance
+    controversial_samples=set()
+    for key,distance in sorted(distances.items(), key=lambda x:x[1], reverse=True):
+        date=uuid.UUID(key.split('|')[0].split('-')[0])
+        controversial_samples.add(date)
+        date=uuid.UUID(key.split('|')[1].split('-')[0])
+        controversial_samples.add(date)
+        if len(controversial_samples) >= 4:
+            break
+    result['controversial_samples']=list(controversial_samples)
+    return result
 

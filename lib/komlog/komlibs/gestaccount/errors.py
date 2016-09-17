@@ -400,6 +400,10 @@ class Errors(Enum):
     E_GPA_GDPH_IPID     =   7150    #: get_datapoint_hooks. invalid pid
     E_GPA_GDPH_DPNF     =   7151    #: get_datapoint_hooks. datapoint not found
 
+    E_GPA_GDCS_IPID     =   7200    #: invalid pid
+    E_GPA_GDCS_DPNF     =   7201    #: datapoint not found
+    E_GPA_GDCS_DSNF     =   7202    #: datasource not found
+
 # gestaccount widget api
 
     E_GWA_GWC_IW    = 8900

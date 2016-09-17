@@ -333,3 +333,10 @@ class Errors(Enum):
     E_IIMM_DIRM_IHIE        = 262809    #: DataIntervalRequestMessage. invalid hex interval end
     E_IIMM_DIRM_IJSURI      = 262810    #: DataIntervalRequestMessage. invalid json uri
 
+    E_IIMM_ADTREE_IPID      = 262900    #: AnalyzeDTreeMessage. invalid pid
+    E_IIMM_ADTREE_ELFS      = 262901    #: AnalyzeDTreeMessage. error loading from string
+    E_IIMM_ADTREE_MINS      = 262902    #: AnalyzeDTreeMessage. msg is not string
+    E_IIMM_ADTREE_IST       = 262903    #: AnalyzeDTreeMessage. invalid serialization type
+    E_IIMM_ADTREE_IHPID     = 262904    #: AnalyzeDTreeMessage. invalid hex pid
+
+
