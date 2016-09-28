@@ -22,22 +22,28 @@ from komlog.komlibs.general.validation import arguments as args
 
 
 @exceptions.ExceptionHandler
-def new_user_request(username, password, email, invitation=None, require_invitation=False):
+def new_user_request(username, password, email, segment=None, token=None, invitation=None, require_invitation=False):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_IU)
     if not args.is_valid_password(password): 
         raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_IP)
     if not args.is_valid_email(email):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_IE)
+    if segment != None and not args.is_valid_string_int(segment):
+        raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_ISID)
+    if token != None and not args.is_valid_string(token):
+        raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_ITOK)
     if require_invitation and not args.is_valid_hex_uuid(invitation):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_IINV)
     #ensure we always create new users and emails in lowercase
     username=username.lower()
     email=email.lower()
+    if segment != None:
+        segment = int(segment)
     if require_invitation:
         inv_id=uuid.UUID(invitation)
         try:
-            user=userapi.create_user_by_invitation(username, password, email, inv_id=inv_id)
+            user=userapi.create_user_by_invitation(username, password, email, inv_id=inv_id, sid=segment, token=token)
         except gestexcept.InvitationNotFoundException:
             status_c=status.WEB_STATUS_BAD_PARAMETERS
             data={'message':'Invalid Invitation Code'}
@@ -64,7 +70,7 @@ def new_user_request(username, password, email, invitation=None, require_invitat
                 error=e.error
             return response.WebInterfaceResponse(status=status_c, data=data, error=error)
     else:
-        user=userapi.create_user(username, password, email)
+        user=userapi.create_user(username, password, email, sid=segment, token=token)
     if user:
         webop=operation.NewUserOperation(uid=user['uid'])
         authop=webop.get_auth_operation()
@@ -93,7 +99,8 @@ def get_user_config_request(passport):
     data={'username':user['username'],
           'uid':user['uid'].hex,
           'email':user['email'],
-          'state':user['state']
+          'state':user['state'],
+          'segment':user['segment'],
          }
     return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
 
@@ -260,4 +267,31 @@ def reset_password_request(code, password):
         else:
             error=e.error
         return response.WebInterfaceResponse(status=status_c, error=error)
+
+@exceptions.ExceptionHandler
+def update_user_segment_request(passport, segment, token=None):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSGR_IPSP)
+    if not args.is_valid_string_int(segment):
+        raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSGR_ISID)
+    if token != None and not args.is_valid_string(token):
+        raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSGR_ITOK)
+    authorization.authorize_request(request=Requests.UPDATE_USER_CONFIG, passport=passport)
+    sid=int(segment)
+    try:
+        userapi.update_segment(uid=passport.uid, sid=sid, token=token)
+    except gestexcept.BadParametersException as e:
+        status_c=status.WEB_STATUS_BAD_PARAMETERS
+        error=e.error
+        if error == gesterrors.E_GUA_UPDSEG_SEGNF:
+            data={'message':'Invalid segment.'}
+        elif error == gesterrors.E_GUA_UPDSEG_TOKNEED:
+            data={'message':'Credit card info needed.'}
+        else:
+            data={'message':'Bad parameters'}
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error)
+    resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    #TODO: Add checkAuthInterfaces operation
+    #TODO: Add UserNotification operation
+    return resp
 

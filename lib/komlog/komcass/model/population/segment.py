@@ -87,4 +87,20 @@ STATEMENTS=[
     "insert into prm_user_segment_quo (sid,quote,value) values (3,'quo_user_total_widgets',1000000)",
     "insert into prm_user_segment_quo (sid,quote,value) values (3,'quo_user_total_occupation',100000000000)",
 
+
+# ALLOWED SEGMENT TRANSITIONS
+
+    "insert into prm_user_segment_allowed_transitions (sid,sids) values (0,{1,2,3});",
+    "insert into prm_user_segment_allowed_transitions (sid,sids) values (1,{2,3,0});",
+    "insert into prm_user_segment_allowed_transitions (sid,sids) values (2,{3,0,1});",
+    "insert into prm_user_segment_allowed_transitions (sid,sids) values (3,{0,1,2});",
+
+# SEGMENT FARES
+
+    "insert into prm_user_segment_fare (sid, amount, currency, frequency) values (0,0,null,null);",
+    "insert into prm_user_segment_fare (sid, amount, currency, frequency) values (1,10,'USD','m');",
+    "insert into prm_user_segment_fare (sid, amount, currency, frequency) values (2,99,'USD','m');",
+    "insert into prm_user_segment_fare (sid, amount, currency, frequency) values (3,995,'USD','m');",
+
 ]
+

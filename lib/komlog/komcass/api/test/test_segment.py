@@ -1,6 +1,9 @@
 import unittest
+import uuid
+import decimal
 from komlog.komcass.api import segment as segmentapi
 from komlog.komcass.model.orm import segment as ormsegment
+from komlog.komlibs.general.time import timeuuid
 
 
 class KomcassApiSegmentTest(unittest.TestCase):
@@ -193,4 +196,190 @@ class KomcassApiSegmentTest(unittest.TestCase):
         self.assertEqual(segmentapi.get_user_segment_quotes(sid),[])
         self.assertTrue(segmentapi.delete_user_segment_quotes(sid))
         self.assertEqual(segmentapi.get_user_segment_quotes(sid),[])
+
+    def test_get_user_segment_transition_non_existent(self):
+        ''' get_user_segment_transition should return None if no transition exist '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertIsNone(segmentapi.get_user_segment_transition(uid=uid, date=date))
+
+    def test_get_user_segment_transition_existent(self):
+        ''' get_user_segment_transition should return  the UserSegmentTransition object '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        sid = 0
+        previous_sid = None
+        self.assertTrue(segmentapi.insert_user_segment_transition(uid=uid, date=date, sid=sid, previous_sid=previous_sid))
+        transition=segmentapi.get_user_segment_transition(uid=uid, date=date)
+        self.assertEqual(transition.uid, uid)
+        self.assertEqual(transition.date, date)
+        self.assertEqual(transition.sid, sid)
+        self.assertEqual(transition.previous_sid, previous_sid)
+
+    def test_get_user_segment_transitions_non_existent(self):
+        ''' get_user_segment_transitions should return an empty array if no transition is found '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertEqual(segmentapi.get_user_segment_transitions(uid=uid),[])
+        self.assertEqual(segmentapi.get_user_segment_transitions(uid=uid, init_date=timeuuid.uuid1()),[])
+        self.assertEqual(segmentapi.get_user_segment_transitions(uid=uid, end_date=timeuuid.uuid1()),[])
+        self.assertEqual(segmentapi.get_user_segment_transitions(uid=uid, init_date=timeuuid.uuid1(), end_date=timeuuid.uuid1()),[])
+
+    def test_get_user_segment_transitions_existent(self):
+        ''' get_user_segment_transitions should return an the transitions '''
+        uid=uuid.uuid4()
+        for i in range(1,10):
+            date=timeuuid.uuid1(seconds=i)
+            sid=i
+            previous_sid = i-1
+            self.assertTrue(segmentapi.insert_user_segment_transition(uid=uid, date=date, sid=sid, previous_sid=previous_sid))
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid)),9)
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid, init_date=timeuuid.min_uuid_from_time(5))),5)
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid, end_date=timeuuid.max_uuid_from_time(5))),5)
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid, init_date=timeuuid.min_uuid_from_time(5), end_date=timeuuid.max_uuid_from_time(5))),1)
+
+    def test_insert_user_segment_transition(self):
+        ''' insert_user_segment_transition should succeed and insert the values '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        sid=0
+        previous_sid=0
+        self.assertTrue(segmentapi.insert_user_segment_transition(uid=uid, date=date, sid=sid, previous_sid=previous_sid))
+        transition = segmentapi.get_user_segment_transition(uid=uid, date=date)
+        self.assertEqual(transition.uid, uid)
+        self.assertEqual(transition.date, date)
+        self.assertEqual(transition.sid, sid)
+        self.assertEqual(transition.previous_sid, previous_sid)
+
+    def test_delete_user_segment_transition_non_existent_transition(self):
+        ''' delete_user_segment_transition should return true even if it does not exist '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        self.assertTrue(segmentapi.delete_user_segment_transition(uid=uid, date=date))
+
+    def test_delete_user_segment_transition_existent_transition(self):
+        ''' delete_user_segment_transition should delete and return True if transition exists '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1()
+        sid=0
+        previous_sid=0
+        self.assertTrue(segmentapi.insert_user_segment_transition(uid=uid, date=date, sid=sid, previous_sid=previous_sid))
+        transition = segmentapi.get_user_segment_transition(uid=uid, date=date)
+        self.assertEqual(transition.uid, uid)
+        self.assertEqual(transition.date, date)
+        self.assertEqual(transition.sid, sid)
+        self.assertEqual(transition.previous_sid, previous_sid)
+        self.assertTrue(segmentapi.delete_user_segment_transition(uid=uid, date=date))
+        self.assertIsNone(segmentapi.get_user_segment_transition(uid=uid, date=date))
+
+    def test_delete_user_segment_transitions(self):
+        ''' get_user_segment_transitions should return an the transitions '''
+        uid=uuid.uuid4()
+        for i in range(1,10):
+            date=timeuuid.uuid1(seconds=i)
+            sid=i
+            previous_sid = i-1
+            self.assertTrue(segmentapi.insert_user_segment_transition(uid=uid, date=date, sid=sid, previous_sid=previous_sid))
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid)),9)
+        self.assertTrue(segmentapi.delete_user_segment_transitions(uid=uid, init_date=timeuuid.min_uuid_from_time(8)))
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid)),7)
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid, init_date=timeuuid.min_uuid_from_time(8))),0)
+        self.assertTrue(segmentapi.delete_user_segment_transitions(uid=uid, end_date=timeuuid.max_uuid_from_time(2)))
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid)),5)
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid, end_date=timeuuid.max_uuid_from_time(2))),0)
+        self.assertTrue(segmentapi.delete_user_segment_transitions(uid=uid, init_date=timeuuid.min_uuid_from_time(4), end_date=timeuuid.max_uuid_from_time(5)))
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid)),3)
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid, init_date = timeuuid.min_uuid_from_time(4), end_date=timeuuid.max_uuid_from_time(2))),0)
+        self.assertTrue(segmentapi.delete_user_segment_transitions(uid=uid))
+        self.assertEqual(len(segmentapi.get_user_segment_transitions(uid=uid)),0)
+
+    def test_get_user_segment_allowed_transitions_non_existent(self):
+        ''' get_user_segment_allowed_transitions should return None if no transition exist '''
+        sid=999990
+        self.assertIsNone(segmentapi.get_user_segment_allowed_transitions(sid=sid))
+
+    def test_get_user_segment_allowed_transitions_existent(self):
+        ''' get_user_segment_allowed_transitions should return  the UserSegmentAllowedTransition object '''
+        sid=999999
+        sids={23,43,2525,2423}
+        self.assertTrue(segmentapi.insert_user_segment_allowed_transitions(sid=sid, sids=sids))
+        transitions=segmentapi.get_user_segment_allowed_transitions(sid=sid)
+        self.assertEqual(transitions.sid, sid)
+        self.assertEqual(transitions.sids, sids)
+
+    def test_insert_user_segment_allowed_transitions(self):
+        ''' insert_user_segment_allowed_transition should succeed and insert the values '''
+        sid=888888
+        sids={43,52,12555,1432}
+        self.assertTrue(segmentapi.insert_user_segment_allowed_transitions(sid=sid, sids=sids))
+        transitions=segmentapi.get_user_segment_allowed_transitions(sid=sid)
+        self.assertEqual(transitions.sid, sid)
+        self.assertEqual(transitions.sids, sids)
+
+    def test_delete_user_segment_allowed_transitions_non_existent_transition(self):
+        ''' delete_user_segment_allowed_transitions should return true even if it does not exist '''
+        sid=888880
+        self.assertTrue(segmentapi.delete_user_segment_allowed_transitions(sid=sid))
+
+    def test_delete_user_segment_allowed_transitions_existent_transition(self):
+        ''' delete_user_segment_allowed_transitions should delete and return True if transition exists '''
+        sid=888885
+        sids={43,5,2212535,1432}
+        self.assertTrue(segmentapi.insert_user_segment_allowed_transitions(sid=sid, sids=sids))
+        transitions=segmentapi.get_user_segment_allowed_transitions(sid=sid)
+        self.assertEqual(transitions.sid, sid)
+        self.assertEqual(transitions.sids, sids)
+        self.assertTrue(segmentapi.delete_user_segment_allowed_transitions(sid=sid))
+        self.assertIsNone(segmentapi.get_user_segment_allowed_transitions(sid=sid))
+
+    def test_get_user_segment_fare_non_existent(self):
+        ''' get_user_segment_fare should return None if no entry exist '''
+        sid=999990
+        self.assertIsNone(segmentapi.get_user_segment_fare(sid=sid))
+
+    def test_get_user_segment_fare_existent(self):
+        ''' get_user_segment_fare should return  the UserSegmentAllowedTransition object '''
+        sid=999999
+        amount = decimal.Decimal('2234234')
+        currency = 'USD'
+        frequency = 'm'
+        self.assertTrue(segmentapi.insert_user_segment_fare(sid=sid, amount=amount, currency=currency, frequency=frequency))
+        fare=segmentapi.get_user_segment_fare(sid=sid)
+        self.assertEqual(fare.sid, sid)
+        self.assertEqual(fare.amount, amount)
+        self.assertEqual(fare.currency, currency)
+        self.assertEqual(fare.frequency, frequency)
+
+    def test_insert_user_segment_fare(self):
+        ''' insert_user_segment_allowed_transition should succeed and insert the values '''
+        sid=888888
+        amount = decimal.Decimal('22344')
+        currency = 'USD'
+        frequency = 'm'
+        self.assertTrue(segmentapi.insert_user_segment_fare(sid=sid, amount=amount, currency=currency, frequency=frequency))
+        fare=segmentapi.get_user_segment_fare(sid=sid)
+        self.assertEqual(fare.sid, sid)
+        self.assertEqual(fare.amount, amount)
+        self.assertEqual(fare.currency, currency)
+        self.assertEqual(fare.frequency, frequency)
+
+    def test_delete_user_segment_fare_non_existent_fare(self):
+        ''' delete_user_segment_fare should return true even if it does not exist '''
+        sid=888880
+        self.assertTrue(segmentapi.delete_user_segment_fare(sid=sid))
+
+    def test_delete_user_segment_fare_existent_fare(self):
+        ''' delete_user_segment_fare should delete and return True if fare exists '''
+        sid=888885
+        amount = decimal.Decimal('2.34')
+        currency = 'EUR'
+        frequency = 'm'
+        self.assertTrue(segmentapi.insert_user_segment_fare(sid=sid, amount=amount, currency=currency, frequency=frequency))
+        fare=segmentapi.get_user_segment_fare(sid=sid)
+        self.assertEqual(fare.sid, sid)
+        self.assertEqual(fare.amount, amount)
+        self.assertEqual(fare.currency, currency)
+        self.assertEqual(fare.frequency, frequency)
+        self.assertTrue(segmentapi.delete_user_segment_fare(sid=sid))
+        self.assertIsNone(segmentapi.get_user_segment_fare(sid=sid))
 

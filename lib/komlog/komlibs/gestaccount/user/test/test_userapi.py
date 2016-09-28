@@ -1,5 +1,6 @@
 import unittest
 import uuid
+import stripe
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.user.states import *
@@ -31,6 +32,94 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertEqual(username, userinfo['username'])
         self.assertEqual(email, userinfo['email'])
         self.assertIsNotNone(userinfo['code'])
+
+    def test_create_user_failure_invalid_sid(self):
+        ''' create_user should fail if sid is invalid '''
+        username = 'test_create_user_failure_invalid_sid'
+        password = 'password'
+        email = username+'@komlog.org'
+        sids=[2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'username', uuid.uuid4().hex, uuid.uuid1()]
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.create_user(username=username, password=password, email=email, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_ISID)
+
+    def test_create_user_failure_invalid_token(self):
+        ''' create_user should fail if token is invalid '''
+        username = 'test_create_user_failure_invalid_sid'
+        password = 'password'
+        email = username+'@komlog.org'
+        tokens=[231213, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), uuid.uuid4(), uuid.uuid1()]
+        for token in tokens:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.create_user(username=username, password=password, email=email, token=token)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_ITOK)
+
+    def test_create_user_failure_non_existent_segment(self):
+        ''' create_user should fail if sid segment does not exist '''
+        username = 'test_create_user_failure_non_existent_segment'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 93921942
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            userapi.create_user(username=username, password=password, email=email, sid=sid)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_SEGNF)
+
+    def test_create_user_failure_token_needed_for_segment_with_cost(self):
+        ''' create_user should fail if segment has cost and we dont pass token '''
+        username = 'test_create_user_failure_token_needed_for_segment_with_cost'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 1
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            userapi.create_user(username=username, password=password, email=email, sid=sid)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_TOKNEED)
+
+    def test_create_user_success_in_segment_with_cost(self):
+        ''' create_user should succeed creating a user in a segment with cost '''
+        username = 'test_create_user_success_in_segment_with_cost'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 1
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        user=userapi.create_user(username=username, password=password, email=email, sid=sid, token=token.id)
+        self.assertIsNotNone(user)
+        self.assertEqual(user['email'], email)
+        self.assertEqual(user['username'], username)
+        self.assertEqual(user['segment'], sid)
+
+    def test_create_user_failure_token_used_twice(self):
+        ''' create_user should fail if we use a token twice '''
+        username = 'test_create_user_failure_token_used_twice_first_try'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 1
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        user=userapi.create_user(username=username, password=password, email=email, sid=sid, token=token.id)
+        self.assertIsNotNone(user)
+        self.assertEqual(user['email'], email)
+        self.assertEqual(user['username'], username)
+        self.assertEqual(user['segment'], sid)
+        username = 'test_create_user_failure_token_used_twice_second_try'
+        password = 'password'
+        email = username+'@komlog.org'
+        with self.assertRaises(exceptions.UserCreationException) as cm:
+            userapi.create_user(username=username, password=password, email=email, sid=sid, token=token.id)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_ECREPAY)
 
     def test_auth_user(self):
         ''' auth_user should authenticate the user '''
@@ -233,6 +322,54 @@ class GestaccountUserApiTest(unittest.TestCase):
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id)
         self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_INVAU)
+
+    def test_create_user_by_invitation_success_in_segment_with_cost(self):
+        ''' create_user_by_invitation should succeed creating a user in a segment with cost '''
+        username = 'test_create_user_by_invitation_success_in_segment_with_cost'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 1
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        invitations=userapi.generate_user_invitations(email=email)
+        inv_id=invitations[0]['inv_id']
+        user=userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id, sid=sid, token=token.id)
+        self.assertIsNotNone(user)
+        self.assertEqual(user['email'], email)
+        self.assertEqual(user['username'], username)
+        self.assertEqual(user['segment'], sid)
+
+    def test_create_user_by_invitation_success_in_second_try_in_segment_with_cost(self):
+        ''' create_user_by_invitation should succeed creating a user in a segment with cost. If first try failed, the invitation should be reseted to allow more tries. '''
+        username = 'test_create_user_by_invitation_success_in_second_try_in_segment_with_cost'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 1
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        invitations=userapi.generate_user_invitations(email=email)
+        inv_id=invitations[0]['inv_id']
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id, sid=sid, token=None)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_TOKNEED)
+        #now use the token
+        user=userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id, sid=sid, token=token.id)
+        self.assertIsNotNone(user)
+        self.assertEqual(user['email'], email)
+        self.assertEqual(user['username'], username)
+        self.assertEqual(user['segment'], sid)
 
     def test_start_invitation_process_failure_invalid_invitation_id(self):
         ''' start_invitation_process should fail if inv_id is invalid '''
@@ -912,4 +1049,146 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertTrue(userapi.delete_pending_hook(uid=uid, uri=uri, sid=sid))
         pending_hooks=userapi.get_uri_pending_hooks(uid=uid, uri=uri)
         self.assertEqual(pending_hooks, [])
+
+    def test_update_segment_failure_invalid_uid(self):
+        ''' update_segment should fail if uid is not valid '''
+        uids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'username', uuid.uuid4().hex, uuid.uuid1()]
+        sid = 0
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.update_segment(uid=uid, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_UPDSEG_IUID)
+
+    def test_update_segment_failure_invalid_sid(self):
+        ''' update_segment should fail if sid is not valid '''
+        sids=[None, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'username', uuid.uuid4().hex, uuid.uuid1()]
+        uid = uuid.uuid4()
+        for sid in sids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.update_segment(uid=uid, sid=sid)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_UPDSEG_ISID)
+
+    def test_update_segment_failure_invalid_token(self):
+        ''' update_segment should fail if token is not valid '''
+        tokens=[2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), uuid.uuid4(), uuid.uuid1()]
+        uid = uuid.uuid4()
+        sid = 0
+        for token in tokens:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.update_segment(uid=uid, sid=sid, token=token)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_UPDSEG_ITOK)
+
+    def test_update_segment_failure_user_not_found(self):
+        ''' update_segment should fail if user does not exist '''
+        uid = uuid.uuid4()
+        sid = 0
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            userapi.update_segment(uid=uid, sid=sid)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_UPDSEG_UNF)
+
+    def test_update_segment_failure_segment_not_found(self):
+        ''' update_segment should fail if segment does not exist '''
+        username = 'test_update_segment_failure_segment_not_found'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 0
+        userinfo = userapi.create_user(username=username, password=password, email=email, sid=sid)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        new_sid = 99239243
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            userapi.update_segment(uid=userinfo['uid'], sid=new_sid)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_UPDSEG_SEGNF)
+
+    def test_update_segment_failure_token_needed(self):
+        ''' update_segment should fail if user transitions to a paid segment and has no payment info '''
+        username = 'test_update_segment_failure_token_needed'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 0
+        userinfo = userapi.create_user(username=username, password=password, email=email, sid=sid)
+        self.assertEqual(username, userinfo['username'])
+        self.assertEqual(email, userinfo['email'])
+        new_sid = 1
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            userapi.update_segment(uid=userinfo['uid'], sid=new_sid)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_UPDSEG_TOKNEED)
+
+    def test_update_segment_success_creating_customer_with_token(self):
+        ''' update_segment should succeed modifying the user's segment. If user has no payment info before, the new info should be created. '''
+        username = 'test_update_segment_success_creating_customer_with_token'
+        password = 'password'
+        email = username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        self.assertEqual(user['email'], email)
+        self.assertEqual(user['username'], username)
+        sid = 1
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        self.assertTrue(userapi.update_segment(uid=user['uid'], sid=sid, token=token.id))
+        new_user_config = userapi.get_user_config(uid=user['uid'])
+        self.assertEqual(new_user_config['segment'], sid)
+
+    def test_update_segment_success_without_token_keeping_customer_info(self):
+        ''' update_segment should succeed modifying the user's segment. If user has already payment info and no token is passed, then keep that info. '''
+        username = 'test_update_segment_success_without_token_keeping_customer_info'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 1
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        user=userapi.create_user(username=username, password=password, email=email, sid=sid, token=token.id)
+        self.assertIsNotNone(user)
+        self.assertEqual(user['email'], email)
+        self.assertEqual(user['username'], username)
+        new_sid = 2
+        for new_sid in [2,3,0]:
+            self.assertTrue(userapi.update_segment(uid=user['uid'], sid=new_sid))
+            new_user_config = userapi.get_user_config(uid=user['uid'])
+            self.assertEqual(new_user_config['segment'], new_sid)
+
+    def test_update_segment_success_with_token_updating_customer_info(self):
+        ''' update_segment should succeed modifying the user's segment. If user has already payment info and token is passed, then update customer info. '''
+        username = 'test_update_segment_success_with_token_updating_customer_info'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 1
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        user=userapi.create_user(username=username, password=password, email=email, sid=sid, token=token.id)
+        self.assertIsNotNone(user)
+        self.assertEqual(user['email'], email)
+        self.assertEqual(user['username'], username)
+        new_sid = 2
+        for new_sid in [2,3,0]:
+            token = stripe.Token.create(
+                card={
+                    "number": '4242424242424242',
+                    "exp_month": 12,
+                    "exp_year": 2017,
+                    "cvc": '123'
+                },
+            )
+            self.assertTrue(userapi.update_segment(uid=user['uid'], sid=new_sid, token=token.id))
+            new_user_config = userapi.get_user_config(uid=user['uid'])
+            self.assertEqual(new_user_config['segment'], new_sid)
 

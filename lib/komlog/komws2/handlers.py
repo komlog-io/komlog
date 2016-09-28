@@ -146,6 +146,22 @@ class UserConfirmationHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
+class UserPlanHandler(tornado.web.RequestHandler):
+
+    @auth.authenticated
+    def put(self):
+        try:
+            segment=self.get_argument('s') #s : segment
+            token=self.get_argument('t',default=None) #t: token
+        except ValueError:
+            self.set_status(400)
+            self.write(json.dumps({'message':'Bad parameters'}))
+        else:
+            response=user.update_user_segment_request(passport=self.passport, segment=segment, token=token)
+            asyncio.ensure_future(msgapi.send_response_messages(response))
+            self.set_status(response.status)
+            self.write(json.dumps(response.data))
+
 class DatapointDataHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
@@ -640,7 +656,17 @@ class SignupHandler(tornado.web.RequestHandler):
         password=self.get_argument('password',default=None)
         email=self.get_argument('email',default=None)
         invitation=self.get_argument('i',default=None)
-        response=user.new_user_request(username=username,password=password,email=email,invitation=invitation, require_invitation=True)
+        segment=self.get_argument('s',default=None)
+        token=self.get_argument('t',default=None)
+        response=user.new_user_request(
+            username=username,
+            password=password,
+            email=email,
+            segment=segment,
+            token=token,
+            invitation=invitation,
+            require_invitation=True
+        )
         asyncio.ensure_future(msgapi.send_response_messages(response))
         self.render('signup_post.html', page_title='Komlog', response=response)
 
@@ -710,6 +736,7 @@ HANDLERS = [
             (r'/etc/cr/(?P<cid>'+UUID4_REGEX+')/u/(?P<member>'+USERNAME_REGEX+')',CircleMembersHandler),
             (r'/etc/usr/confirm/', UserConfirmationHandler),
             (r'/etc/usr/?', UsersHandler),
+            (r'/etc/usr/plan?', UserPlanHandler),
             (r'/var/ds/('+UUID4_REGEX+')', DatasourceDataHandler),
             (r'/var/dp/('+UUID4_REGEX+')', DatapointDataHandler),
             (r'/var/uri/?', UriHandler),

@@ -20,6 +20,7 @@ class Webserver(modules.Module):
             needs_db=True,
             needs_msgbus=True,
             needs_mailer=False,
+            needs_payment=True,
             tasks=[self._web_server]
         )
         self.params={}

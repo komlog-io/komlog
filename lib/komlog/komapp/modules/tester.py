@@ -7,6 +7,7 @@ from komlog.komcass import connection as casscon
 from komlog.komcass.model.schema import creation
 from komlog.komimc import bus as msgbus
 from komlog.komlibs.mail import connection as mailcon
+from komlog.komlibs.payment import api as paymentapi
 
 
 class Tester(modules.Module):
@@ -16,7 +17,8 @@ class Tester(modules.Module):
             instance_number=instance_number,
             needs_db=True,
             needs_msgbus=True,
-            needs_mailer=True
+            needs_mailer=True,
+            needs_payment=True
         )
 
     def signal_handler(self, signum, frame):
@@ -49,6 +51,9 @@ class Tester(modules.Module):
         if not mailcon.initialize_mailer():
             logging.logger.error('Error initializing mailer')
             exit()
+        if not paymentapi.initialize_payment():
+            logging.logger.error('Error initializing payment')
+            exit()
         self.loop()
         self.terminate()
 
@@ -76,6 +81,9 @@ class Tester(modules.Module):
         if self.needs_mailer: 
             logging.logger.info('Closing mailer connection')
             mailcon.terminate_mailer()
+        if self.needs_payment:
+            logging.logger.info('Disabling payment')
+            paymentapi.disable_payment()
         keyspace = config.get(options.CASSANDRA_KEYSPACE)
         cluster = config.get(options.CASSANDRA_CLUSTER)
         cluster = list(host for host in cluster.split(',') if len(host)>0) if cluster else None

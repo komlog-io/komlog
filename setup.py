@@ -74,7 +74,8 @@ setup(name='komlog',
         'scipy',
         'numpy',
         'pandas',
-        'tornado'
+        'tornado',
+        'stripe'
     ],
     package_dir={ '': 'lib' },
     packages= find_packages('lib'),

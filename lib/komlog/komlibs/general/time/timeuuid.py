@@ -29,6 +29,9 @@ def get_uuid1_from_isodate(isodate):
         date=pd.Timestamp(isodate,tz='utc')
     return uuid1(seconds=date.timestamp())
 
+def get_datetime_from_uuid1(u):
+    return util.datetime_from_uuid1(u)
+
 def get_isodate_from_uuid(u):
     ts=util.unix_time_from_uuid1(u)
     date=pd.Timestamp(int(ts*10**6), unit='us',tz='utc')

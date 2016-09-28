@@ -13,14 +13,16 @@ from komlog.komcass import connection as casscon
 from komlog.komimc import api as msgapi
 from komlog.komimc import bus as msgbus
 from komlog.komlibs.mail import connection as mailcon
+from komlog.komlibs.payment import api as paymentapi
 
 loop = asyncio.get_event_loop()
 
 class Module(object):
-    def __init__(self, name, instance_number, needs_db=False, needs_msgbus=False, needs_mailer=False,tasks=[]):
+    def __init__(self, name, instance_number, needs_db=False, needs_msgbus=False, needs_mailer=False, needs_payment=False, tasks=[]):
         self.needs_db=needs_db
         self.needs_msgbus=needs_msgbus
         self.needs_mailer=needs_mailer
+        self.needs_payment=needs_payment
         self.name = name
         self.instance_number = instance_number
         self.hostname = socket.gethostname()
@@ -55,6 +57,10 @@ class Module(object):
         if self.needs_mailer:
             if not mailcon.initialize_mailer():
                 logging.logger.error('Error initializing mailer')
+        if self.needs_payment:
+            if not paymentapi.initialize_payment():
+                logging.logger.error('Error initializing payment')
+                exit()
         for task in self.tasks:
             loop.create_task(task())
         self.loop()
@@ -95,6 +101,9 @@ class Module(object):
         if self.needs_mailer: 
             logging.logger.info('Closing mailer connection')
             mailcon.terminate_mailer()
+        if self.needs_payment:
+            logging.logger.info('Closing mailer connection')
+            paymentapi.disable_payment()
         logging.logger.info('Module '+str(self.name)+'-'+str(self.instance_number)+' exiting')
         loop.close()
 

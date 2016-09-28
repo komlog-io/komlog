@@ -37,6 +37,10 @@ class UserCreationException(GestaccountException):
     def __init__(self, error):
         super().__init__(error=error)
 
+class UserUnsupportedOperationException(GestaccountException):
+    def __init__(self, error):
+        super().__init__(error=error)
+
 class InvalidPasswordException(GestaccountException):
     def __init__(self, error):
         super().__init__(error=error)
@@ -211,6 +215,10 @@ class DatasourceHashGenerationException(GestaccountException):
         super().__init__(error=error)
 
 class DatapointStoreValueException(GestaccountException):
+    def __init__(self, error):
+        super().__init__(error=error)
+
+class UpdateOperationException(GestaccountException):
     def __init__(self, error):
         super().__init__(error=error)
 

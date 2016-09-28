@@ -7,6 +7,9 @@ OBJECTS=[
     'MST_USER',
     'MST_USER_INDEX_01',
     'MST_USER_INDEX_02',
+    'MST_USER_BILLING_INFO',
+    'MST_USER_BILLING_INFO_INDEX_01',
+    'MST_USER_STRIPE_INFO',
     'MST_SIGNUP',
     'MST_SIGNUP_INDEX_01',
     'MST_SIGNUP_INDEX_02',
@@ -39,6 +42,27 @@ MST_USER_INDEX_01='''
 
 MST_USER_INDEX_02='''
     CREATE INDEX ON mst_user (email);
+'''
+
+MST_USER_BILLING_INFO='''
+    CREATE TABLE mst_user_billing_info (
+        uid                 uuid,
+        billing_day         int,
+        last_billing        timeuuid,
+        PRIMARY KEY (uid)
+    );
+'''
+
+MST_USER_BILLING_INFO_INDEX_01='''
+    CREATE INDEX ON mst_user_billing_info (billing_day);
+'''
+
+MST_USER_STRIPE_INFO='''
+    CREATE TABLE mst_user_stripe_info (
+        uid                 uuid,
+        stripe_id           text,
+        PRIMARY KEY (uid)
+    );
 '''
 
 MST_SIGNUP='''

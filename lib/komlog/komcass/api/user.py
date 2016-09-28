@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 Created on 01/10/2014
 
@@ -66,6 +65,14 @@ def insert_user(user):
 @exceptions.ExceptionHandler
 def update_user_password(username, password):
     resp=connection.session.execute(stmtuser.U_PASSWORD_MSTUSER_B_USERNAME,(password,username))
+    return resp[0]['[applied]'] if resp else False
+
+@exceptions.ExceptionHandler
+def update_user_segment(username, segment, current_segment=None):
+    if current_segment != None:
+        resp=connection.session.execute(stmtuser.U_SEGMENT_MSTUSER_B_USERNAME_IEQ_SEGMENT,(segment,username, current_segment))
+    else:
+        resp=connection.session.execute(stmtuser.U_SEGMENT_MSTUSER_B_USERNAME,(segment,username))
     return resp[0]['[applied]'] if resp else False
 
 @exceptions.ExceptionHandler
@@ -262,4 +269,62 @@ def delete_pending_hooks(uid, uri=None):
 def delete_pending_hook(uid, uri, sid):
     connection.session.execute(stmtuser.D_A_MSTPENDINGHOOK_B_UID_URI_SID,(uid,uri,sid))
     return True
+
+@exceptions.ExceptionHandler
+def get_user_billing_info(uid):
+    row=connection.session.execute(stmtuser.S_A_MSTUSERBILLINGINFO_B_UID,(uid,))
+    return ormuser.BillingInfo(**row[0]) if row else None
+
+@exceptions.ExceptionHandler
+def new_user_billing_info(uid, billing_day, last_billing):
+    resp=connection.session.execute(stmtuser.I_A_MSTUSERBILLINGINFO_INE,(uid, billing_day, last_billing))
+    return resp[0]['[applied]'] if resp else False
+
+@exceptions.ExceptionHandler
+def insert_user_billing_info(uid, billing_day, last_billing):
+    connection.session.execute(stmtuser.I_A_MSTUSERBILLINGINFO,(uid, billing_day, last_billing))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_user_billing_info(uid):
+    resp=connection.session.execute(stmtuser.D_A_MSTUSERBILLINGINFO_B_UID_IE,(uid,))
+    return resp[0]['[applied]'] if resp else False
+
+@exceptions.ExceptionHandler
+def update_user_billing_day(uid, billing_day, current_billing_day=None):
+    if current_billing_day != None:
+        resp=connection.session.execute(stmtuser.U_BILLINGDAY_MSTUSERBILLINGINFO_B_UID_IEQ_BILLINGDAY,(billing_day, uid, current_billing_day))
+        return resp[0]['[applied]'] if resp else False
+    else:
+        connection.session.execute(stmtuser.U_BILLINGDAY_MSTUSERBILLINGINFO_B_UID,(billing_day, uid))
+        return True
+
+@exceptions.ExceptionHandler
+def update_user_last_billing(uid, last_billing, current_last_billing=None):
+    if current_last_billing != None:
+        resp=connection.session.execute(stmtuser.U_LASTBILLING_MSTUSERBILLINGINFO_B_UID_IEQ_LASTBILLING,(last_billing, uid, current_last_billing))
+        return resp[0]['[applied]'] if resp else False
+    else:
+        connection.session.execute(stmtuser.U_LASTBILLING_MSTUSERBILLINGINFO_B_UID,(last_billing, uid))
+        return True
+
+@exceptions.ExceptionHandler
+def get_user_stripe_info(uid):
+    row=connection.session.execute(stmtuser.S_A_MSTUSERSTRIPEINFO_B_UID,(uid,))
+    return ormuser.StripeInfo(**row[0]) if row else None
+
+@exceptions.ExceptionHandler
+def new_user_stripe_info(uid, stripe_id):
+    resp=connection.session.execute(stmtuser.I_A_MSTUSERSTRIPEINFO_INE,(uid,stripe_id))
+    return resp[0]['[applied]'] if resp else False
+
+@exceptions.ExceptionHandler
+def insert_user_stripe_info(uid, stripe_id):
+    connection.session.execute(stmtuser.I_A_MSTUSERSTRIPEINFO,(uid,stripe_id))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_user_stripe_info(uid):
+    resp=connection.session.execute(stmtuser.D_A_MSTUSERSTRIPEINFO_B_UID_IE,(uid,))
+    return resp[0]['[applied]'] if resp else False
 

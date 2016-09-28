@@ -22,6 +22,17 @@ class User:
         self.segment=segment
         self.creation_date=creation_date
 
+class BillingInfo:
+    def __init__(self, uid, billing_day, last_billing):
+        self.uid=uid
+        self.billing_day=billing_day
+        self.last_billing=last_billing
+
+class StripeInfo:
+    def __init__(self, uid, stripe_id):
+        self.uid=uid
+        self.stripe_id=stripe_id
+
 class Invitation:
     def __init__(self, inv_id, date, state, tran_id=None):
         self.inv_id=inv_id

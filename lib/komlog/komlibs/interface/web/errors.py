@@ -36,6 +36,8 @@ class Errors(Enum):
     E_IWAU_NUSR_INVAU   = 100005 #: new_user_request invitation already used
     E_IWAU_NUSR_UAEU    = 100006 #: new_user_request user already exists (username)
     E_IWAU_NUSR_UAEE    = 100007 #: new_user_request user already exists (email)
+    E_IWAU_NUSR_ISID    = 100008 #: new_user_request invalid sid
+    E_IWAU_NUSR_ITOK    = 100009 #: new_user_request invalid token
 
     E_IWAU_CUSR_IE      = 100010
     E_IWAU_CUSR_IC      = 100011
@@ -74,6 +76,10 @@ class Errors(Enum):
     E_IWAU_RPR_UNF=100092 #: reset_password_request: user not found.
     E_IWAU_RPR_CNF=100093 #: reset_password_request: code not found
     E_IWAU_RPR_CODEAU=100094 #: reset_password_request: code already used.
+
+    E_IWAU_UUSGR_IPSP       = 100100 #: invalid passport
+    E_IWAU_UUSGR_ISID       = 100101 #: invalid segment id
+    E_IWAU_UUSGR_ITOK       = 100102 #: invalid token
 
 #interface web api agent
 

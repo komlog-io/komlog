@@ -6,6 +6,7 @@ author: jcazor
 '''
 
 import uuid
+import json
 from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import agent as cassapiagent
@@ -15,6 +16,7 @@ from komlog.komcass.api import widget as cassapiwidget
 from komlog.komcass.api import dashboard as cassapidashboard
 from komlog.komcass.api import circle as cassapicircle
 from komlog.komcass.api import snapshot as cassapisnapshot
+from komlog.komcass.api import segment as cassapisegment
 from komlog.komcass.model.orm import user as ormuser
 from komlog.komlibs.gestaccount.user import segments
 from komlog.komlibs.gestaccount.user.states import *
@@ -23,6 +25,7 @@ from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
+from komlog.komlibs.payment import api as paymentapi
 
 
 def auth_user(username, password):
@@ -35,7 +38,7 @@ def auth_user(username, password):
         raise exceptions.UserNotFoundException(error=Errors.E_GUA_AUU_UNF)
     return crypto.verify_password(password, user.password, user.uid.bytes)
 
-def create_user(username, password, email):
+def create_user(username, password, email, sid=None, token=None):
     '''This function creates a new user in the database'''
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_IU)
@@ -43,6 +46,10 @@ def create_user(username, password, email):
         raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_IP)
     if not args.is_valid_email(email):
         raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_IE)
+    if sid!= None and not args.is_valid_int(sid):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_ISID)
+    if token != None and not args.is_valid_string(token):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_ITOK)
     user=cassapiuser.get_user(username=username)
     if user:
         raise exceptions.UserAlreadyExistsException(error=Errors.E_GUA_CRU_UAEU)
@@ -54,22 +61,39 @@ def create_user(username, password, email):
     if not hpassword:
         raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_HPNF)
     now=timeuuid.uuid1()
-    segment=segments.FREE
-    user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=segments.FREE, creation_date=now, state=UserStates.PREACTIVE)
+    if sid == None:
+        sid=segments.FREE
+    seginfo = cassapisegment.get_user_segment(sid=sid)
+    if seginfo == None:
+        raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_SEGNF)
+    segfare = cassapisegment.get_user_segment_fare(sid=sid)
+    if segfare != None and segfare.amount > 0 and token == None:
+        raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_TOKNEED)
+    user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=sid, creation_date=now, state=UserStates.PREACTIVE)
     try:
-        if cassapiuser.new_user(user=user):
-            code=crypto.get_random_string(size=32)
-            signup_info=ormuser.SignUp(username=user.username, code=code, email=user.email, creation_date=user.creation_date)
-            if cassapiuser.insert_signup_info(signup_info=signup_info):
-                return {'uid':user.uid, 'email':user.email, 'code':signup_info.code, 'username':user.username,'state':user.state, 'segment':user.segment}
-            else:
-                cassapiuser.delete_user(username=user.username)
-                return None
+        if token != None:
+            customer = paymentapi.create_customer(uid=user.uid, token=token)
+            if customer == None:
+                raise exceptions.UserCreationException(error=Errors.E_GUA_CRU_ECREPAY)
+        code=crypto.get_random_string(size=32)
+        signup_info=ormuser.SignUp(username=user.username, code=code, email=user.email, creation_date=user.creation_date)
+        billing_day = timeuuid.get_datetime_from_uuid1(now).day
+        last_billing = timeuuid.min_uuid_from_time(timeuuid.get_unix_timestamp(now))
+        if (cassapiuser.new_user(user=user) and
+            cassapiuser.insert_signup_info(signup_info=signup_info) and
+            cassapiuser.insert_user_billing_info(uid=user.uid, billing_day=billing_day, last_billing=last_billing)):
+            return {'uid':user.uid, 'email':user.email, 'code':signup_info.code, 'username':user.username,'state':user.state, 'segment':user.segment}
         else:
+            paymentapi.delete_customer(customer['id'])
+            cassapiuser.delete_user(username=user.username)
+            cassapiuser.delete_signup_info(username=user.username)
+            cassapiuser.delete_user_billing_info(uid=user.uid)
             return None
-    except cassexcept.KomcassException:
+    except:
+        paymentapi.delete_customer(uid=user.uid)
         cassapiuser.delete_user(username=user.username)
         cassapiuser.delete_signup_info(username=user.username)
+        cassapiuser.delete_user_billing_info(uid=user.uid)
         raise
 
 def confirm_user(email, code):
@@ -97,7 +121,7 @@ def confirm_user(email, code):
             raise exceptions.UserConfirmationException(error=Errors.E_GUA_COU_IUE)
         cassapiuser.insert_signup_info(signup_info=new_signup_info)
         return True
-    except cassexcept.KomcassException:
+    except:
         cassapiuser.insert_user(user=user)
         cassapiuser.insert_signup_info(signup_info=signup_info)
         raise
@@ -144,7 +168,7 @@ def update_user_config(uid, new_email=None, old_password=None, new_password=None
             return True
         else:
             return False
-    except cassexcept.KomcassException:
+    except:
         cassapiuser.insert_user(user=user)
         raise
 
@@ -182,7 +206,7 @@ def register_invitation_request(email):
         request=ormuser.InvitationRequest(email=email, date=now, state=InvitationRequestStates.REGISTERED)
         try:
             return cassapiuser.insert_invitation_request(invitation_request=request)
-        except cassexcept.KomcassException:
+        except:
             cassapiuser.delete_invitation_request(email=email)
             raise
     else:
@@ -239,17 +263,17 @@ def generate_user_invitations(email=None, num=1):
             cassapiuser.insert_invitation_request(request)
     return generated
 
-def create_user_by_invitation(username, password, email, inv_id):
+def create_user_by_invitation(username, password, email, inv_id, sid=None, token=None):
     ''' This function creates a new user in the database if invitation is valid '''
     tran_id=start_invitation_process(inv_id=inv_id)
     user_info=None
     try:
-        user_info=create_user(username=username, password=password, email=email)
+        user_info=create_user(username=username, password=password, email=email, sid=sid, token=token)
         if user_info:
             end_invitation_process(inv_id=inv_id, tran_id=tran_id)
         else:
             initialize_invitation(inv_id=inv_id)
-    except cassexcept.KomcassException:
+    except:
         if user_info:
             cassapiuser.delete_user(username=user_info['username'])
             cassapiuser.delete_signup_info(username=user_info['username'])
@@ -274,7 +298,7 @@ def start_invitation_process(inv_id):
             if not cassapiuser.insert_invitation_info(invitation_info=new_info):
                 raise exceptions.InvitationProcessException(error=Errors.E_GUA_SIP_EIII)
             return tran_id
-        except cassexcept.KomcassException:
+        except:
             cassapiuser.delete_invitation_info(inv_id=inv_id, date=now)
             raise
     else:
@@ -306,7 +330,7 @@ def end_invitation_process(inv_id, tran_id):
             try:
                 if not cassapiuser.insert_invitation_info(invitation_info=new_info):
                     raise exceptions.InvitationProcessException(error=Errors.E_GUA_EIP_EIII)
-            except cassexcept.KomcassException:
+            except:
                 cassapiuser.delete_invitation_info(inv_id=new_info.inv_id, date=now)
                 raise
         return True
@@ -337,7 +361,7 @@ def initialize_invitation(inv_id):
     try:
         if not cassapiuser.insert_invitation_info(invitation_info=new_info):
             raise exceptions.InvitationProcessException(error=Errors.E_GUA_II_EIII)
-    except cassexcept.KomcassException:
+    except:
         cassapiuser.delete_invitation_info(inv_id=new_info.inv_id, date=now)
         raise
     return True
@@ -376,7 +400,7 @@ def register_forget_request(username=None, email=None):
                 return {'code':code,'username':user.username, 'email':user.email, 'uid':user.uid}
             else:
                 raise exceptions.ForgetRequestException(error=Errors.E_GUA_RFR_DBE)
-        except cassexcept.KomcassException:
+        except:
             cassapiuser.delete_forget_request(code=code)
             raise
     else:
@@ -414,7 +438,7 @@ def reset_password(code, password):
                 return True
             else:
                 raise exceptions.ForgetRequestException(error=Errors.E_GUA_RP_EUDB)
-        except cassapiexcept.KomcassException:
+        except:
             cassapiuser.update_user_password(username=user.username, password=user.password)
             cassapiuser.update_forget_request_state(code=code, new_state=ForgetRequestStates.UNUSED)
             raise
@@ -477,4 +501,53 @@ def delete_pending_hook(uid, uri, sid):
         raise exceptions.BadParametersException(error=Errors.E_GUA_DPH_ISID)
     cassapiuser.delete_pending_hook(uid=uid, uri=uri, sid=sid)
     return True
+
+def update_segment(uid, sid, token=None):
+    '''This function updates the segment of the user '''
+    if not args.is_valid_uuid(uid):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_UPDSEG_IUID)
+    if not args.is_valid_int(sid):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_UPDSEG_ISID)
+    if token != None and not args.is_valid_string(token):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_UPDSEG_ITOK)
+    user=cassapiuser.get_user(uid=uid)
+    if user is None:
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_UPDSEG_UNF)
+    if user.segment == sid:
+        return True
+    seginfo = cassapisegment.get_user_segment(sid=sid)
+    if seginfo == None:
+        raise exceptions.BadParametersException(error=Errors.E_GUA_UPDSEG_SEGNF)
+    allowed_transitions=cassapisegment.get_user_segment_allowed_transitions(sid=user.segment)
+    if allowed_transitions is None or sid not in allowed_transitions.sids:
+        raise exceptions.UserUnsupportedOperationException(error=Errors.E_GUA_UPDSEG_TRNTAL)
+    segfare = cassapisegment.get_user_segment_fare(sid=sid)
+    if segfare != None and segfare.amount > 0:
+        customer = paymentapi.get_customer(uid=uid)
+        if customer is None and token is None:
+            raise exceptions.BadParametersException(error=Errors.E_GUA_UPDSEG_TOKNEED)
+    updated = False
+    now = timeuuid.uuid1()
+    try:
+        if cassapiuser.update_user_segment(username=user.username, segment=sid, current_segment=user.segment):
+            cassapisegment.insert_user_segment_transition(uid=uid, date=now, sid=sid, previous_sid=user.segment)
+            updated = True
+            if segfare != None and segfare.amount > 0:
+                if customer is None and token:
+                    if paymentapi.create_customer(uid=uid, token=token):
+                        return True
+                elif customer and token:
+                    if paymentapi.update_customer(uid=uid, token=token):
+                        return True
+                else:
+                    return True
+                raise exceptions.UpdateOperationException(error=Errors.E_GUA_UPDSEG_EUPAY)
+            return True
+        else:
+            raise exceptions.UpdateOperationException(error=Errors.E_EGUA_UPDSEG_EUDB)
+    except:
+        if updated:
+            cassapiuser.update_user_segment(username=user.username, segment=user.segment, current_segment = sid)
+            cassapisegment.delete_user_segment_transition(uid=uid, date=now)
+        raise
 

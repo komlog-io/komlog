@@ -70,13 +70,13 @@ class KomcassApiUserTest(unittest.TestCase):
         self.assertIsNone(userapi.get_user(email=email))
 
     def test_new_user_no_user_object(self):
-        '''' new_user should fail if no user Object is passed as argument '''
+        ''' new_user should fail if no user Object is passed as argument '''
         users=[None,234234,'a',{'a':'dict'},['a','list']]
         for user in users:
             self.assertFalse(userapi.new_user(user))
 
     def test_new_user_success(self):
-        '''' new_user should succeed if user is created successfully '''
+        ''' new_user should succeed if user is created successfully '''
         username='test_new_user_success_user'
         password=b'password'
         email=username+'@komlog.org'
@@ -86,18 +86,18 @@ class KomcassApiUserTest(unittest.TestCase):
         self.assertTrue(userapi.new_user(user))
 
     def test_new_user_already_existing_user(self):
-        '''' new_user should fail if user is already created '''
+        ''' new_user should fail if user is already created '''
         user=self.user
         self.assertFalse(userapi.new_user(user))
 
     def test_insert_user_no_user_object(self):
-        '''' insert_user should fail if no user Object is passed as argument '''
+        ''' insert_user should fail if no user Object is passed as argument '''
         users=[None,234234,'a',{'a':'dict'},['a','list']]
         for user in users:
             self.assertFalse(userapi.insert_user(user))
 
     def test_insert_user_success(self):
-        '''' new_user should succeed if user is created successfully '''
+        ''' new_user should succeed if user is created successfully '''
         username='test_insert_user_success_user'
         password=b'password'
         email=username+'@komlog.org'
@@ -707,4 +707,256 @@ class KomcassApiUserTest(unittest.TestCase):
         hooks=userapi.get_pending_hooks(uid=uids[uid_i])
         self.assertEqual(len(hooks),(9*9)-1)
         self.assertIsNone(userapi.get_pending_hook(uid=uids[uid_i],uri=uris[uri_i],sid=sids[sid_i]))
+
+    def test_get_user_billing_info_non_existent(self):
+        ''' get_user_billing_info should return None if no info exists '''
+        uid=uuid.uuid4()
+        self.assertIsNone(userapi.get_user_billing_info(uid=uid))
+
+    def test_get_user_billing_info_existent(self):
+        ''' get_user_billing_info should return a BillingInfo object if info exists '''
+        uid=uuid.uuid4()
+        billing_day = 20
+        last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.insert_user_billing_info(uid=uid, billing_day=billing_day, last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+
+    def test_insert_user_billing_info_success(self):
+        ''' insert_user_billing_info should return True and set the information '''
+        uid=uuid.uuid4()
+        billing_day = 20
+        last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.insert_user_billing_info(uid=uid, billing_day=billing_day, last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+        new_billing_day = 10
+        new_last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.insert_user_billing_info(uid=uid, billing_day=new_billing_day, last_billing = new_last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, new_billing_day)
+        self.assertEqual(info.last_billing, new_last_billing)
+
+    def test_new_user_billing_info_success_previously_did_not_exist(self):
+        ''' new_user_billing_info should return True and set the information if info did not exist previously '''
+        uid=uuid.uuid4()
+        billing_day = 20
+        last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.new_user_billing_info(uid=uid, billing_day=billing_day, last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+
+    def test_new_user_billing_info_failure_previously_did_exist(self):
+        ''' new_user_billing_info should return False if user existed previously '''
+        uid=uuid.uuid4()
+        billing_day = 20
+        last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.new_user_billing_info(uid=uid, billing_day=billing_day, last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+        new_billing_day = 64
+        new_last_billing = timeuuid.uuid1()
+        self.assertFalse(userapi.new_user_billing_info(uid=uid, billing_day=new_billing_day, last_billing = new_last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+
+    def test_delete_user_billing_info_success_previously_did_exist(self):
+        ''' delete_user_billing_info should return True if user existed previously and delete it '''
+        uid=uuid.uuid4()
+        billing_day = 20
+        last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.new_user_billing_info(uid=uid, billing_day=billing_day, last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+        self.assertTrue(userapi.delete_user_billing_info(uid=uid))
+        self.assertIsNone(userapi.get_user_billing_info(uid=uid))
+
+    def test_delete_user_billing_info_failure_previously_did_not_exist(self):
+        ''' delete_user_billing_info should return False if user did not exist previously '''
+        uid=uuid.uuid4()
+        self.assertFalse(userapi.delete_user_billing_info(uid=uid))
+        self.assertIsNone(userapi.get_user_billing_info(uid=uid))
+
+    def test_update_user_billing_day_success_current_value_equals_expected(self):
+        ''' update_user_billing_day should update the value if current billing day is as expected'''
+        uid=uuid.uuid4()
+        billing_day = 20
+        last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.new_user_billing_info(uid=uid, billing_day=billing_day, last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+        new_billing_day = 31
+        self.assertTrue(userapi.update_user_billing_day(uid=uid, billing_day=new_billing_day,  current_billing_day = billing_day))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, new_billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+
+    def test_update_user_billing_day_failure_current_value_not_equal_expected(self):
+        ''' update_user_billing_day should fail if current billing day value is not as expected'''
+        uid=uuid.uuid4()
+        billing_day = 20
+        last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.new_user_billing_info(uid=uid, billing_day=billing_day, last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+        new_billing_day = 31
+        self.assertFalse(userapi.update_user_billing_day(uid=uid, billing_day=new_billing_day,  current_billing_day = new_billing_day))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+
+    def test_update_user_billing_day_success_no_current_value_condition(self):
+        ''' update_user_billing_day should succeed if no current value condition is set '''
+        uid=uuid.uuid4()
+        billing_day = 20
+        last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.new_user_billing_info(uid=uid, billing_day=billing_day, last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+        new_billing_day = 31
+        self.assertTrue(userapi.update_user_billing_day(uid=uid, billing_day=new_billing_day))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, new_billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+
+    def test_update_user_last_billing_success_current_value_equals_expected(self):
+        ''' update_user_billing_day should update the value if current billing day is as expected'''
+        uid=uuid.uuid4()
+        billing_day = 20
+        last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.new_user_billing_info(uid=uid, billing_day=billing_day, last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+        new_last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.update_user_last_billing(uid=uid, last_billing=new_last_billing,  current_last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, new_last_billing)
+
+    def test_update_user_billing_day_failure_current_value_not_equal_expected(self):
+        ''' update_user_billing_day should fail if current billing day value is not as expected'''
+        uid=uuid.uuid4()
+        billing_day = 20
+        last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.new_user_billing_info(uid=uid, billing_day=billing_day, last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+        new_last_billing = timeuuid.uuid1()
+        self.assertFalse(userapi.update_user_last_billing(uid=uid, last_billing=new_last_billing,  current_last_billing = new_last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+
+    def test_update_user_billing_day_success_no_current_value_condition(self):
+        ''' update_user_billing_day should succeed if no current value condition is set '''
+        uid=uuid.uuid4()
+        billing_day = 20
+        last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.new_user_billing_info(uid=uid, billing_day=billing_day, last_billing = last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, last_billing)
+        new_last_billing = timeuuid.uuid1()
+        self.assertTrue(userapi.update_user_last_billing(uid=uid, last_billing=new_last_billing))
+        info=userapi.get_user_billing_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.billing_day, billing_day)
+        self.assertEqual(info.last_billing, new_last_billing)
+
+    def test_get_user_stripe_info_non_existent(self):
+        ''' get_user_stripe_info should return None if no info exists '''
+        uid=uuid.uuid4()
+        self.assertIsNone(userapi.get_user_stripe_info(uid=uid))
+
+    def test_get_user_stripe_info_existent(self):
+        ''' get_user_stripe_info should return a StripeInfo object if info exists '''
+        uid=uuid.uuid4()
+        stripe_id = 'some text' 
+        self.assertTrue(userapi.insert_user_stripe_info(uid=uid, stripe_id=stripe_id))
+        info=userapi.get_user_stripe_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.stripe_id, stripe_id)
+
+    def test_insert_user_stripe_info_success(self):
+        ''' insert_user_stripe_info should return True and set the information '''
+        uid=uuid.uuid4()
+        stripe_id = 'some text' 
+        self.assertTrue(userapi.insert_user_stripe_info(uid=uid, stripe_id=stripe_id))
+        info=userapi.get_user_stripe_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.stripe_id, stripe_id)
+        new_stripe_id  = 'some other id'
+        self.assertTrue(userapi.insert_user_stripe_info(uid=uid, stripe_id=new_stripe_id))
+        info=userapi.get_user_stripe_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.stripe_id, new_stripe_id)
+
+    def test_new_user_stripe_info_success_previously_did_not_exist(self):
+        ''' new_user_stripe_info should return True and set the information if info did not exist previously '''
+        uid=uuid.uuid4()
+        stripe_id = 'some text' 
+        self.assertTrue(userapi.new_user_stripe_info(uid=uid, stripe_id=stripe_id))
+        info=userapi.get_user_stripe_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.stripe_id, stripe_id)
+
+    def test_new_user_stripe_info_failure_previously_did_exist(self):
+        ''' new_user_stripe_info should return False if user existed previously '''
+        uid=uuid.uuid4()
+        stripe_id = 'some text' 
+        self.assertTrue(userapi.new_user_stripe_info(uid=uid, stripe_id=stripe_id))
+        info=userapi.get_user_stripe_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.stripe_id, stripe_id)
+        new_stripe_id = 'some new text' 
+        self.assertFalse(userapi.new_user_stripe_info(uid=uid, stripe_id=new_stripe_id))
+        info=userapi.get_user_stripe_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.stripe_id, stripe_id)
+
+    def test_delete_user_stripe_info_success_previously_did_exist(self):
+        ''' delete_user_stripe_info should return True if user existed previously and delete it '''
+        uid=uuid.uuid4()
+        stripe_id = 'some text' 
+        self.assertTrue(userapi.new_user_stripe_info(uid=uid, stripe_id=stripe_id))
+        info=userapi.get_user_stripe_info(uid=uid)
+        self.assertEqual(info.uid, uid)
+        self.assertEqual(info.stripe_id, stripe_id)
+        self.assertTrue(userapi.delete_user_stripe_info(uid=uid))
+        self.assertIsNone(userapi.get_user_stripe_info(uid=uid))
+
+    def test_delete_user_stripe_info_failure_previously_did_not_exist(self):
+        ''' delete_user_stripe_info should return False if user did not exist previously '''
+        uid=uuid.uuid4()
+        self.assertFalse(userapi.delete_user_stripe_info(uid=uid))
+        self.assertIsNone(userapi.get_user_stripe_info(uid=uid))
 

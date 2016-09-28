@@ -28,114 +28,129 @@ class Errors(Enum):
 
 #gestaccount user api
 
-    E_GUA_GHP_IU    = 10
-    E_GUA_GHP_IP    = 11
+    E_GUA_GHP_IU    = 100
+    E_GUA_GHP_IP    = 101
 
-    E_GUA_AUU_IU    = 20
-    E_GUA_AUU_IP    = 21
-    E_GUA_AUU_UNF   = 22
-    E_GUA_AUU_HPNF  = 23
+    E_GUA_AUU_IU    = 200
+    E_GUA_AUU_IP    = 201
+    E_GUA_AUU_UNF   = 202
+    E_GUA_AUU_HPNF  = 203
 
-    E_GUA_CRU_IU    = 30
-    E_GUA_CRU_IP    = 31
-    E_GUA_CRU_IE    = 32
-    E_GUA_CRU_UAEU  = 33
-    E_GUA_CRU_UAEE  = 34
-    E_GUA_CRU_HPNF  = 35
+    E_GUA_CRU_IU        = 300
+    E_GUA_CRU_IP        = 301
+    E_GUA_CRU_IE        = 302
+    E_GUA_CRU_UAEU      = 303
+    E_GUA_CRU_UAEE      = 304
+    E_GUA_CRU_HPNF      = 305
+    E_GUA_CRU_ISID      = 306 #: invalid sid
+    E_GUA_CRU_ITOK      = 307 #: invalid token
+    E_GUA_CRU_SEGNF     = 308 #: segment not found
+    E_GUA_CRU_TOKNEED   = 309 #: token needed
+    E_GUA_CRU_ECREPAY   = 310 #: error creating payment profile
 
-    E_GUA_COU_IE    = 40
-    E_GUA_COU_IC    = 41
-    E_GUA_COU_CNF   = 42
-    E_GUA_COU_CMM   = 43
-    E_GUA_COU_CAU   = 44
-    E_GUA_COU_UNF   = 45
-    E_GUA_COU_IUE   = 46
+    E_GUA_COU_IE    = 400
+    E_GUA_COU_IC    = 401
+    E_GUA_COU_CNF   = 402
+    E_GUA_COU_CMM   = 403
+    E_GUA_COU_CAU   = 404
+    E_GUA_COU_UNF   = 405
+    E_GUA_COU_IUE   = 406
 
-    E_GUA_UUC_IU    = 50
-    E_GUA_UUC_UNF   = 51
-    E_GUA_UUC_EMP   = 52
-    E_GUA_UUC_ONP   = 53
-    E_GUA_UUC_IP    = 54
-    E_GUA_UUC_PNM   = 55
-    E_GUA_UUC_EQP   = 56
-    E_GUA_UUC_HPNF  = 57
-    E_GUA_UUC_IE    = 58
-    E_GUA_UUC_EAE   = 59
+    E_GUA_UPDSEG_IUID       = 450 #: invalid uid
+    E_GUA_UPDSEG_ISID       = 451 #: invalid segment
+    E_GUA_UPDSEG_ITOK       = 452 #: invalid token
+    E_GUA_UPDSEG_UNF        = 453 #: user not found
+    E_GUA_UPDSEG_SEGNF      = 454 #: segment not found
+    E_GUA_UPDSEG_TRNTAL     = 455 #: transition not allowed
+    E_GUA_UPDSEG_TOKNEED    = 456 #: token needed
+    E_GUA_UPDSEG_EUPAY      = 457 #: error updating payment profile
+    E_GUA_UPDSEG_EUDB       = 458 #: error updating database
 
-    E_GUA_GUC_IU    = 70
-    E_GUA_GUC_UNF   = 71
+    E_GUA_UUC_IU    = 500
+    E_GUA_UUC_UNF   = 501
+    E_GUA_UUC_EMP   = 502
+    E_GUA_UUC_ONP   = 503
+    E_GUA_UUC_IP    = 504
+    E_GUA_UUC_PNM   = 505
+    E_GUA_UUC_EQP   = 506
+    E_GUA_UUC_HPNF  = 507
+    E_GUA_UUC_IE    = 508
+    E_GUA_UUC_EAE   = 509
 
-    E_GUA_DU_IU     = 80
-    E_GUA_DU_UNF    = 81
+    E_GUA_GUC_IU    = 600
+    E_GUA_GUC_UNF   = 601
 
-    E_GUA_GUID_IU   = 85
-    E_GUA_GUID_UNF  = 86
+    E_GUA_DU_IU     = 700
+    E_GUA_DU_UNF    = 701
 
-    E_GUA_RIR_IEMAIL= 90 #: register invitation request. Invalid Email
+    E_GUA_GUID_IU   = 800
+    E_GUA_GUID_UNF  = 801
 
-    E_GUA_GUI_IEMAIL= 95 #: generate user invitation. Invalid Email
+    E_GUA_RIR_IEMAIL= 900 #: register invitation request. Invalid Email
 
-    E_GUA_SIP_IINV  = 110 #: start_invitation_process. invalid invitation.
-    E_GUA_SIP_INVNF = 111 #: start_invitation_process. invitation not found.
-    E_GUA_SIP_INVAU = 112 #: start_invitation_process. invitation already used
-    E_GUA_SIP_EIII  = 113 #: start_invitation_process. error inserting invitation info.
-    E_GUA_SIP_ISNE  = 114 #: start_invitation_process. invitation state not expected.
+    E_GUA_GUI_IEMAIL= 950 #: generate user invitation. Invalid Email
 
-    E_GUA_EIP_IINV  = 120 #: end_invitation_process. invalid invitation.
-    E_GUA_EIP_ITRN  = 121 #: end_invitation_process. invalid transaction id.
-    E_GUA_EIP_INVNF = 122 #: end_invitation_process. invitation not found.
-    E_GUA_EIP_INUE  = 123 #: end_invitation_process. invitation not used.
-    E_GUA_EIP_RCF   = 124 #: end_invitation_process. race condition found.
-    E_GUA_EIP_SNF   = 125 #: end_invitation_process. state found not valid.
-    E_GUA_EIP_EIII  = 126 #: end_invitation_process. error inserting invitation info.
+    E_GUA_SIP_IINV  = 1000 #: start_invitation_process. invalid invitation.
+    E_GUA_SIP_INVNF = 1001 #: start_invitation_process. invitation not found.
+    E_GUA_SIP_INVAU = 1002 #: start_invitation_process. invitation already used
+    E_GUA_SIP_EIII  = 1003 #: start_invitation_process. error inserting invitation info.
+    E_GUA_SIP_ISNE  = 1004 #: start_invitation_process. invitation state not expected.
 
-    E_GUA_UIT_IINV  = 130 #: undo_invitation_transactions. invalid invitation.
-    E_GUA_UIT_ITRN  = 131 #: undo_invitation_transactions. invalid transaction id.
-    E_GUA_UIT_INVNF = 132 #: undo_invitation_transactions. invitation info not found.
+    E_GUA_EIP_IINV  = 1200 #: end_invitation_process. invalid invitation.
+    E_GUA_EIP_ITRN  = 1201 #: end_invitation_process. invalid transaction id.
+    E_GUA_EIP_INVNF = 1202 #: end_invitation_process. invitation not found.
+    E_GUA_EIP_INUE  = 1203 #: end_invitation_process. invitation not used.
+    E_GUA_EIP_RCF   = 1204 #: end_invitation_process. race condition found.
+    E_GUA_EIP_SNF   = 1205 #: end_invitation_process. state found not valid.
+    E_GUA_EIP_EIII  = 1206 #: end_invitation_process. error inserting invitation info.
 
-    E_GUA_II_IINV   = 135 #: initialize_invitation. invalid invitation.
-    E_GUA_II_INVNF  = 136 #: initialize_invitation. invitation info not found.
-    E_GUA_II_EIII   = 137 #: initialize_invitation. error inserting invitation info.
+    E_GUA_UIT_IINV  = 1300 #: undo_invitation_transactions. invalid invitation.
+    E_GUA_UIT_ITRN  = 1301 #: undo_invitation_transactions. invalid transaction id.
+    E_GUA_UIT_INVNF = 1302 #: undo_invitation_transactions. invitation info not found.
 
-    E_GUA_CUI_IINV  = 145 #: check_unused_invitation. invalid invitation.
-    E_GUA_CUI_INVNF = 146 #: check_unused_invitation. invitation not found.
-    E_GUA_CUI_INVAU = 147 #: check_unused_invitation. invitation already used.
-    E_GUA_CUI_INVIS = 148 #: check_unused_invitation. invitation state invalid.
+    E_GUA_II_IINV   = 1350 #: initialize_invitation. invalid invitation.
+    E_GUA_II_INVNF  = 1351 #: initialize_invitation. invitation info not found.
+    E_GUA_II_EIII   = 1352 #: initialize_invitation. error inserting invitation info.
 
-    E_GUA_RFR_IU    = 155 #: register_forget_request. invalid username.
-    E_GUA_RFR_IEMAIL= 156 #: register_forget_request. invalid email.
-    E_GUA_RFR_NPP   = 157 #: register_forget_request. no param passed.
-    E_GUA_RFR_DBE   = 158 #: register_forget_request. database error.
-    E_GUA_RFR_UNF   = 159 #: register_forget_request. user not found.
+    E_GUA_CUI_IINV  = 1400 #: check_unused_invitation. invalid invitation.
+    E_GUA_CUI_INVNF = 1401 #: check_unused_invitation. invitation not found.
+    E_GUA_CUI_INVAU = 1402 #: check_unused_invitation. invitation already used.
+    E_GUA_CUI_INVIS = 1403 #: check_unused_invitation. invitation state invalid.
 
-    E_GUA_CUFC_ICODE    = 165 #: check_unused_forget_code. invalid code.
-    E_GUA_CUFC_CNF      = 166 #: check_unused_forget_code. code not found.
-    E_GUA_CUFC_CODEAU   = 167 #: check_unused_forget_code. code already used.
+    E_GUA_RFR_IU    = 1500 #: register_forget_request. invalid username.
+    E_GUA_RFR_IEMAIL= 1501 #: register_forget_request. invalid email.
+    E_GUA_RFR_NPP   = 1502 #: register_forget_request. no param passed.
+    E_GUA_RFR_DBE   = 1503 #: register_forget_request. database error.
+    E_GUA_RFR_UNF   = 1504 #: register_forget_request. user not found.
 
-    E_GUA_RP_ICODE  = 175 #: reset_password. invalid code.
-    E_GUA_RP_IPWD   = 176 #: reset_password. invalid password.
-    E_GUA_RP_CNF    = 177 #: reset_password. code not found.
-    E_GUA_RP_CODEAU = 178 #: reset_password. code already used.
-    E_GUA_RP_UNF    = 179 #: reset_password. user not found.
-    E_GUA_RP_EUDB   = 180 #: reset_password. error updating database.
-    E_GUA_RP_EGPWD  = 181 #: reset_password. error generating new password.
+    E_GUA_CUFC_ICODE    = 1600 #: check_unused_forget_code. invalid code.
+    E_GUA_CUFC_CNF      = 1601 #: check_unused_forget_code. code not found.
+    E_GUA_CUFC_CODEAU   = 1602 #: check_unused_forget_code. code already used.
 
-    E_GUA_RPH_IUID  = 200 #: register_pending_hook. invalid uid
-    E_GUA_RPH_IURI  = 201 #: register_pending_hook. invalid uri
-    E_GUA_RPH_ISID  = 202 #: register_pending_hook. invalid sid
-    E_GUA_RPH_UNF   = 203 #: register_pending_hook. user not found
+    E_GUA_RP_ICODE  = 1700 #: reset_password. invalid code.
+    E_GUA_RP_IPWD   = 1701 #: reset_password. invalid password.
+    E_GUA_RP_CNF    = 1702 #: reset_password. code not found.
+    E_GUA_RP_CODEAU = 1703 #: reset_password. code already used.
+    E_GUA_RP_UNF    = 1704 #: reset_password. user not found.
+    E_GUA_RP_EUDB   = 1705 #: reset_password. error updating database.
+    E_GUA_RP_EGPWD  = 1706 #: reset_password. error generating new password.
 
-    E_GUA_GUPH_IUID  = 210 #: get_uri_pending_hooks. invalid uid
-    E_GUA_GUPH_IURI  = 211 #: get_uri_pending_hooks. invalid uri
+    E_GUA_RPH_IUID  = 1800 #: register_pending_hook. invalid uid
+    E_GUA_RPH_IURI  = 1801 #: register_pending_hook. invalid uri
+    E_GUA_RPH_ISID  = 1802 #: register_pending_hook. invalid sid
+    E_GUA_RPH_UNF   = 1803 #: register_pending_hook. user not found
 
-    E_GUA_DSPH_ISID  = 220 #: delete_session_pending_hooks. invalid sid
+    E_GUA_GUPH_IUID  = 1820 #: get_uri_pending_hooks. invalid uid
+    E_GUA_GUPH_IURI  = 1821 #: get_uri_pending_hooks. invalid uri
 
-    E_GUA_DUPH_IUID  = 230 #: delete_uri_pending_hooks. invalid uid
-    E_GUA_DUPH_IURI  = 231 #: delete_uri_pending_hooks. invalid uri
+    E_GUA_DSPH_ISID  = 1850 #: delete_session_pending_hooks. invalid sid
 
-    E_GUA_DPH_IUID   = 240 #: delete_pending_hook. invalid uid
-    E_GUA_DPH_IURI   = 241 #: delete_pending_hook. invalid uri
-    E_GUA_DPH_ISID   = 242 #: delete_pending_hook. invalid sid
+    E_GUA_DUPH_IUID  = 1900 #: delete_uri_pending_hooks. invalid uid
+    E_GUA_DUPH_IURI  = 1901 #: delete_uri_pending_hooks. invalid uri
+
+    E_GUA_DPH_IUID   = 1950 #: delete_pending_hook. invalid uid
+    E_GUA_DPH_IURI   = 1951 #: delete_pending_hook. invalid uri
+    E_GUA_DPH_ISID   = 1952 #: delete_pending_hook. invalid sid
 
 #gestaccount agent api
 

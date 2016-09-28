@@ -20,3 +20,5 @@ HTTP_LISTEN_PORT='webserver:starting_listen_port'
 TORNADO_DEBUG='webserver:debug_mode'
 WS_LISTEN_ADDRESS='websocketserver:listen_address'
 WS_LISTEN_PORT='websocketserver:starting_listen_port'
+STRIPE_API_KEY='payment:stripe_api_key'
+

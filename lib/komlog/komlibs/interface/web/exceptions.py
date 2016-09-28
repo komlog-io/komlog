@@ -21,6 +21,7 @@ BAD_PARAMETERS_STATUS_EXCEPTION_LIST=(
 )
 
 NOT_ALLOWED_STATUS_EXCEPTION_LIST=(
+    gestexcept.UserUnsupportedOperationException,
     gestexcept.WidgetUnsupportedOperationException,
     authexcept.IntervalBoundsException,
 )

@@ -1,6 +1,7 @@
 import unittest
 import uuid
 import json
+import stripe
 from komlog.komcass.api import quote as cassapiquote
 from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.auth import passport
@@ -130,6 +131,28 @@ class InterfaceWebApiUserTest(unittest.TestCase):
             response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
+    def test_new_user_request_failure_invalid_segment(self):
+        ''' new_user_request should fail if segment is invalid '''
+        username = 'test_new_user_request_failure_invalid_segment'
+        password = 'password'
+        email = username+'@komlog.org'
+        segments = ['u@ser@komlog.org', 'invalid_email_ñ@domain.com','email@.com','.@domain.com','my email@domain.com','email . @email.com',{'a':'dict'}, ['a list',],('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        for segment in segments:
+            response=userapi.new_user_request(username=username, password=password, email=email, segment=segment)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWAU_NUSR_ISID.value)
+
+    def test_new_user_request_failure_invalid_token(self):
+        ''' new_user_request should fail if token is invalid '''
+        username = 'test_new_user_request_failure_invalid_token'
+        password = 'password'
+        email = username+'@komlog.org'
+        tokens= [223, 232.423 ,{'a':'dict'}, ['a list',],('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        for token in tokens:
+            response=userapi.new_user_request(username=username, password=password, email=email, token=token)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWAU_NUSR_ITOK.value)
+
     def test_new_user_request_failure_non_existent_invitation(self):
         ''' new_user_request should fail if invitation does not exist '''
         username = 'test_new_user_request_failure_non_existent_invitation_user'
@@ -157,6 +180,47 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+
+    def test_new_user_request_success_with_invitation_and_token(self):
+        ''' new_user_request should succeed if invitation_request is True and invitation exists and is unused, and we pass a token for a paid segment '''
+        username = 'test_new_user_request_success_with_invitation_and_token_user'
+        password = 'password'
+        email = username+'@komlog.org'
+        invitation=gestuserapi.generate_user_invitations(email=email)
+        invitation=invitation[0]['inv_id'].hex
+        segment = '1'
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True, segment=segment, token=token.id)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.data['uid'],response2.data['uid'])
+        self.assertEqual(username,response2.data['username'])
+        self.assertEqual(email,response2.data['email'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
+        self.assertEqual(int(segment),response2.data['segment'])
         msgs=response.unrouted_messages
         found=False
         while len(msgs)>0:
@@ -961,4 +1025,147 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.reset_password_request(code=code, password=password)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
         self.assertEqual(response.error, Errors.E_IWAU_RPR_CODEAU.value)
+
+    def test_update_user_segment_request_failure_invalid_passport(self):
+        ''' update_user_segment_request should fail if passport is invalid'''
+        passports = [None, 23423424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','/asdfa','my user']
+        segment='1'
+        for psp in passports:
+            response=userapi.update_user_segment_request(passport=psp, segment=segment)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWAU_UUSGR_IPSP.value)
+
+    def test_update_user_segment_request_failure_invalid_segment(self):
+        ''' update_user_segment_request should fail if segment is invalid'''
+        username = 'test_update_user_segment_request_failure_invalid_segment'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        segments= [None, 424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','/asdfa','my user']
+        for segment in segments:
+            response=userapi.update_user_segment_request(passport=psp, segment=segment)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWAU_UUSGR_ISID.value)
+
+    def test_update_user_segment_request_failure_invalid_token(self):
+        ''' update_user_segment_request should fail if token is invalid'''
+        username = 'test_update_user_segment_request_failure_invalid_token'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        tokens = [424, {'a':'dict'},['a list',],uuid.uuid4(), uuid.uuid1(), {'set'},('a','tuple')]
+        segment='1'
+        for token in tokens:
+            response=userapi.update_user_segment_request(passport=psp, segment=segment,token=token)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWAU_UUSGR_ITOK.value)
+
+    def test_update_user_segment_request_failure_token_needed(self):
+        ''' update_user_segment_request should fail if we try to modify to a paid segment without token '''
+        username = 'test_update_user_segment_request_failure_token_needed'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        segment='1'
+        response=userapi.update_user_segment_request(passport=psp, segment=segment)
+        self.assertEqual(response.error, gesterrors.E_GUA_UPDSEG_TOKNEED.value)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_update_user_segment_request_failure_non_existent_segment(self):
+        ''' update_user_segment_request should fail if we try migrate to a non existing segment '''
+        username = 'test_update_user_segment_request_failure_non_existent_segment'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        segment='42523931'
+        response=userapi.update_user_segment_request(passport=psp, segment=segment)
+        self.assertEqual(response.error, gesterrors.E_GUA_UPDSEG_SEGNF.value)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_update_user_segment_request_success(self):
+        ''' update_user_segment_request should succeed '''
+        username = 'test_update_user_segment_request_success'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        segment='2'
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        response=userapi.update_user_segment_request(passport=psp, segment=segment, token=token.id)
+        self.assertEqual(response.error, Errors.OK.value)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        #now migrate to other segment, updating card info
+        segment = '1'
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        response=userapi.update_user_segment_request(passport=psp, segment=segment, token=token.id)
+        self.assertEqual(response.error, Errors.OK.value)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+
+    def test_update_user_segment_request_failure_token_reused(self):
+        ''' update_user_segment_request should fail if token is reused '''
+        username = 'test_update_user_segment_request_failure_token_reused'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        segment='2'
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        response=userapi.update_user_segment_request(passport=psp, segment=segment, token=token.id)
+        self.assertEqual(response.error, Errors.OK.value)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        #now migrate to other segment, with the same token
+        segment = '1'
+        response=userapi.update_user_segment_request(passport=psp, segment=segment, token=token.id)
+        self.assertEqual(response.error, gesterrors.E_GUA_UPDSEG_EUPAY.value)
+        self.assertEqual(response.status, status.WEB_STATUS_INTERNAL_ERROR)
+
 
