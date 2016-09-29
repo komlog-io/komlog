@@ -511,10 +511,15 @@ def monitor_new_datapoint(did, date, position, length, datapointname):
             if dswidget and dpwidget:
                 graphkin.kin_widgets(ido=dpwidget.wid, idd=dswidget.wid)
                 widgets_related=True
+        else:
+            if datapoint['pid'] in mark_result['dtree_gen_success']:
+                #store some previous samples so the new datapoint event can show a graph
+                store_datapoint_values(pid=datapoint['pid'], date=date, store_newer=False, store_older=True, count=5)
         return {**datapoint, **mark_result}
     except:
         if 'pid' in datapoint and datapoint['previously_existed'] is False:
             cassapidatapoint.delete_datapoint(pid=datapoint['pid'])
+            cassapidatapoint.delete_datapoint_data(pid=datapoint['pid'])
             graphuri.dissociate_vertex(ido=datapoint['pid'])
         if widgets_related:
             graphkin.unkin_widgets(ido=dpwidget.wid, idd=dswidget.wid)
@@ -545,7 +550,7 @@ def store_user_datapoint_value(pid, date, content):
     else:
         raise exceptions.DatapointStoreValueException(error=Errors.E_GPA_SDPSV_IDDE)
 
-def store_datapoint_values(pid, date, store_newer=True):
+def store_datapoint_values(pid, date, store_newer=True, store_older=False, count=None):
     '''
     Esta funcion suele llamarse, sobre todo, cuando un dtree de un datapoint se actualiza,
     debido a que el usuario ha aportado nueva informacion al conjunto de datos de entrenamiento.
@@ -575,13 +580,15 @@ def store_datapoint_values(pid, date, store_newer=True):
     datasource_stats=cassapidatasource.get_datasource_stats(did=did)
     if store_newer:
         todate=datasource_stats.last_mapped
-        fromdate=date
+    else:
+        todate=date
+    if store_older:
+        fromdate=timeuuid.LOWEST_TIME_UUID
     else:
         fromdate=date
-        todate=date
-    if date.time > datasource_stats.last_mapped.time:
+    if fromdate.time > datasource_stats.last_mapped.time:
         raise exceptions.DatasourceMapNotFoundException(error=Errors.E_GPA_SDPV_DMNF)
-    dsmaps=cassapidatasource.get_datasource_maps(did=did, fromdate=fromdate, todate=todate)
+    dsmaps=cassapidatasource.get_datasource_maps(did=did, fromdate=fromdate, todate=todate, count=count)
     for dsmap in dsmaps:
         cassapidatasource.delete_datapoint_from_datasource_map(did=did, date=dsmap.date, pid=datapoint.pid)
         cassapidatapoint.delete_datapoint_data_at(pid=datapoint.pid, date=dsmap.date)

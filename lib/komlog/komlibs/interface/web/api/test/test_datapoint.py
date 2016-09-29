@@ -754,7 +754,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         end_date=None
         response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(len(response.data),1)
+        self.assertEqual(len(response.data),5) # 5 because monitor_datapoint tries to store 5 sampls
         self.assertEqual(response.data[0]['value'],7)
 
     def test_get_datapoint_data_request_failure_date_requested_before_interval_bounds_limit(self):
@@ -827,12 +827,12 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         end_date=str(timeuuid.get_unix_timestamp(timeuuid.uuid1()))
         response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(len(response.data),1)
+        self.assertEqual(len(response.data),5) # 5 because monitor_datapoint tries to store 5 sampls
         self.assertEqual(response.data[0]['value'],9)
         #the same query without setting start_date
         response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=None, end_date=end_date)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(len(response.data),1)
+        self.assertEqual(len(response.data),5)
         self.assertEqual(response.data[0]['value'],9)
         self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
 

@@ -131,7 +131,7 @@ class EventsApiSummaryTest(unittest.TestCase):
 
     def test_generate_user_event_data_summary_event_type_has_no_summary_defined(self):
         ''' generate_user_event_data_summary should return None if event_type has no summary by default '''
-        event_types=[types.USER_EVENT_NOTIFICATION_NEW_USER,types.USER_EVENT_NOTIFICATION_NEW_AGENT,types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE,types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT,types.USER_EVENT_NOTIFICATION_NEW_WIDGET]
+        event_types=[types.USER_EVENT_NOTIFICATION_NEW_USER,types.USER_EVENT_NOTIFICATION_NEW_AGENT,types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD,types.USER_EVENT_NOTIFICATION_NEW_CIRCLE,types.USER_EVENT_NOTIFICATION_NEW_WIDGET]
         parameters={}
         for t in event_types:
             self.assertIsNone(summary.generate_user_event_data_summary(event_type=t, parameters=parameters))
@@ -519,4 +519,137 @@ class EventsApiSummaryTest(unittest.TestCase):
         parameters={'did':datasource['did'],'dates':[date]}
         ev_summary = summary._generate_data_summary_UEIDPI(parameters=parameters)
         self.assertEqual(ev_summary,{'data':[{'vars':[(0,1),],'content':content,'ts':timeuuid.get_unix_timestamp(date),'seq':timeuuid.get_custom_sequence(date)}]})
+
+    def test__generate_data_summary_UENNDS_failure_no_did(self):
+        ''' _generate_data_summary_UENNDS should fail if parameters has no did '''
+        parameters={}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            summary._generate_data_summary_UENNDS(parameters=parameters)
+        self.assertEqual(cm.exception.error, Errors.E_EAS_GDSUENNDS_IDID)
+
+    def test__generate_data_summary_UENNDS_failure_invalid_did(self):
+        ''' _generate_data_summary_UENNDS should fail if did is not uuid '''
+        dids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        parameters={}
+        for did in dids:
+            parameters['did']=did
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                summary._generate_data_summary_UENNDS(parameters=parameters)
+            self.assertEqual(cm.exception.error, Errors.E_EAS_GDSUENNDS_IDID)
+
+    def test__generate_data_summary_UENNDS_failure_no_data_found(self):
+        ''' _generate_data_summary_UENNDS should fail if did is not found '''
+        parameters={'did':uuid.uuid4()}
+        self.assertIsNone(summary._generate_data_summary_UENNDS(parameters=parameters))
+
+    def  test__generate_data_summary_UENNDS_success(self):
+        ''' _generate_data_summary_UENNDS should succeed '''
+        username='test__generate_data_summary_uennds_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE
+        date=uuid.uuid1()
+        agentname='agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        datasourcename='datasource'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='1 datasource content'
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        parameters={'did':datasource['did']}
+        ev_summary = summary._generate_data_summary_UENNDS(parameters=parameters)
+        self.assertEqual(ev_summary['type'], widget_types.DATASOURCE)
+        self.assertEqual(ev_summary['ts'], timeuuid.get_unix_timestamp(date))
+        self.assertEqual(ev_summary['datasource'], {'content':content})
+
+    def test__generate_data_summary_UENNDP_failure_no_pid(self):
+        ''' _generate_data_summary_UENNDP should fail if parameters has no pid '''
+        parameters={}
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            summary._generate_data_summary_UENNDP(parameters=parameters)
+        self.assertEqual(cm.exception.error, Errors.E_EAS_GDSUENNDP_IPID)
+
+    def test__generate_data_summary_UENNDP_failure_invalid_pid(self):
+        ''' _generate_data_summary_UENNDP should fail if pid is not uuid '''
+        pids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]
+        parameters={}
+        for pid in pids:
+            parameters['pid']=pid
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                summary._generate_data_summary_UENNDP(parameters=parameters)
+            self.assertEqual(cm.exception.error, Errors.E_EAS_GDSUENNDP_IPID)
+
+    def test__generate_data_summary_UENNDP_failure_datapoint_not_found(self):
+        ''' _generate_data_summary_UENNDP should fail if pid is not found '''
+        parameters={'pid':uuid.uuid4()}
+        with self.assertRaises(exceptions.SummaryCreationException) as cm:
+            summary._generate_data_summary_UENNDP(parameters=parameters)
+        self.assertEqual(cm.exception.error, Errors.E_EAS_GDSUENNDP_DPNF)
+
+    def test__generate_data_summary_UENNDP_failure_datapoint_has_no_data(self):
+        ''' _generate_data_summary_UENNDP should return None if there is no data '''
+        username='test__generate_data_summary_uenndp_failure_datapoint_has_no_data'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
+        date=uuid.uuid1()
+        agentname='agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        datasourcename='datasource'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='1 datasource content'
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        datapointname='datapoint_name'
+        datapoint=datapointapi.monitor_new_datapoint(did=datasource['did'],date=date, position=0, length = 1,datapointname=datapointname)
+        parameters={'pid':datapoint['pid']}
+        ev_summary = summary._generate_data_summary_UENNDP(parameters=parameters)
+        self.assertIsNone(ev_summary)
+
+    def test__generate_data_summary_UENNDP_success(self):
+        ''' _generate_data_summary_UENNDP should return the summary if there are more than one values stored '''
+        username='test__generate_data_summary_uenndp_success'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT
+        agentname='agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        datasourcename='datasource'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        dates=[timeuuid.uuid1(seconds=1),timeuuid.uuid1(seconds=2),timeuuid.uuid1(seconds=3)]
+        for date in dates:
+            content='1 datasource content'
+            self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+            self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        datapointname='datapoint_name'
+        datapoint=datapointapi.monitor_new_datapoint(did=datasource['did'],date=dates[0], position=0, length = 1,datapointname=datapointname)
+        self.assertTrue(datapointapi.store_datapoint_values(pid=datapoint['pid'], date=dates[0], store_newer=True))
+        parameters={'pid':datapoint['pid']}
+        ev_summary = summary._generate_data_summary_UENNDP(parameters=parameters)
+        self.assertIsNotNone(ev_summary)
+        self.assertEqual(ev_summary['type'],widget_types.DATAPOINT)
+        self.assertEqual(ev_summary['its'],timeuuid.get_unix_timestamp(dates[0]))
+        self.assertEqual(ev_summary['ets'],timeuuid.get_unix_timestamp(dates[-1]))
+        self.assertTrue(ev_summary['its']<ev_summary['ets'])
+        self.assertEqual(len(ev_summary['datapoints']),1)
+        self.assertEqual(ev_summary['datapoints'][0]['color'],datapoint['color'])
+        self.assertEqual(len(ev_summary['datapoints'][0]['data']),3)
 

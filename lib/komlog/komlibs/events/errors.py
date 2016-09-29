@@ -143,12 +143,17 @@ class Errors(Enum):
     E_EAS_GUEDS_IUID        = 170000 #: invalid uid
     E_EAS_GUEDS_IDATE       = 170001 #: invalid date
 
-    E_EAS_GDSUENNSS_NPNF   = 170100 #: nid parameter not found.
-    E_EAS_GDSUENNSS_INID   = 170101 #: invalid nid parameter.
-    E_EAS_GDSUENNSS_NIDNF  = 170102 #: snapshot not found.
+    E_EAS_GDSUENNSS_NPNF    = 170100 #: nid parameter not found.
+    E_EAS_GDSUENNSS_INID    = 170101 #: invalid nid parameter.
+    E_EAS_GDSUENNSS_NIDNF   = 170102 #: snapshot not found.
 
-    E_EAS_GDSUEIDPI_IDID   = 170200 #: invalid did parameter
-    E_EAS_GDSUEIDPI_IDATES = 170201 #: invalid dates parameter
-    E_EAS_GDSUEIDPI_DSVNF  = 170202 #: datasource variables not found
-    E_EAS_GDSUEIDPI_DSDNF  = 170203 #: datasource data not found
+    E_EAS_GDSUEIDPI_IDID    = 170200 #: invalid did parameter
+    E_EAS_GDSUEIDPI_IDATES  = 170201 #: invalid dates parameter
+    E_EAS_GDSUEIDPI_DSVNF   = 170202 #: datasource variables not found
+    E_EAS_GDSUEIDPI_DSDNF   = 170203 #: datasource data not found
+
+    E_EAS_GDSUENNDS_IDID    = 170300 #: invalid pid parameter
+
+    E_EAS_GDSUENNDP_IPID    = 170400 #: invalid pid parameter
+    E_EAS_GDSUENNDP_DPNF    = 170401 #: datapoint not found
 

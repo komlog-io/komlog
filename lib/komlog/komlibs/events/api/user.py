@@ -244,14 +244,18 @@ def _insert_event_notification_new_datasource(uid, parameters):
     datasource=cassapidatasource.get_datasource(did=did)
     if not datasource:
         raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDS_DNF)
+    summary_params={'did':did}
+    summary_data = summary.generate_user_event_data_summary(event_type = types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters=summary_params)
+    event_summary = ormevents.UserEventDataSummary(uid=uid, date=now, summary = summary_data)
     event=ormevents.UserEventNotificationNewDatasource(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, aid=datasource.aid, did=did, datasourcename=datasource.datasourcename)
     try:
-        if cassapievents.insert_user_event(event):
+        if cassapievents.insert_user_event(event) and cassapievents.insert_user_event_data_summary(event_summary):
             return {'uid':uid, 'date':now}
         else:
             raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDS_DBIE)
     except cassexcept.KomcassException:
         cassapievents.delete_user_event(event)
+        cassapievents.delete_user_event_data_summary(uid=uid, date=now)
         raise
 
 def _insert_event_notification_new_datapoint(uid, parameters):
@@ -272,14 +276,18 @@ def _insert_event_notification_new_datapoint(uid, parameters):
     datasource=cassapidatasource.get_datasource(did=datapoint.did)
     if not datasource:
         raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDP_DNF)
+    summary_params={'pid':pid}
+    summary_data = summary.generate_user_event_data_summary(event_type = types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters=summary_params)
+    event_summary = ormevents.UserEventDataSummary(uid=uid, date=now, summary = summary_data)
     event=ormevents.UserEventNotificationNewDatapoint(uid=uid, date=now, priority=priorities.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, did=datapoint.did, pid=pid, datasourcename=datasource.datasourcename, datapointname=datapoint.datapointname)
     try:
-        if cassapievents.insert_user_event(event):
+        if cassapievents.insert_user_event(event) and cassapievents.insert_user_event_data_summary(event_summary):
             return {'uid':uid, 'date':now}
         else:
             raise exceptions.UserEventCreationException(error=Errors.E_EAU_IENNDP_DBIE)
     except cassexcept.KomcassException:
         cassapievents.delete_user_event(event)
+        cassapievents.delete_user_event_data_summary(uid=uid, date=now)
         raise
 
 def _insert_event_notification_new_widget(uid, parameters):

@@ -48,10 +48,10 @@ def _generate_data_summary_UENNSS(parameters):
         ds_data=cassapidatasource.get_datasource_data(did=snapshot.did, fromdate=snapshot.interval_init, todate=snapshot.interval_end, count=1)
         if len(ds_data)==1:
             summary={
-                'type':widget_types.DATASOURCE,\
-                'ts':timeuuid.get_unix_timestamp(ds_data[0].date),\
-                'widgetname':snapshot.widgetname,\
-                'datasource':{'content':ds_data[0].content}\
+                'type':widget_types.DATASOURCE,
+                'ts':timeuuid.get_unix_timestamp(ds_data[0].date),
+                'widgetname':snapshot.widgetname,
+                'datasource':{'content':ds_data[0].content}
             }
             return summary
         else:
@@ -61,17 +61,17 @@ def _generate_data_summary_UENNSS(parameters):
         ets=timeuuid.get_unix_timestamp(snapshot.interval_end)
         dp_data=cassapidatapoint.get_datapoint_data(pid=snapshot.pid, fromdate=snapshot.interval_init, todate=snapshot.interval_end)
         summary={
-            'type':widget_types.DATAPOINT,\
-            'its':its,\
-            'ets':ets,\
-            'widgetname':snapshot.widgetname,\
+            'type':widget_types.DATAPOINT,
+            'its':its,
+            'ets':ets,
+            'widgetname':snapshot.widgetname,
             'datapoints':[]
         }
         if len(dp_data)>1:
             aggregated_data=aggregate.aggregate_timeseries_data(data=[[timeuuid.get_unix_timestamp(d['date']),float(d['value'])] for d in dp_data], bins=50, interval=[its,ets])
-            summary['datapoints'].append({\
-                'color':snapshot.datapoint_config.color,\
-                'data':aggregated_data\
+            summary['datapoints'].append({
+                'color':snapshot.datapoint_config.color,
+                'data':aggregated_data
             })
             return summary
         else:
@@ -80,21 +80,21 @@ def _generate_data_summary_UENNSS(parameters):
         its=timeuuid.get_unix_timestamp(snapshot.interval_init)
         ets=timeuuid.get_unix_timestamp(snapshot.interval_end)
         summary={
-            'type':widget_types.MULTIDP,\
-            'its':its,\
-            'ets':ets,\
-            'widgetname':snapshot.widgetname,\
-            'datapoints':[]\
+            'type':widget_types.MULTIDP,
+            'its':its,
+            'ets':ets,
+            'widgetname':snapshot.widgetname,
+            'datapoints':[]
         }
         dp_with_data=0
         for datapoint in snapshot.datapoints_config:
             dp_data=cassapidatapoint.get_datapoint_data(pid=datapoint.pid, fromdate=snapshot.interval_init, todate=snapshot.interval_end)
             dp_with_data+=1 if len(dp_data)>1 else 0
             aggregated_data=aggregate.aggregate_timeseries_data(data=[[timeuuid.get_unix_timestamp(d['date']),float(d['value'])] for d in dp_data], bins=50, interval=[its,ets])
-            summary['datapoints'].append({\
-                'color':datapoint.color,\
-                'datapointname':datapoint.datapointname,\
-                'data':aggregated_data\
+            summary['datapoints'].append({
+                'color':datapoint.color,
+                'datapointname':datapoint.datapointname,
+                'data':aggregated_data
             })
         if dp_with_data>0:
             return summary
@@ -127,11 +127,53 @@ def _generate_data_summary_UEIDPI(parameters):
         summary['data'].append({'vars':list(variables.items()), 'content':ds_data.content, 'ts':ts, 'seq':seq})
     return summary
 
+def _generate_data_summary_UENNDS(parameters):
+    if not 'did' in parameters or not args.is_valid_uuid(parameters['did']):
+        raise exceptions.BadParametersException(error=Errors.E_EAS_GDSUENNDS_IDID)
+    now = timeuuid.uuid1()
+    ds_data=cassapidatasource.get_datasource_data(did=parameters['did'], todate=now, count=1)
+    if len(ds_data)==1:
+        summary={
+            'type':widget_types.DATASOURCE,
+            'ts':timeuuid.get_unix_timestamp(ds_data[0].date),
+            'datasource':{'content':ds_data[0].content}
+        }
+        return summary
+    else:
+        return None
+
+def _generate_data_summary_UENNDP(parameters):
+    if not 'pid' in parameters or not args.is_valid_uuid(parameters['pid']):
+        raise exceptions.BadParametersException(error=Errors.E_EAS_GDSUENNDP_IPID)
+    datapoint = cassapidatapoint.get_datapoint(pid=parameters['pid'])
+    if datapoint is None:
+        raise exceptions.SummaryCreationException(error=Errors.E_EAS_GDSUENNDP_DPNF)
+    now = timeuuid.uuid1()
+    then = timeuuid.LOWEST_TIME_UUID
+    dp_data=cassapidatapoint.get_datapoint_data(pid=parameters['pid'], fromdate=then, todate=now, count=50)
+    if len(dp_data)<=1:
+        return None
+    its=timeuuid.get_unix_timestamp(dp_data[-1]['date'])
+    ets=timeuuid.get_unix_timestamp(dp_data[0]['date'])
+    summary={
+        'type':widget_types.DATAPOINT,
+        'its':its,
+        'ets':ets,
+        'datapoints':[]
+    }
+    aggregated_data=aggregate.aggregate_timeseries_data(data=[[timeuuid.get_unix_timestamp(d['date']),float(d['value'])] for d in dp_data], bins=50, interval=[its,ets])
+    summary['datapoints'].append({
+        'color':datapoint.color,
+        'data':aggregated_data
+    })
+    return summary
+
+
 _generate_user_event_data_summary_funcs = {
     types.USER_EVENT_NOTIFICATION_NEW_USER:lambda x:None,
     types.USER_EVENT_NOTIFICATION_NEW_AGENT:lambda x:None,
-    types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE:lambda x:None,
-    types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT:lambda x:None,
+    types.USER_EVENT_NOTIFICATION_NEW_DATASOURCE:_generate_data_summary_UENNDS,
+    types.USER_EVENT_NOTIFICATION_NEW_DATAPOINT:_generate_data_summary_UENNDP,
     types.USER_EVENT_NOTIFICATION_NEW_WIDGET:lambda x:None,
     types.USER_EVENT_NOTIFICATION_NEW_DASHBOARD:lambda x:None,
     types.USER_EVENT_NOTIFICATION_NEW_CIRCLE:lambda x:None,
