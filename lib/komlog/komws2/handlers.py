@@ -143,8 +143,11 @@ class UserConfirmationHandler(tornado.web.RequestHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=user.confirm_user_request(email=email,code=code)
-            self.set_status(response.status)
-            self.write(json.dumps(response.data))
+            if response.status == status.WEB_STATUS_OK:
+                self.redirect(self.get_login_url())
+            else:
+                self.set_status(response.status)
+                self.write(json.dumps(response.data))
 
 class UserPlanHandler(tornado.web.RequestHandler):
 

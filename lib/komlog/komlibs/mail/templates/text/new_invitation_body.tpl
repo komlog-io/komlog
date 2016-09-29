@@ -7,4 +7,4 @@ and join the best data science community worlwide :)
 
 Thank you, 
 --
-Komlog AI crew.
+Komlog Team

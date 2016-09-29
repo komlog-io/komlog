@@ -17,7 +17,7 @@
 </p>
 <p style="margin-bottom: 0cm; line-height: 100%">Thank you for joining
 Komlog. To confirm your account, please click 
-<a href="http://www.komlog.org/confirm?c=${code}&e=${to_address}">here</a>.
+<a href="http://www.komlog.org/etc/usr/confirm/?c=${code}&e=${to_address}">here</a>.
 </p>
 <p style="margin-bottom: 0cm; line-height: 100%"><br/>
 
@@ -28,6 +28,6 @@ Komlog. To confirm your account, please click
 
 </p>
 <p style="margin-bottom: 0cm; line-height: 100%">–</p>
-<p style="margin-bottom: 0cm; line-height: 100%">Komlog AI crew.</p>
+<p style="margin-bottom: 0cm; line-height: 100%">Komlog Team</p>
 </body>
 </html>

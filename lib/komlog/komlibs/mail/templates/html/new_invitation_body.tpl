@@ -28,6 +28,6 @@ and join the best data science community worlwide :)</p>
 
 </p>
 <p style="margin-bottom: 0cm; line-height: 100%">–</p>
-<p style="margin-bottom: 0cm; line-height: 100%">Komlog AI crew.</p>
+<p style="margin-bottom: 0cm; line-height: 100%">Komlog Team</p>
 </body>
 </html>

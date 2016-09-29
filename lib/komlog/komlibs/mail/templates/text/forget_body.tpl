@@ -6,4 +6,4 @@ please, go to http://www.komlog.org/forget?c=${code}
 
 Thank you, 
 --
-Komlog AI crew.
+Komlog Team
