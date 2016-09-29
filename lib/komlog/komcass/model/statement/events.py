@@ -28,6 +28,7 @@ STATEMENTS={
             150700:'select * from dat_ue_notif_new_dashboard where uid=? and date=?',
             150800:'select * from dat_ue_notif_new_circle where uid=? and date=?',
             150900:'select * from dat_ue_interv_dp_identification where uid=? and date=?',
+            150901:'select * from dat_ue_interv_dp_identification where uid=? and date<=? and date>=? and pid = ? allow filtering',
             151000:'select * from dat_uer_interv_dp_identification where uid=? and date=?',
             151001:'select * from dat_uer_interv_dp_identification where uid=?',
             151100:'select * from dat_ue_notif_new_snapshot_shared where uid=? and date=?',
@@ -128,6 +129,7 @@ S_A_DATUENOTIFNEWCIRCLE_B_UID_DATE=150800
 # dat_ue_interv_datapoint_identification
 
 S_A_DATUEINTERVDPIDENTIFICATION_B_UID_DATE=150900
+S_A_DATUEINTERVDPIDENTIFICATION_B_UID_ENDDATE_FROMDATE_PID=150901
 
 # dat_uer_interv_datapoint_identification
 

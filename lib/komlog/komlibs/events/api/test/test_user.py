@@ -1371,6 +1371,47 @@ class EventsApiUserTest(unittest.TestCase):
         self.assertEqual(db_event['parameters']['datasourcename'],datasourcename)
         self.assertEqual(db_event['parameters']['datapointname'],datapointname)
 
+    def test_new_event_intervention_datapoint_identification_failure_event_not_generated_because_once_in_last_day_found(self):
+        ''' new_event should fail if there is a similar event in the last day '''
+        username='test_new_event_intervention_datapoint_identification_failure_event_not_generated_because_once_in_last_day_found'
+        password='temporal'
+        email=username+'@komlog.org'
+        event_type=types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION
+        date=uuid.uuid1()
+        doubts=[uuid.uuid4().hex, uuid.uuid4().hex]
+        discarded=[uuid.uuid4().hex, uuid.uuid4().hex]
+        agentname='agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='version'
+        datasourcename='datasource'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agent=agentapi.create_agent(uid=user['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        datasource=datasourceapi.create_datasource(uid=user['uid'],aid=agent['aid'],datasourcename=datasourcename)
+        self.assertIsNotNone(datasource)
+        content='1 datasource content'
+        self.assertTrue(datasourceapi.store_datasource_data(did=datasource['did'],date=date,content=content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=datasource['did'], date=date))
+        datapointname='datapoint_name'
+        datapoint=datapointapi.monitor_new_datapoint(did=datasource['did'],date=date, position=0, length = 1,datapointname=datapointname)
+        parameters={'did':datasource['did'].hex,'dates':[date.hex],'pid':datapoint['pid'].hex}
+        event=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event)
+        db_event=eventsuser.get_event(uid=user['uid'],date=event['date'])
+        self.assertIsNotNone(db_event)
+        self.assertEqual(db_event['uid'],user['uid'])
+        self.assertEqual(db_event['date'],event['date'])
+        self.assertEqual(db_event['type'],types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
+        self.assertTrue(isinstance(db_event, dict))
+        self.assertEqual(db_event['parameters']['pid'],datapoint['pid'])
+        self.assertEqual(db_event['parameters']['datasourcename'],datasourcename)
+        self.assertEqual(db_event['parameters']['datapointname'],datapointname)
+        event2=eventsuser.new_event(uid=user['uid'], event_type=event_type, parameters=parameters)
+        self.assertIsNotNone(event2)
+        self.assertEqual(event2['uid'],user['uid'])
+        self.assertEqual(event2['created'],False)
+
     def test_new_event_notification_new_snapshot_shared_failure_invalid_uid(self):
         ''' new_event should fail if uid is invalid  '''
         uids=[None,234234, 234234.234234, 'astring',uuid.uuid4().hex, uuid.uuid1().hex, uuid.uuid1(), {'a':'dict'},['a','list'],('a','tuple'),{'set'}]

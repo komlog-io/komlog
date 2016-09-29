@@ -384,6 +384,10 @@ def _insert_event_intervention_datapoint_identification(uid, parameters):
     now=timeuuid.uuid1()
     pid = uuid.UUID(parameters['pid'])
     did=uuid.UUID(parameters['did'])
+    yesterday = timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(now)-86400)
+    last_day_enabled = cassapievents.get_count_enabled_user_events_intervention_datapoint_identification_by_pid(uid=uid, from_date=yesterday, end_date=now, pid=pid)
+    if last_day_enabled > 0:
+        return {'uid':uid, 'created':False}
     user=cassapiuser.get_user(uid=uid)
     if not user:
         raise exceptions.UserEventCreationException(error=Errors.E_EAU_IEIDPI_UNF)
@@ -413,7 +417,7 @@ def _insert_event_intervention_datapoint_identification(uid, parameters):
         cassapievents.delete_user_event_data_summary(uid=uid, date=now)
         raise
     else:
-        return {'uid':uid, 'date':now}
+        return {'uid':uid, 'date':now, 'created':True}
 
 def _insert_event_notification_new_snapshot_shared(uid, parameters):
     if not args.is_valid_uuid(uid):

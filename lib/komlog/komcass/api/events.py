@@ -150,6 +150,16 @@ def _get_user_event_intervention_datapoint_identification(event):
     else:
         return None
 
+@exceptions.ExceptionHandler
+def get_count_enabled_user_events_intervention_datapoint_identification_by_pid(uid,from_date,end_date,pid):
+    count = 0
+    rows=connection.session.execute(stmtevents.S_A_DATUEINTERVDPIDENTIFICATION_B_UID_ENDDATE_FROMDATE_PID,(uid, end_date, from_date, pid))
+    for row in rows:
+        enabled = connection.session.execute(stmtevents.S_A_DATUSEREVENTS_B_UID_DATE,(uid, row['date']))
+        if enabled:
+            count += 1
+    return count
+
 def insert_user_event(event):
     if not isinstance(event, ormevents.UserEvent):
         return False

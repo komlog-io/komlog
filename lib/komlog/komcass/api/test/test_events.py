@@ -590,6 +590,88 @@ class KomcassApiEventsTest(unittest.TestCase):
         event=ormevents.UserEvent(uid=uid,date=date, priority=1,type=9999999999)
         self.assertIsNone(eventsapi._get_user_event(event))
 
+    def test_get_count_enabled_user_events_intervention_datapoint_identification_by_pid_non_existent_events(self):
+        ''' get_count_enabled_user_events_intervention_datapoint_identification_by_pid should return 0 if no event idpi existed '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1(seconds=500)
+        pid = uuid.uuid4()
+        datasourcename='datasourcename'
+        datapointname='datapointname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid,datasourcename=datasourcename,datapointname=datapointname)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.pid,db_user_event.pid)
+        self.assertEqual(event.datasourcename, db_user_event.datasourcename)
+        self.assertEqual(event.datapointname, db_user_event.datapointname)
+        from_date=timeuuid.uuid1(seconds=1)
+        end_date=timeuuid.uuid1(seconds=1000)
+        new_pid = uuid.uuid4()
+        self.assertEqual(eventsapi.get_count_enabled_user_events_intervention_datapoint_identification_by_pid(uid=uid, from_date=from_date, end_date=end_date, pid=new_pid), 0)
+        new_uid = uuid.uuid4()
+        self.assertEqual(eventsapi.get_count_enabled_user_events_intervention_datapoint_identification_by_pid(uid=new_uid, from_date=from_date, end_date=end_date, pid=pid), 0)
+        new_from_date=timeuuid.uuid1(seconds=501)
+        self.assertEqual(eventsapi.get_count_enabled_user_events_intervention_datapoint_identification_by_pid(uid=uid, from_date=new_from_date, end_date=end_date, pid=pid), 0)
+        new_end_date=timeuuid.uuid1(seconds=499)
+        self.assertEqual(eventsapi.get_count_enabled_user_events_intervention_datapoint_identification_by_pid(uid=uid, from_date=from_date, end_date=new_end_date, pid=pid), 0)
+        self.assertEqual(eventsapi.get_count_enabled_user_events_intervention_datapoint_identification_by_pid(uid=uid, from_date=from_date, end_date=end_date, pid=pid), 1)
+
+    def test_get_count_enabled_user_events_intervention_datapoint_identification_by_pid_disabled_but_existent_events(self):
+        ''' get_count_enabled_user_events_intervention_datapoint_identification_by_pid should return 0 if found events idpi existed but are disabled '''
+        uid=uuid.uuid4()
+        date=timeuuid.uuid1(seconds=500)
+        pid = uuid.uuid4()
+        datasourcename='datasourcename'
+        datapointname='datapointname'
+        event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid,datasourcename=datasourcename,datapointname=datapointname)
+        self.assertTrue(eventsapi.insert_user_event(event))
+        db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+        self.assertIsNotNone(db_user_event)
+        self.assertEqual(event.uid,db_user_event.uid)
+        self.assertEqual(event.date,db_user_event.date)
+        self.assertEqual(event.priority,db_user_event.priority)
+        self.assertEqual(event.type,types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
+        self.assertEqual(event.type,db_user_event.type)
+        self.assertEqual(event.pid,db_user_event.pid)
+        self.assertEqual(event.datasourcename, db_user_event.datasourcename)
+        self.assertEqual(event.datapointname, db_user_event.datapointname)
+        from_date=timeuuid.uuid1(seconds=1)
+        end_date=timeuuid.uuid1(seconds=1000)
+        self.assertEqual(eventsapi.get_count_enabled_user_events_intervention_datapoint_identification_by_pid(uid=uid, from_date=from_date, end_date=end_date, pid=pid), 1)
+        self.assertTrue(eventsapi.disable_user_event(event))
+        self.assertEqual(eventsapi.get_count_enabled_user_events_intervention_datapoint_identification_by_pid(uid=uid, from_date=from_date, end_date=end_date, pid=pid), 0)
+
+    def test_get_count_enabled_user_events_intervention_datapoint_identification_by_pid_some_events_found(self):
+        ''' get_count_enabled_user_events_intervention_datapoint_identification_by_pid should return the number of events found '''
+        uid=uuid.uuid4()
+        pid = uuid.uuid4()
+        datasourcename='datasourcename'
+        datapointname='datapointname'
+        for i in range(500,600):
+            date=timeuuid.uuid1(seconds=i)
+            event=ormevents.UserEventInterventionDatapointIdentification(uid=uid,date=date, priority=1, pid=pid,datasourcename=datasourcename,datapointname=datapointname)
+            self.assertTrue(eventsapi.insert_user_event(event))
+            db_user_event=eventsapi.get_user_event(uid=uid, date=date)
+            self.assertIsNotNone(db_user_event)
+            self.assertEqual(event.uid,db_user_event.uid)
+            self.assertEqual(event.date,db_user_event.date)
+            self.assertEqual(event.priority,db_user_event.priority)
+            self.assertEqual(event.type,types.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION)
+            self.assertEqual(event.type,db_user_event.type)
+            self.assertEqual(event.pid,db_user_event.pid)
+            self.assertEqual(event.datasourcename, db_user_event.datasourcename)
+            self.assertEqual(event.datapointname, db_user_event.datapointname)
+        from_date=timeuuid.uuid1(seconds=1)
+        end_date=timeuuid.uuid1(seconds=1000)
+        self.assertEqual(eventsapi.get_count_enabled_user_events_intervention_datapoint_identification_by_pid(uid=uid, from_date=from_date, end_date=end_date, pid=pid), 100)
+        self.assertTrue(eventsapi.disable_user_event(event))
+        self.assertEqual(eventsapi.get_count_enabled_user_events_intervention_datapoint_identification_by_pid(uid=uid, from_date=from_date, end_date=end_date, pid=pid), 99)
+
     def test_insert_user_event_failure_non_UserEvent_instance(self):
         ''' insert_user_event should return False if event is not an instance of UserEvent '''
         events=[None,23, '23423',uuid.uuid4(),{'dict':'dict'},{'set'},['list'],('tuple','tuple2')]
