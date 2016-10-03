@@ -442,6 +442,7 @@ a {
   margin: 10px 17px 0px;
   text-overflow: ellipsis;
   overflow: hidden;
+  word-wrap: break-word;
 }
 
 .user-event-body a {
