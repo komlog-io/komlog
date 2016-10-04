@@ -106,7 +106,7 @@ a {
   color: #eee;
   background-color: #262B33;
   border-right: 1px solid #262B33;
-  z-index: 2000;
+  z-index: 1000;
   transition: left 0.1s;
 }
 
@@ -150,6 +150,10 @@ a {
 .side-menu .action-icon:hover {
   color: white;
   transition: color 0.3s;
+}
+
+.side-menu-toolbar {
+    margin-bottom: 25px;
 }
 
 .sidebar-right {
@@ -555,6 +559,14 @@ a {
 .modal-container .modal, .modal-container .modal-backdrop {
   position: absolute;
   border-radius: 2px;
+}
+
+.modal-backdrop {
+  z-index: 1100;
+}
+
+.modal {
+  z-index: 1200;
 }
 
 /* 
