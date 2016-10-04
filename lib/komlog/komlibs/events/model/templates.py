@@ -41,11 +41,11 @@ HTML_BODY_TPL_USER_EVENT_NOTIFICATION_NEW_DATAPOINT=Template(
 )
 
 HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_WIDGET=Template(
-    "<div>New Widget</div>"
+    "<div>New Graph</div>"
 )
 
 HTML_BODY_TPL_USER_EVENT_NOTIFICATION_NEW_WIDGET=Template(
-    "<div>Widget <a onclick=\"PubSub.publish('loadSlide',{wid:'${parameters['wid']}'})\">${parameters['widgetname']}</a> created.</div>"
+    "<div>Graph <a onclick=\"PubSub.publish('loadSlide',{wid:'${parameters['wid']}'})\">${parameters['widgetname']}</a> created.</div>"
 )
 
 HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_DASHBOARD=Template(
