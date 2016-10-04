@@ -292,6 +292,7 @@ a {
 
 .datapoint {
   cursor: pointer;
+  font-weight: bold;
 }
 
 .variable {
