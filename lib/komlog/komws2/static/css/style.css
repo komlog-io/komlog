@@ -569,6 +569,10 @@ a {
   z-index: 1200;
 }
 
+.modal-body {
+  word-wrap: break-word;
+}
+
 /* 
     Navigation Tree
                     */
