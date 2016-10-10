@@ -156,6 +156,26 @@ a {
     margin-bottom: 25px;
 }
 
+.side-config-menu {
+  position: fixed;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  width: 300px;
+  display: block;
+  padding: 65px 20px 20px 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  color: #eee;
+  background-color: #262B33;
+  border-right: 1px solid #262B33;
+  z-index: 1000;
+}
+
+.side-config-menu a {
+  color: #eee;
+}
+
 .sidebar-right {
   position: fixed;
   top: 50px;

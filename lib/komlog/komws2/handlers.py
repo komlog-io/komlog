@@ -277,8 +277,7 @@ class UserConfigHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self):
-        response=user.get_user_config_request(passport=self.passport)
-        self.render('config.html',userdata=response.data,page_title='Komlog')
+        self.render('config.html', page_title='Komlog')
 
     @auth.authenticated
     def put(self):
@@ -709,7 +708,7 @@ USERNAME_REGEX='[0-9a-z\-_]+'
 HANDLERS = [
             (r'/', AppRootHandler),
             (r'/home', UserHomeHandler),
-            (r'/home/config', UserConfigHandler),
+            (r'/config/?', UserConfigHandler),
             (r'/login/?', LoginHandler),
             (r'/invite/?', InviteHandler),
             (r'/signup/?', SignupHandler),

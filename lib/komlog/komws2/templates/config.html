@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block jsDefinition %}
+<script src="{{ static_url("3p/js/react-with-addons-0.14.6.js")}}"></script>
+<script src="{{ static_url("3p/js/react-dom-0.14.6.js")}}"></script>
+<script src="{{ static_url("3p/js/react-bootstrap.min.js")}}"></script>
+<script src="{{ static_url("3p/js/jquery.min.js")}}"></script>
+<script src="{{ static_url("3p/js/bootstrap.min.js")}}"></script>
+<script src="{{ static_url("3p/js/d3.min.js")}}"></script>
+<script src="{{ static_url("3p/js/pubsub.js")}}"></script>
+<script src="{{ static_url("js/komlog-utils.js")}}"></script>
+<script src="{{ static_url("js/komlog-alert.js")}}"></script>
+<script src="{{ static_url("js/komlog-user-store.js")}}"></script>
+<script src="{{ static_url("js/komlog-user-header.js")}}"></script>
+<script src="{{ static_url("js/komlog-config-menu.js")}}"></script>
+
+{% end %}
+
+{% block body %}
+    <div id='user-header'>
+    </div>
+    <div id='alert-area'>
+    </div>
+    <div class="container-fluid">
+      <div id="config-menu">
+      </div>
+    </div>
+{% end %}
