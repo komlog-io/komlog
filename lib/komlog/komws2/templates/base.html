@@ -8,8 +8,8 @@
     <title>{{ page_title }}</title>
     <meta name="description" content="" />
     <meta name="author" content="komlog crew" />
-    <link href="{{ static_url('3p/css/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ static_url('css/style.css') }}" rel="stylesheet">
+    <link href="{{ static_url('3p/css/bootstrap.min.css', include_version=False) }}" rel="stylesheet">
+    <link href="{{ static_url('css/style.css', include_version=False) }}" rel="stylesheet">
   </head>
   <body>
     {% block body %}

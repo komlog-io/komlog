@@ -8,7 +8,7 @@ from pathlib import Path
 if sys.version_info < (3, 5):
     sys.exit("Sorry, Python 3.5 or greater required.")
 
-komws2_data_paths = ('./lib/komlog/komws2/static/','./lib/komlog/komws2/templates/')
+komws2_data_paths = ('./lib/komlog/komws2/templates/',)
 komws2_data = []
 for data_path in komws2_data_paths:
     for root, dirs, files in os.walk(data_path):
