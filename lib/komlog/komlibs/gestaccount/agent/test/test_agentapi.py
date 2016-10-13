@@ -111,6 +111,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
         self.assertEqual(data['agentname'],agentname) 
         self.assertEqual(data['state'], AgentStates.ACTIVE) 
         self.assertEqual(data['version'],version) 
+        self.assertEqual(data['pubkey'],pubkey) 
 
     def test_get_agents_config_non_existent_user(self):
         ''' get_agents_config should fail if username is not found in system '''

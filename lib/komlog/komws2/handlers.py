@@ -42,7 +42,7 @@ class AgentsHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self):
-        response=agent.get_agents_config_request(passport=self.passport)
+        response=agent.get_agents_config_request(passport=self.passport, dids_flag=False)
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 

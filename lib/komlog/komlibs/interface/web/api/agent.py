@@ -48,11 +48,11 @@ def new_agent_request(passport, agentname, pubkey, version):
             raise
 
 @exceptions.ExceptionHandler
-def get_agents_config_request(passport):
+def get_agents_config_request(passport, dids_flag=True):
     if not isinstance(passport, Passport):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_GAGSCR_IPSP)
     authorization.authorize_request(request=Requests.GET_AGENTS_CONFIG, passport=passport)
-    data=agentapi.get_agents_config(uid=passport.uid, dids_flag=True)
+    data=agentapi.get_agents_config(uid=passport.uid, dids_flag=dids_flag)
     response_data=[]
     for reg in data:
         agent_config={}
@@ -60,6 +60,7 @@ def get_agents_config_request(passport):
         agent_config['agentname']=reg['agentname']
         agent_config['state']=reg['state']
         agent_config['version']=reg['version']
+        agent_config['pubkey']=reg['pubkey'].decode('utf-8')
         if 'dids' in reg:
             agent_config['dids']=[]
             for did in reg['dids']:
@@ -81,6 +82,7 @@ def get_agent_config_request(passport, aid):
     response_data['agentname']=data['agentname']
     response_data['state']=data['state']
     response_data['version']=data['version']
+    response_data['pubkey']=data['pubkey'].decode('utf-8')
     if 'dids' in data:
         response_data['dids']=[]
         for did in data['dids']:

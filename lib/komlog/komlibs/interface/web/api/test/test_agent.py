@@ -139,6 +139,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertEqual(response2.data['agentname'],agentname)
         self.assertEqual(response2.data['state'], AgentStates.ACTIVE)
         self.assertEqual(response2.data['version'], version)
+        self.assertEqual(response2.data['pubkey'], b64decode(pubkey).decode('utf-8'))
 
     def test_get_agent_config_request_failure_invalid_passport(self):
         ''' get_agent_config_request should fail if username is invalid '''
@@ -231,11 +232,13 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
                 self.assertEqual(reg['agentname'],agentname1)
                 self.assertEqual(reg['state'], AgentStates.ACTIVE)
                 self.assertEqual(reg['version'], version)
+                self.assertEqual(reg['pubkey'], b64decode(pubkey1).decode('utf-8'))
             elif reg['aid']==response2.data['aid']:
                 agent_seen+=1
                 self.assertEqual(reg['agentname'],agentname2)
                 self.assertEqual(reg['state'], AgentStates.ACTIVE)
                 self.assertEqual(reg['version'], version)
+                self.assertEqual(reg['pubkey'], b64decode(pubkey2).decode('utf-8'))
         self.assertEqual(agent_seen,2)
 
     def test_get_agents_config_request_failure_invalid_passport(self):

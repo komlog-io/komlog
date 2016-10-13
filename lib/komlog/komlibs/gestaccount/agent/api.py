@@ -184,6 +184,7 @@ def get_agent_config(aid,dids_flag=False):
         data['agentname']=agent.agentname
         data['state']=agent.state
         data['version']=agent.version
+        data['pubkey']=agent.pubkey
         if dids_flag:
             dids=cassapidatasource.get_datasources_dids(aid=aid)
             data['dids']=[did for did in dids] if dids else []
