@@ -112,8 +112,7 @@ def delete_agent_request(passport, aid):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_DAGR_IA)
     aid=uuid.UUID(aid)
     authorization.authorize_request(request=Requests.DELETE_AGENT, passport=passport, aid=aid)
-    message=messages.DeleteAgentMessage(aid=aid)
-    resp = response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
-    resp.add_message(messages.DeleteAgentMessage(aid=aid))
+    deleteapi.delete_agent(aid=aid)
+    resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     return resp
 
