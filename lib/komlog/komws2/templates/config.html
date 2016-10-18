@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block jsDefinition %}
+<script src="{{ static_url("3p/js/stripe.js", include_version=False)}}"></script>
 <script src="{{ static_url("3p/js/react-with-addons-0.14.6.js", include_version=False)}}"></script>
 <script src="{{ static_url("3p/js/react-dom-0.14.6.js", include_version=False)}}"></script>
 <script src="{{ static_url("3p/js/react-bootstrap.min.js", include_version=False)}}"></script>
@@ -14,6 +15,9 @@
 <script src="{{ static_url("js/komlog-user-header.js", include_version=False)}}"></script>
 <script src="{{ static_url("js/komlog-config-menu.js", include_version=False)}}"></script>
 
+<script type="text/javascript">
+  Stripe.setPublishableKey('pk_test_OkRhSWyLnApT6NKr0ZLeWIsU');
+</script>
 {% end %}
 
 {% block body %}

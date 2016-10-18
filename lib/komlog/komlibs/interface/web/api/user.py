@@ -269,7 +269,7 @@ def reset_password_request(code, password):
         return response.WebInterfaceResponse(status=status_c, error=error)
 
 @exceptions.ExceptionHandler
-def update_user_segment_request(passport, segment, token=None):
+def upgrade_user_segment_request(passport, segment, token=None):
     if not isinstance(passport, Passport):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSGR_IPSP)
     if not args.is_valid_string_int(segment):
@@ -293,5 +293,13 @@ def update_user_segment_request(passport, segment, token=None):
     resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     #TODO: Add checkAuthInterfaces operation
     #TODO: Add UserNotification operation
+    return resp
+
+@exceptions.ExceptionHandler
+def get_user_upgrade_info_request(passport):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSGR_IPSP)
+    data = userapi.get_user_segment_info(uid=passport.uid)
+    resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
     return resp
 

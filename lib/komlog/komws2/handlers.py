@@ -149,18 +149,25 @@ class UserConfirmationHandler(tornado.web.RequestHandler):
                 self.set_status(response.status)
                 self.write(json.dumps(response.data))
 
-class UserPlanHandler(tornado.web.RequestHandler):
+class UserUpgradeHandler(tornado.web.RequestHandler):
+
+    @auth.authenticated
+    def get(self):
+        response=user.get_user_upgrade_info_request(passport=self.passport)
+        self.set_status(response.status)
+        self.write(json.dumps(response.data))
 
     @auth.authenticated
     def put(self):
         try:
-            segment=self.get_argument('s') #s : segment
-            token=self.get_argument('t',default=None) #t: token
+            data=json_decode(self.request.body)
+            segment = data.get('s')
+            token = data.get('t')
         except ValueError:
             self.set_status(400)
-            self.write(json.dumps({'message':'Bad parameters'}))
+            self.write(json.dumps({'message':'Bad Parameters'}))
         else:
-            response=user.update_user_segment_request(passport=self.passport, segment=segment, token=token)
+            response=user.upgrade_user_segment_request(passport=self.passport, segment=segment, token=token)
             asyncio.ensure_future(msgapi.send_response_messages(response))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
@@ -738,7 +745,7 @@ HANDLERS = [
             (r'/etc/cr/(?P<cid>'+UUID4_REGEX+')/u/(?P<member>'+USERNAME_REGEX+')',CircleMembersHandler),
             (r'/etc/usr/confirm/', UserConfirmationHandler),
             (r'/etc/usr/?', UsersHandler),
-            (r'/etc/usr/plan?', UserPlanHandler),
+            (r'/etc/usr/upgrade/?', UserUpgradeHandler),
             (r'/var/ds/('+UUID4_REGEX+')', DatasourceDataHandler),
             (r'/var/dp/('+UUID4_REGEX+')', DatapointDataHandler),
             (r'/var/uri/?', UriHandler),

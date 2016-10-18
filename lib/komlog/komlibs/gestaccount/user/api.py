@@ -544,10 +544,51 @@ def update_segment(uid, sid, token=None):
                 raise exceptions.UpdateOperationException(error=Errors.E_GUA_UPDSEG_EUPAY)
             return True
         else:
-            raise exceptions.UpdateOperationException(error=Errors.E_EGUA_UPDSEG_EUDB)
+            raise exceptions.UpdateOperationException(error=Errors.E_GUA_UPDSEG_EUDB)
     except:
         if updated:
             cassapiuser.update_user_segment(username=user.username, segment=user.segment, current_segment = sid)
             cassapisegment.delete_user_segment_transition(uid=uid, date=now)
         raise
+
+def get_user_segment_info(uid):
+    '''This function returns user segment info and allowed transitions '''
+    if not args.is_valid_uuid(uid):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_GUSEGINF_IUID)
+    user=cassapiuser.get_user(uid=uid)
+    if user is None:
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_GUSEGINF_UNF)
+    seginfo = cassapisegment.get_user_segment(sid=user.segment)
+    if seginfo == None:
+        return None
+    segfare = cassapisegment.get_user_segment_fare(sid=seginfo.sid)
+    info = {}
+    info['current_plan']={
+        'description':seginfo.description,
+        'id':seginfo.sid,
+        'price':str(segfare.amount) if segfare else '0',
+    }
+    info['allowed_plans']=[]
+    allowed_transitions=cassapisegment.get_user_segment_allowed_transitions(sid=user.segment)
+    for tr_sid in allowed_transitions.sids:
+        tr_info = cassapisegment.get_user_segment(sid=tr_sid)
+        if tr_info:
+            tr_fare = cassapisegment.get_user_segment_fare(sid=tr_sid)
+            info['allowed_plans'].append({
+                'description':tr_info.description,
+                'id':tr_info.sid,
+                'price':str(tr_fare.amount) if tr_fare else '0',
+            })
+    payment_info = paymentapi.get_customer(uid=uid)
+    if payment_info:
+        source_id = payment_info['default_source']
+        if source_id:
+            for source in payment_info['sources']['data']:
+                if source['id'] == source_id:
+                    info['payment_info']={
+                        'last4':source['last4'],
+                        'exp_month':source['exp_month'],
+                        'exp_year':source['exp_year'],
+                    }
+    return info
 

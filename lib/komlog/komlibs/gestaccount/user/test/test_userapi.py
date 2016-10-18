@@ -7,6 +7,7 @@ from komlog.komlibs.gestaccount.user.states import *
 from komlog.komlibs.gestaccount import exceptions
 from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komcass.api import user as cassapiuser
+from komlog.komcass.api import segment as cassapisegment
 
 class GestaccountUserApiTest(unittest.TestCase):
     ''' komlog.gestaccount.user.api tests '''
@@ -1191,4 +1192,68 @@ class GestaccountUserApiTest(unittest.TestCase):
             self.assertTrue(userapi.update_segment(uid=user['uid'], sid=new_sid, token=token.id))
             new_user_config = userapi.get_user_config(uid=user['uid'])
             self.assertEqual(new_user_config['segment'], new_sid)
+
+    def test_get_user_segment_info_segment_failure_invalid_uid(self):
+        ''' get_user_segment_info should fail if uid is not valid '''
+        uids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'username', uuid.uuid4().hex, uuid.uuid1()]
+        for uid in uids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                userapi.get_user_segment_info(uid=uid)
+            self.assertEqual(cm.exception.error, Errors.E_GUA_GUSEGINF_IUID)
+
+    def test_get_user_segment_info_segment_failure_user_not_found(self):
+        ''' get_user_segment_info should fail if user does not exist '''
+        uid=uuid.uuid4()
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            userapi.get_user_segment_info(uid=uid)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_GUSEGINF_UNF)
+
+    def test_get_user_segment_info_success_without_customer_info(self):
+        ''' get_user_segment_info should return current and allowed segments. if user has no payment info, dont return it '''
+        username = 'test_get_user_segment_info_success_without_customer_info'
+        password = 'password'
+        email = username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        self.assertEqual(user['email'], email)
+        self.assertEqual(user['username'], username)
+        user_config = userapi.get_user_config(uid=user['uid'])
+        allowed_sids = cassapisegment.get_user_segment_allowed_transitions(user_config['segment'])
+        self.assertIsNotNone(allowed_sids)
+        self.assertTrue(len(allowed_sids.sids)>0)
+        user_segment_info = userapi.get_user_segment_info(uid=user['uid'])
+        self.assertIsNotNone(user_segment_info)
+        self.assertEqual(user_segment_info['current_plan']['id'],user_config['segment'])
+        self.assertEqual(len(user_segment_info['allowed_plans']),len(allowed_sids.sids))
+        self.assertTrue('payment_info' not in user_segment_info)
+
+    def test_get_user_segment_info_success_with_customer_info(self):
+        ''' get_user_segment_info should return current and allowed segments. if user has payment info, return it '''
+        username = 'test_get_user_segment_info_success_with_customer_info'
+        password = 'password'
+        email = username+'@komlog.org'
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        user=userapi.create_user(username=username, password=password, email=email, token=token.id)
+        self.assertIsNotNone(user)
+        self.assertEqual(user['email'], email)
+        self.assertEqual(user['username'], username)
+        user_config = userapi.get_user_config(uid=user['uid'])
+        allowed_sids = cassapisegment.get_user_segment_allowed_transitions(user_config['segment'])
+        self.assertIsNotNone(allowed_sids)
+        self.assertTrue(len(allowed_sids.sids)>0)
+        user_segment_info = userapi.get_user_segment_info(uid=user['uid'])
+        self.assertIsNotNone(user_segment_info)
+        self.assertEqual(user_segment_info['current_plan']['id'],user_config['segment'])
+        self.assertEqual(len(user_segment_info['allowed_plans']),len(allowed_sids.sids))
+        self.assertTrue('payment_info' in user_segment_info)
+        self.assertEqual(user_segment_info['payment_info']['last4'],'4242')
+        self.assertEqual(user_segment_info['payment_info']['exp_month'],12)
+        self.assertEqual(user_segment_info['payment_info']['exp_year'],2017)
 

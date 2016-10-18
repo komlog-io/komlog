@@ -152,65 +152,68 @@ class Errors(Enum):
     E_GUA_DPH_IURI   = 1951 #: delete_pending_hook. invalid uri
     E_GUA_DPH_ISID   = 1952 #: delete_pending_hook. invalid sid
 
+    E_GUA_GUSEGINF_IUID = 2000 #: get_user_segment_info. invalid uid
+    E_GUA_GUSEGINF_UNF  = 2001 #: get_user_segment_info. user not found
+
 #gestaccount agent api
 
-    E_GAA_AUA_IA    = 2000
-    E_GAA_AUA_IPK   = 2001
-    E_GAA_AUA_ANF   = 2002
+    E_GAA_AUA_IA    = 3000
+    E_GAA_AUA_IPK   = 3001
+    E_GAA_AUA_ANF   = 3002
 
-    E_GAA_CRA_IU    = 2100
-    E_GAA_CRA_IA    = 2101
-    E_GAA_CRA_IPK   = 2102
-    E_GAA_CRA_IV    = 2103
-    E_GAA_CRA_AAE   = 2104
-    E_GAA_CRA_EIA   = 2105
-    E_GAA_CRA_UNF   = 2106
+    E_GAA_CRA_IU    = 3100
+    E_GAA_CRA_IA    = 3101
+    E_GAA_CRA_IPK   = 3102
+    E_GAA_CRA_IV    = 3103
+    E_GAA_CRA_AAE   = 3104
+    E_GAA_CRA_EIA   = 3105
+    E_GAA_CRA_UNF   = 3106
 
-    E_GAA_ACA_IA    = 2200
-    E_GAA_ACA_EIA   = 2201
-    E_GAA_ACA_ANF   = 2202
-    E_GAA_ACA_APKNF = 2203 #: activate_agent: agent public key not found
+    E_GAA_ACA_IA    = 3200
+    E_GAA_ACA_EIA   = 3201
+    E_GAA_ACA_ANF   = 3202
+    E_GAA_ACA_APKNF = 3203 #: activate_agent: agent public key not found
 
-    E_GAA_SPA_IA    = 2250
-    E_GAA_SPA_EIA   = 2251
-    E_GAA_SPA_ANF   = 2252
-    E_GAA_SPA_APKNF = 2253 #: suspend_agent: agent public key not found
+    E_GAA_SPA_IA    = 3250
+    E_GAA_SPA_EIA   = 3251
+    E_GAA_SPA_ANF   = 3252
+    E_GAA_SPA_APKNF = 3253 #: suspend_agent: agent public key not found
 
-    E_GAA_GACFG_IA  = 2300
-    E_GAA_GACFG_IF  = 2301
-    E_GAA_GACFG_ANF = 2302
+    E_GAA_GACFG_IA  = 3300
+    E_GAA_GACFG_IF  = 3301
+    E_GAA_GACFG_ANF = 3302
 
-    E_GAA_GASC_IU   = 2400
-    E_GAA_GASC_IF   = 2401
-    E_GAA_GASC_UNF  = 2402
+    E_GAA_GASC_IU   = 3400
+    E_GAA_GASC_IF   = 3401
+    E_GAA_GASC_UNF  = 3402
 
-    E_GAA_UAC_IU    = 2500
-    E_GAA_UAC_IA    = 2501
-    E_GAA_UAC_IAN   = 2502
-    E_GAA_UAC_ANF   = 2503
-    E_GAA_UAC_IAE   = 2504
+    E_GAA_UAC_IU    = 3500
+    E_GAA_UAC_IA    = 3501
+    E_GAA_UAC_IAN   = 3502
+    E_GAA_UAC_ANF   = 3503
+    E_GAA_UAC_IAE   = 3504
 
-    E_GAA_DA_IA     = 2600
-    E_GAA_DA_ANF    = 2601
+    E_GAA_DA_IA     = 3600
+    E_GAA_DA_ANF    = 3601
 
-    E_GAA_GAC_IU    = 2700 #: generate_auth_challenge: invalid user
-    E_GAA_GAC_IPK   = 2701 #: generate_auth_challenge: invalid public key
-    E_GAA_GAC_UNF   = 2702 #: generate_auth_challenge: user not found
-    E_GAA_GAC_ANF   = 2703 #: generate_auth_challenge: agent not found
-    E_GAA_GAC_EGC   = 2704 #: generate_auth_challenge: error generating challenge
-    E_GAA_GAC_EIDB  = 2705 #: generate_auth_challenge: error inserting challenge in database
+    E_GAA_GAC_IU    = 3700 #: generate_auth_challenge: invalid user
+    E_GAA_GAC_IPK   = 3701 #: generate_auth_challenge: invalid public key
+    E_GAA_GAC_UNF   = 3702 #: generate_auth_challenge: user not found
+    E_GAA_GAC_ANF   = 3703 #: generate_auth_challenge: agent not found
+    E_GAA_GAC_EGC   = 3704 #: generate_auth_challenge: error generating challenge
+    E_GAA_GAC_EIDB  = 3705 #: generate_auth_challenge: error inserting challenge in database
 
-    E_GAA_VAC_IU    = 2800 #: validate_auth_challenge: invalid user
-    E_GAA_VAC_IPK   = 2801 #: validate_auth_challenge: invalid public key
-    E_GAA_VAC_ICH   = 2802 #: validate_auth_challenge: invalid challenge_hash
-    E_GAA_VAC_ISG   = 2803 #: validate_auth_challenge: invalid signature
-    E_GAA_VAC_UNF   = 2804 #: validate_auth_challenge: user not found
-    E_GAA_VAC_ANF   = 2805 #: validate_auth_challenge: agent not found
-    E_GAA_VAC_CHNF  = 2806 #: validate_auth_challenge: challenge not found
-    E_GAA_VAC_CHAU  = 2807 #: validate_auth_challenge: challenge already used
-    E_GAA_VAC_CHEX  = 2808 #: validate_auth_challenge: challenge expired
-    E_GAA_VAC_EIDB  = 2809 #: validate_auth_challenge: error inserting in database
-    E_GAA_VAC_EVS   = 2810 #: validate_auth_challenge: error validating signature
+    E_GAA_VAC_IU    = 3800 #: validate_auth_challenge: invalid user
+    E_GAA_VAC_IPK   = 3801 #: validate_auth_challenge: invalid public key
+    E_GAA_VAC_ICH   = 3802 #: validate_auth_challenge: invalid challenge_hash
+    E_GAA_VAC_ISG   = 3803 #: validate_auth_challenge: invalid signature
+    E_GAA_VAC_UNF   = 3804 #: validate_auth_challenge: user not found
+    E_GAA_VAC_ANF   = 3805 #: validate_auth_challenge: agent not found
+    E_GAA_VAC_CHNF  = 3806 #: validate_auth_challenge: challenge not found
+    E_GAA_VAC_CHAU  = 3807 #: validate_auth_challenge: challenge already used
+    E_GAA_VAC_CHEX  = 3808 #: validate_auth_challenge: challenge expired
+    E_GAA_VAC_EIDB  = 3809 #: validate_auth_challenge: error inserting in database
+    E_GAA_VAC_EVS   = 3810 #: validate_auth_challenge: error validating signature
 
 # gestaccount datasource api
 

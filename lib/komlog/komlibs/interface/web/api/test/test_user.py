@@ -1026,18 +1026,18 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
         self.assertEqual(response.error, Errors.E_IWAU_RPR_CODEAU.value)
 
-    def test_update_user_segment_request_failure_invalid_passport(self):
-        ''' update_user_segment_request should fail if passport is invalid'''
+    def test_upgrade_user_segment_request_failure_invalid_passport(self):
+        ''' upgrade_user_segment_request should fail if passport is invalid'''
         passports = [None, 23423424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','/asdfa','my user']
         segment='1'
         for psp in passports:
-            response=userapi.update_user_segment_request(passport=psp, segment=segment)
+            response=userapi.upgrade_user_segment_request(passport=psp, segment=segment)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
             self.assertEqual(response.error, Errors.E_IWAU_UUSGR_IPSP.value)
 
-    def test_update_user_segment_request_failure_invalid_segment(self):
-        ''' update_user_segment_request should fail if segment is invalid'''
-        username = 'test_update_user_segment_request_failure_invalid_segment'
+    def test_upgrade_user_segment_request_failure_invalid_segment(self):
+        ''' upgrade_user_segment_request should fail if segment is invalid'''
+        username = 'test_upgrade_user_segment_request_failure_invalid_segment'
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
@@ -1048,13 +1048,13 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         psp = passport.get_user_passport(cookie)
         segments= [None, 424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','/asdfa','my user']
         for segment in segments:
-            response=userapi.update_user_segment_request(passport=psp, segment=segment)
+            response=userapi.upgrade_user_segment_request(passport=psp, segment=segment)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
             self.assertEqual(response.error, Errors.E_IWAU_UUSGR_ISID.value)
 
-    def test_update_user_segment_request_failure_invalid_token(self):
-        ''' update_user_segment_request should fail if token is invalid'''
-        username = 'test_update_user_segment_request_failure_invalid_token'
+    def test_upgrade_user_segment_request_failure_invalid_token(self):
+        ''' upgrade_user_segment_request should fail if token is invalid'''
+        username = 'test_upgrade_user_segment_request_failure_invalid_token'
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
@@ -1066,13 +1066,13 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         tokens = [424, {'a':'dict'},['a list',],uuid.uuid4(), uuid.uuid1(), {'set'},('a','tuple')]
         segment='1'
         for token in tokens:
-            response=userapi.update_user_segment_request(passport=psp, segment=segment,token=token)
+            response=userapi.upgrade_user_segment_request(passport=psp, segment=segment,token=token)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
             self.assertEqual(response.error, Errors.E_IWAU_UUSGR_ITOK.value)
 
-    def test_update_user_segment_request_failure_token_needed(self):
-        ''' update_user_segment_request should fail if we try to modify to a paid segment without token '''
-        username = 'test_update_user_segment_request_failure_token_needed'
+    def test_upgrade_user_segment_request_failure_token_needed(self):
+        ''' upgrade_user_segment_request should fail if we try to modify to a paid segment without token '''
+        username = 'test_upgrade_user_segment_request_failure_token_needed'
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
@@ -1082,13 +1082,13 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         segment='1'
-        response=userapi.update_user_segment_request(passport=psp, segment=segment)
+        response=userapi.upgrade_user_segment_request(passport=psp, segment=segment)
         self.assertEqual(response.error, gesterrors.E_GUA_UPDSEG_TOKNEED.value)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_update_user_segment_request_failure_non_existent_segment(self):
-        ''' update_user_segment_request should fail if we try migrate to a non existing segment '''
-        username = 'test_update_user_segment_request_failure_non_existent_segment'
+    def test_upgrade_user_segment_request_failure_non_existent_segment(self):
+        ''' upgrade_user_segment_request should fail if we try migrate to a non existing segment '''
+        username = 'test_upgrade_user_segment_request_failure_non_existent_segment'
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
@@ -1098,13 +1098,13 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         segment='42523931'
-        response=userapi.update_user_segment_request(passport=psp, segment=segment)
+        response=userapi.upgrade_user_segment_request(passport=psp, segment=segment)
         self.assertEqual(response.error, gesterrors.E_GUA_UPDSEG_SEGNF.value)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
-    def test_update_user_segment_request_success(self):
-        ''' update_user_segment_request should succeed '''
-        username = 'test_update_user_segment_request_success'
+    def test_upgrade_user_segment_request_success(self):
+        ''' upgrade_user_segment_request should succeed '''
+        username = 'test_upgrade_user_segment_request_success'
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
@@ -1122,7 +1122,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 "cvc": '123'
             },
         )
-        response=userapi.update_user_segment_request(passport=psp, segment=segment, token=token.id)
+        response=userapi.upgrade_user_segment_request(passport=psp, segment=segment, token=token.id)
         self.assertEqual(response.error, Errors.OK.value)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         #now migrate to other segment, updating card info
@@ -1135,13 +1135,13 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 "cvc": '123'
             },
         )
-        response=userapi.update_user_segment_request(passport=psp, segment=segment, token=token.id)
+        response=userapi.upgrade_user_segment_request(passport=psp, segment=segment, token=token.id)
         self.assertEqual(response.error, Errors.OK.value)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
 
-    def test_update_user_segment_request_failure_token_reused(self):
-        ''' update_user_segment_request should fail if token is reused '''
-        username = 'test_update_user_segment_request_failure_token_reused'
+    def test_upgrade_user_segment_request_failure_token_reused(self):
+        ''' upgrade_user_segment_request should fail if token is reused '''
+        username = 'test_upgrade_user_segment_request_failure_token_reused'
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
@@ -1159,13 +1159,78 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                 "cvc": '123'
             },
         )
-        response=userapi.update_user_segment_request(passport=psp, segment=segment, token=token.id)
+        response=userapi.upgrade_user_segment_request(passport=psp, segment=segment, token=token.id)
         self.assertEqual(response.error, Errors.OK.value)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         #now migrate to other segment, with the same token
         segment = '1'
-        response=userapi.update_user_segment_request(passport=psp, segment=segment, token=token.id)
+        response=userapi.upgrade_user_segment_request(passport=psp, segment=segment, token=token.id)
         self.assertEqual(response.error, gesterrors.E_GUA_UPDSEG_EUPAY.value)
         self.assertEqual(response.status, status.WEB_STATUS_INTERNAL_ERROR)
 
+    def test_get_user_upgrade_info_request_failure_invalid_passport(self):
+        ''' get_user_upgrade_info_request should fail if passport is invalid '''
+        passports = [None, 23423424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','/asdfa','my user']
+        for psp in passports:
+            response=userapi.get_user_upgrade_info_request(passport=psp)
+            self.assertEqual(response.error, Errors.E_IWAU_UUSGR_IPSP.value)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_get_user_upgrade_info_request_failure_user_not_found(self):
+        ''' get_user_upgrade_info_request should fail if user does not exist '''
+        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        response=userapi.get_user_upgrade_info_request(passport=psp)
+        self.assertEqual(response.error, gesterrors.E_GUA_GUSEGINF_UNF.value)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+
+    def test_get_user_upgrade_info_request_success_no_payment_info(self):
+        ''' get_user_upgrade_info should return the current and allowed plans, no payment info exists. '''
+        username = 'test_get_user_upgrade_info_request_success_no_payment_info'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response=userapi.get_user_upgrade_info_request(passport=psp)
+        self.assertEqual(response.error, Errors.OK.value)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue('current_plan' in response.data)
+        self.assertTrue('allowed_plans' in response.data)
+        self.assertFalse('payment_info' in response.data)
+
+    def test_get_user_upgrade_info_request_success_with_payment_info(self):
+        ''' get_user_upgrade_info should return the current and allowed plans, payment info exists. '''
+        username = 'test_get_user_upgrade_info_request_success_with_payment_info'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        segment='2'
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        response=userapi.upgrade_user_segment_request(passport=psp, segment=segment, token=token.id)
+        self.assertEqual(response.error, Errors.OK.value)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        response=userapi.get_user_upgrade_info_request(passport=psp)
+        self.assertEqual(response.error, Errors.OK.value)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue('current_plan' in response.data)
+        self.assertTrue('allowed_plans' in response.data)
+        self.assertTrue('payment_info' in response.data)
+        self.assertEqual(response.data['payment_info']['last4'],'4242')
+        self.assertEqual(response.data['payment_info']['exp_month'],12)
+        self.assertEqual(response.data['payment_info']['exp_year'],2017)
 
