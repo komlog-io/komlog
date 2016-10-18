@@ -73,6 +73,24 @@ class AgentConfigHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
+class AgentSuspendHandler(tornado.web.RequestHandler):
+
+    @auth.authenticated
+    def post(self, aid):
+        response=agent.suspend_agent_request(passport=self.passport, aid=aid)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
+        self.set_status(response.status)
+        self.write(json.dumps(response.data))
+
+class AgentActivateHandler(tornado.web.RequestHandler):
+
+    @auth.authenticated
+    def post(self, aid):
+        response=agent.activate_agent_request(passport=self.passport, aid=aid)
+        asyncio.ensure_future(msgapi.send_response_messages(response))
+        self.set_status(response.status)
+        self.write(json.dumps(response.data))
+
 class DatasourceDataHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
@@ -724,6 +742,8 @@ HANDLERS = [
             (r'/logout/?', LogoutHandler),
             (r'/etc/ag/?', AgentsHandler),
             (r'/etc/ag/('+UUID4_REGEX+')', AgentConfigHandler),
+            (r'/etc/ag/('+UUID4_REGEX+')/suspend/?', AgentSuspendHandler),
+            (r'/etc/ag/('+UUID4_REGEX+')/activate/?', AgentActivateHandler),
             (r'/etc/ds/?', DatasourcesHandler),
             (r'/etc/ds/('+UUID4_REGEX+')', DatasourceConfigHandler),
             (r'/etc/dp/?', DatapointsHandler),

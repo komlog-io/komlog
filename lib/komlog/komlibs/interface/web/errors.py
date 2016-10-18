@@ -102,6 +102,13 @@ class Errors(Enum):
     E_IWAA_DAGR_IPSP=100230
     E_IWAA_DAGR_IA=100231
 
+    E_IWAA_SAGR_IPSP    = 100240 #: suspend_agent_request. invalid passport
+    E_IWAA_SAGR_IAID    = 100241 #: suspend_agent_request. invalid aid
+
+    E_IWAA_AAGR_IPSP    = 100250 #: activate_agent_request. invalid passport
+    E_IWAA_AAGR_IAID    = 100251 #: activate_agent_request. invalid aid
+
+
 
 #interface web api datasource
 

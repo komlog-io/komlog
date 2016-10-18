@@ -116,3 +116,27 @@ def delete_agent_request(passport, aid):
     resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     return resp
 
+@exceptions.ExceptionHandler
+def suspend_agent_request(passport, aid):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_SAGR_IPSP)
+    if not args.is_valid_hex_uuid(aid):
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_SAGR_IAID)
+    aid=uuid.UUID(aid)
+    authorization.authorize_request(request=Requests.UPDATE_AGENT_CONFIG, passport=passport, aid=aid)
+    agentapi.suspend_agent(aid=aid)
+    resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    return resp
+
+@exceptions.ExceptionHandler
+def activate_agent_request(passport, aid):
+    if not isinstance(passport, Passport):
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_AAGR_IPSP)
+    if not args.is_valid_hex_uuid(aid):
+        raise exceptions.BadParametersException(error=Errors.E_IWAA_AAGR_IAID)
+    aid=uuid.UUID(aid)
+    authorization.authorize_request(request=Requests.UPDATE_AGENT_CONFIG, passport=passport, aid=aid)
+    agentapi.activate_agent(aid=aid)
+    resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
+    return resp
+

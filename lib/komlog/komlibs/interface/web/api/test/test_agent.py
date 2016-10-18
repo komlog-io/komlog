@@ -10,6 +10,7 @@ from komlog.komlibs.interface.web.api import user as userapi
 from komlog.komlibs.interface.web.api import agent as agentapi 
 from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status
+from komlog.komlibs.interface.web.errors import Errors
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc import status as imcstatus
 from komlog.komlibs.general.validation import arguments as args
@@ -365,4 +366,122 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         for aid in aids:
             response=agentapi.delete_agent_request(passport=psp, aid=aid)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+
+    def test_suspend_agent_request_failure_invalid_passport(self):
+        ''' suspend_agent_request should fail if passport is invalid '''
+        passports=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        aid=uuid.uuid4().hex
+        for psp in passports:
+            response=agentapi.suspend_agent_request(passport=psp, aid=aid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWAA_SAGR_IPSP.value)
+
+    def test_suspend_agent_request_failure_invalid_aid(self):
+        ''' suspend_agent_request should fail if aid is invalid '''
+        aids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        psp=passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        for aid in aids:
+            response=agentapi.suspend_agent_request(passport=psp, aid=aid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWAA_SAGR_IAID.value)
+
+    def test_suspend_agent_request_failure_no_permission_over_agent(self):
+        ''' suspend_agent_request should fail if user has no permission over agent '''
+        username = 'test_suspend_agent_request_failure_no_permission_over_agent'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        aid = uuid.uuid4().hex
+        response=agentapi.suspend_agent_request(passport=psp, aid=aid)
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.error, autherrors.E_ARA_APAC_RE.value)
+
+    def test_suspend_agent_request_success(self):
+        ''' suspend_agent_request should succeed '''
+        username = 'test_suspend_agent_request_success'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        agentname='agentname'
+        pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
+        version='test library vX.XX'
+        response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
+        aid = response.data['aid']
+        response=agentapi.get_agent_config_request(passport=psp, aid=aid)
+        self.assertEqual(response.data['state'], AgentStates.ACTIVE)
+        response=agentapi.suspend_agent_request(passport=psp, aid=aid)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        response2=agentapi.get_agent_config_request(passport=psp, aid=aid)
+        self.assertEqual(response2.data['state'], AgentStates.SUSPENDED)
+
+    def test_activate_agent_request_failure_invalid_passport(self):
+        ''' activate_agent_request should fail if passport is invalid '''
+        passports=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        aid=uuid.uuid4().hex
+        for psp in passports:
+            response=agentapi.activate_agent_request(passport=psp, aid=aid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWAA_AAGR_IPSP.value)
+
+    def test_activate_agent_request_failure_invalid_aid(self):
+        ''' activate_agent_request should fail if aid is invalid '''
+        aids=['Username','userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        psp=passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        for aid in aids:
+            response=agentapi.activate_agent_request(passport=psp, aid=aid)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWAA_AAGR_IAID.value)
+
+    def test_activate_agent_request_failure_no_permission_over_agent(self):
+        ''' activate_agent_request should fail if user has no permission over agent '''
+        username = 'test_activate_agent_request_failure_no_permission_over_agent'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        aid = uuid.uuid4().hex
+        response=agentapi.activate_agent_request(passport=psp, aid=aid)
+        self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response.error, autherrors.E_ARA_APAC_RE.value)
+
+    def test_activate_agent_request_success(self):
+        ''' activate_agent_request should succeed '''
+        username = 'test_activate_agent_request_success'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        agentname='agentname'
+        pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
+        version='test library vX.XX'
+        response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
+        aid = response.data['aid']
+        response=agentapi.activate_agent_request(passport=psp, aid=aid)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        response2=agentapi.get_agent_config_request(passport=psp, aid=aid)
+        self.assertEqual(response2.data['state'], AgentStates.ACTIVE)
 
