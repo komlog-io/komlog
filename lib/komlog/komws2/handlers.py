@@ -738,7 +738,6 @@ HANDLERS = [
             (r'/invite/?', InviteHandler),
             (r'/signup/?', SignupHandler),
             (r'/forget/?', ForgetHandler),
-            (r'/careers/?', CareersHandler),
             (r'/logout/?', LogoutHandler),
             (r'/etc/ag/?', AgentsHandler),
             (r'/etc/ag/('+UUID4_REGEX+')', AgentConfigHandler),
