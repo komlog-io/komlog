@@ -58,9 +58,9 @@ def get_test_suite():
 setup(name='komlog',
     version='0.0.1',
     description='Komlog',
-    author='Komlog Crew',
-    author_email='dev@komlog.org',
-    url='http://www.komlog.org',
+    author='Komlog Team',
+    author_email='hello@komlog.io',
+    url='http://www.komlog.io',
     license='LICENSE.txt',
     install_requires=[
         'setuptools',

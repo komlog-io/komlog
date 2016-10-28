@@ -2,7 +2,7 @@
 Hello!
 
 We received a request to reset your password. To set a new password,
-please, go to http://www.komlog.org/forget?c=${code}
+please, go to http://www.komlog.io/forget?c=${code}
 
 Thank you, 
 --

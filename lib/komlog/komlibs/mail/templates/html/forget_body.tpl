@@ -17,7 +17,7 @@
 </p>
 <p style="margin-bottom: 0cm; line-height: 100%">We received a request
 to reset your password. To set a new password, please, click the following 
-<a href="http://www.komlog.org/forget?c=${code}">link</a>.
+<a href="http://www.komlog.io/forget?c=${code}">link</a>.
 <p style="margin-bottom: 0cm; line-height: 100%"><br/>
 
 </p>
