@@ -4,22 +4,31 @@
     <!-- Page Content -->
     <div class="container">
         {% if response.status == status.WEB_STATUS_OK %}
-        <div class="well well-signin">
-            <h2>Welcome {{response.data['username']}}!,</h2>
-            <p><h5>A big Thank You for joining us. Hope your experience at Komlog be as satisfactory as possible.</h5></p>
-            <p><h5>You will receive and email to confirm your account.</h5></p>
-            <p><h5>To start with, you can go to our <a href="blog.komlog.io">blog</a>, or meet our community at the <a href="http://forum.komlog.io">forum</a>.</h5></p>
-            <p><h5>Or simply go to the <a href="/login">login</a> page and enjoy the experience!!!</h5></p>
+        <div class="well">
+            <h2>Welcome {{response.data['username']}}!</h2>
+            <h4>
+              <p>Thank You for joining us.</p>
+              <p>You will receive and email to confirm your account. To start with, you can go to our <a href="blog.komlog.io">blog</a>, meet our community at the <a href="http://forum.komlog.io">forum</a>, or simply <a href="/login">log in</a> and enjoy the experience!!!</p>
+            </h4>
         </div>
         {% else %}
         <div class="well">
             <h2>Error...</h2>
             {% if response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_IU.value %}
             <h5>The username you used is not valid. Please, remember it can contain only letters, numbers and the '_' character.</h5>
+              {% if invitation != None %}
+              <h5><a href="/signup?i={{invitation}}">Try again.</a></h5>
+              {% end %}
             {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_IP.value %}
             <h5>The password you used is not valid.</h5>
+              {% if invitation != None %}
+              <h5><a href="/signup?i={{invitation}}">Try again.</a></h5>
+              {% end %}
             {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_IE.value %}
             <h5>The email you used is not valid. Please, introduce a valid one.</h5>
+              {% if invitation != None %}
+              <h5><a href="/signup?i={{invitation}}">Try again.</a></h5>
+              {% end %}
             {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_IINV.value %}
             <h5>The invitation you used is not valid. Please, introduce a valid one or request a new one <a href="/invite">here</a>.</h5>
             {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_INVNF.value %}
@@ -28,8 +37,14 @@
             <h5>The invitation has already been used. Please, request a new one <a href="/invite">here</a>.</h5>
             {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_UAEU.value %}
             <h5>The username you chose already exists. Please, pick a different one.</h5>
+              {% if invitation != None %}
+              <h5><a href="/signup?i={{invitation}}">Try again.</a></h5>
+              {% end %}
             {% elif response.status == status.WEB_STATUS_BAD_PARAMETERS and response.error == Errors.E_IWAU_NUSR_UAEE.value %}
             <h5>The email you chose already has an associated account. Please, use a different one.</h5>
+              {% if invitation != None %}
+              <h5><a href="/signup?i={{invitation}}">Try again.</a></h5>
+              {% end %}
             {% else %}
             <h5>Sorry, something went wrong (error code: {{ response.error }}). Please, try again later or request a new invitation <a href="/invite" >here</a>.</h5>
             {% end %}

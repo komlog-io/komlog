@@ -695,7 +695,7 @@ class SignupHandler(tornado.web.RequestHandler):
             require_invitation=True
         )
         asyncio.ensure_future(msgapi.send_response_messages(response))
-        self.render('signup_post.html', page_title='Komlog', response=response)
+        self.render('signup_post.html', page_title='Komlog', response=response, invitation=invitation)
 
 class ForgetHandler(tornado.web.RequestHandler):
 
