@@ -108,7 +108,7 @@ def insert_signup_info(signup_info):
     if not isinstance(signup_info, ormuser.SignUp):
         return False
     else:
-        connection.session.execute(stmtuser.I_A_MSTSIGNUP,(signup_info.username,signup_info.code,signup_info.email,signup_info.creation_date,signup_info.utilization_date))
+        connection.session.execute(stmtuser.I_A_MSTSIGNUP,(signup_info.username,signup_info.email, signup_info.code,signup_info.inv_id,signup_info.creation_date,signup_info.utilization_date))
         return True
 
 @exceptions.ExceptionHandler
@@ -118,28 +118,63 @@ def delete_signup_info(username):
 
 @exceptions.ExceptionHandler
 def get_invitation_info(inv_id):
-    row=connection.session.execute(stmtuser.S_A_DATINVITATION_B_INVID,(inv_id,))
-    data=[]
+    row=connection.session.execute(stmtuser.S_A_MSTINVITATION_B_INVID,(inv_id,))
     if row:
-        for d in row:
-            data.append(ormuser.Invitation(**d))
-    return data
+        return ormuser.Invitation(**row[0])
+    return None
+
+@exceptions.ExceptionHandler
+def new_invitation_info(invitation_info):
+    if not isinstance(invitation_info, ormuser.Invitation):
+        return False
+    else:
+        connection.session.execute(stmtuser.I_A_MSTINVITATION_INE,(invitation_info.inv_id,invitation_info.creation_date,invitation_info.state,invitation_info.count, invitation_info.max_count, invitation_info.active_from, invitation_info.active_until))
+        return True
 
 @exceptions.ExceptionHandler
 def insert_invitation_info(invitation_info):
     if not isinstance(invitation_info, ormuser.Invitation):
         return False
     else:
-        connection.session.execute(stmtuser.I_A_DATINVITATION,(invitation_info.inv_id,invitation_info.date,invitation_info.state,invitation_info.tran_id))
+        connection.session.execute(stmtuser.I_A_MSTINVITATION,(invitation_info.inv_id,invitation_info.creation_date,invitation_info.state,invitation_info.count, invitation_info.max_count, invitation_info.active_from, invitation_info.active_until))
         return True
 
 @exceptions.ExceptionHandler
-def delete_invitation_info(inv_id, date=None):
-    if date:
-        connection.session.execute(stmtuser.D_A_DATINVITATION_B_INVID_DATE,(inv_id,date))
-    else:
-        connection.session.execute(stmtuser.D_A_DATINVITATION_B_INVID,(inv_id,))
+def delete_invitation_info(inv_id):
+    connection.session.execute(stmtuser.D_A_MSTINVITATION_B_INVID,(inv_id,))
     return True
+
+@exceptions.ExceptionHandler
+def update_invitation_info_state(inv_id, new_state):
+    resp=connection.session.execute(stmtuser.U_STATE_MSTINVITATION_B_INVID,(new_state,inv_id))
+    return resp[0]['[applied]'] if resp else False
+
+@exceptions.ExceptionHandler
+def increment_invitation_used_count(inv_id, increment):
+    ''' we use lightweight transactions to increment invitation count '''
+    resp=connection.session.execute(stmtuser.U_COUNT_MSTINVITATION_I_COUNT,(increment, inv_id, 0))
+    if not resp:
+        return False
+    elif resp[0]['[applied]'] is True:
+        return True
+    elif 'count' in resp[0]:
+        cur_val = resp[0]['count']
+        n_val=cur_val + increment
+        applied = False
+        retries=0
+        while applied != True:
+            resp=connection.session.execute(stmtuser.U_COUNT_MSTINVITATION_I_COUNT,(n_val,inv_id, cur_val))
+            if not resp:
+                return False
+            applied=resp[0]['[applied]']
+            if not applied:
+                if retries>100:
+                    return False
+                retries+=1
+                cur_val=resp[0]['count']
+                n_val=cur_val+ increment
+        return True
+    return False
 
 @exceptions.ExceptionHandler
 def get_invitation_request(email):
@@ -157,6 +192,14 @@ def get_invitation_requests(state, num=0):
         for d in row:
             data.append(ormuser.InvitationRequest(**d))
     return data
+
+@exceptions.ExceptionHandler
+def new_invitation_request(invitation_request):
+    if not isinstance(invitation_request, ormuser.InvitationRequest):
+        return False
+    else:
+        resp = connection.session.execute(stmtuser.I_A_DATINVITATIONREQUEST_INE,(invitation_request.email,invitation_request.date,invitation_request.state,invitation_request.inv_id))
+        return resp[0]['[applied]'] if resp else False
 
 @exceptions.ExceptionHandler
 def insert_invitation_request(invitation_request):

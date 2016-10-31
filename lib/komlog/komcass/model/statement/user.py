@@ -17,7 +17,7 @@ STATEMENTS={0:'select * from mst_user where username=?',
             100:'select * from mst_signup where email=?',
             101:'select * from mst_signup where username=?',
             102:'select * from mst_signup where code=?',
-            200:'select * from dat_invitation where inv_id=?',
+            200:'select * from mst_invitation where inv_id=?',
             300:'select * from dat_invitation_request where email=?',
             301:'select * from dat_invitation_request where state=?',
             302:'select * from dat_invitation_request where state=? limit ?',
@@ -34,9 +34,11 @@ STATEMENTS={0:'select * from mst_user where username=?',
             700:'select * from mst_user_stripe_info where uid=?',
             5000:'insert into mst_user (username,uid,password,email,state,segment,creation_date) values (?,?,?,?,?,?,?)',
             5001:'insert into mst_user (username,uid,password,email,state,segment,creation_date) values (?,?,?,?,?,?,?) if not exists',
-            5100:'insert into mst_signup (username,code,email,creation_date,utilization_date) values (?,?,?,?,?)',
-            5200:'insert into dat_invitation (inv_id,date,state,tran_id) values (?,?,?,?)',
+            5100:'insert into mst_signup (username,email,code,inv_id,creation_date,utilization_date) values (?,?,?,?,?,?)',
+            5200:'insert into mst_invitation (inv_id,creation_date,state,count,max_count,active_from,active_until) values (?,?,?,?,?,?,?)',
+            5201:'insert into mst_invitation (inv_id,creation_date,state,count,max_count,active_from,active_until) values (?,?,?,?,?,?,?) if not exists',
             5300:'insert into dat_invitation_request (email,date,state,inv_id) values (?,?,?,?)',
+            5301:'insert into dat_invitation_request (email,date,state,inv_id) values (?,?,?,?) if not exists',
             5400:'insert into dat_forget_request (code,date,state,uid) values (?,?,?,?)',
             5500:'insert into mst_pending_hook (uid,uri,sid) values (?,?,?)',
             5600:'insert into mst_user_billing_info (uid,billing_day,last_billing) values (?,?,?)',
@@ -45,8 +47,7 @@ STATEMENTS={0:'select * from mst_user where username=?',
             5701:'insert into mst_user_stripe_info (uid,stripe_id) values (?,?) if not exists',
             7000:'delete from mst_user where username=?',
             7100:'delete from mst_signup where username=?',
-            7200:'delete from dat_invitation where inv_id=? and date=?',
-            7201:'delete from dat_invitation where inv_id=?',
+            7200:'delete from mst_invitation where inv_id=?',
             7300:'delete from dat_invitation_request where email=?',
             7400:'delete from dat_forget_request where code=?',
             7500:'delete from mst_pending_hook where uid=?',
@@ -57,6 +58,8 @@ STATEMENTS={0:'select * from mst_user where username=?',
             9000:'update mst_user set password=? where username=? if exists',
             9001:'update mst_user set segment=? where username=? if exists',
             9002:'update mst_user set segment=? where username=? if segment = ?',
+            9200:'update mst_invitation set count=? where inv_id=? if count=?',
+            9201:'update mst_invitation set state=? where inv_id=? if exists',
             9300:'update dat_invitation_request set state=? where email=? if exists',
             9400:'update dat_forget_request set state=? where code=? if exists',
             9600:'update mst_user_billing_info set billing_day = ? where uid = ?',
@@ -80,9 +83,9 @@ S_A_MSTSIGNUP_B_EMAIL=100
 S_A_MSTSIGNUP_B_USERNAME=101
 S_A_MSTSIGNUP_B_CODE=102
 
-# dat_invitation
+# mst_invitation
 
-S_A_DATINVITATION_B_INVID=200
+S_A_MSTINVITATION_B_INVID=200
 
 # dat_invitation_request
 
@@ -124,13 +127,15 @@ I_A_MSTUSER_INE=5001
 
 I_A_MSTSIGNUP=5100
 
-# dat_invitation
+# mst_invitation
 
-I_A_DATINVITATION=5200
+I_A_MSTINVITATION=5200
+I_A_MSTINVITATION_INE=5201
 
 # dat_invitation_request
 
 I_A_DATINVITATIONREQUEST=5300
+I_A_DATINVITATIONREQUEST_INE=5301
 
 # dat_forget_request
 
@@ -160,10 +165,9 @@ D_A_MSTUSER_B_USERNAME=7000
 
 D_A_MSTSIGNUP_B_USERNAME=7100
 
-# dat_invitation
+# mst_invitation
 
-D_A_DATINVITATION_B_INVID_DATE=7200
-D_A_DATINVITATION_B_INVID=7201
+D_A_MSTINVITATION_B_INVID=7200
 
 # dat_invitation_request
 
@@ -197,7 +201,10 @@ U_SEGMENT_MSTUSER_B_USERNAME_IEQ_SEGMENT=9002
 
 # mst_signup
 
-# dat_invitation
+# mst_invitation
+
+U_COUNT_MSTINVITATION_I_COUNT = 9200
+U_STATE_MSTINVITATION_B_INVID = 9201
 
 # dat_invitation_request
 

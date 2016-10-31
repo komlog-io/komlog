@@ -2321,7 +2321,7 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
     def test_NewInvitationMailMessage_failure_invalid_email(self):
         ''' NewInvitationMailMessage creation should fail if email is invalid '''
         emails=[None, -23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1(),'CAPITAL@email.com','adfañdasdf@email.com','email@eamil@email','email@domain','email@email@domain.com','.@.com','email@.com']
-        inv_id=uuid.uuid4()
+        inv_id='test'
         for email in emails:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 messages.NewInvitationMailMessage(email=email, inv_id=inv_id)
@@ -2329,7 +2329,7 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
 
     def test_NewInvitationMailMessage_failure_invalid_invitation_id(self):
         ''' NewInvitationMailMessage creation should fail if email is invalid '''
-        inv_ids=[None, -23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1(),'CAPITAL@email.com','adfañdasdf@email.com','email@eamil@email','email@domain','email@email@domain.com','.@.com','email@.com']
+        inv_ids=[None, -23423, 2323.2342, {'a','dict'},['a','list'],('a','tuple'),timeuuid.uuid1()]
         email='test_newinvitationmailmessage_failure_invalid_invitation_id@komlog.org'
         for inv_id in inv_ids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
@@ -2339,7 +2339,7 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
     def test_NewInvitationMailMessage_success(self):
         ''' NewInvitationMailMessage creation should succeed '''
         email='test_newinvitationmailmessage_success@komlog.org'
-        inv_id=uuid.uuid4()
+        inv_id='asdfasdfasdf'
         msg=messages.NewInvitationMailMessage(email=email, inv_id=inv_id)
         self.assertTrue(isinstance(msg, messages.NewInvitationMailMessage))
         self.assertEqual(msg._type_, messages.Messages.NEW_INV_MAIL_MESSAGE)
@@ -2365,20 +2365,11 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
             messages.NewInvitationMailMessage.load_from_serialization(msg)
         self.assertEqual(cm.exception.error, Errors.E_IIMM_NEWINV_IST)
 
-    def test_NewInvitationMailMessage_failure_load_from_serialization_invalid_hex_inv_id(self):
-        ''' NewInvitationMailMessage creation should fail if we pass a string with invalid inv_id '''
-        inv_id=uuid.uuid4()
-        email='test@komlog.org'
-        msg='|'.join((messages.NewInvitationMailMessage._type_.value,email,'inv_id.hex'))
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            messages.NewInvitationMailMessage.load_from_serialization(msg)
-        self.assertEqual(cm.exception.error, Errors.E_IIMM_NEWINV_IHINV)
-
     def test_NewInvitationMailMessage_success_load_from_serialization(self):
         ''' NewInvitationMailMessage creation should succeed calling the classmethod load_from_serialization '''
-        inv_id=uuid.uuid4()
+        inv_id='test'
         email='test@komlog.org'
-        msg='|'.join((messages.NewInvitationMailMessage._type_.value,email,inv_id.hex))
+        msg='|'.join((messages.NewInvitationMailMessage._type_.value,email,inv_id))
         obj=messages.NewInvitationMailMessage.load_from_serialization(msg)
         self.assertEqual(obj.inv_id, inv_id)
         self.assertEqual(obj.email, email)
@@ -2388,9 +2379,9 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
 
     def test_NewInvitationMailMessage_success_load_from_serialization_base_class(self):
         '''  NewInvitationMailMessage creation should succeed calling the classmethod load_from_serialization from the base class '''
-        inv_id=uuid.uuid4()
+        inv_id='test'
         email='test@komlog.org'
-        msg='|'.join((messages.NewInvitationMailMessage._type_.value,email,inv_id.hex))
+        msg='|'.join((messages.NewInvitationMailMessage._type_.value,email,inv_id))
         obj=messages.IMCMessage.load_from_serialization(msg)
         self.assertEqual(obj.inv_id, inv_id)
         self.assertEqual(obj.email, email)
@@ -2400,9 +2391,9 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
 
     def test_NewInvitationMailMessage_to_serialization_success(self):
         '''NewInvitationMailMessage .to_serialization should succeed '''
-        inv_id=uuid.uuid4()
+        inv_id='test'
         email='test@komlog.org'
-        msg='|'.join((messages.NewInvitationMailMessage._type_.value,email,inv_id.hex))
+        msg='|'.join((messages.NewInvitationMailMessage._type_.value,email,inv_id))
         obj=messages.IMCMessage.load_from_serialization(msg)
         self.assertEqual(obj.inv_id, inv_id)
         self.assertEqual(obj.email, email)

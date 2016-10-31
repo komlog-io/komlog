@@ -36,17 +36,21 @@ class Errors(Enum):
     E_GUA_AUU_UNF   = 202
     E_GUA_AUU_HPNF  = 203
 
-    E_GUA_CRU_IU        = 300
-    E_GUA_CRU_IP        = 301
-    E_GUA_CRU_IE        = 302
-    E_GUA_CRU_UAEU      = 303
-    E_GUA_CRU_UAEE      = 304
-    E_GUA_CRU_HPNF      = 305
-    E_GUA_CRU_ISID      = 306 #: invalid sid
-    E_GUA_CRU_ITOK      = 307 #: invalid token
-    E_GUA_CRU_SEGNF     = 308 #: segment not found
-    E_GUA_CRU_TOKNEED   = 309 #: token needed
-    E_GUA_CRU_ECREPAY   = 310 #: error creating payment profile
+    E_GUA_CRU_IU            = 300
+    E_GUA_CRU_IP            = 301
+    E_GUA_CRU_IE            = 302
+    E_GUA_CRU_UAEU          = 303
+    E_GUA_CRU_UAEE          = 304
+    E_GUA_CRU_HPNF          = 305
+    E_GUA_CRU_ISID          = 306 #: invalid sid
+    E_GUA_CRU_ITOK          = 307 #: invalid token
+    E_GUA_CRU_SEGNF         = 308 #: segment not found
+    E_GUA_CRU_TOKNEED       = 309 #: token needed
+    E_GUA_CRU_ECREPAY       = 310 #: error creating payment profile
+    E_GUA_CRU_IINV          = 311 #: invalid invitation id
+    E_GUA_CRU_INVNF         = 312 #: invitation not found
+    E_GUA_CRU_INVMXCNTRCH   = 313 #: invitation used max count reached
+    E_GUA_CRU_OUTINVINT     = 314 #: out of invitation active interval
 
     E_GUA_COU_IE    = 400
     E_GUA_COU_IC    = 401
@@ -87,35 +91,16 @@ class Errors(Enum):
     E_GUA_GUID_UNF  = 801
 
     E_GUA_RIR_IEMAIL= 900 #: register invitation request. Invalid Email
+    E_GUA_RIR_UAUAI = 901 #: register invitation request. user already used an invitation
 
-    E_GUA_GUI_IEMAIL= 950 #: generate user invitation. Invalid Email
+    E_GUA_GUI_IEMAIL= 950 #: generate user invitations. Invalid Email
+    E_GUA_GUI_ECINV = 951 #: generate user invitations. Error creating invitation info
+    E_GUA_GUI_UAUAI = 952 #: generate user invitations. user already used an invitation
 
-    E_GUA_SIP_IINV  = 1000 #: start_invitation_process. invalid invitation.
-    E_GUA_SIP_INVNF = 1001 #: start_invitation_process. invitation not found.
-    E_GUA_SIP_INVAU = 1002 #: start_invitation_process. invitation already used
-    E_GUA_SIP_EIII  = 1003 #: start_invitation_process. error inserting invitation info.
-    E_GUA_SIP_ISNE  = 1004 #: start_invitation_process. invitation state not expected.
-
-    E_GUA_EIP_IINV  = 1200 #: end_invitation_process. invalid invitation.
-    E_GUA_EIP_ITRN  = 1201 #: end_invitation_process. invalid transaction id.
-    E_GUA_EIP_INVNF = 1202 #: end_invitation_process. invitation not found.
-    E_GUA_EIP_INUE  = 1203 #: end_invitation_process. invitation not used.
-    E_GUA_EIP_RCF   = 1204 #: end_invitation_process. race condition found.
-    E_GUA_EIP_SNF   = 1205 #: end_invitation_process. state found not valid.
-    E_GUA_EIP_EIII  = 1206 #: end_invitation_process. error inserting invitation info.
-
-    E_GUA_UIT_IINV  = 1300 #: undo_invitation_transactions. invalid invitation.
-    E_GUA_UIT_ITRN  = 1301 #: undo_invitation_transactions. invalid transaction id.
-    E_GUA_UIT_INVNF = 1302 #: undo_invitation_transactions. invitation info not found.
-
-    E_GUA_II_IINV   = 1350 #: initialize_invitation. invalid invitation.
-    E_GUA_II_INVNF  = 1351 #: initialize_invitation. invitation info not found.
-    E_GUA_II_EIII   = 1352 #: initialize_invitation. error inserting invitation info.
-
-    E_GUA_CUI_IINV  = 1400 #: check_unused_invitation. invalid invitation.
-    E_GUA_CUI_INVNF = 1401 #: check_unused_invitation. invitation not found.
-    E_GUA_CUI_INVAU = 1402 #: check_unused_invitation. invitation already used.
-    E_GUA_CUI_INVIS = 1403 #: check_unused_invitation. invitation state invalid.
+    E_GUA_CUI_IINV          = 1400 #: check_unused_invitation. invalid invitation.
+    E_GUA_CUI_INVNF         = 1401 #: check_unused_invitation. invitation not found.
+    E_GUA_CUI_INVMXCNTRCH   = 1402 #: check_unused_invitation. invitation max used count reached.
+    E_GUA_CUI_OUTINVINT     = 1403 #: check_unused_invitation. out of invitation active interval
 
     E_GUA_RFR_IU    = 1500 #: register_forget_request. invalid username.
     E_GUA_RFR_IEMAIL= 1501 #: register_forget_request. invalid email.

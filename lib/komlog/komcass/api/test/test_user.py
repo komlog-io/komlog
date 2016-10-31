@@ -1,6 +1,7 @@
 import unittest
 import uuid
 import random
+from komlog.komlibs.general.string import stringops
 from komlog.komlibs.general.time import timeuuid
 from komlog.komcass.api import user as userapi
 from komlog.komcass.model.orm import user as ormuser
@@ -18,8 +19,9 @@ class KomcassApiUserTest(unittest.TestCase):
         uid=uuid.uuid4()
         creation_date=timeuuid.uuid1()
         code='test_komlog.komcass.api.user_code'
+        inv_id=stringops.get_randomstring()
         self.user=ormuser.User(username=username, password=password, email=email, uid=uid, creation_date=creation_date)
-        self.signup_info=ormuser.SignUp(username=username, code=code, email=email, creation_date=creation_date)
+        self.signup_info=ormuser.SignUp(username=username, code=code, inv_id=inv_id, email=email, creation_date=creation_date)
         userapi.insert_user(self.user)
         userapi.insert_signup_info(self.signup_info)
 
@@ -124,6 +126,7 @@ class KomcassApiUserTest(unittest.TestCase):
         self.assertEqual(signup_info.username, self.signup_info.username)
         self.assertEqual(signup_info.email, self.signup_info.email)
         self.assertEqual(signup_info.code, self.signup_info.code)
+        self.assertEqual(signup_info.inv_id, self.signup_info.inv_id)
 
     def test_get_signup_info_non_existing_username(self):
         ''' get_user should return None if we pass a non existing username '''
@@ -137,6 +140,7 @@ class KomcassApiUserTest(unittest.TestCase):
         self.assertEqual(signup_info.username, self.signup_info.username)
         self.assertEqual(signup_info.email, self.signup_info.email)
         self.assertEqual(signup_info.code, self.signup_info.code)
+        self.assertEqual(signup_info.inv_id, self.signup_info.inv_id)
 
     def test_get_signup_info_non_existing_code(self):
         ''' get_user should return None if we pass a non existing code '''
@@ -150,6 +154,7 @@ class KomcassApiUserTest(unittest.TestCase):
         self.assertEqual(signup_info.username, self.signup_info.username)
         self.assertEqual(signup_info.email, self.signup_info.email)
         self.assertEqual(signup_info.code, self.signup_info.code)
+        self.assertEqual(signup_info.inv_id, self.signup_info.inv_id)
 
     def test_get_signup_info_non_existing_email(self):
         ''' get_user should return None if we pass a non existing email '''
@@ -188,68 +193,60 @@ class KomcassApiUserTest(unittest.TestCase):
 
     def test_get_invitation_info_non_existing_info(self):
         ''' get_invitation_info should return an empty array is no info is found '''
-        inv_id=uuid.uuid4()
-        self.assertEqual(userapi.get_invitation_info(inv_id=inv_id),[])
+        inv_id=stringops.get_randomstring()
+        self.assertIsNone(userapi.get_invitation_info(inv_id=inv_id))
 
     def test_get_invitation_info_existing_info(self):
         ''' get_invitation_info should return an array with the found info '''
-        info1=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
-        info2=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
-        info3=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=uuid.uuid4())
-        info4=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
-        info5=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
-        info6=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
-        self.assertTrue(userapi.insert_invitation_info(info1))
-        self.assertTrue(userapi.insert_invitation_info(info1))
-        self.assertTrue(userapi.insert_invitation_info(info1))
+        inv_id1=stringops.get_randomstring()
+        inv_id2=stringops.get_randomstring()
+        inv_id3=stringops.get_randomstring()
+        info1=ormuser.Invitation(inv_id=inv_id1,creation_date=timeuuid.uuid1(),state=0, max_count=10)
+        info2=ormuser.Invitation(inv_id=inv_id2,creation_date=timeuuid.uuid1(),state=1, max_count=130, active_from=timeuuid.uuid1(), active_until=timeuuid.uuid1())
         self.assertTrue(userapi.insert_invitation_info(info1))
         self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info3))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info5))
-        self.assertTrue(userapi.insert_invitation_info(info5))
-        self.assertTrue(userapi.insert_invitation_info(info5))
-        self.assertTrue(userapi.insert_invitation_info(info6))
-        info_found=userapi.get_invitation_info(inv_id=info1.inv_id)
-        self.assertEqual(len(info_found),5)
-        info_found=userapi.get_invitation_info(inv_id=info2.inv_id)
-        self.assertEqual(len(info_found),1)
+        info_found=userapi.get_invitation_info(inv_id=inv_id1)
+        self.assertEqual(info_found.inv_id,inv_id1)
+        self.assertEqual(info_found.state,0)
+        self.assertEqual(info_found.count,0)
+        self.assertEqual(info_found.max_count,info1.max_count)
+        self.assertEqual(info_found.active_from,None)
+        self.assertEqual(info_found.active_until,None)
+        info_found=userapi.get_invitation_info(inv_id=inv_id2)
+        self.assertEqual(info_found.inv_id,inv_id2)
+        self.assertEqual(info_found.state,1)
+        self.assertEqual(info_found.count,0)
+        self.assertEqual(info_found.max_count,info2.max_count)
+        self.assertEqual(info_found.active_from,info2.active_from)
+        self.assertEqual(info_found.active_until,info2.active_until)
+        info_found=userapi.get_invitation_info(inv_id=inv_id3)
+        self.assertIsNone(info_found)
 
     def test_insert_invitation_info_success(self):
         ''' insert_invitation_info should insert the info successfully '''
-        info1=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
-        info2=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
-        info3=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=uuid.uuid4())
-        info4=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
-        info5=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
-        info6=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
-        self.assertTrue(userapi.insert_invitation_info(info1))
-        self.assertTrue(userapi.insert_invitation_info(info1))
-        self.assertTrue(userapi.insert_invitation_info(info1))
+        inv_id1=stringops.get_randomstring()
+        inv_id2=stringops.get_randomstring()
+        inv_id3=stringops.get_randomstring()
+        info1=ormuser.Invitation(inv_id=inv_id1,creation_date=timeuuid.uuid1(),state=0, max_count=10)
+        info2=ormuser.Invitation(inv_id=inv_id2,creation_date=timeuuid.uuid1(),state=1, max_count=130, active_from=timeuuid.uuid1(), active_until=timeuuid.uuid1())
         self.assertTrue(userapi.insert_invitation_info(info1))
         self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info3))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info5))
-        self.assertTrue(userapi.insert_invitation_info(info5))
-        self.assertTrue(userapi.insert_invitation_info(info5))
-        self.assertTrue(userapi.insert_invitation_info(info6))
-        info_found=userapi.get_invitation_info(inv_id=info1.inv_id)
-        self.assertEqual(len(info_found),5)
-        info_found=userapi.get_invitation_info(inv_id=info2.inv_id)
-        self.assertEqual(len(info_found),1)
+        info_found=userapi.get_invitation_info(inv_id=inv_id1)
+        self.assertEqual(info_found.inv_id,inv_id1)
+        self.assertEqual(info_found.state,0)
+        self.assertEqual(info_found.count,0)
+        self.assertEqual(info_found.max_count,info1.max_count)
+        self.assertEqual(info_found.active_from,None)
+        self.assertEqual(info_found.active_until,None)
+        info_found=userapi.get_invitation_info(inv_id=inv_id2)
+        self.assertEqual(info_found.inv_id,inv_id2)
+        self.assertEqual(info_found.state,1)
+        self.assertEqual(info_found.count,0)
+        self.assertEqual(info_found.max_count,info2.max_count)
+        self.assertEqual(info_found.active_from,info2.active_from)
+        self.assertEqual(info_found.active_until,info2.active_until)
+        info_found=userapi.get_invitation_info(inv_id=inv_id3)
+        self.assertIsNone(info_found)
 
     def test_insert_invitation_info_failure_non_Invitation_instance(self):
         ''' insert_invitation_info should fail if info is not a Invitation instance '''
@@ -257,59 +254,93 @@ class KomcassApiUserTest(unittest.TestCase):
         for info in infos:
             self.assertFalse(userapi.insert_invitation_info(info))
 
+    def test_increment_invitation_used_count_failure_non_existent_invitation(self):
+        ''' increment_invitation_used_count should fail if invitation does not exist '''
+        inv_id=stringops.get_randomstring()
+        self.assertFalse(userapi.increment_invitation_used_count(inv_id=inv_id, increment=1))
+
+    def test_increment_invitation_used_count_success(self):
+        ''' increment_invitation_used_count should add the value successfully '''
+        inv_id=stringops.get_randomstring()
+        info=ormuser.Invitation(inv_id=inv_id,creation_date=timeuuid.uuid1(),state=0, max_count=10)
+        self.assertTrue(userapi.insert_invitation_info(info))
+        info_found=userapi.get_invitation_info(inv_id=inv_id)
+        self.assertEqual(info_found.inv_id,inv_id)
+        self.assertEqual(info_found.state,0)
+        self.assertEqual(info_found.count,0)
+        self.assertEqual(info_found.max_count,info.max_count)
+        self.assertEqual(info_found.active_from,None)
+        self.assertEqual(info_found.active_until,None)
+        self.assertTrue(userapi.increment_invitation_used_count(inv_id=inv_id, increment=1))
+        info_found=userapi.get_invitation_info(inv_id=inv_id)
+        self.assertEqual(info_found.count,1)
+        self.assertTrue(userapi.increment_invitation_used_count(inv_id=inv_id, increment=1))
+        info_found=userapi.get_invitation_info(inv_id=inv_id)
+        self.assertEqual(info_found.count,2)
+        self.assertTrue(userapi.increment_invitation_used_count(inv_id=inv_id, increment=-1))
+        info_found=userapi.get_invitation_info(inv_id=inv_id)
+        self.assertEqual(info_found.count,1)
+
+    def test_update_invitation_info_state_success(self):
+        ''' update_invitation_info_state should update the state of the invitation '''
+        inv_id=stringops.get_randomstring()
+        info=ormuser.Invitation(inv_id=inv_id,creation_date=timeuuid.uuid1(),state=0, max_count=10)
+        self.assertTrue(userapi.insert_invitation_info(info))
+        info_found=userapi.get_invitation_info(inv_id=inv_id)
+        self.assertEqual(info_found.inv_id,inv_id)
+        self.assertEqual(info_found.state,0)
+        self.assertEqual(info_found.count,0)
+        self.assertEqual(info_found.max_count,info.max_count)
+        self.assertEqual(info_found.active_from,None)
+        self.assertEqual(info_found.active_until,None)
+        self.assertTrue(userapi.update_invitation_info_state(inv_id=inv_id, new_state=1))
+        info_found=userapi.get_invitation_info(inv_id=inv_id)
+        self.assertEqual(info_found.inv_id,inv_id)
+        self.assertEqual(info_found.state,1)
+
+    def test_update_invitation_request_state_failed(self):
+        ''' update_invitation_info_state should fail if invitation does not exist '''
+        inv_id=stringops.get_randomstring()
+        self.assertFalse(userapi.update_invitation_request_state(inv_id=inv_id, new_state=1))
+
     def test_delete_invitation_info_success(self):
         ''' delete_invitation_info should delete the info successfully '''
-        info1=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
-        info2=ormuser.Invitation(inv_id=uuid.uuid4(),date=timeuuid.uuid1(),state=0)
-        info3=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=uuid.uuid4())
-        info4=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
-        info5=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
-        info6=ormuser.Invitation(inv_id=info1.inv_id,date=timeuuid.uuid1(),state=1,tran_id=info3.tran_id)
-        self.assertTrue(userapi.insert_invitation_info(info1))
-        self.assertTrue(userapi.insert_invitation_info(info1))
-        self.assertTrue(userapi.insert_invitation_info(info1))
+        inv_id1=stringops.get_randomstring()
+        inv_id2=stringops.get_randomstring()
+        inv_id3=stringops.get_randomstring()
+        info1=ormuser.Invitation(inv_id=inv_id1,creation_date=timeuuid.uuid1(),state=0, max_count=10)
+        info2=ormuser.Invitation(inv_id=inv_id2,creation_date=timeuuid.uuid1(),state=1, max_count=130, active_from=timeuuid.uuid1(), active_until=timeuuid.uuid1())
         self.assertTrue(userapi.insert_invitation_info(info1))
         self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info2))
-        self.assertTrue(userapi.insert_invitation_info(info3))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info4))
-        self.assertTrue(userapi.insert_invitation_info(info5))
-        self.assertTrue(userapi.insert_invitation_info(info5))
-        self.assertTrue(userapi.insert_invitation_info(info5))
-        self.assertTrue(userapi.insert_invitation_info(info6))
+        info_found=userapi.get_invitation_info(inv_id=inv_id1)
+        self.assertEqual(info_found.inv_id,inv_id1)
+        self.assertEqual(info_found.state,0)
+        self.assertEqual(info_found.count,0)
+        self.assertEqual(info_found.max_count,info1.max_count)
+        self.assertEqual(info_found.active_from,None)
+        self.assertEqual(info_found.active_until,None)
+        info_found=userapi.get_invitation_info(inv_id=inv_id2)
+        self.assertEqual(info_found.inv_id,inv_id2)
+        self.assertEqual(info_found.state,1)
+        self.assertEqual(info_found.count,0)
+        self.assertEqual(info_found.max_count,info2.max_count)
+        self.assertEqual(info_found.active_from,info2.active_from)
+        self.assertEqual(info_found.active_until,info2.active_until)
+        info_found=userapi.get_invitation_info(inv_id=inv_id3)
+        self.assertIsNone(info_found)
+        self.assertTrue(userapi.delete_invitation_info(inv_id=info1.inv_id))
+        self.assertTrue(userapi.delete_invitation_info(inv_id=info2.inv_id))
         info_found=userapi.get_invitation_info(inv_id=info1.inv_id)
-        self.assertEqual(len(info_found),5)
+        self.assertIsNone(info_found)
         info_found=userapi.get_invitation_info(inv_id=info2.inv_id)
-        self.assertEqual(len(info_found),1)
-        self.assertTrue(userapi.delete_invitation_info(inv_id=info1.inv_id, date=info1.date))
-        self.assertTrue(userapi.delete_invitation_info(inv_id=info2.inv_id, date=info2.date))
-        info_found=userapi.get_invitation_info(inv_id=info1.inv_id)
-        self.assertEqual(len(info_found),4)
-        info_found=userapi.get_invitation_info(inv_id=info2.inv_id)
-        self.assertEqual(len(info_found),0)
-
-    def test_delete_invitation_info_success_all_inv_id_deleted(self):
-        ''' delete_invitation_info should delete the info successfully '''
-        inv_id=uuid.uuid4()
-        for i in range(1,101):
-            info=ormuser.Invitation(inv_id=inv_id,date=timeuuid.uuid1(),state=i)
-            self.assertTrue(userapi.insert_invitation_info(info))
-        info_found=userapi.get_invitation_info(inv_id=inv_id)
-        self.assertEqual(len(info_found),100)
-        self.assertTrue(userapi.delete_invitation_info(inv_id=inv_id))
-        info_found=userapi.get_invitation_info(inv_id=inv_id)
-        self.assertEqual(len(info_found),0)
+        self.assertIsNone(info_found)
 
     def test_delete_invitation_info_success_even_if_does_not_exist(self):
         ''' delete_invitation_info should delete the info successfully even if it does not exist '''
-        inv_id=uuid.uuid4()
-        date=timeuuid.uuid1()
-        self.assertTrue(userapi.delete_invitation_info(inv_id=inv_id, date=date))
+        inv_id=stringops.get_randomstring()
+        self.assertTrue(userapi.delete_invitation_info(inv_id=inv_id))
+        info_found=userapi.get_invitation_info(inv_id=inv_id)
+        self.assertIsNone(info_found)
 
     def test_get_invitation_request_none_found(self):
         ''' get_invitation_request should return None if no request is found '''
@@ -318,10 +349,14 @@ class KomcassApiUserTest(unittest.TestCase):
 
     def test_get_invitation_request_success(self):
         ''' get_invitation_request should return the request '''
-        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
-        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
-        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
-        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        inv_id=stringops.get_randomstring()
+        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=inv_id)
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request1))
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request2))
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request3))
@@ -333,10 +368,14 @@ class KomcassApiUserTest(unittest.TestCase):
 
     def test_get_invitation_requests_success(self):
         ''' get_invitation_request should return the requests with the associated state '''
-        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
-        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
-        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
-        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
+        inv_id=stringops.get_randomstring()
+        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=inv_id)
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request1))
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request2))
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request3))
@@ -350,10 +389,14 @@ class KomcassApiUserTest(unittest.TestCase):
 
     def test_insert_invitation_request_success(self):
         ''' insert_invitation_request should insert the object successfully '''
-        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
-        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
-        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
-        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
+        inv_id=stringops.get_randomstring()
+        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=inv_id)
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request1))
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request2))
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request3))
@@ -371,12 +414,80 @@ class KomcassApiUserTest(unittest.TestCase):
         for request in requests:
             self.assertFalse(userapi.insert_invitation_request(request))
 
+    def test_new_invitation_request_success(self):
+        ''' new_invitation_request should insert the object successfully if it did not exist previously '''
+        inv_id1=stringops.get_randomstring()
+        inv_id2=stringops.get_randomstring()
+        inv_id3=stringops.get_randomstring()
+        inv_id4=stringops.get_randomstring()
+        email1='test_new_invitation_request_success1@komlog.io'
+        email2='test_new_invitation_request_success2@komlog.io'
+        email3='test_new_invitation_request_success3@komlog.io'
+        email4='test_new_invitation_request_success4@komlog.io'
+        request1=ormuser.InvitationRequest(email=email1,date=timeuuid.uuid1(),state=0,inv_id=inv_id1)
+        request2=ormuser.InvitationRequest(email=email2,date=timeuuid.uuid1(),state=0,inv_id=inv_id2)
+        request3=ormuser.InvitationRequest(email=email3,date=timeuuid.uuid1(),state=0,inv_id=inv_id3)
+        request4=ormuser.InvitationRequest(email=email4,date=timeuuid.uuid1(),state=0,inv_id=inv_id4)
+        self.assertTrue(userapi.new_invitation_request(invitation_request=request1))
+        self.assertTrue(userapi.new_invitation_request(invitation_request=request2))
+        self.assertTrue(userapi.new_invitation_request(invitation_request=request3))
+        self.assertTrue(userapi.new_invitation_request(invitation_request=request4))
+        request1_found=userapi.get_invitation_request(email=email1)
+        request2_found=userapi.get_invitation_request(email=email2)
+        request3_found=userapi.get_invitation_request(email=email3)
+        request4_found=userapi.get_invitation_request(email=email4)
+        self.assertEqual(request1_found.inv_id, request1.inv_id)
+        self.assertEqual(request2_found.inv_id, request2.inv_id)
+        self.assertEqual(request3_found.inv_id, request3.inv_id)
+        self.assertEqual(request4_found.inv_id, request4.inv_id)
+
+    def test_new_invitation_request_failure_already_existing_invitation(self):
+        ''' new_invitation_request should fail if row existed previously '''
+        inv_id1=stringops.get_randomstring()
+        inv_id2=stringops.get_randomstring()
+        inv_id3=stringops.get_randomstring()
+        inv_id4=stringops.get_randomstring()
+        email1='test_new_invitation_request_failure_already_existing_invitation1@komlog.io'
+        email2='test_new_invitation_request_failure_already_existing_invitation2@komlog.io'
+        email3='test_new_invitation_request_failure_already_existing_invitation3@komlog.io'
+        email4='test_new_invitation_request_failure_already_existing_invitation4@komlog.io'
+        request1=ormuser.InvitationRequest(email=email1,date=timeuuid.uuid1(),state=0,inv_id=inv_id1)
+        request2=ormuser.InvitationRequest(email=email2,date=timeuuid.uuid1(),state=0,inv_id=inv_id2)
+        request3=ormuser.InvitationRequest(email=email3,date=timeuuid.uuid1(),state=0,inv_id=inv_id3)
+        request4=ormuser.InvitationRequest(email=email4,date=timeuuid.uuid1(),state=0,inv_id=inv_id4)
+        self.assertTrue(userapi.new_invitation_request(invitation_request=request1))
+        self.assertTrue(userapi.new_invitation_request(invitation_request=request2))
+        self.assertTrue(userapi.new_invitation_request(invitation_request=request3))
+        self.assertTrue(userapi.new_invitation_request(invitation_request=request4))
+        request1_found=userapi.get_invitation_request(email=email1)
+        request2_found=userapi.get_invitation_request(email=email2)
+        request3_found=userapi.get_invitation_request(email=email3)
+        request4_found=userapi.get_invitation_request(email=email4)
+        self.assertEqual(request1_found.inv_id, request1.inv_id)
+        self.assertEqual(request2_found.inv_id, request2.inv_id)
+        self.assertEqual(request3_found.inv_id, request3.inv_id)
+        self.assertEqual(request4_found.inv_id, request4.inv_id)
+        self.assertFalse(userapi.new_invitation_request(invitation_request=request1))
+        self.assertFalse(userapi.new_invitation_request(invitation_request=request2))
+        self.assertFalse(userapi.new_invitation_request(invitation_request=request3))
+        self.assertFalse(userapi.new_invitation_request(invitation_request=request4))
+
+    def test_new_invitation_request_failure_non_InvitationRequest_instance(self):
+        ''' new_invitation_request should fail if info is not a InvitationRequest instance '''
+        requests=[None, 123123, '2123123123', {'a':'dict'},['a','list']]
+        for request in requests:
+            self.assertFalse(userapi.new_invitation_request(request))
+
     def test_delete_invitation_request_success(self):
         ''' delete_invitation_request should delete the object successfully '''
-        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
-        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
-        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
-        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=uuid.uuid4())
+        inv_id=stringops.get_randomstring()
+        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request2=ormuser.InvitationRequest(email='get_invitation_request2_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request3=ormuser.InvitationRequest(email='get_invitation_request3_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=inv_id)
+        inv_id=stringops.get_randomstring()
+        request4=ormuser.InvitationRequest(email='get_invitation_request4_success@komlog.org',date=timeuuid.uuid1(),state=1,inv_id=inv_id)
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request1))
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request2))
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request3))
@@ -404,7 +515,8 @@ class KomcassApiUserTest(unittest.TestCase):
 
     def test_update_invitation_request_state_success(self):
         ''' update_invitation_request_state should update the state of the request '''
-        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=uuid.uuid4())
+        inv_id=stringops.get_randomstring()
+        request1=ormuser.InvitationRequest(email='get_invitation_request1_success@komlog.org',date=timeuuid.uuid1(),state=0,inv_id=inv_id)
         self.assertTrue(userapi.insert_invitation_request(invitation_request=request1))
         request=userapi.get_invitation_request(email=request1.email)
         self.assertIsNotNone(request)

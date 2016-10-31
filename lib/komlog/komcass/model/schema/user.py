@@ -13,7 +13,7 @@ OBJECTS=[
     'MST_SIGNUP',
     'MST_SIGNUP_INDEX_01',
     'MST_SIGNUP_INDEX_02',
-    'DAT_INVITATION',
+    'MST_INVITATION',
     'DAT_INVITATION_REQUEST',
     'DAT_INVITATION_REQUEST_INDEX_01',
     'DAT_FORGET_REQUEST',
@@ -68,8 +68,9 @@ MST_USER_STRIPE_INFO='''
 MST_SIGNUP='''
     CREATE TABLE mst_signup (
         username text,
-        code text,
         email text,
+        code text,
+        inv_id text,
         creation_date timeuuid,
         utilization_date timeuuid,
         PRIMARY KEY (username)
@@ -84,14 +85,17 @@ MST_SIGNUP_INDEX_02='''
     CREATE INDEX ON mst_signup (code);
 '''
 
-DAT_INVITATION='''
-    CREATE TABLE dat_invitation (
-        inv_id uuid,
-        date timeuuid,
+MST_INVITATION='''
+    CREATE TABLE mst_invitation (
+        inv_id text,
+        creation_date timeuuid,
         state int,
-        tran_id uuid,
-        PRIMARY KEY (inv_id,date)
-    ) WITH CLUSTERING ORDER BY (date desc);
+        count int,
+        max_count int,
+        active_from timeuuid,
+        active_until timeuuid,
+        PRIMARY KEY (inv_id)
+    );
 '''
 
 DAT_INVITATION_REQUEST='''
@@ -99,7 +103,7 @@ DAT_INVITATION_REQUEST='''
         email text,
         date timeuuid,
         state int,
-        inv_id uuid,
+        inv_id text,
         PRIMARY KEY (email)
     );
 '''

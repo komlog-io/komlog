@@ -5,7 +5,7 @@
     <div class="container">
       <div class="well">
         <h2>Request an Invitation</h2>
-        <h5>Sign up is disabled for the moment. To get an account, join our waiting list, and we will send you an invitation as soon as they are available.</h5>
+        <h5>You need an invitation to join Komlog. To get one, join our waiting list, and we will send you one as soon as they are available.</h5>
         <form class="form-inline form-invite" method="post" action="">
           <div class="form-group">
             <label for="email" class="sr-only">Email</label>
@@ -13,6 +13,17 @@
           </div>
           <button class="btn btn-primary" type="submit">join waiting list</button>
         </form>
+        </br>
+        <h6><a data-toggle="collapse" href="#collapseInvitation" aria-expanded="false" aria-controls="collapseInvitation">Do you have an invitation?</a></h6>
+        <div class="collapse" id="collapseInvitation">
+          <form class="form-inline form-invite" method="get" action="/signup/">
+            <div class="form-group">
+              <label for="invitation" class="sr-only">Invitation Code</label>
+              <input type="text" id="invitation" name="i" class="form-control" placeholder="Invitation Code" required autofocus>
+            </div>
+            <button class="btn btn-success" type="submit">Validate</button>
+          </form>
+        </div>
       </div>
     </div>
     <!-- /.container -->

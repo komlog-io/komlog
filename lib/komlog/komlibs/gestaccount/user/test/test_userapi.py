@@ -1,6 +1,8 @@
 import unittest
 import uuid
 import stripe
+from komlog.komlibs.general.time import timeuuid
+from komlog.komlibs.general.string import stringops
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.user.states import *
@@ -10,7 +12,7 @@ from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import segment as cassapisegment
 
 class GestaccountUserApiTest(unittest.TestCase):
-    ''' komlog.gestaccount.user.api tests '''
+    ''' komlibs.gestaccount.user.api tests '''
 
     def setUp(self):
         self.username = 'test_komlog.gestaccount.user.api_user'
@@ -121,6 +123,130 @@ class GestaccountUserApiTest(unittest.TestCase):
         with self.assertRaises(exceptions.UserCreationException) as cm:
             userapi.create_user(username=username, password=password, email=email, sid=sid, token=token.id)
         self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_ECREPAY)
+
+    def test_create_user_failure_by_invitation_invalid_invitation(self):
+        ''' create_user should fail if invitation does not exist '''
+        inv_id = 3
+        username='username'
+        password='password'
+        email=username+'@komlog.org'
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            userapi.create_user(username=username, password=password, email=email, inv_id=inv_id)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_IINV)
+
+    def test_create_user_failure_by_invitation_non_existent_invitation(self):
+        ''' create_user should fail if invitation does not exist '''
+        inv_id = stringops.get_randomstring()
+        username='username'
+        password='password'
+        email=username+'@komlog.org'
+        with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
+            userapi.create_user(username=username, password=password, email=email, inv_id=inv_id)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_INVNF)
+
+    def test_create_user_success_by_invitation(self):
+        username='test_create_user_success_by_invitation'
+        password='temporal'
+        email=username+'@komlog.org'
+        invitations=userapi.generate_user_invitations(email=email)
+        inv_id=invitations[0]['inv_id']
+        user_info=userapi.create_user(username=username, password=password, email=email, inv_id=inv_id)
+        self.assertEqual(user_info['username'],username)
+        self.assertEqual(user_info['email'],email)
+        self.assertTrue('uid' in user_info)
+        self.assertTrue('code' in user_info)
+        signup_info=cassapiuser.get_signup_info(email=email)
+        self.assertEqual(signup_info.inv_id, inv_id)
+        inv_info=cassapiuser.get_invitation_info(inv_id=inv_id)
+        self.assertEqual(inv_info.count, 1)
+
+    def test_create_user_failure_by_invitation_invitation_used_max_count_reached(self):
+        username='test_create_user_failure_by_invitation_invitation_used_max_count_reached'
+        password='temporal'
+        email=username+'@komlog.org'
+        invitations=userapi.generate_user_invitations(email=email)
+        inv_id=invitations[0]['inv_id']
+        user_info=userapi.create_user(username=username, password=password, email=email, inv_id=inv_id)
+        self.assertEqual(user_info['username'],username)
+        self.assertEqual(user_info['email'],email)
+        self.assertTrue('uid' in user_info)
+        self.assertTrue('code' in user_info)
+        username=username+'2'
+        email=username+'@komlog.org'
+        with self.assertRaises(exceptions.InvitationProcessException) as cm:
+            userapi.create_user(username=username, password=password, email=email, inv_id=inv_id)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_INVMXCNTRCH)
+
+    def test_create_user_failure_by_invitation_now_less_than_active_from(self):
+        username='test_create_user_failure_by_invitation_now_less_than_active_from'
+        password='temporal'
+        email=username+'@komlog.org'
+        now=timeuuid.uuid1()
+        active_from=timeuuid.uuid1(seconds=timeuuid.get_unix_timestamp(now)+1000)
+        invitations=userapi.generate_user_invitations(email=email, active_from=active_from)
+        inv_id=invitations[0]['inv_id']
+        with self.assertRaises(exceptions.InvitationProcessException) as cm:
+            userapi.create_user(username=username, password=password, email=email, inv_id=inv_id)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_OUTINVINT)
+
+    def test_create_user_failure_by_invitation_now_after_active_until(self):
+        username='test_create_user_failure_by_invitation_now_after_active_until'
+        password='temporal'
+        email=username+'@komlog.org'
+        active_until=timeuuid.uuid1(seconds=1)
+        invitations=userapi.generate_user_invitations(email=email, active_until=active_until)
+        inv_id=invitations[0]['inv_id']
+        with self.assertRaises(exceptions.InvitationProcessException) as cm:
+            userapi.create_user(username=username, password=password, email=email, inv_id=inv_id)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_OUTINVINT)
+
+    def test_create_user_success_by_invitation_in_segment_with_cost(self):
+        ''' create_user_should succeed creating a user in a segment with cost by invitation '''
+        username = 'test_create_user_success_by_invitation_in_segment_with_cost'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 1
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        invitations=userapi.generate_user_invitations(email=email)
+        inv_id=invitations[0]['inv_id']
+        user=userapi.create_user(username=username, password=password, email=email, inv_id=inv_id, sid=sid, token=token.id)
+        self.assertIsNotNone(user)
+        self.assertEqual(user['email'], email)
+        self.assertEqual(user['username'], username)
+        self.assertEqual(user['segment'], sid)
+
+    def test_create_user_success_by_invitation_in_second_try_in_segment_with_cost(self):
+        ''' create_user should succeed creating a user in a segment with cost by invitation. If first try failed, the invitation should be reseted to allow more tries. '''
+        username = 'test_create_user_success_by_invitation_in_second_try_in_segment_with_cost'
+        password = 'password'
+        email = username+'@komlog.org'
+        sid = 1
+        token = stripe.Token.create(
+            card={
+                "number": '4242424242424242',
+                "exp_month": 12,
+                "exp_year": 2017,
+                "cvc": '123'
+            },
+        )
+        invitations=userapi.generate_user_invitations(email=email)
+        inv_id=invitations[0]['inv_id']
+        with self.assertRaises(exceptions.UserCreationException) as cm:
+            userapi.create_user(username=username, password=password, email=email, inv_id=inv_id, sid=sid, token='malformedToken')
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_ECREPAY)
+        #now use the token
+        user=userapi.create_user(username=username, password=password, email=email, inv_id=inv_id, sid=sid, token=token.id)
+        self.assertIsNotNone(user)
+        self.assertEqual(user['email'], email)
+        self.assertEqual(user['username'], username)
+        self.assertEqual(user['segment'], sid)
 
     def test_auth_user(self):
         ''' auth_user should authenticate the user '''
@@ -243,6 +369,56 @@ class GestaccountUserApiTest(unittest.TestCase):
         email='test_register_invitation_request_success@komlog.org'
         self.assertTrue(userapi.register_invitation_request(email=email))
 
+    def test_register_invitation_request_success_registered_twice_but_not_generated_yet(self):
+        ''' register_invitation_request should insert the request in db only once if invitation was not generated yet '''
+        email='test_register_invitation_request_success_registered_twice_but_not_generated@komlog.org'
+        self.assertTrue(userapi.register_invitation_request(email=email))
+        request=cassapiuser.get_invitation_request(email=email)
+        self.assertIsNotNone(request)
+        self.assertEqual(request.email, email)
+        self.assertIsNone(request.inv_id)
+        self.assertTrue(userapi.register_invitation_request(email=email))
+        request2=cassapiuser.get_invitation_request(email=email)
+        self.assertEqual(request.date, request2.date)
+        self.assertEqual(request.email, request2.email)
+        self.assertEqual(request.inv_id, request2.inv_id)
+        self.assertEqual(request.state, request2.state)
+
+    def test_register_invitation_request_success_registered_twice_already_generated_but_not_used(self):
+        ''' register_invitation_request should insert the request in db twice if invitation was already generated but not used '''
+        email='test_register_invitation_request_success_registered_twice_already_generated_but_not_used@komlog.org'
+        self.assertTrue(userapi.generate_user_invitations(email=email))
+        request=cassapiuser.get_invitation_request(email=email)
+        self.assertIsNotNone(request)
+        self.assertEqual(request.email, email)
+        self.assertIsNotNone(request.inv_id)
+        self.assertEqual(request.state, InvitationRequestStates.ASSOCIATED)
+        self.assertTrue(userapi.register_invitation_request(email=email))
+        request2=cassapiuser.get_invitation_request(email=email)
+        self.assertNotEqual(request.date, request2.date)
+        self.assertEqual(request.email, request2.email)
+        self.assertNotEqual(request.inv_id, request2.inv_id)
+        self.assertEqual(request2.state, InvitationRequestStates.REGISTERED)
+        inv_info=cassapiuser.get_invitation_info(inv_id=request.inv_id)
+        self.assertEqual(inv_info.state, InvitationStates.DISABLED)
+
+    def test_register_invitation_request_failure_registered_twice_already_generated_and_used(self):
+        ''' register_invitation_request should fail if the invitation was already generated and used '''
+        username = 'test_register_invitation_request_failure_registered_twice_already_generated_and_used'
+        password = 'password'
+        email=username+'@komlog.io'
+        self.assertTrue(userapi.register_invitation_request(email=email))
+        self.assertTrue(userapi.generate_user_invitations(email=email))
+        request=cassapiuser.get_invitation_request(email=email)
+        self.assertIsNotNone(request)
+        self.assertEqual(request.email, email)
+        self.assertIsNotNone(request.inv_id)
+        self.assertEqual(request.state, InvitationRequestStates.ASSOCIATED)
+        userinfo = userapi.create_user(username=username, password=password, email=email, inv_id=request.inv_id)
+        with self.assertRaises(exceptions.UserUnsupportedOperationException) as cm:
+            userapi.register_invitation_request(email=email)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_RIR_UAUAI)
+
     def test_generate_user_invitations_failure_invalid_email(self):
         ''' generate_user_invitations should fail if num=1 and email is in invalid '''
         emails=[34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4(), uuid.uuid1(),'email@fake','@badmail','fake@']
@@ -257,7 +433,7 @@ class GestaccountUserApiTest(unittest.TestCase):
         invitations=userapi.generate_user_invitations(email=email)
         self.assertEqual(len(invitations),1)
         self.assertEqual(invitations[0]['email'],email)
-        self.assertTrue(isinstance(invitations[0]['inv_id'],uuid.UUID))
+        self.assertTrue(isinstance(invitations[0]['inv_id'],str))
 
     def test_generate_user_invitations_success_previously_requested_invitation(self):
         ''' generate_user_invitations should succeed if invitation was requested previously '''
@@ -266,9 +442,9 @@ class GestaccountUserApiTest(unittest.TestCase):
         invitations=userapi.generate_user_invitations(email=email)
         self.assertEqual(len(invitations),1)
         self.assertEqual(invitations[0]['email'],email)
-        self.assertTrue(isinstance(invitations[0]['inv_id'],uuid.UUID))
+        self.assertTrue(isinstance(invitations[0]['inv_id'],str))
 
-    def test_generate_user_invitations_success_previously_requested_multiple_invitations(self):
+    def test_generate_user_invitations_success_previously_requested_invitations(self):
         ''' generate_user_invitations should succeed if invitation was requested previously,
             and generate the number of invitations requested (if that number of requests
             was registered previously, of course) '''
@@ -286,344 +462,124 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertEqual(len(invitations),5)
         for invitation in invitations:
             self.assertTrue(args.is_valid_email(invitation['email']))
-            self.assertTrue(isinstance(invitation['inv_id'],uuid.UUID))
+            self.assertTrue(isinstance(invitation['inv_id'],str))
 
-    def test_create_user_by_invitation_failure_non_existent_invitation(self):
-        username='username'
-        password='password'
-        email=username+'@komlog.org'
-        inv_id=uuid.uuid4()
-        with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
-            userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_INVNF)
-
-    def test_create_user_by_invitation_success(self):
-        username='test_create_user_by_invitation_success'
-        password='temporal'
-        email=username+'@komlog.org'
-        invitations=userapi.generate_user_invitations(email=email)
-        inv_id=invitations[0]['inv_id']
-        user_info=userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id)
-        self.assertEqual(user_info['username'],username)
-        self.assertEqual(user_info['email'],email)
-        self.assertTrue('uid' in user_info)
-        self.assertTrue('code' in user_info)
-
-    def test_create_user_by_invitation_failure_already_used_invitation(self):
-        username='test_create_user_by_invitation_failure_already_used_invitation'
-        password='temporal'
-        email=username+'@komlog.org'
-        invitations=userapi.generate_user_invitations(email=email)
-        inv_id=invitations[0]['inv_id']
-        user_info=userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id)
-        self.assertEqual(user_info['username'],username)
-        self.assertEqual(user_info['email'],email)
-        self.assertTrue('uid' in user_info)
-        self.assertTrue('code' in user_info)
-        with self.assertRaises(exceptions.InvitationProcessException) as cm:
-            userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_INVAU)
-
-    def test_create_user_by_invitation_success_in_segment_with_cost(self):
-        ''' create_user_by_invitation should succeed creating a user in a segment with cost '''
-        username = 'test_create_user_by_invitation_success_in_segment_with_cost'
+    def test_generate_user_invitations_failure_email_already_used_an_invitation(self):
+        ''' generate_user_invitations should fail if the email already used a previous invitation '''
+        username = 'test_generate_user_invitation_failure_email_already_used_an_invitation'
         password = 'password'
-        email = username+'@komlog.org'
-        sid = 1
-        token = stripe.Token.create(
-            card={
-                "number": '4242424242424242',
-                "exp_month": 12,
-                "exp_year": 2017,
-                "cvc": '123'
-            },
-        )
-        invitations=userapi.generate_user_invitations(email=email)
-        inv_id=invitations[0]['inv_id']
-        user=userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id, sid=sid, token=token.id)
-        self.assertIsNotNone(user)
-        self.assertEqual(user['email'], email)
-        self.assertEqual(user['username'], username)
-        self.assertEqual(user['segment'], sid)
+        email=username+'@komlog.io'
+        self.assertTrue(userapi.register_invitation_request(email=email))
+        self.assertTrue(userapi.generate_user_invitations(email=email))
+        request=cassapiuser.get_invitation_request(email=email)
+        self.assertIsNotNone(request)
+        self.assertEqual(request.email, email)
+        self.assertIsNotNone(request.inv_id)
+        self.assertEqual(request.state, InvitationRequestStates.ASSOCIATED)
+        userinfo = userapi.create_user(username=username, password=password, email=email, inv_id=request.inv_id)
+        self.assertIsNotNone(userinfo)
+        with self.assertRaises(exceptions.UserUnsupportedOperationException) as cm:
+            userapi.generate_user_invitations(email=email)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_GUI_UAUAI)
 
-    def test_create_user_by_invitation_success_in_second_try_in_segment_with_cost(self):
-        ''' create_user_by_invitation should succeed creating a user in a segment with cost. If first try failed, the invitation should be reseted to allow more tries. '''
-        username = 'test_create_user_by_invitation_success_in_second_try_in_segment_with_cost'
+    def test_generate_user_invitations_success_email_already_requested_an_invitation_but_did_not_used_it(self):
+        ''' generate_user_invitations should generate a new one if the email already requested a previous invitation and is generated but not used '''
+        username = 'test_generate_user_invitations_success_email_already_requested_an_invitation_but_did_not_used_it'
         password = 'password'
-        email = username+'@komlog.org'
-        sid = 1
-        token = stripe.Token.create(
-            card={
-                "number": '4242424242424242',
-                "exp_month": 12,
-                "exp_year": 2017,
-                "cvc": '123'
-            },
-        )
-        invitations=userapi.generate_user_invitations(email=email)
-        inv_id=invitations[0]['inv_id']
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id, sid=sid, token=None)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_CRU_TOKNEED)
-        #now use the token
-        user=userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id, sid=sid, token=token.id)
-        self.assertIsNotNone(user)
-        self.assertEqual(user['email'], email)
-        self.assertEqual(user['username'], username)
-        self.assertEqual(user['segment'], sid)
+        email=username+'@komlog.io'
+        self.assertTrue(userapi.register_invitation_request(email=email))
+        self.assertTrue(userapi.generate_user_invitations(email=email))
+        request=cassapiuser.get_invitation_request(email=email)
+        self.assertIsNotNone(request)
+        self.assertEqual(request.email, email)
+        self.assertIsNotNone(request.inv_id)
+        self.assertEqual(request.state, InvitationRequestStates.ASSOCIATED)
+        self.assertTrue(userapi.generate_user_invitations(email=email))
+        request2=cassapiuser.get_invitation_request(email=email)
+        self.assertIsNotNone(request2)
+        self.assertEqual(request2.email, email)
+        self.assertIsNotNone(request2.inv_id)
+        self.assertEqual(request2.state, InvitationRequestStates.ASSOCIATED)
+        self.assertNotEqual(request.inv_id, request2.inv_id)
+        inv_info1=cassapiuser.get_invitation_info(inv_id=request.inv_id)
+        self.assertEqual(inv_info1.state, InvitationStates.DISABLED)
 
-    def test_start_invitation_process_failure_invalid_invitation_id(self):
-        ''' start_invitation_process should fail if inv_id is invalid '''
-        inv_ids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4().hex, uuid.uuid1(),'email@fake','@badmail','fake@']
-        for inv_id in inv_ids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                userapi.start_invitation_process(inv_id=inv_id)
-            self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_IINV)
+    def test_generate_user_invitations_success_custom_max_count_and_active_interval(self):
+        ''' generate_user_invitations should generate a new one with requested params '''
+        username = 'test_generate_user_invitations_success_with_custom_params'
+        password = 'password'
+        email=username+'@komlog.io'
+        max_count=400
+        active_from=timeuuid.uuid1(seconds=500)
+        active_until=timeuuid.uuid1(seconds=5000)
+        self.assertTrue(userapi.generate_user_invitations(email=email, max_count=max_count, active_from=active_from, active_until=active_until))
+        request=cassapiuser.get_invitation_request(email=email)
+        self.assertIsNotNone(request)
+        self.assertEqual(request.email, email)
+        self.assertIsNotNone(request.inv_id)
+        self.assertEqual(request.state, InvitationRequestStates.ASSOCIATED)
+        inv_info=cassapiuser.get_invitation_info(inv_id=request.inv_id)
+        self.assertIsNotNone(inv_info)
+        self.assertEqual(inv_info.inv_id,request.inv_id)
+        self.assertEqual(inv_info.state,InvitationStates.ENABLED)
+        self.assertEqual(inv_info.count,0)
+        self.assertEqual(inv_info.max_count,max_count)
+        self.assertEqual(inv_info.active_from,active_from)
+        self.assertEqual(inv_info.active_until,active_until)
 
-    def test_start_invitation_process_failure_invitation_not_found(self):
-        ''' start_invitation_process should fail if inv_id is not found '''
-        inv_id=uuid.uuid4()
-        with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
-            userapi.start_invitation_process(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_INVNF)
-
-    def test_start_invitation_process_failure_already_used_invitation(self):
-        username='test_start_invitation_process_failure_already_used_invitation'
-        password='temporal'
-        email=username+'@komlog.org'
-        invitations=userapi.generate_user_invitations(email=email)
-        inv_id=invitations[0]['inv_id']
-        user_info=userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id)
-        self.assertEqual(user_info['username'],username)
-        self.assertEqual(user_info['email'],email)
-        self.assertTrue('uid' in user_info)
-        self.assertTrue('code' in user_info)
-        with self.assertRaises(exceptions.InvitationProcessException) as cm:
-            userapi.start_invitation_process(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_INVAU)
-
-    def test_start_invitation_process_failure_invitation_state_not_expected(self):
-        username='test_start_invitation_process_failure_already_used_invitation'
-        password='temporal'
-        email=username+'@komlog.org'
-        invitations=userapi.generate_user_invitations(email=email)
-        inv_id=invitations[0]['inv_id']
-        invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-        invitation_info[0].tran_id=uuid.uuid4()
-        self.assertTrue(cassapiuser.insert_invitation_info(invitation_info[0]))
-        with self.assertRaises(exceptions.InvitationProcessException) as cm:
-            userapi.start_invitation_process(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_SIP_ISNE)
-
-    def test_start_invitation_process_success(self):
-        username='test_start_invitation_process_success'
-        password='temporal'
-        email=username+'@komlog.org'
-        invitations=userapi.generate_user_invitations(email=email)
-        inv_id=invitations[0]['inv_id']
-        tran_id=userapi.start_invitation_process(inv_id=inv_id)
-        self.assertTrue(isinstance(tran_id,uuid.UUID))
-        invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-        found=False
-        for reg in invitation_info:
-            if reg.state==InvitationStates.USING and reg.tran_id==tran_id:
-                found=True
-        self.assertTrue(found)
-
-    def test_end_invitation_process_failure_invalid_invitation_id(self):
-        ''' end_invitation_process should fail if inv_id is invalid '''
-        inv_ids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4().hex, uuid.uuid1(),'email@fake','@badmail','fake@']
-        tran_id=uuid.uuid4()
-        for inv_id in inv_ids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-            self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_IINV)
-
-    def test_end_invitation_process_failure_invalid_transaction_id(self):
-        ''' end_invitation_process should fail if transaction id is invalid '''
-        tran_ids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4().hex, uuid.uuid1(),'email@fake','@badmail','fake@']
-        inv_id=uuid.uuid4()
-        for tran_id in tran_ids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-            self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_ITRN)
-
-    def test_end_invitation_process_failure_invitation_not_found(self):
-        ''' end_invitation_process should fail if invitation does not exist '''
-        tran_id=uuid.uuid4()
-        inv_id=uuid.uuid4()
-        with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
-            userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_INVNF)
-
-    def test_end_invitation_process_failure_invitation_not_used(self):
-        ''' end_invitation_process should fail if invitation is unused '''
-        email='test_end_invitation_process_failure_invitation_not_used@komlog.org'
-        invitations=userapi.generate_user_invitations(email=email)
-        tran_id=uuid.uuid4()
-        inv_id=invitations[0]['inv_id']
-        with self.assertRaises(exceptions.InvitationProcessException) as cm:
-            userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_INUE)
-
-    def test_end_invitation_process_failure_race_condition_found(self):
-        ''' end_invitation_process should fail if invitation is being used already by other process '''
-        email='test_end_invitation_process_failure_race_condition_found@komlog.org'
-        invitations=userapi.generate_user_invitations(email=email)
-        tran_id=uuid.uuid4()
-        inv_id=invitations[0]['inv_id']
-        other_transaction=userapi.start_invitation_process(inv_id=inv_id)
-        with self.assertRaises(exceptions.InvitationProcessException) as cm:
-            userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_RCF)
-
-    def test_end_invitation_process_failure_no_using_state_found(self):
-        ''' end_invitation_process should fail if invitation is inconsistent and no using state is found '''
-        email='test_end_invitation_process_failure_no_using_state_found@komlog.org'
-        invitations=userapi.generate_user_invitations(email=email)
-        tran_id=uuid.uuid4()
-        inv_id=invitations[0]['inv_id']
-        other_transaction=userapi.start_invitation_process(inv_id=inv_id)
-        userapi.end_invitation_process(inv_id=inv_id,tran_id=other_transaction)
-        invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-        self.assertEqual(len(invitation_info),3)
-        for reg in invitation_info:
-            if reg.state==InvitationStates.USING:
-                cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
-        with self.assertRaises(exceptions.InvitationProcessException) as cm:
-            userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_EIP_SNF)
-
-    def test_end_invitation_process_success(self):
-        ''' end_invitation_process should succeed '''
-        email='test_end_invitation_process_success@komlog.org'
-        invitations=userapi.generate_user_invitations(email=email)
-        inv_id=invitations[0]['inv_id']
-        tran_id=userapi.start_invitation_process(inv_id=inv_id)
-        self.assertTrue(userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id))
-
-    def test_undo_invitation_transactions_failure_invalid_inv_id(self):
-        ''' undo_invitation_transactions should fail if inv_id is invalid '''
-        inv_ids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4().hex, uuid.uuid1(),'email@fake','@badmail','fake@']
-        tran_id=uuid.uuid4()
-        for inv_id in inv_ids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                userapi.undo_invitation_transactions(inv_id=inv_id,tran_id=tran_id)
-            self.assertEqual(cm.exception.error, Errors.E_GUA_UIT_IINV)
-
-    def test_undo_invitation_transactions_failure_invalid_transaction_id(self):
-        ''' undo_invitation_transactions should fail if transaction id is invalid '''
-        tran_ids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4().hex, uuid.uuid1(),'email@fake','@badmail','fake@']
-        inv_id=uuid.uuid4()
-        for tran_id in tran_ids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                userapi.undo_invitation_transactions(inv_id=inv_id,tran_id=tran_id)
-            self.assertEqual(cm.exception.error, Errors.E_GUA_UIT_ITRN)
-
-    def test_undo_invitation_transaction_failure_invitation_info_not_found(self):
-        ''' undo_invitation_transaction should fail if invitation info is not found '''
-        tran_id=uuid.uuid4()
-        inv_id=uuid.uuid4()
-        with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
-            userapi.undo_invitation_transactions(inv_id=inv_id,tran_id=tran_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_UIT_INVNF)
-
-    def test_undo_invitation_transactions_success(self):
-        ''' undo_invitation_transactions should succeed '''
-        email='test_undo_invitation_transactions_success@komlog.org'
-        invitations=userapi.generate_user_invitations(email=email)
-        inv_id=invitations[0]['inv_id']
-        tran_id=userapi.start_invitation_process(inv_id=inv_id)
-        userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-        invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-        self.assertEqual(len(invitation_info),3)
-        self.assertTrue(userapi.undo_invitation_transactions(inv_id=inv_id, tran_id=tran_id))
-        invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-        self.assertEqual(len(invitation_info),1)
-
-    def test_initialize_invitation_failure_invalid_inv_id(self):
-        ''' initialize_invitation should fail if inv_id is invalid '''
-        inv_ids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4().hex, uuid.uuid1(),'email@fake','@badmail','fake@']
-        for inv_id in inv_ids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                userapi.initialize_invitation(inv_id=inv_id)
-            self.assertEqual(cm.exception.error, Errors.E_GUA_II_IINV)
-
-    def test_initialize_invitation_failure_invitation_info_not_found(self):
-        ''' initialize_invitation should fail if invitation info is not found '''
-        inv_id=uuid.uuid4()
-        with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
-            userapi.initialize_invitation(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_II_INVNF)
-
-    def test_initialize_invitation_success(self):
-        ''' initialize_invitation should succeed '''
-        email='test_initialize_invitation_success@komlog.org'
-        invitations=userapi.generate_user_invitations(email=email)
-        inv_id=invitations[0]['inv_id']
-        tran_id=userapi.start_invitation_process(inv_id=inv_id)
-        userapi.end_invitation_process(inv_id=inv_id,tran_id=tran_id)
-        invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-        self.assertEqual(len(invitation_info),3)
-        self.assertTrue(userapi.initialize_invitation(inv_id=inv_id))
-        invitation_info_2=cassapiuser.get_invitation_info(inv_id=inv_id)
-        self.assertEqual(len(invitation_info_2),1)
-        self.assertEqual(invitation_info_2[0].state, InvitationStates.UNUSED)
-
-    def test_check_unused_invitation_failure_invalid_invitation_id(self):
-        ''' check_unused_invitation should fail if inv_id is invalid '''
-        inv_ids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), 'userÑame', uuid.uuid4().hex, uuid.uuid1(),'email@fake','@badmail','fake@']
+    def test_check_unused_invitation_failure_invalid_invitation(self):
+        ''' check_unused_invitation should fail if invitation id is invalid '''
+        inv_ids=[None, 34234, 2342.234234, {'a':'dict'}, ['a','list'], {'set'}, ('a','tuple'), uuid.uuid4(), uuid.uuid1()]
         for inv_id in inv_ids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
                 userapi.check_unused_invitation(inv_id=inv_id)
             self.assertEqual(cm.exception.error, Errors.E_GUA_CUI_IINV)
 
     def test_check_unused_invitation_failure_invitation_not_found(self):
-        ''' check_unused_invitation should fail if inv_id is not found '''
-        inv_id=uuid.uuid4()
+        ''' check_unused_invitation should fail if invitation id does not exist '''
+        inv_id = stringops.get_randomstring()
         with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
             userapi.check_unused_invitation(inv_id=inv_id)
         self.assertEqual(cm.exception.error, Errors.E_GUA_CUI_INVNF)
 
-    def test_check_unused_invitation_failure_invitation_already_used(self):
-        ''' check_unused_invitation should fail if inv_id is already used '''
-        username='test_check_unused_invitation_failure_already_used_invitation'
-        password='temporal'
-        email=username+'@komlog.org'
+    def test_check_unused_invitation_failure_invitation_disabled(self):
+        ''' check_unused_invitation should fail if invitation is disabled '''
+        email='test_check_unused_invitation_failure_invitation_disabled@komlog.io'
         invitations=userapi.generate_user_invitations(email=email)
         inv_id=invitations[0]['inv_id']
-        user_info=userapi.create_user_by_invitation(username=username, password=password, email=email, inv_id=inv_id)
-        self.assertEqual(user_info['username'],username)
-        self.assertEqual(user_info['email'],email)
-        self.assertTrue('uid' in user_info)
-        self.assertTrue('code' in user_info)
-        with self.assertRaises(exceptions.InvitationProcessException) as cm:
+        self.assertTrue(cassapiuser.update_invitation_info_state(inv_id, new_state=InvitationStates.DISABLED))
+        inv_info=cassapiuser.get_invitation_info(inv_id=inv_id)
+        self.assertEqual(inv_info.state, InvitationStates.DISABLED)
+        with self.assertRaises(exceptions.InvitationNotFoundException) as cm:
             userapi.check_unused_invitation(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_CUI_INVAU)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CUI_INVNF)
 
-    def test_check_unused_invitation_failure_invitation_state_invalid(self):
-        ''' check_unused_invitation should fail if invitation state is invalid '''
-        username='test_check_unused_invitation_failure_invitation_state_invalid'
-        password='temporal'
-        email=username+'@komlog.org'
+    def test_check_unused_invitation_failure_invitation_used_max_count_reached(self):
+        ''' check_unused_invitation should fail if invitation has been used '''
+        email='test_check_unused_invitation_failure_invitation_used_max_count_reached@komlog.io'
         invitations=userapi.generate_user_invitations(email=email)
         inv_id=invitations[0]['inv_id']
-        invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-        self.assertEqual(len(invitation_info),1)
-        for reg in invitation_info:
-            if reg.state==InvitationStates.UNUSED:
-                cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
-                reg.state=InvitationStates.USING
-                cassapiuser.insert_invitation_info(reg)
+        self.assertTrue(cassapiuser.increment_invitation_used_count(inv_id, 1))
+        inv_info=cassapiuser.get_invitation_info(inv_id=inv_id)
+        self.assertEqual(inv_info.count, 1)
         with self.assertRaises(exceptions.InvitationProcessException) as cm:
             userapi.check_unused_invitation(inv_id=inv_id)
-        self.assertEqual(cm.exception.error, Errors.E_GUA_CUI_INVIS)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CUI_INVMXCNTRCH)
+
+    def test_check_unused_invitation_failure_out_of_invitation_active_interval(self):
+        ''' check_unused_invitation should fail if now is out of invitation active interval '''
+        email='test_check_unused_invitation_failure_out_of_invitation_active_interval@komlog.io'
+        active_from=timeuuid.uuid1(seconds=1)
+        active_until=timeuuid.uuid1(seconds=2)
+        invitations=userapi.generate_user_invitations(email=email,active_from=active_from, active_until=active_until)
+        inv_id=invitations[0]['inv_id']
+        with self.assertRaises(exceptions.InvitationProcessException) as cm:
+            userapi.check_unused_invitation(inv_id=inv_id)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_CUI_OUTINVINT)
 
     def test_check_unused_invitation_success(self):
-        ''' check_unused_invitation should succeed '''
-        username='test_check_unused_invitation_success'
-        password='temporal'
-        email=username+'@komlog.org'
+        ''' check_unused_invitation should return True if invitation is available '''
+        email='test_check_unused_invitation_success@komlog.io'
         invitations=userapi.generate_user_invitations(email=email)
         inv_id=invitations[0]['inv_id']
         self.assertTrue(userapi.check_unused_invitation(inv_id=inv_id))

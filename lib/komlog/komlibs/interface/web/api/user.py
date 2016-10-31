@@ -33,44 +33,42 @@ def new_user_request(username, password, email, segment=None, token=None, invita
         raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_ISID)
     if token != None and not args.is_valid_string(token):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_ITOK)
-    if require_invitation and not args.is_valid_hex_uuid(invitation):
+    if require_invitation and not args.is_valid_string(invitation):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_IINV)
     #ensure we always create new users and emails in lowercase
     username=username.lower()
     email=email.lower()
     if segment != None:
         segment = int(segment)
-    if require_invitation:
-        inv_id=uuid.UUID(invitation)
-        try:
-            user=userapi.create_user_by_invitation(username, password, email, inv_id=inv_id, sid=segment, token=token)
-        except gestexcept.InvitationNotFoundException:
-            status_c=status.WEB_STATUS_BAD_PARAMETERS
-            data={'message':'Invalid Invitation Code'}
-            error=Errors.E_IWAU_NUSR_INVNF
-            return response.WebInterfaceResponse(status=status_c, data=data, error=error)
-        except gestexcept.InvitationProcessException as e:
-            if e.error == gesterrors.E_GUA_SIP_INVAU:
-                status_c=status.WEB_STATUS_BAD_PARAMETERS
-                data={'message':'Invitation Already Used'}
-                error=Errors.E_IWAU_NUSR_INVAU
-            else:
-                status_c=status.WEB_STATUS_INTERNAL_ERROR
-                data={'message':'Error code '+str(e.error)}
-                error=e.error
-            return response.WebInterfaceResponse(status=status_c, data=data, error=error)
-        except gestexcept.UserAlreadyExistsException as e:
-            status_c=status.WEB_STATUS_BAD_PARAMETERS
-            data={'message':'User already exists'}
-            if e.error==gesterrors.E_GUA_CRU_UAEU:
-                error=Errors.E_IWAU_NUSR_UAEU
-            elif e.error==gesterrors.E_GUA_CRU_UAEE:
-                error=Errors.E_IWAU_NUSR_UAEE
-            else:
-                error=e.error
-            return response.WebInterfaceResponse(status=status_c, data=data, error=error)
-    else:
-        user=userapi.create_user(username, password, email, sid=segment, token=token)
+    if require_invitation is False:
+        invitation = None
+    try:
+        user=userapi.create_user(username, password, email, inv_id=invitation, sid=segment, token=token)
+    except gestexcept.InvitationNotFoundException:
+        status_c=status.WEB_STATUS_BAD_PARAMETERS
+        data={'message':'Invalid Invitation Code'}
+        error=Errors.E_IWAU_NUSR_INVNF
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error)
+    except gestexcept.InvitationProcessException as e:
+        if e.error in (gesterrors.E_GUA_CRU_INVMXCNTRCH,gesterrors.E_GUA_CRU_OUTINVINT):
+            status_c=status.WEB_STATUS_NOT_ALLOWED
+            data={'message':'Invitation not available'}
+            error=Errors.E_IWAU_NUSR_INVAU
+        else:
+            status_c=status.WEB_STATUS_INTERNAL_ERROR
+            data={'message':'Internal error, code: '+str(e.error)}
+            error=e.error
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error)
+    except gestexcept.UserAlreadyExistsException as e:
+        status_c=status.WEB_STATUS_NOT_ALLOWED
+        data={'message':'User already exists'}
+        if e.error==gesterrors.E_GUA_CRU_UAEU:
+            error=Errors.E_IWAU_NUSR_UAEU
+        elif e.error==gesterrors.E_GUA_CRU_UAEE:
+            error=Errors.E_IWAU_NUSR_UAEE
+        else:
+            error=e.error
+        return response.WebInterfaceResponse(status=status_c, data=data, error=error)
     if user:
         webop=operation.NewUserOperation(uid=user['uid'])
         authop=webop.get_auth_operation()
@@ -157,20 +155,19 @@ def register_invitation_request(email):
 
 @exceptions.ExceptionHandler
 def check_invitation_request(invitation):
-    if not args.is_valid_hex_uuid(invitation):
+    if not args.is_valid_string(invitation):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_CIR_IINV)
     try:
-        inv_id=uuid.UUID(invitation)
-        userapi.check_unused_invitation(inv_id=inv_id)
+        userapi.check_unused_invitation(inv_id=invitation)
     except gestexcept.InvitationNotFoundException as e:
         status_c=status.WEB_STATUS_NOT_FOUND
         data={'message':'Invitation not found'}
         error=Errors.E_IWAU_CIR_INVNF
         return response.WebInterfaceResponse(status=status_c, data=data, error=error)
     except gestexcept.InvitationProcessException as e:
-        if e.error == gesterrors.E_GUA_CUI_INVAU:
+        if e.error in (gesterrors.E_GUA_CUI_INVMXCNTRCH,gesterrors.E_GUA_CUI_OUTINVINT):
             status_c=status.WEB_STATUS_BAD_PARAMETERS
-            data={'message':'Invitation Already Used'}
+            data={'message':'Invitation not available'}
             error=Errors.E_IWAU_CIR_INVAU
         else:
             status_c=status.WEB_STATUS_INTERNAL_ERROR
@@ -192,7 +189,7 @@ def send_invitation_request(email=None, num=1):
     msgs=[]
     for invitation in invitations:
         msgs.append(messages.NewInvitationMailMessage(email=invitation['email'], inv_id=invitation['inv_id']))
-        sent.append((invitation['email'],invitation['inv_id'].hex))
+        sent.append((invitation['email'],invitation['inv_id']))
     resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data=sent)
     for msg in msgs:
         resp.add_message(msg)

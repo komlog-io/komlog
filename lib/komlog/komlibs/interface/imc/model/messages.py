@@ -1315,7 +1315,7 @@ class NewInvitationMailMessage(IMCMessage):
 
     @inv_id.setter
     def inv_id(self, inv_id):
-        if args.is_valid_uuid(inv_id):
+        if args.is_valid_string(inv_id):
             self._inv_id = inv_id
         else:
             raise exceptions.BadParametersException(error=Errors.E_IIMM_NEWINV_IINV)
@@ -1323,7 +1323,7 @@ class NewInvitationMailMessage(IMCMessage):
     @classmethod
     def load_from_serialization(cls, msg):
         try:
-            m_type, email, h_inv_id = msg.split('|')
+            m_type, email, inv_id = msg.split('|')
         except ValueError:
             raise exceptions.BadParametersException(error=Errors.E_IIMM_NEWINV_ELFS)
         except AttributeError:
@@ -1331,14 +1331,10 @@ class NewInvitationMailMessage(IMCMessage):
         else:
             if not m_type == cls._type_.value:
                 raise exceptions.BadParametersException(error=Errors.E_IIMM_NEWINV_IST)
-            if not args.is_valid_hex_uuid(h_inv_id):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_NEWINV_IHINV)
-            email = email
-            inv_id = uuid.UUID(h_inv_id)
             return cls(email=email, inv_id=inv_id)
 
     def to_serialization(self):
-        return '|'.join((self._type_.value, self._email, self._inv_id.hex))
+        return '|'.join((self._type_.value, self._email, self._inv_id))
 
 class ForgetMailMessage(IMCMessage):
     _type_ = Messages.FORGET_MAIL_MESSAGE

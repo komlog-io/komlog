@@ -18,10 +18,10 @@ def send_welcome_mail(usermail, code):
         return False
 
 def send_invitation_mail(to, inv_id):
-    if not arguments.is_valid_email(to) or not arguments.is_valid_uuid(inv_id):
+    if not arguments.is_valid_email(to) or not arguments.is_valid_string(inv_id):
         return False
     mailargs={'to_address':to,
-              'inv_id':inv_id.hex,
+              'inv_id':inv_id,
               'domain':config.get(options.MAIL_DOMAIN)
              }
     mailmessage=mailmessages.get_message(mailtypes.NEW_INVITATION,mailargs)

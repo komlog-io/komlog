@@ -25,6 +25,7 @@ from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
+from komlog.komlibs.general.string import stringops
 from komlog.komlibs.payment import api as paymentapi
 
 
@@ -38,7 +39,7 @@ def auth_user(username, password):
         raise exceptions.UserNotFoundException(error=Errors.E_GUA_AUU_UNF)
     return crypto.verify_password(password, user.password, user.uid.bytes)
 
-def create_user(username, password, email, sid=None, token=None):
+def create_user(username, password, email, inv_id=None, sid=None, token=None):
     '''This function creates a new user in the database'''
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_IU)
@@ -46,6 +47,8 @@ def create_user(username, password, email, sid=None, token=None):
         raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_IP)
     if not args.is_valid_email(email):
         raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_IE)
+    if inv_id != None and not args.is_valid_string(inv_id):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_IINV)
     if sid!= None and not args.is_valid_int(sid):
         raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_ISID)
     if token != None and not args.is_valid_string(token):
@@ -69,6 +72,16 @@ def create_user(username, password, email, sid=None, token=None):
     segfare = cassapisegment.get_user_segment_fare(sid=sid)
     if segfare != None and segfare.amount > 0 and token == None:
         raise exceptions.BadParametersException(error=Errors.E_GUA_CRU_TOKNEED)
+    if inv_id != None:
+        inv_info = cassapiuser.get_invitation_info(inv_id=inv_id)
+        if inv_info == None or inv_info.state != InvitationStates.ENABLED:
+            raise exceptions.InvitationNotFoundException(error=Errors.E_GUA_CRU_INVNF)
+        if inv_info.count >= inv_info.max_count:
+            raise exceptions.InvitationProcessException(error=Errors.E_GUA_CRU_INVMXCNTRCH)
+        if (inv_info.active_from and now.time<inv_info.active_from.time) or (inv_info.active_until and now.time>inv_info.active_until.time):
+            raise exceptions.InvitationProcessException(error=Errors.E_GUA_CRU_OUTINVINT)
+        if not cassapiuser.increment_invitation_used_count(inv_id=inv_id, increment=1):
+            raise exceptions.InvitationProcessException(error=Errors.E_GUA_CRU_EINCINVCNT)
     user=ormuser.User(username=username, uid=uid, password=hpassword, email=email, segment=sid, creation_date=now, state=UserStates.PREACTIVE)
     try:
         if token != None:
@@ -77,6 +90,8 @@ def create_user(username, password, email, sid=None, token=None):
                 raise exceptions.UserCreationException(error=Errors.E_GUA_CRU_ECREPAY)
         code=crypto.get_random_string(size=32)
         signup_info=ormuser.SignUp(username=user.username, code=code, email=user.email, creation_date=user.creation_date)
+        if inv_id != None:
+            signup_info.inv_id = inv_id
         billing_day = timeuuid.get_datetime_from_uuid1(now).day
         last_billing = timeuuid.min_uuid_from_time(timeuuid.get_unix_timestamp(now))
         if (cassapiuser.new_user(user=user) and
@@ -88,12 +103,16 @@ def create_user(username, password, email, sid=None, token=None):
             cassapiuser.delete_user(username=user.username)
             cassapiuser.delete_signup_info(username=user.username)
             cassapiuser.delete_user_billing_info(uid=user.uid)
+            if inv_id != None:
+                cassapiuser.increment_invitation_used_count(inv_id=inv_id, increment=-1)
             return None
     except:
         paymentapi.delete_customer(uid=user.uid)
         cassapiuser.delete_user(username=user.username)
         cassapiuser.delete_signup_info(username=user.username)
         cassapiuser.delete_user_billing_info(uid=user.uid)
+        if inv_id != None:
+            cassapiuser.increment_invitation_used_count(inv_id=inv_id, increment=-1)
         raise
 
 def confirm_user(email, code):
@@ -205,14 +224,29 @@ def register_invitation_request(email):
         now=timeuuid.uuid1()
         request=ormuser.InvitationRequest(email=email, date=now, state=InvitationRequestStates.REGISTERED)
         try:
-            return cassapiuser.insert_invitation_request(invitation_request=request)
+            return cassapiuser.new_invitation_request(invitation_request=request)
         except:
             cassapiuser.delete_invitation_request(email=email)
             raise
     else:
-        return True # request already registered
+        if request.state == InvitationRequestStates.REGISTERED:
+            return True #invitation registered, not sent yet
+        else:
+            if request.inv_id != None:
+                inv_info = cassapiuser.get_invitation_info(inv_id = request.inv_id)
+                if inv_info and inv_info.count > 0:
+                    raise exceptions.UserUnsupportedOperationException(error=Errors.E_GUA_RIR_UAUAI)
+                else:
+                    cassapiuser.update_invitation_info_state(request.inv_id, InvitationStates.DISABLED)
+            now=timeuuid.uuid1()
+            request=ormuser.InvitationRequest(email=email, date=now, state=InvitationRequestStates.REGISTERED)
+            try:
+                return cassapiuser.insert_invitation_request(invitation_request=request)
+            except:
+                cassapiuser.delete_invitation_request(email=email)
+                raise
 
-def generate_user_invitations(email=None, num=1):
+def generate_user_invitations(email=None, num=1, max_count=1, active_from=None, active_until=None):
     ''' generate_user_invitations is used to provision a new invitation in initial state
         in the system.
         - If email is passed, the invitation its associtated to the specified email, if not
@@ -223,10 +257,16 @@ def generate_user_invitations(email=None, num=1):
         
         This function returns an array with as many invitations as requested. in JSON format
         as this example:
-        [{'email':'email@example.com','inv_id':uuid.UUID4() generated},...]
+        [{'email':'email@example.com','inv_id':'invitation string'},...]
     '''
     if email is not None and not args.is_valid_email(email):
         raise exceptions.BadParametersException(error=Errors.E_GUA_GUI_IEMAIL)
+    if not args.is_valid_int(max_count):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_GUI_IMAXCNT)
+    if active_from != None and not args.is_valid_date(active_from):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_GUI_IACTF)
+    if active_until != None and not args.is_valid_date(active_until):
+        raise exceptions.BadParametersException(error=Errors.E_GUA_GUI_IACTU)
     generated=[]
     regs=[]
     if num>1 or (num==1 and email is None):
@@ -236,148 +276,61 @@ def generate_user_invitations(email=None, num=1):
     elif email is not None:
         request=cassapiuser.get_invitation_request(email=email)
         if not request:
-            request=ormuser.InvitationRequest(email=email, date=timeuuid.uuid1(), state=InvitationRequestStates.REGISTERED)
-            try:
-                if cassapiuser.insert_invitation_request(request):
-                    regs.append(request)
-            except cassexcept.KomcassException:
-                cassapiuser.delete_invitation_request(email=email)
+            register_invitation_request(email=email)
+            request=cassapiuser.get_invitation_request(email=email)
+            if request:
+                regs.append(request)
+        elif request.inv_id != None:
+            inv_info = cassapiuser.get_invitation_info(inv_id=request.inv_id)
+            if inv_info and inv_info.count > 0:
+                raise exceptions.UserUnsupportedOperationException(error=Errors.E_GUA_GUI_UAUAI)
+            else:
+                cassapiuser.update_invitation_info_state(request.inv_id, InvitationStates.DISABLED)
+                regs.append(request)
         else:
             regs.append(request)
     for request in regs:
-        invitation=ormuser.Invitation(inv_id=uuid.uuid4(), date=timeuuid.uuid1(),state=InvitationStates.UNUSED)
+        registered_invitation = False
+        retry = 0
+        while registered_invitation is False:
+            inv_id = stringops.get_randomstring(length=10)
+            invitation=ormuser.Invitation(inv_id=inv_id, creation_date=timeuuid.uuid1(),state=InvitationStates.ENABLED,max_count=max_count, active_from=active_from, active_until=active_until)
+            if cassapiuser.new_invitation_info(invitation):
+                registered_invitation = True
+            else:
+                if retry>=5:
+                    raise exceptions.InvitationProcessException(error=Errors.E_GUA_GUI_ECINV)
+                retry+=1
         request.inv_id=invitation.inv_id
         request.state=InvitationRequestStates.ASSOCIATED
         try:
-            if cassapiuser.insert_invitation_request(request) and cassapiuser.insert_invitation_info(invitation):
+            if cassapiuser.insert_invitation_request(request):
                 generated.append({'email':request.email,'inv_id':request.inv_id})
             else:
-                cassapiuser.delete_invitation_info(inv_id=invitation.inv_id, date=invitation.date)
+                cassapiuser.delete_invitation_info(inv_id=invitation.inv_id)
                 request.inv_id=None
                 request.state=InvitationRequestStates.REGISTERED
                 cassapiuser.insert_invitation_request(request)
-        except cassexcept.KomcassException:
-            cassapiuser.delete_invitation_info(inv_id=invitation.inv_id, date=invitation.date)
+        except:
+            cassapiuser.delete_invitation_info(inv_id=invitation.inv_id)
             request.inv_id=None
             request.state=InvitationRequestStates.REGISTERED
             cassapiuser.insert_invitation_request(request)
     return generated
 
-def create_user_by_invitation(username, password, email, inv_id, sid=None, token=None):
-    ''' This function creates a new user in the database if invitation is valid '''
-    tran_id=start_invitation_process(inv_id=inv_id)
-    user_info=None
-    try:
-        user_info=create_user(username=username, password=password, email=email, sid=sid, token=token)
-        if user_info:
-            end_invitation_process(inv_id=inv_id, tran_id=tran_id)
-        else:
-            initialize_invitation(inv_id=inv_id)
-    except:
-        if user_info:
-            cassapiuser.delete_user(username=user_info['username'])
-            cassapiuser.delete_signup_info(username=user_info['username'])
-        undo_invitation_transactions(inv_id=inv_id, tran_id=tran_id)
-        raise
-    else:
-        return user_info
-
-def start_invitation_process(inv_id):
-    if not args.is_valid_uuid(inv_id):
-        raise exceptions.BadParametersException(error=Errors.E_GUA_SIP_IINV)
-    invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-    if len(invitation_info)==0:
-        raise exceptions.InvitationNotFoundException(error=Errors.E_GUA_SIP_INVNF)
-    elif len(invitation_info)>1:
-        raise exceptions.InvitationProcessException(error=Errors.E_GUA_SIP_INVAU)
-    elif invitation_info[0].state == InvitationStates.UNUSED and invitation_info[0].tran_id == None:
-        now=timeuuid.uuid1()
-        tran_id=uuid.uuid4()
-        new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=InvitationStates.USING, tran_id=tran_id)
-        try:
-            if not cassapiuser.insert_invitation_info(invitation_info=new_info):
-                raise exceptions.InvitationProcessException(error=Errors.E_GUA_SIP_EIII)
-            return tran_id
-        except:
-            cassapiuser.delete_invitation_info(inv_id=inv_id, date=now)
-            raise
-    else:
-        raise exceptions.InvitationProcessException(error=Errors.E_GUA_SIP_ISNE)
-
-def end_invitation_process(inv_id, tran_id):
-    if not args.is_valid_uuid(inv_id):
-        raise exceptions.BadParametersException(error=Errors.E_GUA_EIP_IINV)
-    if not args.is_valid_uuid(tran_id):
-        raise exceptions.BadParametersException(error=Errors.E_GUA_EIP_ITRN)
-    invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-    if len(invitation_info)==0:
-        raise exceptions.InvitationNotFoundException(error=Errors.E_GUA_EIP_INVNF)
-    elif len(invitation_info)==1:
-        raise exceptions.InvitationProcessException(error=Errors.E_GUA_EIP_INUE)
-    else:
-        using_found=False
-        for reg in invitation_info:
-            if reg.state==InvitationStates.USING:
-                if reg.tran_id != tran_id:
-                    raise exceptions.InvitationProcessException(error=Errors.E_GUA_EIP_RCF)
-                else:
-                    using_found=True
-        if not using_found:
-            raise exceptions.InvitationProcessException(error=Errors.E_GUA_EIP_SNF)
-        else:
-            now=timeuuid.uuid1()
-            new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=InvitationStates.USED, tran_id=tran_id)
-            try:
-                if not cassapiuser.insert_invitation_info(invitation_info=new_info):
-                    raise exceptions.InvitationProcessException(error=Errors.E_GUA_EIP_EIII)
-            except:
-                cassapiuser.delete_invitation_info(inv_id=new_info.inv_id, date=now)
-                raise
-        return True
-
-def undo_invitation_transactions(inv_id, tran_id):
-    if not args.is_valid_uuid(inv_id):
-        raise exceptions.BadParametersException(error=Errors.E_GUA_UIT_IINV)
-    if not args.is_valid_uuid(tran_id):
-        raise exceptions.BadParametersException(error=Errors.E_GUA_UIT_ITRN)
-    invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-    if len(invitation_info)==0:
-        raise exceptions.InvitationNotFoundException(error=Errors.E_GUA_UIT_INVNF)
-    for reg in invitation_info:
-        if reg.tran_id==tran_id:
-            cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
-    return True
-
-def initialize_invitation(inv_id):
-    if not args.is_valid_uuid(inv_id):
-        raise exceptions.BadParametersException(error=Errors.E_GUA_II_IINV)
-    invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-    if len(invitation_info)==0:
-        raise exceptions.InvitationNotFoundException(error=Errors.E_GUA_II_INVNF)
-    for reg in invitation_info:
-        cassapiuser.delete_invitation_info(inv_id=inv_id, date=reg.date)
-    now=timeuuid.uuid1()
-    new_info=ormuser.Invitation(inv_id=inv_id, date=now, state=InvitationStates.UNUSED)
-    try:
-        if not cassapiuser.insert_invitation_info(invitation_info=new_info):
-            raise exceptions.InvitationProcessException(error=Errors.E_GUA_II_EIII)
-    except:
-        cassapiuser.delete_invitation_info(inv_id=new_info.inv_id, date=now)
-        raise
-    return True
-
 def check_unused_invitation(inv_id):
-    if not args.is_valid_uuid(inv_id):
+    if not args.is_valid_string(inv_id):
         raise exceptions.BadParametersException(error=Errors.E_GUA_CUI_IINV)
-    invitation_info=cassapiuser.get_invitation_info(inv_id=inv_id)
-    if len(invitation_info)==0:
+    now = timeuuid.uuid1()
+    inv_info=cassapiuser.get_invitation_info(inv_id=inv_id)
+    if inv_info == None or inv_info.state == InvitationStates.DISABLED:
         raise exceptions.InvitationNotFoundException(error=Errors.E_GUA_CUI_INVNF)
-    elif len(invitation_info)>1:
-        raise exceptions.InvitationProcessException(error=Errors.E_GUA_CUI_INVAU)
-    elif len(invitation_info)==1 and invitation_info[0].state==InvitationStates.UNUSED:
-        return True
+    elif inv_info.count >= inv_info.max_count:
+        raise exceptions.InvitationProcessException(error=Errors.E_GUA_CUI_INVMXCNTRCH)
+    elif (inv_info.active_from and now.time<inv_info.active_from.time) or (inv_info.active_until and now.time>inv_info.active_until.time):
+        raise exceptions.InvitationProcessException(error=Errors.E_GUA_CUI_OUTINVINT)
     else:
-        raise exceptions.InvitationProcessException(error=Errors.E_GUA_CUI_INVIS)
+        return True
 
 def register_forget_request(username=None, email=None):
     ''' register_forget_request is used to store a request when a user wants to reset

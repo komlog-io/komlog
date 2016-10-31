@@ -92,7 +92,8 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     msgs.append(msg2)
         response3 = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response3, webresp.WebInterfaceResponse))
-        self.assertEqual(response3.status, status.WEB_STATUS_ACCESS_DENIED)
+        self.assertEqual(response3.error, Errors.E_IWAU_NUSR_UAEU.value)
+        self.assertEqual(response3.status, status.WEB_STATUS_NOT_ALLOWED)
 
     def test_new_user_request_failure_invalid_username(self):
         ''' new_user_request should fail if username is invalid'''
@@ -162,13 +163,62 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
+    def test_new_user_request_failure_with_invitation_already_used(self):
+        ''' new_user_request should fail if invitation is already used '''
+        username = 'test_new_user_request_failure_with_invitation_already_used'
+        password = 'password'
+        email = username+'@komlog.org'
+        invitation=gestuserapi.generate_user_invitations(email=email)
+        invitation=invitation[0]['inv_id']
+        response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.data['uid'],response2.data['uid'])
+        self.assertEqual(username,response2.data['username'])
+        self.assertEqual(email,response2.data['email'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email)
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        username=username+'_other'
+        email=username+'@komlog.io'
+        response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
+        self.assertEqual(response.error, Errors.E_IWAU_NUSR_INVAU.value)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_ALLOWED)
+
+    def test_new_user_request_failure_with_invitation_out_of_active_interval(self):
+        ''' new_user_request should fail if invitation is not active '''
+        username = 'test_new_user_request_failure_with_invitation_out_of_active_interval'
+        password = 'password'
+        email = username+'@komlog.org'
+        active_from=timeuuid.uuid1(seconds=1)
+        active_until=timeuuid.uuid1(seconds=2)
+        invitation=gestuserapi.generate_user_invitations(email=email, active_from=active_from, active_until=active_until)
+        invitation=invitation[0]['inv_id']
+        response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
+        self.assertEqual(response.error, Errors.E_IWAU_NUSR_INVAU.value)
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_ALLOWED)
+
     def test_new_user_request_success_with_invitation(self):
         ''' new_user_request should succeed if invitation_request is True and invitation exists and is unused '''
         username = 'test_new_user_request_success_with_invitation_user'
         password = 'password'
         email = username+'@komlog.org'
         invitation=gestuserapi.generate_user_invitations(email=email)
-        invitation=invitation[0]['inv_id'].hex
+        invitation=invitation[0]['inv_id']
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
@@ -199,7 +249,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         invitation=gestuserapi.generate_user_invitations(email=email)
-        invitation=invitation[0]['inv_id'].hex
+        invitation=invitation[0]['inv_id']
         segment = '1'
         token = stripe.Token.create(
             card={
@@ -240,7 +290,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         invitation=gestuserapi.generate_user_invitations(email=email)
-        invitation=invitation[0]['inv_id'].hex
+        invitation=invitation[0]['inv_id']
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
@@ -268,8 +318,8 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
-        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
-        self.assertEqual(response.data, {'message':'Invitation Already Used'})
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_ALLOWED)
+        self.assertEqual(response.data, {'message':'Invitation not available'})
 
     def test_confirm_user_request_success(self):
         ''' confirm_user_request should succeed if arguments are valid and the user state is set to activated '''
@@ -607,7 +657,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
 
     def test_check_invitation_request_failure_invalid_invitation(self):
         ''' check_invitation_request should fail if invitation is invalid '''
-        invitations = ['u@ser@komlog.org', 'invalid_email_ñ@domain.com','email@.com','.@domain.com','my email@domain.com','email . @email.com',234234,None,{'a':'dict'}, ['a list',],('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        invitations = [234234,None,{'a':'dict'}, ['a list',],('a','tuple'),uuid.uuid4(), uuid.uuid1(),12.12,{'set'}]
         for invitation in invitations:
             response=userapi.check_invitation_request(invitation=invitation)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
@@ -626,7 +676,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         invitation=gestuserapi.generate_user_invitations(email=email)
-        invitation=invitation[0]['inv_id'].hex
+        invitation=invitation[0]['inv_id']
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
@@ -655,13 +705,26 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
         self.assertEqual(response.error, Errors.E_IWAU_CIR_INVAU.value)
 
+    def test_check_invitation_request_failure_out_of_invitation_active_interval(self):
+        ''' check_invitation_request should fail if invitation is out of invitation active interval '''
+        username = 'test_check_invitation_request_failure_out_of_invitation_active_interval'
+        password = 'password'
+        email = username+'@komlog.org'
+        active_from=timeuuid.uuid1(seconds=1)
+        active_until=timeuuid.uuid1(seconds=2)
+        invitation=gestuserapi.generate_user_invitations(email=email, active_from=active_from, active_until=active_until)
+        invitation=invitation[0]['inv_id']
+        response=userapi.check_invitation_request(invitation=invitation)
+        self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+        self.assertEqual(response.error, Errors.E_IWAU_CIR_INVAU.value)
+
     def test_check_invitation_request_success(self):
         ''' check_invitation_request should succeed if invitation exists and is unused '''
         username = 'test_check_invitation_request_success'
         password = 'password'
         email = username+'@komlog.org'
         invitation=gestuserapi.generate_user_invitations(email=email)
-        invitation=invitation[0]['inv_id'].hex
+        invitation=invitation[0]['inv_id']
         response=userapi.check_invitation_request(invitation=invitation)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.error, Errors.OK.value)
@@ -700,8 +763,8 @@ class InterfaceWebApiUserTest(unittest.TestCase):
             for msg in msgs:
                 if msg.type == messages.Messages.NEW_INV_MAIL_MESSAGE:
                     self.assertEqual(msg.email, email)
-                    self.assertEqual(msg.inv_id, uuid.UUID(response.data[0][1]))
-                    self.assertTrue(args.is_valid_uuid(msg.inv_id))
+                    self.assertEqual(msg.inv_id, response.data[0][1])
+                    self.assertTrue(args.is_valid_string(msg.inv_id))
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)

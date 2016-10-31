@@ -1,5 +1,3 @@
-#coding: utf-8
-
 '''
 
 library for various general functions used along the code
@@ -12,5 +10,5 @@ related with string management
 import string
 import random
 
-def get_randomstring(size=6, chars=string.ascii_uppercase + string.digits):
-    return ''+''.join(random.choice(chars) for x in range(size))
+def get_randomstring(length=6, chars=string.ascii_letters + string.digits + '-_'):
+    return ''+''.join(random.SystemRandom().choice(chars) for x in range(length))

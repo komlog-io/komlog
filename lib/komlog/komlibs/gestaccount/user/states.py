@@ -12,9 +12,8 @@ class UserStates(int, Enum):
     ACTIVE    = 1
 
 class InvitationStates(int, Enum):
-    UNUSED = 0
-    USING  = 1
-    USED   = 2
+    ENABLED = 0
+    DISABLED = 1
 
 class InvitationRequestStates(int, Enum):
     REGISTERED = 0

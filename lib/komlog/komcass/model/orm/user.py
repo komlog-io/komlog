@@ -5,10 +5,11 @@ Created on 01/10/2014
 '''
 
 class SignUp:
-    def __init__(self, username, code, email, creation_date, utilization_date=None):
+    def __init__(self, username, email, code, creation_date, inv_id=None, utilization_date=None):
         self.username=username
-        self.code=code
         self.email=email
+        self.code=code
+        self.inv_id = inv_id
         self.creation_date=creation_date
         self.utilization_date=utilization_date
 
@@ -34,11 +35,14 @@ class StripeInfo:
         self.stripe_id=stripe_id
 
 class Invitation:
-    def __init__(self, inv_id, date, state, tran_id=None):
+    def __init__(self, inv_id, creation_date, state, max_count, active_from=None, active_until=None, count=0):
         self.inv_id=inv_id
-        self.date=date
+        self.creation_date=creation_date
         self.state=state
-        self.tran_id=tran_id
+        self.count = count
+        self.max_count = max_count
+        self.active_from = active_from
+        self.active_until = active_until
 
 class InvitationRequest:
     def __init__(self, email, date, state, inv_id=None):
