@@ -21,14 +21,10 @@ class Mailer(object):
     Use login() to log in with a username and password.
     """
 
-    def __init__(self, host='localhost'):
-        self.host = ''+host
-        self._usr = None
-        self._pwd = None
-
-    def login(self, usr, pwd):
-        self._usr = usr
-        self._pwd = pwd
+    def __init__(self, user, password, server='localhost'):
+        self.server = server
+        self.user = user
+        self.password = password
 
     def send(self, msg):
         """
@@ -40,25 +36,20 @@ class Mailer(object):
         mailer.send([msg1, msg2, msg3])
         """
         try:
-            logging.logger.debug('Creating SMTP Server to: '+self.host)
-            #server = smtplib.SMTP(self.host)
-            server = smtplib.SMTP_SSL(self.host,465)
+            logging.logger.debug('Creating SMTP Server to: '+self.server)
+            server = smtplib.SMTP(self.server,587)
             logging.logger.debug('EHLO')
             server.ehlo()
-            #server.starttls()
-            server.ehlo()
-
-            if self._usr and self._pwd:
-                logging.logger.debug('SMTP LOGIN usr: '+self._usr)
-                server.login(self._usr, self._pwd)
-
+            server.starttls()
+            logging.logger.debug('SMTP LOGIN usr: '+self.user)
+            server.login(self.user, self.password)
             try:
                 for m in msg:
                     logging.logger.debug('SMTP sending message: '+m)
                     self._send(server, m)
             except TypeError:
                 self._send(server, msg)
-            server.quit()
+            server.close()
             logging.logger.debug('SMTP message sent OK')
             return True
         except Exception as e:
@@ -82,8 +73,7 @@ def initialize_mailer():
     if not server or not user or not password:
         logging.logger.error('Error loading mail server parameters')
         return False
-    mailer=Mailer(server)
-    mailer.login(user, password)
+    mailer=Mailer(user=user, password=password, server=server)
     logging.logger.debug('Mail connection initialized successfully')
     return True
 

@@ -35,9 +35,9 @@ subjects={
 }
 
 fromaddress={
-    0:'no-reply@komlog.io',
-    1:'no-reply@komlog.io',
-    2:'no-reply@komlog.io',
+    0:'Komlog <no-reply@komlog.io>',
+    1:'Komlog <no-reply@komlog.io>',
+    2:'Komlog <no-reply@komlog.io>',
 }
 
 toaddress={
