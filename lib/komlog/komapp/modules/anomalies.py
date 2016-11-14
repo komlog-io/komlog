@@ -2,12 +2,16 @@ from komlog.komapp.modules import modules
 
 
 class Anomalies(modules.Module):
-    def __init__(self, instance_number):
+    def __init__(self, instance):
         super().__init__(
             name=self.__class__.__name__,
-            instance_number=instance_number,
+            instance=instance,
             needs_db=True,
             needs_msgbus=True,
             tasks=[self._messages_listener]
         )
+
+def get_module(instance):
+    mod = Anomalies(instance=instance)
+    return mod
 

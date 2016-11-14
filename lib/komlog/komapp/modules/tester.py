@@ -11,10 +11,10 @@ from komlog.komlibs.payment import api as paymentapi
 
 
 class Tester(modules.Module):
-    def __init__(self, instance_number):
+    def __init__(self, instance):
         super().__init__(
             name=self.__class__.__name__,
-            instance_number=instance_number,
+            instance=instance,
             needs_db=True,
             needs_msgbus=True,
             needs_mailer=True,
@@ -30,7 +30,7 @@ class Tester(modules.Module):
 
     def start(self):
         signal.signal(signal.SIGTERM,self.signal_handler)
-        if not logging.initialize_logging(self.name+'_'+str(self.instance_number)):
+        if not logging.initialize_logging(self.name+'_'+str(self.instance)):
             exit()
         logging.logger.info('Module started')
         keyspace = config.get(options.CASSANDRA_KEYSPACE)
@@ -45,7 +45,7 @@ class Tester(modules.Module):
         if not casscon.initialize_session():
             logging.logger.error('Error initializing cassandra session')
             exit()
-        if not msgbus.initialize_msgbus(self.name, self.instance_number, self.hostname):
+        if not msgbus.initialize_msgbus(self.name, self.instance, self.hostname):
             logging.logger.error('Error initializing broker session')
             exit()
         if not mailcon.initialize_mailer():
@@ -91,5 +91,9 @@ class Tester(modules.Module):
             pass
         else:
             creation.drop_database(cluster, keyspace)
-        logging.logger.info('Module '+str(self.name)+'-'+str(self.instance_number)+' exiting')
+        logging.logger.info('Module '+str(self.name)+'-'+str(self.instance)+' exiting')
+
+def get_module(instance):
+    mod = Tester(instance=instance)
+    return mod
 

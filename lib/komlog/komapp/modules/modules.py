@@ -8,6 +8,7 @@ import socket
 import signal
 import asyncio
 import functools
+import traceback
 from komlog.komfig import logging
 from komlog.komcass import connection as casscon
 from komlog.komimc import api as msgapi
@@ -18,40 +19,25 @@ from komlog.komlibs.payment import api as paymentapi
 loop = asyncio.get_event_loop()
 
 class Module(object):
-    def __init__(self, name, instance_number, needs_db=False, needs_msgbus=False, needs_mailer=False, needs_payment=False, tasks=[]):
+    def __init__(self, name, instance, needs_db=False, needs_msgbus=False, needs_mailer=False, needs_payment=False, tasks=[]):
         self.needs_db=needs_db
         self.needs_msgbus=needs_msgbus
         self.needs_mailer=needs_mailer
         self.needs_payment=needs_payment
         self.name = name
-        self.instance_number = instance_number
+        self.instance = instance
         self.hostname = socket.gethostname()
         self.tasks=tasks
-
-    def signal_handler(self, signum):
-        if signum == signal.SIGTERM:
-            logging.logger.info('SIGTERM received, terminating')
-            self.shutdown()
-        elif signum == signal.SIGINT:
-            logging.logger.info('SIGINT received, terminating')
-            self.shutdown()
-        else:
-            logging.logger.info('signal '+str(signum)+' received, ignoring')
+        self._my_tasks = []
 
     def start(self):
-        loop.add_signal_handler(signal.SIGTERM,
-            functools.partial(self.signal_handler, signal.SIGTERM))
-        loop.add_signal_handler(signal.SIGINT,
-            functools.partial(self.signal_handler, signal.SIGINT))
-        if not logging.initialize_logging(self.name+'_'+str(self.instance_number)):
-            exit()
         logging.logger.info('Module started')
         if self.needs_db:
             if not casscon.initialize_session():
                 logging.logger.error('Error initializing cassandra session')
                 exit()
         if self.needs_msgbus:
-            if not msgbus.initialize_msgbus(self.name, self.instance_number, self.hostname):
+            if not msgbus.initialize_msgbus(self.name, self.instance, self.hostname):
                 logging.logger.error('Error initializing broker session')
                 exit()
         if self.needs_mailer:
@@ -62,34 +48,40 @@ class Module(object):
                 logging.logger.error('Error initializing payment')
                 exit()
         for task in self.tasks:
-            loop.create_task(task())
+            self._my_tasks.append(loop.create_task(task()))
         self.loop()
         self.terminate()
-    
-    def loop(self):
-        try:
-            loop.run_forever()
-        except:
-           pass
 
-    def shutdown(self):
+    def stop(self):
         for task in self.tasks:
-            loop.create_task(task(start=False))
+            self._my_tasks.append(loop.create_task(task(start=False)))
         deadline = loop.time() + 10
         def stop_loop():
             now = loop.time()
             logging.logger.info('waiting for loop finishing requests')
-            if now < deadline and len(asyncio.Task.all_tasks())>0:
-                logging.logger.info('No paramos porque existen estas tareas: '+str(asyncio.Task.all_tasks()))
+            for task in self._my_tasks:
+                if not task.done():
+                    logging.logger.info('Pending tasks exists, waiting... ')
+                    break
+            else:
+                logging.logger.info('Stopping loop')
+                loop.stop()
+                return
+            if now < deadline:
                 loop.call_later(1, stop_loop)
-            elif len(asyncio.Task.all_tasks())==0:
+            else:
+                logging.logger.info('Timeout expired waiting for tasks to finish.. forcing it')
                 loop.stop()
-                logging.logger.info('loop stopped')
-            elif now > deadline:
-                logging.logger.info('Timeout expired waiting for loop shutdown, forcing it')
-                loop.stop()
-                logging.logger.info('loop stopped')
         stop_loop()
+
+    def loop(self):
+        try:
+            loop.run_forever()
+        except:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
+        self.terminate()
 
     def terminate(self):
         if self.needs_db:
@@ -104,7 +96,7 @@ class Module(object):
         if self.needs_payment:
             logging.logger.info('Closing mailer connection')
             paymentapi.disable_payment()
-        logging.logger.info('Module '+str(self.name)+'-'+str(self.instance_number)+' exiting')
+        logging.logger.info('Module '+str(self.name)+'-'+str(self.instance)+' exiting')
         loop.close()
 
     async def _messages_listener(self, start=True):
@@ -118,12 +110,12 @@ class Module(object):
                         if response:
                             await msgapi.send_response_messages(response)
                         else:
-                            logging.logger.error('msgresult is None: '+message.type)
+                            logging.logger.error('msgresult is None: '+message.type.value)
                     except AttributeError:
-                        logging.logger.exception('Exception processing message: '+message.type)
+                        logging.logger.exception('Exception processing message: '+message.type.value)
                     except Exception as e:
                         logging.logger.exception('Exception processing message: '+str(e))
-            logging.logger.exception('Exiting messages listener loop')
+            logging.logger.info('Exiting messages listener loop')
         else:
             self.run = False
 

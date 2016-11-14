@@ -13,10 +13,10 @@ from tornado.platform.asyncio import AsyncIOMainLoop
 loop = asyncio.get_event_loop()
 
 class Webserver(modules.Module):
-    def __init__(self, instance_number):
+    def __init__(self, instance):
         super().__init__(
             self.__class__.__name__,
-            instance_number,
+            instance,
             needs_db=True,
             needs_msgbus=True,
             needs_mailer=False,
@@ -24,7 +24,7 @@ class Webserver(modules.Module):
             tasks=[self._web_server]
         )
         self.params={}
-        self.params['http_listen_port']=int(config.get(options.HTTP_LISTEN_PORT))+self.instance_number if config.get(options.HTTP_LISTEN_PORT) else None
+        self.params['http_listen_port']=int(config.get(options.HTTP_LISTEN_PORT))+self.instance if config.get(options.HTTP_LISTEN_PORT) else None
 
     async def _web_server(self, start=True):
         if start:
@@ -34,4 +34,8 @@ class Webserver(modules.Module):
             self.http_server.listen(self.params['http_listen_port'])
         else:
             self.http_server.stop()
+
+def get_module(instance):
+    mod = Webserver(instance=instance)
+    return mod
 

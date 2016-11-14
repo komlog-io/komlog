@@ -2,20 +2,27 @@
 '''
 Created on 2016/04/01
 
-@author: Komlog Crew
+@author: Komlog Team
 '''
 
-from komlog.komapp import komapp
-from komlog.komapp.modules import lambdas,textmining,anomalies,events,gestconsole,rescontrol,websocketserver,webserver
 import os
+import inspect
+import argparse
+from komlog.komapp import komapp
 
 def main():
-    HOME = os.path.expanduser('~')
-    cfg_file = '.komlog/komlog.cfg'
-    program_name = 'komlog'
-    app = komapp.Komapp(os.path.join(HOME,cfg_file), program_name)
+    exec_file = inspect.getabsfile(main)
+    parser = argparse.ArgumentParser(description='Komlog')
+    parser.add_argument('-c', '--config', help='Configuration file')
+    parser.add_argument('-m', '--module', help='Module name')
+    parser.add_argument('-i', '--instance', help='Module instance')
+    args = parser.parse_args()
+    if args.config == None:
+        HOME = os.path.expanduser('~')
+        cfg_file = '.komlog/komlog.cfg'
+        args.config = os.path.join(HOME,cfg_file)
+    app = komapp.Komapp(exec_file=exec_file, conf_file=args.config, module=args.module, instance=args.instance)
     app.start()
-    
 
 if __name__ == "__main__":
     main() 

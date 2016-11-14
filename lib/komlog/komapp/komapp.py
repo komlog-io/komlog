@@ -6,116 +6,122 @@ Created on 31/12/2012
 import os
 import signal
 import time
+import importlib
+import traceback
+import subprocess
 from komlog.komfig import config, logging, options
-from komlog.komapp.modules import modules
-from multiprocessing import Process
+
 
 class Komapp(object):
-    def __init__(self,conf_file, program_name):
-        self.path, self.conf_file = os.path.split(conf_file)
-        self._program_name=program_name
-        self.modules = []
-        self.processes = []
-        self.run = True
+    def __init__(self, exec_file, conf_file, module, instance):
+        self.exec_file = exec_file
+        self.conf_file = conf_file
+        self.module = module
+        self.instance = instance
+        if module is None and instance is None:
+            self._process_name = 'komlog'
+        else:
+            self._process_name = '-'.join((module,instance))
 
     def signal_handler(self, signum, frame):
         if signum == signal.SIGTERM:
             logging.logger.info('SIGTERM received, terminating')
-            self.run = False
+            self.shutdown()
         else:
             logging.logger.info('signal '+str(signum)+' received, ignoring')
 
     def start(self):
         signal.signal(signal.SIGTERM,self.signal_handler)
+        signal.signal(signal.SIGINT,self.signal_handler)
         self.load_conf_file()
-        if logging.initialize_logging(self._program_name):
+        if logging.initialize_logging(self._process_name):
             logging.logger.info('Configuration file loaded successfully')
-        self.load_modules()
-        self.start_modules()
-        self.loop()
-        self.terminate()
+        if self.module != None and self.instance != None:
+            self.start_module()
+        elif self.module is None and self.instance is None:
+            self.spawn_modules()
+        else:
+            logging.logger.error('Invalid parameters.')
+            logging.logger.error('Pass module and instance parameters or none of them')
+            exit(-1)
 
     def load_conf_file(self):
-        """
-        Load conf_file
-        """
-        if os.path.exists(self.path):
-            if os.path.isdir(self.path):
-                if os.path.isfile(os.path.join(self.path, self.conf_file)):
-                    if not config.initialize_config(os.path.join(self.path, self.conf_file)):
-                        exit()
+        path, filename = os.path.split(self.conf_file)
+        if os.path.exists(path):
+            if os.path.isdir(path):
+                if os.path.isfile(self.conf_file):
+                    if not config.initialize_config(self.conf_file):
+                        exit(-1)
                 else:
-                    print("Not a file: "+os.path.join(self.path, self.conf_file))
-                    exit()
+                    print('Not a file: '+self.conf_file)
+                    exit(-1)
             else:
-                print("Not a directory: "+self.path)
-                exit()
+                print('Not a directory: '+self.path)
+                exit(-1)
         else:
-            print("Directory not found: "+self.path)
-            exit()
+            print('Directory not found: '+self.path)
+            exit(-1)
 
-    def load_modules(self):
-        modules_enabled = []
+    def start_module(self):
+        module_name = '.'.join(('komlog.komapp.modules',self.module))
+        try:
+            m = importlib.import_module(module_name)
+        except:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
+            raise
+        self._mod_obj = m.get_module(instance=int(self.instance))
+        self._mod_obj.start()
+
+    def spawn_modules(self):
+        modules = []
         for module in config.get(options.MODULES).split(','):
             if str(config.get(options.MODULE_ENABLED, module)).lower() == 'yes':
                 instances = config.get(options.MODULE_INSTANCES, module)
                 if not instances:
-                    instances=1
+                    modules.append((module,'0'))
                 else:
-                    instances=int(instances)
-                try:
-                    for c in modules.Module.__subclasses__():
-                        if c.__name__ == module[0].upper()+module[1:]:
-                            for i in range(instances):
-                                modobj = (c(i),i)
-                                modules_enabled.append(modobj)
-                                modobj = None
-                except NameError as e:
-                    logging.logger.exception('Module not found: '+str(e))
-        self.modules = modules_enabled
-
-    def start_modules(self, module=None):
-        if not module:
-            for i,module in enumerate(self.modules):
-                p = Process(target=module[0].start,name=module[0].__class__.__name__+'-'+str(module[1]))
-                logging.logger.info('Starting module: '+str(p))
-                p.start()
-                self.processes.insert(i,p)
-        else:
-            i = self.modules.index(module)
-            if not self.processes[i].is_alive():
-                p = Process(target=module[0].start,name=module[0].__class__.__name__+'-'+str(module[1]))
-                p.start()
-                logging.logger.info('Starting module: '+str(p))
-                self.processes.pop(i)
-                self.processes.insert(i,p)
-            else:
-                logging.logger.error('Trying to start an already running module')
-
-    def loop(self):
+                    instances = int(instances)
+                    for i in range(0,instances):
+                        modules.append((module,str(i)))
+        procs = []
+        for module in modules:
+            args=[self.exec_file,'-c',self.conf_file,'-m',module[0],'-i',module[1]]
+            proc = subprocess.Popen(args, start_new_session=True)
+            procs.append(proc)
+        if len(procs)>0:
+            self.run = True
         while self.run:
             time.sleep(5)
-            for i, process in enumerate(self.processes):
-                logging.logger.debug('Checking Module: '+str(i))
-                if not process.is_alive():
-                    logging.logger.error('Module death detected: '+str(process.pid))
+            for i,proc in enumerate(procs):
+                logging.logger.debug('Checking proc: '+str(proc.args))
+                if proc.poll() != None:
+                    logging.logger.error('Module death detected: '+str(proc.args))
                     if not str(config.get(options.RESTART_MODULES)).lower() == 'no':
-                        logging.logger.error('Starting module: '+str(process.pid))
-                        self.start_modules(self.modules[i])
+                        logging.logger.error('Starting module: '+str(proc.args))
+                        proc = subprocess.Popen(proc.args)
+                        procs.pop(i)
+                        procs.append(proc)
                     else:
-                        self.processes.pop(i)
-                        if len(self.processes)==0:
+                        procs.pop(i)
+                        if len(procs)==0:
                             self.run=False
-                        break
+        for proc in procs:
+            logging.logger.error('Sending Termination signal to process: '+str(proc.args))
+            proc.send_signal(signal.SIGTERM)
+        for proc in procs:
+            try:
+                logging.logger.info('Waiting process termination: '+str(proc.args))
+                proc.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                logging.logger.error('Timeout expired waiting for process termination: '+str(proc.args)+' Killing it.')
+                proc.kill()
+        logging.logger.info('Exiting Komlog, bye bye.')
 
-    def terminate(self):
-        for process in self.processes:
-            logging.logger.info('Sending process SIGTERM signal: '+str(process))
-            process.terminate()
-        for process in self.processes:
-            logging.logger.info('Waiting process '+str(process)+' end...')
-            process.join()
-            logging.logger.info('OK')
-        logging.logger.info('Exiting')
-
+    def shutdown(self):
+        if self.module:
+            self._mod_obj.stop()
+        else:
+            self.run=False
 
