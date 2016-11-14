@@ -89,7 +89,8 @@ setup(name='komlog',
        'bin/komlog-test',
     ],
     data_files=[
-        ('config',['etc/komlog.cfg'])
+        ('config',['etc/komlog.cfg']),
+        ('/lib/systemd/system',['etc/komlog.service'])
     ]
 )
 
