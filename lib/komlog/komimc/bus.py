@@ -31,7 +31,7 @@ class MessageBus:
 
     async def start(self):
         try:
-            self.local = await aioredis.create_pool(self.broker, encoding='utf-8')
+            self.local = await aioredis.create_pool((self.broker,6379), encoding='utf-8')
             self.remotes[self.running_host]=self.local
         except Exception:
             ex_info=traceback.format_exc().splitlines()
@@ -54,7 +54,7 @@ class MessageBus:
             return True
         except aioredis.RedisError:
             try:
-                self.local = await aioredis.create_pool(self.broker,encoding='utf-8')
+                self.local = await aioredis.create_pool((self.broker, 6379),encoding='utf-8')
                 self.remotes[self.running_host]=self.local
                 with (await self.local) as redis:
                     await redis.rpush(addr,komlog_message.to_serialization().encode('utf-8'))
@@ -100,13 +100,19 @@ class MessageBus:
                 await redis.rpush(addr,komlog_message.to_serialization().encode('utf-8'))
         except (KeyError, aioredis.RedisError):
             logging.logger.error('exception sending message to '+host+' addr: '+addr)
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
             try:
-                self.remotes[host] = await aioredis.create_pool(host, encoding='utf-8')
+                self.remotes[host] = await aioredis.create_pool((host, 6379), encoding='utf-8')
                 with (await self.remotes[host]) as redis:
                     await redis.rpush(addr,komlog_message.to_serialization().encode('utf-8'))
                 logging.logger.error('Success in retry sending message to '+host+' addr: '+addr)
             except Exception:
                 logging.logger.error('Error in retry sending message to '+host+' addr: '+addr)
+                ex_info=traceback.format_exc().splitlines()
+                for line in ex_info:
+                    logging.logger.error(line)
                 return False
         except Exception:
             ex_info=traceback.format_exc().splitlines()

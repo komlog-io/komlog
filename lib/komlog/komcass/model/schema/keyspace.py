@@ -5,4 +5,4 @@ This file declares some parameters for the keyspace creation
 '''
 
 KEYSPACE = 'komlog'
-REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 1 }
+REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'DC1' : 1 }
