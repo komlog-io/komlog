@@ -9,10 +9,13 @@ from komlog.komfig import logging, config, options
 
 class Application(tornado.web.Application):
     def __init__(self):
-        debug = config.get(options.TORNADO_DEBUG)
-        debug = True if debug else False
+        autoreload = config.get(options.WEB_AUTORELOAD)
+        autoreload = True if autoreload and autoreload.lower() == 'true' else False
+        debug = config.get(options.LOG_LEVEL)
+        debug = True if debug and debug.lower() == 'debug' else False
         logging.logger.debug('Initializing Application')
         logging.logger.debug(str(settings.SETTINGS))
         logging.logger.debug('Tornado debug_mode: '+str(debug))
-        tornado.web.Application.__init__(self, handlers.HANDLERS, debug=debug, **settings.SETTINGS)
+        logging.logger.debug('autoreload: '+str(autoreload))
+        tornado.web.Application.__init__(self, handlers.HANDLERS, debug=debug, autorelaod=autoreload, **settings.SETTINGS)
 
