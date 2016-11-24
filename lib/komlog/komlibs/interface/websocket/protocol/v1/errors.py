@@ -87,10 +87,12 @@ class Errors(Enum):
     E_IWSPV1MM_UHFU_IURI    = 220400      #: UnHookFromUri. invalid uri
     E_IWSPV1MM_UHFU_ELFD    = 220403      #: UnHookFromUri. error loading from dict
 
-    E_IWSPV1MM_RQDI_IURI    = 220500      #: RequestDataInterval. invalid uri
-    E_IWSPV1MM_RQDI_ISTART  = 220501      #: RequestDataInterval. invalid start
-    E_IWSPV1MM_RQDI_IEND    = 220502      #: RequestDataInterval. invalid end
-    E_IWSPV1MM_RQDI_ELFD    = 220503      #: RequestDataInterval. error loading from dict
+    E_IWSPV1MM_RQDT_IURI    = 220500      #: RequestData. invalid uri
+    E_IWSPV1MM_RQDT_ISTART  = 220501      #: RequestData. invalid start
+    E_IWSPV1MM_RQDT_IEND    = 220502      #: RequestData. invalid end
+    E_IWSPV1MM_RQDT_ELFD    = 220503      #: RequestData. error loading from dict
+    E_IWSPV1MM_RQDT_ECOIN   = 220504      #: RequestData. count or interval needed
+    E_IWSPV1MM_RQDT_ICOUNT  = 220505      #: RequestData. invalid count
 
     E_IWSPV1MM_SDI_IURI     = 220600      #: SendDataInterval. invalid uri
     E_IWSPV1MM_SDI_ISTART   = 220601      #: SendDataInterval. invalid start

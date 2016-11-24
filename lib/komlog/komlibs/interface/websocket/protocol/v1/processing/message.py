@@ -301,15 +301,18 @@ def _process_unhook_from_uri(passport, message):
     return Response(status=status.MESSAGE_EXECUTION_OK)
 
 @exceptions.ExceptionHandler
-def _process_request_data_interval(passport, message):
-    message = modmsg.RequestDataInterval.load_from_dict(message)
+def _process_request_data(passport, message):
+    message = modmsg.RequestData.load_from_dict(message)
     uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
     if not uri_info or uri_info['type'] == vertex.VOID:
         return Response(status=status.RESOURCE_NOT_FOUND, reason='uri '+message.uri+' does not exist', error=Errors.E_IWSPV1PM_PRDI_UNF)
     elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
         return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PRDI_ONA)
     else:
-        if message.start <= message.end:
+        if message.start is None and message.end is None:
+            ii=timeuuid.min_uuid_from_time(1)
+            ie=timeuuid.min_uuid_from_time(timeuuid.get_unix_timestamp(timeuuid.uuid1()))
+        elif message.start <= message.end:
             ii=timeuuid.min_uuid_from_time(message.start.timestamp())
             ie=timeuuid.max_uuid_from_time(message.end.timestamp())
         else:
@@ -336,7 +339,7 @@ def _process_request_data_interval(passport, message):
             error=Errors.OK
             reason='message accepted for processing'
             stat=status.MESSAGE_ACCEPTED_FOR_PROCESSING
-        msg=messages.DataIntervalRequestMessage(sid=passport.sid, uri={'type':uri_info['type'],'id':uri_info['id'],'uri':message.uri}, ii=ii, ie=ie)
+        msg=messages.DataIntervalRequestMessage(sid=passport.sid, uri={'type':uri_info['type'],'id':uri_info['id'],'uri':message.uri}, ii=ii, ie=ie, count=message.count)
         resp=Response(status=stat, reason=reason, error=error)
         resp.add_message(msg)
         return resp

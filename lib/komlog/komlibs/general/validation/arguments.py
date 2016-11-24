@@ -169,8 +169,10 @@ def is_valid_isodate(argument):
     if isinstance(argument, str) and ISODATE.search(argument):
         try:
             t=pd.Timestamp(argument)
+            if t.timestamp()<0:
+                return False
             return True
-        except ValueError:
+        except (ValueError,pd.tslib.OutOfBoundsDatetime):
             return False
     elif isinstance(argument, pd.Timestamp):
         return True

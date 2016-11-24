@@ -3277,6 +3277,18 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
                 messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie)
             self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_IIE)
 
+    def test_DataIntervalRequestMessage_failure_invalid_count(self):
+        ''' DataIntervalRequestMessage creation should fail if count is invalid '''
+        counts=[2323.2342, -1, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4(), uuid.uuid1().hex, json.dumps('username'), 'user\nname','user\tname']
+        uri={'uri':'valid.uri','type':'type','id':uuid.uuid4()}
+        sid=uuid.uuid4()
+        ii=timeuuid.uuid1()
+        ie=timeuuid.uuid1()
+        for count in counts:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_ICOUNT)
+
     def test_DataIntervalRequestMessage_failure_invalid_uri_not_a_dict(self):
         ''' DataIntervalRequestMessage creation should fail if uri is not a dict '''
         uri='uri'
@@ -3382,7 +3394,7 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
 
     def test_DataIntervalRequestMessage_failure_load_from_serialization_invalid_serialization_type(self):
         ''' DataIntervalRequestMessage creation should fail if we pass a string with not the expected type '''
-        msg='|'.join(('WHATEVER','1','2','3','4'))
+        msg='|'.join(('WHATEVER','1','2','3','4','5'))
         with self.assertRaises(exceptions.BadParametersException) as cm:
             messages.DataIntervalRequestMessage.load_from_serialization(msg)
         self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_IST)
@@ -3393,7 +3405,8 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         ii=uuid.uuid1()
         ie=uuid.uuid1()
         uri={'uri':'uri','type':'ds','id':uuid.uuid4().hex}
-        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,'sid.hex',ii.hex,ie.hex,json.dumps(uri)))
+        count=5
+        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,'sid.hex',ii.hex,ie.hex,json.dumps(uri),json.dumps(count)))
         with self.assertRaises(exceptions.BadParametersException) as cm:
             messages.DataIntervalRequestMessage.load_from_serialization(msg)
         self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_IHSID)
@@ -3404,7 +3417,8 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         ii=uuid.uuid1()
         ie=uuid.uuid1()
         uri={'uri':'uri','type':'ds','id':uuid.uuid4().hex}
-        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,'ii.hex',ie.hex,json.dumps(uri)))
+        count=5
+        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,'ii.hex',ie.hex,json.dumps(uri),json.dumps(count)))
         with self.assertRaises(exceptions.BadParametersException) as cm:
             messages.DataIntervalRequestMessage.load_from_serialization(msg)
         self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_IHII)
@@ -3415,7 +3429,8 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         ii=uuid.uuid1()
         ie=uuid.uuid1()
         uri={'uri':'uri','type':'ds','id':uuid.uuid4().hex}
-        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,ii.hex,'ie.hex',json.dumps(uri)))
+        count=5
+        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,ii.hex,'ie.hex',json.dumps(uri),json.dumps(count)))
         with self.assertRaises(exceptions.BadParametersException) as cm:
             messages.DataIntervalRequestMessage.load_from_serialization(msg)
         self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_IHIE)
@@ -3426,10 +3441,23 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         ii=uuid.uuid1()
         ie=uuid.uuid1()
         uri="{'uri':'uri','type':'ds','id':uuid.uuid4().hex}"
-        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,ii.hex,ie.hex,uri))
+        count=5
+        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,ii.hex,ie.hex,uri,json.dumps(count)))
         with self.assertRaises(exceptions.BadParametersException) as cm:
             messages.DataIntervalRequestMessage.load_from_serialization(msg)
         self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_IJSURI)
+
+    def test_DataIntervalRequestMessage_failure_load_from_serialization_invalid_json_count(self):
+        ''' DataIntervalRequestMessage creation should fail if we pass a string with invalid count '''
+        sid=uuid.uuid4()
+        ii=uuid.uuid1()
+        ie=uuid.uuid1()
+        uri={'uri':'uri','type':'ds','id':uuid.uuid4().hex}
+        count=5
+        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,ii.hex,ie.hex,json.dumps(uri),str({count})))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.DataIntervalRequestMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_DIRM_IJSCOUNT)
 
     def test_DataIntervalRequestMessage_success_load_from_serialization(self):
         ''' DataIntervalRequestMessage creation should succeed calling the classmethod load_from_serialization '''
@@ -3438,13 +3466,15 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         ie=uuid.uuid1()
         id1=uuid.uuid4()
         uri={'uri':'uri','type':'ds','id':id1.hex}
-        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,ii.hex,ie.hex,json.dumps(uri)))
+        count=5
+        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,ii.hex,ie.hex,json.dumps(uri),json.dumps(count)))
         obj_uri={'uri':'uri','type':'ds','id':id1}
         obj=messages.DataIntervalRequestMessage.load_from_serialization(msg)
         self.assertEqual(obj.sid,sid)
         self.assertEqual(obj.ii,ii)
         self.assertEqual(obj.ie,ie)
         self.assertEqual(obj.uri,obj_uri)
+        self.assertEqual(obj.count, count)
         self.assertEqual(obj._type_, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
         self.assertTrue(isinstance(obj, messages.DataIntervalRequestMessage))
         self.assertTrue(isinstance(obj, messages.IMCMessage))
@@ -3456,13 +3486,15 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         ie=uuid.uuid1()
         id1=uuid.uuid4()
         uri={'uri':'uri','type':'ds','id':id1.hex}
-        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,ii.hex,ie.hex,json.dumps(uri)))
+        count=5
+        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,ii.hex,ie.hex,json.dumps(uri),json.dumps(count)))
         obj_uri={'uri':'uri','type':'ds','id':id1}
         obj=messages.IMCMessage.load_from_serialization(msg)
         self.assertEqual(obj.sid,sid)
         self.assertEqual(obj.ii,ii)
         self.assertEqual(obj.ie,ie)
         self.assertEqual(obj.uri,obj_uri)
+        self.assertEqual(obj.count,count)
         self.assertEqual(obj._type_, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
         self.assertTrue(isinstance(obj, messages.DataIntervalRequestMessage))
         self.assertTrue(isinstance(obj, messages.IMCMessage))
@@ -3474,13 +3506,15 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         ie=uuid.uuid1()
         id1=uuid.uuid4()
         uri={'uri':'uri','type':'ds','id':id1.hex}
-        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,ii.hex,ie.hex,json.dumps(uri)))
+        count=34
+        msg='|'.join((messages.DataIntervalRequestMessage._type_.value,sid.hex,ii.hex,ie.hex,json.dumps(uri),json.dumps(count)))
         obj_uri={'uri':'uri','type':'ds','id':id1}
         obj=messages.IMCMessage.load_from_serialization(msg)
         self.assertEqual(obj.sid,sid)
         self.assertEqual(obj.ii,ii)
         self.assertEqual(obj.ie,ie)
         self.assertEqual(obj.uri,obj_uri)
+        self.assertEqual(obj.count,count)
         self.assertEqual(obj._type_, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
         self.assertTrue(isinstance(obj, messages.DataIntervalRequestMessage))
         self.assertTrue(isinstance(obj, messages.IMCMessage))
@@ -3490,6 +3524,7 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         self.assertEqual(obj2.ii,ii)
         self.assertEqual(obj2.ie,ie)
         self.assertEqual(obj2.uri,obj_uri)
+        self.assertEqual(obj2.count,count)
         self.assertEqual(obj._type_, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
         self.assertTrue(isinstance(obj2, messages.DataIntervalRequestMessage))
         self.assertTrue(isinstance(obj2, messages.IMCMessage))

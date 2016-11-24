@@ -759,184 +759,259 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             msg=message.UnHookFromUri.load_from_dict(dict_msg)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFU_IURI)
 
-    def test_RequestDataInterval_success(self):
-        ''' Creating a RequestDataInterval object should succeed '''
+    def test_RequestData_success(self):
+        ''' Creating a RequestData object should succeed '''
         uri='valid.uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
-        msg=message.RequestDataInterval(uri=uri, start=start, end=end)
-        self.assertTrue(isinstance(msg, message.RequestDataInterval))
+        count=123
+        msg=message.RequestData(uri=uri, start=start, end=end, count=count)
+        self.assertTrue(isinstance(msg, message.RequestData))
         self.assertEqual(msg.uri, uri)
         self.assertEqual(msg.start, start)
         self.assertEqual(msg.end, end)
+        self.assertEqual(msg.count, count)
         self.assertEqual(msg.v, message.KomlogMessage._version_)
-        self.assertEqual(msg.action, Messages.REQUEST_DATA_INTERVAL)
+        self.assertEqual(msg.action, Messages.REQUEST_DATA)
         expected_dict={
             'v':message.KomlogMessage._version_,
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
                 'start':start.isoformat(),
-                'end':end.isoformat()
+                'end':end.isoformat(),
+                'count':count
             }
         }
         self.assertEqual(msg.to_dict(), expected_dict)
 
-    def test_RequestDataInterval_failure_invalid_uri(self):
-        ''' Creating a RequestDataInterval object fail if uri is invalid '''
+    def test_RequestData_success_no_dates(self):
+        ''' Creating a RequestData object should succeed '''
+        uri='valid.uri'
+        count=123
+        msg=message.RequestData(uri=uri, count=count)
+        self.assertTrue(isinstance(msg, message.RequestData))
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.start, None)
+        self.assertEqual(msg.end, None)
+        self.assertEqual(msg.count, count)
+        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.action, Messages.REQUEST_DATA)
+        expected_dict={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.REQUEST_DATA.value,
+            'payload':{
+                'uri':uri,
+                'start':None,
+                'end':None,
+                'count':count
+            }
+        }
+        self.assertEqual(msg.to_dict(), expected_dict)
+
+    def test_RequestData_success_no_count(self):
+        ''' Creating a RequestData object should succeed '''
+        uri='valid.uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        msg=message.RequestData(uri=uri, start=start, end=end)
+        self.assertTrue(isinstance(msg, message.RequestData))
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.start, start)
+        self.assertEqual(msg.end, end)
+        self.assertEqual(msg.count, None)
+        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.action, Messages.REQUEST_DATA)
+        expected_dict={
+            'v':message.KomlogMessage._version_,
+            'action':Messages.REQUEST_DATA.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'count':None
+            }
+        }
+        self.assertEqual(msg.to_dict(), expected_dict)
+
+    def test_RequestData_failure_no_count_no_complete_interval(self):
+        ''' Creating a RequestData object should fail if no count and no complete interval is passed'''
+        uri='valid.uri'
+        end=pd.Timestamp('now',tz='utc')
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestData(uri=uri, end=end)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ECOIN)
+
+    def test_RequestData_failure_invalid_uri(self):
+        ''' Creating a RequestData object fail if uri is invalid '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval(uri=uri, start=start, end=end)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_IURI)
+            msg=message.RequestData(uri=uri, start=start, end=end)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_IURI)
 
-    def test_RequestDataInterval_failure_invalid_start(self):
-        ''' Creating a RequestDataInterval object fail if start is invalid '''
+    def test_RequestData_failure_invalid_start(self):
+        ''' Creating a RequestData object fail if start is invalid '''
         uri='valid.uri'
         start=timeuuid.uuid1()
         end=pd.Timestamp('now',tz='utc')
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval(uri=uri, start=start, end=end)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ISTART)
+            msg=message.RequestData(uri=uri, start=start, end=end)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ISTART)
 
-    def test_RequestDataInterval_failure_invalid_end(self):
-        ''' Creating a RequestDataInterval object fail if end is invalid '''
+    def test_RequestData_failure_invalid_end(self):
+        ''' Creating a RequestData object fail if end is invalid '''
         uri='valid.uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=time.time()
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval(uri=uri, start=start, end=end)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_IEND)
+            msg=message.RequestData(uri=uri, start=start, end=end)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_IEND)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_no_dict(self):
-        ''' Creating a RequestDataInterval object should fail if msg is not a dict '''
+    def test_RequestData_failure_invalid_count(self):
+        ''' Creating a RequestData object fail if count is invalid '''
+        uri='valid.uri'
+        count=-1
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestData(uri=uri, count=count)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ICOUNT)
+
+    def test_RequestData_failure_error_loading_from_dict_no_dict(self):
+        ''' Creating a RequestData object should fail if msg is not a dict '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial=[{
             'v':message.KomlogMessage._version_,
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
                 'start':start.isoformat(),
+                'count':33,
                 'end':end.isoformat()
             }
         }]
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_no_version(self):
-        ''' Creating a RequestDataInterval object should fail if v is not found '''
+    def test_RequestData_failure_error_loading_from_dict_no_version(self):
+        ''' Creating a RequestData object should fail if v is not found '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
             'va':message.KomlogMessage._version_,
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
                 'start':start.isoformat(),
+                'count':33,
                 'end':end.isoformat()
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_no_action(self):
-        ''' Creating a RequestDataInterval object should fail if action is not found '''
+    def test_RequestData_failure_error_loading_from_dict_no_action(self):
+        ''' Creating a RequestData object should fail if action is not found '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
             'v':message.KomlogMessage._version_,
-            'theaction':Messages.REQUEST_DATA_INTERVAL.value,
+            'theaction':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
                 'start':start.isoformat(),
+                'count':33,
                 'end':end.isoformat()
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_no_payload(self):
-        ''' Creating a RequestDataInterval object should fail if payload is not found '''
+    def test_RequestData_failure_error_loading_from_dict_no_payload(self):
+        ''' Creating a RequestData object should fail if payload is not found '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
             'v':message.KomlogMessage._version_,
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'fayload':{
                 'uri':uri,
                 'start':start.isoformat(),
+                'count':33,
                 'end':end.isoformat()
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_invalid_version(self):
-        ''' Creating a RequestDataInterval object should fail if version is not an int '''
+    def test_RequestData_failure_error_loading_from_dict_invalid_version(self):
+        ''' Creating a RequestData object should fail if version is not an int '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
             'v':[message.KomlogMessage._version_],
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
                 'start':start.isoformat(),
+                'count':33,
                 'end':end.isoformat()
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_wrong_version(self):
-        ''' Creating a RequestDataInterval object should fail if version is not the expected '''
+    def test_RequestData_failure_error_loading_from_dict_wrong_version(self):
+        ''' Creating a RequestData object should fail if version is not the expected '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
             'v':9999999999999,
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
                 'start':start.isoformat(),
+                'count':33,
                 'end':end.isoformat()
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_invalid_action(self):
-        ''' Creating a RequestDataInterval object should fail if action is invalid '''
+    def test_RequestData_failure_error_loading_from_dict_invalid_action(self):
+        ''' Creating a RequestData object should fail if action is invalid '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
             'v':[message.KomlogMessage._version_],
-            'action':[Messages.REQUEST_DATA_INTERVAL.value],
+            'action':[Messages.REQUEST_DATA.value],
             'payload':{
                 'uri':uri,
                 'start':start.isoformat(),
+                'count':33,
                 'end':end.isoformat()
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_wrong_action(self):
-        ''' Creating a RequestDataInterval object should fail if action is not the expected '''
+    def test_RequestData_failure_error_loading_from_dict_wrong_action(self):
+        ''' Creating a RequestData object should fail if action is not the expected '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
@@ -946,102 +1021,127 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'payload':{
                 'uri':uri,
                 'start':start.isoformat(),
+                'count':33,
                 'end':end.isoformat()
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_invalid_payload(self):
-        ''' Creating a RequestDataInterval object should fail if payload is not a dict '''
+    def test_RequestData_failure_error_loading_from_dict_invalid_payload(self):
+        ''' Creating a RequestData object should fail if payload is not a dict '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
             'v':[message.KomlogMessage._version_],
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'payload':[{
                 'uri':uri,
                 'start':start.isoformat(),
+                'count':33,
                 'end':end.isoformat()
             }]
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_payload_uri_not_found(self):
-        ''' Creating a RequestDataInterval object should fail if payload uri is not found '''
+    def test_RequestData_failure_error_loading_from_dict_payload_uri_not_found(self):
+        ''' Creating a RequestData object should fail if payload uri is not found '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
             'v':[message.KomlogMessage._version_],
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'ari':uri,
                 'start':start.isoformat(),
+                'count':33,
                 'end':end.isoformat()
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_payload_start_not_found(self):
-        ''' Creating a RequestDataInterval object should fail if payload start is not found '''
+    def test_RequestData_failure_error_loading_from_dict_payload_start_not_found(self):
+        ''' Creating a RequestData object should fail if payload start is not found '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
             'v':[message.KomlogMessage._version_],
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
                 'estart':start.isoformat(),
+                'count':33,
                 'end':end.isoformat()
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_failure_error_loading_from_dict_payload_end_not_found(self):
-        ''' Creating a RequestDataInterval object should fail if payload end is not found '''
+    def test_RequestData_failure_error_loading_from_dict_payload_end_not_found(self):
+        ''' Creating a RequestData object should fail if payload end is not found '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
             'v':[message.KomlogMessage._version_],
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
                 'start':start.isoformat(),
+                'count':33,
                 'fin':end.isoformat()
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
-    def test_RequestDataInterval_success_loading_from_dict(self):
-        ''' Creating a RequestDataInterval object should succeed '''
+    def test_RequestData_failure_error_loading_from_dict_payload_count_not_found(self):
+        ''' Creating a RequestData object should fail if payload count is not found '''
         uri='non valid uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
             'v':[message.KomlogMessage._version_],
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
                 'start':start.isoformat(),
+                'mount':33,
                 'end':end.isoformat()
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDI_ELFD)
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
+
+    def test_RequestData_success_loading_from_dict(self):
+        ''' Creating a RequestData object should succeed '''
+        uri='non valid uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':[message.KomlogMessage._version_],
+            'action':Messages.REQUEST_DATA.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'count':33,
+                'end':end.isoformat()
+            }
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
     def test_SendDataInterval_success(self):
         ''' Creating a SendDataInterval object should succeed '''
@@ -1587,7 +1687,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ]
         serial={
             'v':message.KomlogMessage._version_,
-            'action':Messages.REQUEST_DATA_INTERVAL.value,
+            'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
                 'start':start.isoformat(),

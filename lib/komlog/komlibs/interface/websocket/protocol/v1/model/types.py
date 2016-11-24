@@ -22,7 +22,7 @@ class Messages(Enum):
     SEND_DP_DATA            = 'send_dp_data'
     SEND_DS_DATA            = 'send_ds_data'
     UNHOOK_FROM_URI         = 'unhook_from_uri'
-    REQUEST_DATA_INTERVAL   = 'request_data_interval'
+    REQUEST_DATA            = 'request_data'
     SEND_DATA_INTERVAL      = 'send_data_interval'
 
 # OPERATION TYPES

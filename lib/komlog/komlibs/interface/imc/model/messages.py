@@ -15,6 +15,7 @@ from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.interface.imc import exceptions
 from komlog.komlibs.interface.imc.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
+from komlog.komfig import logging
 
 
 #MESSAGE LIST
@@ -1638,11 +1639,12 @@ class HookNewUrisMessage(IMCMessage):
 class DataIntervalRequestMessage(IMCMessage):
     _type_ = Messages.DATA_INTERVAL_REQUEST_MESSAGE
 
-    def __init__(self, sid, uri, ii, ie):
+    def __init__(self, sid, uri, ii, ie, count=None):
         self.sid = sid
         self.uri = uri
         self.ii = ii
         self.ie = ie
+        self.count = count
 
     @property
     def sid(self):
@@ -1693,10 +1695,23 @@ class DataIntervalRequestMessage(IMCMessage):
         else:
             raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IIE)
 
+    @property
+    def count(self):
+        return self._count
+
+    @count.setter
+    def count(self, count):
+        if count is None:
+            self._count = None
+        elif args.is_valid_int(count):
+            self._count = count
+        else:
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_ICOUNT)
+
     @classmethod
     def load_from_serialization(cls, msg):
         try:
-            m_type, h_sid, h_ii, h_ie, js_uri = msg.split('|')
+            m_type, h_sid, h_ii, h_ie, js_uri, js_count = msg.split('|')
         except ValueError:
             raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_ELFS)
         except AttributeError:
@@ -1714,14 +1729,18 @@ class DataIntervalRequestMessage(IMCMessage):
                 uri=json.loads(js_uri)
             except (TypeError,json.JSONDecodeError):
                 raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IJSURI)
+            try:
+                count=json.loads(js_count)
+            except (TypeError,json.JSONDecodeError):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IJSCOUNT)
             sid = uuid.UUID(h_sid)
-            ii= uuid.UUID(h_ii)
-            ie= uuid.UUID(h_ie)
-            return cls(sid=sid, ii=ii, ie=ie, uri=uri)
+            ii = uuid.UUID(h_ii)
+            ie = uuid.UUID(h_ie)
+            return cls(sid=sid, ii=ii, ie=ie, uri=uri, count=count)
 
     def to_serialization(self):
         uri = {'uri':self._uri['uri'],'type':self._uri['type'],'id':self._uri['id'].hex}
-        return '|'.join((self._type_.value, self._sid.hex, self._ii.hex, self._ie.hex, json.dumps(uri)))
+        return '|'.join((self._type_.value, self._sid.hex, self._ii.hex, self._ie.hex, json.dumps(uri),json.dumps(self._count)))
 
 class AnalyzeDTreeMessage(IMCMessage):
     _type_ = Messages.ANALYZE_DTREE_MESSAGE

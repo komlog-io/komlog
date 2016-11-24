@@ -350,7 +350,7 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
             self.assertTrue(arguments.is_valid_datapoint_content(param))
 
     def test_is_valid_isodate_invalid(self):
-        ''' is_valid_isodate should return False if parameter is not a valid iso 8601 date or is not a pandas.Timestamp object or iso 8601 is not between the pandas.Timestamp valid range '''
+        ''' is_valid_isodate should return False if parameter is not a valid iso 8601 date or is not a pandas.Timestamp object or iso 8601 is not between the pandas.Timestamp valid range, or timestamp is before unix timestamp (negative) '''
         params=[
             ['a','list'],
             ('a','tuple'),
@@ -364,6 +364,7 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
             {'a':'dict'},
             {'set'},
             None,
+            '1969-12-31T23:59:59Z', #before first unix timestamp
             '3016-07-18T17:07:00.002323Z', #year greater than max supported
             '30160-07-18T17:07:00.002323Z', #year greater than max supported
             '-2016-07-18T17:07:00.002323Z', #negative years not allowed

@@ -190,7 +190,7 @@ def process_message_DATINT(message):
             msg=ws_message.SendDataInterval(uri=uri, start=start, end=end, data=[])
             imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
             response.add_message(imc_message,dest=session_info.imc_address)
-            imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=limit, ie=message.ie)
+            imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=limit, ie=message.ie, count=message.count)
             response.add_message(imc_message)
     except (authexcept.DatapointNotFoundException,
             authexcept.DatasourceNotFoundException):
@@ -208,12 +208,12 @@ def process_message_DATINT(message):
         resp_data=[]
         try:
             if uri['type']==vertex.DATAPOINT:
-                count=1000
+                count=message.count if message.count and message.count < 1000 else 1000
                 data=datapointapi.get_datapoint_data(pid=message.uri['id'],fromdate=message.ii, todate=message.ie, count=count)
                 for row in data:
                     resp_data.append((timeuuid.get_isodate_from_uuid(row['date']),str(row['value'])))
             elif uri['type']==vertex.DATASOURCE:
-                count=100
+                count=message.count if message.count and message.count < 100 else 100
                 data=datasourceapi.get_datasource_data(did=message.uri['id'],fromdate=message.ii, todate=message.ie, count=count)
                 for row in data:
                     resp_data.append((timeuuid.get_isodate_from_uuid(row['date']),str(row['content'])))
@@ -223,8 +223,10 @@ def process_message_DATINT(message):
         if len(resp_data)==count:
             new_ie=data[-1]['date']
             start=timeuuid.get_isodate_from_uuid(new_ie)
-            imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=message.ii, ie=new_ie)
-            response.add_message(imc_message)
+            if message.count != count:
+                new_count = message.count-count if message.count else None
+                imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=message.ii, ie=new_ie, count=new_count)
+                response.add_message(imc_message)
         msg=ws_message.SendDataInterval(uri=uri, start=start, end=end, data=resp_data)
         imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
         response.add_message(imc_message,dest=session_info.imc_address)

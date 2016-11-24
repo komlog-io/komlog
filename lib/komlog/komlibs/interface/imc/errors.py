@@ -332,6 +332,8 @@ class Errors(Enum):
     E_IIMM_DIRM_IHII        = 262808    #: DataIntervalRequestMessage. invalid hex interval init
     E_IIMM_DIRM_IHIE        = 262809    #: DataIntervalRequestMessage. invalid hex interval end
     E_IIMM_DIRM_IJSURI      = 262810    #: DataIntervalRequestMessage. invalid json uri
+    E_IIMM_DIRM_ICOUNT      = 262811    #: DataIntervalRequestMessage. invalid count
+    E_IIMM_DIRM_IJSCOUNT    = 262812    #: DataIntervalRequestMessage. invalid json count
 
     E_IIMM_ADTREE_IPID      = 262900    #: AnalyzeDTreeMessage. invalid pid
     E_IIMM_ADTREE_ELFS      = 262901    #: AnalyzeDTreeMessage. error loading from string

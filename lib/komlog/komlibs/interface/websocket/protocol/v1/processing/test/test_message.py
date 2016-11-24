@@ -1721,9 +1721,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.unrouted_messages,[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[])
 
-    def test__process_request_data_interval_failure_uri_does_not_exist(self):
-        ''' _process_request_data_interval should fail if uri does not exist '''
-        username='test_process_request_data_interval_failure_uri_does_not_exist'
+    def test__process_request_data_failure_uri_does_not_exist(self):
+        ''' _process_request_data should fail if uri does not exist '''
+        username='test_process_request_data_failure_uri_does_not_exist'
         password='password_for_the_user'
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
@@ -1734,8 +1734,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'system.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat()}}
-        resp=message._process_request_data_interval(psp, msg)
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'system.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
+        resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_UNF.value)
         self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
@@ -1743,9 +1743,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.routed_messages,{})
         self.assertEqual(resp.unrouted_messages,[])
 
-    def test__process_request_data_interval_failure_operation_not_allowed_for_uri_type(self):
-        ''' _process_request_data_interval should fail if uri type is not valid '''
-        username='test_process_request_data_interval_failure_operation_not_allowed_for_uri_type'
+    def test__process_request_data_failure_operation_not_allowed_for_uri_type(self):
+        ''' _process_request_data should fail if uri type is not valid '''
+        username='test_process_request_data_failure_operation_not_allowed_for_uri_type'
         password='password_for_the_user'
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
@@ -1757,8 +1757,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.widget','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat()}}
-        resp=message._process_request_data_interval(psp, msg)
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.widget','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
+        resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ONA.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
@@ -1766,9 +1766,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.routed_messages,{})
         self.assertEqual(resp.unrouted_messages,[])
 
-    def test__process_request_data_interval_failure_access_denied_to_ds_uri(self):
-        ''' _process_request_data_interval should fail if user has no access to uri'''
-        username='test_process_request_data_interval_failure_access_denied_to_ds_uri'
+    def test__process_request_data_failure_access_denied_to_ds_uri(self):
+        ''' _process_request_data should fail if user has no access to uri'''
+        username='test_process_request_data_failure_access_denied_to_ds_uri'
         password='password_for_the_user'
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
@@ -1780,8 +1780,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.ds',type=vertex.USER_DATASOURCE_RELATION))
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat()}}
-        resp=message._process_request_data_interval(psp, msg)
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
+        resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, autherrors.E_ARA_AGDSD_RE.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
@@ -1789,9 +1789,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.routed_messages,{})
         self.assertEqual(resp.unrouted_messages,[])
 
-    def test__process_request_data_interval_failure_access_denied_to_dp_uri(self):
-        ''' _process_request_data_interval should fail if user has no access to uri'''
-        username='test_process_request_data_interval_failure_access_denied_to_dp_uri'
+    def test__process_request_data_failure_access_denied_to_dp_uri(self):
+        ''' _process_request_data should fail if user has no access to uri'''
+        username='test_process_request_data_failure_access_denied_to_dp_uri'
         password='password_for_the_user'
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
@@ -1803,8 +1803,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.dp',type=vertex.USER_DATAPOINT_RELATION))
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
-        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.dp','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat()}}
-        resp=message._process_request_data_interval(psp, msg)
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.dp','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
+        resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, autherrors.E_ARA_AGDPD_RE.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
@@ -1812,9 +1812,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.routed_messages,{})
         self.assertEqual(resp.unrouted_messages,[])
 
-    def test__process_request_data_interval_failure_access_to_data_range_not_allowed_ds(self):
-        ''' _process_request_data_interval should fail if user wants to access a non reachable data range because of limitations '''
-        username='test_process_request_data_interval_failure_access_to_data_range_not_allowed_ds'
+    def test__process_request_data_failure_access_to_data_range_not_allowed_ds(self):
+        ''' _process_request_data should fail if user wants to access a non reachable data range because of limitations '''
+        username='test_process_request_data_failure_access_to_data_range_not_allowed_ds'
         password='password_for_the_user'
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
@@ -1827,7 +1827,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
-        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat()}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         #se the date limit for data retrieval
@@ -1835,7 +1835,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         uid=user_reg['uid']
         min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc')+pd.Timedelta('1d'))
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, content=min_ts.hex))
-        resp=message._process_request_data_interval(psp, msg)
+        resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ANA.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
@@ -1848,9 +1848,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
 
-    def test__process_request_data_interval_failure_access_to_data_range_not_allowed_dp(self):
-        ''' _process_request_data_interval should fail if user wants to access a non reachable data range because of limitations '''
-        username='test_process_request_data_interval_failure_access_to_data_range_not_allowed_dp'
+    def test__process_request_data_failure_access_to_data_range_not_allowed_dp(self):
+        ''' _process_request_data should fail if user wants to access a non reachable data range because of limitations '''
+        username='test_process_request_data_failure_access_to_data_range_not_allowed_dp'
         password='password_for_the_user'
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
@@ -1863,7 +1863,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
-        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat()}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         #se the date limit for data retrieval
@@ -1871,7 +1871,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         uid=user_reg['uid']
         min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc')+pd.Timedelta('2d'))
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, content=min_ts.hex))
-        resp=message._process_request_data_interval(psp, msg)
+        resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ANA.value)
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
@@ -1884,9 +1884,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
 
-    def test__process_request_data_interval_failure_access_to_data_range_limited_ds(self):
-        ''' _process_request_data_interval should fail if user wants to access a data range that has limitations within it '''
-        username='test_process_request_data_interval_failure_access_to_data_range_limited_ds'
+    def test__process_request_data_failure_access_to_data_range_limited_ds(self):
+        ''' _process_request_data should fail if user wants to access a data range that has limitations within it '''
+        username='test_process_request_data_failure_access_to_data_range_limited_ds'
         password='password_for_the_user'
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
@@ -1899,7 +1899,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
-        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat()}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         #se the date limit for data retrieval
@@ -1907,7 +1907,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         uid=user_reg['uid']
         min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc'))
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, content=min_ts.hex))
-        resp=message._process_request_data_interval(psp, msg)
+        resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP.value)
         self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
@@ -1919,9 +1919,43 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
 
-    def test__process_request_data_interval_failure_access_to_data_range_limited_dp(self):
-        ''' _process_request_data_interval should fail if user wants to access a data range with limitations within it '''
-        username='test_process_request_data_interval_failure_access_to_data_range_limited_dp'
+    def test__process_request_data_failure_access_to_data_range_limited_ds_no_interval_received(self):
+        ''' _process_request_data should limit interval if user has interval bounds and no interval was received in request, only count '''
+        username='test_process_request_data_failure_access_to_data_range_limited_ds_no_interval_received'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        count=100
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.ds','start':None,'end':None,'count':count}}
+        datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
+        self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
+        #se the date limit for data retrieval
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        uid=user_reg['uid']
+        min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc'))
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, content=min_ts.hex))
+        resp=message._process_request_data(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP.value)
+        self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(len(resp.unrouted_messages),1)
+        self.assertEqual(resp.unrouted_messages[0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(resp.unrouted_messages[0].sid, psp.sid)
+        self.assertEqual(resp.unrouted_messages[0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
+        self.assertEqual(timeuuid.get_unix_timestamp(resp.unrouted_messages[0].ii),1)
+        self.assertNotEqual(timeuuid.get_unix_timestamp(resp.unrouted_messages[0].ie),1)
+
+    def test__process_request_data_failure_access_to_data_range_limited_dp(self):
+        ''' _process_request_data should fail if user wants to access a data range with limitations within it '''
+        username='test_process_request_data_failure_access_to_data_range_limited_dp'
         password='password_for_the_user'
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
@@ -1934,7 +1968,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
-        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat()}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         #se the date limit for data retrieval
@@ -1942,7 +1976,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         uid=user_reg['uid']
         min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc'))
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, content=min_ts.hex))
-        resp=message._process_request_data_interval(psp, msg)
+        resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP.value)
         self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
@@ -1954,9 +1988,45 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
 
-    def test__process_request_data_interval_success_no_limitations_ds(self):
-        ''' _process_request_data_interval should succeed if user want a data range than can access '''
-        username='test_process_request_data_interval_success_no_limitations_ds'
+    def test__process_request_data_failure_access_to_data_range_limited_dp_no_interval_received(self):
+        ''' _process_request_data should return a limited range if user has interval bounds limits, and no interval was received in request, only count '''
+        username='test_process_request_data_failure_access_to_data_range_limited_dp_no_interval_received'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        start=None
+        end=None
+        count=200
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.dp','start':start,'end':end,'count':count}}
+        datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
+        self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
+        #se the date limit for data retrieval
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        uid=user_reg['uid']
+        min_ts=timeuuid.get_uuid1_from_isodate(pd.Timestamp('now',tz='utc'))
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid=uid, iface=iface, content=min_ts.hex))
+        resp=message._process_request_data(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP.value)
+        self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(len(resp.unrouted_messages),1)
+        self.assertEqual(resp.unrouted_messages[0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(resp.unrouted_messages[0].sid, psp.sid)
+        self.assertEqual(resp.unrouted_messages[0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
+        self.assertEqual(timeuuid.get_unix_timestamp(resp.unrouted_messages[0].ii),1)
+        self.assertNotEqual(timeuuid.get_unix_timestamp(resp.unrouted_messages[0].ie),1)
+
+    def test__process_request_data_success_no_limitations_ds(self):
+        ''' _process_request_data should succeed if user want a data range than can access '''
+        username='test_process_request_data_success_no_limitations_ds'
         password='password_for_the_user'
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
@@ -1969,10 +2039,10 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
-        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat()}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
-        resp=message._process_request_data_interval(psp, msg)
+        resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.OK.value)
         self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
@@ -1984,9 +2054,40 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
 
-    def test__process_request_data_interval_success_no_limitations_dp(self):
-        ''' _process_request_data_interval should success if user wants a data range without access limitations '''
-        username='test_process_request_data_interval_success_no_limitations_dp'
+    def test__process_request_data_success_no_limitations_ds_count_passed(self):
+        ''' _process_request_data should succeed if user want some rows '''
+        username='test_process_request_data_success_no_limitations_ds_count_passed'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        start=None
+        end=None
+        count=400
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.ds','start':start,'end':end,'count':count}}
+        datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
+        self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
+        resp=message._process_request_data(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.OK.value)
+        self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(len(resp.unrouted_messages),1)
+        self.assertEqual(resp.unrouted_messages[0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(resp.unrouted_messages[0].sid, psp.sid)
+        self.assertEqual(resp.unrouted_messages[0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
+        self.assertEqual(timeuuid.get_unix_timestamp(resp.unrouted_messages[0].ii),1)
+        self.assertNotEqual(timeuuid.get_unix_timestamp(resp.unrouted_messages[0].ie),1)
+
+    def test__process_request_data_success_no_limitations_dp(self):
+        ''' _process_request_data should success if user wants a data range without access limitations '''
+        username='test_process_request_data_success_no_limitations_dp'
         password='password_for_the_user'
         email=username+'@komlog.org'
         user_reg=userapi.create_user(username=username, password=password, email=email)
@@ -1999,10 +2100,10 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
-        msg={'v':1,'action':Messages.REQUEST_DATA_INTERVAL.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat()}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
-        resp=message._process_request_data_interval(psp, msg)
+        resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, modresp.Response))
         self.assertEqual(resp.error, Errors.OK.value)
         self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
@@ -2014,3 +2115,33 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.unrouted_messages[0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.unrouted_messages[0].ie, timeuuid.max_uuid_from_time(end))
 
+    def test__process_request_data_success_no_limitations_dp_count_passed(self):
+        ''' _process_request_data should success if user wants some rows '''
+        username='test_process_request_data_success_no_limitations_dp_count_passed'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4())
+        start=None
+        end=None
+        count=2332
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.dp','start':start,'end':end,'count':count}}
+        datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
+        self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
+        resp=message._process_request_data(psp, msg)
+        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertEqual(resp.error, Errors.OK.value)
+        self.assertEqual(resp.status, status.MESSAGE_ACCEPTED_FOR_PROCESSING)
+        self.assertEqual(resp.routed_messages,{})
+        self.assertEqual(len(resp.unrouted_messages),1)
+        self.assertEqual(resp.unrouted_messages[0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(resp.unrouted_messages[0].sid, psp.sid)
+        self.assertEqual(resp.unrouted_messages[0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
+        self.assertEqual(timeuuid.get_unix_timestamp(resp.unrouted_messages[0].ii),1)
+        self.assertNotEqual(timeuuid.get_unix_timestamp(resp.unrouted_messages[0].ie),1)

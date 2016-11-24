@@ -29,6 +29,6 @@ _processing_funcs = {
     Messages.SEND_MULTI_DATA.value:procmsg._process_send_multi_data,
     Messages.HOOK_TO_URI.value:procmsg._process_hook_to_uri,
     Messages.UNHOOK_FROM_URI.value:procmsg._process_unhook_from_uri,
-    Messages.REQUEST_DATA_INTERVAL.value:procmsg._process_request_data_interval,
+    Messages.REQUEST_DATA.value:procmsg._process_request_data,
 }
 

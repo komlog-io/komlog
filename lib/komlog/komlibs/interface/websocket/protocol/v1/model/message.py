@@ -348,13 +348,16 @@ class UnHookFromUri(KomlogMessage):
             }
         }
 
-class RequestDataInterval(KomlogMessage):
-    _action_ = Messages.REQUEST_DATA_INTERVAL
+class RequestData(KomlogMessage):
+    _action_ = Messages.REQUEST_DATA
 
-    def __init__(self, uri, start, end):
+    def __init__(self, uri, start=None, end=None, count=None):
         self.uri = uri
         self.start = start
-        self.end = end 
+        self.end = end
+        self.count = count
+        if count is None and (start is None or end is None):
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDT_ECOIN)
 
     @property
     def uri(self):
@@ -365,7 +368,7 @@ class RequestDataInterval(KomlogMessage):
         if args.is_valid_uri(uri):
             self._uri=uri
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDI_IURI)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDT_IURI)
 
     @property
     def start(self):
@@ -373,10 +376,12 @@ class RequestDataInterval(KomlogMessage):
 
     @start.setter
     def start(self, start):
-        if args.is_valid_isodate(start):
+        if start is None:
+            self._start = None
+        elif args.is_valid_isodate(start):
             self._start=pd.Timestamp(start,tz='utc') if pd.Timestamp(start).tz is None else pd.Timestamp(start)
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDI_ISTART)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDT_ISTART)
 
     @property
     def end(self):
@@ -384,10 +389,25 @@ class RequestDataInterval(KomlogMessage):
 
     @end.setter
     def end(self, end):
-        if args.is_valid_isodate(end):
+        if end is None:
+            self._end = None
+        elif args.is_valid_isodate(end):
             self._end=pd.Timestamp(end,tz='utc') if pd.Timestamp(end).tz is None else pd.Timestamp(end)
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDI_IEND)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDT_IEND)
+
+    @property
+    def count(self):
+        return self._count
+
+    @count.setter
+    def count(self, count):
+        if count is None:
+            self._count = None
+        elif args.is_valid_int(count):
+            self._count=count
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDT_ICOUNT)
 
     @classmethod
     def load_from_dict(cls, msg):
@@ -400,13 +420,15 @@ class RequestDataInterval(KomlogMessage):
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']
             and 'start' in msg['payload']
-            and 'end' in msg['payload']):
+            and 'end' in msg['payload']
+            and 'count' in msg['payload']):
             uri=msg['payload']['uri']
             start=msg['payload']['start']
             end=msg['payload']['end']
-            return cls(uri=uri, start=start, end=end)
+            count=msg['payload']['count']
+            return cls(uri=uri, start=start, end=end, count=count)
         else:
-            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDI_ELFD)
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDT_ELFD)
 
     def to_dict(self):
         ''' returns a JSON serializable dict '''
@@ -415,8 +437,9 @@ class RequestDataInterval(KomlogMessage):
             'action':self.action.value,
             'payload':{
                 'uri':self.uri,
-                'start':self.start.isoformat(),
-                'end':self.end.isoformat(),
+                'start':self._start.isoformat() if self._start else None,
+                'end':self._end.isoformat() if self._end else None,
+                'count':self._count,
             }
         }
 
