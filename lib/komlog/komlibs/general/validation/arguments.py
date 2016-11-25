@@ -22,7 +22,6 @@ ASCII=re.compile('a-zA-Z')
 NUMBERS=re.compile('0-9')
 STRINGNUMBER=re.compile('^[+-]?([0-9]*\.)?[0-9]+([e|E][-|+]?[0-9]+)?(?!\s)$')
 EMAIL=re.compile('''^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$''')
-SEQUENCE=re.compile('^[a-fA-F0-9]{20}$')
 ISODATE=re.compile('^((?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$')
 
 def is_valid_username(argument):
@@ -190,15 +189,7 @@ def is_valid_timestamp(argument):
     return False
 
 def is_valid_sequence(argument):
-    if isinstance(argument,str) and SEQUENCE.search(argument):
-        try:
-            value=uuid.UUID(argument+'010000000000')
-        except ValueError:
-            return False
-        else:
-            return True
-    else:
-        return False
+    return is_valid_hex_date(argument)
 
 def is_valid_uuid(argument):
     if isinstance(argument, uuid.UUID) and argument.version==4:

@@ -97,7 +97,7 @@ class AuthPassportTest(unittest.TestCase):
 
     def test_cookie_creation_failure_invalid_seq(self):
         ''' a new cookie instance should fail if cookie seq is invalid '''
-        seqs= ['string',1,1.2,{'a':'dict'},uuid.uuid4(),uuid.uuid1().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'}, None]
+        seqs= ['string',1,1.2,{'a':'dict'},uuid.uuid4(),uuid.uuid4().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'}, None]
         cookie={'user':'username','sid':uuid.uuid4().hex, 'aid':uuid.uuid4().hex}
         for seq in seqs:
             cookie['seq']=seq

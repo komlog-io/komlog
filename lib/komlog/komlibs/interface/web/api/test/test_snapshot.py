@@ -1380,7 +1380,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         ''' new_snapshot_request should fail if no sequence is passed or is invalid '''
         psp = self.passport
         wid=uuid.uuid4().hex
-        seqs=[None, 32423, 023423.23423, ['a','list'],('a','tuple'),'Username','user name','userñame',uuid.uuid1(),uuid.uuid4().hex,uuid.uuid1().hex]
+        seqs=[None, 32423, 023423.23423, ['a','list'],('a','tuple'),'Username','user name','userñame',uuid.uuid1(),uuid.uuid4().hex,uuid.uuid4(),'abcde']
         username_to_share=self.username_to_share
         for seq in seqs:
             response=snapshotapi.new_snapshot_request(passport=psp, wid=wid, user_list=[username_to_share],seq=seq)

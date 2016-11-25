@@ -179,7 +179,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
         did=self.agents[0]['dids'][0]
         datapointname='test_new_datasource_datapoint_request_failure'
-        sequence='23423234565432345678'
+        sequence=uuid.uuid1().hex
         position=1
         length=1
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
@@ -191,7 +191,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         psp = self.passport
         did=uuid.uuid4().hex
         datapointname='test_new_datasource_datapoint_request_failure'
-        sequence='23423234565432345678'
+        sequence=uuid.uuid1().hex
         position=1
         length=1
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
@@ -489,7 +489,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         ''' mark_positive_variable_request should fail if datapoint does not exist '''
         psp = self.passport
         pid=uuid.uuid4().hex
-        sequence='23423234565432345678'
+        sequence=uuid.uuid1().hex
         position=1
         length=1
         response=datapointapi.mark_positive_variable_request(passport=psp, pid=pid, sequence=sequence, position=position, length=length)
@@ -588,7 +588,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         ''' mark_negative_variable_request should fail if datapoint does not exist '''
         psp = self.passport
         pid=uuid.uuid4().hex
-        sequence='23423234565432345678'
+        sequence=uuid.uuid1().hex
         position=1
         length=1
         response=datapointapi.mark_negative_variable_request(passport=psp, pid=pid, sequence=sequence, position=position, length=length)

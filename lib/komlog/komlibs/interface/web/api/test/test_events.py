@@ -472,7 +472,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         new_event=usereventsapi.new_event(uid=psp.uid, event_type=event_type, parameters=parameters)
         self.assertIsNotNone(new_event)
         seq=timeuuid.get_custom_sequence(new_event['date'])
-        data={'identified':[{'s':date.hex,'l':1,'p':4}]}
+        data={'identified':[{'s':date,'l':1,'p':4}]}
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
         self.assertEqual(response.error, Errors.E_IWAEV_EVRPR_IIDIT.value)

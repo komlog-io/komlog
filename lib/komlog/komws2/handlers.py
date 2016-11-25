@@ -726,8 +726,7 @@ class CareersHandler(tornado.web.RequestHandler):
     def get(self):
         self.render('careers.html', page_title='Komlog')
 
-UUID4_REGEX='[0-9a-fA-F]{32}'
-SEQ_REGEX='[0-9a-fA-F]{20}'
+UUID_REGEX='[0-9a-fA-F]{32}'
 USERNAME_REGEX='[0-9a-z\-_]+'
 
 HANDLERS = [
@@ -740,35 +739,35 @@ HANDLERS = [
             (r'/forget/?', ForgetHandler),
             (r'/logout/?', LogoutHandler),
             (r'/etc/ag/?', AgentsHandler),
-            (r'/etc/ag/('+UUID4_REGEX+')', AgentConfigHandler),
-            (r'/etc/ag/('+UUID4_REGEX+')/suspend/?', AgentSuspendHandler),
-            (r'/etc/ag/('+UUID4_REGEX+')/activate/?', AgentActivateHandler),
+            (r'/etc/ag/('+UUID_REGEX+')', AgentConfigHandler),
+            (r'/etc/ag/('+UUID_REGEX+')/suspend/?', AgentSuspendHandler),
+            (r'/etc/ag/('+UUID_REGEX+')/activate/?', AgentActivateHandler),
             (r'/etc/ds/?', DatasourcesHandler),
-            (r'/etc/ds/('+UUID4_REGEX+')', DatasourceConfigHandler),
+            (r'/etc/ds/('+UUID_REGEX+')', DatasourceConfigHandler),
             (r'/etc/dp/?', DatapointsHandler),
-            (r'/etc/dp/('+UUID4_REGEX+')', DatapointConfigHandler),
-            (r'/etc/dp/('+UUID4_REGEX+')/positives/?', DatapointPositivesHandler),
-            (r'/etc/dp/('+UUID4_REGEX+')/negatives/?', DatapointNegativesHandler),
-            (r'/etc/dp/('+UUID4_REGEX+')/ds/?', DatapointDatasourceHandler),
+            (r'/etc/dp/('+UUID_REGEX+')', DatapointConfigHandler),
+            (r'/etc/dp/('+UUID_REGEX+')/positives/?', DatapointPositivesHandler),
+            (r'/etc/dp/('+UUID_REGEX+')/negatives/?', DatapointNegativesHandler),
+            (r'/etc/dp/('+UUID_REGEX+')/ds/?', DatapointDatasourceHandler),
             (r'/etc/wg/?', WidgetsHandler),
-            (r'/etc/wg/('+UUID4_REGEX+')', WidgetConfigHandler),
-            (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/dp/(?P<pid>'+UUID4_REGEX+')', WidgetDatapointsHandler),
-            (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/rel/?', WidgetRelatedHandler),
-            (r'/etc/wg/(?P<wid>'+UUID4_REGEX+')/sn/?', WidgetSnapshotsHandler),
+            (r'/etc/wg/('+UUID_REGEX+')', WidgetConfigHandler),
+            (r'/etc/wg/(?P<wid>'+UUID_REGEX+')/dp/(?P<pid>'+UUID_REGEX+')', WidgetDatapointsHandler),
+            (r'/etc/wg/(?P<wid>'+UUID_REGEX+')/rel/?', WidgetRelatedHandler),
+            (r'/etc/wg/(?P<wid>'+UUID_REGEX+')/sn/?', WidgetSnapshotsHandler),
             (r'/etc/db/?', DashboardsHandler),
-            (r'/etc/db/('+UUID4_REGEX+')', DashboardConfigHandler),
-            (r'/etc/db/(?P<bid>'+UUID4_REGEX+')/wg/(?P<wid>'+UUID4_REGEX+')', DashboardWidgetsHandler),
-            (r'/etc/sn/('+UUID4_REGEX+')', SnapshotConfigHandler),
+            (r'/etc/db/('+UUID_REGEX+')', DashboardConfigHandler),
+            (r'/etc/db/(?P<bid>'+UUID_REGEX+')/wg/(?P<wid>'+UUID_REGEX+')', DashboardWidgetsHandler),
+            (r'/etc/sn/('+UUID_REGEX+')', SnapshotConfigHandler),
             (r'/etc/cr/?', CirclesHandler),
-            (r'/etc/cr/('+UUID4_REGEX+')', CircleConfigHandler),
-            (r'/etc/cr/(?P<cid>'+UUID4_REGEX+')/u/(?P<member>'+USERNAME_REGEX+')',CircleMembersHandler),
+            (r'/etc/cr/('+UUID_REGEX+')', CircleConfigHandler),
+            (r'/etc/cr/(?P<cid>'+UUID_REGEX+')/u/(?P<member>'+USERNAME_REGEX+')',CircleMembersHandler),
             (r'/etc/usr/confirm/', UserConfirmationHandler),
             (r'/etc/usr/?', UsersHandler),
             (r'/etc/usr/upgrade/?', UserUpgradeHandler),
-            (r'/var/ds/('+UUID4_REGEX+')', DatasourceDataHandler),
-            (r'/var/dp/('+UUID4_REGEX+')', DatapointDataHandler),
+            (r'/var/ds/('+UUID_REGEX+')', DatasourceDataHandler),
+            (r'/var/dp/('+UUID_REGEX+')', DatapointDataHandler),
             (r'/var/uri/?', UriHandler),
             (r'/var/usr/ev/?', UserEventsHandler),
-            (r'/var/usr/ev/('+SEQ_REGEX+')', UserEventsResponsesHandler),
+            (r'/var/usr/ev/('+UUID_REGEX+')', UserEventsResponsesHandler),
             ]
 

@@ -51,7 +51,7 @@ def _process_send_ds_data(passport, message):
     else:
         return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datasource', error=Errors.E_IWSPV1PM_PSDSD_IURI)
     try:
-        date=timeuuid.get_uuid1_from_isodate(message.ts)
+        date=timeuuid.get_uuid1_from_isodate(message.ts, predictable=True)
         datasourceapi.store_datasource_data(did=did, date=date, content=message.content)
         op=modop.DatasourceDataStoredOperation(uid=passport.uid, did=did, date=date)
         op_msgs=operation.process_operation(op)
@@ -81,7 +81,7 @@ def _process_send_ds_data(passport, message):
 def _process_send_dp_data(passport, message):
     message = modmsg.SendDpData.load_from_dict(message)
     new_datapoint=False
-    date=timeuuid.get_uuid1_from_isodate(message.ts)
+    date=timeuuid.get_uuid1_from_isodate(message.ts, predictable=True)
     msgs=[]
     uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
     if not uri_info or uri_info['type']==vertex.VOID:
@@ -123,7 +123,7 @@ def _process_send_dp_data(passport, message):
 @exceptions.ExceptionHandler
 def _process_send_multi_data(passport, message):
     message = modmsg.SendMultiData.load_from_dict(message)
-    date=timeuuid.get_uuid1_from_isodate(message.ts)
+    date=timeuuid.get_uuid1_from_isodate(message.ts, predictable=True)
     existing_uris=[]
     pending_ds_creations=[]
     pending_dp_creations=[]

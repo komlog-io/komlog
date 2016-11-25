@@ -1,10 +1,8 @@
 import uuid
+import random
 import time
 import pandas as pd
 from cassandra import util
-
-node=0x010000000000
-str_node='010000000000'
 
 HIGHEST_TIME_UUID=util.HIGHEST_TIME_UUID
 LOWEST_TIME_UUID=util.LOWEST_TIME_UUID
@@ -13,21 +11,21 @@ def get_unix_timestamp(u):
     return util.unix_time_from_uuid1(u)
 
 def get_custom_sequence(u):
-    return u.hex[0:20]
+    return u.hex
 
 def get_uuid1_from_custom_sequence(sequence):
     try:
-        value=uuid.UUID(sequence+str_node)
+        value=uuid.UUID(sequence)
     except ValueError:
         return None
     else:
         return value
 
-def get_uuid1_from_isodate(isodate):
+def get_uuid1_from_isodate(isodate, predictable=False):
     date=pd.Timestamp(isodate)
     if date.tz is None:
         date=pd.Timestamp(isodate,tz='utc')
-    return uuid1(seconds=date.timestamp())
+    return uuid1(seconds=date.timestamp(), predictable=predictable)
 
 def get_datetime_from_uuid1(u):
     return util.datetime_from_uuid1(u)
@@ -37,10 +35,16 @@ def get_isodate_from_uuid(u):
     date=pd.Timestamp(int(ts*10**6), unit='us',tz='utc')
     return date.isoformat()
 
-def uuid1(clock_seq=None, seconds=None):
-    global node
+def uuid1(seconds=None, predictable=False):
     if not seconds:
         seconds=time.time()
+    if predictable:
+        clock_seq = (int(seconds)|129)&2047
+        node = (int(seconds*1e6)^(2**48-1))&(2**48-1)
+    else:
+        r = random.SystemRandom()
+        clock_seq = r.getrandbits(14)
+        node = r.getrandbits(48)
     return util.uuid_from_time(time_arg=seconds, node=node, clock_seq=clock_seq)
 
 def max_uuid_from_time(timestamp):
