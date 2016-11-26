@@ -102,7 +102,8 @@ def encrypt(key, plaintext):
 def get_hash(message):
     try:
         digest = hashes.Hash(hashes.Whirlpool(), backend=default_backend())
-        digest.update(message)
+        for i in range(0,30):
+            digest.update(message)
         return digest.finalize()
     except Exception:
         return None
