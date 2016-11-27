@@ -11,14 +11,14 @@ def get_statement(num):
 
 
 STATEMENTS={
-    110000:'select * from prm_user_segment_quo where sid=?',
-    110001:'select * from prm_user_segment_quo where sid=? and quote=?',
-    110100:'select * from mst_user_segment where sid=?',
-    110200:'select * from dat_user_segment_transition where uid=? and date=?',
+    110000:'select sid,quote,value from prm_user_segment_quo where sid=?',
+    110001:'select sid,quote,value from prm_user_segment_quo where sid=? and quote=?',
+    110100:'select sid,description from mst_user_segment where sid=?',
+    110200:'select uid,date,sid,previous_sid from dat_user_segment_transition where uid=? and date=?',
     110201:'select date,sid,previous_sid from dat_user_segment_transition where uid=?',
     110202:'select date,sid,previous_sid from dat_user_segment_transition where uid=? and date>=? and date<=?',
-    110300:'select * from prm_user_segment_allowed_transitions where sid = ?',
-    110400:'select * from prm_user_segment_fare where sid = ?',
+    110300:'select sid,sids from prm_user_segment_allowed_transitions where sid = ?',
+    110400:'select sid,amount,currency,frequency from prm_user_segment_fare where sid = ?',
     115000:'insert into prm_user_segment_quo (sid,quote,value) values (?,?,?)',
     115100:'insert into mst_user_segment (sid,description) values (?,?)',
     115200:'insert into dat_user_segment_transition (uid,date,sid,previous_sid) values (?,?,?,?)',

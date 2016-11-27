@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 This file defines the cassandra statements for the creation of quotes related tables
 

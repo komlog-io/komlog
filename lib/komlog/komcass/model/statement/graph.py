@@ -11,27 +11,27 @@ def get_statement(num):
 
 
 STATEMENTS={
-            130012:'select * from gr_uri_in where idd=?',
-            130013:'select * from gr_uri_out where ido=?',
-            130014:'select * from gr_uri_in where idd=? and ido=?',
-            130015:'select * from gr_uri_out where ido=? and idd=?',
-            130016:'select ido from gr_uri_in where idd=?',
-            130017:'select idd from gr_uri_out where ido=?',
-            130018:'select * from gr_kin_in where idd=?',
-            130019:'select * from gr_kin_out where ido=?',
-            130020:'select * from gr_kin_in where idd=? and ido=?',
-            130021:'select * from gr_kin_out where ido=? and idd=?',
-            130022:'select ido from gr_kin_in where idd=?',
-            130023:'select idd from gr_kin_out where ido=?',
-            131004:'insert into gr_uri_in (idd,ido,type,creation_date,uri) values (?,?,?,?,?)',
-            131005:'insert into gr_uri_out (ido,idd,type,creation_date,uri) values (?,?,?,?,?)',
-            131006:'insert into gr_kin_in (idd,ido,type,creation_date,params) values (?,?,?,?,?)',
-            131007:'insert into gr_kin_out (ido,idd,type,creation_date,params) values (?,?,?,?,?)',
-            132004:'delete from gr_uri_in where idd=? and ido=?',
-            132005:'delete from gr_uri_out where ido=? and idd=?',
-            132006:'delete from gr_kin_in where idd=? and ido=?',
-            132007:'delete from gr_kin_out where ido=? and idd=?',
-           }
+    130012:'select idd,ido,type,creation_date,uri from gr_uri_in where idd=?',
+    130013:'select ido,idd,type,creation_date,uri from gr_uri_out where ido=?',
+    130014:'select idd,ido,type,creation_date,uri from gr_uri_in where idd=? and ido=?',
+    130015:'select ido,idd,type,creation_date,uri from gr_uri_out where ido=? and idd=?',
+    130016:'select ido from gr_uri_in where idd=?',
+    130017:'select idd from gr_uri_out where ido=?',
+    130018:'select idd,ido,type,creation_date,params from gr_kin_in where idd=?',
+    130019:'select ido,idd,type,creation_date,params from gr_kin_out where ido=?',
+    130020:'select idd,ido,type,creation_date,params from gr_kin_in where idd=? and ido=?',
+    130021:'select ido,idd,type,creation_date,params from gr_kin_out where ido=? and idd=?',
+    130022:'select ido from gr_kin_in where idd=?',
+    130023:'select idd from gr_kin_out where ido=?',
+    131004:'insert into gr_uri_in (idd,ido,type,creation_date,uri) values (?,?,?,?,?)',
+    131005:'insert into gr_uri_out (ido,idd,type,creation_date,uri) values (?,?,?,?,?)',
+    131006:'insert into gr_kin_in (idd,ido,type,creation_date,params) values (?,?,?,?,?)',
+    131007:'insert into gr_kin_out (ido,idd,type,creation_date,params) values (?,?,?,?,?)',
+    132004:'delete from gr_uri_in where idd=? and ido=?',
+    132005:'delete from gr_uri_out where ido=? and idd=?',
+    132006:'delete from gr_kin_in where idd=? and ido=?',
+    132007:'delete from gr_kin_out where ido=? and idd=?',
+}
 
 # selects
 

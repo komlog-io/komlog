@@ -12,14 +12,14 @@ def get_statement(num):
 
 
 STATEMENTS={
-    10000:'select * from mst_agent where aid=?',
-    10001:'select * from mst_agent where uid=?',
+    10000:'select aid,uid,agentname,pubkey,version,state,creation_date from mst_agent where aid=?',
+    10001:'select aid,uid,agentname,pubkey,version,state,creation_date from mst_agent where uid=?',
     10002:'select count(*) from mst_agent where uid=?',
     10003:'select aid from mst_agent where uid=?',
-    10100:'select * from mst_agent_pubkey where uid=?',
-    10101:'select * from mst_agent_pubkey where uid=? and pubkey=?',
-    10200:'select * from mst_agent_challenge where aid=? and challenge=?',
-    10300:'select * from mst_agent_session where sid=?',
+    10100:'select uid,pubkey,aid,state from mst_agent_pubkey where uid=?',
+    10101:'select uid,pubkey,aid,state from mst_agent_pubkey where uid=? and pubkey=?',
+    10200:'select aid,challenge,generated,validated from mst_agent_challenge where aid=? and challenge=?',
+    10300:'select sid,aid,uid,last_update,imc_address from mst_agent_session where sid=?',
     10301:'select sid from mst_agent_session where aid=?',
     15000:'insert into mst_agent (aid,uid,agentname,pubkey,version,state,creation_date) values (?,?,?,?,?,?,?)',
     15001:'insert into mst_agent (aid,uid,agentname,pubkey,version,state,creation_date) values (?,?,?,?,?,?,?) if not exists',

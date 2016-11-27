@@ -10,19 +10,20 @@ def get_statement(num):
         return None
 
 
-STATEMENTS={140000:'select * from mst_circle where cid=?',
-            140001:'select * from mst_circle where uid=? and type=? allow filtering',
-            140002:'select * from mst_circle where uid=?',
-            140003:'select cid from mst_circle where uid=? and type=? allow filtering',
-            140004:'select cid from mst_circle where uid=?',
-            140005:'select count(*) from mst_circle where uid=? and type=? allow filtering',
-            140006:'select count(*) from mst_circle where uid=?',
-            145000:'insert into mst_circle (cid,uid,type,creation_date,circlename,members) values (?,?,?,?,?,?)',
-            145001:'insert into mst_circle (cid,uid,type,creation_date,circlename,members) values (?,?,?,?,?,?) if not exists',
-            147000:'delete from mst_circle where cid=?',
-            147001:'delete members[?] from mst_circle where cid=?',
-            149000:'update mst_circle set members=? where cid=?',
-           }
+STATEMENTS={
+    140000:'select cid,uid,type,creation_date,circlename,members from mst_circle where cid=?',
+    140001:'select cid,uid,type,creation_date,circlename,members from mst_circle where uid=? and type=? allow filtering',
+    140002:'select cid,uid,type,creation_date,circlename,members from mst_circle where uid=?',
+    140003:'select cid from mst_circle where uid=? and type=? allow filtering',
+    140004:'select cid from mst_circle where uid=?',
+    140005:'select count(*) from mst_circle where uid=? and type=? allow filtering',
+    140006:'select count(*) from mst_circle where uid=?',
+    145000:'insert into mst_circle (cid,uid,type,creation_date,circlename,members) values (?,?,?,?,?,?)',
+    145001:'insert into mst_circle (cid,uid,type,creation_date,circlename,members) values (?,?,?,?,?,?) if not exists',
+    147000:'delete from mst_circle where cid=?',
+    147001:'delete members[?] from mst_circle where cid=?',
+    149000:'update mst_circle set members=? where cid=?',
+}
 
 # selects (140000 - 144999)
 

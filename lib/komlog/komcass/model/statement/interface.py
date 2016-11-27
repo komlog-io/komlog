@@ -11,12 +11,12 @@ def get_statement(num):
 
 
 STATEMENTS={
-    70000:'select * from if_user_deny where uid=?',
-    70001:'select * from if_user_deny where uid=? and interface=?',
-    70100:'select * from if_ts_user_deny where uid=?',
-    70101:'select * from if_ts_user_deny where uid=? and interface=?',
-    70102:'select * from if_ts_user_deny where uid=? and interface=? and ts=?',
-    70103:'select * from if_ts_user_deny where uid=? and interface=? and ts>=? and ts<=?',
+    70000:'select uid,interface,content from if_user_deny where uid=?',
+    70001:'select uid,interface,content from if_user_deny where uid=? and interface=?',
+    70100:'select uid,interface,ts,content from if_ts_user_deny where uid=?',
+    70101:'select uid,interface,ts,content from if_ts_user_deny where uid=? and interface=?',
+    70102:'select uid,interface,ts,content from if_ts_user_deny where uid=? and interface=? and ts=?',
+    70103:'select uid,interface,ts,content from if_ts_user_deny where uid=? and interface=? and ts>=? and ts<=?',
     75000:'insert into if_user_deny (uid,interface,content) values (?,?,?)',
     75100:'insert into if_ts_user_deny (uid,interface,ts,content) values (?,?,?,?)',
     75101:'insert into if_ts_user_deny (uid,interface,ts,content) values (?,?,?,?) if not exists',
