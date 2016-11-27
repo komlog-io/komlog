@@ -183,6 +183,23 @@ class GestaccountAgentApiTest(unittest.TestCase):
             api.generate_auth_challenge(username=username, pubkey=pubkey)
         self.assertEqual(cm.exception.error, Errors.E_GAA_GAC_ANF)
 
+    def test_generate_auth_challenge_failure_agent_not_in_active_state(self):
+        ''' generate_auth_challenge should fail if agent is not in active state '''
+        username='test_generate_auth_challenge_failure_agent_not_in_active_state'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agentname='test_generate_auth_challenge_failure_agent_not_in_active_state'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='Test Version'
+        agent=api.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(api.suspend_agent(aid=agent['aid']))
+        with self.assertRaises(exceptions.ChallengeGenerationException) as cm:
+            challenge=api.generate_auth_challenge(username=username, pubkey=pubkey)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_GAC_IAS)
+
     def test_generate_auth_challenge_success(self):
         ''' generate_auth_challenge should succeed '''
         username='test_generate_auth_challenge_success'
@@ -304,6 +321,29 @@ class GestaccountAgentApiTest(unittest.TestCase):
         with self.assertRaises(exceptions.ChallengeValidationException) as cm:
             api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
         self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_EVS)
+
+    def test_validate_auth_challenge_failure_agent_not_in_active_state(self):
+        ''' validate_auth_challenge should failure agent not in active state '''
+        username='test_validate_auth_challenge_failure_agent_not_in_active_state'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user)
+        agentname='test_generate_auth_challenge_failure_agent_not_in_active_state'
+        key=crypto.generate_rsa_key()
+        pubkey=crypto.serialize_public_key(key.public_key())
+        version='Test Version'
+        agent=api.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        enc_challenge=api.generate_auth_challenge(username=username, pubkey=pubkey)
+        challenge=crypto.decrypt(key=crypto.serialize_private_key(key), ciphertext=enc_challenge)
+        self.assertIsNotNone(challenge)
+        challenge_hash=crypto.get_hash(challenge)
+        signature=crypto.sign_message(key=crypto.serialize_private_key(key), message=challenge_hash)
+        self.assertTrue(api.suspend_agent(aid=agent['aid']))
+        with self.assertRaises(exceptions.ChallengeValidationException) as cm:
+            api.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge_hash, signature=signature)
+        self.assertEqual(cm.exception.error, Errors.E_GAA_VAC_IAS)
 
     def test_validate_auth_challenge_success(self):
         ''' validate_auth_challenge should succeed '''

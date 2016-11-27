@@ -77,7 +77,7 @@ class Cookie:
             self.seq = cookie['seq']
         else:
             raise exceptions.CookieException(error = Errors.E_AP_CC_ID)
-    
+
     @property
     def user(self):
         return self._user
@@ -143,4 +143,15 @@ def get_agent_passport(cookie):
     if agent.state != AgentStates.ACTIVE:
         raise exceptions.AuthorizationExpiredException(error=Errors.E_AP_GAP_IAS)
     return Passport(uid=agent.uid, sid=cookie.sid, aid=agent.aid)
+
+def check_agent_passport_validity(passport):
+    if not isinstance(passport, Passport):
+        raise exceptions.PassportException(error=Errors.E_AP_CPV_IP)
+    if passport.aid is None:
+        raise exceptions.PassportException(error=Errors.E_AP_CPV_IAID)
+    agent = cassapiagent.get_agent(aid=passport.aid)
+    if agent is None:
+        raise exceptions.AgentNotFoundException(error=Errors.E_AP_CPV_ANF)
+    elif agent.state != AgentStates.ACTIVE:
+        raise exceptions.AuthorizationExpiredException(error=Errors.E_AP_CPV_IAS)
 

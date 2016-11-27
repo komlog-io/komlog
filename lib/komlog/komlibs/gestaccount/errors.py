@@ -187,6 +187,7 @@ class Errors(Enum):
     E_GAA_GAC_ANF   = 3703 #: generate_auth_challenge: agent not found
     E_GAA_GAC_EGC   = 3704 #: generate_auth_challenge: error generating challenge
     E_GAA_GAC_EIDB  = 3705 #: generate_auth_challenge: error inserting challenge in database
+    E_GAA_GAC_IAS   = 3706 #: generate_auth_challenge: invalid agent state
 
     E_GAA_VAC_IU    = 3800 #: validate_auth_challenge: invalid user
     E_GAA_VAC_IPK   = 3801 #: validate_auth_challenge: invalid public key
@@ -199,6 +200,7 @@ class Errors(Enum):
     E_GAA_VAC_CHEX  = 3808 #: validate_auth_challenge: challenge expired
     E_GAA_VAC_EIDB  = 3809 #: validate_auth_challenge: error inserting in database
     E_GAA_VAC_EVS   = 3810 #: validate_auth_challenge: error validating signature
+    E_GAA_VAC_IAS   = 3811 #: validate_auth_challenge: invalid agent state
 
 # gestaccount datasource api
 

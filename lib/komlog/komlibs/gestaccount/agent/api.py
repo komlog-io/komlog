@@ -35,6 +35,9 @@ def generate_auth_challenge(username, pubkey):
     agent_pubkey=cassapiagent.get_agent_pubkey(uid=user.uid, pubkey=pubkey)
     if not agent_pubkey:
         raise exceptions.ChallengeGenerationException(error=Errors.E_GAA_GAC_ANF)
+    agent_info = cassapiagent.get_agent(aid=agent_pubkey.aid)
+    if not agent_info or agent_info.state != AgentStates.ACTIVE:
+        raise exceptions.ChallengeGenerationException(error=Errors.E_GAA_GAC_IAS)
     challenge=crypto.get_random_sequence(size=64)
     ch_enc=crypto.encrypt(key=agent_pubkey.pubkey, plaintext=challenge)
     ch_hash=crypto.get_hash(message=challenge)
@@ -65,6 +68,9 @@ def validate_auth_challenge(username, pubkey, challenge_hash, signature):
     agent_pubkey=cassapiagent.get_agent_pubkey(uid=user.uid, pubkey=pubkey)
     if not agent_pubkey:
         raise exceptions.ChallengeValidationException(error=Errors.E_GAA_VAC_ANF)
+    agent_info = cassapiagent.get_agent(aid=agent_pubkey.aid)
+    if not agent_info or agent_info.state != AgentStates.ACTIVE:
+        raise exceptions.ChallengeValidationException(error=Errors.E_GAA_VAC_IAS)
     agent_challenge=cassapiagent.get_agent_challenge(aid=agent_pubkey.aid, challenge=challenge_hash)
     if not agent_challenge:
         raise exceptions.ChallengeValidationException(error=Errors.E_GAA_VAC_CHNF)

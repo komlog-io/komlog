@@ -124,6 +124,11 @@ class Errors(Enum):
     E_AP_GAP_IAS    = 53201      #: get_agent_passport. Invalid agent state
     E_AP_GAP_CANF   = 53202      #: get_agent_passport. Cookie has no aid
 
+    E_AP_CPV_IP     = 53300      #: check_agent_passport_validity. Invalid passport
+    E_AP_CPV_IAID   = 53301      #: check_agent_passport_validity. Invalid aid
+    E_AP_CPV_ANF    = 53302      #: check_agent_passport_validity. Agent not found
+    E_AP_CPV_IAS    = 53303      #: check_agent_passport_validity. Invalid agent state
+
 # auth.tickets.provision
 
     E_ATP_NST_IUID   = 56000      #: new_snapshot_ticket invalid uid

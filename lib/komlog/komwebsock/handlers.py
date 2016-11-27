@@ -28,10 +28,12 @@ class WSConnectionHandler(websocket.WebSocketHandler):
             asyncio.ensure_future(msgapi.send_response_messages(response))
             self.write_message(json.dumps({'status':response.status,'reason':response.reason,'error':response.error}))
 
-    @auth.agent_authenticated
-    def on_close(self):
-        session.unset_session(passport=self.passport)
+    def on_connection_close(self):
+        psp = getattr(self, 'passport', None)
+        if psp:
+            session.unset_session(passport=psp)
 
+    @auth.agent_active
     def agent_callback(self, message):
         self.write_message(json.dumps(message))
 

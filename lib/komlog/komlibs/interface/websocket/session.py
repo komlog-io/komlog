@@ -9,13 +9,14 @@ import time
 import traceback
 from komlog.komfig import logging
 from komlog.komlibs.auth import session
+from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors as errorsv1
 
 agent_callback={}
 
 def set_session(passport, callback):
     try:
-        if session.set_agent_session(sid=passport.sid, aid=passport.aid, uid=passport.uid):
+        if isinstance(passport, Passport) and session.set_agent_session(sid=passport.sid, aid=passport.aid, uid=passport.uid):
             agent_callback[passport.sid]=callback
             return True
         return False
@@ -30,7 +31,7 @@ def set_session(passport, callback):
 
 def unset_session(passport):
     try:
-        if session.unset_agent_session(passport.sid):
+        if isinstance(passport, Passport) and session.unset_agent_session(passport.sid):
             agent_callback.pop(passport.sid,None)
             return True
         return False

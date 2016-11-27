@@ -4,6 +4,7 @@ Lambda functionality related messages
 
 '''
 
+import traceback
 from komlog.komfig import logging, defaults
 from komlog.komlibs.auth import session, passport, authorization
 from komlog.komlibs.auth.resources import authorization as resauth
@@ -150,6 +151,10 @@ def process_message_SSDATA(message):
         except authexcept.SessionNotFoundException:
             response.error=Errors.E_IIALD_SSDT_SNF
         response.status=status.IMC_STATUS_NOT_FOUND
+    except Exception:
+        ex_info=traceback.format_exc().splitlines()
+        for line in ex_info:
+            logging.logger.error(line)
     else:
         response.status=status.IMC_STATUS_OK
     return response

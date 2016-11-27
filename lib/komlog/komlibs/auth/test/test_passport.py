@@ -215,3 +215,58 @@ class AuthPassportTest(unittest.TestCase):
         self.assertEqual(psp.aid, aid)
         self.assertEqual(psp.uid, uid)
 
+    def test_check_agent_passport_validity_failure_invalid_passport(self):
+        ''' check_agent_passport_validity should fail if passport is invalid '''
+        psps = ['234234',1,1.2,{'a':'dict'},uuid.uuid4().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'}]
+        for psp in psps:
+            with self.assertRaises(exceptions.PassportException) as cm:
+                passport.check_agent_passport_validity(passport=psp)
+            self.assertEqual(cm.exception.error, Errors.E_AP_CPV_IP)
+
+    def test_check_agent_passport_validity_failure_passport_has_no_agent(self):
+        ''' check_agent_passport_validity should fail if passport has no agent '''
+        uid = uuid.uuid4()
+        sid = uuid.uuid4()
+        psp = passport.Passport(uid=uid, sid=sid)
+        with self.assertRaises(exceptions.PassportException) as cm:
+            passport.check_agent_passport_validity(passport=psp)
+        self.assertEqual(cm.exception.error, Errors.E_AP_CPV_IAID)
+
+    def test_check_agent_passport_validity_failure_non_existent_agent(self):
+        ''' check_agent_passport_validity should fail if agent does not exist '''
+        uid = uuid.uuid4()
+        sid = uuid.uuid4()
+        aid = uuid.uuid4()
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid)
+        with self.assertRaises(exceptions.AgentNotFoundException) as cm:
+            passport.check_agent_passport_validity(passport=psp)
+        self.assertEqual(cm.exception.error, Errors.E_AP_CPV_ANF)
+
+    def test_check_agent_passport_validity_failure_invalid_agent_state(self):
+        ''' check_agent_passport_validity should fail if agent is not active '''
+        agentname='test_check_agent_passport_validity_failure_invalid_agent_state'
+        pubkey=b'pubkey'
+        uid = uuid.uuid4()
+        aid = uuid.uuid4()
+        sid = uuid.uuid4()
+        state = AgentStates.SUSPENDED
+        agent = ormagent.Agent(uid=uid, aid=aid, agentname=agentname, pubkey=pubkey, state=state)
+        self.assertTrue(cassapiagent.new_agent(agent))
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid)
+        with self.assertRaises(exceptions.AuthorizationExpiredException) as cm:
+            passport.check_agent_passport_validity(passport=psp)
+        self.assertEqual(cm.exception.error, Errors.E_AP_CPV_IAS)
+
+    def test_check_agent_passport_validity_success(self):
+        ''' check_agent_passport_validity should succeed '''
+        agentname='test_check_agent_passport_validity_success'
+        pubkey=b'pubkey'
+        uid = uuid.uuid4()
+        aid = uuid.uuid4()
+        sid = uuid.uuid4()
+        state = AgentStates.ACTIVE
+        agent = ormagent.Agent(uid=uid, aid=aid, agentname=agentname, pubkey=pubkey, state=state)
+        self.assertTrue(cassapiagent.new_agent(agent))
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid)
+        self.assertIsNone(passport.check_agent_passport_validity(passport=psp))
+
