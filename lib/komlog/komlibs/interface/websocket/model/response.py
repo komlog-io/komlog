@@ -1,6 +1,6 @@
 from komlog.komlibs.general.validation import arguments as args
-from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
-from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
+from komlog.komlibs.interface.websocket import exceptions
+from komlog.komlibs.interface.websocket.errors import Errors
 
 class Response:
     def __init__(self, status, error=Errors.OK, reason=None):
@@ -20,7 +20,7 @@ class Response:
         if args.is_valid_int(value):
             self._status=value
         else:
-            raise exceptions.ResponseValidationException(error=Errors.E_IWSPV1MR_RESP_IS)
+            raise exceptions.ResponseValidationException(error=Errors.E_IWSMR_RESP_IS)
 
     @property
     def routed_messages(self):

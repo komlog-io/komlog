@@ -139,7 +139,7 @@ def insert_agent_session(obj):
     if not isinstance(obj, ormagent.AgentSession):
         return False
     else:
-        connection.session.execute(stmtagent.I_A_MSTAGENTSESSION,(obj.sid,obj.aid,obj.uid,obj.imc_address,obj.last_update))
+        connection.session.execute(stmtagent.I_A_MSTAGENTSESSION,(obj.sid,obj.aid,obj.uid,obj.pv,obj.imc_address,obj.last_update))
         return True
 
 @exceptions.ExceptionHandler
@@ -147,7 +147,7 @@ def update_agent_session_if_last_update(obj, last_update):
     if not isinstance(obj, ormagent.AgentSession):
         return False
     else:
-        resp=connection.session.execute(stmtagent.U_A_MSTAGENTSESSION_B_SID_I_LASTUPDATE,(obj.aid,obj.uid,obj.imc_address,obj.last_update,obj.sid,last_update))
+        resp=connection.session.execute(stmtagent.U_A_MSTAGENTSESSION_B_SID_I_LASTUPDATE,(obj.aid,obj.uid,obj.pv,obj.imc_address,obj.last_update,obj.sid,last_update))
         return resp[0]['[applied]'] if resp else False
 
 @exceptions.ExceptionHandler

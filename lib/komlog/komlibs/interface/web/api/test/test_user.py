@@ -34,7 +34,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -70,7 +70,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -173,7 +173,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -222,7 +222,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -262,7 +262,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True, segment=segment, token=token.id)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -294,7 +294,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -346,7 +346,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response2=userapi.confirm_user_request(email=msg.email, code=msg.code)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response3 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -451,7 +451,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response2=userapi.confirm_user_request(email=msg.email, code=msg.code)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response3 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -471,7 +471,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -500,7 +500,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         new_email=username+'2@komlog.org'
         old_password=password
@@ -569,7 +569,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         data={}
         data['old_password']='validpassword'
@@ -584,7 +584,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         data={}
         data['old_password']=password
@@ -599,7 +599,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         data={}
         data['new_password']=password
@@ -614,7 +614,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         data={}
         data['new_password']=password
@@ -680,7 +680,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -803,7 +803,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -850,7 +850,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -912,7 +912,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -966,7 +966,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -1043,7 +1043,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response2 = userapi.get_user_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
@@ -1107,7 +1107,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         segments= [None, 424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','/asdfa','my user']
         for segment in segments:
@@ -1124,7 +1124,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         tokens = [424, {'a':'dict'},['a list',],uuid.uuid4(), uuid.uuid1(), {'set'},('a','tuple')]
         segment='1'
@@ -1142,7 +1142,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         segment='1'
         response=userapi.upgrade_user_segment_request(passport=psp, segment=segment)
@@ -1158,7 +1158,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         segment='42523931'
         response=userapi.upgrade_user_segment_request(passport=psp, segment=segment)
@@ -1174,7 +1174,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         segment='2'
         token = stripe.Token.create(
@@ -1211,7 +1211,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         segment='2'
         token = stripe.Token.create(
@@ -1255,7 +1255,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         response=userapi.get_user_upgrade_info_request(passport=psp)
         self.assertEqual(response.error, Errors.OK.value)
@@ -1273,7 +1273,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         segment='2'
         token = stripe.Token.create(

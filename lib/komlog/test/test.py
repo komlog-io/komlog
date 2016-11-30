@@ -68,7 +68,6 @@ MODULES = [
     'komlog.komlibs.interface.web.api.test.test_circle.InterfaceWebApiCircleTest',
     'komlog.komlibs.interface.web.api.test.test_uri.InterfaceWebApiUriTest',
     'komlog.komlibs.interface.web.api.test.test_events.InterfaceWebApiEventsTest',
-    'komlog.komlibs.interface.websocket.protocol.v1.model.test.test_response.InterfaceWebSocketProtocolV1ModelResponseTest',
     'komlog.komlibs.interface.websocket.protocol.v1.model.test.test_message.InterfaceWebSocketProtocolV1ModelMessageTest',
     'komlog.komlibs.interface.websocket.protocol.v1.model.test.test_operation.InterfaceWebSocketProtocolV1ModelOperationTest',
     'komlog.komlibs.interface.websocket.protocol.v1.processing.test.test_operation.InterfaceWebSocketProtocolV1ProcessingOperationTest',
@@ -76,6 +75,7 @@ MODULES = [
     'komlog.komlibs.interface.websocket.protocol.v1.test.test_api.InterfaceWebSocketProtocolV1ApiTest',
     'komlog.komlibs.interface.websocket.test.test_api.InterfaceWebSocketApiTest',
     'komlog.komlibs.interface.websocket.test.test_session.InterfaceWebSocketSessionTest',
+    'komlog.komlibs.interface.websocket.model.test.test_response.InterfaceWebSocketModelResponseTest',
 ]
 
 def run_tests():

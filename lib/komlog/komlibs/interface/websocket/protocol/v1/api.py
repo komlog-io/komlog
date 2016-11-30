@@ -6,11 +6,11 @@ This file implement the v1 api of the websocket protocol
 
 import time
 from komlog.komfig import logging
-from komlog.komlibs.interface.websocket.protocol.v1 import status, exceptions
+from komlog.komlibs.interface.websocket import status, exceptions
+from komlog.komlibs.interface.websocket.model.response import Response
+from komlog.komlibs.interface.websocket.model.types import Messages
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.processing import message as procmsg
-from komlog.komlibs.interface.websocket.protocol.v1.model.response import Response
-from komlog.komlibs.interface.websocket.protocol.v1.model.types import Messages
 
 
 

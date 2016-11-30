@@ -16,7 +16,7 @@ agent_callback={}
 
 def set_session(passport, callback):
     try:
-        if isinstance(passport, Passport) and session.set_agent_session(sid=passport.sid, aid=passport.aid, uid=passport.uid):
+        if isinstance(passport, Passport) and session.set_agent_session(sid=passport.sid, aid=passport.aid, uid=passport.uid, pv=passport.pv):
             agent_callback[passport.sid]=callback
             return True
         return False

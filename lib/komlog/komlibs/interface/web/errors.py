@@ -357,9 +357,11 @@ class Errors(Enum):
 
     E_IWAL_ALGCR_IU    = 105200 #: agent_login_generate_challenge_request: invalid username
     E_IWAL_ALGCR_IPK   = 105201 #: agent_login_generate_challenge_request: invalid pubkey
+    E_IWAL_ALGCR_IPV   = 105202 #: agent_login_generate_challenge_request: invalid protocol version
 
     E_IWAL_ALVCR_IU    = 105300 #: agent_login_validate_challenge_request: invalid username
     E_IWAL_ALVCR_IPK   = 105301 #: agent_login_validate_challenge_request: invalid pubkey
     E_IWAL_ALVCR_ICH   = 105302 #: agent_login_validate_challenge_request: invalid challenge
     E_IWAL_ALVCR_ISG   = 105303 #: agent_login_validate_challenge_request: invalid signature
+    E_IWAL_ALVCR_IPV   = 105304 #: agent_login_validate_challenge_request: invalid protocol version
 

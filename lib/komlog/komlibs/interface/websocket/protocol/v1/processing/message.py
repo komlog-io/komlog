@@ -21,12 +21,12 @@ from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.graph.api import uri as graphuri
 from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.interface.imc.model import messages
-from komlog.komlibs.interface.websocket.protocol.v1 import status, exceptions
+from komlog.komlibs.interface.websocket import status, exceptions
+from komlog.komlibs.interface.websocket.model.response import Response
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.processing import operation
 from komlog.komlibs.interface.websocket.protocol.v1.model import message as modmsg
 from komlog.komlibs.interface.websocket.protocol.v1.model import operation as modop
-from komlog.komlibs.interface.websocket.protocol.v1.model.response import Response
 
 
 

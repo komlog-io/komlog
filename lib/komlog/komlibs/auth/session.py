@@ -22,7 +22,7 @@ def get_agent_session_info(sid):
         raise exceptions.SessionNotFoundException(error=Errors.E_AS_GASI_SNF)
     return session
 
-def set_agent_session(sid, aid, uid):
+def set_agent_session(sid, aid, uid, pv):
     ''' associate the session id to the current imc_address of the running process '''
     if not args.is_valid_uuid(sid):
         raise exceptions.BadParametersException(error=Errors.E_AS_SAGS_ISID)
@@ -30,12 +30,15 @@ def set_agent_session(sid, aid, uid):
         raise exceptions.BadParametersException(error=Errors.E_AS_SAGS_IAID)
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=Errors.E_AS_SAGS_IUID)
+    if not args.is_valid_int(pv):
+        raise exceptions.BadParametersException(error=Errors.E_AS_SAGS_IPV)
     if msgbus.msgbus.imc_address is None:
         raise exceptions.BadParametersException(error=Errors.E_AS_SAGS_IMCNC)
     session=ormagent.AgentSession(
         sid=sid,
         aid=aid,
         uid=uid,
+        pv=pv,
         imc_address=msgbus.msgbus.imc_address,
         last_update=timeuuid.uuid1()
     )
@@ -54,6 +57,7 @@ def unset_agent_session(sid, last_update=None):
         sid=sid,
         aid=None,
         uid=None,
+        pv=None,
         imc_address=None,
         last_update=timeuuid.uuid1()
     )

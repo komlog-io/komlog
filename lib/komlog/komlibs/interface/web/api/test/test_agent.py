@@ -394,7 +394,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         aid = uuid.uuid4().hex
         response=agentapi.suspend_agent_request(passport=psp, aid=aid)
@@ -410,7 +410,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         agentname='agentname'
         pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
@@ -454,7 +454,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         aid = uuid.uuid4().hex
         response=agentapi.activate_agent_request(passport=psp, aid=aid)
@@ -470,7 +470,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        cookie = {'user':username,'sid':uuid.uuid4().hex,  'aid':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         psp = passport.get_user_passport(cookie)
         agentname='agentname'
         pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')

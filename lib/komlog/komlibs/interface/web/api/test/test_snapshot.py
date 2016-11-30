@@ -69,7 +69,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         agents_info=agentapi.get_agents_config_request(passport=self.passport)
         self.agents=agents_info.data
         aid = response.data['aid']
-        cookie = {'user':self.username, 'sid':uuid.uuid4().hex,  'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'pv':1, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         self.agent_passport = passport.get_agent_passport(cookie)
         self.username_to_share='test_komlibs.interface.web.api.snapshot_user_to_share'
         response = loginapi.login_request(username=self.username_to_share, password=self.password)

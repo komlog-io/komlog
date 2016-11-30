@@ -29,10 +29,11 @@ class AgentChallenge:
         self.validated = validated
 
 class AgentSession:
-    def __init__(self, sid, aid, uid, imc_address, last_update):
+    def __init__(self, sid, aid, uid, pv, imc_address, last_update):
         self.sid = sid
         self.aid = aid
         self.uid = uid
+        self.pv  = pv
         self.imc_address = imc_address
         self.last_update = last_update
 

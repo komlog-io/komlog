@@ -17,13 +17,17 @@ from komlog.komfig import logging
 
 
 class Passport:
-    def __init__(self, uid, sid, aid=None):
+    def __init__(self, uid, sid, aid=None,pv=None):
         self._uid=None
         self._sid=None
         self._aid=None
+        self._pv=None
         self.uid = uid
         self.sid = sid
         self.aid = aid
+        self.pv = pv
+        if bool(self.pv) ^ bool(self.aid):
+            raise exceptions.PassportException(error = Errors.E_AP_PC_AIDORPV)
 
     @property
     def uid(self):
@@ -60,20 +64,36 @@ class Passport:
         else:
             raise exceptions.PassportException(error = Errors.E_AP_PC_IA)
 
+    @property
+    def pv(self):
+        return self._pv
+
+    @pv.setter
+    def pv(self, value):
+        if value is None:
+            self._pv = None
+        elif args.is_valid_int(value):
+            self._pv = value
+        else:
+            raise exceptions.PassportException(error = Errors.E_AP_PC_IPV)
+
 class Cookie:
     def __init__(self, cookie):
         self._user = None
         self._sid = None
         self._aid = None
         self._seq = None
+        self._pv = None
         if (isinstance(cookie, dict)
             and 'user' in cookie
             and 'sid' in cookie
             and 'aid' in cookie
+            and 'pv' in cookie
             and 'seq' in cookie):
             self.user= cookie['user']
             self.sid = cookie['sid']
             self.aid = cookie['aid']
+            self.pv = cookie['pv']
             self.seq = cookie['seq']
         else:
             raise exceptions.CookieException(error = Errors.E_AP_CC_ID)
@@ -114,6 +134,19 @@ class Cookie:
             raise exceptions.CookieException(error = Errors.E_AP_CC_IA)
 
     @property
+    def pv(self):
+        return self._pv
+
+    @pv.setter
+    def pv(self, value):
+        if value is None:
+            self._pv = None
+        elif args.is_valid_int(value):
+            self._pv = value
+        else:
+            raise exceptions.CookieException(error = Errors.E_AP_CC_IPV)
+
+    @property
     def seq(self):
         return self._seq
 
@@ -137,12 +170,14 @@ def get_agent_passport(cookie):
     cookie = Cookie(cookie)
     if not cookie.aid:
         raise exceptions.CookieException(error=Errors.E_AP_GAP_CANF)
+    if cookie.pv is None:
+        raise exceptions.CookieException(error=Errors.E_AP_GAP_CPVNF)
     agent = cassapiagent.get_agent(aid=cookie.aid)
     if not agent:
         raise exceptions.AgentNotFoundException(error=Errors.E_AP_GAP_ANF)
     if agent.state != AgentStates.ACTIVE:
         raise exceptions.AuthorizationExpiredException(error=Errors.E_AP_GAP_IAS)
-    return Passport(uid=agent.uid, sid=cookie.sid, aid=agent.aid)
+    return Passport(uid=agent.uid, sid=cookie.sid, aid=agent.aid, pv=cookie.pv)
 
 def check_agent_passport_validity(passport):
     if not isinstance(passport, Passport):

@@ -20,7 +20,8 @@ from komlog.komlibs.interface.imc import status, exceptions
 from komlog.komlibs.interface.imc.errors import Errors
 from komlog.komlibs.interface.imc.model import messages, responses
 from komlog.komlibs.interface.websocket import session as ws_session
-from komlog.komlibs.interface.websocket.protocol.v1.model import message as ws_message
+from komlog.komlibs.interface.websocket.model.message import MessagesCatalog
+from komlog.komlibs.interface.websocket.model.types import Messages
 from komlog.komimc import bus as msgbus
 
 
@@ -78,9 +79,10 @@ def process_message_URISUPDT(message):
                         pass
                 if len(data)>0:
                     ts=timeuuid.get_isodate_from_uuid(date)
-                    msg=ws_message.SendMultiData(ts=ts, uris=data)
-                    message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
-                    response.add_message(message,dest=session_info.imc_address)
+                    msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_MULTI_DATA, ts=ts, uris=data)
+                    if msg:
+                        message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
+                        response.add_message(message,dest=session_info.imc_address)
         except authexcept.SessionNotFoundException:
             message=messages.ClearSessionHooksMessage(sid=sid, ids=[(uri['id'],uri['type']) for uri in uris])
             response.add_message(message)
@@ -172,7 +174,7 @@ def process_message_DATINT(message):
             response.error=Errors.E_IIALD_DATINT_NSA
         response.status=status.IMC_STATUS_NOT_FOUND
         return response
-    psp=passport.Passport(uid=session_info.uid, aid=session_info.aid, sid=session_info.sid)
+    psp=passport.Passport(uid=session_info.uid, aid=session_info.aid, sid=session_info.sid, pv=session_info.pv)
     try:
         if message.uri['type'] == vertex.DATASOURCE:
             authorization.authorize_get_datasource_data(psp, did=message.uri['id'], ii=message.ii, ie=message.ie, tid=None)
@@ -184,17 +186,19 @@ def process_message_DATINT(message):
             start=timeuuid.get_isodate_from_uuid(message.ii)
             end=timeuuid.get_isodate_from_uuid(message.ie)
             data=[]
-            msg=ws_message.SendDataInterval(uri=uri, start=start, end=end, data=data)
-            imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
-            response.add_message(imc_message,dest=session_info.imc_address)
+            msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=data)
+            if msg:
+                imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
+                response.add_message(imc_message,dest=session_info.imc_address)
         else:
             uri={'uri':message.uri['uri'],'type':message.uri['type']}
             start=timeuuid.get_isodate_from_uuid(message.ii)
             limit=e.data['date']
             end=timeuuid.get_isodate_from_uuid(limit)
-            msg=ws_message.SendDataInterval(uri=uri, start=start, end=end, data=[])
-            imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
-            response.add_message(imc_message,dest=session_info.imc_address)
+            msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=[])
+            if msg:
+                imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
+                response.add_message(imc_message,dest=session_info.imc_address)
             imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=limit, ie=message.ie, count=message.count)
             response.add_message(imc_message)
     except (authexcept.DatapointNotFoundException,
@@ -203,9 +207,10 @@ def process_message_DATINT(message):
             start=timeuuid.get_isodate_from_uuid(ii)
             end=timeuuid.get_isodate_from_uuid(ie)
             data=[]
-            msg=ws_message.SendDataInterval(uri=uri, start=start, end=end, data=data)
-            imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
-            response.add_message(imc_message,dest=session_info.imc_address)
+            msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=data)
+            if msg:
+                imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
+                response.add_message(imc_message,dest=session_info.imc_address)
     else:
         uri={'uri':message.uri['uri'],'type':message.uri['type']}
         start=timeuuid.get_isodate_from_uuid(message.ii)
@@ -232,9 +237,10 @@ def process_message_DATINT(message):
                 new_count = message.count-count if message.count else None
                 imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=message.ii, ie=new_ie, count=new_count)
                 response.add_message(imc_message)
-        msg=ws_message.SendDataInterval(uri=uri, start=start, end=end, data=resp_data)
-        imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
-        response.add_message(imc_message,dest=session_info.imc_address)
+        msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=resp_data)
+        if msg:
+            imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
+            response.add_message(imc_message,dest=session_info.imc_address)
     response.status=status.IMC_STATUS_OK
     return response
 

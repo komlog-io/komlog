@@ -8,7 +8,7 @@ from komlog.komlibs.events import exceptions as eventexcept
 from komlog.komlibs.interface.imc import status
 from komlog.komlibs.interface.imc.errors import Errors
 from komlog.komlibs.interface.imc.model import responses
-from komlog.komlibs.interface.websocket.protocol.v1 import exceptions as wsv1except
+from komlog.komlibs.interface.websocket import exceptions as wsexcept
 
 class BadParametersException(Exception):
     def __init__(self, error):
@@ -61,7 +61,7 @@ INTERNAL_ERROR_STATUS_EXCEPTION_LIST=(
     gestexcept.CircleAddMemberException,
     gestexcept.CircleDeleteMemberException,
     eventexcept.UserEventCreationException,
-    wsv1except.MessageValidationException,
+    wsexcept.MessageValidationException,
 )
 
 SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST = (

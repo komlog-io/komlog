@@ -1,9 +1,9 @@
 
 from komlog.komlibs.auth.model.operations import Operations as AuthOperations
 from komlog.komlibs.general.validation import arguments as args
-from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket import exceptions
+from komlog.komlibs.interface.websocket.model.types import Operations
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
-from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operations
 
 
 OPAUTHS={

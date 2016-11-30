@@ -7,26 +7,26 @@ import pandas as pd
 from komlog.komfig import logging
 from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.general.time import timeuuid
-from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket import exceptions
+from komlog.komlibs.interface.websocket.model.types import Messages
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model import message
-from komlog.komlibs.interface.websocket.protocol.v1.model.types import Messages
 
 
 class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     ''' komlibs.interface.websocket.protocol.v1.model.message tests '''
 
-    def test_KomlogMessage_failure_direct_instantiation_not_allowed(self):
-        ''' we cannot create a KomlogMessage object directly. we only are allowed to
+    def test_MessagesVersionCatalog_failure_direct_instantiation_not_allowed(self):
+        ''' we cannot create a MessagesVersionCatalog object directly. we only are allowed to
             create one of its derived classes '''
         with self.assertRaises(TypeError) as cm:
-            msg=message.KomlogMessage()
-        self.assertEqual(str(cm.exception), '<KomlogMessage> cannot be instantiated directly')
+            msg=message.MessagesVersionCatalog()
+        self.assertEqual(str(cm.exception), '<MessagesVersionCatalog> cannot be instantiated directly')
 
     def test_SendDsData_version_cannot_be_modified(self):
         ''' if we create a new SendDsData message, the version param cannot be modified  '''
         msg=message.SendDsData(uri='uri',ts=pd.Timestamp('now',tz='utc'),content='ds_content')
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
         self.assertFalse(getattr(msg,'payload', False))
         with self.assertRaises(TypeError) as cm:
@@ -36,7 +36,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDsData_action_cannot_be_modified(self):
         ''' if we create a new SendDsData message, the action param cannot be modified  '''
         msg=message.SendDsData(uri='uri',ts=pd.Timestamp('now',tz='utc'),content='ds_content')
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
         self.assertFalse(getattr(msg,'payload', False))
         with self.assertRaises(TypeError) as cm:
@@ -47,9 +47,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDsData.to_dict() method should generate a valid serializable dict '''
         ts=pd.Timestamp('now',tz='utc')
         msg=message.SendDsData(uri='uri',ts=ts,content='content')
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.KomlogMessage._version_,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDsData_success_generating_serializable_dict_with_no_timezone_ts(self):
@@ -57,21 +57,21 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ts='2016-07-18T17:15:00'
         ts2=pd.Timestamp(ts,tz='utc')
         msg=message.SendDsData(uri='uri',ts=ts,content='content')
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.KomlogMessage._version_,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':ts2.isoformat(),'content':'content'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':ts2.isoformat(),'content':'content'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDsData_success_loading_from_dict(self):
         ''' SendDsData.load_from_dict() method should generate a valid SendDsData object '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
         }
         msg=message.SendDsData.load_from_dict(dict_msg)
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
@@ -81,13 +81,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ts='2016-07-18T17:15:00'
         ts2=pd.Timestamp(ts, tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'payload':{'uri':'uri','ts':ts,'content':'content'}
         }
         msg=message.SendDsData.load_from_dict(dict_msg)
         dict_msg['payload']['ts']=ts2.isoformat()
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
         self.assertEqual(msg.ts.timestamp(), ts2.timestamp())
         self.assertEqual(msg.to_dict(),dict_msg)
@@ -109,7 +109,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
         }
@@ -121,7 +121,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'payload':['uri','uri','ts',ts.isoformat(),'content','content']
         }
@@ -133,7 +133,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'payload':{'ari':'uri','ts':ts.isoformat(),'content':'content'}
         }
@@ -144,7 +144,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDsData_failure_loading_from_dict_invalid_payload_ts_not_found(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'payload':{'uri':'uri','its':1,'content':'content'}
         }
@@ -156,7 +156,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'payload':{'uri':'uri','ts':ts.isoformat(),'contents':'content'}
         }
@@ -168,7 +168,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'payload':{'uri':'ñññinvalid uri','ts':ts.isoformat(),'content':'content'}
         }
@@ -179,7 +179,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDsData_failure_loading_from_dict_invalid_payload_ts_invalid(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'payload':{'uri':'uri','ts':'1','content':'content'}
         }
@@ -191,7 +191,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'payload':{'uri':'uri','ts':ts.isoformat(),'content':{'a':'dict'}}
         }
@@ -203,9 +203,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDpData.to_dict() method should generate a valid serializable dict '''
         ts=pd.Timestamp('now',tz='utc')
         msg=message.SendDpData(uri='uri',ts=ts,content='33.33')
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.KomlogMessage._version_,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDpData_success_generating_serializable_dict_with_no_timezone_ts(self):
@@ -213,9 +213,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ts='2016-07-18T17:15:00'
         ts2=pd.Timestamp(ts,tz='utc')
         msg=message.SendDpData(uri='uri',ts=ts,content='33.33')
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.KomlogMessage._version_,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':ts2.isoformat(),'content':'33.33'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':ts2.isoformat(),'content':'33.33'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
 
@@ -223,12 +223,12 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDpData.load_from_dict() method should generate a valid SendDpData object '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
         }
         msg=message.SendDpData.load_from_dict(dict_msg)
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
@@ -238,13 +238,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ts='2016-07-18T17:15:00'
         ts2=pd.Timestamp(ts,tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'payload':{'uri':'uri','ts':ts,'content':'33.33'}
         }
         msg=message.SendDpData.load_from_dict(dict_msg)
         dict_msg['payload']['ts']=ts2.isoformat()
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
         self.assertEqual(msg.ts.timestamp(), ts2.timestamp())
         self.assertEqual(msg.to_dict(),dict_msg)
@@ -266,7 +266,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
         }
@@ -278,7 +278,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'payload':['uri','uri','ts',ts.isoformat(),'content','33.33']
         }
@@ -290,7 +290,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'payload':{'ari':'uri','ts':ts.isoformat(),'content':'33.33'}
         }
@@ -301,7 +301,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDpData_failure_loading_from_dict_invalid_payload_ts_not_found(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'payload':{'uri':'uri','its':1,'content':'33.33'}
         }
@@ -313,7 +313,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'payload':{'uri':'uri','ts':ts.isoformat(),'contents':'33.33'}
         }
@@ -325,7 +325,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'payload':{'uri':'ñññinvalid uri','ts':ts.isoformat(),'content':'33.33'}
         }
@@ -336,7 +336,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDpData_failure_loading_from_dict_invalid_payload_ts_invalid(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'payload':{'uri':'uri','ts':'1','content':'33.33'}
         }
@@ -348,7 +348,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'payload':{'uri':'uri','ts':ts.isoformat(),'content':{'a':'dict'}}
         }
@@ -360,9 +360,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.to_dict() method should generate a valid serializable dict '''
         ts=pd.Timestamp('now',tz='utc')
         msg=message.SendMultiData(uris=[{'uri':'uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],ts=ts)
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.KomlogMessage._version_,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendMultiData_success_generating_serializable_dict_with_no_timezone_ts(self):
@@ -370,21 +370,21 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ts='2016-07-18T17:15:00'
         ts2=pd.Timestamp(ts, tz='utc')
         msg=message.SendMultiData(uris=[{'uri':'uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],ts=ts)
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.KomlogMessage._version_,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts2.isoformat()}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts2.isoformat()}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendMultiData_success_loading_from_dict(self):
         ''' SendMultiData.load_from_dict() method should generate a valid SendMultiData object '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
         }
         msg=message.SendMultiData.load_from_dict(dict_msg)
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
@@ -394,13 +394,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ts='2016-07-18T17:15:00'
         ts2=pd.Timestamp(ts, tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts}
         }
         msg=message.SendMultiData.load_from_dict(dict_msg)
         dict_msg['payload']['ts']=ts2.isoformat()
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
         self.assertEqual(msg.ts.timestamp(),ts2.timestamp())
         self.assertEqual(msg.to_dict(),dict_msg)
@@ -422,7 +422,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
         }
@@ -434,7 +434,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':['uri','uri','ts',ts.isoformat(),'content','33.33']
         }
@@ -446,7 +446,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{'aris':[{'uri':'uri','type':vertex.DATAPOINT, 'content':'33.33'}],'ts':ts.isoformat()}
         }
@@ -457,7 +457,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_ts_not_found(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'its':1}
         }
@@ -469,7 +469,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{'uris':{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},'ts':ts.isoformat()}
         }
@@ -481,7 +481,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{'uris':['string','other','trhee'],'ts':ts.isoformat()}
         }
@@ -493,7 +493,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
@@ -510,7 +510,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
@@ -527,7 +527,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
@@ -544,7 +544,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
@@ -561,7 +561,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
@@ -578,7 +578,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         ts=pd.Timestamp('now',tz='utc')
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
@@ -594,7 +594,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_ts_invalid(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{
                 'uris':[
@@ -610,20 +610,20 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_HookToUri_success_generating_serializable_dict(self):
         ''' HookToUri.to_dict() method should generate a valid serializable dict '''
         msg=message.HookToUri(uri='uri')
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.HOOK_TO_URI)
-        self.assertEqual(msg.to_dict(), {'v':message.KomlogMessage._version_,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_HookToUri_success_loading_from_dict(self):
         ''' HookToUri.load_from_dict() method should generate a valid HookToUri object '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
             'payload':{'uri':'uri'}
         }
         msg=message.HookToUri.load_from_dict(dict_msg)
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.HOOK_TO_URI)
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
@@ -642,7 +642,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_HookToUri_failure_loading_from_dict_invalid_action(self):
         ''' HookToUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'payload':{'uri':'uri'}
         }
@@ -653,7 +653,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_HookToUri_failure_loading_from_dict_invalid_payload_type(self):
         ''' HookToUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
             'payload':['uri','uri']
         }
@@ -664,7 +664,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_HookToUri_failure_loading_from_dict_invalid_payload_uri_not_found(self):
         ''' HookToUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
             'payload':{'ari':'uri'}
         }
@@ -675,7 +675,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_HookToUri_failure_loading_from_dict_invalid_payload_uri_invalid(self):
         ''' HookToUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
             'payload':{'uri':['uri']}
         }
@@ -686,20 +686,20 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_UnHookFromUri_success_generating_serializable_dict(self):
         ''' UnHookFromUri.to_dict() method should generate a valid serializable dict '''
         msg=message.UnHookFromUri(uri='uri')
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.UNHOOK_FROM_URI)
-        self.assertEqual(msg.to_dict(), {'v':message.KomlogMessage._version_,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_UnHookFromUri_success_loading_from_dict(self):
         ''' UnHookFromUri.load_from_dict() method should generate a valid UnHookFromUri object '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.UNHOOK_FROM_URI.value,
             'payload':{'uri':'uri'}
         }
         msg=message.UnHookFromUri.load_from_dict(dict_msg)
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.UNHOOK_FROM_URI)
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
@@ -718,7 +718,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_UnHookFromUri_failure_loading_from_dict_invalid_action(self):
         ''' UnHookFromUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
             'payload':{'uri':'uri'}
         }
@@ -729,7 +729,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_UnHookFromUri_failure_loading_from_dict_invalid_payload_type(self):
         ''' UnHookFromUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.UNHOOK_FROM_URI.value,
             'payload':['uri','uri']
         }
@@ -740,7 +740,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_UnHookFromUri_failure_loading_from_dict_invalid_payload_uri_not_found(self):
         ''' UnHookFromUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.UNHOOK_FROM_URI.value,
             'payload':{'ari':'uri'}
         }
@@ -751,7 +751,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_UnHookFromUri_failure_loading_from_dict_invalid_payload_uri_invalid(self):
         ''' UnHookFromUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.UNHOOK_FROM_URI.value,
             'payload':{'uri':['uri']}
         }
@@ -771,10 +771,10 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.start, start)
         self.assertEqual(msg.end, end)
         self.assertEqual(msg.count, count)
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.REQUEST_DATA)
         expected_dict={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -795,10 +795,10 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.start, None)
         self.assertEqual(msg.end, None)
         self.assertEqual(msg.count, count)
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.REQUEST_DATA)
         expected_dict={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -820,10 +820,10 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.start, start)
         self.assertEqual(msg.end, end)
         self.assertEqual(msg.count, None)
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.REQUEST_DATA)
         expected_dict={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -883,7 +883,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial=[{
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -902,7 +902,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'va':message.KomlogMessage._version_,
+            'va':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -921,7 +921,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'theaction':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -940,7 +940,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'fayload':{
                 'uri':uri,
@@ -959,7 +959,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.KomlogMessage._version_],
+            'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -997,7 +997,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.KomlogMessage._version_],
+            'v':[message.MessagesVersionCatalog._version_],
             'action':[Messages.REQUEST_DATA.value],
             'payload':{
                 'uri':uri,
@@ -1016,7 +1016,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.KomlogMessage._version_],
+            'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.SEND_DS_DATA.value,
             'payload':{
                 'uri':uri,
@@ -1035,7 +1035,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.KomlogMessage._version_],
+            'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.REQUEST_DATA.value,
             'payload':[{
                 'uri':uri,
@@ -1054,7 +1054,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.KomlogMessage._version_],
+            'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'ari':uri,
@@ -1073,7 +1073,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.KomlogMessage._version_],
+            'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -1092,7 +1092,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.KomlogMessage._version_],
+            'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -1111,7 +1111,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.KomlogMessage._version_],
+            'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -1130,7 +1130,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.KomlogMessage._version_],
+            'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -1165,10 +1165,10 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.start, start)
         self.assertEqual(msg.end, end)
         self.assertEqual(msg.data, data)
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DATA_INTERVAL)
         expected_dict={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
             'payload':{
                 'uri':uri,
@@ -1476,7 +1476,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial=[{
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
             'payload':{
                 'uri':uri,
@@ -1506,7 +1506,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'vi':message.KomlogMessage._version_,
+            'vi':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
             'payload':{
                 'uri':uri,
@@ -1536,7 +1536,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'theaction':Messages.SEND_DATA_INTERVAL.value,
             'payload':{
                 'uri':uri,
@@ -1566,7 +1566,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
             'iipayload':{
                 'uri':uri,
@@ -1596,7 +1596,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':[message.KomlogMessage._version_],
+            'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.SEND_DATA_INTERVAL.value,
             'payload':{
                 'uri':uri,
@@ -1626,7 +1626,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':message.KomlogMessage._version_+1,
+            'v':message.MessagesVersionCatalog._version_+1,
             'action':Messages.SEND_DATA_INTERVAL.value,
             'payload':{
                 'uri':uri,
@@ -1656,7 +1656,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL,
             'payload':{
                 'uri':uri,
@@ -1686,7 +1686,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -1716,7 +1716,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
             'payload':[{
                 'uri':uri,
@@ -1746,7 +1746,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
             'payload':{
                 'iuri':uri,
@@ -1776,7 +1776,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
             'payload':{
                 'uri':uri,
@@ -1806,7 +1806,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
             'payload':{
                 'uri':uri,
@@ -1836,7 +1836,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
             'payload':{
                 'uri':uri,
@@ -1866,7 +1866,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
         ]
         serial={
-            'v':message.KomlogMessage._version_,
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
             'payload':{
                 'uri':uri,
@@ -1877,7 +1877,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         }
         msg=message.SendDataInterval.load_from_dict(serial)
         self.assertTrue(isinstance(msg, message.SendDataInterval))
-        self.assertEqual(msg.v, message.KomlogMessage._version_)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DATA_INTERVAL)
         self.assertEqual(msg.uri, uri)
         self.assertEqual(msg.start, start)

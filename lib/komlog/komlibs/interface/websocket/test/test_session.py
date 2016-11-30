@@ -19,8 +19,9 @@ class InterfaceWebSocketSessionTest(unittest.TestCase):
         ''' set_session should succeed and associate the sid with the current process imc_address '''
         uid = uuid.uuid4()
         aid = uuid.uuid4()
+        pv = 1
         sid=uuid.uuid4()
-        psp = Passport(uid=uid,sid=sid,aid=aid)
+        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
         def callback(message):
             return message
         self.assertTrue(session.set_session(psp,callback))
@@ -37,7 +38,8 @@ class InterfaceWebSocketSessionTest(unittest.TestCase):
         ''' unset_session should succeed and disassociate the sid with the current process imc_address '''
         uid = uuid.uuid4()
         aid = uuid.uuid4()
+        pv = 1
         sid=uuid.uuid4()
-        psp = Passport(uid=uid,sid=sid,aid=aid)
+        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
         self.assertTrue(session.unset_session(psp))
 

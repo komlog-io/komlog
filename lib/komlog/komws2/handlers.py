@@ -341,12 +341,13 @@ class LoginHandler(tornado.web.RequestHandler):
             pubkey=self.get_argument('k',None)
             challenge=self.get_argument('c',None)
             signature=self.get_argument('s',None)
+            pv=self.get_argument('pv',None)
         except Exception:
             self.redirect(self.get_login_url())
         else:
-            response=login.login_request(username=username, password=password, pubkey=pubkey, challenge=challenge, signature=signature)
+            response=login.login_request(username=username, password=password, pubkey=pubkey, challenge=challenge, signature=signature, pv=pv)
             if getattr(response,'cookie',None):
-                self.set_secure_cookie('kid',json.dumps(response.cookie), expires_days=7, httponly=True, domain='.'+config.get(options.ROOT_DOMAIN))#, secure=True)
+                self.set_secure_cookie('kid',json.dumps(response.cookie), expires_days=7, httponly=True, domain='.'+config.get(options.ROOT_DOMAIN), secure=True)
                 del response.cookie
             if isinstance(response.data, dict) and 'redirect' in response.data:
                 self.redirect(response.data['redirect'])

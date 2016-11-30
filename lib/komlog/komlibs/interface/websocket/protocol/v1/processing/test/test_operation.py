@@ -4,7 +4,7 @@ from komlog.komfig import logging
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
 from komlog.komlibs.interface.imc.model import messages
-from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket import exceptions
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.processing import operation
 from komlog.komlibs.interface.websocket.protocol.v1.model import operation as modop

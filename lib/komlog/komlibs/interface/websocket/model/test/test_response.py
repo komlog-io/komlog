@@ -3,13 +3,13 @@ import time
 import uuid
 import json
 from komlog.komfig import logging
-from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
-from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
-from komlog.komlibs.interface.websocket.protocol.v1.model import response
+from komlog.komlibs.interface.websocket import exceptions
+from komlog.komlibs.interface.websocket.errors import Errors
+from komlog.komlibs.interface.websocket.model import response
 
 
-class InterfaceWebSocketProtocolV1ModelResponseTest(unittest.TestCase):
-    ''' komlibs.interface.websocket.protocol.v1.model.response tests '''
+class InterfaceWebSocketModelResponseTest(unittest.TestCase):
+    ''' komlibs.interface.websocket.model.response tests '''
 
     def test_new_response_success(self):
         ''' a new response object should be created '''
@@ -30,7 +30,7 @@ class InterfaceWebSocketProtocolV1ModelResponseTest(unittest.TestCase):
         for status in statuses:
             with self.assertRaises(exceptions.ResponseValidationException) as cm:
                 resp=response.Response(status=status)
-            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MR_RESP_IS)
+            self.assertEqual(cm.exception.error, Errors.E_IWSMR_RESP_IS)
 
     def test_Response_error_setting_routed_messages(self):
         ''' Response.routed_messages should not be modified manually, always call add_message() '''

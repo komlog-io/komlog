@@ -25,9 +25,8 @@ from komlog.komlibs.interface.imc.api import lambdas
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.imc import status
 from komlog.komlibs.interface.imc.errors import Errors
-from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors as WSErrors
 from komlog.komlibs.interface.websocket import session as ws_session
-from komlog.komlibs.interface.websocket.protocol.v1.model import message as ws_message
+from komlog.komlibs.interface.websocket.protocol.v1.model import message as wsmsgv1
 
 
 pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
@@ -270,6 +269,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         expired_session=ormagent.AgentSession(
             sid=expired_sid,
             aid=None, 
+            pv=None,
             uid=None,
             imc_address=None,
             last_update=timeuuid.uuid1(seconds=1)
@@ -337,6 +337,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             sid=unassociated_sid,
             aid=None, 
             uid=None,
+            pv=None,
             imc_address=None,
             last_update=timeuuid.uuid1()
         )
@@ -396,7 +397,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         associated_sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=associated_sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=associated_sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=associated_sid)
         self.assertIsNotNone(session_info)
         self.assertEqual(session_info.sid, associated_sid)
@@ -456,7 +457,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         associated_sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=associated_sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=associated_sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=associated_sid)
         self.assertIsNotNone(session_info)
         self.assertEqual(session_info.sid, associated_sid)
@@ -485,7 +486,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, associated_sid)
         ts=timeuuid.get_isodate_from_uuid(date)
-        expected_data=ws_message.SendMultiData(ts=ts, uris=[
+        expected_data=wsmsgv1.SendMultiData(ts=ts, uris=[
             {'uri':datasource_uri,'type':vertex.DATASOURCE,'content':ds_content},
         ]).to_dict()
         recv_data=response.routed_messages[session_info.imc_address][0].data
@@ -522,7 +523,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         associated_sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=associated_sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=associated_sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=associated_sid)
         self.assertIsNotNone(session_info)
         self.assertEqual(session_info.sid, associated_sid)
@@ -551,7 +552,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, associated_sid)
         ts=timeuuid.get_isodate_from_uuid(date)
-        expected_data=ws_message.SendMultiData(ts=ts, uris=[
+        expected_data=wsmsgv1.SendMultiData(ts=ts, uris=[
             {'uri':datapoint_uri,'type':vertex.DATAPOINT,'content':dp_content},
         ]).to_dict()
         recv_data=response.routed_messages[session_info.imc_address][0].data
@@ -592,7 +593,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         associated_sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=associated_sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=associated_sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=associated_sid)
         self.assertIsNotNone(session_info)
         self.assertEqual(session_info.sid, associated_sid)
@@ -625,10 +626,10 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, associated_sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        self.assertTrue(recv_data['action'],ws_message.SendMultiData._action_.value)
+        self.assertTrue(recv_data['action'],wsmsgv1.SendMultiData._action_.value)
         self.assertTrue(recv_data['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
         self.assertEqual(sorted(recv_data['payload']['uris'], key=lambda x: x['uri']),sorted(data, key=lambda x: x['uri']))
-        valid_message=ws_message.KomlogMessage.load_from_dict(recv_data)
+        valid_message=wsmsgv1.SendMultiData.load_from_dict(recv_data)
 
     def test_process_message_URISUPDT_success_uris_and_data_existed_and_sessions_associated(self):
         ''' process_message_URISUPDT should succeed and generate the corresponding messages
@@ -665,7 +666,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         associated_sid1=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=associated_sid1, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=associated_sid1, aid=aid, uid=uid,pv=1))
         session_info1=session.get_agent_session_info(sid=associated_sid1)
         self.assertIsNotNone(session_info1)
         self.assertEqual(session_info1.sid, associated_sid1)
@@ -675,7 +676,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(datasourceapi.hook_to_datasource(did=did, sid=associated_sid1))
         self.assertTrue(datapointapi.hook_to_datapoint(pid=pid, sid=associated_sid1))
         associated_sid2=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=associated_sid2, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=associated_sid2, aid=aid, uid=uid,pv=1))
         session_info2=session.get_agent_session_info(sid=associated_sid2)
         self.assertIsNotNone(session_info2)
         self.assertEqual(session_info2.sid, associated_sid2)
@@ -715,14 +716,14 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         
         msg1=response.routed_messages[session_info1.imc_address][0].data
         msg2=response.routed_messages[session_info1.imc_address][1].data
-        self.assertEqual(msg1['action'],ws_message.SendMultiData._action_.value)
-        self.assertEqual(msg2['action'],ws_message.SendMultiData._action_.value)
+        self.assertEqual(msg1['action'],wsmsgv1.SendMultiData._action_.value)
+        self.assertEqual(msg2['action'],wsmsgv1.SendMultiData._action_.value)
         self.assertEqual(msg1['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
         self.assertEqual(msg2['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
         self.assertEqual(sorted(msg1['payload']['uris'], key=lambda x: x['uri']),sorted(data, key=lambda x: x['uri']))
         self.assertEqual(sorted(msg2['payload']['uris'], key=lambda x: x['uri']),sorted(data, key=lambda x: x['uri']))
-        valid_message=ws_message.KomlogMessage.load_from_dict(msg1)
-        valid_message=ws_message.KomlogMessage.load_from_dict(msg2)
+        valid_message=wsmsgv1.SendMultiData.load_from_dict(msg1)
+        valid_message=wsmsgv1.SendMultiData.load_from_dict(msg2)
 
     def test_process_message_HOOKNEW_success_no_new_uris(self):
         ''' process_message_HOOKNEW should succeed if there is no new uri '''
@@ -1064,7 +1065,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         associated_sid1=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=associated_sid1, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=associated_sid1, aid=aid, uid=uid,pv=1))
         session_info1=session.get_agent_session_info(sid=associated_sid1)
         self.assertIsNotNone(session_info1)
         self.assertEqual(session_info1.sid, associated_sid1)
@@ -1074,7 +1075,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(datasourceapi.hook_to_datasource(did=did, sid=associated_sid1))
         self.assertTrue(datapointapi.hook_to_datapoint(pid=pid, sid=associated_sid1))
         associated_sid2=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=associated_sid2, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=associated_sid2, aid=aid, uid=uid,pv=1))
         session_info2=session.get_agent_session_info(sid=associated_sid2)
         self.assertIsNotNone(session_info2)
         self.assertEqual(session_info2.sid, associated_sid2)
@@ -1120,7 +1121,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             {'uri':'uri','type':vertex.DATASOURCE,'content':'content'},
             {'uri':'uri2','type':vertex.DATAPOINT, 'content':'2323.434'}
         ]
-        msg=ws_message.SendMultiData(ts=ts, uris=data)
+        msg=wsmsgv1.SendMultiData(ts=ts, uris=data)
         message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
         response=lambdas.process_message_SSDATA(message=message)
         self.assertEqual(response.error, Errors.E_IIALD_SSDT_SNF)
@@ -1138,7 +1139,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             {'uri':'uri','type':vertex.DATASOURCE,'content':'content'},
             {'uri':'uri2','type':vertex.DATAPOINT, 'content':'333'}
         ]
-        msg=ws_message.SendMultiData(ts=ts, uris=data)
+        msg=wsmsgv1.SendMultiData(ts=ts, uris=data)
         message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
         class FakeWSSession:
             def __init__(self):
@@ -1156,7 +1157,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.routed_messages, {})
         self.assertEqual(response.unrouted_messages, [])
-        expected_msg=ws_message.SendMultiData(ts=ts,uris=data)
+        expected_msg=wsmsgv1.SendMultiData(ts=ts,uris=data)
         self.assertEqual(fake_callback.response_json, json.dumps(expected_msg.to_dict()))
 
     def test_process_message_DATINT_failure_session_not_found_exception(self):
@@ -1196,6 +1197,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         expired_session=ormagent.AgentSession(
             sid=sid,
             aid=None, 
+            pv=None,
             uid=None,
             imc_address=None,
             last_update=timeuuid.uuid1(seconds=1)
@@ -1221,7 +1223,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         sid=uuid.uuid4()
         aid=uuid.uuid4()
         uid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         uri={'uri':'valid.uri','type':vertex.DATASOURCE, 'id':uuid.uuid4()}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
@@ -1239,7 +1241,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         sid=uuid.uuid4()
         aid=uuid.uuid4()
         uid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         uri={'uri':'valid.uri','type':vertex.DATAPOINT, 'id':uuid.uuid4()}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
@@ -1273,7 +1275,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(isinstance(pid,uuid.UUID))
         self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
@@ -1291,7 +1293,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
@@ -1322,7 +1324,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             dp_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
@@ -1340,7 +1342,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         self.assertEqual(len(session_data_msg.data), 498)
 
@@ -1364,7 +1366,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(isinstance(did,uuid.UUID))
         self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
@@ -1382,7 +1384,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
@@ -1412,7 +1414,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             ds_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
@@ -1430,7 +1432,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(len(session_data_msg.data), 100)
         self.assertEqual(len(response.unrouted_messages),1)
@@ -1465,7 +1467,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             dp_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
@@ -1486,7 +1488,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
@@ -1516,7 +1518,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             ds_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
@@ -1537,7 +1539,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(len(session_data_msg.data), 0)
 
@@ -1566,7 +1568,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             dp_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
@@ -1587,7 +1589,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         new_ii=timeuuid.min_uuid_from_time(450)
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
@@ -1612,7 +1614,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
@@ -1642,7 +1644,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             ds_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
@@ -1664,7 +1666,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
         new_ii=timeuuid.min_uuid_from_time(450)
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(len(session_data_msg.data), 0)
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
@@ -1689,7 +1691,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
@@ -1720,7 +1722,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             dp_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
@@ -1739,7 +1741,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         self.assertEqual(len(session_data_msg.data), 200)
 
@@ -1768,7 +1770,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             dp_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
@@ -1787,7 +1789,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         self.assertEqual(len(session_data_msg.data), 48)
 
@@ -1816,7 +1818,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             dp_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
@@ -1841,7 +1843,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         self.assertEqual(len(session_data_msg.data), 1000)
 
@@ -1869,7 +1871,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             ds_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
@@ -1888,7 +1890,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(len(session_data_msg.data), 50)
 
@@ -1916,7 +1918,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             ds_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
@@ -1935,7 +1937,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(len(session_data_msg.data), 3)
 
@@ -1963,7 +1965,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
             ds_date=timeuuid.uuid1(seconds=i)
             self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         sid=uuid.uuid4()
-        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid))
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
         session_info=session.get_agent_session_info(sid=sid)
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
@@ -1982,7 +1984,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.routed_messages[session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.routed_messages[session_info.imc_address][0].sid, sid)
         recv_data=response.routed_messages[session_info.imc_address][0].data
-        session_data_msg=ws_message.SendDataInterval.load_from_dict(recv_data)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(len(session_data_msg.data), 100)
         self.assertEqual(len(response.unrouted_messages),1)

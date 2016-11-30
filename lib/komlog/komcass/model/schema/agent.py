@@ -54,6 +54,7 @@ MST_AGENT_SESSION='''
         sid uuid,
         aid uuid,
         uid uuid,
+        pv  int,
         last_update timeuuid,
         imc_address text,
         PRIMARY KEY (sid)

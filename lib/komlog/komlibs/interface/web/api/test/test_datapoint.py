@@ -54,7 +54,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             self.passport = passport.get_user_passport(cookie)
             response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
             aid = response.data['aid']
-            cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+            cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'pv':1, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
             self.agent_passport = passport.get_agent_passport(cookie)
             for msg in response.unrouted_messages:
                 msgresponse=msgapi.process_message(msg)

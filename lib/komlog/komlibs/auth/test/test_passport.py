@@ -21,10 +21,12 @@ class AuthPassportTest(unittest.TestCase):
         uid = uuid.uuid4()
         sid = uuid.uuid4()
         aid = None
-        psp = passport.Passport(uid=uid, sid=sid, aid=aid)
+        pv = None
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv=pv)
         self.assertTrue(isinstance(psp, passport.Passport))
         aid = uuid.uuid4()
-        psp = passport.Passport(uid=uid, sid=sid, aid=aid)
+        pv = 1
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv=pv)
         self.assertTrue(isinstance(psp, passport.Passport))
 
     def test_passport_creation_failure_invalid_uid(self):
@@ -32,20 +34,33 @@ class AuthPassportTest(unittest.TestCase):
         uids = ['234234',1,1.2,{'a':'dict'},uuid.uuid4().hex, uuid.uuid1(), None, ('a','tuple'), ['an','array'],{'set'}]
         sid=uuid.uuid4()
         aid = None
+        pv = None
         for uid in uids:
             with self.assertRaises(exceptions.PassportException) as cm:
-                psp = passport.Passport(uid=uid, sid=sid, aid=aid)
+                psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv=pv)
             self.assertEqual(cm.exception.error, Errors.E_AP_PC_IU)
 
     def test_passport_creation_failure_invalid_aid(self):
         ''' a new passport instance should fail if aid is invalid '''
         aids = ['234234',1,1.2,{'a':'dict'},uuid.uuid4().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'}]
+        pv = 1
         uid = uuid.uuid4()
         sid = uuid.uuid4()
         for aid in aids:
             with self.assertRaises(exceptions.PassportException) as cm:
-                psp = passport.Passport(uid=uid, sid=sid, aid=aid)
+                psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv=pv)
             self.assertEqual(cm.exception.error, Errors.E_AP_PC_IA)
+
+    def test_passport_creation_failure_invalid_pv(self):
+        ''' a new passport instance should fail if pv is invalid '''
+        pvs= ['234234',-1,1.2,{'a':'dict'},uuid.uuid4().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'}]
+        uid = uuid.uuid4()
+        sid = uuid.uuid4()
+        aid = uuid.uuid4()
+        for pv in pvs:
+            with self.assertRaises(exceptions.PassportException) as cm:
+                psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv=pv)
+            self.assertEqual(cm.exception.error, Errors.E_AP_PC_IPV)
 
     def test_passport_creation_failure_invalid_sid(self):
         ''' a new passport instance should fail if sid is invalid '''
@@ -56,6 +71,29 @@ class AuthPassportTest(unittest.TestCase):
             with self.assertRaises(exceptions.PassportException) as cm:
                 psp = passport.Passport(uid=uid, sid=sid, aid=aid)
             self.assertEqual(cm.exception.error, Errors.E_AP_PC_IS)
+
+    def test_passport_creation_failure_one_of_aid_or_pv_is_None(self):
+        ''' a new passport instance should fail if one of pv or aid is None '''
+        uid = uuid.uuid4()
+        sid = uuid.uuid4()
+        with self.assertRaises(exceptions.PassportException) as cm:
+            aid = uuid.uuid4()
+            pv = None
+            psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv=pv)
+        self.assertEqual(cm.exception.error, Errors.E_AP_PC_AIDORPV)
+        with self.assertRaises(exceptions.PassportException) as cm:
+            aid = None
+            pv = 1
+            psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv=pv)
+        self.assertEqual(cm.exception.error, Errors.E_AP_PC_AIDORPV)
+        aid = uuid.uuid4()
+        pv = 1
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv=pv)
+        self.assertTrue(isinstance(psp, passport.Passport))
+        aid = None
+        pv = None
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv=pv)
+        self.assertTrue(isinstance(psp, passport.Passport))
 
     def test_cookie_creation_failure_invalid_cookie(self):
         ''' a new cookie instance should fail if cookie is invalid '''
@@ -68,7 +106,7 @@ class AuthPassportTest(unittest.TestCase):
     def test_cookie_creation_failure_invalid_user(self):
         ''' a new cookie instance should fail if cookie user is invalid '''
         usernames= [1,1.2,{'a':'dict'},uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'},None]
-        cookie={'sid':uuid.uuid4().hex, 'aid':uuid.uuid4().hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie={'sid':uuid.uuid4().hex, 'aid':uuid.uuid4().hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'pv':1}
         for user in usernames:
             cookie['user']=user
             with self.assertRaises(exceptions.CookieException) as cm:
@@ -78,17 +116,27 @@ class AuthPassportTest(unittest.TestCase):
     def test_cookie_creation_failure_invalid_aid(self):
         ''' a new cookie instance should fail if cookie aid is invalid '''
         aids= ['string',1,1.2,{'a':'dict'},uuid.uuid4(),uuid.uuid1().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'}]
-        cookie={'user':'username','sid':uuid.uuid4().hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie={'user':'username','sid':uuid.uuid4().hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'pv':1}
         for aid in aids:
             cookie['aid']=aid
             with self.assertRaises(exceptions.CookieException) as cm:
                 cookie = passport.Cookie(cookie)
             self.assertEqual(cm.exception.error, Errors.E_AP_CC_IA)
 
+    def test_cookie_creation_failure_invalid_pv(self):
+        ''' a new cookie instance should fail if cookie pv is invalid '''
+        pvs= ['string',-1,1.2,{'a':'dict'},uuid.uuid4(),uuid.uuid1().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'}]
+        cookie={'user':'username','aid':uuid.uuid4().hex,'sid':uuid.uuid4().hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        for pv in pvs:
+            cookie['pv']=pv
+            with self.assertRaises(exceptions.CookieException) as cm:
+                cookie = passport.Cookie(cookie)
+            self.assertEqual(cm.exception.error, Errors.E_AP_CC_IPV)
+
     def test_cookie_creation_failure_invalid_sid(self):
         ''' a new cookie instance should fail if cookie sid is invalid '''
         sids= [None,'string',1,1.2,{'a':'dict'},uuid.uuid4(),uuid.uuid1().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'}]
-        cookie={'user':'username','aid':uuid.uuid4().hex, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie={'user':'username','aid':uuid.uuid4().hex, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'pv':1}
         for sid in sids:
             cookie['sid']=sid
             with self.assertRaises(exceptions.CookieException) as cm:
@@ -98,7 +146,7 @@ class AuthPassportTest(unittest.TestCase):
     def test_cookie_creation_failure_invalid_seq(self):
         ''' a new cookie instance should fail if cookie seq is invalid '''
         seqs= ['string',1,1.2,{'a':'dict'},uuid.uuid4(),uuid.uuid4().hex, uuid.uuid1(), ('a','tuple'), ['an','array'],{'set'},{'user':'user','aid':'aid'}, None]
-        cookie={'user':'username','sid':uuid.uuid4().hex, 'aid':uuid.uuid4().hex}
+        cookie={'user':'username','sid':uuid.uuid4().hex, 'aid':uuid.uuid4().hex,'pv':1}
         for seq in seqs:
             cookie['seq']=seq
             with self.assertRaises(exceptions.CookieException) as cm:
@@ -111,6 +159,7 @@ class AuthPassportTest(unittest.TestCase):
             'user':'test_get_user_passport_failure_non_existing_user',
             'sid':uuid.uuid4().hex,
             'aid':None,
+            'pv':None,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
         with self.assertRaises(exceptions.UserNotFoundException) as cm:
@@ -126,6 +175,7 @@ class AuthPassportTest(unittest.TestCase):
             'user':username,
             'sid':uuid.uuid4().hex,
             'aid':None,
+            'pv':None,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
         user = ormuser.User(uid=uuid.uuid4(), username=username, password=password, email=email)
@@ -144,6 +194,7 @@ class AuthPassportTest(unittest.TestCase):
             'user':username,
             'sid':uuid.uuid4().hex,
             'aid':None,
+            'pv':None,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
         user = ormuser.User(uid=uuid.uuid4(), username=username, password=password, email=email, state=state)
@@ -159,6 +210,7 @@ class AuthPassportTest(unittest.TestCase):
             'user':'test_get_agent_passport_failure_cookie_has_no_aid',
             'sid':uuid.uuid4().hex,
             'aid':None,
+            'pv':1,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
         with self.assertRaises(exceptions.CookieException) as cm:
@@ -171,6 +223,7 @@ class AuthPassportTest(unittest.TestCase):
             'user':'test_get_agent_passport_failure_non_existing_agent',
             'sid':uuid.uuid4().hex,
             'aid':uuid.uuid4().hex,
+            'pv':1,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
         with self.assertRaises(exceptions.AgentNotFoundException) as cm:
@@ -189,11 +242,52 @@ class AuthPassportTest(unittest.TestCase):
             'user':'test_get_agent_passport_failure_agent_state_not_valid',
             'sid':uuid.uuid4().hex,
             'aid':aid.hex,
+            'pv':1,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
         with self.assertRaises(exceptions.AuthorizationExpiredException) as cm:
             psp=passport.get_agent_passport(cookie)
         self.assertEqual(cm.exception.error, Errors.E_AP_GAP_IAS)
+
+    def test_get_agent_passport_failure_invalid_pv(self):
+        ''' get_agent_passport should fail if pv is invalid '''
+        agentname='test_get_agent_passport_failure_invalid_pv'
+        pubkey=b'pubkey'
+        uid = uuid.uuid4()
+        aid = uuid.uuid4()
+        state = AgentStates.ACTIVE
+        agent = ormagent.Agent(uid=uid, aid=aid, agentname=agentname, pubkey=pubkey, state=state)
+        self.assertTrue(cassapiagent.new_agent(agent))
+        cookie = {
+            'user':'test_get_agent_passport_failure_agent_state_not_valid',
+            'sid':uuid.uuid4().hex,
+            'aid':aid.hex,
+            'pv':-1,
+            'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
+        }
+        with self.assertRaises(exceptions.CookieException) as cm:
+            psp=passport.get_agent_passport(cookie)
+        self.assertEqual(cm.exception.error,Errors.E_AP_CC_IPV)
+
+    def test_get_agent_passport_failure_pv_is_None(self):
+        ''' get_agent_passport should fail if pv is None '''
+        agentname='test_get_agent_passport_failure_pv_is_none'
+        pubkey=b'pubkey'
+        uid = uuid.uuid4()
+        aid = uuid.uuid4()
+        state = AgentStates.ACTIVE
+        agent = ormagent.Agent(uid=uid, aid=aid, agentname=agentname, pubkey=pubkey, state=state)
+        self.assertTrue(cassapiagent.new_agent(agent))
+        cookie = {
+            'user':'test_get_agent_passport_failure_agent_state_not_valid',
+            'sid':uuid.uuid4().hex,
+            'aid':aid.hex,
+            'pv':None,
+            'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
+        }
+        with self.assertRaises(exceptions.CookieException) as cm:
+            psp=passport.get_agent_passport(cookie)
+        self.assertEqual(cm.exception.error,Errors.E_AP_GAP_CPVNF)
 
     def test_get_agent_passport_success(self):
         ''' get_agent_passport should succeed '''
@@ -208,6 +302,7 @@ class AuthPassportTest(unittest.TestCase):
             'user':'test_get_agent_passport_failure_agent_state_not_valid',
             'sid':uuid.uuid4().hex,
             'aid':aid.hex,
+            'pv':1,
             'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())
         }
         psp=passport.get_agent_passport(cookie)
@@ -237,7 +332,8 @@ class AuthPassportTest(unittest.TestCase):
         uid = uuid.uuid4()
         sid = uuid.uuid4()
         aid = uuid.uuid4()
-        psp = passport.Passport(uid=uid, sid=sid, aid=aid)
+        pv = 1
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv = pv)
         with self.assertRaises(exceptions.AgentNotFoundException) as cm:
             passport.check_agent_passport_validity(passport=psp)
         self.assertEqual(cm.exception.error, Errors.E_AP_CPV_ANF)
@@ -249,10 +345,11 @@ class AuthPassportTest(unittest.TestCase):
         uid = uuid.uuid4()
         aid = uuid.uuid4()
         sid = uuid.uuid4()
+        pv = 1
         state = AgentStates.SUSPENDED
         agent = ormagent.Agent(uid=uid, aid=aid, agentname=agentname, pubkey=pubkey, state=state)
         self.assertTrue(cassapiagent.new_agent(agent))
-        psp = passport.Passport(uid=uid, sid=sid, aid=aid)
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv =pv)
         with self.assertRaises(exceptions.AuthorizationExpiredException) as cm:
             passport.check_agent_passport_validity(passport=psp)
         self.assertEqual(cm.exception.error, Errors.E_AP_CPV_IAS)
@@ -264,9 +361,10 @@ class AuthPassportTest(unittest.TestCase):
         uid = uuid.uuid4()
         aid = uuid.uuid4()
         sid = uuid.uuid4()
+        pv = 1
         state = AgentStates.ACTIVE
         agent = ormagent.Agent(uid=uid, aid=aid, agentname=agentname, pubkey=pubkey, state=state)
         self.assertTrue(cassapiagent.new_agent(agent))
-        psp = passport.Passport(uid=uid, sid=sid, aid=aid)
+        psp = passport.Passport(uid=uid, sid=sid, aid=aid, pv=pv)
         self.assertIsNone(passport.check_agent_passport_validity(passport=psp))
 

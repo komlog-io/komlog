@@ -393,15 +393,17 @@ class KomcassApiAgentTest(unittest.TestCase):
         sid=uuid.uuid4()
         aid=uuid.uuid4()
         uid=uuid.uuid4()
+        pv=1
         imc_address='host@imc.address'
         last_update=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,pv=pv,imc_address=imc_address,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         db_session=agentapi.get_agent_session(sid=sid)
         self.assertIsNotNone(db_session)
         self.assertEqual(db_session.sid,sid)
         self.assertEqual(db_session.aid,aid)
         self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.pv,pv)
         self.assertEqual(db_session.last_update,last_update)
         self.assertEqual(db_session.imc_address,imc_address)
 
@@ -416,15 +418,17 @@ class KomcassApiAgentTest(unittest.TestCase):
         sid=uuid.uuid4()
         aid=uuid.uuid4()
         uid=uuid.uuid4()
+        pv=1
         imc_address='host@imc.address'
         last_update=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,pv=pv,imc_address=imc_address,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         db_session=agentapi.get_agent_session(sid=sid)
         self.assertIsNotNone(db_session)
         self.assertEqual(db_session.sid,sid)
         self.assertEqual(db_session.aid,aid)
         self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.pv,pv)
         self.assertEqual(db_session.last_update,last_update)
         self.assertEqual(db_session.imc_address,imc_address)
 
@@ -440,9 +444,10 @@ class KomcassApiAgentTest(unittest.TestCase):
         sid=uuid.uuid4()
         aid=uuid.uuid4()
         uid=uuid.uuid4()
+        pv=1
         imc_address='host@imc.address'
         last_update=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,pv=pv,imc_address=imc_address,last_update=last_update)
         last_update=timeuuid.uuid1()
         self.assertFalse(agentapi.update_agent_session_if_last_update(obj=session, last_update=last_update))
 
@@ -451,28 +456,32 @@ class KomcassApiAgentTest(unittest.TestCase):
         sid=uuid.uuid4()
         aid=uuid.uuid4()
         uid=uuid.uuid4()
+        pv=1
         imc_address='host@imc.address'
         last_update=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,pv=pv,imc_address=imc_address,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         db_session=agentapi.get_agent_session(sid=sid)
         self.assertIsNotNone(db_session)
         self.assertEqual(db_session.sid,sid)
         self.assertEqual(db_session.aid,aid)
         self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.pv,pv)
         self.assertEqual(db_session.last_update,last_update)
         self.assertEqual(db_session.imc_address,imc_address)
         aid=uuid.uuid4()
         uid=uuid.uuid4()
         imc_address='host@imc.address'
+        pv=2
         last_update=timeuuid.uuid1()
-        new_session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        new_session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,pv=pv,imc_address=imc_address,last_update=last_update)
         self.assertTrue(agentapi.update_agent_session_if_last_update(obj=new_session, last_update=last_update))
         db_session=agentapi.get_agent_session(sid=sid)
         self.assertIsNotNone(db_session)
         self.assertEqual(db_session.sid,sid)
         self.assertEqual(db_session.aid,aid)
         self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.pv,pv)
         self.assertEqual(db_session.last_update,last_update)
         self.assertEqual(db_session.imc_address,imc_address)
 
@@ -481,22 +490,25 @@ class KomcassApiAgentTest(unittest.TestCase):
         sid=uuid.uuid4()
         aid=uuid.uuid4()
         uid=uuid.uuid4()
+        pv=1
         imc_address='host@imc.address'
         last_update=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,pv=pv,imc_address=imc_address,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         db_session=agentapi.get_agent_session(sid=sid)
         self.assertIsNotNone(db_session)
         self.assertEqual(db_session.sid,sid)
         self.assertEqual(db_session.aid,aid)
         self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.pv,pv)
         self.assertEqual(db_session.last_update,last_update)
         self.assertEqual(db_session.imc_address,imc_address)
         aid=uuid.uuid4()
         uid=uuid.uuid4()
+        pv=3
         imc_address='host@imc.address'
         last_update=timeuuid.uuid1()
-        new_session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        new_session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,pv=pv,imc_address=imc_address,last_update=last_update)
         last_update=timeuuid.uuid1(seconds=1)
         self.assertFalse(agentapi.update_agent_session_if_last_update(obj=session, last_update=last_update))
         db_session2=agentapi.get_agent_session(sid=sid)
@@ -504,6 +516,7 @@ class KomcassApiAgentTest(unittest.TestCase):
         self.assertEqual(db_session.sid,db_session2.sid)
         self.assertEqual(db_session.aid,db_session2.aid)
         self.assertEqual(db_session.uid,db_session2.uid)
+        self.assertEqual(db_session.pv,db_session2.pv)
         self.assertEqual(db_session.last_update,db_session2.last_update)
         self.assertEqual(db_session.imc_address,db_session2.imc_address)
 
@@ -517,15 +530,17 @@ class KomcassApiAgentTest(unittest.TestCase):
         sid=uuid.uuid4()
         aid=uuid.uuid4()
         uid=uuid.uuid4()
+        pv=1
         imc_address='host@imc.address'
         last_update=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,pv=pv,imc_address=imc_address,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         db_session=agentapi.get_agent_session(sid=sid)
         self.assertIsNotNone(db_session)
         self.assertEqual(db_session.sid,sid)
         self.assertEqual(db_session.aid,aid)
         self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.pv,pv)
         self.assertEqual(db_session.last_update,last_update)
         self.assertEqual(db_session.imc_address,imc_address)
         self.assertTrue(agentapi.delete_agent_session(sid=sid))
@@ -548,15 +563,17 @@ class KomcassApiAgentTest(unittest.TestCase):
         sid=uuid.uuid4()
         aid=uuid.uuid4()
         uid=uuid.uuid4()
+        pv=1
         imc_address='host@imc.address'
         last_update=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,pv=pv,imc_address=imc_address,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         db_session=agentapi.get_agent_session(sid=sid)
         self.assertIsNotNone(db_session)
         self.assertEqual(db_session.sid,sid)
         self.assertEqual(db_session.aid,aid)
         self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.pv,pv)
         self.assertEqual(db_session.last_update,last_update)
         self.assertEqual(db_session.imc_address,imc_address)
         last_update=timeuuid.uuid1()
@@ -569,15 +586,17 @@ class KomcassApiAgentTest(unittest.TestCase):
         sid=uuid.uuid4()
         aid=uuid.uuid4()
         uid=uuid.uuid4()
+        pv=1
         imc_address='host@imc.address'
         last_update=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,imc_address=imc_address,last_update=last_update)
+        session=ormagent.AgentSession(sid=sid, aid=aid,uid=uid,pv=pv,imc_address=imc_address,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         db_session=agentapi.get_agent_session(sid=sid)
         self.assertIsNotNone(db_session)
         self.assertEqual(db_session.sid,sid)
         self.assertEqual(db_session.aid,aid)
         self.assertEqual(db_session.uid,uid)
+        self.assertEqual(db_session.pv,pv)
         self.assertEqual(db_session.last_update,last_update)
         self.assertEqual(db_session.imc_address,imc_address)
         last_update=timeuuid.uuid1(seconds=1)
@@ -589,15 +608,16 @@ class KomcassApiAgentTest(unittest.TestCase):
         ''' delete_agent_sessions should return True and delete all agent sessions '''
         aid=uuid.uuid4()
         uid=uuid.uuid4()
+        pv=1
         sid1=uuid.uuid4()
         imc_address1='host@imc.address'
         last_update=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid1, aid=aid,uid=uid,imc_address=imc_address1,last_update=last_update)
+        session=ormagent.AgentSession(sid=sid1, aid=aid,uid=uid,pv=pv,imc_address=imc_address1,last_update=last_update)
         self.assertTrue(agentapi.insert_agent_session(session))
         sid2=uuid.uuid4()
         imc_address2='host@imc.address2'
         last_update2=timeuuid.uuid1()
-        session=ormagent.AgentSession(sid=sid2, aid=aid,uid=uid,imc_address=imc_address2,last_update=last_update2)
+        session=ormagent.AgentSession(sid=sid2, aid=aid,uid=uid,pv=pv,imc_address=imc_address2,last_update=last_update2)
         self.assertTrue(agentapi.insert_agent_session(session))
         self.assertIsNotNone(agentapi.get_agent_session(sid=sid1))
         self.assertIsNotNone(agentapi.get_agent_session(sid=sid2))

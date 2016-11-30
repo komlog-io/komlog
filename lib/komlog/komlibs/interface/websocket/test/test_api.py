@@ -4,13 +4,10 @@ import uuid
 from komlog.komfig import logging
 from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.gestaccount.errors import Errors as gesterrors
-from komlog.komlibs.interface.websocket import api
-from komlog.komlibs.interface.websocket.protocol.v1 import exceptions, status
-from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
-from komlog.komlibs.interface.websocket.protocol.v1.processing import operation, message
-from komlog.komlibs.interface.websocket.protocol.v1.model import message as modmsg
-from komlog.komlibs.interface.websocket.protocol.v1.model import response as modresp
-from komlog.komlibs.interface.websocket.protocol.v1.model import operation as modop
+from komlog.komlibs.interface.websocket import exceptions, status, api
+from komlog.komlibs.interface.websocket.model import response
+from komlog.komlibs.interface.websocket.errors import Errors
+from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors as errorsv1
 
 
 class InterfaceWebSocketApiTest(unittest.TestCase):
@@ -21,10 +18,11 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         uid=uuid.uuid4()
         aid=uuid.uuid4()
         sid=uuid.uuid4()
-        psp = Passport(uid=uid,sid=sid,aid=aid)
+        pv = 1
+        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'action':1}
         resp=api.process_message(passport=psp, message=msg)
-        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertTrue(isinstance(resp, response.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
         self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA.value)
 
@@ -33,10 +31,11 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         uid=uuid.uuid4()
         aid=uuid.uuid4()
         sid=uuid.uuid4()
-        psp = Passport(uid=uid,sid=sid,aid=aid)
+        pv = 1
+        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'v':1}
         resp=api.process_message(passport=psp, message=msg)
-        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertTrue(isinstance(resp, response.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
         self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA.value)
 
@@ -46,12 +45,13 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         uid=uuid.uuid4()
         aid=uuid.uuid4()
         sid=uuid.uuid4()
-        psp = Passport(uid=uid,sid=sid,aid=aid)
+        pv = 1
+        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'v':None,'action':'send_ds_data','payload':{'data':'data'}}
         for version in versions:
             msg['v']=version
             resp=api.process_message(passport=psp, message=msg)
-            self.assertTrue(isinstance(resp, modresp.Response))
+            self.assertTrue(isinstance(resp, response.Response))
             self.assertEqual(resp.status, status.PROTOCOL_ERROR)
             self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA.value)
 
@@ -61,12 +61,13 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         uid=uuid.uuid4()
         aid=uuid.uuid4()
         sid=uuid.uuid4()
-        psp = Passport(uid=uid,sid=sid,aid=aid)
+        pv = 1
+        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'v':1,'action':None,'payload':{'data':'data'}}
         for action in actions:
             msg['action']=action
             resp=api.process_message(passport=psp, message=msg)
-            self.assertTrue(isinstance(resp, modresp.Response))
+            self.assertTrue(isinstance(resp, response.Response))
             self.assertEqual(resp.status, status.PROTOCOL_ERROR)
             self.assertEqual(resp.error, Errors.E_IWSA_PM_IVA.value)
 
@@ -76,31 +77,33 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         msg={'v':1,'action':'send_ds_data','payload':{'data':'data'}}
         for psp in passports:
             resp=api.process_message(passport=psp, message=msg)
-            self.assertTrue(isinstance(resp, modresp.Response))
+            self.assertTrue(isinstance(resp, response.Response))
             self.assertEqual(resp.status, status.INTERNAL_ERROR)
             self.assertEqual(resp.error, Errors.E_IWSA_PM_IPSP.value)
 
-    def test_process_message_failure_invalid_message_payload(self):
-        ''' process_message should fail if message payload is invalid '''
+    def test_process_message_failure_invalid_message_payload_v1(self):
+        ''' process_message should fail if message with protocol version 1 payload is invalid '''
         uid = uuid.uuid4()
         aid = uuid.uuid4()
         sid=uuid.uuid4()
-        psp = Passport(uid=uid,sid=sid,aid=aid)
+        pv = 1
+        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'v':1,'action':'send_ds_data','payload':{'data':'data'}}
         resp=api.process_message(passport=psp, message=msg)
-        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertTrue(isinstance(resp, response.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
-        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDSD_ELFD.value)
+        self.assertEqual(resp.error, errorsv1.E_IWSPV1MM_SDSD_ELFD.value)
 
     def test_process_message_failure_unsupported_protocol_version(self):
         ''' process_message should fail if protocol version is not known '''
         uid = uuid.uuid4()
         aid = uuid.uuid4()
         sid=uuid.uuid4()
-        psp = Passport(uid=uid,sid=sid,aid=aid)
+        pv = 1
+        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'v':100000000000,'action':'send_ds_data','payload':{'data':'data'}}
         resp=api.process_message(passport=psp, message=msg)
-        self.assertTrue(isinstance(resp, modresp.Response))
+        self.assertTrue(isinstance(resp, response.Response))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
         self.assertEqual(resp.error, Errors.E_IWSA_PM_UPV.value)
 

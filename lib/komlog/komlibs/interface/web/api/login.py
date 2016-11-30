@@ -18,14 +18,14 @@ from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 
 @exceptions.ExceptionHandler
-def login_request(username, password=None, pubkey=None, challenge=None, signature=None):
+def login_request(username, password=None, pubkey=None, pv=None, challenge=None, signature=None):
     if password is not None:
         return _user_login_request(username=username, password=password)
     if pubkey is not None:
         if challenge is None and signature is None:
-            return _agent_login_generate_challenge_request(username=username, pubkey=pubkey)
+            return _agent_login_generate_challenge_request(username=username, pubkey=pubkey, pv=pv)
         else:
-            return _agent_login_validate_challenge_request(username=username, pubkey=pubkey, challenge=challenge, signature=signature)
+            return _agent_login_validate_challenge_request(username=username, pubkey=pubkey, pv=pv, challenge=challenge, signature=signature)
     return response.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, error=Errors.E_IWAL_LR_IPRM)
 
 def _user_login_request(username, password):
@@ -37,14 +37,16 @@ def _user_login_request(username, password):
         return response.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, error=Errors.E_IWAL_ULR_AUTHERR)
     data={'redirect':'/home'}
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
-    resp.cookie={'user':username,'aid':None,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
+    resp.cookie={'user':username,'aid':None,'pv':None,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
     return resp
 
-def _agent_login_generate_challenge_request(username, pubkey):
+def _agent_login_generate_challenge_request(username, pubkey, pv):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALGCR_IU)
     if not args.is_valid_string(pubkey):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALGCR_IPK)
+    if not args.is_valid_string_int(pv) or int(pv) == 0:
+        raise exceptions.BadParametersException(error=Errors.E_IWAL_ALGCR_IPV)
     try:
         pubkey=b64decode(pubkey.encode('utf-8'))
     except Exception:
@@ -53,11 +55,13 @@ def _agent_login_generate_challenge_request(username, pubkey):
     data={'challenge':b64encode(challenge).decode('utf-8')}
     return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
 
-def _agent_login_validate_challenge_request(username, pubkey, challenge, signature):
+def _agent_login_validate_challenge_request(username, pubkey, pv, challenge, signature):
     if not args.is_valid_username(username):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALVCR_IU)
     if not args.is_valid_string(pubkey):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALVCR_IPK)
+    if not args.is_valid_string_int(pv) or int(pv) == 0:
+        raise exceptions.BadParametersException(error=Errors.E_IWAL_ALVCR_IPV)
     if not args.is_valid_string(challenge):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALVCR_ICH)
     if not args.is_valid_string(signature):
@@ -70,7 +74,7 @@ def _agent_login_validate_challenge_request(username, pubkey, challenge, signatu
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALVCR_IPK)
     aid=agentapi.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge, signature=signature)
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
-    resp.cookie={'user':username,'aid':aid.hex,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
+    resp.cookie={'user':username,'aid':aid.hex,'pv':int(pv), 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
     return resp
 
 

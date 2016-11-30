@@ -3,10 +3,10 @@ import time
 import uuid
 import json
 from komlog.komfig import logging
-from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket import exceptions
+from komlog.komlibs.interface.websocket.model.types import Operations
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model import operation
-from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operations
 
 
 class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):

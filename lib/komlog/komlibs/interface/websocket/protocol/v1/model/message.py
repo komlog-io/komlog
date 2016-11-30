@@ -2,54 +2,35 @@ import decimal
 import pandas as pd
 from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.general.validation import arguments as args
-from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket import exceptions
+from komlog.komlibs.interface.websocket.model import message
+from komlog.komlibs.interface.websocket.model.types import Messages
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
-from komlog.komlibs.interface.websocket.protocol.v1.model.types import Messages
 
-class Catalog(type):
-    def __init__(cls, name, bases, dct):
-        if hasattr(cls, '_action_'):
-            cls._catalog_[cls._action_.value]=cls
-        super().__init__(name, bases, dct)
-
-class KomlogMessage(metaclass=Catalog):
+class MessagesVersionCatalog(message.MessagesCatalog):
     _version_ = 1
-    _catalog_ = {}
 
     def __new__(cls, *args, **kwargs):
-        if cls is KomlogMessage:
-            raise TypeError('<KomlogMessage> cannot be instantiated directly')
+        if cls is MessagesVersionCatalog:
+            raise TypeError('<MessagesVersionCatalog> cannot be instantiated directly')
         return object.__new__(cls)
 
-    @property
-    def action(self):
-        return self._action_
-
-    @action.setter
-    def action(self, value):
-        raise TypeError('Action cannot be modified')
-
-    @property
-    def v(self):
-        return self._version_
-
-    @v.setter
-    def v(self, value):
-        raise TypeError('Version cannot be modified')
+    @classmethod
+    def catalog(cls):
+        return cls._catalog_[cls._version_]
 
     @classmethod
-    def load_from_dict(cls, msg):
-        if cls is KomlogMessage:
-            if isinstance(msg, dict) and 'action' in msg:
+    def get_message(cls, action, **kwargs):
+        if cls is MessagesVersionCatalog:
+            if isinstance(action,str):
                 try:
-                    return cls._catalog_[msg['action']].load_from_dict(msg)
+                    return cls._catalog_[cls._version_][action](**kwargs)
                 except KeyError:
-                    raise TypeError('Unknown message type')
-            raise TypeError('Message not supported')
-        else:
-            raise NotImplementedError
+                    pass
+        return None
 
-class SendDsData(KomlogMessage):
+
+class SendDsData(MessagesVersionCatalog):
     _action_ = Messages.SEND_DS_DATA
 
     def __init__(self, uri, ts, content):
@@ -122,7 +103,7 @@ class SendDsData(KomlogMessage):
             }
         }
 
-class SendDpData(KomlogMessage):
+class SendDpData(MessagesVersionCatalog):
     _action_ = Messages.SEND_DP_DATA
 
     def __init__(self, uri, ts, content):
@@ -195,7 +176,7 @@ class SendDpData(KomlogMessage):
             }
         }
 
-class SendMultiData(KomlogMessage):
+class SendMultiData(MessagesVersionCatalog):
     _action_ = Messages.SEND_MULTI_DATA
 
     def __init__(self, ts, uris):
@@ -264,10 +245,10 @@ class SendMultiData(KomlogMessage):
             }
         }
 
-class HookToUri(KomlogMessage):
+class HookToUri(MessagesVersionCatalog):
     _action_  = Messages.HOOK_TO_URI
 
-    def __init__(self, uri):
+    def __init__(self, uri, **kwargs):
         self.uri=uri
 
     @property
@@ -306,7 +287,7 @@ class HookToUri(KomlogMessage):
             }
         }
 
-class UnHookFromUri(KomlogMessage):
+class UnHookFromUri(MessagesVersionCatalog):
     _action_ = Messages.UNHOOK_FROM_URI
 
     def __init__(self, uri):
@@ -348,7 +329,7 @@ class UnHookFromUri(KomlogMessage):
             }
         }
 
-class RequestData(KomlogMessage):
+class RequestData(MessagesVersionCatalog):
     _action_ = Messages.REQUEST_DATA
 
     def __init__(self, uri, start=None, end=None, count=None):
@@ -443,7 +424,7 @@ class RequestData(KomlogMessage):
             }
         }
 
-class SendDataInterval(KomlogMessage):
+class SendDataInterval(MessagesVersionCatalog):
     _action_ = Messages.SEND_DATA_INTERVAL
 
     def __init__(self, uri, start, end, data):

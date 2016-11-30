@@ -17,10 +17,10 @@ from komlog.komlibs.auth import update as authupdate
 from komlog.komlibs.general.validation import arguments
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.events.model import types as eventstypes
-from komlog.komlibs.interface.websocket.protocol.v1 import exceptions
+from komlog.komlibs.interface.websocket import exceptions
+from komlog.komlibs.interface.websocket.model.types import Operations
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.model import operation as modop
-from komlog.komlibs.interface.websocket.protocol.v1.model.types import Operations
 
 def process_operation(operation):
     if not isinstance(operation, modop.WSIFaceOperation):

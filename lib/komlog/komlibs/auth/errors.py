@@ -112,10 +112,13 @@ class Errors(Enum):
     E_AP_CC_IA      = 53002      #: Cookie class. invalid aid
     E_AP_CC_IS      = 53003      #: Cookie class. invalid session id
     E_AP_CC_ISQ     = 53004      #: Cookie class. invalid sequence
+    E_AP_CC_IPV     = 53005      #: Cookie class. invalid protocol version
 
     E_AP_PC_IU      = 53010      #: Passport class. invalid uid
     E_AP_PC_IA      = 53011      #: Passport class. invalid aid
     E_AP_PC_IS      = 53012      #: Passport class. invalid session id
+    E_AP_PC_IPV     = 53013      #: Passport class. invalid protocol version
+    E_AP_PC_AIDORPV = 53014      #: Passport class. one of aid or pv is None
 
     E_AP_GUP_UNF    = 53100      #: get_user_passport. User not found exception
     E_AP_GUP_IUS    = 53101      #: get_user_passport. Invalid user state
@@ -123,6 +126,7 @@ class Errors(Enum):
     E_AP_GAP_ANF    = 53200      #: get_agent_passport. Agent not found exception
     E_AP_GAP_IAS    = 53201      #: get_agent_passport. Invalid agent state
     E_AP_GAP_CANF   = 53202      #: get_agent_passport. Cookie has no aid
+    E_AP_GAP_CPVNF  = 53203      #: get_agent_passport. Cookie has no protocol version
 
     E_AP_CPV_IP     = 53300      #: check_agent_passport_validity. Invalid passport
     E_AP_CPV_IAID   = 53301      #: check_agent_passport_validity. Invalid aid
@@ -185,6 +189,7 @@ class Errors(Enum):
     E_AS_SAGS_IAID  =   58001       #: set_agent_session. invalid aid
     E_AS_SAGS_IUID  =   58002       #: set_agent_session. invalid uid
     E_AS_SAGS_IMCNC =   58003       #: set_agent_session. imc address not configured
+    E_AS_SAGS_IPV   =   58004       #: set_agent_session. invalid protocol version
 
     E_AS_USAGS_ISID =   58100       #: unset_agent_session. invalid sid
     E_AS_USAGS_ILU  =   58101       #: unset_agent_session. invalid last_update

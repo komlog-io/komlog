@@ -5,9 +5,9 @@ from komlog.komcass import exceptions as cassexcept
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.events import exceptions as eventexcept
-from komlog.komlibs.interface.websocket.protocol.v1 import status
-from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
-from komlog.komlibs.interface.websocket.protocol.v1.model import response as modresp
+from komlog.komlibs.interface.websocket import status
+from komlog.komlibs.interface.websocket.errors import Errors
+from komlog.komlibs.interface.websocket.model import response as modresp
 
 class WebSocketProtocolException(Exception):
     def __init__(self, error):
