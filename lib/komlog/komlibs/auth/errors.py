@@ -104,6 +104,12 @@ class Errors(Enum):
     E_ARA_AHTDS_RE  = 52370      #: authorize_hook_to_datasource exception
     E_ARA_AUHFDP_RE = 52380      #: authorize_unhook_from_datapoint exception
     E_ARA_AUHFDS_RE = 52390      #: authorize_unhook_from_datasource exception
+    E_ARA_AGU_IURI  = 52400      #: authorize_get_uri invalid uri
+    E_ARA_AGU_RE    = 52401      #: authorize_get_uri no access exception
+    E_ARA_ARPH_IURI = 52410      #: authorize_register_pending_hook invalid uri
+    E_ARA_ARPH_RE   = 52411      #: authorize_register_pending_hook no access
+    E_ARA_ADPH_IURI  = 52420      #: authorize_register_pending_hook invalid uri
+    E_ARA_ADPH_RE    = 52421      #: authorize_register_pending_hook no access
 
 # auth.passport
 
@@ -339,4 +345,20 @@ class Errors(Enum):
     E_AQD_QUTO_DIDNF    =   61130   #: quo_user_total_occupation. did not found.
     E_AQD_QUTO_DSNF     =   61131   #: quo_user_total_occupation. datasource not found.
     E_AQD_QUTO_USRNF    =   61132   #: quo_user_total_occupation. user not found.
+
+# auth.shared.uri
+
+    E_ASU_SUT_IUID      = 65000     #: share_uri_tree: invalid uid
+    E_ASU_SUT_IDUID     = 65001     #: share_uri_tree: invalid dest_uid
+    E_ASU_SUT_IURI      = 65002     #: share_uri_tree: invalid uri
+
+    E_ASU_USUT_IUID     = 65100     #: unshare_uri_tree: invalid uid
+    E_ASU_USUT_IDUID    = 65101     #: unshare_uri_tree: invalid dest_uid
+    E_ASU_USUT_IURI     = 65102     #: unshare_uri_tree: invalid uri
+
+    E_ASU_GUSWM_IUID    = 65200     #: get_uris_shared_with_me: invalid uid
+    E_ASU_GUSWM_IOUID   = 65201     #: get_uris_shared_with_me: invalid owner_uid
+
+    E_ASU_GUS_IUID      = 65300     #: get_uris_shared: invalid uid
+    E_ASU_GUS_IDUID     = 65301     #: get_uris_shared: invalid dest_uid
 

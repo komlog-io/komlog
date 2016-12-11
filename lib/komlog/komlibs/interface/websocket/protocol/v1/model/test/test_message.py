@@ -62,6 +62,15 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':ts2.isoformat(),'content':'content'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
+    def test_SendDsData_success_generating_serializable_dict_with_global_uri(self):
+        ''' SendDsData.to_dict() method should generate a valid serializable dict '''
+        ts=pd.Timestamp('now',tz='utc')
+        msg=message.SendDsData(uri='user:uri',ts=ts,content='content')
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_DATA)
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'user:uri','ts':ts.isoformat(),'content':'content'}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
     def test_SendDsData_success_loading_from_dict(self):
         ''' SendDsData.load_from_dict() method should generate a valid SendDsData object '''
         ts=pd.Timestamp('now',tz='utc')
@@ -90,6 +99,20 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
         self.assertEqual(msg.ts.timestamp(), ts2.timestamp())
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_SendDsData_success_loading_from_dict_with_global_uri(self):
+        ''' SendDsData.load_from_dict() method should generate a valid SendDsData object '''
+        ts=pd.Timestamp('now',tz='utc')
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_DATA.value,
+            'payload':{'uri':'my_user:uri','ts':ts.isoformat(),'content':'content'}
+        }
+        msg=message.SendDsData.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_DATA)
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
@@ -218,6 +241,14 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':ts2.isoformat(),'content':'33.33'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
+    def test_SendDpData_success_generating_serializable_dict_with_global_uri(self):
+        ''' SendDpData.to_dict() method should generate a valid serializable dict '''
+        ts=pd.Timestamp('now',tz='utc')
+        msg=message.SendDpData(uri='user:uri',ts=ts,content='33.33')
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DP_DATA)
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'user:uri','ts':ts.isoformat(),'content':'33.33'}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDpData_success_loading_from_dict(self):
         ''' SendDpData.load_from_dict() method should generate a valid SendDpData object '''
@@ -247,6 +278,20 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
         self.assertEqual(msg.ts.timestamp(), ts2.timestamp())
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_SendDpData_success_loading_from_dict_with_global_uri(self):
+        ''' SendDpData.load_from_dict() method should generate a valid SendDpData object '''
+        ts=pd.Timestamp('now',tz='utc')
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DP_DATA.value,
+            'payload':{'uri':'the_user:uri','ts':ts.isoformat(),'content':'33.33'}
+        }
+        msg=message.SendDpData.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DP_DATA)
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
@@ -375,6 +420,15 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts2.isoformat()}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
+    def test_SendMultiData_success_generating_serializable_dict_with_global_uri(self):
+        ''' SendMultiData.to_dict() method should generate a valid serializable dict '''
+        ts=pd.Timestamp('now',tz='utc')
+        msg=message.SendMultiData(uris=[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],ts=ts)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'payload':{'uris':[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
     def test_SendMultiData_success_loading_from_dict(self):
         ''' SendMultiData.load_from_dict() method should generate a valid SendMultiData object '''
         ts=pd.Timestamp('now',tz='utc')
@@ -403,6 +457,20 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
         self.assertEqual(msg.ts.timestamp(),ts2.timestamp())
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_SendMultiData_success_loading_from_dict_with_global_uri(self):
+        ''' SendMultiData.load_from_dict() method should generate a valid SendMultiData object '''
+        ts=pd.Timestamp('now',tz='utc')
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_MULTI_DATA.value,
+            'payload':{'uris':[{'uri':'user2:uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
+        }
+        msg=message.SendMultiData.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
@@ -615,12 +683,33 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
+    def test_HookToUri_success_generating_serializable_dict_with_global_uri(self):
+        ''' HookToUri.to_dict() method should generate a valid serializable dict '''
+        msg=message.HookToUri(uri='user1:uri')
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.HOOK_TO_URI)
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'user1:uri'}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
     def test_HookToUri_success_loading_from_dict(self):
         ''' HookToUri.load_from_dict() method should generate a valid HookToUri object '''
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
             'payload':{'uri':'uri'}
+        }
+        msg=message.HookToUri.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.HOOK_TO_URI)
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_HookToUri_success_loading_from_dict_with_global_uri(self):
+        ''' HookToUri.load_from_dict() method should generate a valid HookToUri object '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.HOOK_TO_URI.value,
+            'payload':{'uri':'the_user:uri'}
         }
         msg=message.HookToUri.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
@@ -691,12 +780,33 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
+    def test_UnHookFromUri_success_generating_serializable_dict_with_global_uri(self):
+        ''' UnHookFromUri.to_dict() method should generate a valid serializable dict '''
+        msg=message.UnHookFromUri(uri='my_superuser:uri')
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.UNHOOK_FROM_URI)
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'my_superuser:uri'}})
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
     def test_UnHookFromUri_success_loading_from_dict(self):
         ''' UnHookFromUri.load_from_dict() method should generate a valid UnHookFromUri object '''
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.UNHOOK_FROM_URI.value,
             'payload':{'uri':'uri'}
+        }
+        msg=message.UnHookFromUri.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.UNHOOK_FROM_URI)
+        self.assertEqual(msg.to_dict(),dict_msg)
+        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
+
+    def test_UnHookFromUri_success_loading_from_dict_with_global_uri(self):
+        ''' UnHookFromUri.load_from_dict() method should generate a valid UnHookFromUri object '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.UNHOOK_FROM_URI.value,
+            'payload':{'uri':'root:uri'}
         }
         msg=message.UnHookFromUri.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
@@ -830,6 +940,32 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
                 'start':start.isoformat(),
                 'end':end.isoformat(),
                 'count':None
+            }
+        }
+        self.assertEqual(msg.to_dict(), expected_dict)
+
+    def test_RequestData_success_with_global_uri(self):
+        ''' Creating a RequestData object should succeed '''
+        uri='remote_user:valid.uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        count=123
+        msg=message.RequestData(uri=uri, start=start, end=end, count=count)
+        self.assertTrue(isinstance(msg, message.RequestData))
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.start, start)
+        self.assertEqual(msg.end, end)
+        self.assertEqual(msg.count, count)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.REQUEST_DATA)
+        expected_dict={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.REQUEST_DATA.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'count':count
             }
         }
         self.assertEqual(msg.to_dict(), expected_dict)
@@ -997,7 +1133,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.MessagesVersionCatalog._version_],
+            'v':message.MessagesVersionCatalog._version_,
             'action':[Messages.REQUEST_DATA.value],
             'payload':{
                 'uri':uri,
@@ -1016,7 +1152,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.MessagesVersionCatalog._version_],
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'payload':{
                 'uri':uri,
@@ -1035,7 +1171,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.MessagesVersionCatalog._version_],
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':[{
                 'uri':uri,
@@ -1054,7 +1190,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.MessagesVersionCatalog._version_],
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'ari':uri,
@@ -1073,7 +1209,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.MessagesVersionCatalog._version_],
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -1092,7 +1228,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.MessagesVersionCatalog._version_],
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -1111,7 +1247,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.MessagesVersionCatalog._version_],
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -1126,11 +1262,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_RequestData_success_loading_from_dict(self):
         ''' Creating a RequestData object should succeed '''
-        uri='non valid uri'
+        uri='valid.uri'
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         serial={
-            'v':[message.MessagesVersionCatalog._version_],
+            'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
             'payload':{
                 'uri':uri,
@@ -1139,13 +1275,72 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
                 'end':end.isoformat()
             }
         }
-        with self.assertRaises(exceptions.MessageValidationException) as cm:
-            msg=message.RequestData.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
+        msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(msg.uri,uri)
+        self.assertEqual(msg.start,start)
+        self.assertEqual(msg.end,end)
+        self.assertEqual(msg.count,33)
+
+    def test_RequestData_success_loading_from_dict_with_global_uri(self):
+        ''' Creating a RequestData object should succeed '''
+        uri='the_remote_master:valid.uri'
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        serial={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.REQUEST_DATA.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'count':None,
+                'end':end.isoformat()
+            }
+        }
+        msg=message.RequestData.load_from_dict(serial)
+        self.assertEqual(msg.uri,uri)
+        self.assertEqual(msg.start,start)
+        self.assertEqual(msg.end,end)
+        self.assertEqual(msg.count,None)
 
     def test_SendDataInterval_success(self):
         ''' Creating a SendDataInterval object should succeed '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
+        self.assertTrue(isinstance(msg, message.SendDataInterval))
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.start, start)
+        self.assertEqual(msg.end, end)
+        self.assertEqual(msg.data, data)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DATA_INTERVAL)
+        expected_dict={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        self.assertEqual(msg.to_dict(), expected_dict)
+
+    def test_SendDataInterval_success_with_global_uri(self):
+        ''' Creating a SendDataInterval object should succeed '''
+        uri={'uri':'other_group:valid.uri','type':vertex.DATAPOINT}
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         data=[
@@ -1852,6 +2047,41 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_success_load_from_dict(self):
         ''' Creating a SendDataInterval object from a dict should succeed '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
+        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        end=pd.Timestamp('now',tz='utc')
+        data=[
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
+            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+        ]
+        serial={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DATA_INTERVAL.value,
+            'payload':{
+                'uri':uri,
+                'start':start.isoformat(),
+                'end':end.isoformat(),
+                'data':data,
+            }
+        }
+        msg=message.SendDataInterval.load_from_dict(serial)
+        self.assertTrue(isinstance(msg, message.SendDataInterval))
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DATA_INTERVAL)
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.start, start)
+        self.assertEqual(msg.end,end)
+        self.assertEqual(msg.data,data)
+
+    def test_SendDataInterval_success_load_from_dict_with_global_uri(self):
+        ''' Creating a SendDataInterval object from a dict should succeed '''
+        uri={'uri':'other_user:valid.uri','type':vertex.DATAPOINT}
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
         end=pd.Timestamp('now',tz='utc')
         data=[

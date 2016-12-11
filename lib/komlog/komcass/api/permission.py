@@ -11,10 +11,7 @@ from komlog.komcass import connection, exceptions
 @exceptions.ExceptionHandler
 def get_user_agent_perm(uid, aid):
     row=connection.session.execute(stmtperm.S_A_PERMUSERAGENT_B_UID_AID,(uid,aid))
-    if not row:
-        return None
-    else:
-        return ormperm.UserAgentPerm(**row[0])
+    return ormperm.UserAgentPerm(**row[0]) if row else None
 
 @exceptions.ExceptionHandler
 def get_user_agents_perm(uid):
@@ -43,10 +40,7 @@ def delete_user_agents_perm(uid):
 @exceptions.ExceptionHandler
 def get_user_datasource_perm(uid, did):
     row=connection.session.execute(stmtperm.S_A_PERMUSERDATASOURCE_B_UID_DID,(uid,did))
-    if not row:
-        return None
-    else:
-        return ormperm.UserDatasourcePerm(**row[0])
+    return ormperm.UserDatasourcePerm(**row[0]) if row else None
 
 @exceptions.ExceptionHandler
 def get_user_datasources_perm(uid):
@@ -75,10 +69,7 @@ def delete_user_datasources_perm(uid):
 @exceptions.ExceptionHandler
 def get_user_datapoint_perm(uid, pid):
     row=connection.session.execute(stmtperm.S_A_PERMUSERDATAPOINT_B_UID_PID,(uid,pid))
-    if not row:
-        return None
-    else:
-        return ormperm.UserDatapointPerm(**row[0])
+    return ormperm.UserDatapointPerm(**row[0]) if row else None
 
 @exceptions.ExceptionHandler
 def get_user_datapoints_perm(uid):
@@ -107,10 +98,7 @@ def delete_user_datapoints_perm(uid):
 @exceptions.ExceptionHandler
 def get_user_widget_perm(uid, wid):
     row=connection.session.execute(stmtperm.S_A_PERMUSERWIDGET_B_UID_WID,(uid,wid))
-    if not row:
-        return None
-    else:
-        return ormperm.UserWidgetPerm(**row[0])
+    return ormperm.UserWidgetPerm(**row[0]) if row else None
 
 @exceptions.ExceptionHandler
 def get_user_widgets_perm(uid):
@@ -139,10 +127,7 @@ def delete_user_widgets_perm(uid):
 @exceptions.ExceptionHandler
 def get_user_dashboard_perm(uid, bid):
     row=connection.session.execute(stmtperm.S_A_PERMUSERDASHBOARD_B_UID_BID,(uid,bid))
-    if not row:
-        return None
-    else:
-        return ormperm.UserDashboardPerm(**row[0])
+    return ormperm.UserDashboardPerm(**row[0]) if row else None
 
 @exceptions.ExceptionHandler
 def get_user_dashboards_perm(uid):
@@ -224,5 +209,75 @@ def delete_user_circle_perm(uid, cid):
 @exceptions.ExceptionHandler
 def delete_user_circles_perm(uid):
     connection.session.execute(stmtperm.D_P_PERMUSERCIRCLE_B_UID,(uid,))
+    return True
+
+@exceptions.ExceptionHandler
+def get_user_shared_uris(uid, dest_uid=None):
+    data=[]
+    if dest_uid:
+        row=connection.session.execute(stmtperm.S_A_PERMUSERSHAREDURI_B_UID_DESTUID,(uid,dest_uid))
+    else:
+        row=connection.session.execute(stmtperm.S_A_PERMUSERSHAREDURI_B_UID,(uid,))
+    if row:
+        for r in row:
+            data.append(ormperm.UserSharedUriPerm(**r))
+    return data
+
+@exceptions.ExceptionHandler
+def get_user_shared_uri_perm(uid, dest_uid, uri):
+    row=connection.session.execute(stmtperm.S_A_PERMUSERSHAREDURI_B_UID_DESTUID_URI,(uid,dest_uid,uri))
+    return ormperm.UserSharedUriPerm(**row[0]) if row else None
+
+@exceptions.ExceptionHandler
+def insert_user_shared_uri_perm(uid, dest_uid, uri, perm):
+    connection.session.execute(stmtperm.I_A_PERMUSERSHAREDURI,(uid,dest_uid,uri,perm))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_user_shared_uris(uid, dest_uid=None):
+    if dest_uid:
+        connection.session.execute(stmtperm.D_A_PERMUSERSHAREDURI_B_UID_DESTUID,(uid,dest_uid))
+    else:
+        connection.session.execute(stmtperm.D_A_PERMUSERSHAREDURI_B_UID,(uid,))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_user_shared_uri_perm(uid, dest_uid, uri):
+    connection.session.execute(stmtperm.D_A_PERMUSERSHAREDURI_B_UID_DESTUID_URI,(uid,dest_uid,uri))
+    return True
+
+@exceptions.ExceptionHandler
+def get_user_shared_uris_with_me(uid, owner_uid=None):
+    data=[]
+    if owner_uid:
+        row=connection.session.execute(stmtperm.S_A_PERMUSERSHAREDURIWITHME_B_UID_OWNERUID,(uid,owner_uid))
+    else:
+        row=connection.session.execute(stmtperm.S_A_PERMUSERSHAREDURIWITHME_B_UID,(uid,))
+    if row:
+        for r in row:
+            data.append(ormperm.UserSharedUriWithMePerm(**r))
+    return data
+
+@exceptions.ExceptionHandler
+def get_user_shared_uri_with_me_perm(uid, owner_uid, uri):
+    row=connection.session.execute(stmtperm.S_A_PERMUSERSHAREDURIWITHME_B_UID_OWNERUID_URI,(uid,owner_uid,uri))
+    return ormperm.UserSharedUriWithMePerm(**row[0]) if row else None
+
+@exceptions.ExceptionHandler
+def insert_user_shared_uri_with_me_perm(uid, owner_uid, uri, perm):
+    connection.session.execute(stmtperm.I_A_PERMUSERSHAREDURIWITHME,(uid,owner_uid,uri,perm))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_user_shared_uris_with_me(uid, owner_uid=None):
+    if owner_uid:
+        connection.session.execute(stmtperm.D_A_PERMUSERSHAREDURIWITHME_B_UID_OWNERUID,(uid,owner_uid))
+    else:
+        connection.session.execute(stmtperm.D_A_PERMUSERSHAREDURIWITHME_B_UID,(uid,))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_user_shared_uri_with_me_perm(uid, owner_uid, uri):
+    connection.session.execute(stmtperm.D_A_PERMUSERSHAREDURIWITHME_B_UID_OWNERUID_URI,(uid,owner_uid,uri))
     return True
 

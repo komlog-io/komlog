@@ -33,6 +33,7 @@ MODULES = [
     'komlog.komlibs.auth.resources.test.test_update.AuthResourcesUpdateTest',
     'komlog.komlibs.auth.tickets.test.test_provision.AuthTicketsProvisionTest',
     'komlog.komlibs.auth.tickets.test.test_authorization.AuthTicketsAuthorizationTest',
+    'komlog.komlibs.auth.shared.test.test_uri.AuthSharedUriTest',
     'komlog.komlibs.payment.test.test_api.KomlibsPaymentApiTest',
     'komlog.komfs.test.test_api.KomfsApiTest',
     'komlog.komcass.api.test.test_user.KomcassApiUserTest',

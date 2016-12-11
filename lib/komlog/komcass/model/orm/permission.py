@@ -1,4 +1,3 @@
-#coding: utf-8
 '''
 Created on 01/10/2014
 
@@ -52,5 +51,21 @@ class UserCirclePerm:
     def __init__(self, uid, cid=None, perm=None):
         self.uid=uid
         self.cid=cid
+        self.perm=perm
+
+class UserSharedUriPerm:
+    ''' This class is used to access Shared uri permission relation '''
+    def __init__(self, uid, dest_uid, uri, perm):
+        self.uid=uid
+        self.dest_uid=dest_uid
+        self.uri=uri
+        self.perm=perm
+
+class UserSharedUriWithMePerm:
+    ''' This class is used to access Shared with me uri permission relation '''
+    def __init__(self, uid, owner_uid, uri, perm):
+        self.uid=uid
+        self.owner_uid=owner_uid
+        self.uri=uri
         self.perm=perm
 

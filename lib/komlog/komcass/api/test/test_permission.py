@@ -1,7 +1,9 @@
 import unittest
 import uuid
+from komlog.komfig import logging
 from komlog.komcass.api import permission as permissionapi
 from komlog.komcass.model.orm import permission as ormpermission
+from komlog.komlibs.general.string import stringops
 
 
 class KomcassApiPermissionTest(unittest.TestCase):
@@ -776,4 +778,290 @@ class KomcassApiPermissionTest(unittest.TestCase):
         self.assertEqual(len(perms), 2)
         self.assertTrue(permissionapi.delete_user_circles_perm(uid=uid))
         self.assertEqual(permissionapi.get_user_circles_perm(uid=uid), [])
+
+    def test_get_user_shared_uris_by_uid_non_existing(self):
+        ''' get_user_shared_uris should return an empty list '''
+        uid=uuid.uuid4()
+        shared=permissionapi.get_user_shared_uris(uid=uid)
+        self.assertEqual(shared, [])
+
+    def test_get_user_shared_uris_by_uid_dest_uid_non_existing(self):
+        ''' get_user_shared_uris should return an empty list '''
+        uid=uuid.uuid4()
+        dest_uid=uuid.uuid4()
+        shared=permissionapi.get_user_shared_uris(uid=uid, dest_uid=dest_uid)
+        self.assertEqual(shared, [])
+
+    def test_get_user_shared_uris_by_uid_existing(self):
+        ''' get_user_shared_uris should return a list with the uris '''
+        uid=uuid.uuid4()
+        perm=0
+        for i in range (0,10):
+            dest_uid=uuid.uuid4()
+            uri='uri'+str(i)
+            self.assertTrue(permissionapi.insert_user_shared_uri_perm(uid,dest_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uris(uid=uid)
+        self.assertEqual(len(shared), 10)
+
+    def test_get_user_shared_uris_by_uid_dest_uid_existing(self):
+        ''' get_user_shared_uris should return a list with the uris '''
+        uid=uuid.uuid4()
+        dest_uid=uuid.uuid4()
+        perm=0
+        for i in range (0,10):
+            uri='uri'+str(i)
+            self.assertTrue(permissionapi.insert_user_shared_uri_perm(uid,dest_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uris(uid=uid, dest_uid=dest_uid)
+        self.assertEqual(len(shared), 10)
+
+    def test_get_user_shared_uri_perm_non_existing(self):
+        ''' get_user_shared_uri_perm should return None if row does not exist '''
+        uid=uuid.uuid4()
+        dest_uid=uuid.uuid4()
+        uri = 'uri'
+        perm=0
+        self.assertIsNone(permissionapi.get_user_shared_uri_perm(uid=uid, dest_uid=dest_uid,uri=uri))
+
+    def test_get_user_shared_uri_perm_existing(self):
+        ''' get_user_shared_uri_perm should return ther item '''
+        uid=uuid.uuid4()
+        dest_uid=uuid.uuid4()
+        uri = 'uri'
+        perm=0
+        self.assertTrue(permissionapi.insert_user_shared_uri_perm(uid,dest_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uri_perm(uid=uid, dest_uid=dest_uid,uri=uri)
+        self.assertEqual(shared.uid, uid)
+        self.assertEqual(shared.dest_uid, dest_uid)
+        self.assertEqual(shared.uri, uri)
+        self.assertEqual(shared.perm, perm)
+
+    def test_insert_user_shared_uri_perm_success(self):
+        ''' insert_user_shared_uri_perm should succeed '''
+        uid=uuid.uuid4()
+        dest_uid=uuid.uuid4()
+        uri = 'uri'
+        perm=0
+        self.assertTrue(permissionapi.insert_user_shared_uri_perm(uid,dest_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uri_perm(uid=uid, dest_uid=dest_uid,uri=uri)
+        self.assertEqual(shared.uid, uid)
+        self.assertEqual(shared.dest_uid, dest_uid)
+        self.assertEqual(shared.uri, uri)
+        self.assertEqual(shared.perm, perm)
+
+    def test_delete_user_shared_uris_by_uid_non_existing(self):
+        ''' delete_user_shared_uris should return true even if perms did not exist '''
+        uid=uuid.uuid4()
+        shared=permissionapi.get_user_shared_uris(uid=uid)
+        self.assertEqual(shared, [])
+        self.assertTrue(permissionapi.delete_user_shared_uris(uid=uid))
+
+    def test_delete_user_shared_uris_by_uid_dest_uid_non_existing(self):
+        ''' delete_user_shared_uris should return true even if perms did not exist '''
+        uid=uuid.uuid4()
+        dest_uid=uuid.uuid4()
+        shared=permissionapi.get_user_shared_uris(uid=uid, dest_uid=dest_uid)
+        self.assertEqual(shared, [])
+        self.assertTrue(permissionapi.delete_user_shared_uris(uid=uid, dest_uid=dest_uid))
+
+    def test_delete_user_shared_uris_by_uid_existing(self):
+        ''' delete_user_shared_uris should delete the rows '''
+        uid=uuid.uuid4()
+        perm=0
+        for i in range (0,10):
+            dest_uid=uuid.uuid4()
+            uri='uri'+str(i)
+            self.assertTrue(permissionapi.insert_user_shared_uri_perm(uid,dest_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uris(uid=uid)
+        self.assertEqual(len(shared), 10)
+        self.assertTrue(permissionapi.delete_user_shared_uris(uid=uid))
+        shared=permissionapi.get_user_shared_uris(uid=uid)
+        self.assertEqual(len(shared), 0)
+
+    def test_delete_user_shared_uris_by_uid_dest_uid_existing(self):
+        ''' delete_user_shared_uris should delete the rows '''
+        uid=uuid.uuid4()
+        dest_uid=uuid.uuid4()
+        perm=0
+        for i in range (0,10):
+            uri='uri'+str(i)
+            self.assertTrue(permissionapi.insert_user_shared_uri_perm(uid,dest_uid,uri,perm))
+        for i in range (0,10):
+            other_dest_uid=uuid.uuid4()
+            uri='uri'+str(i)
+            self.assertTrue(permissionapi.insert_user_shared_uri_perm(uid,other_dest_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uris(uid=uid)
+        self.assertEqual(len(shared), 20)
+        shared=permissionapi.get_user_shared_uris(uid=uid, dest_uid=dest_uid)
+        self.assertEqual(len(shared), 10)
+        self.assertTrue(permissionapi.delete_user_shared_uris(uid=uid, dest_uid=dest_uid))
+        shared=permissionapi.get_user_shared_uris(uid=uid, dest_uid=dest_uid)
+        self.assertEqual(len(shared), 0)
+        shared=permissionapi.get_user_shared_uris(uid=uid)
+        self.assertEqual(len(shared), 10)
+
+    def test_delete_user_shared_uri_perm_non_existing(self):
+        ''' delete_user_shared_uri_perm should return true even if perm did not exist '''
+        uid=uuid.uuid4()
+        dest_uid=uuid.uuid4()
+        uri='uri'
+        self.assertIsNone(permissionapi.get_user_shared_uri_perm(uid=uid, dest_uid=uid, uri=uri))
+        self.assertTrue(permissionapi.delete_user_shared_uri_perm(uid=uid, dest_uid=dest_uid, uri=uri))
+
+    def test_delete_user_shared_uri_perm_existing(self):
+        ''' delete_user_shared_uri_perm should delete the row '''
+        uid=uuid.uuid4()
+        dest_uid=uuid.uuid4()
+        uri='uri'
+        perm=0
+        self.assertTrue(permissionapi.insert_user_shared_uri_perm(uid,dest_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uri_perm(uid=uid, dest_uid=dest_uid, uri=uri)
+        self.assertEqual(shared.uid,uid)
+        self.assertEqual(shared.dest_uid,dest_uid)
+        self.assertEqual(shared.uri,uri)
+        self.assertEqual(shared.perm,perm)
+        self.assertTrue(permissionapi.delete_user_shared_uri_perm(uid=uid, dest_uid=dest_uid, uri=uri))
+        self.assertIsNone(permissionapi.get_user_shared_uri_perm(uid=uid, dest_uid=dest_uid, uri=uri))
+
+    def test_get_user_shared_uris_with_me_by_uid_non_existing(self):
+        ''' get_user_shared_uris_with_me should return an empty list '''
+        uid=uuid.uuid4()
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid)
+        self.assertEqual(shared, [])
+
+    def test_get_user_shared_uris_with_me_by_uid_owner_uid_non_existing(self):
+        ''' get_user_shared_uris_with_me should return an empty list '''
+        uid=uuid.uuid4()
+        owner_uid=uuid.uuid4()
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid, owner_uid=owner_uid)
+        self.assertEqual(shared, [])
+
+    def test_get_user_shared_uris_with_me_by_uid_existing(self):
+        ''' get_user_shared_uris_with_me should return a list with the uris '''
+        uid=uuid.uuid4()
+        perm=0
+        for i in range (0,10):
+            owner_uid=uuid.uuid4()
+            uri='uri'+str(i)
+            self.assertTrue(permissionapi.insert_user_shared_uri_with_me_perm(uid,owner_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid)
+        self.assertEqual(len(shared), 10)
+
+    def test_get_user_shared_uris_with_me_by_uid_owner_uid_existing(self):
+        ''' get_user_shared_uris_with_me should return a list with the uris '''
+        uid=uuid.uuid4()
+        owner_uid=uuid.uuid4()
+        perm=0
+        for i in range (0,10):
+            uri='uri'+str(i)
+            self.assertTrue(permissionapi.insert_user_shared_uri_with_me_perm(uid,owner_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid, owner_uid=owner_uid)
+        self.assertEqual(len(shared), 10)
+
+    def test_get_user_shared_uri_with_me_perm_non_existing(self):
+        ''' get_user_shared_uri_with_me_perm should return None if row does not exist '''
+        uid=uuid.uuid4()
+        owner_uid=uuid.uuid4()
+        uri = 'uri'
+        perm=0
+        self.assertIsNone(permissionapi.get_user_shared_uri_with_me_perm(uid=uid, owner_uid=owner_uid,uri=uri))
+
+    def test_get_user_shared_uri_with_me_perm_existing(self):
+        ''' get_user_shared_uri_with_me_perm should return ther item '''
+        uid=uuid.uuid4()
+        owner_uid=uuid.uuid4()
+        uri = 'uri'
+        perm=0
+        self.assertTrue(permissionapi.insert_user_shared_uri_with_me_perm(uid,owner_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uri_with_me_perm(uid=uid, owner_uid=owner_uid,uri=uri)
+        self.assertEqual(shared.uid, uid)
+        self.assertEqual(shared.owner_uid, owner_uid)
+        self.assertEqual(shared.uri, uri)
+        self.assertEqual(shared.perm, perm)
+
+    def test_insert_user_shared_uri_with_me_perm_success(self):
+        ''' insert_user_shared_uri_with_me_perm should succeed '''
+        uid=uuid.uuid4()
+        owner_uid=uuid.uuid4()
+        uri = 'uri'
+        perm=0
+        self.assertTrue(permissionapi.insert_user_shared_uri_with_me_perm(uid,owner_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uri_with_me_perm(uid=uid, owner_uid=owner_uid,uri=uri)
+        self.assertEqual(shared.uid, uid)
+        self.assertEqual(shared.owner_uid, owner_uid)
+        self.assertEqual(shared.uri, uri)
+        self.assertEqual(shared.perm, perm)
+
+    def test_delete_user_shared_uris_with_me_by_uid_non_existing(self):
+        ''' delete_user_shared_uris_with_me should return true even if perms did not exist '''
+        uid=uuid.uuid4()
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid)
+        self.assertEqual(shared, [])
+        self.assertTrue(permissionapi.delete_user_shared_uris_with_me(uid=uid))
+
+    def test_delete_user_shared_uris_with_me_by_uid_owner_uid_non_existing(self):
+        ''' delete_user_shared_uris_with_me should return true even if perms did not exist '''
+        uid=uuid.uuid4()
+        owner_uid=uuid.uuid4()
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid, owner_uid=owner_uid)
+        self.assertEqual(shared, [])
+        self.assertTrue(permissionapi.delete_user_shared_uris_with_me(uid=uid, owner_uid=owner_uid))
+
+    def test_delete_user_shared_uris_with_me_by_uid_existing(self):
+        ''' delete_user_shared_uris_with_me should delete the rows '''
+        uid=uuid.uuid4()
+        perm=0
+        for i in range (0,10):
+            owner_uid=uuid.uuid4()
+            uri='uri'+str(i)
+            self.assertTrue(permissionapi.insert_user_shared_uri_with_me_perm(uid,owner_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid)
+        self.assertEqual(len(shared), 10)
+        self.assertTrue(permissionapi.delete_user_shared_uris_with_me(uid=uid))
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid)
+        self.assertEqual(len(shared), 0)
+
+    def test_delete_user_shared_uris_with_me_by_uid_owner_uid_existing(self):
+        ''' delete_user_shared_uris_with_me should delete the rows '''
+        uid=uuid.uuid4()
+        owner_uid=uuid.uuid4()
+        perm=0
+        for i in range (0,10):
+            uri='uri'+str(i)
+            self.assertTrue(permissionapi.insert_user_shared_uri_with_me_perm(uid,owner_uid,uri,perm))
+        for i in range (0,10):
+            other_owner_uid=uuid.uuid4()
+            uri='uri'+str(i)
+            self.assertTrue(permissionapi.insert_user_shared_uri_with_me_perm(uid,other_owner_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid)
+        self.assertEqual(len(shared), 20)
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid, owner_uid=owner_uid)
+        self.assertEqual(len(shared), 10)
+        self.assertTrue(permissionapi.delete_user_shared_uris_with_me(uid=uid, owner_uid=owner_uid))
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid, owner_uid=owner_uid)
+        self.assertEqual(len(shared), 0)
+        shared=permissionapi.get_user_shared_uris_with_me(uid=uid)
+        self.assertEqual(len(shared), 10)
+
+    def test_delete_user_shared_uri_with_me_perm_non_existing(self):
+        ''' delete_user_shared_uri_with_me_perm should return true even if perm did not exist '''
+        uid=uuid.uuid4()
+        owner_uid=uuid.uuid4()
+        uri='uri'
+        self.assertIsNone(permissionapi.get_user_shared_uri_with_me_perm(uid=uid, owner_uid=uid, uri=uri))
+        self.assertTrue(permissionapi.delete_user_shared_uri_with_me_perm(uid=uid, owner_uid=owner_uid, uri=uri))
+
+    def test_delete_user_shared_uri_with_me_perm_existing(self):
+        ''' delete_user_shared_uri_with_me_perm should delete the row '''
+        uid=uuid.uuid4()
+        owner_uid=uuid.uuid4()
+        uri='uri'
+        perm=0
+        self.assertTrue(permissionapi.insert_user_shared_uri_with_me_perm(uid,owner_uid,uri,perm))
+        shared=permissionapi.get_user_shared_uri_with_me_perm(uid=uid, owner_uid=owner_uid, uri=uri)
+        self.assertEqual(shared.uid,uid)
+        self.assertEqual(shared.owner_uid,owner_uid)
+        self.assertEqual(shared.uri,uri)
+        self.assertEqual(shared.perm,perm)
+        self.assertTrue(permissionapi.delete_user_shared_uri_with_me_perm(uid=uid, owner_uid=owner_uid, uri=uri))
+        self.assertIsNone(permissionapi.get_user_shared_uri_with_me_perm(uid=uid, owner_uid=owner_uid, uri=uri))
 

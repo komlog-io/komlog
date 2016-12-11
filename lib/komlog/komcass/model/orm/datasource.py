@@ -6,7 +6,7 @@ Created on 01/10/2014
 '''
 
 class Datasource:
-    def __init__(self, did, aid=None, uid=None, datasourcename=None, creation_date=None):
+    def __init__(self, did, aid, uid, datasourcename, creation_date):
         self.did=did
         self.aid=aid
         self.uid=uid

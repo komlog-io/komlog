@@ -322,10 +322,27 @@ class Errors(Enum):
 
 # interface web api uri
 
-    E_IWAUR_GUR_IPSP=103000  #get_uri_request invalid user
-    E_IWAUR_GUR_IUR=103001  #get_uri_request invalid uri
-    E_IWAUR_GUR_IID=103002  #get_uri_request invalid id
+    E_IWAUR_GUR_IPSP    = 103000  #get_uri_request invalid user
+    E_IWAUR_GUR_IUR     = 103001  #get_uri_request invalid uri
+    E_IWAUR_GUR_IID     = 103002  #get_uri_request invalid id
+    E_IWAUR_GUR_URINF   = 103003  #get_uri_request uri not found
 
+    E_IWAUR_SUR_IPSP    = 103010  #: share_uri_request: invalid passport
+    E_IWAUR_SUR_IURI    = 103011  #: share_uri_request: invalid uri
+    E_IWAUR_SUR_IUSERS  = 103012  #: share_uri_request: users is not a list
+    E_IWAUR_SUR_IUSER   = 103013  #: share_uri_request: username is not valid
+    E_IWAUR_SUR_NUSER   = 103014  #: share_uri_request: no users received
+    E_IWAUR_SUR_URINF   = 103015  #: share_uri_request: uri not found
+
+    E_IWAUR_USUR_IPSP   = 103020  #: unshare_uri_request: invalid passport
+    E_IWAUR_USUR_IURI   = 103021  #: unshare_uri_request: invalid uri
+    E_IWAUR_USUR_IUSERS = 103022  #: unshare_uri_request: users is not a list
+    E_IWAUR_USUR_IUSER  = 103023  #: unshare_uri_request: username is not valid
+    E_IWAUR_USUR_URINF  = 103024  #: unshare_uri_request: uri not found
+
+    E_IWAUR_GUSR_IPSP   = 103030  #: get_uris_shared_request: invalid passport
+
+    E_IWAUR_GUSWMR_IPSP = 103040  #: get_uris_shared_with_me_request: invalid passport
 
 # interface web api events
 

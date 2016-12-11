@@ -32,11 +32,15 @@ def process_message_URISUPDT(message):
     date=message.date
     hooks={}
     contents={}
+    uris_info={}
+    users_info={}
     for uri in uris:
         try:
             if uri['type'] == vertex.DATASOURCE:
                 sids=datasourceapi.get_datasource_hooks(did=uri['id'])
                 if len(sids)>0:
+                    info = datasourceapi.get_datasource_config(did=uri['id'], pids_flag=False, widget_flag=False)
+                    uris_info[uri['id']]=info
                     ds_data=datasourceapi.get_datasource_data(did=uri['id'], fromdate=date, todate=date, count=1)
                     contents[uri['id']]=ds_data[0]['content']
                     for sid in sids:
@@ -47,6 +51,8 @@ def process_message_URISUPDT(message):
             elif uri['type'] == vertex.DATAPOINT:
                 sids=datapointapi.get_datapoint_hooks(pid=uri['id'])
                 if len(sids)>0:
+                    info = datapointapi.get_datapoint_config(pid=uri['id'], stats_flag=False, widget_flag=False)
+                    uris_info[uri['id']]=info
                     dp_data=datapointapi.get_datapoint_data(pid=uri['id'], fromdate=date, todate=date, count=1)
                     contents[uri['id']]=str(dp_data[0]['value'])
                     for sid in sids:
@@ -65,17 +71,29 @@ def process_message_URISUPDT(message):
             session_info=session.get_agent_session_info(sid=sid)
             if session_info.imc_address is None:
                 if timeuuid.get_unix_timestamp(session_info.last_update)+defaults.SESSION_INACTIVITY_EXPIRATION_SECONDS < timeuuid.get_unix_timestamp(timeuuid.uuid1()):
-                    result=session.delete_agent_session(sid=sid, last_update=session_info.last_update)
+                    if session.delete_agent_session(sid=sid, last_update=session_info.last_update):
+                        message=messages.ClearSessionHooksMessage(sid=sid, ids=[(item['id'],item['type']) for item in uris])
+                        response.add_message(message)
             else:
                 data=[]
-                for uri in uris:
+                for item in uris:
                     try:
-                        if uri['type'] == vertex.DATASOURCE:
-                            resauth.authorize_get_datasource_data(uid=session_info.uid,did=uri['id'])
-                        elif uri['type'] == vertex.DATAPOINT:
-                            resauth.authorize_get_datapoint_data(uid=session_info.uid,pid=uri['id'])
-                        data.append({'uri':uri['uri'],'type':uri['type'],'content':contents[uri['id']]})
-                    except authexcept.AuthorizationException:
+                        if item['type'] == vertex.DATASOURCE:
+                            resauth.authorize_get_datasource_data(uid=session_info.uid,did=item['id'])
+                        elif item['type'] == vertex.DATAPOINT:
+                            resauth.authorize_get_datapoint_data(uid=session_info.uid,pid=item['id'])
+                        item_uid = uris_info[item['id']]['uid']
+                        if session_info.uid == item_uid:
+                            uri = item['uri']
+                        else:
+                            if not item_uid in users_info:
+                                user_info = userapi.get_user_config(uid=item_uid)
+                                users_info[item_uid]=user_info
+                            uri = ':'.join((users_info[item_uid]['username'],item['uri']))
+                        data.append({'uri':uri,'type':item['type'],'content':contents[item['id']]})
+                    except (
+                        authexcept.AuthorizationException,
+                        gestexcept.UserNotFoundException):
                         pass
                 if len(data)>0:
                     ts=timeuuid.get_isodate_from_uuid(date)
@@ -84,7 +102,7 @@ def process_message_URISUPDT(message):
                         message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
                         response.add_message(message,dest=session_info.imc_address)
         except authexcept.SessionNotFoundException:
-            message=messages.ClearSessionHooksMessage(sid=sid, ids=[(uri['id'],uri['type']) for uri in uris])
+            message=messages.ClearSessionHooksMessage(sid=sid, ids=[(item['id'],item['type']) for item in uris])
             response.add_message(message)
     response.status=status.IMC_STATUS_OK
     return response
@@ -177,12 +195,24 @@ def process_message_DATINT(message):
     psp=passport.Passport(uid=session_info.uid, aid=session_info.aid, sid=session_info.sid, pv=session_info.pv)
     try:
         if message.uri['type'] == vertex.DATASOURCE:
+            info = datasourceapi.get_datasource_config(did=message.uri['id'],pids_flag=False, widget_flag=False)
+            if info['uid'] != session_info.uid:
+                user_info = userapi.get_user_config(uid=info['uid'])
+                item_uri = ':'.join((user_info['username'],message.uri['uri']))
+            else:
+                item_uri = message.uri['uri']
             authorization.authorize_get_datasource_data(psp, did=message.uri['id'], ii=message.ii, ie=message.ie, tid=None)
         elif message.uri['type'] == vertex.DATAPOINT:
+            info = datapointapi.get_datapoint_config(pid=message.uri['id'],stats_flag=False, widget_flag=False)
+            if info['uid'] != session_info.uid:
+                user_info = userapi.get_user_config(uid=info['uid'])
+                item_uri = ':'.join((user_info['username'],message.uri['uri']))
+            else:
+                item_uri = message.uri['uri']
             authorization.authorize_get_datapoint_data(psp, pid=message.uri['id'], ii=message.ii, ie=message.ie, tid=None)
     except authexcept.IntervalBoundsException as e:
         if message.ie.time<e.data['date'].time:
-            uri={'uri':message.uri['uri'],'type':message.uri['type']}
+            uri={'uri':item_uri,'type':message.uri['type']}
             start=timeuuid.get_isodate_from_uuid(message.ii)
             end=timeuuid.get_isodate_from_uuid(message.ie)
             data=[]
@@ -190,8 +220,9 @@ def process_message_DATINT(message):
             if msg:
                 imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
                 response.add_message(imc_message,dest=session_info.imc_address)
+            response.status=status.IMC_STATUS_ACCESS_DENIED
         else:
-            uri={'uri':message.uri['uri'],'type':message.uri['type']}
+            uri={'uri':item_uri,'type':message.uri['type']}
             start=timeuuid.get_isodate_from_uuid(message.ii)
             limit=e.data['date']
             end=timeuuid.get_isodate_from_uuid(limit)
@@ -201,18 +232,9 @@ def process_message_DATINT(message):
                 response.add_message(imc_message,dest=session_info.imc_address)
             imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=limit, ie=message.ie, count=message.count)
             response.add_message(imc_message)
-    except (authexcept.DatapointNotFoundException,
-            authexcept.DatasourceNotFoundException):
-            uri={'uri':message.uri['uri'],'type':message.uri['type']}
-            start=timeuuid.get_isodate_from_uuid(ii)
-            end=timeuuid.get_isodate_from_uuid(ie)
-            data=[]
-            msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=data)
-            if msg:
-                imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
-                response.add_message(imc_message,dest=session_info.imc_address)
+            response.status=status.IMC_STATUS_OK
     else:
-        uri={'uri':message.uri['uri'],'type':message.uri['type']}
+        uri={'uri':item_uri,'type':message.uri['type']}
         start=timeuuid.get_isodate_from_uuid(message.ii)
         end=timeuuid.get_isodate_from_uuid(message.ie)
         resp_data=[]

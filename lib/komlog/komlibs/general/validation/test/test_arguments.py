@@ -6,6 +6,7 @@ import datetime
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.general.validation import arguments
+from komlog.komlibs.general.string import stringops
 
 class GeneralValidationArgumentsTest(unittest.TestCase):
     ''' komlog.general.validation.arguments tests '''
@@ -165,6 +166,60 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
         ]
         for param in params:
             self.assertTrue(arguments.is_valid_uri(param)) 
+
+    def test_is_valid_global_uri_invalid(self):
+        ''' is_valid_global_uri should fail if param is not a valid global uri '''
+        params=[None,
+            234234,
+            'with spaces',
+            'with_end_point.',
+            'withspecialcharacterslike\t',
+            'or\ncharacter',
+            ' spacesatbeggining',
+            'spacesatend ',
+            'two..consecutivepoints',
+            '.beginswithpoint',
+            'endswith.',
+            'containsspecialchar$',
+            'endswith\t',
+            '\nbeginwithnewline',
+            'endswith\n',
+            '',
+            'local.uri',
+            'only.username:',
+            ':only.uri',
+            'USER:in.capitals',
+            'more:than:one.colon',
+            'invalidñuser:some.uri',
+            'invalid:uri..here',
+            'user:uri.endingwith\n',
+            'user:uri.endingwith\t',
+            '\nuser:uri.endingwith',
+            '\tuser:uri.endingwith',
+            dict(),
+            list(),
+            set(),
+            uuid.uuid4(),
+            uuid.uuid4().hex,
+        ]
+        for param in params:
+            self.assertFalse(arguments.is_valid_global_uri(param))
+
+    def test_is_valid_global_uri_valid(self):
+        ''' is_valid_global_uri should succeed if param is a valid global uri '''
+        params=[
+            'user:test_uri',
+            'user.uri:with.dots',
+            'user:uri_with_underscores',
+            'user:uri-with-dash',
+            'user:uriwithnumbers007',
+            'user:Capitals',
+            'user:all.together.0.a-b_.99',
+            'user.with.dots:some.uri',
+            'user.09.withnumbers:uri_with_underscores',
+        ]
+        for param in params:
+            self.assertTrue(arguments.is_valid_global_uri(param))
 
     def test_is_valid_relative_uri_invalid(self):
         ''' is_valid_relative_uri should fail if rel uri is not valid '''

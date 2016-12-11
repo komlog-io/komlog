@@ -91,7 +91,7 @@ class Errors(Enum):
     E_IIALD_DATINT_SEXP     = 256101    #: process_message_DATINT. session expired
 
 # komlibs.interface.imc.model.messages
-    
+
     E_IIMM_IMC_UMT          = 260050    #: IMCMessage. Unknown message type
     E_IIMM_IMC_MNS          = 260051    #: IMCMessage. message not supported
 

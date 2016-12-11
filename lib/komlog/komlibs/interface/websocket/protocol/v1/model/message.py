@@ -44,7 +44,7 @@ class SendDsData(MessagesVersionCatalog):
 
     @uri.setter
     def uri(self, uri):
-        if args.is_valid_uri(uri):
+        if (args.is_valid_uri(uri) or args.is_valid_global_uri(uri)):
             self._uri=uri
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSD_IURI)
@@ -117,7 +117,7 @@ class SendDpData(MessagesVersionCatalog):
 
     @uri.setter
     def uri(self, uri):
-        if args.is_valid_uri(uri):
+        if (args.is_valid_uri(uri) or args.is_valid_global_uri(uri)):
             self._uri=uri
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_IURI)
@@ -192,7 +192,7 @@ class SendMultiData(MessagesVersionCatalog):
         if (isinstance(uris,list)
             and all(isinstance(item,dict) for item in uris)
             and all('uri' in item for item in uris)
-            and all(args.is_valid_uri(item['uri']) for item in uris)
+            and all((args.is_valid_uri(item['uri']) or args.is_valid_global_uri(item['uri'])) for item in uris)
             and all('type' in item for item in uris)
             and all(item['type'] in (vertex.DATASOURCE,vertex.DATAPOINT) for item in uris)
             and all('content' in item for item in uris)
@@ -257,7 +257,7 @@ class HookToUri(MessagesVersionCatalog):
 
     @uri.setter
     def uri(self, uri):
-        if args.is_valid_uri(uri):
+        if (args.is_valid_uri(uri) or args.is_valid_global_uri(uri)):
             self._uri=uri
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTU_IURI)
@@ -299,7 +299,7 @@ class UnHookFromUri(MessagesVersionCatalog):
 
     @uri.setter
     def uri(self, uri):
-        if args.is_valid_uri(uri):
+        if (args.is_valid_uri(uri) or args.is_valid_global_uri(uri)):
             self._uri=uri
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFU_IURI)
@@ -346,7 +346,7 @@ class RequestData(MessagesVersionCatalog):
 
     @uri.setter
     def uri(self, uri):
-        if args.is_valid_uri(uri):
+        if (args.is_valid_uri(uri) or args.is_valid_global_uri(uri)):
             self._uri=uri
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDT_IURI)
@@ -441,7 +441,7 @@ class SendDataInterval(MessagesVersionCatalog):
     def uri(self, uri):
         if (isinstance(uri,dict)
             and 'uri' in uri
-            and args.is_valid_uri(uri['uri'])
+            and (args.is_valid_uri(uri['uri']) or args.is_valid_global_uri(uri['uri']))
             and 'type' in uri
             and uri['type'] in (vertex.DATASOURCE,vertex.DATAPOINT)):
             self._uri={'uri':uri['uri'],'type':uri['type']}

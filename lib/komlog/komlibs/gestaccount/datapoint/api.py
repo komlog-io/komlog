@@ -127,23 +127,25 @@ def create_datasource_datapoint(did, datapoint_uri):
             graphuri.dissociate_vertex(ido=pid)
             raise
 
-def get_datapoint_config(pid):
+def get_datapoint_config(pid, stats_flag=True, widget_flag=True):
     if not args.is_valid_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_GPA_GDC_IP)
     datapoint=cassapidatapoint.get_datapoint(pid=pid)
-    datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
     data={}
-    data['pid']=pid
     if datapoint:
+        data['pid']=pid
         data['datapointname']=datapoint.datapointname if datapoint.datapointname else ''
         data['uid']=datapoint.uid
         data['did']=datapoint.did
         data['color']=datapoint.color if datapoint.color else ''
-        if datapoint_stats:
-            data['decimalseparator']=datapoint_stats.decimal_separator if datapoint_stats.decimal_separator else ''
-        widget=cassapiwidget.get_widget_dp(pid=pid)
-        if widget:
-            data['wid']=widget.wid
+        if stats_flag:
+            datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
+            if datapoint_stats:
+                data['decimalseparator']=datapoint_stats.decimal_separator if datapoint_stats.decimal_separator else ''
+        if widget_flag:
+            widget=cassapiwidget.get_widget_dp(pid=pid)
+            if widget:
+                data['wid']=widget.wid
     else:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GPA_GDC_DNF)
     return data

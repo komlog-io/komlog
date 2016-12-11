@@ -1,6 +1,5 @@
-#coding: utf-8
 '''
-update.py 
+update.py
 
 This file implements functions to update authorization to resources
 

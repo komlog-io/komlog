@@ -11,6 +11,8 @@ OBJECTS=[
     'PERM_USER_DASHBOARD',
     'PERM_USER_SNAPSHOT',
     'PERM_USER_CIRCLE',
+    'PERM_USER_SHARED_URI',
+    'PERM_USER_SHARED_URI_WITH_ME',
 ]
 
 PERM_USER_AGENT='''
@@ -73,6 +75,26 @@ PERM_USER_CIRCLE='''
         cid uuid,
         perm int,
         PRIMARY KEY (uid,cid)
+    );
+'''
+
+PERM_USER_SHARED_URI='''
+    CREATE TABLE perm_user_shared_uri (
+        uid uuid,
+        dest_uid uuid,
+        uri text,
+        perm int,
+        PRIMARY KEY (uid,dest_uid,uri)
+    );
+'''
+
+PERM_USER_SHARED_URI_WITH_ME='''
+    CREATE TABLE perm_user_shared_uri_with_me (
+        uid uuid,
+        owner_uid uuid,
+        uri text,
+        perm int,
+        PRIMARY KEY (uid,owner_uid,uri)
     );
 '''
 

@@ -222,8 +222,8 @@ def authorize_disable_event(passport):
 def authorize_response_event(passport):
     pass
 
-def authorize_get_uri(passport):
-    pass
+def authorize_get_uri(passport, uri):
+    resauth.authorize_get_uri(uid=passport.uid, uri=uri)
 
 def authorize_dissociate_datapoint_from_datasource(passport, pid):
     resauth.authorize_dissociate_datapoint_from_datasource(uid=passport.uid,pid=pid)
@@ -239,6 +239,12 @@ def authorize_unhook_from_datapoint(passport, pid):
 
 def authorize_unhook_from_datasource(passport, did):
     resauth.authorize_unhook_from_datasource(uid=passport.uid, did=did)
+
+def authorize_register_pending_hook(passport, uri):
+    resauth.authorize_register_pending_hook(uid=passport.uid, uri=uri)
+
+def authorize_delete_pending_hook(passport, uri):
+    resauth.authorize_delete_pending_hook(uid=passport.uid, uri=uri)
 
 func_requests={
     Requests.ADD_DATAPOINT_TO_WIDGET:authorize_add_datapoint_to_widget,
@@ -300,5 +306,7 @@ func_requests={
     Requests.POST_DATASOURCE_DATA:authorize_post_datasource_data,
     Requests.POST_DATAPOINT_DATA:authorize_post_datapoint_data,
     Requests.RESPONSE_EVENT:authorize_response_event,
+    Requests.REGISTER_PENDING_HOOK:authorize_register_pending_hook,
+    Requests.DELETE_PENDING_HOOK:authorize_delete_pending_hook,
 }
 

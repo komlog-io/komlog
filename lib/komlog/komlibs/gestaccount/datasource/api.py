@@ -39,9 +39,9 @@ def create_datasource(uid,aid,datasourcename):
     now=timeuuid.uuid1()
     did=uuid.uuid4()
     user=cassapiuser.get_user(uid=uid)
-    agent=cassapiagent.get_agent(aid=aid)
     if not user:
         raise exceptions.UserNotFoundException(error=Errors.E_GDA_CRD_UNF)
+    agent=cassapiagent.get_agent(aid=aid)
     if not agent:
         raise exceptions.AgentNotFoundException(error=Errors.E_GDA_CRD_ANF)
     if not graphuri.new_datasource_uri(uid=uid, uri=datasourcename, did=did):
@@ -157,7 +157,7 @@ def store_datasource_data(did, date, content):
             cassapidatasource.set_last_received(did=did, last_received=dsstats.last_received)
         raise
 
-def get_datasource_config(did, pids_flag=True):
+def get_datasource_config(did, pids_flag=True, widget_flag=True):
     if not args.is_valid_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_GDA_GDC_ID)
     datasource=cassapidatasource.get_datasource(did=did)
@@ -170,9 +170,10 @@ def get_datasource_config(did, pids_flag=True):
         if pids_flag:
             pids=cassapidatapoint.get_datapoints_pids(did=did)
             data['pids']=[pid for pid in pids] if pids else []
-        widget=cassapiwidget.get_widget_ds(did=did)
-        if widget:
-            data['wid']=widget.wid
+        if widget_flag:
+            widget=cassapiwidget.get_widget_ds(did=did)
+            if widget:
+                data['wid']=widget.wid
         return data
     else:
         raise exceptions.DatasourceNotFoundException(error=Errors.E_GDA_GDC_DNF)

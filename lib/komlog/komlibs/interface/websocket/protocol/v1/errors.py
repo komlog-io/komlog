@@ -34,11 +34,13 @@ class Errors(Enum):
 
     E_IWSPV1PM_PSDSD_IURI   = 201100    #: uri is not a datasource
     E_IWSPV1PM_PSDSD_ECDS   = 201101    #: error creating datasource
+    E_IWSPV1PM_PSDSD_EUGURI = 201102    #: user tried to modify a foreign global uri
 
     E_IWSPV1PM_PSDPD_IURI   = 201200    #: uri is not a datapoint
     E_IWSPV1PM_PSDPD_ECDP   = 201201    #: error creating datapoint
+    E_IWSPV1PM_PSDPD_EUGURI = 201202    #: user tried to modify a foreign global uri
 
-    E_IWSPV1PM_PSMTD_IUC    = 201300    #: invalid uri content 
+    E_IWSPV1PM_PSMTD_IUC    = 201300    #: invalid uri content
     E_IWSPV1PM_PSMTD_ONAOU  = 201301    #: operation not allowed on uri
     E_IWSPV1PM_PSMTD_ECDS   = 201302    #: error creating datasources
     E_IWSPV1PM_PSMTD_ECDP   = 201303    #: error creating datapoints
@@ -47,17 +49,21 @@ class Errors(Enum):
     E_IWSPV1PM_PSMTD_NUDPOE = 201306    #: new user datapoint operation error
     E_IWSPV1PM_PSMTD_DSDSTE = 201307    #: datasource data store error
     E_IWSPV1PM_PSMTD_UCNV   = 201308    #: uri content not valid for this uri type
+    E_IWSPV1PM_PSMTD_EUGURI = 201309    #: error tried to modify a foreign global uri
 
     E_IWSPV1PM_PHTU_UNF     = 201400    #: process_hook_to_uri: uri not found
     E_IWSPV1PM_PHTU_ONA     = 201401    #: process_hook_to_uri: operation not allowed on this uri
+    E_IWSPV1PM_PHTU_OUNF    = 201402    #: process_hook_to_uri: owner user not found
 
     E_IWSPV1PM_PUHFU_UNF    = 201500    #: process_unhook_from_uri: uri not found
-    E_IWSPV1PM_PUHFU_ONA    = 201501    #: process_unhook_from_uri:operation not allowed on this uri
+    E_IWSPV1PM_PUHFU_ONA    = 201501    #: process_unhook_from_uri: operation not allowed on this uri
+    E_IWSPV1PM_PUHFU_OUNF   = 201502    #: process_unhook_from_uri: owner user not found
 
     E_IWSPV1PM_PRDI_UNF     = 201600    #: process_request_data_interval: uri not found
     E_IWSPV1PM_PRDI_ONA     = 201601    #: process_request_data_interval: operation not allowed on this uri
     E_IWSPV1PM_PRDI_ANA     = 201602    #: process_request_data_interval:access to range not allowed
     E_IWSPV1PM_PRDI_ALP     = 201603    #: process_request_data_interval:access to range limited partially
+    E_IWSPV1PM_PRDI_OUNF    = 201604    #: process_request_data_interval: owner user not found
 
 # interface websocket protocol v1 model message
 

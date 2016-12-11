@@ -618,6 +618,50 @@ class UriHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
+class SharedUriHandler(tornado.web.RequestHandler):
+
+    @auth.authenticated
+    def get(self):
+        response=uri.get_uris_shared_request(passport=self.passport)
+        self.set_status(response.status)
+        self.write(json.dumps(response.data))
+
+    @auth.authenticated
+    def delete(self):
+        try:
+            data=json_decode(self.request.body)
+            req_uri=data['uri'] if 'uri' in data else None
+            users = data['users'] if 'users' in data else None
+        except Exception:
+            self.set_status(400)
+            self.write(json.dumps({'message':'Bad parameters'}))
+        else:
+            response=uri.unshare_uri_request(passport=self.passport, uri=req_uri, users=users)
+            self.set_status(response.status)
+            self.write(json.dumps(response.data))
+
+    @auth.authenticated
+    def post(self):
+        try:
+            data=json_decode(self.request.body)
+            req_uri=data['uri'] if 'uri' in data else None
+            users = data['users'] if 'users' in data else None
+        except Exception:
+            self.set_status(400)
+            self.write(json.dumps({'message':'Bad parameters'}))
+        else:
+            response=uri.share_uri_request(passport=self.passport, uri=req_uri, users=users)
+            self.set_status(response.status)
+            self.write(json.dumps(response.data))
+
+class SharedWithMeUriHandler(tornado.web.RequestHandler):
+
+    @auth.authenticated
+    def get(self):
+        response=uri.get_uris_shared_with_me_request(passport=self.passport)
+        self.set_status(response.status)
+        self.write(json.dumps(response.data))
+
 class UserEventsHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
@@ -768,6 +812,8 @@ HANDLERS = [
             (r'/var/ds/('+UUID_REGEX+')', DatasourceDataHandler),
             (r'/var/dp/('+UUID_REGEX+')', DatapointDataHandler),
             (r'/var/uri/?', UriHandler),
+            (r'/var/uri/shared/?', SharedUriHandler),
+            (r'/var/uri/sharedwithme/?', SharedWithMeUriHandler),
             (r'/var/usr/ev/?', UserEventsHandler),
             (r'/var/usr/ev/('+UUID_REGEX+')', UserEventsResponsesHandler),
             ]

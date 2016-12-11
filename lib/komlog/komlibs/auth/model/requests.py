@@ -72,4 +72,6 @@ class Requests(AutoEnum):
     POST_DATASOURCE_DATA                      = ()
     POST_DATAPOINT_DATA                       = ()
     RESPONSE_EVENT                            = ()
+    REGISTER_PENDING_HOOK                     = ()
+    DELETE_PENDING_HOOK                       = ()
 

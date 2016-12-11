@@ -11,6 +11,7 @@ from komlog.komfig import logging, config, options
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.auth.model.requests import Requests
+from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
 from komlog.komlibs.gestaccount.common import delete as deleteapi
@@ -36,6 +37,16 @@ def _process_send_ds_data(passport, message):
     did=None
     new_datasource=False
     msgs=[]
+    if args.is_valid_global_uri(message.uri):
+        username,local_uri=message.uri.split(':')
+        try:
+            user_uid = userapi.get_uid(username)
+        except gestexcept.UserNotFoundException:
+            user_uid = None
+        if user_uid != passport.uid:
+            return Response(status=status.MESSAGE_EXECUTION_DENIED, reason="Cannot modify other user's uris", error=Errors.E_IWSPV1PM_PSDSD_EUGURI)
+        else:
+            message.uri = local_uri
     uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
     if not uri_info or uri_info['type']==vertex.VOID:
         authorization.authorize_request(request=Requests.NEW_DATASOURCE,passport=passport)
@@ -83,6 +94,16 @@ def _process_send_dp_data(passport, message):
     new_datapoint=False
     date=timeuuid.get_uuid1_from_isodate(message.ts, predictable=True)
     msgs=[]
+    if args.is_valid_global_uri(message.uri):
+        username,local_uri=message.uri.split(':')
+        try:
+            user_uid = userapi.get_uid(username)
+        except gestexcept.UserNotFoundException:
+            user_uid = None
+        if user_uid != passport.uid:
+            return Response(status=status.MESSAGE_EXECUTION_DENIED, reason="Cannot modify other user's uris", error=Errors.E_IWSPV1PM_PSDPD_EUGURI)
+        else:
+            message.uri = local_uri
     uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
     if not uri_info or uri_info['type']==vertex.VOID:
         authorization.authorize_request(request=Requests.NEW_USER_DATAPOINT,passport=passport)
@@ -130,21 +151,31 @@ def _process_send_multi_data(passport, message):
     msgs=[]
     # execution authorization
     for item in message.uris:
-        uri_info=graphuri.get_id(ido=passport.uid, uri=item['uri'])
+        if args.is_valid_global_uri(item['uri']):
+            username,local_uri=item['uri'].split(':')
+            try:
+                user_uid = userapi.get_uid(username)
+            except gestexcept.UserNotFoundException:
+                user_uid = None
+            if user_uid != passport.uid:
+                return Response(status=status.MESSAGE_EXECUTION_DENIED, reason="Cannot modify other user's uris", error=Errors.E_IWSPV1PM_PSMTD_EUGURI)
+        else:
+            local_uri = item['uri']
+        uri_info=graphuri.get_id(ido=passport.uid, uri=local_uri)
         if uri_info is None or uri_info['type']==vertex.VOID:
             if item['type'] == vertex.DATAPOINT and args.is_valid_datapoint_content(item['content']):
-                pending_dp_creations.append(item)
+                pending_dp_creations.append({'type':item['type'],'uri':local_uri,'content':item['content']})
             elif item['type'] == vertex.DATASOURCE and args.is_valid_datasource_content(item['content']):
-                pending_ds_creations.append(item)
+                pending_ds_creations.append({'type':item['type'],'uri':local_uri,'content':item['content']})
             else:
                 return Response(status=status.PROTOCOL_ERROR, reason='invalid content for uri: '+item['uri'], error=Errors.E_IWSPV1PM_PSMTD_IUC)
         elif uri_info['type'] not in (vertex.DATAPOINT,vertex.DATASOURCE):
             return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+item['uri'], error=Errors.E_IWSPV1PM_PSMTD_ONAOU)
         else:
             if uri_info['type'] == vertex.DATASOURCE and args.is_valid_datasource_content(item['content']):
-                existing_uris.append({'uri':item['uri'],'id':uri_info['id'],'type':uri_info['type'],'content':item['content']})
+                existing_uris.append({'uri':local_uri,'id':uri_info['id'],'type':uri_info['type'],'content':item['content']})
             elif uri_info['type'] == vertex.DATAPOINT and args.is_valid_datapoint_content(item['content']):
-                existing_uris.append({'uri':item['uri'],'id':uri_info['id'],'type':uri_info['type'],'content':item['content']})
+                existing_uris.append({'uri':local_uri,'id':uri_info['id'],'type':uri_info['type'],'content':item['content']})
             else:
                 return Response(status=status.PROTOCOL_ERROR, reason='uri content not valid: '+item['uri'], error=Errors.E_IWSPV1PM_PSMTD_UCNV)
     if len(pending_ds_creations)>0:
@@ -267,10 +298,20 @@ def _process_send_multi_data(passport, message):
 @exceptions.ExceptionHandler
 def _process_hook_to_uri(passport, message):
     message = modmsg.HookToUri.load_from_dict(message)
-    uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
+    if args.is_valid_global_uri(message.uri):
+        username,local_uri=message.uri.split(':')
+        try:
+            user_uid = userapi.get_uid(username)
+        except gestexcept.UserNotFoundException:
+            return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PHTU_OUNF)
+    else:
+        local_uri=message.uri
+        user_uid=passport.uid
+    uri_info=graphuri.get_id(ido=user_uid, uri=local_uri)
     if not uri_info or uri_info['type'] == vertex.VOID:
-        userapi.register_pending_hook(uid=passport.uid, uri=message.uri, sid=passport.sid)
-        return Response(status=status.MESSAGE_EXECUTION_OK, reason='Hooked, but uri does not exist yet')
+        authorization.authorize_request(request=Requests.REGISTER_PENDING_HOOK,passport=passport,uri=message.uri)
+        userapi.register_pending_hook(uid=user_uid, uri=local_uri, sid=passport.sid)
+        return Response(status=status.MESSAGE_EXECUTION_OK, reason='Operation registered, but uri does not exist yet')
     elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
         return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PHTU_ONA)
     else:
@@ -285,10 +326,20 @@ def _process_hook_to_uri(passport, message):
 @exceptions.ExceptionHandler
 def _process_unhook_from_uri(passport, message):
     message = modmsg.UnHookFromUri.load_from_dict(message)
-    uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
+    if args.is_valid_global_uri(message.uri):
+        username,local_uri=message.uri.split(':')
+        try:
+            user_uid = userapi.get_uid(username)
+        except gestexcept.UserNotFoundException:
+            return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PUHFU_OUNF)
+    else:
+        local_uri=message.uri
+        user_uid=passport.uid
+    uri_info=graphuri.get_id(ido=user_uid, uri=local_uri)
     if not uri_info or uri_info['type'] == vertex.VOID:
-        userapi.delete_pending_hook(uid=passport.uid, uri=message.uri, sid=passport.sid)
-        return Response(status=status.MESSAGE_EXECUTION_OK, reason='Unhooked, but uri does not exist yet')
+        authorization.authorize_request(request=Requests.DELETE_PENDING_HOOK,passport=passport,uri=message.uri)
+        userapi.delete_pending_hook(uid=user_uid, uri=local_uri, sid=passport.sid)
+        return Response(status=status.MESSAGE_EXECUTION_OK, reason='Unhooked')
     elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
         return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PUHFU_ONA)
     else:
@@ -303,44 +354,54 @@ def _process_unhook_from_uri(passport, message):
 @exceptions.ExceptionHandler
 def _process_request_data(passport, message):
     message = modmsg.RequestData.load_from_dict(message)
-    uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
+    if args.is_valid_global_uri(message.uri):
+        username,local_uri = message.uri.split(':')
+        try:
+            user_uid = userapi.get_uid(username)
+        except gestexcept.UserNotFoundException:
+            return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PRDI_OUNF)
+    else:
+        user_uid = passport.uid
+        local_uri = message.uri
+    uri_info=graphuri.get_id(ido=user_uid, uri=local_uri)
     if not uri_info or uri_info['type'] == vertex.VOID:
+        authorization.authorize_request(request=Requests.GET_URI,passport=passport,uri=message.uri)
         return Response(status=status.RESOURCE_NOT_FOUND, reason='uri '+message.uri+' does not exist', error=Errors.E_IWSPV1PM_PRDI_UNF)
     elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
+        authorization.authorize_request(request=Requests.GET_URI,passport=passport,uri=message.uri)
         return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PRDI_ONA)
+    if message.start is None and message.end is None:
+        ii=timeuuid.min_uuid_from_time(1)
+        ie=timeuuid.min_uuid_from_time(timeuuid.get_unix_timestamp(timeuuid.uuid1()))
+    elif message.start <= message.end:
+        ii=timeuuid.min_uuid_from_time(message.start.timestamp())
+        ie=timeuuid.max_uuid_from_time(message.end.timestamp())
     else:
-        if message.start is None and message.end is None:
-            ii=timeuuid.min_uuid_from_time(1)
-            ie=timeuuid.min_uuid_from_time(timeuuid.get_unix_timestamp(timeuuid.uuid1()))
-        elif message.start <= message.end:
-            ii=timeuuid.min_uuid_from_time(message.start.timestamp())
-            ie=timeuuid.max_uuid_from_time(message.end.timestamp())
+        ii=timeuuid.min_uuid_from_time(message.end.timestamp())
+        ie=timeuuid.max_uuid_from_time(message.start.timestamp())
+    try:
+        if uri_info['type'] == vertex.DATASOURCE:
+            authorization.authorize_request(request=Requests.GET_DATASOURCE_DATA,passport=passport,did=uri_info['id'], ii=ii, ie=ie, tid=None)
+        elif uri_info['type'] == vertex.DATAPOINT:
+            authorization.authorize_request(request=Requests.GET_DATAPOINT_DATA,passport=passport,pid=uri_info['id'], ii=ii, ie=ie, tid=None)
+    except authexcept.IntervalBoundsException as e:
+        if ie.time < e.data['date'].time:
+            limit=timeuuid.get_isodate_from_uuid(e.data['date'])
+            reason = 'Your interval requested for uri '+message.uri+' is wider than the limit allowed: '+limit+'. Access to data is not allowed before that date.'
+            error=Errors.E_IWSPV1PM_PRDI_ANA
+            stat=status.MESSAGE_EXECUTION_DENIED
+            #however we will continue request and send a msg with no data so agent logic is simpler
         else:
-            ii=timeuuid.min_uuid_from_time(message.end.timestamp())
-            ie=timeuuid.max_uuid_from_time(message.start.timestamp())
-        try:
-            if uri_info['type'] == vertex.DATASOURCE:
-                authorization.authorize_request(request=Requests.GET_DATASOURCE_DATA,passport=passport,did=uri_info['id'], ii=ii, ie=ie, tid=None)
-            elif uri_info['type'] == vertex.DATAPOINT:
-                authorization.authorize_request(request=Requests.GET_DATAPOINT_DATA,passport=passport,pid=uri_info['id'], ii=ii, ie=ie, tid=None)
-        except authexcept.IntervalBoundsException as e:
-            if ie.time < e.data['date'].time:
-                limit=timeuuid.get_isodate_from_uuid(e.data['date'])
-                reason = 'Your interval requested for uri '+message.uri+' is older than your current limit: '+limit+'. Access to data is not allowed before that limit.'
-                error=Errors.E_IWSPV1PM_PRDI_ANA
-                stat=status.MESSAGE_EXECUTION_DENIED
-                #however we will continue request and send an empty array so agent logic is simpler
-            else:
-                limit=timeuuid.get_isodate_from_uuid(e.data['date'])
-                reason = 'Your current interval limit is within the range requested for uri '+message.uri+'. Limit is stablished at: '+limit+'. Data interval retrieved will be modified for that reason.'
-                error=Errors.E_IWSPV1PM_PRDI_ALP
-                stat=status.MESSAGE_ACCEPTED_FOR_PROCESSING
-        else:
-            error=Errors.OK
-            reason='message accepted for processing'
+            limit=timeuuid.get_isodate_from_uuid(e.data['date'])
+            reason = 'Your current interval limit is within the range requested for uri '+message.uri+'. Limit is stablished at: '+limit+'. Data interval retrieved will be modified for that reason.'
+            error=Errors.E_IWSPV1PM_PRDI_ALP
             stat=status.MESSAGE_ACCEPTED_FOR_PROCESSING
-        msg=messages.DataIntervalRequestMessage(sid=passport.sid, uri={'type':uri_info['type'],'id':uri_info['id'],'uri':message.uri}, ii=ii, ie=ie, count=message.count)
-        resp=Response(status=stat, reason=reason, error=error)
-        resp.add_message(msg)
-        return resp
+    else:
+        error=Errors.OK
+        reason='message accepted for processing'
+        stat=status.MESSAGE_ACCEPTED_FOR_PROCESSING
+    msg=messages.DataIntervalRequestMessage(sid=passport.sid, uri={'type':uri_info['type'],'id':uri_info['id'],'uri':local_uri}, ii=ii, ie=ie, count=message.count)
+    resp=Response(status=stat, reason=reason, error=error)
+    resp.add_message(msg)
+    return resp
 

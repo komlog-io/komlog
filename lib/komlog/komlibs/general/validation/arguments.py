@@ -11,10 +11,11 @@ import pandas as pd
 from komlog.komlibs.general.crypto import crypto
 
 
-KOMLOGID=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\s)$')
-KOMLOGDESC=re.compile('^[ a-zA-Z0-9\-\._@#!\(\):/$%&+=]+(?!\s)$')
-KOMLOGURI=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$')
-KOMLOGRELURI=re.compile('^([a-zA-Z0-9\-_]+\.\.?)*[a-zA-Z0-9\-_]+(?!\s)$')
+ID=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\s)$')
+DESC=re.compile('^[ a-zA-Z0-9\-\._@#!\(\):/$%&+=]+(?!\s)$')
+URI=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$')
+GLOBALURI=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+:([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$')
+RELURI=re.compile('^([a-zA-Z0-9\-_]+\.\.?)*[a-zA-Z0-9\-_]+(?!\s)$')
 NOTVERSION=re.compile('[^ a-zA-Z0-9\-\+/:\._]')
 CODE=re.compile('^[a-zA-Z0-9]+$')
 WHITESPACES=re.compile(' ')
@@ -27,63 +28,70 @@ ISODATE=re.compile('^((?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[1
 def is_valid_username(argument):
     if not isinstance(argument,str):
         return False
-    if KOMLOGID.search(argument):
+    if ID.search(argument):
         return True
     return False
 
 def is_valid_agentname(argument):
     if not isinstance(argument,str):
         return False
-    if KOMLOGDESC.search(argument):
+    if DESC.search(argument):
         return True
     return False
 
 def is_valid_datasourcename(argument):
     if not isinstance(argument,str):
         return False
-    if KOMLOGDESC.search(argument):
+    if DESC.search(argument):
         return True
     return False
 
 def is_valid_datapointname(argument):
     if not isinstance(argument,str):
         return False
-    if KOMLOGDESC.search(argument):
+    if DESC.search(argument):
         return True
     return False
 
 def is_valid_widgetname(argument):
     if not isinstance(argument,str):
         return False
-    if KOMLOGDESC.search(argument):
+    if DESC.search(argument):
         return True
     return False
 
 def is_valid_dashboardname(argument):
     if not isinstance(argument,str):
         return False
-    if KOMLOGDESC.search(argument):
+    if DESC.search(argument):
         return True
     return False
 
 def is_valid_circlename(argument):
     if not isinstance(argument,str):
         return False
-    if KOMLOGDESC.search(argument):
+    if DESC.search(argument):
         return True
     return False
 
 def is_valid_uri(argument):
     if not isinstance(argument,str):
         return False
-    if KOMLOGURI.search(argument):
+    if URI.search(argument):
+        return True
+    return False
+
+def is_valid_global_uri(argument):
+    if not isinstance(argument,str):
+        return False
+    if GLOBALURI.search(argument):
         return True
     return False
 
 def is_valid_relative_uri(argument):
     if not isinstance(argument,str):
         return False
-    if KOMLOGRELURI.search(argument):
+    if RELURI.search(argument):
         return True
     return False
 
