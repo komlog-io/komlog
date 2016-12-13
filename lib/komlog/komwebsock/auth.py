@@ -11,8 +11,8 @@ import traceback
 from komlog.komlibs.auth import passport
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komcass import exceptions as cassexcept
-from komlog.komlibs.interface.websocket.protocol.v1 import status
-from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
+from komlog.komlibs.interface.websocket import status
+from komlog.komlibs.interface.websocket.errors import Errors
 from komlog.komfig import logging
 
 def agent_authenticated(method):
