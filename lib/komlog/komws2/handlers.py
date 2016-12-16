@@ -362,7 +362,7 @@ class LoginHandler(tornado.web.RequestHandler):
 class LogoutHandler(tornado.web.RequestHandler):
 
     def get(self):
-        self.clear_cookie('kid')
+        self.clear_all_cookies(domain='.'+config.get(options.ROOT_DOMAIN))
         ctype=self.request.headers.get('Content-Type')
         if not ctype or ctype.find('application/json')<0:
             self.redirect(self.get_login_url())
