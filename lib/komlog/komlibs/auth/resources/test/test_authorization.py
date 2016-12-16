@@ -2078,6 +2078,16 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uri=username+':this.uri.is_shared.datasource'
         self.assertIsNone(authorization.authorize_get_uri(uid=uid, uri=uri))
 
+    def test_authorize_get_uri_success_global_uri_is_mine(self):
+        ''' authorize_get_uri should success if username of global uri is me '''
+        username='test_authorize_get_uri_success_global_uri_is_mine'
+        password = 'password'
+        email = username+'@komlog.org'
+        sharing_user=userapi.create_user(username=username, password=password, email=email)
+        #we pass capital username to check is the same as in lowercase
+        uri=username.upper()+':this.uri.is_mine'
+        self.assertIsNone(authorization.authorize_get_uri(uid=sharing_user['uid'], uri=uri))
+
     def test_authorize_get_uri_success_local_uri(self):
         ''' authorize_get_uri should success if uri is local '''
         uid = uuid.uuid4()
@@ -2131,6 +2141,16 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         uri=username+':this.uri.is_shared.datasource'
         self.assertIsNone(authorization.authorize_register_pending_hook(uid=uid, uri=uri))
 
+    def test_authorize_register_pending_hook_success_global_uri_is_mine(self):
+        ''' authorize_register_pending_hook should success if global uri is mine '''
+        username='test_authorize_register_pending_hook_success_global_uri_is_mine'
+        password = 'password'
+        email = username+'@komlog.org'
+        sharing_user=userapi.create_user(username=username, password=password, email=email)
+        shared_uri='this.uri.is_shared'
+        uri=username+':this.uri.is_mine'
+        self.assertIsNone(authorization.authorize_register_pending_hook(uid=sharing_user['uid'], uri=uri))
+
     def test_authorize_register_pending_hook_success_local_uri(self):
         ''' authorize_register_pending_hook should success if uri is local '''
         uid = uuid.uuid4()
@@ -2177,6 +2197,16 @@ class AuthResourcesAuthorizationTest(unittest.TestCase):
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=sharing_user['uid'],dest_uid=uid,uri=shared_uri, perm=perm))
         uri=username+':this.uri.is_shared.datasource'
         self.assertIsNone(authorization.authorize_delete_pending_hook(uid=uid, uri=uri))
+
+    def test_authorize_delete_pending_hook_success_global_uri_is_mine(self):
+        ''' authorize_delete_pending_hook should success if global uri is mine '''
+        username='test_authorize_delete_pending_hook_success_global_uri_is_mine'
+        password = 'password'
+        email = username+'@komlog.org'
+        sharing_user=userapi.create_user(username=username, password=password, email=email)
+        shared_uri='this.uri.is_shared'
+        uri=username+':this.uri.is_mine'
+        self.assertIsNone(authorization.authorize_delete_pending_hook(uid=sharing_user['uid'], uri=uri))
 
     def test_authorize_delete_pending_hook_success_local_uri(self):
         ''' authorize_delete_pending_hook should success if uri is local '''
