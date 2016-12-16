@@ -15,6 +15,7 @@ from komlog.komlibs.interface.web.api import agent as agentapi
 from komlog.komlibs.interface.web.api import datasource as datasourceapi
 from komlog.komlibs.interface.web.api import datapoint as datapointapi
 from komlog.komlibs.interface.web.api import widget as widgetapi
+from komlog.komlibs.interface.web.api import uri as uriapi
 from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.general.validation import arguments as args
@@ -26,6 +27,7 @@ from komlog.komlibs.interface.imc.api import rescontrol, gestconsole
 from komlog.komimc import bus, routing
 from komlog.komimc import api as msgapi
 
+pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
 
 class InterfaceWebApiWidgetTest(unittest.TestCase):
     ''' komlibs.interface.web.api.widget tests '''
@@ -48,25 +50,27 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                     msgresponse=msgapi.process_message(msg)
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
+            response = loginapi.login_request(username=self.username, password=self.password)
+            cookie=getattr(response, 'cookie',None)
+            self.passport = passport.get_user_passport(cookie)
+            agentname='test_komlibs.interface.web.api.widget_agent'
+            version='test library vX.XX'
+            response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
+            if response.status==status.WEB_STATUS_OK:
+                msgs=response.unrouted_messages
+                while len(msgs)>0:
+                    for msg in msgs:
+                        msgs.remove(msg)
+                        msgresponse=msgapi.process_message(msg)
+                        for msg2 in msgresponse.unrouted_messages:
+                            msgs.append(msg2)
+                        self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response, 'cookie',None)
         self.passport = passport.get_user_passport(cookie)
-        agentname='test_komlibs.interface.web.api.widget_agent'
-        pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
-        version='test library vX.XX'
-        response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
-        if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
-            while len(msgs)>0:
-                for msg in msgs:
-                    msgs.remove(msg)
-                    msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
-                        msgs.append(msg2)
-                    self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         agents_info=agentapi.get_agents_config_request(passport=self.passport)
         self.agents=agents_info.data
-        aid = response.data['aid']
+        aid = agents_info.data[0]['aid']
         cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'pv':1, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
         self.agent_passport = passport.get_agent_passport(cookie)
 
@@ -102,6 +106,97 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],datasourcename)
         self.assertEqual(response3.data['did'],response.data['did'])
         self.assertEqual(response3.data['wid'],wid)
+
+    def test_get_widget_config_request_success_widget_ds_remote_widget(self):
+        ''' get_widget_config_request should succeed returning the widget_ds config,
+            indicating the owner if it's different from the user who made the request '''
+        username='test_get_widget_config_request_success_widget_ds_remote_widget'
+        password='password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        uid = uuid.UUID(response.data['uid'])
+        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        agentname='agent'
+        version='test library vX.XX'
+        response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
+        if response.status==status.WEB_STATUS_OK:
+            msgs=response.unrouted_messages
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.unrouted_messages:
+                        msgs.append(msg2)
+                    self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        aid = uuid.UUID(response.data['aid'])
+        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        ds_uri='uris.datapoint'
+        uri='uris'
+        response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        response2 = widgetapi.get_widgets_config_request(passport=psp)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        wid=None
+        num_widgets=0
+        for widget in response2.data:
+            if widget['type']==types.DATASOURCE and widget['did']==response.data['did']:
+                num_widgets+=1
+                wid=widget['wid']
+        self.assertEqual(num_widgets,1)
+        self.assertIsNotNone(wid)
+        response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
+        self.assertEqual(response3.status, status.WEB_STATUS_OK)
+        self.assertEqual(response3.data['type'],types.DATASOURCE)
+        self.assertEqual(response3.data['widgetname'],ds_uri)
+        self.assertEqual(response3.data['did'],response.data['did'])
+        self.assertEqual(response3.data['wid'],wid)
+        users=[username+'_dest1',username+'_dest2',username+'_dest3']
+        dest_uids=[]
+        for user in users:
+            password='password'
+            email = user+'@komlog.org'
+            response = userapi.new_user_request(username=user, password=password, email=email)
+            self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+            self.assertEqual(response.status, status.WEB_STATUS_OK)
+            dest_uids.append(uuid.UUID(response.data['uid']))
+            msgs=response.unrouted_messages
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.unrouted_messages:
+                        msgs.append(msg2)
+        response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        users_checked=0
+        for dest_uid in dest_uids:
+            users_checked+=1
+            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            response=widgetapi.get_widget_config_request(passport=psp,wid=wid)
+            self.assertEqual(response.status, status.WEB_STATUS_OK)
+            self.assertEqual(response.data['wid'],wid)
+            self.assertEqual(response.data['widgetname'],':'.join((username,ds_uri)))
+        self.assertEqual(users_checked,3)
+
 
     def test_get_widget_config_request_success_widget_linegraph(self):
         ''' get_widget_config_request should succeed returning the widget_linegraph config '''

@@ -74,7 +74,11 @@ def get_datapoint_config_request(passport, pid):
     datapoint={}
     datapoint['pid']=data['pid'].hex
     datapoint['color']=data['color']
-    datapoint['datapointname']=data['datapointname']
+    if data['uid'] != passport.uid:
+        owner = userapi.get_user_config(uid=data['uid'])
+        datapoint['datapointname']=':'.join((owner['username'],data['datapointname']))
+    else:
+        datapoint['datapointname']=data['datapointname']
     if data['did'] is not None:
         datapoint['did']=data['did'].hex
     if 'decimalseparator' in data:

@@ -8,12 +8,14 @@ from komlog.komlibs.auth import passport
 from komlog.komlibs.auth.model import interfaces
 from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.auth.model.operations import Operations
+from komlog.komlibs.auth.resources import update as resupdate
 from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.gestaccount.datasource import api as gestdatasourceapi
-from komlog.komlibs.interface.web.api import login as loginapi 
-from komlog.komlibs.interface.web.api import user as userapi 
-from komlog.komlibs.interface.web.api import agent as agentapi 
-from komlog.komlibs.interface.web.api import datasource as datasourceapi 
+from komlog.komlibs.interface.web.api import login as loginapi
+from komlog.komlibs.interface.web.api import user as userapi
+from komlog.komlibs.interface.web.api import agent as agentapi
+from komlog.komlibs.interface.web.api import datasource as datasourceapi
+from komlog.komlibs.interface.web.api import uri as uriapi
 from komlog.komlibs.interface.web.model import response as webresp
 from komlog.komlibs.interface.web import status, exceptions
 from komlog.komlibs.interface.web.errors import Errors
@@ -98,6 +100,77 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
         self.assertEqual(self.agents[0]['aid'], response.data['aid'])
+
+    def test_get_datasource_config_request_success_remote_datasource(self):
+        ''' get_datasource_config_request should succeed, returning datasource info
+            indicating global uri if datasource owner is different from the one who
+            requested the info. '''
+        username='test_get_datasource_config_request_success_remote_datasource'
+        password='password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        msgs=response.unrouted_messages
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        uid = uuid.UUID(response.data['uid'])
+        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        agentname='agent'
+        version='test library vX.XX'
+        response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
+        if response.status==status.WEB_STATUS_OK:
+            msgs=response.unrouted_messages
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.unrouted_messages:
+                        msgs.append(msg2)
+                    self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        aid = uuid.UUID(response.data['aid'])
+        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        ds_uri='uris.datapoint'
+        uri='uris'
+        datasource=gestdatasourceapi.create_datasource(uid=uid, aid=aid,datasourcename=ds_uri)
+        did=datasource['did']
+        self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
+        response=datasourceapi.get_datasource_config_request(passport=psp,did=did.hex)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.data['did'],did.hex)
+        self.assertEqual(response.data['datasourcename'],ds_uri)
+        users=[username+'_dest1',username+'_dest2',username+'_dest3']
+        dest_uids=[]
+        for user in users:
+            password='password'
+            email = user+'@komlog.org'
+            response = userapi.new_user_request(username=user, password=password, email=email)
+            self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+            self.assertEqual(response.status, status.WEB_STATUS_OK)
+            dest_uids.append(uuid.UUID(response.data['uid']))
+            msgs=response.unrouted_messages
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.unrouted_messages:
+                        msgs.append(msg2)
+            uid = uuid.UUID(response.data['uid'])
+        response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        users_checked=0
+        for dest_uid in dest_uids:
+            users_checked+=1
+            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            response=datasourceapi.get_datasource_config_request(passport=psp,did=did.hex)
+            self.assertEqual(response.status, status.WEB_STATUS_OK)
+            self.assertEqual(response.data['did'],did.hex)
+            self.assertEqual(response.data['datasourcename'],':'.join((username,ds_uri)))
+        self.assertEqual(users_checked,3)
 
     def test_get_datasource_config_request_failure_invalid_passport(self):
         ''' get_datasource_config_request should fail if passport is invalid '''

@@ -72,7 +72,11 @@ def get_widget_config_request(passport, wid):
     authorization.authorize_request(request=Requests.GET_WIDGET_CONFIG,passport=passport,wid=wid)
     data=widgetapi.get_widget_config(wid=wid)
     widget={'wid':wid.hex}
-    widget['widgetname']=data['widgetname']
+    if data['uid'] != passport.uid and data['type'] in (types.DATASOURCE,types.DATAPOINT):
+        owner = userapi.get_user_config(uid=data['uid'])
+        widget['widgetname'] = ':'.join((owner['username'],data['widgetname']))
+    else:
+        widget['widgetname']=data['widgetname']
     if data['type']==types.DATASOURCE:
         widget['type']=types.DATASOURCE
         widget['did']=data['did'].hex

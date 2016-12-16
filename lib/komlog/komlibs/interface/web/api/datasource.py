@@ -92,7 +92,11 @@ def get_datasource_config_request(passport, did):
     datasource={}
     datasource['did']=data['did'].hex
     datasource['aid']=data['aid'].hex
-    datasource['datasourcename']=data['datasourcename']
+    if data['uid'] != passport.uid:
+        owner = userapi.get_user_config(uid=data['uid'])
+        datasource['datasourcename'] = ':'.join((owner['username'],data['datasourcename']))
+    else:
+        datasource['datasourcename']=data['datasourcename']
     if 'pids' in data:
         datasource['pids']=[pid.hex for pid in data['pids']]
     if 'wid' in data:
