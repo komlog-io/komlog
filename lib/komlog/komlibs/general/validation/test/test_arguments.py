@@ -36,6 +36,29 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
         for username in usernames:
             self.assertTrue(arguments.is_valid_username(username)) 
 
+    def test_is_valid_username_with_caps_invalid(self):
+        ''' is_valid_username should fail if username is not valid '''
+        params=[None, 234234,'with spaces','withspecialcharacterslike\t','or\ncharacter',
+                ' spacesatbeggining',
+                'spacesatend ',
+                'Two..consecutivepoints',
+                '.beginswithpoint',
+                'endswith.',
+                'containsspecialchar$',
+                'endswith\t',
+                '\nbeginwithnewline',
+                'endswith\n',
+                '',
+                ]
+        for param in params:
+            self.assertFalse(arguments.is_valid_username_with_caps(param))
+
+    def test_is_valid_username_with_caps_valid(self):
+        ''' is_valid_username should succeed if username is valid '''
+        usernames=['test_user','user.with.dots','Username.With_Capitals','user_with_underscores','user-with-dash', 'userwithnumbers007']
+        for username in usernames:
+            self.assertTrue(arguments.is_valid_username_with_caps(username))
+
     def test_is_valid_agentname_invalid(self):
         ''' is_valid_agentname should fail if agentname is not valid '''
         params=[None, 234234, 'Agentname with \t is not Valid','Agentname with \n neither',
@@ -112,13 +135,25 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
         ''' is_valid_email should fail if email is not valid '''
         params=[None, 234234,'not_an_email','email.com','@domain.com','email@','email@domain@domain.com','español@domain.com', 'EMAIL@domain.com']
         for param in params:
-            self.assertFalse(arguments.is_valid_email(param)) 
+            self.assertFalse(arguments.is_valid_email(param))
 
     def test_is_valid_email_valid(self):
         ''' is_valid_email should succeed if email is valid '''
         params=['my_email@domain.com','my.email@mydomain.es','thisemailisvalid@yahoo.com','info@subdomain.domain.com']
         for param in params:
-            self.assertTrue(arguments.is_valid_email(param)) 
+            self.assertTrue(arguments.is_valid_email(param))
+
+    def test_is_valid_email_with_caps_invalid(self):
+        ''' is_valid_email should fail if email is not valid '''
+        params=[None, 234234,'not_an_email','email.com','@domain.com','email@','email@domain@domain.com','español@domain.com', 'E MAIL@domain.com']
+        for param in params:
+            self.assertFalse(arguments.is_valid_email_with_caps(param))
+
+    def test_is_valid_email_with_caps_valid(self):
+        ''' is_valid_email should succeed if email is valid '''
+        params=['my_email@domain.com','my.email@mydomain.es','thisemailisvalid@yahoo.com','info@subdomain.domain.com','Contains.Capitals@DOMAIN.COM']
+        for param in params:
+            self.assertTrue(arguments.is_valid_email_with_caps(param))
 
     def test_is_valid_code_invalid(self):
         ''' is_valid_code should fail if code is not valid '''
@@ -188,7 +223,6 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
             'local.uri',
             'only.username:',
             ':only.uri',
-            'USER:in.capitals',
             'more:than:one.colon',
             'invalidñuser:some.uri',
             'invalid:uri..here',
@@ -217,6 +251,7 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
             'user:all.together.0.a-b_.99',
             'user.with.dots:some.uri',
             'user.09.withnumbers:uri_with_underscores',
+            'USER:in.capitals',
         ]
         for param in params:
             self.assertTrue(arguments.is_valid_global_uri(param))

@@ -95,6 +95,43 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response3.error, Errors.E_IWAU_NUSR_UAEU.value)
         self.assertEqual(response3.status, status.WEB_STATUS_NOT_ALLOWED)
 
+    def test_new_user_request_failure_already_existing_user_with_caps(self):
+        ''' new_user_request should fail if user already exists '''
+        username = 'test_new_user_request_failure_already_existing_user_with_CAPS'
+        password = 'password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.error, Errors.OK.value)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        cookie = {'user':username.lower(), 'sid':uuid.uuid4().hex, 'aid':None, 'pv':None, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        psp = passport.get_user_passport(cookie)
+        response2 = userapi.get_user_config_request(passport=psp)
+        self.assertEqual(response2.status, status.WEB_STATUS_OK)
+        self.assertEqual(response.data['uid'],response2.data['uid'])
+        self.assertEqual(username.lower(),response2.data['username'])
+        self.assertEqual(email.lower(),response2.data['email'])
+        self.assertEqual(UserStates.PREACTIVE,response2.data['state'])
+        msgs=response.unrouted_messages
+        found=False
+        while len(msgs)>0:
+            for msg in msgs:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    self.assertEqual(msg.email, email.lower())
+                    self.assertTrue(args.is_valid_code(msg.code))
+                    found=True
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.unrouted_messages:
+                    msgs.append(msg2)
+        username = username.lower()
+        email = email.lower()
+        response3 = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response3, webresp.WebInterfaceResponse))
+        self.assertEqual(response3.error, Errors.E_IWAU_NUSR_UAEU.value)
+        self.assertEqual(response3.status, status.WEB_STATUS_NOT_ALLOWED)
+
     def test_new_user_request_failure_invalid_username(self):
         ''' new_user_request should fail if username is invalid'''
         usernames = [None, 23423424, {'a':'dict'},['a list',],'asdfaesf$·@·ññ','/asdfa','my user']
@@ -534,7 +571,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         ''' update_user_config_request should fail if email is invalid '''
         data={}
         psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
-        emails=['Wrong@email.com','.@mail.com','invalid@email@email.com','@|invalid.email@email.com',json.dumps('valid@email.com'),{'a':'dict'},['a','list'],None,23423423423,23423.23234]
+        emails=['wrong email@email.com','.@mail.com','invalid@email@email.com','@|invalid.email@email.com',json.dumps('valid@email.com'),{'a':'dict'},['a','list'],None,23423423423,23423.23234]
         for email in emails:
             data['email']=email
             response=userapi.update_user_config_request(passport=psp, data=data)

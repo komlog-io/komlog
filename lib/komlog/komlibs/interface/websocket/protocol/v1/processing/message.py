@@ -40,7 +40,7 @@ def _process_send_ds_data(passport, message):
     if args.is_valid_global_uri(message.uri):
         username,local_uri=message.uri.split(':')
         try:
-            user_uid = userapi.get_uid(username)
+            user_uid = userapi.get_uid(username.lower())
         except gestexcept.UserNotFoundException:
             user_uid = None
         if user_uid != passport.uid:
@@ -97,7 +97,7 @@ def _process_send_dp_data(passport, message):
     if args.is_valid_global_uri(message.uri):
         username,local_uri=message.uri.split(':')
         try:
-            user_uid = userapi.get_uid(username)
+            user_uid = userapi.get_uid(username.lower())
         except gestexcept.UserNotFoundException:
             user_uid = None
         if user_uid != passport.uid:
@@ -154,7 +154,7 @@ def _process_send_multi_data(passport, message):
         if args.is_valid_global_uri(item['uri']):
             username,local_uri=item['uri'].split(':')
             try:
-                user_uid = userapi.get_uid(username)
+                user_uid = userapi.get_uid(username.lower())
             except gestexcept.UserNotFoundException:
                 user_uid = None
             if user_uid != passport.uid:
@@ -301,7 +301,7 @@ def _process_hook_to_uri(passport, message):
     if args.is_valid_global_uri(message.uri):
         username,local_uri=message.uri.split(':')
         try:
-            user_uid = userapi.get_uid(username)
+            user_uid = userapi.get_uid(username.lower())
         except gestexcept.UserNotFoundException:
             return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PHTU_OUNF)
     else:
@@ -329,7 +329,7 @@ def _process_unhook_from_uri(passport, message):
     if args.is_valid_global_uri(message.uri):
         username,local_uri=message.uri.split(':')
         try:
-            user_uid = userapi.get_uid(username)
+            user_uid = userapi.get_uid(username.lower())
         except gestexcept.UserNotFoundException:
             return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PUHFU_OUNF)
     else:
@@ -357,7 +357,7 @@ def _process_request_data(passport, message):
     if args.is_valid_global_uri(message.uri):
         username,local_uri = message.uri.split(':')
         try:
-            user_uid = userapi.get_uid(username)
+            user_uid = userapi.get_uid(username.lower())
         except gestexcept.UserNotFoundException:
             return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PRDI_OUNF)
     else:

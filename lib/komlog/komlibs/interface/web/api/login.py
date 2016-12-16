@@ -29,19 +29,19 @@ def login_request(username, password=None, pubkey=None, pv=None, challenge=None,
     return response.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, error=Errors.E_IWAL_LR_IPRM)
 
 def _user_login_request(username, password):
-    if not args.is_valid_username(username):
+    if not args.is_valid_username_with_caps(username):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ULR_IU)
     if not args.is_valid_password(password):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ULR_IPWD)
-    if not userapi.auth_user(username=username, password=password):
+    if not userapi.auth_user(username=username.lower(), password=password):
         return response.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, error=Errors.E_IWAL_ULR_AUTHERR)
     data={'redirect':'/home'}
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
-    resp.cookie={'user':username,'aid':None,'pv':None,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
+    resp.cookie={'user':username.lower(),'aid':None,'pv':None,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
     return resp
 
 def _agent_login_generate_challenge_request(username, pubkey, pv):
-    if not args.is_valid_username(username):
+    if not args.is_valid_username_with_caps(username):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALGCR_IU)
     if not args.is_valid_string(pubkey):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALGCR_IPK)
@@ -51,12 +51,12 @@ def _agent_login_generate_challenge_request(username, pubkey, pv):
         pubkey=b64decode(pubkey.encode('utf-8'))
     except Exception:
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALGCR_IPK)
-    challenge=agentapi.generate_auth_challenge(username=username, pubkey=pubkey)
+    challenge=agentapi.generate_auth_challenge(username=username.lower(), pubkey=pubkey)
     data={'challenge':b64encode(challenge).decode('utf-8')}
     return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
 
 def _agent_login_validate_challenge_request(username, pubkey, pv, challenge, signature):
-    if not args.is_valid_username(username):
+    if not args.is_valid_username_with_caps(username):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALVCR_IU)
     if not args.is_valid_string(pubkey):
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALVCR_IPK)
@@ -72,9 +72,9 @@ def _agent_login_validate_challenge_request(username, pubkey, pv, challenge, sig
         signature=b64decode(signature.encode('utf-8'))
     except Exception:
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALVCR_IPK)
-    aid=agentapi.validate_auth_challenge(username=username, pubkey=pubkey, challenge_hash=challenge, signature=signature)
+    aid=agentapi.validate_auth_challenge(username=username.lower(), pubkey=pubkey, challenge_hash=challenge, signature=signature)
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
-    resp.cookie={'user':username,'aid':aid.hex,'pv':int(pv), 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
+    resp.cookie={'user':username.lower(),'aid':aid.hex,'pv':int(pv), 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
     return resp
 
 

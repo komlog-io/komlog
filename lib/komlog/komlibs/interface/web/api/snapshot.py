@@ -153,10 +153,10 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
     uids=set()
     if user_list:
         for user in user_list:
-            if not args.is_valid_username(user):
+            if not args.is_valid_username_with_caps(user):
                 raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_IULE)
             else:
-                user_uid=userapi.get_uid(username=user)
+                user_uid=userapi.get_uid(username=user.lower())
                 if user_uid:
                     uids.add(user_uid)
     cids=set()

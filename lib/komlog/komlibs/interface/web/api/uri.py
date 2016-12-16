@@ -50,8 +50,8 @@ def get_uri_request(passport, uri=None):
     max_ids_to_retrieve=10
     if uri is not None:
         if args.is_valid_global_uri(uri):
-            user,local_uri =uri.split(':')
-            uid = userapi.get_uid(user)
+            username,local_uri =uri.split(':')
+            uid = userapi.get_uid(username.lower())
         else:
             uid = passport.uid
             local_uri=uri
@@ -76,7 +76,7 @@ def share_uri_request(passport, uri, users):
     if not isinstance(users,list):
         raise exceptions.BadParametersException(error=Errors.E_IWAUR_SUR_IUSERS)
     for item in users:
-        if not args.is_valid_username(item):
+        if not args.is_valid_username_with_caps(item):
             raise exceptions.BadParametersException(error=Errors.E_IWAUR_SUR_IUSER)
     if len(users) == 0:
         raise exceptions.BadParametersException(error=Errors.E_IWAUR_SUR_NUSER)
@@ -85,7 +85,7 @@ def share_uri_request(passport, uri, users):
         raise exceptions.BadParametersException(error=Errors.E_IWAUR_SUR_URINF)
     uids=[]
     for username in users:
-        uid=userapi.get_uid(username)
+        uid=userapi.get_uid(username.lower())
         uids.append(uid)
     shared=[]
     try:
@@ -109,7 +109,7 @@ def unshare_uri_request(passport, uri, users=None):
         if not isinstance(users,list):
             raise exceptions.BadParametersException(error=Errors.E_IWAUR_USUR_IUSERS)
         for item in users:
-            if not args.is_valid_username(item):
+            if not args.is_valid_username_with_caps(item):
                 raise exceptions.BadParametersException(error=Errors.E_IWAUR_USUR_IUSER)
     uri_info = graphuri.get_id(ido=passport.uid, uri=uri)
     if uri_info is None:
@@ -117,9 +117,9 @@ def unshare_uri_request(passport, uri, users=None):
     if users is None or len(users) == 0:
         shareduri.unshare_uri_tree(uid=passport.uid, uri=uri)
     else:
-        for user in users:
+        for username in users:
             try:
-                uid = userapi.get_uid(user)
+                uid = userapi.get_uid(username.lower())
                 shareduri.unshare_uri_tree(uid=passport.uid, uri=uri, dest_uid=uid)
             except gestexcept.UserNotFoundException:
                 pass

@@ -117,19 +117,18 @@ def add_user_to_circle_request(passport, cid, member):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_AUTCR_IPSP)
     if not args.is_valid_hex_uuid(cid):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_AUTCR_IC)
-    if not args.is_valid_username(member):
+    if not args.is_valid_username_with_caps(member):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_AUTCR_IM)
     cid=uuid.UUID(cid)
     authorization.authorize_request(request=Requests.ADD_MEMBER_TO_CIRCLE,passport=passport,cid=cid)
-    if circleapi.add_user_to_circle(cid=cid, username=member):
+    if circleapi.add_user_to_circle(cid=cid, username=member.lower()):
         webop=operation.UpdateCircleMembersOperation(uid=passport.uid, cid=cid)
         authop=webop.get_auth_operation()
         params=webop.get_params()
         resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
         resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
         return resp
-    else:
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN)
 
 @exceptions.ExceptionHandler
 def delete_user_from_circle_request(passport, cid, member):
@@ -137,17 +136,16 @@ def delete_user_from_circle_request(passport, cid, member):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_DUFCR_IPSP)
     if not args.is_valid_hex_uuid(cid):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_DUFCR_IC)
-    if not args.is_valid_username(member):
+    if not args.is_valid_username_with_caps(member):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_DUFCR_IM)
     cid=uuid.UUID(cid)
     authorization.authorize_request(request=Requests.DELETE_MEMBER_FROM_CIRCLE,passport=passport,cid=cid)
-    if circleapi.delete_user_from_circle(cid=cid, username=member):
+    if circleapi.delete_user_from_circle(cid=cid, username=member.lower()):
         webop=operation.UpdateCircleMembersOperation(uid=passport.uid, cid=cid)
         authop=webop.get_auth_operation()
         params=webop.get_params()
         resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
         resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
         return resp
-    else:
-        return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN)
 

@@ -23,11 +23,11 @@ from komlog.komlibs.general.validation import arguments as args
 
 @exceptions.ExceptionHandler
 def new_user_request(username, password, email, segment=None, token=None, invitation=None, require_invitation=False):
-    if not args.is_valid_username(username):
+    if not args.is_valid_username_with_caps(username):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_IU)
-    if not args.is_valid_password(password): 
+    if not args.is_valid_password(password):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_IP)
-    if not args.is_valid_email(email):
+    if not args.is_valid_email_with_caps(email):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_IE)
     if segment != None and not args.is_valid_string_int(segment):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_NUSR_ISID)
@@ -81,11 +81,11 @@ def new_user_request(username, password, email, segment=None, token=None, invita
 
 @exceptions.ExceptionHandler
 def confirm_user_request(email, code):
-    if not args.is_valid_email(email):
+    if not args.is_valid_email_with_caps(email):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_CUSR_IE)
     if not args.is_valid_code(code):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_CUSR_IC)
-    if userapi.confirm_user(email, code):
+    if userapi.confirm_user(email.lower(), code):
         return response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
 
 @exceptions.ExceptionHandler
@@ -110,9 +110,9 @@ def update_user_config_request(passport, data):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSCR_ID)
     request_params={}
     if 'email' in data:
-        if not args.is_valid_email(data['email']):
+        if not args.is_valid_email_with_caps(data['email']):
             raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSCR_IE)
-        request_params['new_email']=data['email']
+        request_params['new_email']=data['email'].lower()
     if 'new_password' in data:
         if not args.is_valid_password(data['new_password']):
             raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSCR_INP)
@@ -145,8 +145,9 @@ def delete_user_request(passport):
 
 @exceptions.ExceptionHandler
 def register_invitation_request(email):
-    if not args.is_valid_email(email):
+    if not args.is_valid_email_with_caps(email):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_RIR_IEMAIL)
+    email=email.lower()
     if userapi.register_invitation_request(email=email):
         data={'email':email}
         return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
@@ -180,10 +181,11 @@ def check_invitation_request(invitation):
 
 @exceptions.ExceptionHandler
 def send_invitation_request(email=None, num=1):
-    if email is not None and not args.is_valid_email(email):
+    if email is not None and not args.is_valid_email_with_caps(email):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_SIR_IEMAIL)
     if not args.is_valid_int(num):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_SIR_INUM)
+    email = email.lower() if email else None
     invitations=userapi.generate_user_invitations(email=email, num=num)
     sent=[]
     msgs=[]
@@ -197,10 +199,11 @@ def send_invitation_request(email=None, num=1):
 
 @exceptions.ExceptionHandler
 def register_forget_request(account):
-    if not args.is_valid_email(account) and not args.is_valid_username(account):
+    if not args.is_valid_email_with_caps(account) and not args.is_valid_username_with_caps(account):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_RFR_IACCOUNT)
+    account=account.lower()
     try:
-        if args.is_valid_email(account):
+        if args.is_valid_email_with_caps(account):
             request=userapi.register_forget_request(email=account)
         else:
             request=userapi.register_forget_request(username=account)

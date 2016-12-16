@@ -348,7 +348,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
 
     def test_add_user_to_circle_request_failure_invalid_member(self):
         ''' add_user_to_circle_request should fail if member is invalid '''
-        members=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
+        members=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'user name','userñame']
         cid=uuid.uuid4().hex
         psp = self.passport
         for member in members:
@@ -447,7 +447,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
 
     def test_delete_user_from_circle_request_failure_invalid_member(self):
         ''' delete_user_from_circle_request should fail if member is invalid '''
-        members=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'Username','user name','userñame']
+        members=[None, 32423, 023423.23423, {'a':'dict'},['a','list'],('a','tuple'),'user name','userñame']
         cid=uuid.uuid4().hex
         psp = self.passport
         for member in members:

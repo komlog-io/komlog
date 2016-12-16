@@ -11,10 +11,11 @@ import pandas as pd
 from komlog.komlibs.general.crypto import crypto
 
 
-ID=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\s)$')
+USERNAME=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\s)$')
+USERNAMEWITHCAP=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$')
 DESC=re.compile('^[ a-zA-Z0-9\-\._@#!\(\):/$%&+=]+(?!\s)$')
 URI=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$')
-GLOBALURI=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+:([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$')
+GLOBALURI=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+:([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$')
 RELURI=re.compile('^([a-zA-Z0-9\-_]+\.\.?)*[a-zA-Z0-9\-_]+(?!\s)$')
 NOTVERSION=re.compile('[^ a-zA-Z0-9\-\+/:\._]')
 CODE=re.compile('^[a-zA-Z0-9]+$')
@@ -23,12 +24,20 @@ ASCII=re.compile('a-zA-Z')
 NUMBERS=re.compile('0-9')
 STRINGNUMBER=re.compile('^[+-]?([0-9]*\.)?[0-9]+([e|E][-|+]?[0-9]+)?(?!\s)$')
 EMAIL=re.compile('''^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$''')
+EMAILWITHCAPS=re.compile('''^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$''')
 ISODATE=re.compile('^((?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$')
 
 def is_valid_username(argument):
     if not isinstance(argument,str):
         return False
-    if ID.search(argument):
+    if USERNAME.search(argument):
+        return True
+    return False
+
+def is_valid_username_with_caps(argument):
+    if not isinstance(argument,str):
+        return False
+    if USERNAMEWITHCAP.search(argument):
         return True
     return False
 
@@ -127,6 +136,13 @@ def is_valid_email(argument):
     if not isinstance(argument,str):
         return False
     if EMAIL.search(argument):
+        return True
+    return False
+
+def is_valid_email_with_caps(argument):
+    if not isinstance(argument,str):
+        return False
+    if EMAILWITHCAPS.search(argument):
         return True
     return False
 

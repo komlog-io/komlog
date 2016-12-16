@@ -405,7 +405,7 @@ def authorize_get_uri(uid, uri):
         return
     elif args.is_valid_global_uri(uri):
         owner_username,local_uri=uri.split(':')
-        owner_uid = cassapiuser.get_uid(username=owner_username)
+        owner_uid = cassapiuser.get_uid(username=owner_username.lower())
         if owner_uid:
             shares = cassapiperm.get_user_shared_uris(uid=owner_uid, dest_uid=uid)
             for share in shares:
@@ -420,7 +420,7 @@ def authorize_register_pending_hook(uid, uri):
         return
     elif args.is_valid_global_uri(uri):
         owner_username,local_uri=uri.split(':')
-        owner_uid = cassapiuser.get_uid(username=owner_username)
+        owner_uid = cassapiuser.get_uid(username=owner_username.lower())
         if owner_uid:
             shares = cassapiperm.get_user_shared_uris(uid=owner_uid, dest_uid=uid)
             for share in shares:
@@ -435,7 +435,7 @@ def authorize_delete_pending_hook(uid, uri):
         return
     elif args.is_valid_global_uri(uri):
         owner_username,local_uri=uri.split(':')
-        owner_uid = cassapiuser.get_uid(username=owner_username)
+        owner_uid = cassapiuser.get_uid(username=owner_username.lower())
         if owner_uid:
             shares = cassapiperm.get_user_shared_uris(uid=owner_uid, dest_uid=uid)
             for share in shares:
