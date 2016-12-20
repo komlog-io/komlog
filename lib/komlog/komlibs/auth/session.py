@@ -6,7 +6,6 @@ methods for managing web sessions
 
 from komlog.komlibs.auth import exceptions
 from komlog.komlibs.auth.errors import Errors
-from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komcass.api import agent as cassapiagent

@@ -53,7 +53,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
 
     def test_get_dashboard_config_request_failure_non_existent_username(self):
         ''' get_dashboard_config_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         bid=uuid.uuid4().hex
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -93,7 +93,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
 
     def test_get_dashboards_config_request_failure_non_existent_username(self):
         ''' get_dashboards_config_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response=dashboardapi.get_dashboards_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
@@ -192,7 +192,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
 
     def test_delete_dashboard_request_failure_non_existent_user(self):
         ''' delete_dashboard_request should fail if user does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         bid=uuid.uuid4().hex
         response=dashboardapi.delete_dashboard_request(passport=psp, bid=bid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -307,7 +307,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
 
     def test_update_dashboard_config_request_failure_non_existent_user(self):
         ''' update_dashboard_config_request should fail if user does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         bid=uuid.uuid4().hex
         data={'dashboardname':'new_dashboard_name'}
         response=dashboardapi.update_dashboard_config_request(passport=psp, bid=bid, data=data)
@@ -370,7 +370,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
 
     def test_add_widget_request_failure_non_existing_username(self):
         ''' add_widget_request should fail if user has no access over bid or wid '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         wid=uuid.uuid4().hex
         bid=uuid.uuid4().hex
         response=dashboardapi.add_widget_request(passport=psp, bid=bid, wid=wid)
@@ -437,7 +437,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
 
     def test_delete_widget_request_failure_non_existent_user(self):
         ''' delete_widget_request should fail if user has no access over bid or wid '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         wid=uuid.uuid4().hex
         bid=uuid.uuid4().hex
         response=dashboardapi.delete_widget_request(passport=psp, bid=bid, wid=wid)
@@ -499,7 +499,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
 
     def test_new_dashboard_request_failure_non_existent_user(self):
         ''' new_dashboard_request should fail if user does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         dashboardname='test_new_dashboard_request_failure_non_existent_user'
         data={'dashboardname':dashboardname}
         response=dashboardapi.new_dashboard_request(passport=psp,data=data)

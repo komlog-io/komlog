@@ -83,8 +83,6 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         response = loginapi.login_request(username, password=password)
         cookie=response.cookie
         self.assertEqual(cookie['user'], username)
-        self.assertEqual(cookie['aid'],None)
-        self.assertEqual(cookie['pv'],None)
         self.assertTrue(args.is_valid_sequence(cookie['seq']))
         self.assertTrue(args.is_valid_hex_uuid(cookie['sid']))
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -335,7 +333,6 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         signature=b64encode(crypto.sign_message(serialized_priv_key, ch_hash)).decode('utf-8')
         response = loginapi.login_request(username, pubkey=pubkey, pv=pv, challenge=ch_resp, signature=signature)
         cookie=response.cookie
-        self.assertEqual(cookie['user'], username)
         self.assertEqual(cookie['aid'],agent['aid'].hex)
         self.assertEqual(cookie['pv'],int(pv))
         self.assertTrue(args.is_valid_sequence(cookie['seq']))
@@ -366,7 +363,6 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         signature=b64encode(crypto.sign_message(serialized_priv_key, ch_hash)).decode('utf-8')
         response = loginapi.login_request(username, pubkey=pubkey, pv=pv, challenge=ch_resp, signature=signature)
         cookie=response.cookie
-        self.assertEqual(cookie['user'], username)
         self.assertEqual(cookie['aid'],agent['aid'].hex)
         self.assertEqual(cookie['pv'],int(pv))
         self.assertTrue(args.is_valid_sequence(cookie['seq']))

@@ -192,7 +192,7 @@ def process_message_DATINT(message):
             response.error=Errors.E_IIALD_DATINT_NSA
         response.status=status.IMC_STATUS_NOT_FOUND
         return response
-    psp=passport.Passport(uid=session_info.uid, aid=session_info.aid, sid=session_info.sid, pv=session_info.pv)
+    psp=passport.AgentPassport(uid=session_info.uid, aid=session_info.aid, sid=session_info.sid, pv=session_info.pv)
     try:
         if message.uri['type'] == vertex.DATASOURCE:
             info = datasourceapi.get_datasource_config(did=message.uri['id'],pids_flag=False, widget_flag=False)

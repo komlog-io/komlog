@@ -69,7 +69,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         agents_info=agentapi.get_agents_config_request(passport=self.passport)
         self.agents=agents_info.data
         aid = response.data['aid']
-        cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'pv':1, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = passport.AgentCookie(aid=uuid.UUID(aid),pv=1,sid=uuid.uuid4(),seq=timeuuid.get_custom_sequence(uuid.uuid1())).to_dict()
         self.agent_passport = passport.get_agent_passport(cookie)
         self.username_to_share='test_komlibs.interface.web.api.snapshot_user_to_share'
         response = loginapi.login_request(username=self.username_to_share, password=self.password)
@@ -99,7 +99,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_get_snapshots_config_request_failure_non_existent_username(self):
         ''' get_snapshots_config_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response=snapshotapi.get_snapshots_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
         self.assertEqual(response.error, gesterrors.E_GSA_GSSC_UNF.value)
@@ -148,7 +148,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_get_snapshot_config_request_success_snapshot_linegraph(self):
         ''' get_snapshot_config_request should succeed  '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_get_snapshot_config_request_success_snapshot_linegraph'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -170,6 +170,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_get_snapshot_config_request_success_snapshot_linegraph_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -187,6 +188,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_get_snapshot_config_request_success_snapshot_linegraph_dp'
@@ -202,6 +204,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = self.passport
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         pid=None
@@ -246,7 +249,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_get_snapshot_config_request_success_snapshot_histogram(self):
         ''' get_snapshot_config_request should succeed '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_get_snapshot_config_request_success_snapshot_histogram'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -269,6 +272,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
         datasourcename='test_get_snapshot_config_request_success_snapshot_histogram_ds'
+        psp = self.agent_passport
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -285,6 +289,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_get_snapshot_config_request_success_snapshot_histogram_dp'
@@ -344,7 +349,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_get_snapshot_config_request_success_snapshot_table(self):
         ''' get_snapshot_config_request should succeed '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_get_snapshot_config_request_success_snapshot_table'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -366,6 +371,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_get_snapshot_config_request_success_snapshot_table_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -383,6 +389,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_get_snapshot_config_request_success_snapshot_table_dp'
@@ -442,7 +449,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_get_snapshot_config_request_success_snapshot_multidp(self):
         ''' get_snapshot_config_request should succeed '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_get_snapshot_config_request_success_snapshot_multidp'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -464,6 +471,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_get_snapshot_config_request_success_snapshot_multidp_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -481,6 +489,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_get_snapshot_config_request_success_snapshot_multidp_dp'
@@ -563,6 +572,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
@@ -619,6 +629,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
@@ -675,7 +686,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datasourceapi.get_datasource_data_request(passport=psp_to_share, did=did)
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp_to_deny = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datasourceapi.get_datasource_config_request(passport=psp_to_deny, did=did)
@@ -701,6 +712,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_get_snapshot_config_request_success_snapshot_datapoint'
@@ -804,7 +816,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_delete_snapshot_request_success_snapshot_linegraph(self):
         ''' delete_snapshot_request should succeed and delete the snapshot '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_snapshot_request_success_snapshot_linegraph'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -826,6 +838,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_delete_snapshot_request_success_snapshot_linegraph_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -843,6 +856,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_snapshot_request_success_snapshot_linegraph_dp'
@@ -905,7 +919,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_delete_snapshot_request_success_snapshot_histogram(self):
         ''' delete_snapshot_request should succeed '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_snapshot_request_success_snapshot_histogram'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -927,6 +941,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_delete_snapshot_request_success_snapshot_histogram_datasource'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -944,6 +959,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_snapshot_request_success_snapshot_histogram_datapoint'
@@ -1006,7 +1022,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_delete_snapshot_request_success_snapshot_table(self):
         ''' delete_snapshot_request should succeed '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_snapshot_request_success_snapshot_table'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1028,6 +1044,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_delete_snapshot_request_success_snapshot_table_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1045,6 +1062,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_snapshot_request_success_snapshot_table_dp'
@@ -1107,7 +1125,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_delete_snapshot_request_success_snapshot_multidp(self):
         ''' delete_snapshot_request should succeed '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_snapshot_request_success_snapshot_multidp'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1129,6 +1147,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_delete_snapshot_request_success_snapshot_multidp_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1146,6 +1165,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_snapshot_request_success_snapshot_multidp_dp'
@@ -1236,6 +1256,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
@@ -1295,6 +1316,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_snapshot_request_success_snapshot_datapoint_dp'
@@ -1409,7 +1431,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_new_snapshot_request_failure_widget_linegraph_has_no_datapoints(self):
         ''' new_snapshot_request should fail if the linegraph widget has no datapoints '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_new_snapshot_request_failure_widget_linegraph_has_no_datapoints'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1439,7 +1461,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_new_snapshot_request_success_widget_linegraph(self):
         ''' new_snapshot_request should succeed  '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_new_snapshot_request_success_widget_linegraph'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1461,6 +1483,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_new_snapshot_request_success_widget_linegraph_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1478,6 +1501,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_new_snapshot_request_success_widget_linegraph_dp'
@@ -1543,7 +1567,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datapointapi.get_datapoint_data_request(passport=psp_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp_to_deny = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datapointapi.get_datapoint_config_request(passport=psp_to_deny, pid=pid)
@@ -1551,7 +1575,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_new_snapshot_request_failure_widget_histogram_has_no_datapoints(self):
         ''' new_snapshot_request should fail if the histogram widget has no datapoints '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_new_snapshot_request_failure_widget_histogram_has_no_datapoints'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1581,7 +1605,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_new_snapshot_request_success_widget_histogram(self):
         ''' new_snapshot_request should succeed '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_new_snapshot_request_success_widget_histogram'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1603,6 +1627,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_new_snapshot_request_success_widget_histogram_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1620,6 +1645,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_new_snapshot_request_success_widget_histogram_dp'
@@ -1684,7 +1710,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datapointapi.get_datapoint_data_request(passport=psp_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp_to_deny = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datapointapi.get_datapoint_config_request(passport=psp_to_deny, pid=pid)
@@ -1692,7 +1718,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_new_snapshot_request_failure_widget_table_has_no_datapoints(self):
         ''' new_snapshot_request should fail if the table widget has no datapoints '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_new_snapshot_request_failure_widget_table_has_no_datapoints'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1722,7 +1748,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_new_snapshot_request_success_widget_table(self):
         ''' new_snapshot_request should succeed '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_new_snapshot_request_success_widget_table'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1744,6 +1770,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_new_snapshot_request_success_widget_table_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1761,6 +1788,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_new_snapshot_request_success_widget_table_dp'
@@ -1826,7 +1854,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datapointapi.get_datapoint_data_request(passport=psp_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp_to_deny = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datapointapi.get_datapoint_config_request(passport=psp_to_deny, pid=pid)
@@ -1834,7 +1862,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_new_snapshot_request_failure_widget_multidp_has_no_datapoints(self):
         ''' new_snapshot_request should fail if the multidp widget has no datapoints '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_new_snapshot_request_failure_widget_multidp_has_no_datapoints'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1864,7 +1892,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
 
     def test_new_snapshot_request_success_widget_multidp(self):
         ''' new_snapshot_request should succeed '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_new_snapshot_request_success_widget_multidp'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1886,6 +1914,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_new_snapshot_request_success_widget_multidp_ds'
         response = datasourceapi.new_datasource_request(passport=psp,  datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1903,6 +1932,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_new_snapshot_request_success_widget_multidp_dp'
@@ -1971,7 +2001,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datapointapi.get_datapoint_data_request(passport=psp_to_share, pid=pid, start_date='1',end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny=passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp_to_deny=passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datapointapi.get_datapoint_config_request(passport=psp_to_deny, pid=pid)
@@ -1998,6 +2028,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data['seq']
@@ -2044,7 +2075,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datasourceapi.get_datasource_data_request(passport=psp_to_share, did=did)
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp_to_deny = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datasourceapi.get_datasource_config_request(passport=psp_to_deny, did=did)
@@ -2070,6 +2101,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_new_snapshot_request_success_widget_datapoint'
@@ -2135,7 +2167,7 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
         response9=datapointapi.get_datapoint_data_request(passport=psp_to_share, pid=pid, start_date='1', end_date='2')
         self.assertEqual(response9.status, status.WEB_STATUS_ACCESS_DENIED)
         #request from other users should be denied
-        psp_to_deny = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp_to_deny = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response10=snapshotapi.get_snapshot_config_request(passport=psp_to_deny, nid=response6.data['nid'])
         self.assertEqual(response10.status, status.WEB_STATUS_ACCESS_DENIED)
         response11=datapointapi.get_datapoint_config_request(passport=psp_to_deny, pid=pid)

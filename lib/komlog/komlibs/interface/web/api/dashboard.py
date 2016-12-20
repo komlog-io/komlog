@@ -9,7 +9,7 @@ from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import UserPassport
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount.user import api as userapi
@@ -23,7 +23,7 @@ from komlog.komlibs.general.validation import arguments as args
 
 @exceptions.ExceptionHandler
 def get_dashboards_config_request(passport):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_GDBSCR_IPSP)
     authorization.authorize_request(request=Requests.GET_DASHBOARDS_CONFIG,passport=passport)
     data=dashboardapi.get_dashboards_config(uid=passport.uid)
@@ -38,7 +38,7 @@ def get_dashboards_config_request(passport):
 
 @exceptions.ExceptionHandler
 def get_dashboard_config_request(passport, bid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_GDBCR_IPSP)
     if not args.is_valid_hex_uuid(bid):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_GDBCR_IB)
@@ -53,7 +53,7 @@ def get_dashboard_config_request(passport, bid):
 
 @exceptions.ExceptionHandler
 def new_dashboard_request(passport, data):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_NDBR_IPSP)
     if not args.is_valid_dict(data):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_NDBR_ID)
@@ -80,7 +80,7 @@ def new_dashboard_request(passport, data):
 
 @exceptions.ExceptionHandler
 def delete_dashboard_request(passport, bid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_DDBR_IPSP)
     if not args.is_valid_hex_uuid(bid):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_DDBR_IB)
@@ -92,7 +92,7 @@ def delete_dashboard_request(passport, bid):
 
 @exceptions.ExceptionHandler
 def update_dashboard_config_request(passport, bid, data):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_UDBCR_IPSP)
     if not args.is_valid_hex_uuid(bid):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_UDBCR_IB)
@@ -107,7 +107,7 @@ def update_dashboard_config_request(passport, bid, data):
 
 @exceptions.ExceptionHandler
 def add_widget_request(passport, bid, wid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_AWR_IPSP)
     if not args.is_valid_hex_uuid(bid):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_AWR_IB)
@@ -121,7 +121,7 @@ def add_widget_request(passport, bid, wid):
 
 @exceptions.ExceptionHandler
 def delete_widget_request(passport, bid, wid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_DWR_IPSP)
     if not args.is_valid_hex_uuid(bid):
         raise exceptions.BadParametersException(error=Errors.E_IWADB_DWR_IB)

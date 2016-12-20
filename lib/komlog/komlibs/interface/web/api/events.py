@@ -7,7 +7,7 @@ This file defines the logic associated with web interface operations
 import uuid
 from komlog.komfig import logging
 from komlog.komlibs.auth import authorization
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import UserPassport
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.api import user as userevents
 from komlog.komlibs.events.api import user_responses as userresponsesevents
@@ -23,7 +23,7 @@ from komlog.komlibs.general.time import timeuuid
 
 @exceptions.ExceptionHandler
 def get_user_events_request(passport, ets=None, its=None):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAEV_GEVR_IPSP)
     if ets and not args.is_valid_string_float(ets):
         raise exceptions.BadParametersException(error=Errors.E_IWAEV_GEVR_IETS)
@@ -51,7 +51,7 @@ def get_user_events_request(passport, ets=None, its=None):
 
 @exceptions.ExceptionHandler
 def disable_event_request(passport, seq):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAEV_DEVR_IPSP)
     if not args.is_valid_sequence(seq):
         raise exceptions.BadParametersException(error=Errors.E_IWAEV_DEVR_ISEQ)
@@ -62,7 +62,7 @@ def disable_event_request(passport, seq):
 
 @exceptions.ExceptionHandler
 def event_response_request(passport, seq, data):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAEV_EVRPR_IPSP)
     if not args.is_valid_sequence(seq):
         raise exceptions.BadParametersException(error=Errors.E_IWAEV_EVRPR_ISEQ)

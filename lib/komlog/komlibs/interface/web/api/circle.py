@@ -9,7 +9,7 @@ from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import UserPassport
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount.user import api as userapi
@@ -25,7 +25,7 @@ from komlog.komlibs.general.time import timeuuid
 
 @exceptions.ExceptionHandler
 def get_users_circles_config_request(passport):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_GUCSCR_IPSP)
     authorization.authorize_request(request=Requests.GET_CIRCLES_CONFIG,passport=passport)
     data=circleapi.get_users_circles_config(uid=passport.uid)
@@ -42,7 +42,7 @@ def get_users_circles_config_request(passport):
 
 @exceptions.ExceptionHandler
 def get_users_circle_config_request(passport, cid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_GUCCR_IPSP)
     if not args.is_valid_hex_uuid(cid):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_GUCCR_IC)
@@ -58,7 +58,7 @@ def get_users_circle_config_request(passport, cid):
 
 @exceptions.ExceptionHandler
 def delete_circle_request(passport, cid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_DCR_IPSP)
     if not args.is_valid_hex_uuid(cid):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_DCR_IC)
@@ -69,7 +69,7 @@ def delete_circle_request(passport, cid):
 
 @exceptions.ExceptionHandler
 def new_users_circle_request(passport, circlename, members_list=None):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_NUCR_IPSP)
     if not args.is_valid_circlename(circlename):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_NUCR_ICN)
@@ -98,7 +98,7 @@ def new_users_circle_request(passport, circlename, members_list=None):
 
 @exceptions.ExceptionHandler
 def update_circle_request(passport, cid, data):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_UCR_IPSP)
     if not args.is_valid_hex_uuid(cid):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_UCR_IC)
@@ -113,7 +113,7 @@ def update_circle_request(passport, cid, data):
 
 @exceptions.ExceptionHandler
 def add_user_to_circle_request(passport, cid, member):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_AUTCR_IPSP)
     if not args.is_valid_hex_uuid(cid):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_AUTCR_IC)
@@ -132,7 +132,7 @@ def add_user_to_circle_request(passport, cid, member):
 
 @exceptions.ExceptionHandler
 def delete_user_from_circle_request(passport, cid, member):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_DUFCR_IPSP)
     if not args.is_valid_hex_uuid(cid):
         raise exceptions.BadParametersException(error=Errors.E_IWACI_DUFCR_IC)

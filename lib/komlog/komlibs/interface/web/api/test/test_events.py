@@ -76,7 +76,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
 
     def test_get_user_events_request_failure_user_not_found(self):
         ''' get_user_events_request should fail if username is not found '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response=eventsapi.get_user_events_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, [])
@@ -114,7 +114,7 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
 
     def test_disable_event_request_failure_user_not_found(self):
         ''' disable_event_request should fail if username is not found '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         seq=timeuuid.get_custom_sequence(timeuuid.uuid1())
         response=eventsapi.disable_event_request(passport=psp, seq=seq)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)

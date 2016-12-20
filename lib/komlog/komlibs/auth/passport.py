@@ -7,6 +7,7 @@ A passport is the authorization card obtained from a cookie
 import uuid
 from komlog.komlibs.auth import exceptions
 from komlog.komlibs.auth.errors import Errors
+from komlog.komlibs.auth.model.cookies import Cookies
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.gestaccount.user.states import UserStates
@@ -17,17 +18,9 @@ from komlog.komfig import logging
 
 
 class Passport:
-    def __init__(self, uid, sid, aid=None,pv=None):
-        self._uid=None
-        self._sid=None
-        self._aid=None
-        self._pv=None
+    def __init__(self, uid, sid):
         self.uid = uid
         self.sid = sid
-        self.aid = aid
-        self.pv = pv
-        if bool(self.pv) ^ bool(self.aid):
-            raise exceptions.PassportException(error = Errors.E_AP_PC_AIDORPV)
 
     @property
     def uid(self):
@@ -51,18 +44,29 @@ class Passport:
         else:
             raise exceptions.PassportException(error = Errors.E_AP_PC_IS)
 
+class UserPassport(Passport):
+
+    def __init__(self, uid, sid):
+        super().__init__(uid=uid, sid=sid)
+
+
+class AgentPassport(Passport):
+
+    def __init__(self, uid, sid, aid, pv):
+        self.aid = aid
+        self.pv = pv
+        super().__init__(uid=uid, sid=sid)
+
     @property
     def aid(self):
         return self._aid
 
     @aid.setter
     def aid(self, value):
-        if value is None:
-            self._aid = None
-        elif args.is_valid_uuid(value):
+        if args.is_valid_uuid(value):
             self._aid = value
         else:
-            raise exceptions.PassportException(error = Errors.E_AP_PC_IA)
+            raise exceptions.PassportException(error = Errors.E_AP_APC_IA)
 
     @property
     def pv(self):
@@ -70,33 +74,45 @@ class Passport:
 
     @pv.setter
     def pv(self, value):
-        if value is None:
-            self._pv = None
-        elif args.is_valid_int(value):
+        if args.is_valid_int(value):
             self._pv = value
         else:
-            raise exceptions.PassportException(error = Errors.E_AP_PC_IPV)
+            raise exceptions.PassportException(error = Errors.E_AP_APC_IPV)
 
 class Cookie:
-    def __init__(self, cookie):
-        self._user = None
-        self._sid = None
-        self._aid = None
-        self._seq = None
-        self._pv = None
-        if (isinstance(cookie, dict)
-            and 'user' in cookie
-            and 'sid' in cookie
-            and 'aid' in cookie
-            and 'pv' in cookie
-            and 'seq' in cookie):
-            self.user= cookie['user']
-            self.sid = cookie['sid']
-            self.aid = cookie['aid']
-            self.pv = cookie['pv']
-            self.seq = cookie['seq']
+
+    def __init__(self, sid, seq):
+        self.sid = sid
+        self.seq = seq
+
+    @property
+    def sid(self):
+        return self._sid
+
+    @sid.setter
+    def sid(self, sid):
+        if args.is_valid_uuid(sid):
+            self._sid = sid
         else:
-            raise exceptions.CookieException(error = Errors.E_AP_CC_ID)
+            raise exceptions.CookieException(error = Errors.E_AP_CC_IS)
+
+    @property
+    def seq(self):
+        return self._seq
+
+    @seq.setter
+    def seq(self, seq):
+        if args.is_valid_sequence(seq):
+            self._seq = seq
+        else:
+            raise exceptions.CookieException(error = Errors.E_AP_CC_ISQ)
+
+class UserCookie(Cookie):
+    __type__ = Cookies.USER
+
+    def __init__(self, user, sid, seq):
+        self.user = user
+        super().__init__(sid=sid, seq=seq)
 
     @property
     def user(self):
@@ -107,31 +123,48 @@ class Cookie:
         if args.is_valid_username(user):
             self._user = user
         else:
-            raise exceptions.CookieException(error = Errors.E_AP_CC_IU)
+            raise exceptions.CookieException(error = Errors.E_AP_UCC_IU)
 
-    @property
-    def sid(self):
-        return self._sid
-
-    @sid.setter
-    def sid(self, hex_sid):
-        if args.is_valid_hex_uuid(hex_sid):
-            self._sid = uuid.UUID(hex_sid)
+    @classmethod
+    def load_from_dict(cls, cookie):
+        if (isinstance(cookie, dict)
+            and 't' in cookie
+            and cookie['t'] == cls.__type__.value
+            and 'sid' in cookie
+            and args.is_valid_hex_uuid(cookie['sid'])
+            and 'user' in cookie
+            and 'seq' in cookie):
+            sid = uuid.UUID(cookie['sid'])
+            return cls(user=cookie['user'], sid=sid, seq=cookie['seq'])
         else:
-            raise exceptions.CookieException(error = Errors.E_AP_CC_IS)
+            raise exceptions.CookieException(error = Errors.E_AP_UCC_ID)
+
+    def to_dict(self):
+        return {
+            'user':self.user,
+            'sid':self.sid.hex,
+            'seq':self.seq,
+            't':self.__type__.value
+        }
+
+class AgentCookie(Cookie):
+    __type__ = Cookies.AGENT
+
+    def __init__(self, aid, pv, sid, seq):
+        self.aid = aid
+        self.pv = pv
+        super().__init__(sid=sid, seq=seq)
 
     @property
     def aid(self):
         return self._aid
 
     @aid.setter
-    def aid(self, hex_aid):
-        if hex_aid is None:
-            self._aid = None
-        elif args.is_valid_hex_uuid(hex_aid):
-            self._aid = uuid.UUID(hex_aid)
+    def aid(self, aid):
+        if args.is_valid_uuid(aid):
+            self._aid = aid
         else:
-            raise exceptions.CookieException(error = Errors.E_AP_CC_IA)
+            raise exceptions.CookieException(error = Errors.E_AP_ACC_IA)
 
     @property
     def pv(self):
@@ -139,51 +172,58 @@ class Cookie:
 
     @pv.setter
     def pv(self, value):
-        if value is None:
-            self._pv = None
-        elif args.is_valid_int(value):
+        if args.is_valid_int(value):
             self._pv = value
         else:
-            raise exceptions.CookieException(error = Errors.E_AP_CC_IPV)
+            raise exceptions.CookieException(error = Errors.E_AP_ACC_IPV)
 
-    @property
-    def seq(self):
-        return self._seq
-
-    @seq.setter
-    def seq(self, seq):
-        if args.is_valid_sequence(seq):
-            self._seq = timeuuid.get_uuid1_from_custom_sequence(seq)
+    @classmethod
+    def load_from_dict(cls, cookie):
+        if (isinstance(cookie, dict)
+            and 't' in cookie
+            and cookie['t'] == cls.__type__.value
+            and 'sid' in cookie
+            and args.is_valid_hex_uuid(cookie['sid'])
+            and 'aid' in cookie
+            and args.is_valid_hex_uuid(cookie['aid'])
+            and 'pv' in cookie
+            and 'seq' in cookie):
+            aid = uuid.UUID(cookie['aid'])
+            sid = uuid.UUID(cookie['sid'])
+            return cls(aid=aid, pv=cookie['pv'], sid=sid, seq=cookie['seq'])
         else:
-            raise exceptions.CookieException(error = Errors.E_AP_CC_ISQ)
+            raise exceptions.CookieException(error = Errors.E_AP_ACC_ID)
+
+    def to_dict(self):
+        return {
+            'aid':self.aid.hex,
+            'pv':self.pv,
+            'sid':self.sid.hex,
+            'seq':self.seq,
+            't':self.__type__.value
+        }
 
 def get_user_passport(cookie):
-    cookie = Cookie(cookie)
+    cookie = UserCookie.load_from_dict(cookie)
     user = cassapiuser.get_user(username=cookie.user)
     if not user:
         raise exceptions.UserNotFoundException(error=Errors.E_AP_GUP_UNF)
     if user.state not in (UserStates.ACTIVE, UserStates.PREACTIVE):
         raise exceptions.AuthorizationExpiredException(error=Errors.E_AP_GUP_IUS)
-    return Passport(uid=user.uid, sid=cookie.sid)
+    return UserPassport(uid=user.uid, sid=cookie.sid)
 
 def get_agent_passport(cookie):
-    cookie = Cookie(cookie)
-    if not cookie.aid:
-        raise exceptions.CookieException(error=Errors.E_AP_GAP_CANF)
-    if cookie.pv is None:
-        raise exceptions.CookieException(error=Errors.E_AP_GAP_CPVNF)
+    cookie = AgentCookie.load_from_dict(cookie)
     agent = cassapiagent.get_agent(aid=cookie.aid)
     if not agent:
         raise exceptions.AgentNotFoundException(error=Errors.E_AP_GAP_ANF)
     if agent.state != AgentStates.ACTIVE:
         raise exceptions.AuthorizationExpiredException(error=Errors.E_AP_GAP_IAS)
-    return Passport(uid=agent.uid, sid=cookie.sid, aid=agent.aid, pv=cookie.pv)
+    return AgentPassport(uid=agent.uid, sid=cookie.sid, aid=agent.aid, pv=cookie.pv)
 
 def check_agent_passport_validity(passport):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, AgentPassport):
         raise exceptions.PassportException(error=Errors.E_AP_CPV_IP)
-    if passport.aid is None:
-        raise exceptions.PassportException(error=Errors.E_AP_CPV_IAID)
     agent = cassapiagent.get_agent(aid=passport.aid)
     if agent is None:
         raise exceptions.AgentNotFoundException(error=Errors.E_AP_CPV_ANF)

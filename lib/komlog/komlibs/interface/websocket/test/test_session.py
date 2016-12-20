@@ -1,7 +1,7 @@
 import unittest
 import uuid
 from komlog.komfig import logging
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import AgentPassport
 from komlog.komlibs.interface.websocket import session
 
 
@@ -21,7 +21,7 @@ class InterfaceWebSocketSessionTest(unittest.TestCase):
         aid = uuid.uuid4()
         pv = 1
         sid=uuid.uuid4()
-        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
+        psp = AgentPassport(uid=uid,sid=sid,aid=aid,pv=pv)
         def callback(message):
             return message
         self.assertTrue(session.set_session(psp,callback))
@@ -40,6 +40,6 @@ class InterfaceWebSocketSessionTest(unittest.TestCase):
         aid = uuid.uuid4()
         pv = 1
         sid=uuid.uuid4()
-        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
+        psp = AgentPassport(uid=uid,sid=sid,aid=aid,pv=pv)
         self.assertTrue(session.unset_session(psp))
 

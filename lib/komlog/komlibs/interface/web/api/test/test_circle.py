@@ -47,7 +47,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
 
     def test_get_users_circles_config_request_failure_user_not_found(self):
         ''' get_users_circles_config_request should fail if username is not found '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response=circleapi.get_users_circles_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
 
@@ -226,7 +226,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
 
     def test_new_users_circle_request_failure_non_existent_user(self):
         ''' new_users_circle_request should fail if user does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         circlename='test_new_users_circle_request_failure_non_existent_user'
         response=circleapi.new_users_circle_request(passport=psp, circlename=circlename)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
@@ -275,7 +275,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
     def test_update_circle_request_failure_non_existent_user(self):
         ''' update_circle_request should fail if user does not exist '''
         cid=uuid.uuid4().hex
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         circlename='test_update_circle_request_failure_non_existent_user'
         data={'circlename':circlename}
         response=circleapi.update_circle_request(passport=psp, cid=cid, data=data)
@@ -358,7 +358,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
     def test_add_user_to_circle_request_failure_non_existent_user(self):
         ''' add_user_to_circle_request should fail if user does not exist '''
         cid=uuid.uuid4().hex
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         member='test_add_user_to_circle_request_failure_non_existent_user_member'
         response=circleapi.add_user_to_circle_request(passport=psp, cid=cid, member=member)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)

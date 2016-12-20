@@ -8,7 +8,7 @@ import uuid
 from komlog.komfig import logging
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import exceptions as authexcept
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import UserPassport
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount import exceptions as gestexcept
@@ -26,7 +26,7 @@ from komlog.komlibs.general.time import timeuuid
 
 @exceptions.ExceptionHandler
 def get_datapoint_data_request(passport, pid, start_date, end_date, tid=None):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_GDPDR_IPSP)
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_GDPDR_IP)
@@ -64,7 +64,7 @@ def get_datapoint_data_request(passport, pid, start_date, end_date, tid=None):
 
 @exceptions.ExceptionHandler
 def get_datapoint_config_request(passport, pid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_GDPCR_IPSP)
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_GDPCR_IP)
@@ -89,7 +89,7 @@ def get_datapoint_config_request(passport, pid):
 
 @exceptions.ExceptionHandler
 def update_datapoint_config_request(passport, pid, data):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_UDPCR_IPSP)
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_UDPCR_IP)
@@ -110,7 +110,7 @@ def update_datapoint_config_request(passport, pid, data):
 
 @exceptions.ExceptionHandler
 def new_datasource_datapoint_request(passport, did, sequence, position, length, datapointname):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_NDPR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_NDPR_ID)
@@ -131,7 +131,7 @@ def new_datasource_datapoint_request(passport, did, sequence, position, length, 
 
 @exceptions.ExceptionHandler
 def mark_positive_variable_request(passport, pid, sequence, position, length):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_MPVR_IPSP)
     if not args.is_valid_sequence(sequence):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_MPVR_IS)
@@ -150,7 +150,7 @@ def mark_positive_variable_request(passport, pid, sequence, position, length):
 
 @exceptions.ExceptionHandler
 def mark_negative_variable_request(passport, pid, sequence, position, length):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_MNVR_IPSP)
     if not args.is_valid_sequence(sequence):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_MNVR_IS)
@@ -169,7 +169,7 @@ def mark_negative_variable_request(passport, pid, sequence, position, length):
 
 @exceptions.ExceptionHandler
 def delete_datapoint_request(passport, pid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_DDPR_IPSP)
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_DDPR_IP)
@@ -181,7 +181,7 @@ def delete_datapoint_request(passport, pid):
 
 @exceptions.ExceptionHandler
 def dissociate_datapoint_from_datasource_request(passport, pid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_DDPFDS_IPSP)
     if not args.is_valid_hex_uuid(pid):
         raise exceptions.BadParametersException(error=Errors.E_IWADP_DDPFDS_IP)

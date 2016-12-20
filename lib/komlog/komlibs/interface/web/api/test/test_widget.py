@@ -71,7 +71,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         agents_info=agentapi.get_agents_config_request(passport=self.passport)
         self.agents=agents_info.data
         aid = agents_info.data[0]['aid']
-        cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'pv':1, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = passport.AgentCookie(aid=uuid.UUID(aid), sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(uuid.uuid1()),pv=1).to_dict()
         self.agent_passport = passport.get_agent_passport(cookie)
 
     def test_get_widget_config_request_success_widget_ds(self):
@@ -90,6 +90,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = self.passport
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -124,7 +125,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -138,7 +139,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         ds_uri='uris.datapoint'
         uri='uris'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
@@ -153,6 +154,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -190,7 +192,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=widgetapi.get_widget_config_request(passport=psp,wid=wid)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data['wid'],wid)
@@ -352,7 +354,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_get_widget_config_request_failure_non_existent_username(self):
         ''' get_widget_config_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         wid=uuid.uuid4().hex
         response=widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -382,6 +384,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = self.passport
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -426,6 +429,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = self.passport
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertTrue(len(response2.data)>=1)
@@ -444,7 +448,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_get_widgets_config_request_failure_non_existent_username(self):
         ''' get_widgets_config_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         response=widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
         self.assertEqual(response.error, gesterrors.E_GWA_GWSC_UNF.value)
@@ -503,6 +507,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = self.passport
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -523,7 +528,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_delete_widget_request_success_widget_linegraph(self):
         ''' delete_widget should delete the linegraph widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_widget_request_success_widget_linegraph'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -538,6 +543,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = self.passport
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -560,7 +566,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_delete_widget_request_success_widget_histogram(self):
         ''' delete_widget should delete the histogram widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_widget_request_success_widget_histogram'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -575,6 +581,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = self.passport
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -597,7 +604,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_delete_widget_request_success_widget_table(self):
         ''' delete_widget should delete the table widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_widget_request_success_widget_table'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -612,6 +619,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = self.passport
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -634,7 +642,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_delete_widget_request_success_widget_multidp(self):
         ''' delete_widget should delete the table widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_widget_request_success_widget_multidp'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -649,6 +657,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = self.passport
         wid=response.data['wid']
         response3 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
@@ -687,7 +696,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_new_widget_request_failure_non_existing_user(self):
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         data={'type':'mp', 'widgetname':'widgetname'}
         response=widgetapi.new_widget_request(passport=psp, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
@@ -707,7 +716,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_new_widget_request_success_widget_linegraph(self):
         ''' new_widget should create the linegraph widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_new_widget_request_success_widget_linegraph'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -757,7 +766,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_new_widget_request_success_widget_table(self):
         ''' new_widget should create the table widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_new_widget_request_success_widget_table'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -782,7 +791,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_new_widget_request_success_widget_multidp(self):
         ''' new_widget should create the multidp widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_new_widget_request_success_widget_multidp'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -843,7 +852,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_add_datapoint_request_success_widget_linegraph(self):
         ''' add_datapoint_request should add the datapoint to the linegraph widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_add_datapoint_request_success_widget_linegraph'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -865,6 +874,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_add_datapoint_request_success_widget_linegraph_datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -882,6 +892,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_add_datapoint_request_success_widget_linegraph_datapoint'
@@ -918,7 +929,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_add_datapoint_request_success_widget_histogram(self):
         ''' add_datapoint_request should add the datapoint to the histogram widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_add_datapoint_request_success_widget_histogram'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -940,6 +951,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_add_dataopint_request_success_widget_histogram_datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -957,6 +969,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_add_datapoint_request_success_widget_histogram_datapoint'
@@ -993,7 +1006,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_add_datapoint_request_success_widget_table(self):
         ''' add_datapoint_request should add the datapoint to the table widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_add_datapoint_request_success_widget_table'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1015,6 +1028,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_add_dataopint_request_success_widget_table_datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1032,6 +1046,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_add_datapoint_request_success_widget_table_datapoint'
@@ -1068,7 +1083,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_add_datapoint_request_success_widget_multidp(self):
         ''' add_datapoint_request should add the datapoint to the multidp widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_add_datapoint_request_success_widget_multidp'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1091,6 +1106,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['view'],vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_add_dataopint_request_success_widget_multidp_datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1108,6 +1124,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_add_datapoint_request_success_widget_multidp_datapoint'
@@ -1171,7 +1188,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_delete_datapoint_request_failure_non_existent_username(self):
         ''' delete_datapoint_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         pid=uuid.uuid4().hex
         wid=uuid.uuid4().hex
         response=widgetapi.delete_datapoint_request(passport=psp, wid=wid, pid=pid)
@@ -1180,7 +1197,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_delete_datapoint_request_success_widget_linegraph(self):
         ''' delete_datapoint_request should delete the datapoint from the linegraph widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_datapoint_request_success_widget_linegraph'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1202,6 +1219,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_delete_datapoint_request_success_widget_linegraph_datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1219,6 +1237,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_datapoint_request_success_widget_linegraph_datapoint'
@@ -1263,7 +1282,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_delete_datapoint_request_success_widget_histogram(self):
         ''' delete_datapoint_request should delete the datapoint from the histogram widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_datapoint_request_success_widget_histogram'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1285,6 +1304,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_delete_dataopint_request_success_widget_histogram_datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1302,6 +1322,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_datapoint_request_success_widget_histogram__datapoint'
@@ -1346,7 +1367,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_delete_datapoint_request_success_widget_table(self):
         ''' delete_datapoint_request should delete the datapoint from the table widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_datapoint_request_success_widget_table'
         data={'type':types.TABLE, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1368,6 +1389,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_delete_dataopint_request_success_widget_table_datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1385,6 +1407,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_datapoint_request_success_widget_table_datapoint'
@@ -1429,7 +1452,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_delete_datapoint_request_success_widget_multidp(self):
         ''' delete_datapoint_request should delete the datapoint from the multidp widget successfully '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_delete_datapoint_request_success_widget_multidp'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1452,6 +1475,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['view'],vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_delete_dataopint_request_success_widget_multidp_datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1469,6 +1493,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_datapoint_request_success_widget_multidp_datapoint'
@@ -1552,7 +1577,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_update_widget_config_request_success_widget_histogram(self):
         ''' update_widget_config_request should update successfylly the widget configuration '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_update_widget_config_request_success_widget_histogram'
         data={'type':types.HISTOGRAM, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1574,6 +1599,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_update_widget_config_request_success'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1591,6 +1617,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_update_widget_config_request_success_widget_histogram'
@@ -1638,7 +1665,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_update_widget_config_request_success_widget_multidp(self):
         ''' update_widget_config_request should update successfylly the widget configuration '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_update_widget_config_request_success_widget_multidp'
         data={'type':types.MULTIDP, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1661,6 +1688,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
         self.assertEqual(response3.data['view'],vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
+        psp = self.agent_passport
         datasourcename='test_update_widget_config_request_success_widget_multidp'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1678,6 +1706,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_update_widget_config_request_success_widget_multidp'
@@ -1744,7 +1773,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_get_related_widgets_request_failure_non_existent_username(self):
         ''' get_related_widgets_request should fail if username does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         wid=uuid.uuid4().hex
         response=widgetapi.get_related_widgets_request(passport=psp, wid=wid)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -1774,6 +1803,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = self.passport
         response2 = widgetapi.get_widgets_config_request(passport=psp)
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         wid=None
@@ -1804,7 +1834,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
 
     def test_get_related_widgets_request_success(self):
         ''' get_releated_widgets_request should succeed '''
-        psp = self.agent_passport
+        psp = self.passport
         widgetname='test_get_related_widgets_request_success_widget_linegraph'
         data={'type':types.LINEGRAPH, 'widgetname':widgetname}
         response = widgetapi.new_widget_request(passport=psp, data=data)
@@ -1826,6 +1856,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['widgetname'],widgetname)
         self.assertEqual(response3.data['datapoints'],[])
         self.assertEqual(response3.data['wid'],wid)
+        psp = self.agent_passport
         datasourcename='test_get_related_widgets_requests_success_datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
@@ -1843,6 +1874,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         date=timeuuid.uuid1()
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(response.data['did']), date=date, content=datasourcecontent))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(response.data['did']), date=date))
+        psp = self.passport
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_get_related_widgets_request_success_datapoint'

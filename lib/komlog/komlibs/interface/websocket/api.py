@@ -8,14 +8,14 @@ websocket interface
 import time
 from komlog.komfig import logging
 from komlog.komlibs.general.validation import arguments as args
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import AgentPassport
 from komlog.komlibs.interface.websocket.model import response
 from komlog.komlibs.interface.websocket import status
 from komlog.komlibs.interface.websocket.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1 import api as apiv1
 
 def process_message(passport, message):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, AgentPassport):
         t=time.time()
         error=Errors.E_IWSA_PM_IPSP
         logging.c_logger.info(','.join(('komlog.komlibs.interface.websocket.api.process_message',error.name,str(t),str(t))))

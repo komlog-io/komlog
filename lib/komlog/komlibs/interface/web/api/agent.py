@@ -4,7 +4,7 @@ from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import UserPassport
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount.user import api as userapi
@@ -19,7 +19,7 @@ from komlog.komlibs.general.validation import arguments as args
 
 @exceptions.ExceptionHandler
 def new_agent_request(passport, agentname, pubkey, version):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_NAGR_IPSP)
     if not args.is_valid_agentname(agentname):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_NAGR_IAN)
@@ -49,7 +49,7 @@ def new_agent_request(passport, agentname, pubkey, version):
 
 @exceptions.ExceptionHandler
 def get_agents_config_request(passport, dids_flag=True):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_GAGSCR_IPSP)
     authorization.authorize_request(request=Requests.GET_AGENTS_CONFIG, passport=passport)
     data=agentapi.get_agents_config(uid=passport.uid, dids_flag=dids_flag)
@@ -70,7 +70,7 @@ def get_agents_config_request(passport, dids_flag=True):
 
 @exceptions.ExceptionHandler
 def get_agent_config_request(passport, aid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_GAGCR_IPSP)
     if not args.is_valid_hex_uuid(aid):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_GAGCR_IA)
@@ -91,7 +91,7 @@ def get_agent_config_request(passport, aid):
 
 @exceptions.ExceptionHandler
 def update_agent_config_request(passport, aid, data):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_UAGCR_IPSP)
     if not args.is_valid_hex_uuid(aid):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_UAGCR_IA)
@@ -106,7 +106,7 @@ def update_agent_config_request(passport, aid, data):
 
 @exceptions.ExceptionHandler
 def delete_agent_request(passport, aid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_DAGR_IPSP)
     if not args.is_valid_hex_uuid(aid):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_DAGR_IA)
@@ -118,7 +118,7 @@ def delete_agent_request(passport, aid):
 
 @exceptions.ExceptionHandler
 def suspend_agent_request(passport, aid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_SAGR_IPSP)
     if not args.is_valid_hex_uuid(aid):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_SAGR_IAID)
@@ -130,7 +130,7 @@ def suspend_agent_request(passport, aid):
 
 @exceptions.ExceptionHandler
 def activate_agent_request(passport, aid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_AAGR_IPSP)
     if not args.is_valid_hex_uuid(aid):
         raise exceptions.BadParametersException(error=Errors.E_IWAA_AAGR_IAID)

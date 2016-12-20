@@ -113,31 +113,31 @@ class Errors(Enum):
 
 # auth.passport
 
-    E_AP_CC_ID      = 53000      #: Cookie class. invalid dict cookie passed
-    E_AP_CC_IU      = 53001      #: Cookie class. invalid user
-    E_AP_CC_IA      = 53002      #: Cookie class. invalid aid
-    E_AP_CC_IS      = 53003      #: Cookie class. invalid session id
-    E_AP_CC_ISQ     = 53004      #: Cookie class. invalid sequence
-    E_AP_CC_IPV     = 53005      #: Cookie class. invalid protocol version
+    E_AP_CC_IS      = 53000      #: Cookie class. invalid session id
+    E_AP_CC_ISQ     = 53001      #: Cookie class. invalid sequence
 
-    E_AP_PC_IU      = 53010      #: Passport class. invalid uid
-    E_AP_PC_IA      = 53011      #: Passport class. invalid aid
-    E_AP_PC_IS      = 53012      #: Passport class. invalid session id
-    E_AP_PC_IPV     = 53013      #: Passport class. invalid protocol version
-    E_AP_PC_AIDORPV = 53014      #: Passport class. one of aid or pv is None
+    E_AP_UCC_ID     = 53010      #: User Cookie class. invalid dict cookie passed
+    E_AP_UCC_IU     = 53011      #: User Cookie class. invalid user
+
+    E_AP_ACC_ID     = 53020      #: Agent Cookie class. invalid dict cookie passed
+    E_AP_ACC_IA     = 53021      #: Agent Cookie class. invalid aid
+    E_AP_ACC_IPV    = 53022      #: Agent Cookie class. invalid protocol version
+
+    E_AP_PC_IU      = 53050      #: Passport class. invalid uid
+    E_AP_PC_IS      = 53051      #: Passport class. invalid session id
+
+    E_AP_APC_IA     = 53060      #: Agent Passport class. invalid aid
+    E_AP_APC_IPV    = 53061      #: Agent Passport class. invalid protocol version
 
     E_AP_GUP_UNF    = 53100      #: get_user_passport. User not found exception
     E_AP_GUP_IUS    = 53101      #: get_user_passport. Invalid user state
 
     E_AP_GAP_ANF    = 53200      #: get_agent_passport. Agent not found exception
     E_AP_GAP_IAS    = 53201      #: get_agent_passport. Invalid agent state
-    E_AP_GAP_CANF   = 53202      #: get_agent_passport. Cookie has no aid
-    E_AP_GAP_CPVNF  = 53203      #: get_agent_passport. Cookie has no protocol version
 
     E_AP_CPV_IP     = 53300      #: check_agent_passport_validity. Invalid passport
-    E_AP_CPV_IAID   = 53301      #: check_agent_passport_validity. Invalid aid
-    E_AP_CPV_ANF    = 53302      #: check_agent_passport_validity. Agent not found
-    E_AP_CPV_IAS    = 53303      #: check_agent_passport_validity. Invalid agent state
+    E_AP_CPV_ANF    = 53301      #: check_agent_passport_validity. Agent not found
+    E_AP_CPV_IAS    = 53302      #: check_agent_passport_validity. Invalid agent state
 
 # auth.tickets.provision
 

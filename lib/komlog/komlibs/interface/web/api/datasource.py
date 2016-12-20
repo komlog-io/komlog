@@ -8,7 +8,7 @@ from komlog.komcass import exceptions as cassexcept
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
 from komlog.komlibs.auth import exceptions as authexcept
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import UserPassport, AgentPassport
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount import exceptions as gestexcept
@@ -26,7 +26,7 @@ from komlog.komlibs.general.time import timeuuid
 
 @exceptions.ExceptionHandler
 def get_datasource_data_request(passport, did, seq=None, tid=None):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_ID)
@@ -71,7 +71,7 @@ def get_datasource_data_request(passport, did, seq=None, tid=None):
 
 @exceptions.ExceptionHandler
 def get_datasources_config_request(passport):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSSCR_IPSP)
     authorization.authorize_request(request=Requests.GET_DATASOURCES_CONFIG,passport=passport)
     data=datasourceapi.get_datasources_config(uid=passport.uid)
@@ -82,7 +82,7 @@ def get_datasources_config_request(passport):
 
 @exceptions.ExceptionHandler
 def get_datasource_config_request(passport, did):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSCR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSCR_ID)
@@ -105,7 +105,7 @@ def get_datasource_config_request(passport, did):
 
 @exceptions.ExceptionHandler
 def update_datasource_config_request(passport, did, data):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSCR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_UDSCR_ID)
@@ -120,7 +120,7 @@ def update_datasource_config_request(passport, did, data):
 
 @exceptions.ExceptionHandler
 def new_datasource_request(passport, datasourcename):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, AgentPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_NDSR_IPSP)
     if not args.is_valid_datasourcename(datasourcename):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_NDSR_IDN)
@@ -146,7 +146,7 @@ def new_datasource_request(passport, datasourcename):
 
 @exceptions.ExceptionHandler
 def delete_datasource_request(passport, did):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_DDSR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_DDSR_ID)

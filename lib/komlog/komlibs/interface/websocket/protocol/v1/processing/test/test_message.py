@@ -13,7 +13,7 @@ from komlog.komcass.api import permission as cassapiperm
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.auth.errors import Errors as autherrors
 from komlog.komlibs.auth import authorization, permissions
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import AgentPassport
 from komlog.komlibs.auth.resources import update as resupdate
 from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.auth.model import interfaces
@@ -43,7 +43,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_send_ds_data_failure_invalid_message(self):
         ''' _process_send_ds_data should fail if message is invalid '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'key':'a message malformed'}
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -54,7 +54,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_send_ds_data_failure_user_not_found(self):
         ''' _process_send_ds_data should fail if user does not exist '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -71,7 +71,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
-        psp = Passport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -94,7 +94,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri=username_owner+':some_uri'
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':uri,'ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         resp=message._process_send_ds_data(psp, msg)
@@ -122,7 +122,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri=username_owner+':some_uri'
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':uri,'ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         resp=message._process_send_ds_data(psp, msg)
@@ -145,7 +145,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         resp=message._process_send_ds_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -167,7 +167,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.void','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_VOID_RELATION))
         resp=message._process_send_ds_data(psp, msg)
@@ -190,7 +190,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.void','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_DATASOURCE_RELATION))
         resp=message._process_send_ds_data(psp, msg)
@@ -213,7 +213,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.void','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_DATAPOINT_RELATION))
         resp=message._process_send_ds_data(psp, msg)
@@ -236,7 +236,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'uri','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         auth_req_bck=authorization.authorize_request
         ds_creation_bck=datasourceapi.create_datasource
@@ -268,7 +268,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.ds','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         auth_req_bck=authorization.authorize_request
         operation_bck=operation.process_operation
@@ -299,7 +299,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.ds','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         auth_req_bck=authorization.authorize_request
         storing_bck=datasourceapi.store_datasource_data
@@ -332,7 +332,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.ds','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
@@ -374,7 +374,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':username+':system.ds','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
@@ -416,7 +416,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.ds','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         self.assertTrue(datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri']))
         auth_req_bck=authorization.authorize_request
@@ -460,7 +460,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':username+':system.ds','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         self.assertTrue(datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='system.ds'))
         auth_req_bck=authorization.authorize_request
@@ -493,7 +493,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_send_dp_data_failure_invalid_message(self):
         ''' _process_send_dp_data should fail if message is invalid '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'key':'a message malformed'}
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -504,7 +504,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_send_dp_data_failure_different_message_passed(self):
         ''' _process_send_dp_data should fail if message is not of type SEND_DP_DATA '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.ds','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -515,7 +515,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_send_dp_data_failure_user_not_found(self):
         ''' _process_send_dp_data should fail if user does not exist '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'89'}}
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -532,7 +532,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
-        psp = Passport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'79'}}
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -555,7 +555,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'],sid=uuid.uuid4(), aid=agent['aid'],pv=1)
+        psp = AgentPassport(uid=user_reg['uid'],sid=uuid.uuid4(), aid=agent['aid'],pv=1)
         uri=username_owner+':uri'
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':uri,'ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'70'}}
         resp=message._process_send_dp_data(psp, msg)
@@ -583,7 +583,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'],sid=uuid.uuid4(), aid=agent['aid'],pv=1)
+        psp = AgentPassport(uid=user_reg['uid'],sid=uuid.uuid4(), aid=agent['aid'],pv=1)
         uri=username_owner+':uri'
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':uri,'ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'70'}}
         resp=message._process_send_dp_data(psp, msg)
@@ -606,7 +606,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'],sid=uuid.uuid4(), aid=agent['aid'],pv=1)
+        psp = AgentPassport(uid=user_reg['uid'],sid=uuid.uuid4(), aid=agent['aid'],pv=1)
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'70'}}
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -628,7 +628,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.void','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'70'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_VOID_RELATION))
         resp=message._process_send_dp_data(psp, msg)
@@ -651,7 +651,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.void','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'70'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_DATAPOINT_RELATION))
         resp=message._process_send_dp_data(psp, msg)
@@ -674,7 +674,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.void','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'70'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_DATASOURCE_RELATION))
         resp=message._process_send_dp_data(psp, msg)
@@ -697,7 +697,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'70'}}
         res_msg=messages. ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
@@ -726,7 +726,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'uri','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
@@ -754,7 +754,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.dp','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'-1.3e8'}}
         operation_bck=operation.process_operation
         def operation_mock(op):
@@ -785,7 +785,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.dp','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'77.5'}}
         resp=message._process_send_dp_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -826,7 +826,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri='system.dp'
         global_uri=username+':'+uri
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':global_uri,'ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'77.5'}}
@@ -869,7 +869,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':'system.dp','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'-32.0'}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
         self.assertIsNotNone(datapoint)
@@ -912,7 +912,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri='system.dp'
         global_uri=username+':'+uri
         msg={'v':1,'action':Messages.SEND_DP_DATA.value,'payload':{'uri':global_uri,'ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'-32.0'}}
@@ -944,7 +944,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_send_multi_data_failure_invalid_message(self):
         ''' _process_send_multi_data should fail if message is invalid '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'key':'a message malformed'}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -955,7 +955,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_send_multi_data_failure_different_message_passed(self):
         ''' _process_send_multi_data should fail if message is not of type SEND_MULTI_DATA '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.ds','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -966,7 +966,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_send_multi_data_failure_user_not_found_new_datasource_auth_failed(self):
         ''' _process_send_multi_data should fail if user does not exist and a new ds uri has to be created '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri','type':vertex.DATASOURCE,'content':'content'}]}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -983,7 +983,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
-        psp = Passport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri','type':vertex.DATASOURCE,'content':'content'}]}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -994,7 +994,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_send_multi_data_failure_user_not_found_new_datapoint_auth_failed(self):
         ''' _process_send_multi_data should fail if user does not exist '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'44'}]}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1011,7 +1011,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_reg=userapi.create_user(username=username, password=password, email=email)
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
-        psp = Passport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'44'}]}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1034,7 +1034,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri=username_owner+':uri'
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':uri,'type':vertex.DATAPOINT,'content':'44'}]}}
         resp=message._process_send_multi_data(psp, msg)
@@ -1062,7 +1062,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri=username_owner+':uri'
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':uri,'type':vertex.DATAPOINT,'content':'44'}]}}
         resp=message._process_send_multi_data(psp, msg)
@@ -1085,7 +1085,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri.widget','type':vertex.DATAPOINT,'content':'44'}]}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
         resp=message._process_send_multi_data(psp, msg)
@@ -1116,7 +1116,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         #res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         #self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri.dp','type':vertex.DATAPOINT, 'content':'44'}]}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1146,7 +1146,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         #res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         #self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri.ds','type':vertex.DATASOURCE, 'content':'44'}]}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1170,7 +1170,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri.ds','type':vertex.DATASOURCE, 'content':'content 5'}]}}
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
         self.assertIsNone(uri_info)
@@ -1215,7 +1215,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         local_uri='uri.ds'
         global_uri=':'.join((username,local_uri))
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':global_uri,'type':vertex.DATASOURCE, 'content':'content 5'}]}}
@@ -1262,7 +1262,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri.dp','type':vertex.DATAPOINT,'content':'5'}]}}
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.dp')
         self.assertIsNone(uri_info)
@@ -1304,7 +1304,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         local_uri='uri.dp'
         global_uri=':'.join((username,local_uri))
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':global_uri,'type':vertex.DATAPOINT,'content':'5'}]}}
@@ -1354,7 +1354,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri.ds','type':vertex.DATASOURCE, 'content':'44'}]}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1399,7 +1399,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':global_uri,'type':vertex.DATASOURCE, 'content':'44'}]}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1442,7 +1442,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri.dp','type':vertex.DATAPOINT, 'content':'44'}]}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1482,7 +1482,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':'uri.dp','type':vertex.DATASOURCE, 'content':'value: 44'}]}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1514,7 +1514,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'uris':[{'uri':global_uri,'type':vertex.DATAPOINT, 'content':'44'}]}}
         resp=message._process_send_multi_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1560,7 +1560,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={
             'v':1,
             'action':Messages.SEND_MULTI_DATA.value,
@@ -1661,7 +1661,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={
             'v':1,
             'action':Messages.SEND_MULTI_DATA.value,
@@ -1762,7 +1762,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={
             'v':1,
             'action':Messages.SEND_MULTI_DATA.value,
@@ -1795,7 +1795,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_hook_to_uri_failure_invalid_message(self):
         ''' _process_hook_to_uri should fail if message is invalid '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'key':'a message malformed'}
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1806,7 +1806,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_hook_to_uri_failure_different_message_passed(self):
         ''' _process_hook_to_uri should fail if message is not of type HOOK_TO_URI '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.SEND_DS_DATA.value,'payload':{'uri':'system.ds','ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content'}}
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1817,7 +1817,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_hook_to_uri_failure_user_not_found(self):
         ''' _process_hook_to_uri should fail if user does not exist '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'system.ds'}}
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1839,7 +1839,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         local_uri='system.ds'
         global_uri=':'.join((username_owner,local_uri))
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':global_uri}}
@@ -1862,7 +1862,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'system.ds'}}
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1889,7 +1889,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':username_owner+':system.ds'}}
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1916,7 +1916,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'system.ds'}}
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -1939,7 +1939,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'uri.widget'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
         resp=message._process_hook_to_uri(psp, msg)
@@ -1962,7 +1962,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertIsNotNone(datasource)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
@@ -1990,7 +1990,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertIsNotNone(datasource)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
@@ -2018,7 +2018,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertIsNotNone(datasource)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
@@ -2046,7 +2046,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_owner['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_owner['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_owner['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         datasource=datasourceapi.create_datasource(uid=user_owner['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertIsNotNone(datasource)
         uri_info=graphuri.get_id(ido=user_owner['uid'], uri='uri.ds')
@@ -2065,7 +2065,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':username_owner+':uri.ds'}}
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2087,9 +2087,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp1 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp2 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp3 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertIsNotNone(datasource)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
@@ -2136,7 +2136,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
@@ -2166,7 +2166,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
@@ -2196,7 +2196,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
@@ -2226,7 +2226,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_owner['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_owner['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_owner['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_owner['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         datapoint=datapointapi.create_user_datapoint(uid=user_owner['uid'], datapoint_uri='uri.dp')
@@ -2247,7 +2247,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':username_owner+':uri.dp'}}
         resp=message._process_hook_to_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2269,9 +2269,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp1 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp2 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp3 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
@@ -2302,7 +2302,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_unhook_from_uri_failure_invalid_message(self):
         ''' _process_unhook_from_uri should fail if message is invalid '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'key':'a message malformed'}
         resp=message._process_unhook_from_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2313,7 +2313,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_unhook_from_uri_failure_different_message_passed(self):
         ''' _process_unhook_from_uri should fail if message is not of type UNHOOK_FROM_URI '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':'system.ds'}}
         resp=message._process_unhook_from_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2324,7 +2324,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
 
     def test__process_unhook_from_uri_success_uri_does_not_exist(self):
         ''' _process_unhook_from_uri should succeed even if uri does not exist '''
-        psp = Passport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'system.ds'}}
         resp=message._process_unhook_from_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2347,7 +2347,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':username_owner+':system.ds'}}
         resp=message._process_unhook_from_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2375,7 +2375,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':username_owner+':system.ds'}}
         resp=message._process_unhook_from_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2404,7 +2404,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':username_owner+':system.ds'}}
         resp=message._process_unhook_from_uri(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2427,7 +2427,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'payload':{'uri':'uri.widget'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
         resp=message._process_unhook_from_uri(psp, msg)
@@ -2450,7 +2450,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertIsNotNone(datasource)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
@@ -2476,9 +2476,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp1 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp2 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp3 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertIsNotNone(datasource)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
@@ -2544,9 +2544,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp1 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp2 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp3 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertIsNotNone(datasource)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
@@ -2612,7 +2612,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_owner['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp1 = Passport(uid=user_owner['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp1 = AgentPassport(uid=user_owner['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         datasource=datasourceapi.create_datasource(uid=user_owner['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertIsNotNone(datasource)
         uri_info=graphuri.get_id(ido=user_owner['uid'], uri='uri.ds')
@@ -2629,9 +2629,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp1 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp2 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp3 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':username_owner+':uri.ds'}}
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2691,7 +2691,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
@@ -2721,9 +2721,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp1 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp2 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp3 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
@@ -2791,9 +2791,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp1 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp2 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp3 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
@@ -2861,7 +2861,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_owner['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp1 = Passport(uid=user_owner['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp1 = AgentPassport(uid=user_owner['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_owner['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         datapoint=datapointapi.create_user_datapoint(uid=user_owner['uid'], datapoint_uri='uri.dp')
@@ -2880,9 +2880,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp1 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp2 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        psp3 = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp1 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp2 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp3 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'payload':{'uri':username_owner+':uri.dp'}}
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2941,7 +2941,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'system.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2964,7 +2964,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username_owner+':system.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -2990,7 +2990,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username_owner+':system.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -3012,7 +3012,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.widget','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -3046,7 +3046,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_req['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_req['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.widget','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -3078,7 +3078,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_req['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_req['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.widget','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -3100,7 +3100,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.ds',type=vertex.USER_DATASOURCE_RELATION))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -3123,7 +3123,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.ds',type=vertex.USER_DATASOURCE_RELATION))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -3152,7 +3152,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username_req+'@komlog.org'
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
-        psp = Passport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.ds','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -3174,7 +3174,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.dp',type=vertex.USER_DATAPOINT_RELATION))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.dp','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -3197,7 +3197,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.dp',type=vertex.USER_DATAPOINT_RELATION))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.dp','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -3226,7 +3226,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         email=username_req+'@komlog.org'
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
-        psp = Passport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.dp','start':pd.Timestamp('now',tz='utc').isoformat(),'end':pd.Timestamp('now',tz='utc').isoformat(),'count':None}}
         resp=message._process_request_data(psp, msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -3248,7 +3248,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3284,7 +3284,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3333,7 +3333,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user_reg['uid'],dest_uid=user_req['uid'],uri='uri.ds',perm=permissions.CAN_READ))
-        psp = Passport(uid=user_reg['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3362,7 +3362,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3398,7 +3398,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3447,7 +3447,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user_reg['uid'],dest_uid=user_req['uid'],uri='uri',perm=permissions.CAN_READ))
-        psp = Passport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3476,7 +3476,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3511,7 +3511,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3559,7 +3559,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user_reg['uid'], dest_uid=user_req['uid'], uri='uri.ds',perm=permissions.CAN_READ))
-        psp = Passport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3587,7 +3587,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         count=100
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.ds','start':None,'end':None,'count':count}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
@@ -3621,7 +3621,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         count=100
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.ds','start':None,'end':None,'count':count}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
@@ -3668,7 +3668,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user_reg['uid'], dest_uid=user_req['uid'], uri='uri.ds',perm=permissions.CAN_READ))
-        psp = Passport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         count=100
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.ds','start':None,'end':None,'count':count}}
         resp=message._process_request_data(psp, msg)
@@ -3695,7 +3695,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3730,7 +3730,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3778,7 +3778,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user_reg['uid'], dest_uid=user_req['uid'], uri='uri',perm=permissions.CAN_READ))
-        psp = Passport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3806,7 +3806,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=None
         end=None
         count=200
@@ -3842,7 +3842,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=None
         end=None
         count=200
@@ -3891,7 +3891,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user_reg['uid'], dest_uid=user_req['uid'], uri='uri',perm=permissions.CAN_READ))
-        psp = Passport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=None
         end=None
         count=200
@@ -3920,7 +3920,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3950,7 +3950,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -3988,7 +3988,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user_reg['uid'], dest_uid=user_req['uid'], uri='uri',perm=permissions.CAN_READ))
-        psp = Passport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.ds','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -4016,7 +4016,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=None
         end=None
         count=400
@@ -4047,7 +4047,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=None
         end=None
         count=400
@@ -4086,7 +4086,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user_reg['uid'], dest_uid=user_req['uid'], uri='uri',perm=permissions.CAN_READ))
-        psp = Passport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=None
         end=None
         count=400
@@ -4115,7 +4115,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':'uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -4145,7 +4145,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -4183,7 +4183,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user_reg['uid'], dest_uid=user_req['uid'], uri='uri',perm=permissions.CAN_READ))
-        psp = Passport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=pd.Timestamp('now',tz='utc')-pd.Timedelta('1d')
         end=pd.Timestamp('now',tz='utc')+pd.Timedelta('1d')
         msg={'v':1,'action':Messages.REQUEST_DATA.value,'payload':{'uri':username+':uri.dp','start':start.isoformat(),'end':end.isoformat(),'count':None}}
@@ -4211,7 +4211,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=None
         end=None
         count=2332
@@ -4242,7 +4242,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
-        psp = Passport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=None
         end=None
         count=2332
@@ -4281,7 +4281,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user_reg['uid'], dest_uid=user_req['uid'], uri='uri',perm=permissions.CAN_READ))
-        psp = Passport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=None
         end=None
         count=2332

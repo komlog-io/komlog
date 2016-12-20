@@ -9,7 +9,7 @@ from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import UserPassport
 from komlog.komlibs.auth.tickets import provision as ticketprov
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
@@ -27,7 +27,7 @@ from komlog.komlibs.general.time import timeuuid
 
 @exceptions.ExceptionHandler
 def get_snapshots_config_request(passport):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWASN_GSNSCR_IPSP)
     authorization.authorize_request(request=Requests.GET_SNAPSHOTS_CONFIG,passport=passport)
     data=snapshotapi.get_snapshots_config(uid=passport.uid)
@@ -78,7 +78,7 @@ def get_snapshots_config_request(passport):
 
 @exceptions.ExceptionHandler
 def get_snapshot_config_request(passport, nid, tid=None):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWASN_GSNCR_IPSP)
     if not args.is_valid_hex_uuid(nid):
         raise exceptions.BadParametersException(error=Errors.E_IWASN_GSNCR_IN)
@@ -131,7 +131,7 @@ def get_snapshot_config_request(passport, nid, tid=None):
 
 @exceptions.ExceptionHandler
 def delete_snapshot_request(passport, nid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWASN_DSNR_IPSP)
     if not args.is_valid_hex_uuid(nid):
         raise exceptions.BadParametersException(error=Errors.E_IWASN_DSNR_IN)
@@ -142,7 +142,7 @@ def delete_snapshot_request(passport, nid):
 
 @exceptions.ExceptionHandler
 def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None, ets=None, seq=None):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_IPSP)
     if not args.is_valid_hex_uuid(wid):
         raise exceptions.BadParametersException(error=Errors.E_IWASN_NSNR_IW)

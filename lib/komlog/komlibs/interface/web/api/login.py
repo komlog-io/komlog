@@ -7,7 +7,7 @@ This file defines the logic associated with web interface operations
 import uuid
 from komlog.komfig import logging
 from base64 import b64encode, b64decode
-from komlog.komlibs.auth import authorization
+from komlog.komlibs.auth import authorization, passport
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.interface.web.model import response
 from komlog.komlibs.interface.web import status, exceptions
@@ -37,7 +37,7 @@ def _user_login_request(username, password):
         return response.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, error=Errors.E_IWAL_ULR_AUTHERR)
     data={'redirect':'/home'}
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
-    resp.cookie={'user':username.lower(),'aid':None,'pv':None,'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
+    resp.cookie=passport.UserCookie(user=username.lower(), seq=timeuuid.get_custom_sequence(timeuuid.uuid1()), sid=uuid.uuid4()).to_dict()
     return resp
 
 def _agent_login_generate_challenge_request(username, pubkey, pv):
@@ -74,7 +74,7 @@ def _agent_login_validate_challenge_request(username, pubkey, pv, challenge, sig
         raise exceptions.BadParametersException(error=Errors.E_IWAL_ALVCR_IPK)
     aid=agentapi.validate_auth_challenge(username=username.lower(), pubkey=pubkey, challenge_hash=challenge, signature=signature)
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
-    resp.cookie={'user':username.lower(),'aid':aid.hex,'pv':int(pv), 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),'sid':uuid.uuid4().hex}
+    resp.cookie=passport.AgentCookie(aid=aid, pv=int(pv), seq=timeuuid.get_custom_sequence(timeuuid.uuid1()), sid=uuid.uuid4()).to_dict()
     return resp
 
 

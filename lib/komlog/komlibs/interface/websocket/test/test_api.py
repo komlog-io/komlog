@@ -2,7 +2,7 @@ import unittest
 import time
 import uuid
 from komlog.komfig import logging
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import AgentPassport
 from komlog.komlibs.gestaccount.errors import Errors as gesterrors
 from komlog.komlibs.interface.websocket import exceptions, status, api
 from komlog.komlibs.interface.websocket.model import response
@@ -19,7 +19,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         aid=uuid.uuid4()
         sid=uuid.uuid4()
         pv = 1
-        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
+        psp = AgentPassport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'action':1}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -32,7 +32,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         aid=uuid.uuid4()
         sid=uuid.uuid4()
         pv = 1
-        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
+        psp = AgentPassport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'v':1}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -46,7 +46,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         aid=uuid.uuid4()
         sid=uuid.uuid4()
         pv = 1
-        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
+        psp = AgentPassport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'v':None,'action':'send_ds_data','payload':{'data':'data'}}
         for version in versions:
             msg['v']=version
@@ -62,7 +62,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         aid=uuid.uuid4()
         sid=uuid.uuid4()
         pv = 1
-        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
+        psp = AgentPassport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'v':1,'action':None,'payload':{'data':'data'}}
         for action in actions:
             msg['action']=action
@@ -87,7 +87,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         aid = uuid.uuid4()
         sid=uuid.uuid4()
         pv = 1
-        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
+        psp = AgentPassport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'v':1,'action':'send_ds_data','payload':{'data':'data'}}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.Response))
@@ -100,7 +100,7 @@ class InterfaceWebSocketApiTest(unittest.TestCase):
         aid = uuid.uuid4()
         sid=uuid.uuid4()
         pv = 1
-        psp = Passport(uid=uid,sid=sid,aid=aid,pv=pv)
+        psp = AgentPassport(uid=uid,sid=sid,aid=aid,pv=pv)
         msg={'v':100000000000,'action':'send_ds_data','payload':{'data':'data'}}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.Response))

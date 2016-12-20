@@ -56,7 +56,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
             self.passport = passport.get_user_passport(cookie)
             response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
             aid = response.data['aid']
-            cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'pv':1, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+            cookie = passport.AgentCookie(aid=uuid.UUID(aid), sid=uuid.uuid4(), pv=1, seq=timeuuid.get_custom_sequence(timeuuid.uuid1())).to_dict()
             self.agent_passport = passport.get_agent_passport(cookie)
             for msg in response.unrouted_messages:
                 msgresponse=msgapi.process_message(msg)
@@ -178,7 +178,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
 
     def test_new_datasource_datapoint_request_failure_user_does_not_exist(self):
         ''' new_datasource_datapoint_request should fail if user does not exist '''
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         did=self.agents[0]['dids'][0]
         datapointname='test_new_datasource_datapoint_request_failure'
         sequence=uuid.uuid1().hex
@@ -258,7 +258,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertIsNotNone(datapoint)
         self.assertEqual(datapoint['datapointname'],'.'.join((datasource_config.data['datasourcename'],datapointname)))
         self.assertEqual(datapoint['did'],uuid.UUID(did))
-        psp = passport.Passport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         pid=datapoint['pid'].hex
         data={'datapointname':'datapointname','color':'#FFAADD'}
         response=datapointapi.update_datapoint_config_request(passport=psp, pid=pid, data=data)
@@ -418,7 +418,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -432,7 +432,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         dp_uri='uris.datapoint'
         uri='uris'
         datapoint=gestdatapointapi.create_user_datapoint(uid=psp.uid, datapoint_uri=dp_uri)
@@ -464,7 +464,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=datapointapi.get_datapoint_config_request(passport=psp,pid=pid.hex)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data['pid'],pid.hex)

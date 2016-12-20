@@ -6,7 +6,7 @@ This file defines the logic associated with uri web interface operations
 
 import uuid
 from komlog.komlibs.auth import authorization, permissions
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import UserPassport
 from komlog.komlibs.auth.shared import uri as shareduri
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.gestaccount import exceptions as gestexcept
@@ -33,7 +33,7 @@ def get_node_info(ido,uri,counter):
 
 @exceptions.ExceptionHandler
 def get_uri_request(passport, uri=None):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAUR_GUR_IPSP)
     if uri is not None:
         if uri=='':
@@ -69,7 +69,7 @@ def get_uri_request(passport, uri=None):
 
 @exceptions.ExceptionHandler
 def share_uri_request(passport, uri, users):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAUR_SUR_IPSP)
     if not args.is_valid_uri(uri):
         raise exceptions.BadParametersException(error=Errors.E_IWAUR_SUR_IURI)
@@ -101,7 +101,7 @@ def share_uri_request(passport, uri, users):
 
 @exceptions.ExceptionHandler
 def unshare_uri_request(passport, uri, users=None):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAUR_USUR_IPSP)
     if not args.is_valid_uri(uri):
         raise exceptions.BadParametersException(error=Errors.E_IWAUR_USUR_IURI)
@@ -127,7 +127,7 @@ def unshare_uri_request(passport, uri, users=None):
 
 @exceptions.ExceptionHandler
 def get_uris_shared_request(passport):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAUR_GUSR_IPSP)
     shared=shareduri.get_uris_shared(uid=passport.uid)
     data={}
@@ -146,7 +146,7 @@ def get_uris_shared_request(passport):
 
 @exceptions.ExceptionHandler
 def get_uris_shared_with_me_request(passport):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAUR_GUSWMR_IPSP)
     shared=shareduri.get_uris_shared_with_me(uid=passport.uid)
     data={}

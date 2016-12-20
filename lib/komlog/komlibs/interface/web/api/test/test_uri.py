@@ -68,7 +68,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         agents_info=agentapi.get_agents_config_request(passport=self.passport)
         self.agents=agents_info.data
         aid = response.data['aid']
-        cookie = {'user':self.username, 'sid':uuid.uuid4().hex, 'aid':aid, 'pv':1, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = passport.AgentCookie(aid=uuid.UUID(aid),sid=uuid.uuid4(),pv=1,seq=timeuuid.get_custom_sequence(uuid.uuid1())).to_dict()
         self.agent_passport = passport.get_agent_passport(cookie)
 
     def test_get_uri_request_failure_invalid_passport(self):
@@ -86,7 +86,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_get_uri_request_failure_invalid_uri(self):
         ''' get_uri_request should fail if uri is invalid '''
-        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(),sid=uuid.uuid4())
         uris=[234234,'with spaces','withspecialcharacterslike\t','or\ncharacter',
                 ' spacesatbeggining',
                 'spacesatend ',
@@ -104,7 +104,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_get_uri_request_failure_user_not_found(self):
         ''' get_uri_request should fail if user does not exist on system '''
-        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(),sid=uuid.uuid4())
         response=uriapi.get_uri_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.error, Errors.OK.value)
@@ -129,6 +129,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='test_komlibs.interface.web'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        psp = self.passport
         response=uriapi.get_uri_request(passport=psp,uri=uri)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
 
@@ -139,13 +140,14 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         uri='test_komlibs.interface.web.datasource..datasource..web..interface'
+        psp = self.passport
         response=uriapi.get_uri_request(passport=psp,uri=uri)
         self.assertEqual(response.error, Errors.E_IWAUR_GUR_IUR.value)
         self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
     def test_get_uri_request_failure_global_uri_user_does_not_exist(self):
         ''' get_uri_request should fail if we try to access a non existent global uri '''
-        psp = self.agent_passport
+        psp = self.passport
         uri='test_get_uri_request_failure_global_uri_user_does_not_exist:uri'
         response=uriapi.get_uri_request(passport=psp,uri=uri)
         self.assertEqual(response.error, autherrors.E_ARA_AGU_RE.value)
@@ -184,10 +186,8 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         agents_info=agentapi.get_agents_config_request(passport=psp)
         agents=agents_info.data
         aid = response.data['aid']
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':aid, 'pv':1, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
-        agent_passport = passport.get_agent_passport(cookie)
         uri=username+':'+'not_shared_uri'
-        psp = self.agent_passport
+        psp = self.passport
         response=uriapi.get_uri_request(passport=psp,uri=uri)
         self.assertEqual(response.error, autherrors.E_ARA_AGU_RE.value)
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
@@ -225,12 +225,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         agents_info=agentapi.get_agents_config_request(passport=psp)
         agents=agents_info.data
         aid = response.data['aid']
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':aid, 'pv':1, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = passport.AgentCookie(aid=uuid.UUID(aid), pv=1, sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(uuid.uuid1())).to_dict()
         agent_passport = passport.get_agent_passport(cookie)
         shared_uri='shared_uri'
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=agent_passport.uid, dest_uid=self.passport.uid,uri=shared_uri, perm=permissions.CAN_READ))
         requested_uri=username+':shared_uri.does_not_exist'
-        psp = self.agent_passport
+        psp = self.passport
         response=uriapi.get_uri_request(passport=psp,uri=requested_uri)
         self.assertEqual(response.error, Errors.E_IWAUR_GUR_URINF.value)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
@@ -268,7 +268,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         agents_info=agentapi.get_agents_config_request(passport=psp)
         agents=agents_info.data
         aid = response.data['aid']
-        cookie = {'user':username, 'sid':uuid.uuid4().hex, 'aid':aid, 'pv':1, 'seq':timeuuid.get_custom_sequence(timeuuid.uuid1())}
+        cookie = passport.AgentCookie(aid=uuid.UUID(aid), pv=1, sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(uuid.uuid1())).to_dict()
         agent_passport = passport.get_agent_passport(cookie)
         shared_uri='shared_uri.datasource'
         response = datasourceapi.new_datasource_request(passport=agent_passport, datasourcename=shared_uri)
@@ -300,7 +300,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_share_uri_request_failure_invalid_uri(self):
         ''' share_uri_request should fail if uri is invalid '''
-        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(),sid=uuid.uuid4())
         uris=[234234,
             'with spaces',
             'withspecialcharacterslike\t',
@@ -325,7 +325,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_share_uri_request_failure_invalid_users(self):
         ''' share_uri_request should fail if users is not a list '''
-        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(),sid=uuid.uuid4())
         uri='local.uri'
         userss=[None,1,132,33.33,-1231,tuple(),dict(),set(),'username',uuid.uuid4(),uuid.uuid1()]
         for users in userss:
@@ -335,7 +335,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_share_uri_request_failure_invalid_user_item(self):
         ''' share_uri_request should fail if a users item is not a valid username '''
-        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(),sid=uuid.uuid4())
         uri='local.uri'
         invalid_users=[None,1,132,33.33,-1231,tuple(),dict(),set(),'username not valid',uuid.uuid4(),uuid.uuid1()]
         for user in invalid_users:
@@ -347,7 +347,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_share_uri_request_failure_no_users_to_share(self):
         ''' share_uri_request should fail if request has no users to share to '''
-        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(),sid=uuid.uuid4())
         uri='local.uri'
         users=[]
         response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
@@ -369,7 +369,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 msgresponse=msgapi.process_message(msg)
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
-        psp = passport.Passport(uid=uuid.UUID(response.data['uid']),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.UUID(response.data['uid']),sid=uuid.uuid4())
         uri='non_existent_uri'
         users=['user1']
         response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
@@ -392,7 +392,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -406,7 +406,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
@@ -419,6 +419,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=['non_existent_user']
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
         self.assertEqual(response.error, gesterrors.E_GUA_GUID_UNF.value)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
@@ -439,7 +440,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -453,7 +454,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         ds_uri='uris.datasource'
         uri='uris'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
@@ -482,13 +483,13 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     msgresponse=msgapi.process_message(msg)
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
-            uid = uuid.UUID(response.data['uid'])
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data, {username:[uri]})
@@ -512,7 +513,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_unshare_uri_request_failure_invalid_uri(self):
         ''' unshare_uri_request should fail if uri is invalid '''
-        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(),sid=uuid.uuid4())
         uris=[234234,
             'with spaces',
             'withspecialcharacterslike\t',
@@ -537,7 +538,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_unshare_uri_request_failure_invalid_users(self):
         ''' unshare_uri_request should fail if users is not a list '''
-        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(),sid=uuid.uuid4())
         uri='local.uri'
         userss=[1,132,33.33,-1231,tuple(),dict(),set(),'username',uuid.uuid4(),uuid.uuid1()]
         for users in userss:
@@ -547,7 +548,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_unshare_uri_request_failure_invalid_user_item(self):
         ''' unshare_uri_request should fail if a users item is not a valid username '''
-        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(),sid=uuid.uuid4())
         uri='local.uri'
         invalid_users=[None,1,132,33.33,-1231,tuple(),dict(),set(),'username not valid',uuid.uuid4(),uuid.uuid1()]
         for user in invalid_users:
@@ -572,7 +573,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 msgresponse=msgapi.process_message(msg)
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
-        psp = passport.Passport(uid=uuid.UUID(response.data['uid']),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.UUID(response.data['uid']),sid=uuid.uuid4())
         uri='non_existent_uri'
         response=uriapi.unshare_uri_request(passport=psp, uri=uri)
         self.assertEqual(response.error, Errors.E_IWAUR_USUR_URINF.value)
@@ -594,7 +595,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -608,7 +609,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         ds_uri='uris.datasource'
         uri='uris'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
@@ -621,6 +622,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, {})
@@ -646,7 +648,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -660,7 +662,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
@@ -673,6 +675,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'non_existent_user1',username+'non_existent_user2']
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, {})
@@ -698,7 +701,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -712,7 +715,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
@@ -740,7 +743,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     msgresponse=msgapi.process_message(msg)
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
-            uid = uuid.UUID(response.data['uid'])
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, {})
@@ -752,7 +755,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data, {})
@@ -774,7 +777,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -788,7 +791,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
@@ -816,6 +819,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     msgresponse=msgapi.process_message(msg)
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, {})
@@ -829,12 +833,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data, {username:[uri]})
         self.assertEqual(users_checked,3)
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.unshare_uri_request(passport=psp, uri=uri)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         response=uriapi.get_uris_shared_request(passport=psp)
@@ -843,7 +847,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data, {})
@@ -865,7 +869,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -879,7 +883,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
@@ -907,6 +911,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     msgresponse=msgapi.process_message(msg)
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, {})
@@ -920,12 +925,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data, {username:[uri]})
         self.assertEqual(users_checked,3)
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         specified_users=users[0:1]
         specified_uid=dest_uids[0:1]
         keep_share_users=users[1:]
@@ -940,7 +945,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         users_checked=0
         for dest_uid in specified_uid:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data, {})
@@ -948,7 +953,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         users_checked=0
         for dest_uid in keep_share_uid:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data, {username:[uri]})
@@ -970,7 +975,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -984,7 +989,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
@@ -1012,6 +1017,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     msgresponse=msgapi.process_message(msg)
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, {})
@@ -1025,12 +1031,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data, {username:[uri]})
         self.assertEqual(users_checked,3)
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         non_existent=[username+'non_existent1',username+'non_existent2']
         response=uriapi.unshare_uri_request(passport=psp, uri=uri, users=non_existent)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -1042,7 +1048,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data, {username:[uri]})
@@ -1064,7 +1070,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_get_uris_shared_request_success_no_shares(self):
         ''' get_uris_shared_request should succeed, returning an empty dict if no data is shared'''
-        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(),sid=uuid.uuid4())
         response=uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, {})
@@ -1085,7 +1091,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -1099,7 +1105,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         ds_uri='uris.datasource'
         uri='uris'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
@@ -1128,17 +1134,18 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     msgresponse=msgapi.process_message(msg)
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data, {username:[uri]})
         self.assertEqual(users_checked,3)
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response = uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(uri in response.data)
@@ -1168,7 +1175,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -1182,7 +1189,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         ds_uri='uris.datasources.thisone'
         uris=['uris','uris.datasources']
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
@@ -1211,20 +1218,21 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     msgresponse=msgapi.process_message(msg)
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         for uri in uris:
             response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertTrue(username in response.data)
             self.assertEqual(len(response.data.keys()),1)
             self.assertEqual(sorted(response.data[username]),sorted(uris))
         self.assertEqual(users_checked,3)
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response = uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(uris[0] in response.data)
@@ -1257,7 +1265,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -1271,7 +1279,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         ds_uri='uris.datasources.thisone'
         uris=['uris','uris.datasources']
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
@@ -1300,13 +1308,14 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     msgresponse=msgapi.process_message(msg)
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         for uri in uris:
             response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertTrue(username in response.data)
@@ -1314,7 +1323,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             self.assertEqual(sorted(response.data[username]),sorted(uris))
         self.assertEqual(users_checked,3)
         #now for some reason one user leaves the system
-        psp = passport.Passport(uid=dest_uids[0],sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=dest_uids[0],sid=uuid.uuid4())
         response = userapi.delete_user_request(passport=psp)
         if response.status==status.WEB_STATUS_RECEIVED:
             msgs=response.unrouted_messages
@@ -1342,7 +1351,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 self.assertEqual(perm.owner_uid, uid)
                 self.assertEqual(perm.perm, permissions.CAN_READ|permissions.CAN_SNAPSHOT)
                 self.assertEqual(perm.uri,uri)
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response = uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(uris[0] in response.data)
@@ -1380,7 +1389,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
 
     def test_get_uris_shared_with_me_request_success_no_shares(self):
         ''' get_uris_shared_with_me_request should succeed, returning an empty dict if no data is shared'''
-        psp = passport.Passport(uid=uuid.uuid4(),sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uuid.uuid4(),sid=uuid.uuid4())
         response=uriapi.get_uris_shared_with_me_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data, {})
@@ -1401,7 +1410,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 for msg2 in msgresponse.unrouted_messages:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         agentname='agent'
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -1415,7 +1424,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
-        psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+        psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
         ds_uri='uris.datasource'
         uri='uris'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
@@ -1444,17 +1453,18 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     msgresponse=msgapi.process_message(msg)
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(response.data, {username:[uri]})
         self.assertEqual(users_checked,3)
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response = uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(uri in response.data)
@@ -1488,7 +1498,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
             owner_ids.append(uuid.UUID(response.data['uid']))
             uid = uuid.UUID(response.data['uid'])
-            psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
             agentname='agent'
             version='test library vX.XX'
             response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -1502,7 +1512,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                             msgs.append(msg2)
                         self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
             aid = uuid.UUID(response.data['aid'])
-            psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+            psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
             ds_uri='uris.datasources.thisone'
             uris=['uris','uris.datasources']
             response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
@@ -1532,14 +1542,14 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
         for uid in owner_ids:
-            psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
             for uri in uris:
                 response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
                 self.assertEqual(response.status, status.WEB_STATUS_OK)
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(len(response.data.keys()),10)
@@ -1548,7 +1558,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 self.assertTrue(user in response.data)
                 self.assertEqual(sorted(response.data[user]),sorted(uris))
         self.assertEqual(users_checked,3)
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response = uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(uris[0] in response.data)
@@ -1585,7 +1595,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                         msgs.append(msg2)
             owner_ids.append(uuid.UUID(response.data['uid']))
             uid = uuid.UUID(response.data['uid'])
-            psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
             agentname='agent'
             version='test library vX.XX'
             response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -1599,7 +1609,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                             msgs.append(msg2)
                         self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
             aid = uuid.UUID(response.data['aid'])
-            psp = passport.Passport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
+            psp = passport.AgentPassport(uid=uid,aid=aid,pv=1,sid=uuid.uuid4())
             ds_uri='uris.datasources.thisone'
             uris=['uris','uris.datasources']
             response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
@@ -1629,14 +1639,14 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     for msg2 in msgresponse.unrouted_messages:
                         msgs.append(msg2)
         for uid in owner_ids:
-            psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
             for uri in uris:
                 response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
                 self.assertEqual(response.status, status.WEB_STATUS_OK)
         users_checked=0
         for dest_uid in dest_uids:
             users_checked+=1
-            psp = passport.Passport(uid=dest_uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest_uid,sid=uuid.uuid4())
             response=uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(len(response.data.keys()),10)
@@ -1645,7 +1655,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 self.assertTrue(user in response.data)
                 self.assertEqual(sorted(response.data[user]),sorted(uris))
         self.assertEqual(users_checked,3)
-        psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response = uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(uris[0] in response.data)
@@ -1663,7 +1673,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 self.assertEqual(perm.uri,uri)
         #now some users leave system (owner1 and dest1)
         for uid in (dest_uids[0],owner_ids[0]):
-            psp = passport.Passport(uid=uid,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
             response = userapi.delete_user_request(passport=psp)
             if response.status==status.WEB_STATUS_RECEIVED:
                 msgs=response.unrouted_messages
@@ -1694,7 +1704,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                     self.assertEqual(perm.uri,uri)
         #now make get_uris_shared_with_me requests and see how perms are updated
         for dest in dest_uids[1:]:
-            psp = passport.Passport(uid=dest,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=dest,sid=uuid.uuid4())
             response = uriapi.get_uris_shared_with_me_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertEqual(len(response.data.keys()),9)
@@ -1703,7 +1713,7 @@ class InterfaceWebApiUriTest(unittest.TestCase):
                 self.assertTrue(user in response.data)
                 self.assertEqual(sorted(response.data[user]),sorted(uris))
         for owner in owner_ids[1:]:
-            psp = passport.Passport(uid=owner,sid=uuid.uuid4())
+            psp = passport.UserPassport(uid=owner,sid=uuid.uuid4())
             response = uriapi.get_uris_shared_request(passport=psp)
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertTrue(uris[0] in response.data)
@@ -1711,11 +1721,11 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             self.assertEqual(len(response.data.keys()),2)
             self.assertEqual(sorted(response.data[uris[0]]),sorted(users[1:]))
             self.assertEqual(sorted(response.data[uris[1]]),sorted(users[1:]))
-        psp = passport.Passport(uid=dest_uids[0],sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=dest_uids[0],sid=uuid.uuid4())
         response = uriapi.get_uris_shared_with_me_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data,{})
-        psp = passport.Passport(uid=owner_ids[0],sid=uuid.uuid4())
+        psp = passport.UserPassport(uid=owner_ids[0],sid=uuid.uuid4())
         response = uriapi.get_uris_shared_request(passport=psp)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertEqual(response.data,{})

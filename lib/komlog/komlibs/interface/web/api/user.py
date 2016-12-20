@@ -7,7 +7,7 @@ This file defines the logic associated with web interface requests
 import uuid
 from komlog.komfig import logging
 from komlog.komlibs.auth import authorization
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import UserPassport
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount import exceptions as gestexcept
@@ -90,7 +90,7 @@ def confirm_user_request(email, code):
 
 @exceptions.ExceptionHandler
 def get_user_config_request(passport):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_GUSCR_IPSP)
     authorization.authorize_request(request=Requests.GET_USER_CONFIG, passport=passport)
     user=userapi.get_user_config(uid=passport.uid)
@@ -104,7 +104,7 @@ def get_user_config_request(passport):
 
 @exceptions.ExceptionHandler
 def update_user_config_request(passport, data):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSCR_IPSP)
     if not args.is_valid_dict(data):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSCR_ID)
@@ -136,7 +136,7 @@ def update_user_config_request(passport, data):
 
 @exceptions.ExceptionHandler
 def delete_user_request(passport):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_DUSR_IPSP)
     authorization.authorize_request(request=Requests.DELETE_USER, passport=passport)
     resp = response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
@@ -270,7 +270,7 @@ def reset_password_request(code, password):
 
 @exceptions.ExceptionHandler
 def upgrade_user_segment_request(passport, segment, token=None):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSGR_IPSP)
     if not args.is_valid_string_int(segment):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSGR_ISID)
@@ -297,7 +297,7 @@ def upgrade_user_segment_request(passport, segment, token=None):
 
 @exceptions.ExceptionHandler
 def get_user_upgrade_info_request(passport):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_UUSGR_IPSP)
     data = userapi.get_user_segment_info(uid=passport.uid)
     resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)

@@ -9,7 +9,7 @@ from komlog.komcass import exceptions as cassexcept
 from komlog.komfig import logging
 from komlog.komlibs.auth import authorization
 from komlog.komlibs.auth import update as authupdate
-from komlog.komlibs.auth.passport import Passport
+from komlog.komlibs.auth.passport import UserPassport
 from komlog.komlibs.auth.model.requests import Requests
 from komlog.komlibs.events.model import types as eventstypes
 from komlog.komlibs.gestaccount.user import api as userapi
@@ -25,7 +25,7 @@ from komlog.komlibs.general.validation import arguments as args
 
 @exceptions.ExceptionHandler
 def get_widgets_config_request(passport):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_GWSCR_IPSP)
     authorization.authorize_request(request=Requests.GET_WIDGETS_CONFIG,passport=passport)
     data=widgetapi.get_widgets_config(uid=passport.uid)
@@ -64,7 +64,7 @@ def get_widgets_config_request(passport):
 
 @exceptions.ExceptionHandler
 def get_widget_config_request(passport, wid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_GWCR_IPSP)
     if not args.is_valid_hex_uuid(wid):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_GWCR_IW)
@@ -100,7 +100,7 @@ def get_widget_config_request(passport, wid):
 
 @exceptions.ExceptionHandler
 def delete_widget_request(passport, wid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_DWR_IPSP)
     if not args.is_valid_hex_uuid(wid):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_DWR_IW)
@@ -112,7 +112,7 @@ def delete_widget_request(passport, wid):
 
 @exceptions.ExceptionHandler
 def new_widget_request(passport, data):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_NWR_IPSP)
     if not args.is_valid_dict(data):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_NWR_ID)
@@ -151,7 +151,7 @@ def new_widget_request(passport, data):
 
 @exceptions.ExceptionHandler
 def add_datapoint_request(passport, wid, pid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_ADPR_IPSP)
     if not args.is_valid_hex_uuid(wid):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_ADPR_IW)
@@ -166,7 +166,7 @@ def add_datapoint_request(passport, wid, pid):
 
 @exceptions.ExceptionHandler
 def delete_datapoint_request(passport, wid, pid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_DDPR_IPSP)
     if not args.is_valid_hex_uuid(wid):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_DDPR_IW)
@@ -181,7 +181,7 @@ def delete_datapoint_request(passport, wid, pid):
 
 @exceptions.ExceptionHandler
 def update_widget_config_request(passport, wid, data):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_UWCR_IPSP)
     if not args.is_valid_hex_uuid(wid):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_UWCR_IW)
@@ -223,7 +223,7 @@ def update_widget_config_request(passport, wid, data):
 
 @exceptions.ExceptionHandler
 def get_related_widgets_request(passport, wid):
-    if not isinstance(passport, Passport):
+    if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_GRWR_IPSP)
     if not args.is_valid_hex_uuid(wid):
         raise exceptions.BadParametersException(error=Errors.E_IWAW_GRWR_IW)
