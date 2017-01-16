@@ -763,15 +763,6 @@ class GestaccountWidgetApiTest(unittest.TestCase):
                 api.update_widget_config(wid=wid, widgetname=widgetname)
             self.assertEqual(cm.exception.error, Errors.E_GWA_UWC_IW)
 
-    def test_update_widget_config_failure_invalid_widgetname(self):
-        ''' update_widget_config_should fail if widgetname is invalid '''
-        widgetnames=[123123, 12313.1231, {'a':'dict'},('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4(), uuid.uuid1()]
-        wid=uuid.uuid4()
-        for widgetname in widgetnames:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                api.update_widget_config(wid=wid, widgetname=widgetname)
-            self.assertEqual(cm.exception.error, Errors.E_GWA_UWC_IWN)
-
     def test_update_widget_config_failure_invalid_colors(self):
         ''' update_widget_config_should fail if colors is invalid '''
         colores=[123123, 12313.1231, ('a','tuple'), ['a','list'],{'set','set1'},uuid.uuid4(), uuid.uuid1()]
@@ -1589,7 +1580,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         self.assertEqual(widget['type'], types.MULTIDP)
         self.assertEqual(widget['active_visualization'], vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
         self.assertNotEqual(widget['active_visualization'], vistypes.VISUALIZATION_TABLE)
-        new_widgetname='test_update_widget_multidp_success_2'
+        new_widgetname='A new title for the widget'
         new_visualization=vistypes.VISUALIZATION_TABLE
         self.assertTrue(api.update_widget_multidp(wid=widget['wid'], widgetname=new_widgetname,active_visualization=new_visualization))
         widget_config=api.get_widget_config(wid=widget['wid'])
@@ -1614,7 +1605,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
-        widgetname='test_update_widget_multidp_failure_vis_not_supp'
+        widgetname='Widgetname does not need to be a uri style'
         widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
         self.assertEqual(widget['widgetname'], widgetname)
@@ -1647,7 +1638,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
         datasource=datasourceapi.create_datasource(uid=user['uid'], aid=agent['aid'], datasourcename=datasourcename)
         datapoint=datapointapi.create_datasource_datapoint(did=datasource['did'],datapoint_uri=datapointname)
-        widgetname='test_update_widget_multidp_succes_only_widgetnames'
+        widgetname='test_update_widget_multidp success only widgetnames'
         widget=api.new_widget_multidp(uid=user['uid'], widgetname=widgetname)
         self.assertTrue(isinstance(widget['wid'],uuid.UUID))
         self.assertEqual(widget['widgetname'], widgetname)
@@ -1661,7 +1652,7 @@ class GestaccountWidgetApiTest(unittest.TestCase):
         self.assertEqual(sorted(widget['datapoints']),sorted([datapoint['pid']]))
         self.assertEqual(widget['type'], types.MULTIDP)
         self.assertEqual(widget['active_visualization'], vistypes.WIDGET_MULTIDP_DEFAULT_VISUALIZATION)
-        new_widgetname='test_update_widget_multidp_success_2'
+        new_widgetname='test_update_widget_multidp success 2'
         self.assertTrue(api.update_widget_multidp(wid=widget['wid'], widgetname=new_widgetname))
         widget_config=api.get_widget_config(wid=widget['wid'])
         self.assertEqual(widget['uid'],widget_config['uid'])

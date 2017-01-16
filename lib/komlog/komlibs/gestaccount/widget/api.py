@@ -276,8 +276,6 @@ def delete_datapoint_from_widget(wid, pid):
 def update_widget_config(wid, widgetname=None, colors=None, active_visualization=None):
     if not args.is_valid_uuid(wid):
         raise exceptions.BadParametersException(error=Errors.E_GWA_UWC_IW)
-    if widgetname and not args.is_valid_uri(widgetname):
-        raise exceptions.BadParametersException(error=Errors.E_GWA_UWC_IWN)
     if colors and not args.is_valid_dict(colors):
         raise exceptions.BadParametersException(error=Errors.E_GWA_UWC_IC)
     if active_visualization and not args.is_valid_int(active_visualization):
@@ -418,7 +416,7 @@ def update_widget_table(wid, widgetname=None, colors=None):
 def update_widget_multidp(wid, widgetname=None, active_visualization=None):
     if not args.is_valid_uuid(wid):
         raise exceptions.BadParametersException(error=Errors.E_GWA_UWMP_IW)
-    if widgetname and not args.is_valid_uri(widgetname):
+    if widgetname and not args.is_valid_widgetname(widgetname):
         raise exceptions.BadParametersException(error=Errors.E_GWA_UWMP_IWN)
     if active_visualization and not args.is_valid_int(active_visualization):
         raise exceptions.BadParametersException(error=Errors.E_GWA_UWMP_IAV)
