@@ -4,75 +4,23 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Komlog platform">
-    <meta name="author" content="Komlog inc.">
+    <meta name="author" content="Komlog Team">
     <title>Komlog</title>
-
-    <!-- Bootstrap Core CSS -->
-    <script src={{ static_url('3p/js/jquery.min.js', include_version=False) }}></script>
-    <script src="{{ static_url('3p/js/bootstrap.min.js', include_version=False)}}"></script>
-    <link href="{{ static_url('3p/css/bootstrap.min.css', include_version=False) }}" rel="stylesheet">
-    <link href="{{ static_url('css/main.css', include_version=False) }}" rel="stylesheet">
-
-    <!-- Custom Fonts -->
-    <link href="{{ static_url('3p/font-awesome/css/font-awesome.min.css', include_version=False) }}" rel="stylesheet" type="text/css">
-
+    <script src="{{ static_url('p_base.js', include_version=False) }}"></script>
+    {% block jsDefinition %}
+    {% end %}
 </head>
 
   <body>
-
-    <!-- Navigation -->
-    <nav class="navbar with-header" role="navigation">
-        <div class="container-fluid">
-            <!-- Brand and toggle get grouped for better mobile display -->
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" href="/">_< Komlog</a>
-            </div>
-            <!-- Collect the nav links, forms, and other content for toggling -->
-            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="nav navbar-nav navbar-right">
-                    <li>
-                        <a href="/login">Sign in</a>
-                    </li>
-                    <li>
-                        <a href="/signup">Create account</a>
-                    </li>
-                </ul>
-            </div>
-            <!-- /.navbar-collapse -->
-        </div>
-        <!-- /.container-fluid -->
-    </nav>
-
+    <div id="header">
+    </div>
     {% block p_content %}
     {% end %}
-
-    <!-- Footer -->
-    <div class="footer navbar-fixed-bottom">
-      <div class="container-fluid">
-        <hr>
-        <div class=row">
-          <div class="col-md-3 col-md-offset-9 motto">
-            <p class="text-muted text-right text-bottom">
-              <strong>hello@komlog.io</strong>
-              <small>| Made with
-              <span class="fa fa-fw fa-heart text-danger"></span>
-              by <strong>Komlog</strong>
-              </small>
-            </p>
-          </div>
-        </div>
-      </div>
+    <div id="footer">
     </div>
   </body>
 

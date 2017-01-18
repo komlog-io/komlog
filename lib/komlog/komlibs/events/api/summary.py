@@ -67,7 +67,7 @@ def _generate_data_summary_UENNSS(parameters):
             'widgetname':snapshot.widgetname,
             'datapoints':[]
         }
-        if len(dp_data)>1:
+        if len(dp_data)>=1:
             aggregated_data=aggregate.aggregate_timeseries_data(data=[[timeuuid.get_unix_timestamp(d['date']),float(d['value'])] for d in dp_data], bins=50, interval=[its,ets])
             summary['datapoints'].append({
                 'color':snapshot.datapoint_config.color,
@@ -89,7 +89,7 @@ def _generate_data_summary_UENNSS(parameters):
         dp_with_data=0
         for datapoint in snapshot.datapoints_config:
             dp_data=cassapidatapoint.get_datapoint_data(pid=datapoint.pid, fromdate=snapshot.interval_init, todate=snapshot.interval_end)
-            dp_with_data+=1 if len(dp_data)>1 else 0
+            dp_with_data+=1 if len(dp_data)>=1 else 0
             aggregated_data=aggregate.aggregate_timeseries_data(data=[[timeuuid.get_unix_timestamp(d['date']),float(d['value'])] for d in dp_data], bins=50, interval=[its,ets])
             summary['datapoints'].append({
                 'color':datapoint.color,

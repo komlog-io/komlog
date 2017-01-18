@@ -1,74 +1,38 @@
 {% extends "p_base.html" %}
 
+{% block jsDefinition %}
+    <script src="{{ static_url('forget.js', include_version=False) }}"></script>
+{% end %}
+
 {% block p_content %}
-    <!-- Page Content -->
-    <div class="container">
-        <div class="well">
-        {% if reset == False %}
-            {% if response.status != status.WEB_STATUS_OK %}
-                <div class="alert alert-danger" role="alert">
-                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                    <span class="sr-only">Error:</span>
-                    {% if response.error == Errors.E_IWAU_RFR_IACCOUNT.value %}
-                        Invalid account, please enter a valid one.
-                    {% elif response.error == Errors.E_IWAU_RFR_UNF.value %}
-                        We didn't find the account <strong>{{ response.data['account'] }}</strong> in the system. Please, enter a valid one.
-                    {% else %}
-                        Ups, we have some problems processing your request. Please, try again later.
-                    {% end %}
-                </div>
+    <div id="content">
+    {% if reset == False %}
+        <div style="display:none" id="rescode">{{response.status}}</div>
+        {% if response.status != status.WEB_STATUS_OK %}
+            {% if response.error == Errors.E_IWAU_RFR_IACCOUNT.value %}
+            <div style="display:none" id="resmsg">Invalid account, please enter a valid one.</div>
+            <div style="display:none" id="dialog">r</div>
+            {% elif response.error == Errors.E_IWAU_RFR_UNF.value %}
+            <div style="display:none" id="resmsg">We didn't find the account <strong>{{ response.data['account'] }}</strong> in the system. Please, enter a valid one.</div>
+            <div style="display:none" id="dialog">r</div>
             {% else %}
-                <div class="alert alert-success" role="alert">
-                    <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
-                    <span class="sr-only">Success: </span>
-                    Your request was processed successfully. Please, check your mail.
-                </div>
+            <div style="display:none" id="resmsg">Ups, we have some problems processing your request. Please, try again later.</div>
             {% end %}
-            <h2>Forgot your password?</h2>
-            <h5>Enter your email or username and we will send you an email to reset your password.</h5>
-            <form class="form-inline form-invite" method="post" action="">
-              <div class="form-group">
-                <label for="account" class="sr-only">Account</label>
-                <input type="text" id="account" name="account" class="form-control" placeholder="email or username" required autofocus>
-              </div>
-              <button class="btn btn-primary" type="submit">Send</button>
-            </form>
         {% else %}
-            {% if response.status == status.WEB_STATUS_OK %}
-                <div class="alert alert-success" role="alert">
-                    <span class="sr-only">Success: </span>
-                    Congratulations! Your password has been updated successfully.
-                </div>
-                <p><a class="btn btn-success" role="button" href="/login">Continue to Komlog</a></p>
-            {% elif response.error == Errors.E_IWAU_RPR_IPWD.value %}
-                <div class="alert alert-danger" role="alert">
-                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                    <span class="sr-only">Error: </span>
-                    The password provided is not valid. Please, select another password. Remember passwords should be at least 6 characters length with letters, numbers and some symbols.
-                </div>
-                <form class="form-signin" method="post" action="">
-                  <h2 class="form-signin-heading">Set the new password</h2>
-                  <label for="new-password" class="sr-only">New password</label>
-                  <input type="password" id="password" name="password" class="form-control" placeholder="new password" required autofocus>
-                  <label for="retype-password" class="sr-only">Retype Password</label>
-                  <input type="password" id="retype-password" name="retype-password" class="form-control" placeholder="retype password" required>
-                  <button class="btn btn-success " type="submit">Set new password</button>
-                </form>
-            {% elif response.error == Errors.E_IWAU_RPR_CODEAU.value %}
-                <div class="alert alert-danger" role="alert">
-                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                    <span class="sr-only">Error: </span>
-                    The reset link provided has already been used, please <a href="/forget">request a new one</a>.
-                </div>
-            {% else %}
-                <div class="alert alert-danger" role="alert">
-                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-                    <span class="sr-only">Error: </span>
-                    An internal error ocurred, please, try it later and if the problem persists, <a href="forget">request a new password reset link</a>.
-                </div>
-            {% end %}
+            <div style="display:none" id="resmsg">Your request was processed successfully. Please, check your mail.</div>
         {% end %}
-        </div>
+    {% else %}
+        <div style="display:none" id="rescode">{{response.status}}</div>
+        {% if response.status == status.WEB_STATUS_OK %}
+            <div style="display:none" id="resmsg">Congratulations! Your password has been updated successfully.</div>
+        {% elif response.error == Errors.E_IWAU_RPR_IPWD.value %}
+            <div style="display:none" id="resmsg">The password provided is not valid. Please, select another password. Remember passwords should be at least 6 characters length with letters, numbers and one symbol.</div>
+            <div style="display:none" id="dialog">u</div>
+        {% elif response.error == Errors.E_IWAU_RPR_CODEAU.value %}
+            <div style="display:none" id="resmsg">The reset link provided has already been used, please <a href="/forget">request a new one</a>.</div>
+        {% else %}
+            <div style="display:none" id="resmsg">An internal error ocurred, please, try it later and if the problem persists, <a href="/forget">request a new password reset link</a>.</div>
+        {% end %}
+    {% end %}
     </div>
-    <!-- /.container -->
 {% end %}

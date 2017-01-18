@@ -36,7 +36,7 @@ def get_event(uid, date):
     else:
         return _get_event_data(event)
 
-def get_events(uid, to_date=None, from_date=None, count=30, params_serializable=False, html_content=False):
+def get_events(uid, to_date=None, from_date=None, count=20, params_serializable=False, html_content=False):
     if not args.is_valid_uuid(uid):
         raise exceptions.BadParametersException(error=Errors.E_EAU_GEVS_IU)
     if to_date and not args.is_valid_date(to_date):

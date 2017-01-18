@@ -2,18 +2,7 @@
 
 {% block jsDefinition %}
 <script src="{{ static_url("3p/js/stripe.js", include_version=False)}}"></script>
-<script src="{{ static_url("3p/js/react-with-addons-0.14.6.js", include_version=False)}}"></script>
-<script src="{{ static_url("3p/js/react-dom-0.14.6.js", include_version=False)}}"></script>
-<script src="{{ static_url("3p/js/react-bootstrap.min.js", include_version=False)}}"></script>
-<script src="{{ static_url("3p/js/jquery.min.js", include_version=False)}}"></script>
-<script src="{{ static_url("3p/js/bootstrap.min.js", include_version=False)}}"></script>
-<script src="{{ static_url("3p/js/d3.min.js", include_version=False)}}"></script>
-<script src="{{ static_url("3p/js/pubsub.js", include_version=False)}}"></script>
-<script src="{{ static_url("js/komlog-utils.js", include_version=False)}}"></script>
-<script src="{{ static_url("js/komlog-alert.js", include_version=False)}}"></script>
-<script src="{{ static_url("js/komlog-user-store.js", include_version=False)}}"></script>
-<script src="{{ static_url("js/komlog-user-header.js", include_version=False)}}"></script>
-<script src="{{ static_url("js/komlog-config-menu.js", include_version=False)}}"></script>
+<script src="{{ static_url("config.js", include_version=False)}}"></script>
 
 <script type="text/javascript">
   Stripe.setPublishableKey('pk_test_OkRhSWyLnApT6NKr0ZLeWIsU');

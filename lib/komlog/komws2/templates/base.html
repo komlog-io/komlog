@@ -8,13 +8,11 @@
     <title>{{ page_title }}</title>
     <meta name="description" content="" />
     <meta name="author" content="komlog crew" />
-    <link href="{{ static_url('3p/css/bootstrap.min.css', include_version=False) }}" rel="stylesheet">
-    <link href="{{ static_url('css/style.css', include_version=False) }}" rel="stylesheet">
+    {% block jsDefinition %}
+    {% end %}
   </head>
   <body>
     {% block body %}
-    {% end %}
-    {% block jsDefinition %}
     {% end %}
   </body>
 </html>

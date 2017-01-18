@@ -1,5 +1,9 @@
 {% extends "p_base.html" %}
 
+{% block jsDefinition %}
+    <script src="{{ static_url('signup.js', include_version=False) }}"></script>
+{% end %}
+
 {% block p_content %}
     <!-- Page Content -->
     <div class="container">

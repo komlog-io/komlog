@@ -64,7 +64,7 @@ def get_uri_request(passport, uri=None):
     else:
         root_id=passport.uid
         base_uri=''
-    node_info=get_node_info(ido=root_id,uri=base_uri,counter=5)
+    node_info=get_node_info(ido=root_id,uri=base_uri,counter=1)
     return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=node_info)
 
 @exceptions.ExceptionHandler

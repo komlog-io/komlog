@@ -1,89 +1,10 @@
 {% extends "p_base.html" %}
 
+{% block jsDefinition %}
+    <script src="{{ static_url('root.js', include_version=False) }}"></script>
+{% end %}
+
 {% block p_content %}
-    <!-- Page Content -->
-    <div class="container main-content">
-        <!-- Description section -->
-        <div class="row">
-            <div class="col-lg-12">
-                <h4>
-                  <p>
-                    Komlog is a flexible and powerful event based processing platform, aimed at <strong>processing and visualizing time series</strong>.</br>
-                  </p>
-                  <p>
-                    With Komlog you can model your time series and create distributed applications that react to updates on those models, making Komlog a useful platform for any <strong>data driven organization</strong> or <strong>data scientist</strong>.
-                  </p>
-                </h4>
-                <p>
-            </div>
-        </div>
-        <!-- Functionalities section -->
-        <div class="row">
-          <h1 class="page-header"> </h1>
-          <div class="col-md-4">
-              <div class="panel panel-default">
-                  <div class="panel-heading">
-                      <h4><i class="fa fa-fw fa-bar-chart"></i> Visualize Data in Minutes</h4>
-                  </div>
-                  <div class="panel-body">
-                      <h5>Identify variables directly on plain texts, making easy to monitor and visualize data from any CLI or script output.</h5>
-                  </div>
-              </div>
-          </div>
-          <div class="col-md-4">
-              <div class="panel panel-default">
-                  <div class="panel-heading">
-                      <h4><i class="fa fa-fw fa-cloud"></i> Cloud Agnostic</h4>
-                  </div>
-                  <div class="panel-body">
-                      <h5> Run Komlog daemons on any cloud provider, on your own servers or both.</h5>
-                  </div>
-              </div>
-          </div>
-          <div class="col-md-4">
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <h4><i class="fa fa-fw fa-link"></i> Be Data Driven</h4>
-              </div>
-              <div class="panel-body">
-                <h5>Build applications that react to changes in your models in real time.</h5>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-4">
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                  <h4><i class="fa fa-fw fa-gift"></i> Free Plan</h4>
-              </div>
-                  <div class="panel-body">
-                      <h5> Start with a free plan and upgrade it according to your needs.</h5>
-                  </div>
-              </div>
-          </div>
-          <div class="col-md-4">
-              <div class="panel panel-default">
-                  <div class="panel-heading">
-                      <h4><i class="fa fa-fw fa-share-alt"></i> Build the IoT </h4>
-                  </div>
-                  <div class="panel-body">
-                      <h5>Share your data models and build applications that use them.</h5>
-                  </div>
-              </div>
-          </div>
-          <div class="col-md-4">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h4><i class="fa fa-fw fa-users"></i> Join the Community </h4>
-                </div>
-                <div class="panel-body">
-                    <h5>Join the Komlog community through our different channels, get help and exchange your knowledge.</h5>
-                </div>
-            </div>
-          </div>
-        </div>
-        <!-- /.row -->
+    <div id="content">
     </div>
-    <!-- /.container -->
 {% end %}

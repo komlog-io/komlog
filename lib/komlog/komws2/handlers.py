@@ -290,7 +290,7 @@ class DatapointNegativesHandler(tornado.web.RequestHandler):
             self.write(json.dumps(response.data))
 
 class DatapointDatasourceHandler(tornado.web.RequestHandler):
-    
+
     @auth.authenticated
     def delete(self, pid):
         response=datapoint.dissociate_datapoint_from_datasource_request(passport=self.passport, pid=pid)
@@ -302,6 +302,7 @@ class UserConfigHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self):
+        self.xsrf_token
         self.render('config.html', page_title='Komlog')
 
     @auth.authenticated
@@ -327,9 +328,13 @@ class UserHomeHandler(tornado.web.RequestHandler):
 
     @auth.authenticated
     def get(self):
+        self.xsrf_token
         self.render('home.html', page_title='Komlog')
 
 class LoginHandler(tornado.web.RequestHandler):
+
+    def check_xsrf_cookie(self):
+        pass
 
     def get(self):
         self.render('login.html',page_title='Komlog', response=None)
@@ -705,6 +710,9 @@ class AppRootHandler(tornado.web.RequestHandler):
 
 class InviteHandler(tornado.web.RequestHandler):
 
+    def check_xsrf_cookie(self):
+        pass
+
     def get(self):
         self.render('invite_get.html', page_title='Komlog')
 
@@ -714,6 +722,9 @@ class InviteHandler(tornado.web.RequestHandler):
         self.render('invite_post.html', page_title='Komlog', response=response)
 
 class SignupHandler(tornado.web.RequestHandler):
+
+    def check_xsrf_cookie(self):
+        pass
 
     def get(self):
         invitation=self.get_argument('i',default=None) #i : invitation id
@@ -743,6 +754,9 @@ class SignupHandler(tornado.web.RequestHandler):
         self.render('signup_post.html', page_title='Komlog', response=response, invitation=invitation)
 
 class ForgetHandler(tornado.web.RequestHandler):
+
+    def check_xsrf_cookie(self):
+        pass
 
     def get(self):
         code=self.get_argument('c',default=None) #c : code

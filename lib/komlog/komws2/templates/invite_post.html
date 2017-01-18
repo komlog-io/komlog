@@ -1,17 +1,16 @@
 {% extends "p_base.html" %}
 
+{% block jsDefinition %}
+    <script src="{{ static_url('invite.js', include_version=False) }}"></script>
+{% end %}
+
 {% block p_content %}
-    <!-- Page Content -->
-    <div class="container">
-      <div class="well">
-      {% if response.status==status.WEB_STATUS_OK %}
-        <h2>Success!!!</h2>
-        <h5>Your request has been processed successfully. We will send you and email to <strong>{{ response.data['email'] }}</strong> as soon as we have invitations available.</h5>
-      {% else %}
-        <h2>Error...</h2>
-        <h5>Your request has been processed with errors (error: {{ response.error }}). Please, <a href="/invite" >try again</a> later.</h5>
-      {% end %}
-      </div>
+    <div id="content">
+      <div style="display:none" id="rescode">{{response.status}}</div>
+    {% if response.status==status.WEB_STATUS_OK %}
+      <div style="display:none" id="resmsg">Your request has been processed successfully. We will send you and email to <strong>{{ response.data['email'] }}</strong> as soon as we have invitations available.</div>
+    {% else %}
+      <div style="display:none" id="resmsg">Error processing your request (error: {{ response.error }}).</div>
+    {% end %}
     </div>
-    <!-- /.container -->
 {% end %}

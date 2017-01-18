@@ -28,7 +28,7 @@ HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_DATASOURCE=Template(
 )
 
 HTML_BODY_TPL_USER_EVENT_NOTIFICATION_NEW_DATASOURCE=Template(
-    "<div>Datasource <a onclick=\"PubSub.publish('loadSlide',{did:'${parameters['did']}'})\">${parameters['datasourcename']}</a> created.</div>"
+    "<div>Datasource <a onclick=\"loadSlide({did:'${parameters['did']}'})\">${parameters['datasourcename']}</a> created.</div>"
 )
 
 HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_DATAPOINT=Template(
@@ -36,8 +36,8 @@ HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_DATAPOINT=Template(
 )
 
 HTML_BODY_TPL_USER_EVENT_NOTIFICATION_NEW_DATAPOINT=Template(
-    "<div>Datapoint <a onclick=\"PubSub.publish('loadSlide',{pid:'${parameters['pid']}'})\">${parameters['datapointname']}</a> created, \
-    associated to datasource <a onclick=\"PubSub.publish('loadSlide',{did:'${parameters['did']}'})\">${parameters['datasourcename']}</a></div>"
+    "<div>Datapoint <a onclick=\"loadSlide({pid:'${parameters['pid']}'})\">${parameters['datapointname']}</a> created, \
+    associated to datasource <a onclick=\"loadSlide({did:'${parameters['did']}'})\">${parameters['datasourcename']}</a></div>"
 )
 
 HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_WIDGET=Template(
@@ -45,7 +45,7 @@ HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_WIDGET=Template(
 )
 
 HTML_BODY_TPL_USER_EVENT_NOTIFICATION_NEW_WIDGET=Template(
-    "<div>Graph <a onclick=\"PubSub.publish('loadSlide',{wid:'${parameters['wid']}'})\">${parameters['widgetname']}</a> created.</div>"
+    "<div>Graph <a onclick=\"loadSlide({wid:'${parameters['wid']}'})\">${parameters['widgetname']}</a> created.</div>"
 )
 
 HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_DASHBOARD=Template(
@@ -53,7 +53,7 @@ HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_DASHBOARD=Template(
 )
 
 HTML_BODY_TPL_USER_EVENT_NOTIFICATION_NEW_DASHBOARD=Template(
-    "<div>Dashboard <a onclick=\"PubSub.publish('loadSlide',{bid:'${parameters['bid']}'})\">${parameters['dashboardname']}</a> created.</div>"
+    "<div>Dashboard <a onclick=\"loadSlide({bid:'${parameters['bid']}'})\">${parameters['dashboardname']}</a> created.</div>"
 )
 
 HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_CIRCLE=Template(
@@ -69,7 +69,7 @@ HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED=Template(
 )
 
 HTML_BODY_TPL_USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED=Template(
-    "<div>New snapshot shared of <a onclick=\"PubSub.publish('loadSlide',{nid:'${parameters['nid']}'})\">${parameters['widgetname']}</a></div>"
+    "<div>New snapshot shared of <a onclick=\"loadSlide({nid:'${parameters['nid']}'})\">${parameters['widgetname']}</a></div>"
 )
 
 HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME=Template(
@@ -77,7 +77,7 @@ HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME=Template(
 )
 
 HTML_BODY_TPL_USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED_WITH_ME=Template(
-    "<div>User <strong>${parameters['username']}</strong> shared a snapshot of <strong><a onclick=\"PubSub.publish('loadSlide',{nid:'${parameters['nid']}',tid:'${parameters['tid']}'})\">${parameters['widgetname']}</a></strong> with you.</div>"
+    "<div>User <strong>${parameters['username']}</strong> shared a snapshot of <strong><a onclick=\"loadSlide({nid:'${parameters['nid']}',tid:'${parameters['tid']}'})\">${parameters['widgetname']}</a></strong> with you.</div>"
 )
 
 HTML_TITLE_TPL_USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION=Template(
