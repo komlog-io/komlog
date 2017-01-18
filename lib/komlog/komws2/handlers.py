@@ -785,6 +785,11 @@ class CareersHandler(tornado.web.RequestHandler):
     def get(self):
         self.render('careers.html', page_title='Komlog')
 
+class TermsHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        self.render('terms.html', page_title='Komlog')
+
 UUID_REGEX='[0-9a-fA-F]{32}'
 USERNAME_REGEX='[0-9a-z\-_]+'
 
@@ -797,6 +802,7 @@ HANDLERS = [
             (r'/signup/?', SignupHandler),
             (r'/forget/?', ForgetHandler),
             (r'/logout/?', LogoutHandler),
+            (r'/terms/?', TermsHandler),
             (r'/etc/ag/?', AgentsHandler),
             (r'/etc/ag/('+UUID_REGEX+')', AgentConfigHandler),
             (r'/etc/ag/('+UUID_REGEX+')/suspend/?', AgentSuspendHandler),
