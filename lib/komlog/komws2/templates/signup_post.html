@@ -6,7 +6,8 @@
 
 {% block p_content %}
     <!-- Page Content -->
-    <div class="container">
+    <div id="content">
+      <div class="container">
         {% if response.status == status.WEB_STATUS_OK %}
         <div class="well">
             <h2>Welcome {{response.data['username']}}!</h2>
@@ -54,6 +55,7 @@
             {% end %}
         </div>
         {% end %}
+      </div>
     </div>
     <!-- /.container -->
 {% end %}
