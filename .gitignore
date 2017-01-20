@@ -1,7 +1,7 @@
 *~
-#lib/komlog/komws2/static/3p/
 build
 dist
+.eggs
 __pycache__/
 *.py[cod]
 *.swp
