@@ -352,7 +352,8 @@ class LoginHandler(tornado.web.RequestHandler):
         else:
             response=login.login_request(username=username, password=password, pubkey=pubkey, challenge=challenge, signature=signature, pv=pv)
             if getattr(response,'cookie',None):
-                self.set_secure_cookie('kid',json.dumps(response.cookie), expires_days=7, httponly=True, domain='.'+config.get(options.ROOT_DOMAIN), secure=True)
+                encrypted = auth.encryptCookie(response.cookie)
+                self.set_secure_cookie('kid', encrypted, expires_days=6, httponly=True, domain='.'+config.get(options.ROOT_DOMAIN), secure=True)
                 del response.cookie
             if isinstance(response.data, dict) and 'redirect' in response.data:
                 self.redirect(response.data['redirect'])
