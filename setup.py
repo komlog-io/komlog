@@ -65,6 +65,7 @@ setup(name='komlog',
     install_requires=[
         'setuptools',
         'cryptography',
+        'pyjwt',
         'cassandra-driver',
         'aioredis',
         'hiredis',
