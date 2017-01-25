@@ -796,6 +796,11 @@ class PrivacyHandler(tornado.web.RequestHandler):
     def get(self):
         self.render('privacy.html', page_title='Komlog')
 
+class CookiesHandler(tornado.web.RequestHandler):
+
+    def get(self):
+        self.render('cookies.html', page_title='Komlog')
+
 UUID_REGEX='[0-9a-fA-F]{32}'
 USERNAME_REGEX='[0-9a-z\-_]+'
 
@@ -810,6 +815,7 @@ HANDLERS = [
     (r'/logout/?', LogoutHandler),
     (r'/terms/?', TermsHandler),
     (r'/privacy/?', PrivacyHandler),
+    (r'/cookies/?', CookiesHandler),
     (r'/etc/ag/?', AgentsHandler),
     (r'/etc/ag/('+UUID_REGEX+')', AgentConfigHandler),
     (r'/etc/ag/('+UUID_REGEX+')/suspend/?', AgentSuspendHandler),
