@@ -3,6 +3,7 @@ import os
 import uuid
 import json
 import tornado.web
+import urllib.parse
 from tornado.escape import json_decode
 from tornado.template import Template
 from komlog.komimc import api as msgapi
@@ -22,7 +23,22 @@ from komlog.komlibs.general.time import timeuuid
 from komlog.komfig import logging, config, options
 from komlog.komws2 import auth
 
-class AgentsHandler(tornado.web.RequestHandler):
+class KomlogHandler (tornado.web.RequestHandler):
+
+    def static_url(self, path, include_host=None, **kwargs):
+        static_path = config.get(options.WEB_STATIC_PATH)
+        cdn_url = config.get(options.WEB_CDN_URL)
+        if static_path and cdn_url:
+            url = urllib.parse.urljoin(base=static_path, url=path)
+            return urllib.parse.urljoin(base=cdn_url, url=url)
+        elif static_path:
+            return urllib.parse.urljoin(base=static_path, url=path)
+        elif cdn_url:
+            return urllib.parse.urljoin(base=cdn_url, url=path)
+        else:
+            return path
+
+class AgentsHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self):
@@ -46,7 +62,7 @@ class AgentsHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class AgentConfigHandler(tornado.web.RequestHandler):
+class AgentConfigHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self,aid):
@@ -73,7 +89,7 @@ class AgentConfigHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class AgentSuspendHandler(tornado.web.RequestHandler):
+class AgentSuspendHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self, aid):
@@ -82,7 +98,7 @@ class AgentSuspendHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class AgentActivateHandler(tornado.web.RequestHandler):
+class AgentActivateHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self, aid):
@@ -91,7 +107,7 @@ class AgentActivateHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class DatasourceDataHandler(tornado.web.RequestHandler):
+class DatasourceDataHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self,did):
@@ -106,7 +122,7 @@ class DatasourceDataHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class DatasourceConfigHandler(tornado.web.RequestHandler):
+class DatasourceConfigHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self,did):
@@ -133,7 +149,7 @@ class DatasourceConfigHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class DatasourcesHandler(tornado.web.RequestHandler):
+class DatasourcesHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self):
@@ -141,7 +157,7 @@ class DatasourcesHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class UsersHandler(tornado.web.RequestHandler):
+class UsersHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self):
@@ -149,7 +165,7 @@ class UsersHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class UserConfirmationHandler(tornado.web.RequestHandler):
+class UserConfirmationHandler(KomlogHandler):
 
     def get(self):
         #Aquí llega a traves de un enlace generado dinámicamente durante el alta
@@ -167,7 +183,7 @@ class UserConfirmationHandler(tornado.web.RequestHandler):
                 self.set_status(response.status)
                 self.write(json.dumps(response.data))
 
-class UserUpgradeHandler(tornado.web.RequestHandler):
+class UserUpgradeHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self):
@@ -190,7 +206,7 @@ class UserUpgradeHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class DatapointDataHandler(tornado.web.RequestHandler):
+class DatapointDataHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self,pid):
@@ -206,7 +222,7 @@ class DatapointDataHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class DatapointConfigHandler(tornado.web.RequestHandler):
+class DatapointConfigHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self,pid):
@@ -233,7 +249,7 @@ class DatapointConfigHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class DatapointsHandler(tornado.web.RequestHandler):
+class DatapointsHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self):
@@ -253,7 +269,7 @@ class DatapointsHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class DatapointPositivesHandler(tornado.web.RequestHandler):
+class DatapointPositivesHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self, pid):
@@ -271,7 +287,7 @@ class DatapointPositivesHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class DatapointNegativesHandler(tornado.web.RequestHandler):
+class DatapointNegativesHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self, pid):
@@ -289,7 +305,7 @@ class DatapointNegativesHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class DatapointDatasourceHandler(tornado.web.RequestHandler):
+class DatapointDatasourceHandler(KomlogHandler):
 
     @auth.authenticated
     def delete(self, pid):
@@ -298,7 +314,7 @@ class DatapointDatasourceHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class UserConfigHandler(tornado.web.RequestHandler):
+class UserConfigHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self):
@@ -324,14 +340,14 @@ class UserConfigHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class UserHomeHandler(tornado.web.RequestHandler):
+class UserHomeHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self):
         self.xsrf_token
         self.render('home.html', page_title='Komlog')
 
-class LoginHandler(tornado.web.RequestHandler):
+class LoginHandler(KomlogHandler):
 
     def check_xsrf_cookie(self):
         pass
@@ -365,7 +381,7 @@ class LoginHandler(tornado.web.RequestHandler):
                 else:
                     self.render('login.html',page_title='Komlog', response=response)
 
-class LogoutHandler(tornado.web.RequestHandler):
+class LogoutHandler(KomlogHandler):
 
     def get(self):
         self.clear_all_cookies(domain='.'+config.get(options.ROOT_DOMAIN))
@@ -373,7 +389,7 @@ class LogoutHandler(tornado.web.RequestHandler):
         if not ctype or ctype.find('application/json')<0:
             self.redirect(self.get_login_url())
 
-class WidgetsHandler(tornado.web.RequestHandler):
+class WidgetsHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self):
@@ -394,7 +410,7 @@ class WidgetsHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class WidgetConfigHandler(tornado.web.RequestHandler):
+class WidgetConfigHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self,wid):
@@ -421,7 +437,7 @@ class WidgetConfigHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class WidgetDatapointsHandler(tornado.web.RequestHandler):
+class WidgetDatapointsHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self, wid, pid):
@@ -435,7 +451,7 @@ class WidgetDatapointsHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class WidgetRelatedHandler(tornado.web.RequestHandler):
+class WidgetRelatedHandler(KomlogHandler):
     
     @auth.authenticated
     def get(self, wid):
@@ -443,7 +459,7 @@ class WidgetRelatedHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class WidgetSnapshotsHandler(tornado.web.RequestHandler):
+class WidgetSnapshotsHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self, wid):
@@ -463,7 +479,7 @@ class WidgetSnapshotsHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class DashboardsHandler(tornado.web.RequestHandler):
+class DashboardsHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self):
@@ -484,7 +500,7 @@ class DashboardsHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class DashboardConfigHandler(tornado.web.RequestHandler):
+class DashboardConfigHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self,bid):
@@ -511,7 +527,7 @@ class DashboardConfigHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class DashboardWidgetsHandler(tornado.web.RequestHandler):
+class DashboardWidgetsHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self, bid, wid):
@@ -525,7 +541,7 @@ class DashboardWidgetsHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class SnapshotConfigHandler(tornado.web.RequestHandler):
+class SnapshotConfigHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self, nid):
@@ -545,7 +561,7 @@ class SnapshotConfigHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class CirclesHandler(tornado.web.RequestHandler):
+class CirclesHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self):
@@ -568,7 +584,7 @@ class CirclesHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class CircleConfigHandler(tornado.web.RequestHandler):
+class CircleConfigHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self, cid):
@@ -594,7 +610,7 @@ class CircleConfigHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class CircleMembersHandler(tornado.web.RequestHandler):
+class CircleMembersHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self, cid, member):
@@ -610,7 +626,7 @@ class CircleMembersHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class UriHandler(tornado.web.RequestHandler):
+class UriHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self):
@@ -624,7 +640,7 @@ class UriHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class SharedUriHandler(tornado.web.RequestHandler):
+class SharedUriHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self):
@@ -660,7 +676,7 @@ class SharedUriHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class SharedWithMeUriHandler(tornado.web.RequestHandler):
+class SharedWithMeUriHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self):
@@ -668,7 +684,7 @@ class SharedWithMeUriHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class UserEventsHandler(tornado.web.RequestHandler):
+class UserEventsHandler(KomlogHandler):
 
     @auth.authenticated
     def get(self):
@@ -683,7 +699,7 @@ class UserEventsHandler(tornado.web.RequestHandler):
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
-class UserEventsResponsesHandler(tornado.web.RequestHandler):
+class UserEventsResponsesHandler(KomlogHandler):
 
     @auth.authenticated
     def post(self, seq):
@@ -704,12 +720,12 @@ class UserEventsResponsesHandler(tornado.web.RequestHandler):
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
-class AppRootHandler(tornado.web.RequestHandler):
+class AppRootHandler(KomlogHandler):
 
     def get(self):
         self.render('root.html', page_title='Komlog')
 
-class InviteHandler(tornado.web.RequestHandler):
+class InviteHandler(KomlogHandler):
 
     def check_xsrf_cookie(self):
         pass
@@ -722,7 +738,7 @@ class InviteHandler(tornado.web.RequestHandler):
         response=user.register_invitation_request(email=email)
         self.render('invite_post.html', page_title='Komlog', response=response)
 
-class SignupHandler(tornado.web.RequestHandler):
+class SignupHandler(KomlogHandler):
 
     def check_xsrf_cookie(self):
         pass
@@ -754,7 +770,7 @@ class SignupHandler(tornado.web.RequestHandler):
         asyncio.ensure_future(msgapi.send_response_messages(response))
         self.render('signup_post.html', page_title='Komlog', response=response, invitation=invitation)
 
-class ForgetHandler(tornado.web.RequestHandler):
+class ForgetHandler(KomlogHandler):
 
     def check_xsrf_cookie(self):
         pass
@@ -781,22 +797,22 @@ class ForgetHandler(tornado.web.RequestHandler):
             response=user.reset_password_request(code=code, password=password)
             self.render('forget_post.html', page_title='Komlog', reset=True, response=response)
 
-class CareersHandler(tornado.web.RequestHandler):
+class CareersHandler(KomlogHandler):
 
     def get(self):
         self.render('careers.html', page_title='Komlog')
 
-class TermsHandler(tornado.web.RequestHandler):
+class TermsHandler(KomlogHandler):
 
     def get(self):
         self.render('terms.html', page_title='Komlog')
 
-class PrivacyHandler(tornado.web.RequestHandler):
+class PrivacyHandler(KomlogHandler):
 
     def get(self):
         self.render('privacy.html', page_title='Komlog')
 
-class CookiesHandler(tornado.web.RequestHandler):
+class CookiesHandler(KomlogHandler):
 
     def get(self):
         self.render('cookies.html', page_title='Komlog')
