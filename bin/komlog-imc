@@ -1,0 +1,28 @@
+#!/usr/bin/python3
+'''
+Created on 2017/02/01
+
+@author: Komlog Team
+'''
+
+import os
+import inspect
+import argparse
+from komlog.komapp import komapp
+
+def main():
+    exec_file = inspect.getabsfile(main)
+    parser = argparse.ArgumentParser(description='Komlog')
+    parser.add_argument('-c', '--config', help='Configuration file')
+    parser.add_argument('-m', '--module', help='Module name')
+    parser.add_argument('-i', '--instance', help='Module instance')
+    args = parser.parse_args()
+    if args.config == None:
+        HOME = os.path.expanduser('~')
+        cfg_file = '.komlog/komlog-imc.cfg'
+        args.config = os.path.join(HOME,cfg_file)
+    app = komapp.Komapp(exec_file=exec_file, conf_file=args.config, module=args.module, instance=args.instance)
+    app.start()
+
+if __name__ == "__main__":
+    main()

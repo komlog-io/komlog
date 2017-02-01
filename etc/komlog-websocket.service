@@ -1,0 +1,15 @@
+[Unit]
+Description=Komlog Websocket Service
+After=redis.service rsyslog.service ntpd.service
+Wants=redis.service rsyslog.service ntpd.service
+
+[Service]
+Type=idle
+User=komlog
+Group=komlog
+ExecStart=/usr/bin/komlog-websocket
+PIDFile=/run/komlog/komlog-websocket.pid
+StandardOutput=null
+
+[Install]
+Alias=komlog-websocket.service

@@ -1,0 +1,15 @@
+[Unit]
+Description=Komlog IMC Service
+After=redis.service rsyslog.service ntpd.service
+Wants=redis.service rsyslog.service ntpd.service
+
+[Service]
+Type=idle
+User=komlog
+Group=komlog
+ExecStart=/usr/bin/komlog-imc
+PIDFile=/run/komlog/komlog-imc.pid
+StandardOutput=null
+
+[Install]
+Alias=komlog-imc.service

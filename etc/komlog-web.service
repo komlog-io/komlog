@@ -1,0 +1,15 @@
+[Unit]
+Description=Komlog Web Service
+After=redis.service rsyslog.service ntpd.service
+Wants=redis.service rsyslog.service ntpd.service
+
+[Service]
+Type=idle
+User=komlog
+Group=komlog
+ExecStart=/usr/bin/komlog-web
+PIDFile=/run/komlog/komlog-web.pid
+StandardOutput=null
+
+[Install]
+Alias=komlog-web.service

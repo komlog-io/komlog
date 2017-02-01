@@ -86,12 +86,14 @@ setup(name='komlog',
         'komlog.komlibs.mail':mail_data
     },
     scripts=[
-       'bin/komlog',
+       'bin/komlog-imc',
+       'bin/komlog-web',
+       'bin/komlog-websocket',
        'bin/komlog-test',
     ],
     data_files=[
-        ('config',['etc/komlog.cfg']),
-        ('/usr/lib/systemd/system',['etc/komlog.service'])
+        ('config',['etc/komlog-imc.cfg','etc/komlog-web.cfg','etc/komlog-websocket.cfg']),
+        ('/usr/lib/systemd/system',['etc/komlog-imc.service','etc/komlog-web.service','etc/komlog-websocket.service'])
     ]
 )
 
