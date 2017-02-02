@@ -857,7 +857,6 @@ HANDLERS = [
     (r'/etc/cr/(?P<cid>'+UUID_REGEX+')/u/(?P<member>'+USERNAME_REGEX+')',CircleMembersHandler),
     (r'/etc/usr/confirm/', UserConfirmationHandler),
     (r'/etc/usr/?', UsersHandler),
-    (r'/etc/usr/upgrade/?', UserUpgradeHandler),
     (r'/var/ds/('+UUID_REGEX+')', DatasourceDataHandler),
     (r'/var/dp/('+UUID_REGEX+')', DatapointDataHandler),
     (r'/var/uri/?', UriHandler),

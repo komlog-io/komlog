@@ -1,12 +1,8 @@
 {% extends "base.html" %}
 
 {% block jsDefinition %}
-<script src="{{ static_url("3p/js/stripe.js", include_version=False)}}"></script>
 <script src="{{ static_url("config.js", include_version=False)}}"></script>
 
-<script type="text/javascript">
-  Stripe.setPublishableKey('pk_test_OkRhSWyLnApT6NKr0ZLeWIsU');
-</script>
 {% end %}
 
 {% block body %}
