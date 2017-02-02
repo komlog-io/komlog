@@ -11,18 +11,20 @@ import pandas as pd
 from komlog.komlibs.general.crypto import crypto
 
 
-USERNAME=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\s)$')
-USERNAMEWITHCAP=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$')
-DESC=re.compile('^[ a-zA-Z0-9\-\._@#!\(\):/$%&+=]+(?!\s)$')
-URI=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$')
-GLOBALURI=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+:([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$')
-RELURI=re.compile('^([a-zA-Z0-9\-_]+\.\.?)*[a-zA-Z0-9\-_]+(?!\s)$')
+STR_MAX_LENGTH=256
+USERNAME=re.compile('^([a-z0-9\-_]+\.)*[a-z0-9\-_]+(?!\s)$', re.UNICODE)
+USERNAMEWITHCAP=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$', re.UNICODE)
+DESC=re.compile('^[ a-zA-Z0-9\-\._@#!\(\):/$%&+=]+(?!\s)$', re.UNICODE)
+SPACEONENDS=re.compile('^\s|\s$', re.UNICODE)
+URI=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$', re.UNICODE)
+GLOBALURI=re.compile('^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+:([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+(?!\s)$', re.UNICODE)
+RELURI=re.compile('^([a-zA-Z0-9\-_]+\.\.?)*[a-zA-Z0-9\-_]+(?!\s)$', re.UNICODE)
 NOTVERSION=re.compile('[^ a-zA-Z0-9\-\+/:\._]')
 CODE=re.compile('^[a-zA-Z0-9]+$')
 WHITESPACES=re.compile(' ')
 ASCII=re.compile('a-zA-Z')
 NUMBERS=re.compile('0-9')
-STRINGNUMBER=re.compile('^[+-]?([0-9]*\.)?[0-9]+([e|E][-|+]?[0-9]+)?(?!\s)$')
+STRINGNUMBER=re.compile('^[+-]?([0-9]*\.)?[0-9]+([e|E][-|+]?[0-9]+)?(?!\s)$', re.UNICODE)
 EMAIL=re.compile('''^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$''')
 EMAILWITHCAPS=re.compile('''^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$''')
 ISODATE=re.compile('^((?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?(Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9])?$')
@@ -30,23 +32,25 @@ ISODATE=re.compile('^((?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[1
 def is_valid_username(argument):
     if not isinstance(argument,str):
         return False
-    if USERNAME.search(argument):
+    if len(argument)<=STR_MAX_LENGTH and USERNAME.search(argument):
         return True
     return False
 
 def is_valid_username_with_caps(argument):
     if not isinstance(argument,str):
         return False
-    if USERNAMEWITHCAP.search(argument):
+    if len(argument)<=STR_MAX_LENGTH and USERNAMEWITHCAP.search(argument):
         return True
     return False
 
 def is_valid_agentname(argument):
     if not isinstance(argument,str):
         return False
-    if DESC.search(argument):
-        return True
-    return False
+    if len(argument)>STR_MAX_LENGTH or len(argument) == 0:
+        return False
+    if SPACEONENDS.search(argument):
+        return False
+    return True
 
 def is_valid_datasourcename(argument):
     if not isinstance(argument,str):
@@ -65,21 +69,25 @@ def is_valid_datapointname(argument):
 def is_valid_widgetname(argument):
     if not isinstance(argument,str):
         return False
-    if DESC.search(argument):
-        return True
-    return False
+    if len(argument)>STR_MAX_LENGTH or len(argument) == 0:
+        return False
+    if SPACEONENDS.search(argument):
+        return False
+    return True
 
 def is_valid_dashboardname(argument):
     if not isinstance(argument,str):
         return False
-    if DESC.search(argument):
-        return True
-    return False
+    if len(argument)>STR_MAX_LENGTH or len(argument) == 0:
+        return False
+    if SPACEONENDS.search(argument):
+        return False
+    return True
 
 def is_valid_circlename(argument):
     if not isinstance(argument,str):
         return False
-    if DESC.search(argument):
+    if len(argument)<=STR_MAX_LENGTH and len(argument) > 0 and DESC.search(argument):
         return True
     return False
 

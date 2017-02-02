@@ -127,7 +127,7 @@ class GestaccountAgentApiTest(unittest.TestCase):
     def test_update_agent_config_data_with_invalid_agentname(self):
         ''' update_agent_config should fail if data has invalid agentname'''
         aid=uuid.uuid4()
-        agentnames=[None, 3423423243, {'a':'dict'},['a','list'],uuid.uuid4(),2342342.23423423,0,1,'agent_with_ñññ']
+        agentnames=[None, 3423423243, {'a':'dict'},['a','list'],uuid.uuid4(),2342342.23423423,0,1]
         for agentname in agentnames:
             self.assertRaises(exceptions.BadParametersException, api.update_agent_config, aid=aid, agentname=agentname)
 

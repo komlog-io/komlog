@@ -69,7 +69,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
 
     def test_new_agent_request_failure_invalid_agentname(self):
         ''' new_agent_request should fail if agentname is invalid '''
-        agentnames=[None, 23423422, 23423.2342, {'a':'dict'},['a','list'],json.dumps('username'),'userñame','user\nname','\tusername']
+        agentnames=[None, 23423422, 23423.2342, {'a':'dict'},['a','list'],'\tagentname']
         psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
         pubkey = b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         version='test library vX.XX'
@@ -335,7 +335,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
 
     def test_update_agent_config_request_failure_invalid_data_new_agentname(self):
         ''' update_agent_config_request should fail if data is invalid '''
-        agentnames=[None, 32423, 023423.23423,['a','list'],('a','tuple'),'user\nname','userñame', uuid.uuid4(),'23234234\thasdfasdfASDFASDF']
+        agentnames=[None, 32423, 023423.23423,['a','list'],('a','tuple'),uuid.uuid4(),'']
         aid=uuid.uuid4().hex
         psp = self.passport
         for name in agentnames:

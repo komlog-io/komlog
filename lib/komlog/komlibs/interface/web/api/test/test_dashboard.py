@@ -490,7 +490,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
 
     def test_new_dashboard_request_failure_invalid_dashboardname(self):
         ''' new_dashboard_request should fail if username is invalid '''
-        dashboardnames=['userñame',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
+        dashboardnames=['',None, 23234, 2342.23423, {'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid1()]
         psp = self.passport
         for dashboardname in dashboardnames:
             data={'dashboardname':dashboardname}

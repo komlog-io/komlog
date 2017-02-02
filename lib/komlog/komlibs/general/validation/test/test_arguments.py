@@ -7,25 +7,32 @@ from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general.crypto import crypto
 from komlog.komlibs.general.validation import arguments
 from komlog.komlibs.general.string import stringops
+from komlog.komfig import logging
 
 class GeneralValidationArgumentsTest(unittest.TestCase):
     ''' komlog.general.validation.arguments tests '''
 
     def test_is_valid_username_invalid(self):
         ''' is_valid_username should fail if username is not valid '''
-        params=[None, 234234,'with spaces','withspecialcharacterslike\t','or\ncharacter',
-                ' spacesatbeggining',
-                'spacesatend ',
-                'Capitals',
-                'Two..consecutivepoints',
-                '.beginswithpoint',
-                'endswith.',
-                'containsspecialchar$',
-                'endswith\t',
-                '\nbeginwithnewline',
-                'endswith\n',
-                '',
-                ]
+        params=[
+            None,
+            234234,
+            'with spaces',
+            'withspecialcharacterslike\t',
+            'or\ncharacter',
+            ' spacesatbeggining',
+            'spacesatend ',
+            'Capitals',
+            'Two..consecutivepoints',
+            '.beginswithpoint',
+            'endswith.',
+            'containsspecialchar$',
+            'endswith\t',
+            '\nbeginwithnewline',
+            'endswith\n',
+            '',
+            257*'a'
+        ]
         for param in params:
             self.assertFalse(arguments.is_valid_username(param)) 
 
@@ -60,20 +67,41 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
             self.assertTrue(arguments.is_valid_username_with_caps(username))
 
     def test_is_valid_agentname_invalid(self):
-        ''' is_valid_agentname should fail if agentname is not valid '''
-        params=[None, 234234, 'Agentname with \t is not Valid','Agentname with \n neither',
-               'cant end in \n',
-               '\ncant begin with newline',
-               '',
-               ]
+        ''' is_valid_agentname should fail if agentname starts or ends with a space or is not str or is longer than allowed '''
+        params=[
+            '',
+            12123,
+            23.2323,
+            1e3,
+            {'set'},
+            ['a','list'],
+            {'a':'dict'},
+            ('a','tuple'),
+            'endswithspace ',
+            'endswithtab\t',
+            'endswithnewline\n',
+            ' startWithSpace',
+            '\tstartWithTab',
+            '\nstartWithNewLine',
+            257*'a'
+        ]
         for param in params:
-            self.assertFalse(arguments.is_valid_agentname(param)) 
+            self.assertFalse(arguments.is_valid_agentname(param))
 
     def test_is_valid_agentname_valid(self):
-        ''' is_valid_agentname should succeed if agentname is valid '''
-        params=['test_agent', 'Agentname OK', 'Agentname @213 #23']
+        ''' is_valid_agentname should succeed if agentname is a string without spaces on ends '''
+        params = [
+            'test_agent',
+            'Agentname OK',
+            'Agentname @213 #23',
+            'Some Capitals',
+            'everything with lowercase',
+            'en español',
+            'Внутри init() удобней писать (и читать тоже) await вместо run_until_complete()',
+            'áéíóúüñÁÉÍÓÚÜÑ'
+        ]
         for param in params:
-            self.assertTrue(arguments.is_valid_agentname(param)) 
+            self.assertTrue(arguments.is_valid_agentname(param))
 
     def test_is_valid_datasourcename_invalid(self):
         ''' is_valid_datasourcename should fail if datasourcename is not valid '''
@@ -98,6 +126,76 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
         params=['Datapoint Name','DatapointName','234234','#1 Datapoint','Datapoint 234234','Con caracteres #@$%&+=_.- por ejemplo']
         for param in params:
             self.assertTrue(arguments.is_valid_datapointname(param)) 
+
+    def test_is_valid_widgetname_invalid(self):
+        ''' is_valid_widgetname should fail if widgetname starts or ends with a space or is not str or is longer than allowed '''
+        params=[
+            '',
+            12123,
+            23.2323,
+            1e3,
+            {'set'},
+            ['a','list'],
+            {'a':'dict'},
+            ('a','tuple'),
+            'endswithspace ',
+            'endswithtab\t',
+            'endswithnewline\n',
+            ' startWithSpace',
+            '\tstartWithTab',
+            '\nstartWithNewLine',
+            257*'a'
+        ]
+        for param in params:
+            logging.logger.debug('param: '+str(param))
+            self.assertFalse(arguments.is_valid_widgetname(param))
+
+    def test_is_valid_widgetname_valid(self):
+        ''' is_valid_widgetname should succeed if widgetname is a string without spaces on ends '''
+        params = [
+            'Some Capitals',
+            'everything with lowercase',
+            'en español',
+            'Внутри init() удобней писать (и читать тоже) await вместо run_until_complete()',
+            'áéíóúüñÁÉÍÓÚÜÑ'
+        ]
+        for param in params:
+            logging.logger.debug('param: '+str(param))
+            self.assertTrue(arguments.is_valid_widgetname(param))
+
+    def test_is_valid_dashboardname_invalid(self):
+        ''' is_valid_dashboardname should fail if dashboardname starts or ends with a space or is not str or is longer than allowed '''
+        params=[
+            '',
+            12123,
+            23.2323,
+            1e3,
+            {'set'},
+            ['a','list'],
+            {'a':'dict'},
+            ('a','tuple'),
+            'endswithspace ',
+            'endswithtab\t',
+            'endswithnewline\n',
+            ' startWithSpace',
+            '\tstartWithTab',
+            '\nstartWithNewLine',
+            257*'a'
+        ]
+        for param in params:
+            self.assertFalse(arguments.is_valid_dashboardname(param))
+
+    def test_is_valid_dashboardname_valid(self):
+        ''' is_valid_dashboardname should succeed if dashboardname is a string without spaces on ends '''
+        params = [
+            'Some Capitals',
+            'everything with lowercase',
+            'en español',
+            'Внутри init() удобней писать (и читать тоже) await вместо run_until_complete()',
+            'áéíóúüñÁÉÍÓÚÜÑ'
+        ]
+        for param in params:
+            self.assertTrue(arguments.is_valid_dashboardname(param))
 
     def test_is_valid_datasource_content_invalid(self):
         ''' is_valid_datasource_content should fail if datasource_content is not valid '''
@@ -394,7 +492,7 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
         ''' is_valid_date should succeed if input is valid date'''
         params=[timeuuid.uuid1()]
         for param in params:
-            self.assertTrue(arguments.is_valid_date(param)) 
+            self.assertTrue(arguments.is_valid_date(param))
 
     def test_is_valid_hexcolor_invalid(self):
         ''' is_valid_hexcolor should fail if input is not valid hex color (with #)'''

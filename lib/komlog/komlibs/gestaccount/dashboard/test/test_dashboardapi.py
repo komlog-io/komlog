@@ -78,7 +78,7 @@ class GestaccountDashboardApiTest(unittest.TestCase):
 
     def test_create_dashboard_failure_invalid_dashboardname(self):
         ''' create_dashboard should fail if dashboardname is invalid '''
-        dashboardnames=[None, 2342342, 2342342.23423, {'a':'dict'}, ['a','list'],('a','tuple'),{'set'}, uuid.uuid4(), uuid.uuid1(), 'dashboardñame']
+        dashboardnames=[None, 2342342, 2342342.23423, {'a':'dict'}, ['a','list'],('a','tuple'),{'set'}, uuid.uuid4(), uuid.uuid1()]
         uid=uuid.uuid4()
         for dashboardname in dashboardnames:
             self.assertRaises(exceptions.BadParametersException, dashboardapi.create_dashboard,uid=uid, dashboardname=dashboardname)
@@ -92,7 +92,7 @@ class GestaccountDashboardApiTest(unittest.TestCase):
     def test_create_dashboard_success(self):
         ''' create_dashboard should succeed if user exists and parameters are ok '''
         username='test_create_dashboard_success'
-        dashboardname='test_create_dashboard_success'
+        dashboardname='El Dashboard con métricas y variables aleatorias.'
         user=userapi.create_user(username=username,password='password',email=username+'@komlog.org')
         result=dashboardapi.create_dashboard(uid=user['uid'], dashboardname=dashboardname)
         self.assertTrue(isinstance(result,dict))
@@ -103,7 +103,7 @@ class GestaccountDashboardApiTest(unittest.TestCase):
 
     def test_update_dashboard_config_failure_invalid_dashboardname(self):
         ''' update_dashboard_config should fail if dashboardname is invalid '''
-        dashboardnames=[None, 2342342, 2342342.23423, {'a':'dict'}, ['a','list'],('a','tuple'),{'set'}, uuid.uuid4(), uuid.uuid1(), 'dashboardñame']
+        dashboardnames=[None, 2342342, 2342342.23423, {'a':'dict'}, ['a','list'],('a','tuple'),{'set'}, uuid.uuid4(), uuid.uuid1()]
         bid=uuid.uuid4()
         for dashboardname in dashboardnames:
             self.assertRaises(exceptions.BadParametersException, dashboardapi.update_dashboard_config, bid=bid, dashboardname=dashboardname)
@@ -133,7 +133,7 @@ class GestaccountDashboardApiTest(unittest.TestCase):
         self.assertTrue(isinstance(result['bid'],uuid.UUID))
         self.assertTrue(isinstance(result['uid'],uuid.UUID))
         bid=result['bid']
-        dashboardname2='test_update_dashboard_config success 2'
+        dashboardname2='Un dashboard con caracteres de España y tildes así'
         self.assertTrue(dashboardapi.update_dashboard_config(bid=bid, dashboardname=dashboardname2))
         dashboardconfig=dashboardapi.get_dashboard_config(bid=bid)
         self.assertEqual(dashboardconfig['bid'],bid)
