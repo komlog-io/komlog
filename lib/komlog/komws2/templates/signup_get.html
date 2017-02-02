@@ -7,21 +7,21 @@
 {% block p_content %}
     <!-- Page Content -->
     <div id="content">
-      <div class="container">
+      <div class="container" style="padding-bottom:20px">
         {% if response.status == status.WEB_STATUS_OK %}
         <div class="well well-signin">
             <form class="form-signup" method="post" action="" onsubmit="return checkPass(this);">
-                <h2 class="form-signup-heading">Create account</h2>
+                <h2 class="form-signup-heading text-center">Create account</h2>
                 <label for="username" class="sr-only">username</label>
-                <input type="text" id="username" name="username" class="form-control" placeholder="username" required autofocus pattern="^([a-z0-9\-_]+\.)*[a-z0-9\-_]+$" title="Can contain lowercase [a-z] characters, underscores (_), hyphens (-) and points (.), but cannot start or end with a point (.)">
+                <input type="text" id="username" name="username" class="form-control" placeholder="username" required autofocus pattern="^([a-z0-9\-_]+\.)*[a-z0-9\-_]+$" title="Can contain letters (a-z), underscores (_), hyphens (-) and dots (.), but cannot start or end with a dot (.)">
                 <label for="password" class="sr-only">password</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="password" required pattern=".{6,}" title="min 6 characters">
+                <input type="password" id="password" name="password" class="form-control" placeholder="password" required pattern=".{6,256}" title="min 6 characters">
                 <label for="password2" class="sr-only">repeat password</label>
-                <input type="password" id="password2" name="password2" class="form-control" placeholder="Confirm password" required pattern=".{6,}" title="min 6 characters">
+                <input type="password" id="password2" name="password2" class="form-control" placeholder="Confirm password" required pattern=".{6,256}" title="min 6 characters">
                 <label for="email" class="sr-only">email</label>
                 <input type="email" id="email" name="email" class="form-control" placeholder="email" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$">
+                <h6>By continuing, you agree to our <a href="/terms">terms of service</a> and <a href="/privacy">privacy policy</a></h6>
                 <button class="btn btn-lg btn-primary btn-block" type="submit">Sign up</button>
-                <h6>By continuing, you agree to our <a href="/terms">terms of service and privacy policy</a></h6>
             </form>
         </div>
         {% else %}
