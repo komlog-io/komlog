@@ -9,34 +9,38 @@ class TextmanModelPatternsTest(unittest.TestCase):
 
     def test_ro_var_regex_0_success(self):
         ''' patterns.ro_var_regex_0 should detect variables with thousand separators (.) and decimal separator (,) '''
-        valids=[';1.000.000,32:  ',
-                ' +1.000.000,32% ',
-                ' -320.233,45%   ',
-                ' 222.222,222222 ',
-               ]
-        invalids=[' 1              ',
-                  ' 1.1            ',
-                  ' 1.1.1          ',
-                  ' 1,1,1          ',
-                  ' 22.2222        ',
-                  ' 22.222         ',
-                  ' 2,222,222.121  ',
-                  ' 2.222.2222,222 ',
-                  ' 3,333,333.32   ',
-                  ' 2222,32        ',
-                  ' 2222.343       ',
-                  ' 23434,342      ',
-                  ' ,243           ',
-                  ' .434           ',
-                  ' 1.2321         ',
-                  ' 1,2323         ',
-                  ' 32,32          ',
-                  ' 32.13          ',
-                  ' 0,232          ',
-                  ' 0.232          ',
-                  ' 12,121         ',
-                  ' 12.121         ',
-                ]
+        valids=[
+            ';1.000.000,32:  ',
+            ' +1.000.000,32% ',
+            ' -320.233,45%   ',
+            ' 222.222,222222 ',
+            ' 32.212,121,    ',
+        ]
+        invalids=[
+            ' 1              ',
+            ' 1.1            ',
+            ' 1.1.1          ',
+            ' 1,1,1          ',
+            ' 22.2222        ',
+            ' 22.222         ',
+            ' 2,222,222.121  ',
+            ' 2.222.2222,222 ',
+            ' 3,333,333.32   ',
+            ' 2222,32        ',
+            ' 2222.343       ',
+            ' 23434,342      ',
+            ' ,243           ',
+            ' .434           ',
+            ' 1.2321         ',
+            ' 1,2323         ',
+            ' 32,32          ',
+            ' 32.13          ',
+            ' 0,232          ',
+            ' 0.232          ',
+            ' 12,121         ',
+            ' 12.121         ',
+            ' 32.212,121,3   ',
+        ]
         for string in valids:
             items_found=patterns.ro_var_regex_0.findall(string)
             self.assertEqual(len(items_found),1)
@@ -46,34 +50,38 @@ class TextmanModelPatternsTest(unittest.TestCase):
 
     def test_ro_var_regex_1_success(self):
         ''' patterns.ro_var_regex_1 should detect variables with thousand separators (,) and decimal separator (.) '''
-        valids=[';1,000,000.32:  ',
-                ' +1,000,000.32% ',
-                ' -320,233.45%   ',
-                ' 222,222.222222 ',
-               ]
-        invalids=[' 1              ',
-                  ' 1.1            ',
-                  ' 1.1.1          ',
-                  ' 1,1,1          ',
-                  ' 22.2222        ',
-                  ' 22.222         ',
-                  ' 2.222.222,121  ',
-                  ' 2,222,2222.222 ',
-                  ' 3.333.333,32   ',
-                  ' 2222,32        ',
-                  ' 2222.343       ',
-                  ' 23434,342      ',
-                  ' ,243           ',
-                  ' .434           ',
-                  ' 1.2321         ',
-                  ' 1,2323         ',
-                  ' 32,32          ',
-                  ' 32.13          ',
-                  ' 0,232          ',
-                  ' 0.232          ',
-                  ' 12,121         ',
-                  ' 12.121         ',
-                ]
+        valids=[
+            ';1,000,000.32:  ',
+            ' +1,000,000.32% ',
+            ' -320,233.45%   ',
+            ' 222,222.222222 ',
+            ' 222,222.222222, ',
+        ]
+        invalids=[
+            ' 1              ',
+            ' 1.1            ',
+            ' 1.1.1          ',
+            ' 1,1,1          ',
+            ' 22.2222        ',
+            ' 22.222         ',
+            ' 2.222.222,121  ',
+            ' 2,222,2222.222 ',
+            ' 3.333.333,32   ',
+            ' 2222,32        ',
+            ' 2222.343       ',
+            ' 23434,342      ',
+            ' ,243           ',
+            ' .434           ',
+            ' 1.2321         ',
+            ' 1,2323         ',
+            ' 32,32          ',
+            ' 32.13          ',
+            ' 0,232          ',
+            ' 0.232          ',
+            ' 12,121         ',
+            ' 12.121         ',
+            ' 222,222.222222,',
+        ]
         for string in valids:
             items_found=patterns.ro_var_regex_1.findall(string)
             self.assertEqual(len(items_found),1)
@@ -84,35 +92,37 @@ class TextmanModelPatternsTest(unittest.TestCase):
     def test_ro_var_regex_2_success(self):
         ''' patterns.ro_var_regex_2 should detect variables with 4 or more digits in the integer part, without thousand separators, and any number of decimal digits, with decimal separator comma (,) '''
         valids=[
-                  ' 2222,32        ',
-                  ' 23434,342      ',
-               ]
+            ' 2222,32        ',
+            ' 23434,342      ',
+            ' 23434,342,     ',
+        ]
         invalids=[
-                  ';1,000,000.32:  ',
-                  ' +1,000,000.32% ',
-                  ' -320,233.45%   ',
-                  ' 222,222.222222 ',
-                  ' 1              ',
-                  ' 1.1            ',
-                  ' 1.1.1          ',
-                  ' 1,1,1          ',
-                  ' 22.2222        ',
-                  ' 22.222         ',
-                  ' 2.222.222,121  ',
-                  ' 2,222,2222.222 ',
-                  ' 3.333.333,32   ',
-                  ' 2222.343       ',
-                  ' ,243           ',
-                  ' .434           ',
-                  ' 1.2321         ',
-                  ' 1,2323         ',
-                  ' 32,32          ',
-                  ' 32.13          ',
-                  ' 0,232          ',
-                  ' 0.232          ',
-                  ' 12,121         ',
-                  ' 12.121         ',
-                ]
+            ';1,000,000.32:  ',
+            ' +1,000,000.32% ',
+            ' -320,233.45%   ',
+            ' 222,222.222222 ',
+            ' 1              ',
+            ' 1.1            ',
+            ' 1.1.1          ',
+            ' 1,1,1          ',
+            ' 22.2222        ',
+            ' 22.222         ',
+            ' 2.222.222,121  ',
+            ' 2,222,2222.222 ',
+            ' 3.333.333,32   ',
+            ' 2222.343       ',
+            ' ,243           ',
+            ' .434           ',
+            ' 1.2321         ',
+            ' 1,2323         ',
+            ' 32,32          ',
+            ' 32.13          ',
+            ' 0,232          ',
+            ' 0.232          ',
+            ' 12,121         ',
+            ' 12.121         ',
+            ' 23434,342,e    ',
+        ]
         for string in valids:
             items_found=patterns.ro_var_regex_2.findall(string)
             self.assertEqual(len(items_found),1)
@@ -127,6 +137,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 123,2323       ',
                   ' ,2323          ',
                   ' ,23232323      ',
+                  ' ,23232323,     ',
                ]
         invalids=[
                   ' 2222,32        ',
@@ -154,6 +165,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 0.232          ',
                   ' 12,121         ',
                   ' 12.121         ',
+                  ' ,23232323,e    ',
                 ]
         for string in valids:
             items_found=patterns.ro_var_regex_3.findall(string)
@@ -170,6 +182,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' ,32            ',
                   ' 2,32           ',
                   ' 2,3            ',
+                  ' 2,3,           ', #if ends with comma space, we consider it as a separator
                ]
         invalids=[
                   ' 1,2323         ',
@@ -200,6 +213,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 0.232          ',
                   ' 12,121         ',
                   ' 12.121         ',
+                  ' 2,3,e          ',
                 ]
         for string in valids:
             items_found=patterns.ro_var_regex_4.findall(string)
@@ -211,42 +225,44 @@ class TextmanModelPatternsTest(unittest.TestCase):
     def test_ro_var_regex_5_success(self):
         ''' patterns.ro_var_regex_5 should detect variables with 0 digits in the integer part, and 3 decimal digits, with decimal separator comma (,) '''
         valids=[
-                  ' ,243           ',
-               ]
+            ' ,243           ',
+            ' ,243,          ',
+        ]
         invalids=[
-                  ' 32,32          ',
-                  ' 32,3           ',
-                  ' ,32            ',
-                  ' 2,32           ',
-                  ' 2,3            ',
-                  ' 1,2323         ',
-                  ' 123,2323       ',
-                  ' ,2323          ',
-                  ' ,23232323      ',
-                  ' 2222,32        ',
-                  ' 23434,342      ',
-                  ';1,000,000.32:  ',
-                  ' +1,000,000.32% ',
-                  ' -320,233.45%   ',
-                  ' 222,222.222222 ',
-                  ' 1              ',
-                  ' 1.1            ',
-                  ' 1.1.1          ',
-                  ' 1,1,1          ',
-                  ' 22.2222        ',
-                  ' 22.222         ',
-                  ' 2.222.222,121  ',
-                  ' 2,222,2222.222 ',
-                  ' 3.333.333,32   ',
-                  ' 2222.343       ',
-                  ' .434           ',
-                  ' 1.2321         ',
-                  ' 32.13          ',
-                  ' 0,232          ',
-                  ' 0.232          ',
-                  ' 12,121         ',
-                  ' 12.121         ',
-                ]
+            ' 32,32          ',
+            ' 32,3           ',
+            ' ,32            ',
+            ' 2,32           ',
+            ' 2,3            ',
+            ' 1,2323         ',
+            ' 123,2323       ',
+            ' ,2323          ',
+            ' ,23232323      ',
+            ' 2222,32        ',
+            ' 23434,342      ',
+            ';1,000,000.32:  ',
+            ' +1,000,000.32% ',
+            ' -320,233.45%   ',
+            ' 222,222.222222 ',
+            ' 1              ',
+            ' 1.1            ',
+            ' 1.1.1          ',
+            ' 1,1,1          ',
+            ' 22.2222        ',
+            ' 22.222         ',
+            ' 2.222.222,121  ',
+            ' 2,222,2222.222 ',
+            ' 3.333.333,32   ',
+            ' 2222.343       ',
+            ' .434           ',
+            ' 1.2321         ',
+            ' 32.13          ',
+            ' 0,232          ',
+            ' 0.232          ',
+            ' 12,121         ',
+            ' 12.121         ',
+            ' ,243,d         ',
+        ]
         for string in valids:
             items_found=patterns.ro_var_regex_5.findall(string)
             self.assertEqual(len(items_found),1)
@@ -258,6 +274,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
         ''' patterns.ro_var_regex_6 should detect variables with a 0 in the integer part, and 3 decimal digits, with decimal separator comma (,) '''
         valids=[
                   ' 0,232          ',
+                  ' 0,232,         ',
                ]
         invalids=[
                   ' ,243           ',
@@ -292,6 +309,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 0.232          ',
                   ' 12,121         ',
                   ' 12.121         ',
+                  ' 0,232,,        ',
                 ]
         for string in valids:
             items_found=patterns.ro_var_regex_6.findall(string)
@@ -307,6 +325,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 2222.34        ',
                   ' 222222.3       ',
                   ' 2222.343333    ',
+                  ' 2222.343333,   ',
                ]
         invalids=[
                   ' 0,232          ',
@@ -341,6 +360,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 0.232          ',
                   ' 12,121         ',
                   ' 12.121         ',
+                  ' 2222.343333,,  ',
                 ]
         for string in valids:
             items_found=patterns.ro_var_regex_7.findall(string)
@@ -357,6 +377,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' .2222          ',
                   ' 22.222222      ',
                   ' 1.2321         ',
+                  ' 1.2321,        ',
                ]
         invalids=[
                   ' 2222.343       ',
@@ -393,6 +414,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 0.232          ',
                   ' 12,121         ',
                   ' 12.121         ',
+                  ' 1.2321,,       ',
                 ]
         for string in valids:
             items_found=patterns.ro_var_regex_8.findall(string)
@@ -412,6 +434,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 321.13         ',
                   ' .1             ',
                   ' .13            ',
+                  ' .13,           ',
                ]
         invalids=[
                   ' 22.2222        ',
@@ -451,6 +474,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 0.232          ',
                   ' 12,121         ',
                   ' 12.121         ',
+                  ' .13,,          ',
                 ]
         for string in valids:
             items_found=patterns.ro_var_regex_9.findall(string)
@@ -463,6 +487,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
         ''' patterns.ro_var_regex_10 should detect variables with no integer part and 3 decimal digits, with decimal separator dot (.) '''
         valids=[
                   ' .434           ',
+                  ' .434,          ',
                ]
         invalids=[
                   ' 1.1            ',
@@ -509,6 +534,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 0.232          ',
                   ' 12,121         ',
                   ' 12.121         ',
+                  ' .434,,         ',
                 ]
         for string in valids:
             items_found=patterns.ro_var_regex_10.findall(string)
@@ -521,6 +547,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
         ''' patterns.ro_var_regex_11 should detect variables with a 0 in the integer part, and 3 decimal digits, with decimal separator dot (.) '''
         valids=[
                   ' 0.232          ',
+                  ' 0.232,          ',
                ]
         invalids=[
                   ' .434           ',
@@ -567,6 +594,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 1.2321         ',
                   ' 12,121         ',
                   ' 12.121         ',
+                  ' 0.232,,          ',
                 ]
         for string in valids:
             items_found=patterns.ro_var_regex_11.findall(string)
@@ -583,6 +611,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 22.222         ',
                   ' 12,121         ',
                   ' 12.121         ',
+                  ' 12.121,        ',
                ]
         invalids=[
                   ' .434           ',
@@ -625,6 +654,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 2,222,2222.222 ',
                   ' 3.333.333,32   ',
                   ' 1.2321         ',
+                  ' 12.121,,       ',
                 ]
         for string in valids:
             items_found=patterns.ro_var_regex_12.findall(string)
@@ -640,7 +670,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 12312          ',
                   ' 0123443        ',
                   ' +142           ',
-                  ' -132           ',
+                  ' -132,          ',
                ]
         invalids=[
                   ' 0.232          ',
@@ -687,6 +717,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 2,222,2222.222 ',
                   ' 3.333.333,32   ',
                   ' 1.2321         ',
+                  ' -132,,         ',
                 ]
         for string in valids:
             items_found=patterns.ro_var_regex_13.findall(string)
@@ -701,7 +732,8 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   '1,1,1',
                   '1.2,1.43,1.3424',
                   '1.0,+1.342,-1.4',
-                  '3241,-231,+1',
+                  '3241,-231,+1, ',
+                  '3241,-231,+1,d',
                ]
         invalids=[
                   ' 1.1.1          ',

@@ -9,10 +9,10 @@ import re
 # patterns used for variable identification
 
 
-VAR_PREFIX_SEPARATOR_REGEXP='(?<=[ \s/\|\(\[;:\*%$#"=])'
-VAR_SUFIX_SEPARATOR_REGEXP ='(?=[ \s/\|\)\];:\*%$#"])'
-VAR_PREFIX_SEPARATOR_WITH_COMMA_REGEXP='(?<=[, \s/\|\(\[;:\*%$#"=])'
-VAR_SUFIX_SEPARATOR_WITH_COMMA_REGEXP='(?=[, \s/\|\(\];:\*%$#"])'
+VAR_PREFIX_SEPARATOR_REGEXP='(?<=[ \s/\|\(\[\];:\*%$#"=\'])'
+VAR_SUFIX_SEPARATOR_REGEXP ='(?=([ \s/\|\)\[\];:\*%$#"=\']|, ))' #we add ', ' for the top command case to detect load_averages, for example.
+VAR_PREFIX_SEPARATOR_WITH_COMMA_REGEXP='(?<=[, \s/\|\(\[\];:\*%$#"=\'])'
+VAR_SUFIX_SEPARATOR_WITH_COMMA_REGEXP='(?=[, \s/\|\(\[\];:\*%$#"=\'])'
 
 SEPARATOR_REGEXP='([ ]+|[\s/\|\(\)\[\];:\*\.%\$\#"=])'
 WORD_REGEXP='([A-Za-z0-9_]+)'
