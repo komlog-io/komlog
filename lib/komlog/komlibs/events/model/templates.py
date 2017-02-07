@@ -8,11 +8,19 @@ from mako.template import Template
 from komlog.komlibs.events.model import types
 
 HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_USER=Template(
-    "<div>Welcome to Komlog, <strong>${parameters['username']}!</strong></div>"
+    """<div>
+        Welcome <strong>${parameters['username']}!</strong>
+        </div>"""
 )
 
 HTML_BODY_TPL_USER_EVENT_NOTIFICATION_NEW_USER=Template(
-    "<div />"
+    """<div>
+        Start uploading your time series with <a target="_blank" href="https://github.com/komlog-io/komlogd">komlogd</a> 
+        or contact us at our <a target="_blank" href="https://gitter.im/komlog_/komlog">Gitter room</a> if you have any 
+        question or simply to hang out with us.<p /><p />
+        We hope you enjoy using Komlog as much as we do building it!<p/>
+        Komlog Team.
+     </div>"""
 )
 
 HTML_TITLE_TPL_USER_EVENT_NOTIFICATION_NEW_AGENT=Template(
