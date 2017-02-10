@@ -25,15 +25,17 @@ class Webserver(modules.Module):
         )
         self.params={}
         self.params['http_listen_port']=int(config.get(options.HTTP_LISTEN_PORT))+self.instance if config.get(options.HTTP_LISTEN_PORT) else None
+        self.params['http_listen_address']=config.get(options.HTTP_LISTEN_ADDRESS) if config.get(options.HTTP_LISTEN_ADDRESS) else ""
 
     async def _web_server(self, start=True):
         if start:
             AsyncIOMainLoop().install()
             self.app = webapp.Application()
             self.http_server = HTTPServer(self.app)
-            self.http_server.listen(self.params['http_listen_port'])
+            self.http_server.listen(self.params['http_listen_port'], address=self.params['http_listen_address'])
         else:
             self.http_server.stop()
+            logging.logger.info('Web server stopped')
 
 def get_module(instance):
     mod = Webserver(instance=instance)
