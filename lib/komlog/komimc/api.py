@@ -75,6 +75,7 @@ async def async_retrieve_message(timeout=0):
             return msg
         except imcexcept.BadParametersException as e:
             logging.logger.error('Error loading IMCMessage: '+e.error.name)
+            logging.logger.error('message: '+str(s_message))
             return None
     else:
         return None

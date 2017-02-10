@@ -1478,7 +1478,7 @@ class SendSessionDataMessage(IMCMessage):
     @classmethod
     def load_from_serialization(cls, msg):
         try:
-            m_type, h_sid, js_data = msg.split('|')
+            m_type, h_sid, js_data = msg.split('|',2)
         except ValueError:
             raise exceptions.BadParametersException(error=Errors.E_IIMM_SSDT_ELFS)
         except AttributeError:
