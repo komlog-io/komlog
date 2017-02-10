@@ -7,10 +7,10 @@
 {% block p_content %}
     <div id="content">
     {% if response and response.status == status.WEB_STATUS_ACCESS_DENIED %}
-      <div style="display:none" id="resmsg">Invalid email or password</div>
+      <div style="display:none" id="resmsg">Invalid username or password</div>
       <div style="display:none" id="rescode">{{response.status}}</div>
     {% elif response and response.status == status.WEB_STATUS_NOT_FOUND %}
-      <div style="display:none" id="resmsg">Invalid email or password</div>
+      <div style="display:none" id="resmsg">Invalid username or password</div>
       <div style="display:none" id="rescode">{{response.status}}</div>
     {% elif response and response.status == status.WEB_STATUS_BAD_PARAMETERS %}
       <div style="display:none" id="resmsg">Check your username and password</div>
