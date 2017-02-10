@@ -31,13 +31,14 @@ class Websocketserver(modules.Module):
         )
         self.params={}
         self.params['ws_listen_port']=int(config.get(options.WS_LISTEN_PORT))+self.instance if config.get(options.WS_LISTEN_PORT) else None
+        self.params['ws_listen_address']=config.get(options.WS_LISTEN_ADDRESS) if config.get(options.WS_LISTEN_ADDRESS) else ""
 
     async def _websocket_server(self, start=True):
         if start:
             AsyncIOMainLoop().install()
             self.app = app.Application()
             self.http_server = HTTPServer(self.app)
-            self.http_server.listen(self.params['ws_listen_port'])
+            self.http_server.listen(self.params['ws_listen_port'], address=self.params['ws_listen_address'])
         else:
             self.http_server.stop()
 
