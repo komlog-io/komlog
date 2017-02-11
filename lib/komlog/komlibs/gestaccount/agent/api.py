@@ -105,6 +105,7 @@ def create_agent(uid,agentname,pubkey,version):
     if user:
         aid=uuid.uuid4()
         now=timeuuid.uuid1()
+        pubkey=crypto.serialize_public_key(crypto.load_public_key(pubkey))
         agent_pubkey=ormagent.AgentPubkey(uid=uid, pubkey=pubkey, aid=aid, state=AgentStates.ACTIVE)
         agent=ormagent.Agent(aid=aid, uid=uid, agentname=agentname, pubkey=pubkey, version=version, state=AgentStates.ACTIVE,creation_date=now)
         try:
