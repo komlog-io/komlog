@@ -13,7 +13,7 @@
             <form class="form-signup" method="post" action="" onsubmit="return checkPass(this);">
                 <h2 class="form-signup-heading text-center">Create account</h2>
                 <label for="username" class="sr-only">username</label>
-                <input type="text" id="username" name="username" class="form-control" placeholder="username" required autofocus pattern="^([a-z0-9\-_]+\.)*[a-z0-9\-_]+$" title="Can contain letters (a-z), underscores (_), hyphens (-) and dots (.), but cannot start or end with a dot (.)">
+                <input type="text" id="username" name="username" class="form-control" placeholder="username" required autofocus pattern="^([a-zA-Z0-9\-_]+\.)*[a-zA-Z0-9\-_]+$" title="Can contain letters (a-zA-Z), numbers, underscores (_), hyphens (-) and dots (.), but cannot start or end with a dot (.)">
                 <label for="password" class="sr-only">password</label>
                 <input type="password" id="password" name="password" class="form-control" placeholder="password" required pattern=".{6,256}" title="min 6 characters">
                 <label for="password2" class="sr-only">repeat password</label>
