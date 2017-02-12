@@ -208,7 +208,7 @@ def get_user_passport(cookie):
     user = cassapiuser.get_user(username=cookie.user)
     if not user:
         raise exceptions.UserNotFoundException(error=Errors.E_AP_GUP_UNF)
-    if user.state not in (UserStates.ACTIVE, UserStates.PREACTIVE):
+    if user.state != UserStates.ACTIVE:
         raise exceptions.AuthorizationExpiredException(error=Errors.E_AP_GUP_IUS)
     return UserPassport(uid=user.uid, sid=cookie.sid)
 

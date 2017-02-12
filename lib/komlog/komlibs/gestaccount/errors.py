@@ -35,6 +35,7 @@ class Errors(Enum):
     E_GUA_AUU_IP    = 201
     E_GUA_AUU_UNF   = 202
     E_GUA_AUU_HPNF  = 203
+    E_GUA_AUU_UNA   = 204 #: user not in active state
 
     E_GUA_CRU_IU            = 300
     E_GUA_CRU_IP            = 301

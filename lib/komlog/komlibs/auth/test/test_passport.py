@@ -513,6 +513,24 @@ class AuthPassportTest(unittest.TestCase):
             psp=passport.get_user_passport(cookie)
         self.assertEqual(cm.exception.error, Errors.E_AP_GUP_IUS)
 
+    def test_get_user_passport_failure_user_not_confirmed_yet(self):
+        ''' get_user_passport should fail if user has not confirmed his account yet '''
+        username='test_get_user_passport_failure_user_not_confirmed_yet'
+        password=b'password'
+        email=username+'@komlog.org'
+        state=UserStates.PREACTIVE
+        cookie = {
+            'user':username,
+            'sid':uuid.uuid4().hex,
+            'seq':timeuuid.get_custom_sequence(timeuuid.uuid1()),
+            't':Cookies.USER.value
+        }
+        user = ormuser.User(uid=uuid.uuid4(), username=username, password=password, email=email, state=state)
+        self.assertTrue(cassapiuser.new_user(user))
+        with self.assertRaises(exceptions.AuthorizationExpiredException) as cm:
+            psp=passport.get_user_passport(cookie)
+        self.assertEqual(cm.exception.error, Errors.E_AP_GUP_IUS)
+
     def test_get_user_passport_success(self):
         ''' get_user_passport should succeed '''
         username='test_get_user_passport_success'

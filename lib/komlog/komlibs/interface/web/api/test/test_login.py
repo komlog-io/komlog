@@ -67,6 +67,7 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         password = 'password'
         email = username + '@komlog.org'
         user = userapi.create_user(username=username, password=password, email=email)
+        self.assertTrue(userapi.confirm_user(email=email, code=user['code']))
         password = 'wrong_password'
         response = loginapi.login_request(username, password=password)
         self.assertEqual(getattr(response,'cookie', None),None)
@@ -74,12 +75,25 @@ class InterfaceWebApiLoginTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_ACCESS_DENIED)
         self.assertEqual(response.error, Errors.E_IWAL_ULR_AUTHERR.value)
 
+    def test_user_login_request_failure_non_active_user(self):
+        ''' user_login_request should fail if user is not in active state '''
+        username = 'test_user_login_request_failure_non_active_user'
+        password = 'password'
+        email = username + '@komlog.org'
+        user = userapi.create_user(username=username, password=password, email=email)
+        response = loginapi.login_request(username, password=password)
+        self.assertEqual(getattr(response,'cookie', None),None)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GUA_AUU_UNA.value)
+
     def test_user_login_request_success(self):
         ''' user_login_request should succeed '''
         username = 'test_user_login_request_success'
         password = 'password'
         email = username + '@komlog.org'
         user = userapi.create_user(username=username, password=password, email=email)
+        self.assertTrue(userapi.confirm_user(email=email, code=user['code']))
         response = loginapi.login_request(username, password=password)
         cookie=response.cookie
         self.assertEqual(cookie['user'], username)

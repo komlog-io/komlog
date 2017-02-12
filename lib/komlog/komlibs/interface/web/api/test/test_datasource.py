@@ -46,6 +46,10 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             msgs=response.unrouted_messages
             while len(msgs)>0:
                 for msg in msgs:
@@ -111,6 +115,10 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -151,6 +159,10 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -206,13 +218,17 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
 
     def test_get_datasource_config_request_failure_no_permission_over_this_datasource(self):
         ''' get_datasource_config_request should fail if user does not have permission over datasource '''
-        new_username = 'test_get_datasource_config_request_failure_no_permission_over_datasource_user'
+        username = 'test_get_datasource_config_request_failure_no_permission_over_datasource_user'
         password = 'password'
-        new_email = new_username+'@komlog.org'
-        response = userapi.new_user_request(username=new_username, password=password, email=new_email)
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        response = loginapi.login_request(username=new_username, password = password)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
+        response = loginapi.login_request(username=username, password = password)
         cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
         did = self.agents[0]['dids'][0]
@@ -271,6 +287,10 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
@@ -359,6 +379,10 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
@@ -419,6 +443,10 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         uid = uuid.UUID(response.data['uid'])
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
         cookie = passport.AgentCookie(aid=uuid.UUID(self.agents[0]['aid']),sid=uuid.uuid4(), pv=1, seq=timeuuid.get_custom_sequence(uuid.uuid1())).to_dict()

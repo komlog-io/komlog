@@ -38,6 +38,9 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
             self.assertTrue(isinstance(creation , webresp.WebInterfaceResponse))
             self.assertEqual(creation .status, status.WEB_STATUS_OK)
             for msg in creation.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
                 msgresponse=msgapi.process_message(msg)
             response = loginapi.login_request(username=username, password=password)
             cookie=getattr(response,'cookie',None)
@@ -192,6 +195,10 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         for msg in response2.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email2, code=code)
+        for msg in response2.unrouted_messages:
             msgresponse=msgapi.process_message(msg)
         response3 = loginapi.login_request(username=username2, password=password)
         cookie=getattr(response3,'cookie',None)
@@ -264,6 +271,10 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response,'cookie',None)
         psp = passport.get_user_passport(cookie)
@@ -394,6 +405,10 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         cookie = passport.UserCookie(user=username, sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(timeuuid.uuid1())).to_dict()
         psp = passport.get_user_passport(cookie)
         aid = uuid.uuid4().hex
@@ -410,6 +425,10 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         cookie = passport.UserCookie(user=username, sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(timeuuid.uuid1())).to_dict()
         psp = passport.get_user_passport(cookie)
         agentname='agentname'
@@ -454,6 +473,10 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         cookie = passport.UserCookie(user=username, sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(timeuuid.uuid1())).to_dict()
         psp = passport.get_user_passport(cookie)
         aid = uuid.uuid4().hex
@@ -470,6 +493,10 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         cookie = passport.UserCookie(user=username, sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(timeuuid.uuid1())).to_dict()
         psp = passport.get_user_passport(cookie)
         agentname='agentname'

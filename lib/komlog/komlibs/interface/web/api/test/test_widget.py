@@ -43,6 +43,10 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             msgs=response.unrouted_messages
             while len(msgs)>0:
                 for msg in msgs:
@@ -117,6 +121,10 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -179,6 +187,10 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -406,6 +418,10 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response = userapi.new_user_request(username=new_username, password=password, email=new_email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=new_email, code=code)
         response = loginapi.login_request(username=new_username, password=password)
         cookie=getattr(response, 'cookie',None)
         psp2 = passport.get_user_passport(cookie)
@@ -461,6 +477,10 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
@@ -1825,6 +1845,10 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response = userapi.new_user_request(username=new_username, password=password, email=new_email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=new_email, code=code)
         response = loginapi.login_request(username=new_username, password=password)
         cookie=getattr(response, 'cookie',None)
         psp2 = passport.get_user_passport(cookie)

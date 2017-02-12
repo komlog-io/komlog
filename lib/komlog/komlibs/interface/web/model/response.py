@@ -25,12 +25,12 @@ class WebInterfaceResponse(object):
         raise TypeError
 
     def add_message(self, msg, dest=None):
-        if dest is not None:
+        if dest is None:
+            self._unrouted_messages.append(msg)
+        else:
             try:
                 self._routed_messages[dest].append(msg)
             except KeyError:
                 self._routed_messages[dest]=[msg]
-        else:
-            self._unrouted_messages.append(msg)
         return True
 

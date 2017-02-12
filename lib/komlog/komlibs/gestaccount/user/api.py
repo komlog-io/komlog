@@ -37,6 +37,8 @@ def auth_user(username, password):
     user=cassapiuser.get_user(username=username)
     if not user:
         raise exceptions.UserNotFoundException(error=Errors.E_GUA_AUU_UNF)
+    if user.state != UserStates.ACTIVE:
+        raise exceptions.UserNotFoundException(error=Errors.E_GUA_AUU_UNA)
     return crypto.verify_password(password, user.password, user.uid.bytes)
 
 def create_user(username, password, email, inv_id=None, sid=None, token=None):
@@ -385,15 +387,19 @@ def reset_password(code, password):
         raise exceptions.UserNotFoundException(error=Errors.E_GUA_RP_UNF)
     new_password=crypto.get_hashed_password(password, user.uid.bytes)
     if new_password:
+        new_user = user
+        new_user.password = new_password
+        # requesting a password reset will modify user state to ACTIVE if it was in PREACTIVE
+        if user.state == UserStates.PREACTIVE:
+            new_user.state = UserStates.ACTIVE
         try:
-            if cassapiuser.update_user_password(username=user.username, password=new_password):
-                cassapiuser.update_forget_request_state(code=code, new_state=ForgetRequestStates.USED)
+            if cassapiuser.update_forget_request_state(code=code, new_state=ForgetRequestStates.USED) and cassapiuser.insert_user(new_user):
                 return True
             else:
                 raise exceptions.ForgetRequestException(error=Errors.E_GUA_RP_EUDB)
         except:
-            cassapiuser.update_user_password(username=user.username, password=user.password)
             cassapiuser.update_forget_request_state(code=code, new_state=ForgetRequestStates.UNUSED)
+            cassapiuser.insert_user(user)
             raise
     raise exceptions.ForgetRequestException(error=Errors.E_GUA_RP_EGPWD)
 

@@ -33,6 +33,10 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
+            for msg in response.unrouted_messages:
                 msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response,'cookie',None)
@@ -107,6 +111,10 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
+        for msg in response.unrouted_messages:
             msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response,'cookie',None)
@@ -172,6 +180,10 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         for msg in response.unrouted_messages:
             msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=username, password=password)
@@ -298,6 +310,10 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         for msg in response.unrouted_messages:
             msgresponse=msgapi.process_message(msg)
         data={'circlename':circlename}

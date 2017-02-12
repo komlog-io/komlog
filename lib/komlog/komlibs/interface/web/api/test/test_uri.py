@@ -42,6 +42,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             msgs=response.unrouted_messages
             while len(msgs)>0:
                 for msg in msgs:
@@ -160,6 +164,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -199,6 +207,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -242,6 +254,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -362,6 +378,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -384,6 +404,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -432,6 +456,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -475,6 +503,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -566,6 +598,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -587,6 +623,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -640,6 +680,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -693,6 +737,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -735,6 +783,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -769,6 +821,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -811,6 +867,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -861,6 +921,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -903,6 +967,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -967,6 +1035,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -1009,6 +1081,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -1083,6 +1159,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -1126,6 +1206,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -1167,6 +1251,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -1210,6 +1298,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -1257,6 +1349,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -1300,6 +1396,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -1402,6 +1502,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.unrouted_messages:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
         msgs=response.unrouted_messages
         while len(msgs)>0:
             for msg in msgs:
@@ -1445,6 +1549,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -1489,6 +1597,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             msgs=response.unrouted_messages
             while len(msgs)>0:
                 for msg in msgs:
@@ -1533,6 +1645,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:
@@ -1586,6 +1702,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             msgs=response.unrouted_messages
             while len(msgs)>0:
                 for msg in msgs:
@@ -1630,6 +1750,10 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
             msgs=response.unrouted_messages
             while len(msgs)>0:

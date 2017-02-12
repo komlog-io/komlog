@@ -248,12 +248,23 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertEqual(user['username'], username)
         self.assertEqual(user['segment'], sid)
 
-    def test_auth_user(self):
+    def test_auth_user_failure_user_not_in_active_state(self):
         ''' auth_user should authenticate the user '''
-        username = 'test_auth_user_user'
+        username = 'test_auth_user_user_failure_user_not_in_active_state'
         password = 'password'
         email = username+'@komlog.org'
         userinfo = userapi.create_user(username=username, password=password, email=email)
+        with self.assertRaises(exceptions.UserNotFoundException) as cm:
+            result=userapi.auth_user(username, password)
+        self.assertEqual(cm.exception.error, Errors.E_GUA_AUU_UNA)
+
+    def test_auth_user_success(self):
+        ''' auth_user should authenticate the user '''
+        username = 'test_auth_user_user_success'
+        password = 'password'
+        email = username+'@komlog.org'
+        userinfo = userapi.create_user(username=username, password=password, email=email)
+        self.assertTrue(userapi.confirm_user(email=email, code=userinfo['code']))
         result=userapi.auth_user(username, password)
         self.assertTrue(result)
 
@@ -785,8 +796,12 @@ class GestaccountUserApiTest(unittest.TestCase):
         self.assertEqual(forget_request['uid'],userinfo['uid'])
         new_password='temporal2'
         code=forget_request['code']
+        userinfo2=userapi.get_user_config(uid=userinfo['uid'])
+        self.assertEqual(userinfo2['state'], UserStates.PREACTIVE)
         self.assertTrue(userapi.reset_password(code=code, password=new_password))
         self.assertTrue(userapi.auth_user(username, new_password))
+        userinfo2=userapi.get_user_config(uid=userinfo['uid'])
+        self.assertEqual(userinfo2['state'], UserStates.ACTIVE)
 
     def test_register_pending_hook_failure_invalid_uid(self):
         ''' register_pending_hook should fail if uid is invalid '''

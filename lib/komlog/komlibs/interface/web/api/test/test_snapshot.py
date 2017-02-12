@@ -43,6 +43,10 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             msgs=response.unrouted_messages
             while len(msgs)>0:
                 for msg in msgs:
@@ -79,6 +83,10 @@ class InterfaceWebApiSnapshotTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username_to_share, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
+            for msg in response.unrouted_messages:
+                if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                    code = msg.code
+                    userapi.confirm_user_request(email=email, code=code)
             msgs=response.unrouted_messages
             while len(msgs)>0:
                 for msg in msgs:
