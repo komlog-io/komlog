@@ -15,6 +15,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
             ' -320.233,45%   ',
             ' 222.222,222222 ',
             ' 32.212,121,    ',
+            ' {32.212,121}   ',
         ]
         invalids=[
             ' 1              ',
@@ -56,6 +57,8 @@ class TextmanModelPatternsTest(unittest.TestCase):
             ' -320,233.45%   ',
             ' 222,222.222222 ',
             ' 222,222.222222, ',
+            ' {222,222.222222}',
+            ' }222,222.222222{',
         ]
         invalids=[
             ' 1              ',
@@ -95,6 +98,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
             ' 2222,32        ',
             ' 23434,342      ',
             ' 23434,342,     ',
+            ' {23434,342}    ',
         ]
         invalids=[
             ';1,000,000.32:  ',
@@ -138,6 +142,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' ,2323          ',
                   ' ,23232323      ',
                   ' ,23232323,     ',
+                  ' {,23232323{     ',
                ]
         invalids=[
                   ' 2222,32        ',
@@ -183,6 +188,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 2,32           ',
                   ' 2,3            ',
                   ' 2,3,           ', #if ends with comma space, we consider it as a separator
+                  ' {2,3}          ',
                ]
         invalids=[
                   ' 1,2323         ',
@@ -227,6 +233,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
         valids=[
             ' ,243           ',
             ' ,243,          ',
+            ' {,243}         ',
         ]
         invalids=[
             ' 32,32          ',
@@ -275,6 +282,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
         valids=[
                   ' 0,232          ',
                   ' 0,232,         ',
+                  ' {0,232}        ',
                ]
         invalids=[
                   ' ,243           ',
@@ -326,6 +334,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 222222.3       ',
                   ' 2222.343333    ',
                   ' 2222.343333,   ',
+                  ' {2222.343333}, ',
                ]
         invalids=[
                   ' 0,232          ',
@@ -378,6 +387,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 22.222222      ',
                   ' 1.2321         ',
                   ' 1.2321,        ',
+                  ' {1.2321{{,     ',
                ]
         invalids=[
                   ' 2222.343       ',
@@ -435,6 +445,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' .1             ',
                   ' .13            ',
                   ' .13,           ',
+                  ' }.13}          ',
                ]
         invalids=[
                   ' 22.2222        ',
@@ -488,6 +499,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
         valids=[
                   ' .434           ',
                   ' .434,          ',
+                  ' {.434}         ',
                ]
         invalids=[
                   ' 1.1            ',
@@ -547,7 +559,8 @@ class TextmanModelPatternsTest(unittest.TestCase):
         ''' patterns.ro_var_regex_11 should detect variables with a 0 in the integer part, and 3 decimal digits, with decimal separator dot (.) '''
         valids=[
                   ' 0.232          ',
-                  ' 0.232,          ',
+                  ' 0.232,         ',
+                  ' }0.232{        ',
                ]
         invalids=[
                   ' .434           ',
@@ -612,6 +625,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 12,121         ',
                   ' 12.121         ',
                   ' 12.121,        ',
+                  ' {12.121}       ',
                ]
         invalids=[
                   ' .434           ',
@@ -671,6 +685,7 @@ class TextmanModelPatternsTest(unittest.TestCase):
                   ' 0123443        ',
                   ' +142           ',
                   ' -132,          ',
+                  ' {-132}         ',
                ]
         invalids=[
                   ' 0.232          ',
