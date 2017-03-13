@@ -437,6 +437,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,
             messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
             messages.Messages.MAP_VARS_MESSAGE.value:1,
+            messages.Messages.URIS_UPDATED_MESSAGE.value:1,
         }
         retrieved_messages={}
         msgs=resp.unrouted_messages
@@ -481,6 +482,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,
             messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
             messages.Messages.MAP_VARS_MESSAGE.value:1,
+            messages.Messages.URIS_UPDATED_MESSAGE.value:1,
         }
         retrieved_messages={}
         msgs=resp.unrouted_messages

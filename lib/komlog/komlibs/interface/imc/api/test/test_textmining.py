@@ -108,7 +108,36 @@ class InterfaceImcApiTextminingTest(unittest.TestCase):
         self.assertEqual(msgs[0].type,messages.Messages.URIS_UPDATED_MESSAGE)
         self.assertEqual(msgs[0].date,ds_date)
         uris=[item['uri'] for item in msgs[0].uris]
-        self.assertEqual(sorted(uris),sorted(['datasource_uri','datasource_uri.datapoint_uri']))
+        self.assertEqual(sorted(uris),sorted(['datasource_uri.datapoint_uri']))
+
+    def test_process_message_FILLDS_success_none_datapoint_found(self):
+        ''' process_message_FILLDS should succeed although it does not contain any dp '''
+        username='test_process_message_fillds_success_none_datapoint_found'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        pubkey=crypto.serialize_public_key(crypto.generate_rsa_key().public_key())
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri) 
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        ds_content='content: 23'
+        ds_date=timeuuid.uuid1()
+        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        self.assertTrue(datasourceapi.generate_datasource_map(did=did, date=ds_date))
+        message=messages.FillDatasourceMessage(did=did, date=ds_date)
+        response=textmining.process_message_FILLDS(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.FILL_DATASOURCE_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertEqual(response.routed_messages, {})
+        self.assertEqual(response.unrouted_messages, [])
 
     def test_process_message_GENTEXTSUMMARY_failure_non_existent_pid(self):
         ''' process_message_GENTEXTSUMMARY should fail if did does not exist '''

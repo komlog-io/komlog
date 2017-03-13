@@ -73,11 +73,11 @@ def process_message_FILLDS(message):
         response.status=status.IMC_STATUS_OK
         if len(store_info['dp_not_found'])>0:
             response.add_message(messages.MissingDatapointMessage(did=did,date=date))
-        uris=[]
-        uris.append({'type':vertex.DATASOURCE,'id':did,'uri':store_info['ds_info']['uri']})
-        for dp in store_info['dp_found']:
-            uris.append({'type':vertex.DATAPOINT,'id':dp['pid'],'uri':dp['uri']})
-        response.add_message(messages.UrisUpdatedMessage(uris=uris,date=date))
+        if len(store_info['dp_found'])>0:
+            uris=[]
+            for dp in store_info['dp_found']:
+                uris.append({'type':vertex.DATAPOINT,'id':dp['pid'],'uri':dp['uri']})
+            response.add_message(messages.UrisUpdatedMessage(uris=uris,date=date))
     else:
         response.error=Errors.E_IAATM_FILLDS_ESDSV
         response.status=status.IMC_STATUS_INTERNAL_ERROR
