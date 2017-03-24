@@ -1,9 +1,10 @@
+import uuid
 import decimal
 import pandas as pd
 from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.interface.websocket import exceptions
-from komlog.komlibs.interface.websocket.model import message
+from komlog.komlibs.interface.websocket.model import message, response
 from komlog.komlibs.interface.websocket.model.types import Messages
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 
@@ -14,6 +15,34 @@ class MessagesVersionCatalog(message.MessagesCatalog):
         if cls is MessagesVersionCatalog:
             raise TypeError('<MessagesVersionCatalog> cannot be instantiated directly')
         return object.__new__(cls)
+
+    def __init__(self, seq=None, irt=None):
+        self.seq = seq if seq else uuid.uuid1().hex[0:20]
+        self.irt = irt
+
+    @property
+    def seq(self):
+        return self._seq
+
+    @seq.setter
+    def seq(self, value):
+        if hasattr(self, '_seq'):
+            raise TypeError('Sequence cannot be modified')
+        elif args.is_valid_message_sequence(value):
+            self._seq = value
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_MVC_ISEQ)
+
+    @property
+    def irt(self):
+        return self._irt
+
+    @irt.setter
+    def irt(self, value):
+        if value is None or args.is_valid_message_sequence(value):
+            self._irt = value
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_MVC_IIRT)
 
     @classmethod
     def catalog(cls):
@@ -29,11 +58,15 @@ class MessagesVersionCatalog(message.MessagesCatalog):
                     pass
         return None
 
+class GenericResponse(response.GenericResponse):
+    def __init__(self, status, irt, error=Errors.OK, reason=None, seq=None):
+        super().__init__(status=status, error=error, reason=reason, v=1, seq=seq, irt=irt)
 
 class SendDsData(MessagesVersionCatalog):
     _action_ = Messages.SEND_DS_DATA
 
-    def __init__(self, uri, ts, content):
+    def __init__(self, uri, ts, content, seq=None, irt=None):
+        super().__init__(seq=seq, irt=irt)
         self.uri=uri
         self.ts=ts
         self.content=content
@@ -77,6 +110,8 @@ class SendDsData(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
+            and 'seq' in msg
+            and 'irt' in msg
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
@@ -87,7 +122,7 @@ class SendDsData(MessagesVersionCatalog):
             uri=msg['payload']['uri']
             ts=msg['payload']['ts']
             content=msg['payload']['content']
-            return cls(uri=uri, ts=ts, content=content)
+            return cls(uri=uri, ts=ts, content=content, seq=msg['seq'], irt=msg['irt'])
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSD_ELFD)
 
@@ -96,6 +131,8 @@ class SendDsData(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
+            'seq':self.seq,
+            'irt':self.irt,
             'payload':{
                 'uri':self.uri,
                 'ts':self.ts.isoformat(),
@@ -106,7 +143,8 @@ class SendDsData(MessagesVersionCatalog):
 class SendDpData(MessagesVersionCatalog):
     _action_ = Messages.SEND_DP_DATA
 
-    def __init__(self, uri, ts, content):
+    def __init__(self, uri, ts, content, seq=None, irt=None):
+        super().__init__(seq=seq, irt=irt)
         self.uri=uri
         self.ts=ts
         self.content=content
@@ -150,6 +188,8 @@ class SendDpData(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
+            and 'seq' in msg
+            and 'irt' in msg
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
@@ -160,7 +200,7 @@ class SendDpData(MessagesVersionCatalog):
             uri=msg['payload']['uri']
             ts=msg['payload']['ts']
             content=msg['payload']['content']
-            return cls(uri=uri, ts=ts, content=content)
+            return cls(uri=uri, ts=ts, content=content, seq=msg['seq'], irt=msg['irt'])
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_ELFD)
 
@@ -169,6 +209,8 @@ class SendDpData(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
+            'seq':self.seq,
+            'irt':self.irt,
             'payload':{
                 'uri':self.uri,
                 'ts':self.ts.isoformat(),
@@ -179,7 +221,8 @@ class SendDpData(MessagesVersionCatalog):
 class SendMultiData(MessagesVersionCatalog):
     _action_ = Messages.SEND_MULTI_DATA
 
-    def __init__(self, ts, uris):
+    def __init__(self, ts, uris, seq=None, irt=None):
+        super().__init__(seq=seq, irt=irt)
         self.ts=ts
         self.uris=uris
 
@@ -220,6 +263,8 @@ class SendMultiData(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
+            and 'seq' in msg
+            and 'irt' in msg
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
@@ -228,7 +273,7 @@ class SendMultiData(MessagesVersionCatalog):
             and 'uris' in msg['payload']):
             ts=msg['payload']['ts']
             uris=msg['payload']['uris']
-            return cls(ts=ts, uris=uris)
+            return cls(ts=ts, uris=uris, seq=msg['seq'], irt=msg['irt'])
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTD_ELFD)
 
@@ -239,6 +284,8 @@ class SendMultiData(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
+            'seq':self.seq,
+            'irt':self.irt,
             'payload':{
                 'ts':self.ts.isoformat(),
                 'uris':ds_uris+dp_uris
@@ -248,7 +295,8 @@ class SendMultiData(MessagesVersionCatalog):
 class HookToUri(MessagesVersionCatalog):
     _action_  = Messages.HOOK_TO_URI
 
-    def __init__(self, uri, **kwargs):
+    def __init__(self, uri, seq=None, irt=None):
+        super().__init__(seq=seq, irt=irt)
         self.uri=uri
 
     @property
@@ -267,13 +315,15 @@ class HookToUri(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
+            and 'seq' in msg
+            and 'irt' in msg
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']):
             uri=msg['payload']['uri']
-            return cls(uri=uri)
+            return cls(uri=uri, seq=msg['seq'], irt=msg['irt'])
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTU_ELFD)
 
@@ -282,6 +332,8 @@ class HookToUri(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
+            'seq':self.seq,
+            'irt':self.irt,
             'payload':{
                 'uri':self.uri
             }
@@ -290,7 +342,8 @@ class HookToUri(MessagesVersionCatalog):
 class UnHookFromUri(MessagesVersionCatalog):
     _action_ = Messages.UNHOOK_FROM_URI
 
-    def __init__(self, uri):
+    def __init__(self, uri, seq=None, irt=None):
+        super().__init__(seq=seq, irt=irt)
         self.uri=uri
 
     @property
@@ -309,13 +362,15 @@ class UnHookFromUri(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
+            and 'seq' in msg
+            and 'irt' in msg
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']):
             uri=msg['payload']['uri']
-            return cls(uri=uri)
+            return cls(uri=uri, seq=msg['seq'], irt=msg['irt'])
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFU_ELFD)
 
@@ -324,6 +379,8 @@ class UnHookFromUri(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
+            'seq':self.seq,
+            'irt':self.irt,
             'payload':{
                 'uri':self.uri
             }
@@ -332,7 +389,8 @@ class UnHookFromUri(MessagesVersionCatalog):
 class RequestData(MessagesVersionCatalog):
     _action_ = Messages.REQUEST_DATA
 
-    def __init__(self, uri, start=None, end=None, count=None):
+    def __init__(self, uri, start=None, end=None, count=None, seq=None, irt=None):
+        super().__init__(seq=seq, irt=irt)
         self.uri = uri
         self.start = start
         self.end = end
@@ -395,6 +453,8 @@ class RequestData(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
+            and 'seq' in msg
+            and 'irt' in msg
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
@@ -407,7 +467,7 @@ class RequestData(MessagesVersionCatalog):
             start=msg['payload']['start']
             end=msg['payload']['end']
             count=msg['payload']['count']
-            return cls(uri=uri, start=start, end=end, count=count)
+            return cls(uri=uri, start=start, end=end, count=count, seq=msg['seq'], irt=msg['irt'])
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDT_ELFD)
 
@@ -416,6 +476,8 @@ class RequestData(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
+            'seq':self.seq,
+            'irt':self.irt,
             'payload':{
                 'uri':self.uri,
                 'start':self._start.isoformat() if self._start else None,
@@ -427,7 +489,8 @@ class RequestData(MessagesVersionCatalog):
 class SendDataInterval(MessagesVersionCatalog):
     _action_ = Messages.SEND_DATA_INTERVAL
 
-    def __init__(self, uri, start, end, data):
+    def __init__(self, uri, start, end, data, seq=None, irt=None):
+        super().__init__(seq=seq, irt=irt)
         self.uri = uri
         self.start = start
         self.end = end 
@@ -494,6 +557,8 @@ class SendDataInterval(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
+            and 'seq' in msg
+            and 'irt' in msg
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
@@ -506,7 +571,7 @@ class SendDataInterval(MessagesVersionCatalog):
             start=msg['payload']['start']
             end=msg['payload']['end']
             data=msg['payload']['data']
-            return cls(uri=uri, start=start, end=end, data=data)
+            return cls(uri=uri, start=start, end=end, data=data, seq=msg['seq'], irt=msg['irt'])
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDI_ELFD)
 
@@ -515,6 +580,8 @@ class SendDataInterval(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
+            'seq':self.seq,
+            'irt':self.irt,
             'payload':{
                 'uri':self.uri,
                 'start':self.start.isoformat(),

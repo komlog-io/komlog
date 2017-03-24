@@ -37,8 +37,8 @@ def new_agent_request(passport, agentname, pubkey, version):
         try:
             if authupdate.update_resources(operation=authop, params=params):
                 resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'aid':agent['aid'].hex})
-                resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
-                resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_AGENT, parameters={'aid':agent['aid'].hex}))
+                resp.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                resp.add_imc_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_AGENT, parameters={'aid':agent['aid'].hex}))
                 return resp
             else:
                 deleteapi.delete_agent(aid=agent['aid'])

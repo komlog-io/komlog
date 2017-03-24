@@ -73,7 +73,7 @@ def process_message_URISUPDT(message):
                 if timeuuid.get_unix_timestamp(session_info.last_update)+defaults.SESSION_INACTIVITY_EXPIRATION_SECONDS < timeuuid.get_unix_timestamp(timeuuid.uuid1()):
                     if session.delete_agent_session(sid=sid, last_update=session_info.last_update):
                         message=messages.ClearSessionHooksMessage(sid=sid, ids=[(item['id'],item['type']) for item in uris])
-                        response.add_message(message)
+                        response.add_imc_message(message)
             else:
                 data=[]
                 for item in uris:
@@ -100,10 +100,10 @@ def process_message_URISUPDT(message):
                     msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_MULTI_DATA, ts=ts, uris=data)
                     if msg:
                         message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
-                        response.add_message(message,dest=session_info.imc_address)
+                        response.add_imc_message(message,dest=session_info.imc_address)
         except authexcept.SessionNotFoundException:
             message=messages.ClearSessionHooksMessage(sid=sid, ids=[(item['id'],item['type']) for item in uris])
-            response.add_message(message)
+            response.add_imc_message(message)
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -133,7 +133,7 @@ def process_message_HOOKNEW(message):
                 userapi.delete_uri_pending_hooks(uid=uid, uri=item['uri'])
     if len(hooked)>0:
         msg=messages.UrisUpdatedMessage(uris=hooked, date=date)
-        response.add_message(msg)
+        response.add_imc_message(msg)
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -167,7 +167,7 @@ def process_message_SSDATA(message):
             else:
                 response.error=Errors.E_IIALD_SSDT_MRE
                 if session_info.imc_address is not None:
-                    response.add_message(message,dest=session_info.imc_address)
+                    response.add_imc_message(message,dest=session_info.imc_address)
         except authexcept.SessionNotFoundException:
             response.error=Errors.E_IIALD_SSDT_SNF
         response.status=status.IMC_STATUS_NOT_FOUND
@@ -219,7 +219,7 @@ def process_message_DATINT(message):
             msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=data)
             if msg:
                 imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
-                response.add_message(imc_message,dest=session_info.imc_address)
+                response.add_imc_message(imc_message,dest=session_info.imc_address)
             response.status=status.IMC_STATUS_ACCESS_DENIED
         else:
             uri={'uri':item_uri,'type':message.uri['type']}
@@ -229,9 +229,9 @@ def process_message_DATINT(message):
             msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=[])
             if msg:
                 imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
-                response.add_message(imc_message,dest=session_info.imc_address)
+                response.add_imc_message(imc_message,dest=session_info.imc_address)
             imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=limit, ie=message.ie, count=message.count)
-            response.add_message(imc_message)
+            response.add_imc_message(imc_message)
             response.status=status.IMC_STATUS_OK
     else:
         uri={'uri':item_uri,'type':message.uri['type']}
@@ -258,11 +258,11 @@ def process_message_DATINT(message):
             if message.count != count:
                 new_count = message.count-count if message.count else None
                 imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=message.ii, ie=new_ie, count=new_count)
-                response.add_message(imc_message)
+                response.add_imc_message(imc_message)
         msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=resp_data)
         if msg:
             imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
-            response.add_message(imc_message,dest=session_info.imc_address)
+            response.add_imc_message(imc_message,dest=session_info.imc_address)
     response.status=status.IMC_STATUS_OK
     return response
 

@@ -108,7 +108,7 @@ class Module(object):
                     try:
                         response=msgapi.process_message(message)
                         if response:
-                            await msgapi.send_response_messages(response)
+                            await msgapi.send_messages(response.imc_messages)
                         else:
                             logging.logger.error('msgresult is None: '+message.type.value)
                     except AttributeError:

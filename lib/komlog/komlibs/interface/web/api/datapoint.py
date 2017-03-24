@@ -126,7 +126,7 @@ def new_datasource_datapoint_request(passport, did, sequence, position, length, 
     authorization.authorize_request(request=Requests.NEW_DATASOURCE_DATAPOINT,passport=passport,did=did)
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
-    resp.add_message(messages.MonitorVariableMessage(uid=passport.uid, did=did, date=date, position=position, length=length, datapointname=datapointname))
+    resp.add_imc_message(messages.MonitorVariableMessage(uid=passport.uid, did=did, date=date, position=position, length=length, datapointname=datapointname))
     return resp
 
 @exceptions.ExceptionHandler
@@ -145,7 +145,7 @@ def mark_positive_variable_request(passport, pid, sequence, position, length):
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
     authorization.authorize_request(request=Requests.MARK_POSITIVE_VARIABLE,passport=passport,pid=pid)
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
-    resp.add_message(messages.PositiveVariableMessage(pid=pid, date=date, position=position, length=length))
+    resp.add_imc_message(messages.PositiveVariableMessage(pid=pid, date=date, position=position, length=length))
     return resp
 
 @exceptions.ExceptionHandler
@@ -164,7 +164,7 @@ def mark_negative_variable_request(passport, pid, sequence, position, length):
     date=timeuuid.get_uuid1_from_custom_sequence(sequence=sequence)
     authorization.authorize_request(request=Requests.MARK_NEGATIVE_VARIABLE,passport=passport,pid=pid)
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
-    resp.add_message(messages.NegativeVariableMessage(pid=pid, date=date, position=position, length=length))
+    resp.add_imc_message(messages.NegativeVariableMessage(pid=pid, date=date, position=position, length=length))
     return resp
 
 @exceptions.ExceptionHandler
@@ -176,7 +176,7 @@ def delete_datapoint_request(passport, pid):
     pid=uuid.UUID(pid)
     authorization.authorize_request(request=Requests.DELETE_DATAPOINT,passport=passport,pid=pid)
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
-    resp.add_message(messages.DeleteDatapointMessage(pid=pid))
+    resp.add_imc_message(messages.DeleteDatapointMessage(pid=pid))
     return resp
 
 @exceptions.ExceptionHandler
@@ -196,6 +196,6 @@ def dissociate_datapoint_from_datasource_request(passport, pid):
         msgs.append(messages.UpdateQuotesMessage(operation=authop, params=params))
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
     for msg in msgs:
-        resp.add_message(msg)
+        resp.add_imc_message(msg)
     return resp
 

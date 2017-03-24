@@ -23,7 +23,7 @@ from komlog.komlibs.graph.api import uri as graphuri
 from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.interface.imc.model import messages
 from komlog.komlibs.interface.websocket import status, exceptions
-from komlog.komlibs.interface.websocket.model.response import Response
+from komlog.komlibs.interface.websocket.model.response import WSocketIfaceResponse
 from komlog.komlibs.interface.websocket.protocol.v1.errors import Errors
 from komlog.komlibs.interface.websocket.protocol.v1.processing import operation
 from komlog.komlibs.interface.websocket.protocol.v1.model import message as modmsg
@@ -36,7 +36,6 @@ def _process_send_ds_data(passport, message):
     message = modmsg.SendDsData.load_from_dict(message)
     did=None
     new_datasource=False
-    msgs=[]
     if args.is_valid_global_uri(message.uri):
         username,local_uri=message.uri.split(':')
         try:
@@ -44,7 +43,10 @@ def _process_send_ds_data(passport, message):
         except gestexcept.UserNotFoundException:
             user_uid = None
         if user_uid != passport.uid:
-            return Response(status=status.MESSAGE_EXECUTION_DENIED, reason="Cannot modify other user's uris", error=Errors.E_IWSPV1PM_PSDSD_EUGURI)
+            result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PSDSD_EUGURI)
+            ws_res = modmsg.GenericResponse(status=status.MESSAGE_EXECUTION_DENIED, reason="Cannot modify other user's uris", error=Errors.E_IWSPV1PM_PSDSD_EUGURI, irt=message.seq)
+            result.add_ws_message(ws_res)
+            return result
         else:
             message.uri = local_uri
     uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
@@ -55,19 +57,26 @@ def _process_send_ds_data(passport, message):
             new_datasource = True
             did=datasource['did']
         else:
-            return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDSD_ECDS)
+            result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_ERROR, error=Errors.E_IWSPV1PM_PSDSD_ECDS)
+            ws_res=modmsg.GenericResponse(status=result.status, error=result.error, reason='internal error', irt=message.seq)
+            result.add_ws_message(ws_res)
+            return result
     elif uri_info['type']==vertex.DATASOURCE:
         did=uri_info['id']
         authorization.authorize_request(request=Requests.POST_DATASOURCE_DATA,passport=passport,did=did)
     else:
-        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datasource', error=Errors.E_IWSPV1PM_PSDSD_IURI)
+        result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PSDSD_IURI)
+        ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='uri is not a datasource', irt=message.seq)
+        result.add_ws_message(ws_res)
+        return result
+    result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_OK, error=Errors.OK)
     try:
         date=timeuuid.get_uuid1_from_isodate(message.ts, predictable=True)
         datasourceapi.store_datasource_data(did=did, date=date, content=message.content)
         op=modop.DatasourceDataStoredOperation(uid=passport.uid, did=did, date=date)
         op_msgs=operation.process_operation(op)
         for msg in op_msgs:
-            msgs.append(msg)
+            result.add_imc_message(msg)
     except:
         if new_datasource:
             deleteapi.delete_datasource(did=did)
@@ -78,24 +87,22 @@ def _process_send_ds_data(passport, message):
                 op=modop.NewDatasourceOperation(uid=passport.uid,aid=passport.aid,did=datasource['did'])
                 op_msgs=operation.process_operation(op)
                 for msg in op_msgs:
-                    msgs.append(msg)
+                    result.add_imc_message(msg)
             except:
                 deleteapi.delete_datasource(did=datasource['did'])
                 raise
-            msgs.append(messages.HookNewUrisMessage(uid=passport.uid, uris=[{'type':vertex.DATASOURCE,'id':did,'uri':message.uri}],date=date))
+            result.add_imc_message(messages.HookNewUrisMessage(uid=passport.uid, uris=[{'type':vertex.DATASOURCE,'id':did,'uri':message.uri}],date=date))
         else:
-            msgs.append(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATASOURCE,'id':did,'uri':message.uri}],date=date))
-    resp = Response(status=status.MESSAGE_EXECUTION_OK)
-    for msg in msgs:
-        resp.add_message(msg)
-    return resp
+            result.add_imc_message(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATASOURCE,'id':did,'uri':message.uri}],date=date))
+    ws_res = modmsg.GenericResponse(status=result.status, irt=message.seq)
+    result.add_ws_message(ws_res)
+    return result
 
 @exceptions.ExceptionHandler
 def _process_send_dp_data(passport, message):
     message = modmsg.SendDpData.load_from_dict(message)
     new_datapoint=False
     date=timeuuid.get_uuid1_from_isodate(message.ts, predictable=True)
-    msgs=[]
     if args.is_valid_global_uri(message.uri):
         username,local_uri=message.uri.split(':')
         try:
@@ -103,7 +110,10 @@ def _process_send_dp_data(passport, message):
         except gestexcept.UserNotFoundException:
             user_uid = None
         if user_uid != passport.uid:
-            return Response(status=status.MESSAGE_EXECUTION_DENIED, reason="Cannot modify other user's uris", error=Errors.E_IWSPV1PM_PSDPD_EUGURI)
+            result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PSDPD_EUGURI)
+            ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason="Cannot modify other user's uris", irt=message.seq)
+            result.add_ws_message(ws_res)
+            return result
         else:
             message.uri = local_uri
     uri_info=graphuri.get_id(ido=passport.uid, uri=message.uri)
@@ -114,34 +124,40 @@ def _process_send_dp_data(passport, message):
             pid=datapoint['pid']
             new_datapoint=True
         else:
-            return Response(status=status.MESSAGE_EXECUTION_ERROR, reason='internal error', error=Errors.E_IWSPV1PM_PSDPD_ECDP)
+            result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_ERROR, error=Errors.E_IWSPV1PM_PSDPD_ECDP)
+            ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='internal error', irt=message.seq)
+            result.add_ws_message(ws_res)
+            return result
     elif uri_info['type']==vertex.DATAPOINT:
         pid=uri_info['id']
         authorization.authorize_request(request=Requests.POST_DATAPOINT_DATA,passport=passport,pid=pid)
     else:
-        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='uri is not a datapoint', error=Errors.E_IWSPV1PM_PSDPD_IURI)
+        result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PSDPD_IURI)
+        ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='uri is not a datapoint', irt=message.seq)
+        result.add_ws_message(ws_res)
+        return result
+    result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_OK, error=Errors.OK)
     try:
         datapointapi.store_user_datapoint_value(pid=pid,date=date,content=message.content)
         op=modop.DatapointDataStoredOperation(uid=passport.uid, pid=pid, date=date)
         op_msgs=operation.process_operation(op)
         for msg in op_msgs:
-            msgs.append(msg)
+            result.add_imc_message(msg)
     except:
         deleteapi.delete_datapoint(pid=pid)
         raise
     else:
         if new_datapoint:
-            msgs.append(messages.HookNewUrisMessage(uid=passport.uid, uris=[{'type':vertex.DATAPOINT,'id':pid,'uri':message.uri}],date=date))
+            result.add_imc_message(messages.HookNewUrisMessage(uid=passport.uid, uris=[{'type':vertex.DATAPOINT,'id':pid,'uri':message.uri}],date=date))
             op=modop.NewUserDatapointOperation(uid=passport.uid,aid=passport.aid,pid=pid)
             op_msgs=operation.process_operation(op)
             for msg in op_msgs:
-                msgs.append(msg)
+                result.add_imc_message(msg)
         else:
-            msgs.append(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATAPOINT,'id':pid,'uri':message.uri}],date=date))
-    resp = Response(status=status.MESSAGE_EXECUTION_OK)
-    for msg in msgs:
-        resp.add_message(msg)
-    return resp
+            result.add_imc_message(messages.UrisUpdatedMessage(uris=[{'type':vertex.DATAPOINT,'id':pid,'uri':message.uri}],date=date))
+    ws_res = modmsg.GenericResponse(status=result.status, irt=message.seq)
+    result.add_ws_message(ws_res)
+    return result
 
 @exceptions.ExceptionHandler
 def _process_send_multi_data(passport, message):
@@ -150,7 +166,6 @@ def _process_send_multi_data(passport, message):
     existing_uris=[]
     pending_ds_creations=[]
     pending_dp_creations=[]
-    msgs=[]
     # execution authorization
     for item in message.uris:
         if args.is_valid_global_uri(item['uri']):
@@ -160,7 +175,10 @@ def _process_send_multi_data(passport, message):
             except gestexcept.UserNotFoundException:
                 user_uid = None
             if user_uid != passport.uid:
-                return Response(status=status.MESSAGE_EXECUTION_DENIED, reason="Cannot modify other user's uris", error=Errors.E_IWSPV1PM_PSMTD_EUGURI)
+                result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PSMTD_EUGURI)
+                ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason="Cannot modify other user's uris", irt=message.seq)
+                result.add_ws_message(ws_res)
+                return result
         else:
             local_uri = item['uri']
         uri_info=graphuri.get_id(ido=passport.uid, uri=local_uri)
@@ -170,16 +188,25 @@ def _process_send_multi_data(passport, message):
             elif item['type'] == vertex.DATASOURCE and args.is_valid_datasource_content(item['content']):
                 pending_ds_creations.append({'type':item['type'],'uri':local_uri,'content':item['content']})
             else:
-                return Response(status=status.PROTOCOL_ERROR, reason='invalid content for uri: '+item['uri'], error=Errors.E_IWSPV1PM_PSMTD_IUC)
+                result = WSocketIfaceResponse(status=status.PROTOCOL_ERROR, error=Errors.E_IWSPV1PM_PSMTD_IUC)
+                ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='invalid content for uri: '+item['uri'], irt=message.seq)
+                result.add_ws_message(ws_res)
+                return result
         elif uri_info['type'] not in (vertex.DATAPOINT,vertex.DATASOURCE):
-            return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+item['uri'], error=Errors.E_IWSPV1PM_PSMTD_ONAOU)
+            result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PSMTD_ONAOU)
+            ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='operation not allowed on this uri: '+item['uri'], irt=message.seq)
+            result.add_ws_message(ws_res)
+            return result
         else:
             if uri_info['type'] == vertex.DATASOURCE and args.is_valid_datasource_content(item['content']):
                 existing_uris.append({'uri':local_uri,'id':uri_info['id'],'type':uri_info['type'],'content':item['content']})
             elif uri_info['type'] == vertex.DATAPOINT and args.is_valid_datapoint_content(item['content']):
                 existing_uris.append({'uri':local_uri,'id':uri_info['id'],'type':uri_info['type'],'content':item['content']})
             else:
-                return Response(status=status.PROTOCOL_ERROR, reason='uri content not valid: '+item['uri'], error=Errors.E_IWSPV1PM_PSMTD_UCNV)
+                result = WSocketIfaceResponse(status=status.PROTOCOL_ERROR, error=Errors.E_IWSPV1PM_PSMTD_UCNV)
+                ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='uri content not valid: '+item['uri'], irt=message.seq)
+                result.add_ws_message(ws_res)
+                return result
     if len(pending_ds_creations)>0:
         authorization.authorize_request(request=Requests.NEW_DATASOURCE,passport=passport)
     if len(pending_dp_creations)>0:
@@ -214,6 +241,7 @@ def _process_send_multi_data(passport, message):
             deleteapi.delete_datapoint(pid=dp['pid'])
         raise
     #store content
+    result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_OK, error=Errors.OK)
     try:
         updated_uris=[]
         updated_new_uris=[]
@@ -235,9 +263,9 @@ def _process_send_multi_data(passport, message):
             datapointapi.store_user_datapoint_value(pid=pid,date=date,content=item['content'])
             updated_new_uris.append({'uri':item['uri'],'type':vertex.DATAPOINT,'id':pid})
         if len(updated_uris)>0:
-            msgs.append(messages.UrisUpdatedMessage(uris=updated_uris, date=date))
+            result.add_imc_message(messages.UrisUpdatedMessage(uris=updated_uris, date=date))
         if len(updated_new_uris)>0:
-            msgs.append(messages.HookNewUrisMessage(uid=passport.uid, uris=updated_new_uris, date=date))
+            result.add_imc_message(messages.HookNewUrisMessage(uid=passport.uid, uris=updated_new_uris, date=date))
     except:
         for item in new_ds:
             deleteapi.delete_datasource(did=ds['did'])
@@ -255,31 +283,31 @@ def _process_send_multi_data(passport, message):
             op=modop.NewDatasourceOperation(uid=passport.uid,aid=passport.aid,did=ds['did'])
             op_msgs=operation.process_operation(op)
             for msg in op_msgs:
-                msgs.append(msg)
+                result.add_imc_message(msg)
             op=modop.DatasourceDataStoredOperation(uid=passport.uid, did=ds['did'], date=date)
             op_msgs=operation.process_operation(op)
             for msg in op_msgs:
-                msgs.append(msg)
+                result.add_imc_message(msg)
         for dp in new_dp:
             op=modop.NewUserDatapointOperation(uid=passport.uid,aid=passport.aid,pid=dp['pid'])
             op_msgs=operation.process_operation(op)
             for msg in op_msgs:
-                msgs.append(msg)
+                result.add_imc_message(msg)
             op=modop.DatapointDataStoredOperation(uid=passport.uid, pid=dp['pid'], date=date)
             op_msgs=operation.process_operation(op)
             for msg in op_msgs:
-                msgs.append(msg)
+                result.add_imc_message(msg)
         for item in existing_uris:
             if item['type']==vertex.DATASOURCE:
                 op=modop.DatasourceDataStoredOperation(uid=passport.uid, did=item['id'], date=date)
                 op_msgs=operation.process_operation(op)
                 for msg in op_msgs:
-                    msgs.append(msg)
+                    result.add_imc_message(msg)
             elif item['type'] == vertex.DATAPOINT:
                 op=modop.DatapointDataStoredOperation(uid=passport.uid, pid=item['id'], date=date)
                 op_msgs=operation.process_operation(op)
                 for msg in op_msgs:
-                    msgs.append(msg)
+                    result.add_imc_message(msg)
     except:
         for item in new_ds:
             deleteapi.delete_datasource(did=ds['did'])
@@ -292,10 +320,9 @@ def _process_send_multi_data(passport, message):
                 deleteapi.delete_datasource_data_at(did=item['id'],date=date)
         raise
     else:
-        resp = Response(status=status.MESSAGE_EXECUTION_OK)
-        for msg in msgs:
-            resp.add_message(msg)
-        return resp
+        ws_res = modmsg.GenericResponse(status=result.status, irt=message.seq)
+        result.add_ws_message(ws_res)
+        return result
 
 @exceptions.ExceptionHandler
 def _process_hook_to_uri(passport, message):
@@ -305,7 +332,10 @@ def _process_hook_to_uri(passport, message):
         try:
             user_uid = userapi.get_uid(username.lower())
         except gestexcept.UserNotFoundException:
-            return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PHTU_OUNF)
+            result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PHTU_OUNF)
+            ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='operation not allowed on this uri: '+message.uri, irt=message.seq)
+            result.add_ws_message(ws_res)
+            return result
     else:
         local_uri=message.uri
         user_uid=passport.uid
@@ -313,9 +343,15 @@ def _process_hook_to_uri(passport, message):
     if not uri_info or uri_info['type'] == vertex.VOID:
         authorization.authorize_request(request=Requests.REGISTER_PENDING_HOOK,passport=passport,uri=message.uri)
         userapi.register_pending_hook(uid=user_uid, uri=local_uri, sid=passport.sid)
-        return Response(status=status.MESSAGE_EXECUTION_OK, reason='Operation registered, but uri does not exist yet')
+        result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_OK, error=Errors.OK)
+        ws_res = modmsg.GenericResponse(status=result.status, reason='Operation registered, but uri does not exist yet', irt=message.seq)
+        result.add_ws_message(ws_res)
+        return result
     elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
-        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PHTU_ONA)
+        result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PHTU_ONA)
+        ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='operation not allowed on this uri: '+message.uri, irt=message.seq)
+        result.add_ws_message(ws_res)
+        return result
     else:
         if uri_info['type'] == vertex.DATASOURCE:
             authorization.authorize_request(request=Requests.HOOK_TO_DATASOURCE,passport=passport,did=uri_info['id'])
@@ -323,7 +359,10 @@ def _process_hook_to_uri(passport, message):
         elif uri_info['type'] == vertex.DATAPOINT:
             authorization.authorize_request(request=Requests.HOOK_TO_DATAPOINT,passport=passport,pid=uri_info['id'])
             datapointapi.hook_to_datapoint(pid=uri_info['id'], sid=passport.sid)
-    return Response(status=status.MESSAGE_EXECUTION_OK, reason='Hooked successfully')
+    result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_OK, error=Errors.OK)
+    ws_res = modmsg.GenericResponse(status=result.status, reason='Hooked successfully', irt=message.seq)
+    result.add_ws_message(ws_res)
+    return result
 
 @exceptions.ExceptionHandler
 def _process_unhook_from_uri(passport, message):
@@ -333,7 +372,10 @@ def _process_unhook_from_uri(passport, message):
         try:
             user_uid = userapi.get_uid(username.lower())
         except gestexcept.UserNotFoundException:
-            return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PUHFU_OUNF)
+            result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PUHFU_OUNF)
+            ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='operation not allowed on this uri: '+message.uri, irt=message.seq)
+            result.add_ws_message(ws_res)
+            return result
     else:
         local_uri=message.uri
         user_uid=passport.uid
@@ -341,9 +383,15 @@ def _process_unhook_from_uri(passport, message):
     if not uri_info or uri_info['type'] == vertex.VOID:
         authorization.authorize_request(request=Requests.DELETE_PENDING_HOOK,passport=passport,uri=message.uri)
         userapi.delete_pending_hook(uid=user_uid, uri=local_uri, sid=passport.sid)
-        return Response(status=status.MESSAGE_EXECUTION_OK, reason='Unhooked')
+        result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_OK, error=Errors.OK)
+        ws_res = modmsg.GenericResponse(status=result.status, reason='Unhooked', irt=message.seq)
+        result.add_ws_message(ws_res)
+        return result
     elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
-        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PUHFU_ONA)
+        result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PUHFU_ONA)
+        ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='operation not allowed on this uri: '+message.uri, irt=message.seq)
+        result.add_ws_message(ws_res)
+        return result
     else:
         if uri_info['type'] == vertex.DATASOURCE:
             authorization.authorize_request(request=Requests.UNHOOK_FROM_DATASOURCE,passport=passport,did=uri_info['id'])
@@ -351,7 +399,10 @@ def _process_unhook_from_uri(passport, message):
         elif uri_info['type'] == vertex.DATAPOINT:
             authorization.authorize_request(request=Requests.UNHOOK_FROM_DATAPOINT,passport=passport, pid=uri_info['id'])
             datapointapi.unhook_from_datapoint(pid=uri_info['id'], sid=passport.sid)
-    return Response(status=status.MESSAGE_EXECUTION_OK)
+    result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_OK, error=Errors.OK)
+    ws_res = modmsg.GenericResponse(status=result.status, irt=message.seq)
+    result.add_ws_message(ws_res)
+    return result
 
 @exceptions.ExceptionHandler
 def _process_request_data(passport, message):
@@ -361,17 +412,26 @@ def _process_request_data(passport, message):
         try:
             user_uid = userapi.get_uid(username.lower())
         except gestexcept.UserNotFoundException:
-            return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PRDI_OUNF)
+            result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PRDI_OUNF)
+            ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='operation not allowed on this uri: '+message.uri, irt=message.seq)
+            result.add_ws_message(ws_res)
+            return result
     else:
         user_uid = passport.uid
         local_uri = message.uri
     uri_info=graphuri.get_id(ido=user_uid, uri=local_uri)
     if not uri_info or uri_info['type'] == vertex.VOID:
         authorization.authorize_request(request=Requests.GET_URI,passport=passport,uri=message.uri)
-        return Response(status=status.RESOURCE_NOT_FOUND, reason='uri '+message.uri+' does not exist', error=Errors.E_IWSPV1PM_PRDI_UNF)
+        result = WSocketIfaceResponse(status=status.RESOURCE_NOT_FOUND, error=Errors.E_IWSPV1PM_PRDI_UNF)
+        ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='uri '+message.uri+' does not exist', irt=message.seq)
+        result.add_ws_message(ws_res)
+        return result
     elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):
         authorization.authorize_request(request=Requests.GET_URI,passport=passport,uri=message.uri)
-        return Response(status=status.MESSAGE_EXECUTION_DENIED, reason='operation not allowed on this uri: '+message.uri, error=Errors.E_IWSPV1PM_PRDI_ONA)
+        result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PRDI_ONA)
+        ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='operation not allowed on this uri: '+message.uri, irt=message.seq)
+        result.add_ws_message(ws_res)
+        return result
     if message.start is None and message.end is None:
         ii=timeuuid.min_uuid_from_time(1)
         ie=timeuuid.min_uuid_from_time(timeuuid.get_unix_timestamp(timeuuid.uuid1()))
@@ -402,8 +462,9 @@ def _process_request_data(passport, message):
         error=Errors.OK
         reason='message accepted for processing'
         stat=status.MESSAGE_ACCEPTED_FOR_PROCESSING
-    msg=messages.DataIntervalRequestMessage(sid=passport.sid, uri={'type':uri_info['type'],'id':uri_info['id'],'uri':local_uri}, ii=ii, ie=ie, count=message.count)
-    resp=Response(status=stat, reason=reason, error=error)
-    resp.add_message(msg)
-    return resp
+    result = WSocketIfaceResponse(status=stat, error=error)
+    result.add_imc_message(messages.DataIntervalRequestMessage(sid=passport.sid, uri={'type':uri_info['type'],'id':uri_info['id'],'uri':local_uri}, ii=ii, ie=ie, count=message.count))
+    ws_res = modmsg.GenericResponse(status=stat, reason=reason, error=error, irt=message.seq)
+    result.add_ws_message(ws_res)
+    return result
 

@@ -43,16 +43,16 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
             response = loginapi.login_request(username=self.username, password=self.password)
             cookie=getattr(response, 'cookie',None)
@@ -61,12 +61,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             version='test library vX.XX'
             response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
             if response.status==status.WEB_STATUS_OK:
-                msgs=response.unrouted_messages
+                msgs=response.imc_messages['unrouted']
                 while len(msgs)>0:
                     for msg in msgs:
                         msgs.remove(msg)
                         msgresponse=msgapi.process_message(msg)
-                        for msg2 in msgresponse.unrouted_messages:
+                        for msg2 in msgresponse.imc_messages['unrouted']:
                             msgs.append(msg2)
                         self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response = loginapi.login_request(username=self.username, password=self.password)
@@ -86,12 +86,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         psp = self.passport
@@ -121,16 +121,16 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -138,12 +138,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -154,12 +154,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -187,17 +187,17 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
@@ -221,12 +221,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -255,12 +255,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -289,12 +289,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -323,12 +323,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -388,12 +388,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         psp = self.passport
@@ -418,7 +418,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response = userapi.new_user_request(username=new_username, password=password, email=new_email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=new_email, code=code)
@@ -437,12 +437,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         psp = self.passport
@@ -477,7 +477,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -519,12 +519,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         psp = self.passport
@@ -555,12 +555,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         psp = self.passport
@@ -573,12 +573,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         response4=widgetapi.delete_widget_request(passport=psp, wid=wid)
         self.assertEqual(response4.status, status.WEB_STATUS_RECEIVED)
-        msgs=response4.unrouted_messages
+        msgs=response4.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response5 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
@@ -593,12 +593,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         psp = self.passport
@@ -611,12 +611,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         response4=widgetapi.delete_widget_request(passport=psp, wid=wid)
         self.assertEqual(response4.status, status.WEB_STATUS_RECEIVED)
-        msgs=response4.unrouted_messages
+        msgs=response4.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response5 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
@@ -631,12 +631,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         psp = self.passport
@@ -649,12 +649,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         response4=widgetapi.delete_widget_request(passport=psp, wid=wid)
         self.assertEqual(response4.status, status.WEB_STATUS_RECEIVED)
-        msgs=response4.unrouted_messages
+        msgs=response4.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response5 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
@@ -669,12 +669,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         psp = self.passport
@@ -687,12 +687,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertEqual(response3.data['wid'],wid)
         response4=widgetapi.delete_widget_request(passport=psp, wid=wid)
         self.assertEqual(response4.status, status.WEB_STATUS_RECEIVED)
-        msgs=response4.unrouted_messages
+        msgs=response4.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response5 = widgetapi.get_widget_config_request(passport=psp, wid=wid)
@@ -743,12 +743,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -768,12 +768,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -793,12 +793,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -818,12 +818,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -879,12 +879,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -900,12 +900,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
@@ -920,12 +920,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -956,12 +956,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -977,12 +977,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
@@ -997,12 +997,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -1033,12 +1033,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -1054,12 +1054,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
@@ -1074,12 +1074,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -1110,12 +1110,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -1132,12 +1132,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
@@ -1152,12 +1152,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -1224,12 +1224,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -1245,12 +1245,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
@@ -1265,12 +1265,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -1309,12 +1309,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -1330,12 +1330,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
@@ -1350,12 +1350,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -1394,12 +1394,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -1415,12 +1415,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
@@ -1435,12 +1435,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -1479,12 +1479,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -1501,12 +1501,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
@@ -1521,12 +1521,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -1604,12 +1604,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -1625,12 +1625,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
@@ -1645,12 +1645,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -1692,12 +1692,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -1714,12 +1714,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
@@ -1734,12 +1734,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)
@@ -1815,12 +1815,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         psp = self.passport
@@ -1845,7 +1845,7 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         response = userapi.new_user_request(username=new_username, password=password, email=new_email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=new_email, code=code)
@@ -1865,12 +1865,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['wid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         wid=response.data['wid']
@@ -1886,12 +1886,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcecontent='DATASOURCE CONTENT 1 2 3'
@@ -1906,12 +1906,12 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         variable=datasourcedata.data['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = widgetapi.get_widgets_config_request(passport=psp)

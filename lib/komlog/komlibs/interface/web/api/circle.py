@@ -84,8 +84,8 @@ def new_users_circle_request(passport, circlename, members_list=None):
         try:
             if authupdate.update_resources(operation=authop, params=params):
                 resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'cid':circle['cid'].hex})
-                resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
-                resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_CIRCLE, parameters={'cid':circle['cid'].hex}))
+                resp.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                resp.add_imc_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_CIRCLE, parameters={'cid':circle['cid'].hex}))
                 return resp
             else:
                 deleteapi.delete_circle(cid=circle['cid'])
@@ -126,7 +126,7 @@ def add_user_to_circle_request(passport, cid, member):
         authop=webop.get_auth_operation()
         params=webop.get_params()
         resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
-        resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+        resp.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
         return resp
     return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN)
 
@@ -145,7 +145,7 @@ def delete_user_from_circle_request(passport, cid, member):
         authop=webop.get_auth_operation()
         params=webop.get_params()
         resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK)
-        resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+        resp.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
         return resp
     return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, error=Errors.UNKNOWN)
 

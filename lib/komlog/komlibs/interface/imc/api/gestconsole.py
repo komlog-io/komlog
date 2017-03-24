@@ -46,17 +46,17 @@ def process_message_MONVAR(message):
     webop=operation.NewDatasourceDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=result['pid'])
     authop=webop.get_auth_operation()
     params=webop.get_params()
-    response.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
-    response.add_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
-    response.add_message(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':result['pid'].hex}))
+    response.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+    response.add_imc_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
+    response.add_imc_message(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':result['pid'].hex}))
     for pid in result['dtree_gen_success']:
-        response.add_message(messages.FillDatapointMessage(pid=pid,date=date))
+        response.add_imc_message(messages.FillDatapointMessage(pid=pid,date=date))
     for pid in result['dtree_gen_failed']:
-        response.add_message(messages.AnalyzeDTreeMessage(pid=pid))
+        response.add_imc_message(messages.AnalyzeDTreeMessage(pid=pid))
     if result['previously_existed'] is False:
-        response.add_message(messages.NewDPWidgetMessage(uid=uid,pid=result['pid']))
+        response.add_imc_message(messages.NewDPWidgetMessage(uid=uid,pid=result['pid']))
         uris=[{'type':vertex.DATAPOINT, 'id':result['pid'], 'uri':result['datapointname']}]
-        response.add_message(messages.HookNewUrisMessage(uid=uid, uris=uris, date=date))
+        response.add_imc_message(messages.HookNewUrisMessage(uid=uid, uris=uris, date=date))
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -73,9 +73,9 @@ def process_message_NEGVAR(message):
     pid=message.pid
     result=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
     for a_pid in result['dtree_gen_success']:
-        response.add_message(messages.FillDatapointMessage(pid=a_pid,date=date))
+        response.add_imc_message(messages.FillDatapointMessage(pid=a_pid,date=date))
     for a_pid in result['dtree_gen_failed']:
-        response.add_message(messages.AnalyzeDTreeMessage(pid=a_pid))
+        response.add_imc_message(messages.AnalyzeDTreeMessage(pid=a_pid))
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -93,9 +93,9 @@ def process_message_POSVAR(message):
     pid=message.pid
     result=datapointapi.mark_positive_variable(date=date, position=position, length=length, pid=pid)
     for a_pid in result['dtree_gen_success']:
-        response.add_message(messages.FillDatapointMessage(pid=a_pid,date=date))
+        response.add_imc_message(messages.FillDatapointMessage(pid=a_pid,date=date))
     for a_pid in result['dtree_gen_failed']:
-        response.add_message(messages.AnalyzeDTreeMessage(pid=a_pid))
+        response.add_imc_message(messages.AnalyzeDTreeMessage(pid=a_pid))
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -161,8 +161,8 @@ def process_message_NEWDSW(message):
         webop=operation.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
         authop=webop.get_auth_operation()
         params=webop.get_params()
-        response.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
-        response.add_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
+        response.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+        response.add_imc_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
         response.status=status.IMC_STATUS_OK
     else:
         response.error=Errors.E_IIAG_NEWDSW_ECW
@@ -180,8 +180,8 @@ def process_message_NEWDPW(message):
         webop=operation.NewWidgetSystemOperation(uid=widget['uid'],wid=widget['wid'])
         authop=webop.get_auth_operation()
         params=webop.get_params()
-        response.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
-        response.add_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
+        response.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+        response.add_imc_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
         response.status=status.IMC_STATUS_OK
     else:
         response.error=Errors.E_IIAG_NEWDPW_ECW
@@ -207,7 +207,7 @@ def process_message_DELAGENT(message):
     deleteapi.delete_agent(aid=agent['aid'])
     op_id=Operations.DELETE_AGENT
     op_params={'uid':agent['uid']}
-    response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+    response.add_imc_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -220,7 +220,7 @@ def process_message_DELDS(message):
     deleteapi.delete_datasource(did=did)
     op_id=Operations.DELETE_DATASOURCE
     op_params={'uid':datasource['uid'],'aid':datasource['aid']}
-    response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+    response.add_imc_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -237,11 +237,11 @@ def process_message_DELDP(message):
     if datasource:
         op_id=Operations.DELETE_DATASOURCE_DATAPOINT
         op_params={'uid':datapoint['uid'],'aid':datasource['aid'],'did':datapoint['did']}
-        response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+        response.add_imc_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
     else:
         op_id=Operations.DELETE_USER_DATAPOINT
         op_params={'uid':datapoint['uid']}
-        response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+        response.add_imc_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -254,7 +254,7 @@ def process_message_DELWIDGET(message):
     deleteapi.delete_widget(wid=wid)
     op_id=Operations.DELETE_WIDGET
     op_params={'uid':widget['uid']}
-    response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+    response.add_imc_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -267,7 +267,7 @@ def process_message_DELDASHB(message):
     deleteapi.delete_dashboard(bid=bid)
     op_id=Operations.DELETE_DASHBOARD
     op_params={'uid':dashboard['uid']}
-    response.add_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
+    response.add_imc_message(messages.UpdateQuotesMessage(operation=op_id, params=op_params))
     response.status=status.IMC_STATUS_OK
     return response
 

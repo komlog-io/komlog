@@ -1,15 +1,15 @@
+import uuid
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.interface.websocket import exceptions
 from komlog.komlibs.interface.websocket.errors import Errors
+from komlog.komlibs.interface.websocket.model.types import Messages
 
-class Response:
-    def __init__(self, status, error=Errors.OK, reason=None):
-        self._status=None
-        self.status=status
-        self.error=error
-        self.reason=reason
-        self._routed_messages={}
-        self._unrouted_messages=[]
+class WSocketIfaceResponse:
+    def __init__(self, status, error=Errors.OK):
+        self.status = status
+        self.error = error
+        self._ws_messages=[]
+        self._imc_messages={'routed':{},'unrouted':[]}
 
     @property
     def status(self):
@@ -20,31 +20,116 @@ class Response:
         if args.is_valid_int(value):
             self._status=value
         else:
-            raise exceptions.ResponseValidationException(error=Errors.E_IWSMR_RESP_IS)
+            raise exceptions.ResponseValidationException(error=Errors.E_IWSMR_PR_IS)
 
     @property
-    def routed_messages(self):
-        return self._routed_messages
+    def ws_messages(self):
+        return self._ws_messages
 
-    @routed_messages.setter
-    def routed_messages(self, value):
+    @ws_messages.setter
+    def ws_messages(self, value):
         raise TypeError
 
     @property
-    def unrouted_messages(self):
-        return self._unrouted_messages
+    def imc_messages(self):
+        return self._imc_messages
 
-    @unrouted_messages.setter
-    def unrouted_messages(self, value):
+    @imc_messages.setter
+    def imc_messages(self, value):
         raise TypeError
 
-    def add_message(self, msg, dest=None):
+    def add_ws_message(self, msg):
+        self._ws_messages.append(msg)
+        return True
+
+    def add_imc_message(self, msg, dest=None):
         if dest is not None:
             try:
-                self._routed_messages[dest].append(msg)
+                self._imc_messages['routed'][dest].append(msg)
             except KeyError:
-                self._routed_messages[dest]=[msg]
+                self._imc_messages['routed'][dest]=[msg]
         else:
-            self._unrouted_messages.append(msg)
+            self._imc_messages['unrouted'].append(msg)
         return True
+
+class GenericResponse:
+    _action_ = Messages.GENERIC_RESPONSE
+
+    def __init__(self, status, error, reason=None, irt=None, v=0, seq=None):
+        self.v = v
+        self.seq = seq if seq else uuid.uuid1().hex[0:20]
+        self.status=status
+        self.error=error
+        self.reason=reason
+        self.irt = irt
+
+    @property
+    def action(self):
+        return self._action_
+
+    @action.setter
+    def action(self, value):
+        raise TypeError('Action cannot be modified')
+
+    @property
+    def v(self):
+        return self._v
+
+    @v.setter
+    def v(self, value):
+        if hasattr(self, '_v'):
+            raise TypeError('Version cannot be modified')
+        elif args.is_valid_int(value):
+            self._v = value
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSMR_GR_IV)
+
+    @property
+    def seq(self):
+        return self._seq
+
+    @seq.setter
+    def seq(self, value):
+        if hasattr(self, '_seq'):
+            raise TypeError('Sequence cannot be modified')
+        elif args.is_valid_message_sequence(value):
+            self._seq = value
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSMR_GR_ISEQ)
+
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        if args.is_valid_int(value):
+            self._status=value
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSMR_GR_IS)
+
+    @property
+    def irt(self):
+        return self._irt
+
+    @irt.setter
+    def irt(self, value):
+        if value is None or args.is_valid_message_sequence(value):
+            self._irt = value
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSMR_GR_IIRT)
+
+    def to_dict(self):
+        ''' returns a JSON serializable dict '''
+        return {
+            'v':self.v,
+            'action':self.action.value,
+            'seq':self.seq,
+            'irt':self.irt,
+            'payload':{
+                'status':self.status,
+                'error':self.error.value,
+                'reason':self.reason
+            }
+        }
 

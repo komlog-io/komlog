@@ -18,8 +18,7 @@ class InterfaceImcApiRescontrolTest(unittest.TestCase):
         message=messages.UpdateQuotesMessage(operation=auth_op, params=params)
         response=rescontrol.process_message_UPDQUO(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_INTERNAL_ERROR)
-        self.assertEqual(response.unrouted_messages,[])
-        self.assertEqual(response.routed_messages,{})
+        self.assertEqual(response.imc_messages, {'routed':{},'unrouted':[]})
 
     def test_process_message_RESAUTH_success(self):
         ''' process_message_RESAUTH should succeed if operation and params are correct '''
@@ -29,6 +28,5 @@ class InterfaceImcApiRescontrolTest(unittest.TestCase):
         message=messages.ResourceAuthorizationUpdateMessage(operation=auth_op, params=params)
         response=rescontrol.process_message_RESAUTH(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_OK)
-        self.assertEqual(response.unrouted_messages,[])
-        self.assertEqual(response.routed_messages,{})
+        self.assertEqual(response.imc_messages, {'routed':{},'unrouted':[]})
 

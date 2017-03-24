@@ -5,32 +5,23 @@ class WebInterfaceResponse(object):
         self.status=status
         self.error=error
         self.data=data
-        self._routed_messages={}
-        self._unrouted_messages=[]
+        self._imc_messages={'routed':{},'unrouted':[]}
 
     @property
-    def routed_messages(self):
-        return self._routed_messages
+    def imc_messages(self):
+        return self._imc_messages
 
-    @routed_messages.setter
-    def routed_messages(self, value):
+    @imc_messages.setter
+    def imc_messages(self, value):
         raise TypeError
 
-    @property
-    def unrouted_messages(self):
-        return self._unrouted_messages
-
-    @unrouted_messages.setter
-    def unrouted_messages(self, value):
-        raise TypeError
-
-    def add_message(self, msg, dest=None):
-        if dest is None:
-            self._unrouted_messages.append(msg)
-        else:
+    def add_imc_message(self, msg, dest=None):
+        if dest is not None:
             try:
-                self._routed_messages[dest].append(msg)
+                self._imc_messages['routed'][dest].append(msg)
             except KeyError:
-                self._routed_messages[dest]=[msg]
+                self._imc_messages['routed'][dest]=[msg]
+        else:
+            self._imc_messages['unrouted'].append(msg)
         return True
 

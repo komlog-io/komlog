@@ -74,9 +74,9 @@ def new_user_request(username, password, email, segment=None, token=None, invita
         authop=webop.get_auth_operation()
         params=webop.get_params()
         resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'uid':user['uid'].hex,'username':username})
-        resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
-        resp.add_message(messages.NewUserNotificationMessage(email=user['email'], code=user['code']))
-        resp.add_message(messages.UserEventMessage(uid=user['uid'],event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_USER))
+        resp.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+        resp.add_imc_message(messages.NewUserNotificationMessage(email=user['email'], code=user['code']))
+        resp.add_imc_message(messages.UserEventMessage(uid=user['uid'],event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_USER))
         return resp
 
 @exceptions.ExceptionHandler
@@ -140,7 +140,7 @@ def delete_user_request(passport):
         raise exceptions.BadParametersException(error=Errors.E_IWAU_DUSR_IPSP)
     authorization.authorize_request(request=Requests.DELETE_USER, passport=passport)
     resp = response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
-    resp.add_message(messages.DeleteUserMessage(uid=passport.uid))
+    resp.add_imc_message(messages.DeleteUserMessage(uid=passport.uid))
     return resp
 
 @exceptions.ExceptionHandler
@@ -194,7 +194,7 @@ def send_invitation_request(email=None, num=1):
         sent.append((invitation['email'],invitation['inv_id']))
     resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data=sent)
     for msg in msgs:
-        resp.add_message(msg)
+        resp.add_imc_message(msg)
     return resp
 
 @exceptions.ExceptionHandler
@@ -215,7 +215,7 @@ def register_forget_request(account):
     else:
         data={'username':request['username'],'email':request['email'],'code':request['code'].hex}
         resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=data)
-        resp.add_message(messages.ForgetMailMessage(email=request['email'], code=request['code']))
+        resp.add_imc_message(messages.ForgetMailMessage(email=request['email'], code=request['code']))
         return resp
 
 @exceptions.ExceptionHandler

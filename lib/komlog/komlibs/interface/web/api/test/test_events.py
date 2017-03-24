@@ -40,16 +40,16 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response, 'cookie',None)
@@ -512,9 +512,9 @@ class InterfaceWebApiEventsTest(unittest.TestCase):
         response=eventsapi.event_response_request(passport=psp, seq=seq, data=data)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         self.assertEqual(response.error, Errors.OK.value)
-        self.assertEqual(len(response.unrouted_messages),1)
-        self.assertEqual(response.unrouted_messages[0]._type_,messages.Messages.USER_EVENT_RESPONSE_MESSAGE)
-        self.assertEqual(response.unrouted_messages[0].parameters,{'identified':data['identified']})
-        msgresponse=msgapi.process_message(response.unrouted_messages[0])
+        self.assertEqual(len(response.imc_messages['unrouted']),1)
+        self.assertEqual(response.imc_messages['unrouted'][0]._type_,messages.Messages.USER_EVENT_RESPONSE_MESSAGE)
+        self.assertEqual(response.imc_messages['unrouted'][0].parameters,{'identified':data['identified']})
+        msgresponse=msgapi.process_message(response.imc_messages['unrouted'][0])
         self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
 

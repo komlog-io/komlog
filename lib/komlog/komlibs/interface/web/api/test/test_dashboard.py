@@ -29,11 +29,11 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response, 'cookie',None)
@@ -72,7 +72,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
@@ -109,11 +109,11 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
@@ -130,11 +130,11 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
@@ -148,7 +148,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
@@ -163,7 +163,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
@@ -218,14 +218,14 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
         psp = passport.get_user_passport(cookie)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             #self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response = loginapi.login_request(username=username, password=password)
@@ -240,7 +240,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
@@ -255,7 +255,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
@@ -279,7 +279,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(count,2)
         response=dashboardapi.delete_dashboard_request(passport=psp, bid=dashboard1['bid'])
         self.assertTrue(response.status, status.WEB_STATUS_RECEIVED)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboards_config_request(passport=psp)
@@ -339,7 +339,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
@@ -411,7 +411,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
@@ -478,7 +478,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)
@@ -531,7 +531,7 @@ class InterfaceWebApiDashboardTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         bid=response.data['bid']
         self.assertTrue(isinstance(uuid.UUID(bid),uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=dashboardapi.get_dashboard_config_request(passport=psp, bid=bid)

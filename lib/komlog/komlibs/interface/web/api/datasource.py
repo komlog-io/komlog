@@ -133,9 +133,9 @@ def new_datasource_request(passport, datasourcename):
         try:
             if authupdate.update_resources(operation=authop, params=params):
                 resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data={'did':datasource['did'].hex})
-                resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
-                resp.add_message(messages.NewDSWidgetMessage(uid=passport.uid, did=datasource['did']))
-                resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':datasource['did'].hex}))
+                resp.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                resp.add_imc_message(messages.NewDSWidgetMessage(uid=passport.uid, did=datasource['did']))
+                resp.add_imc_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATASOURCE, parameters={'did':datasource['did'].hex}))
                 return resp
             else:
                 deleteapi.delete_datasource(did=datasource['did'])
@@ -153,6 +153,6 @@ def delete_datasource_request(passport, did):
     did=uuid.UUID(did)
     authorization.authorize_request(request=Requests.DELETE_DATASOURCE,passport=passport,did=did)
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
-    resp.add_message(messages.DeleteDatasourceMessage(did=did))
+    resp.add_imc_message(messages.DeleteDatasourceMessage(did=did))
     return resp
 

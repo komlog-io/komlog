@@ -32,11 +32,11 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response,'cookie',None)
@@ -101,7 +101,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         username='test_get_users_circle_config_request_failure_no_permissions_over_cid'
@@ -110,11 +110,11 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response,'cookie',None)
@@ -130,7 +130,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
@@ -171,7 +171,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         username='test_delete_circle_request_failure_no_permissions_over_cid'
@@ -180,11 +180,11 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response,'cookie',None)
@@ -200,12 +200,12 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.delete_circle_request(passport=psp, cid=cid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
@@ -251,7 +251,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         response=circleapi.new_users_circle_request(passport=psp, circlename=circlename)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
 
@@ -302,7 +302,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
         username='test_update_circle_request_failure_no_permissions_over_cid'
         password = 'password'
@@ -310,11 +310,11 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
         data={'circlename':circlename}
         response = loginapi.login_request(username=username, password=password)
@@ -331,7 +331,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         new_circlename='test_update_circle_request_success_updated'
@@ -397,7 +397,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
@@ -417,7 +417,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
@@ -431,11 +431,11 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         response2 = userapi.new_user_request(username=member, password=password, email=email)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
-        for msg in response2.unrouted_messages:
+        for msg in response2.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
         response3=circleapi.add_user_to_circle_request(passport=psp, cid=cid, member=member)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
-        for msg in response3.unrouted_messages:
+        for msg in response3.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response4=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
@@ -496,7 +496,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
@@ -516,7 +516,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue('cid' in response.data)
         cid=response.data['cid']
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
@@ -530,11 +530,11 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         response2 = userapi.new_user_request(username=member, password=password, email=email)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
-        for msg in response2.unrouted_messages:
+        for msg in response2.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
         response3=circleapi.add_user_to_circle_request(passport=psp, cid=cid, member=member)
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
-        for msg in response3.unrouted_messages:
+        for msg in response3.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response4=circleapi.get_users_circle_config_request(passport=psp, cid=cid)
@@ -544,7 +544,7 @@ class InterfaceWebApiCircleTest(unittest.TestCase):
         self.assertEqual(response4.data['members'],[{'username':member,'uid':response2.data['uid']}])
         response5=circleapi.delete_user_from_circle_request(passport=psp,cid=cid,member=member)
         self.assertEqual(response5.status, status.WEB_STATUS_OK)
-        for msg in response5.unrouted_messages:
+        for msg in response5.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response6=circleapi.get_users_circle_config_request(passport=psp, cid=cid)

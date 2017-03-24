@@ -37,7 +37,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
             creation = userapi.new_user_request(username=username, password=password, email=email)
             self.assertTrue(isinstance(creation , webresp.WebInterfaceResponse))
             self.assertEqual(creation .status, status.WEB_STATUS_OK)
-            for msg in creation.unrouted_messages:
+            for msg in creation.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
@@ -55,8 +55,8 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
-        self.assertEqual(len(response.unrouted_messages),2)
-        for msg in response.unrouted_messages:
+        self.assertEqual(len(response.imc_messages['unrouted']),2)
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
 
@@ -118,7 +118,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
@@ -134,7 +134,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response2 = agentapi.get_agent_config_request(passport=psp, aid=response.data['aid'])
@@ -185,7 +185,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         username2 = 'test_get_agent_config_failure_no_permission_over_this_agent_user'
@@ -194,11 +194,11 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         response2 = userapi.new_user_request(username=username2, password=password, email=email2)
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
-        for msg in response2.unrouted_messages:
+        for msg in response2.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email2, code=code)
-        for msg in response2.unrouted_messages:
+        for msg in response2.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
         response3 = loginapi.login_request(username=username2, password=password)
         cookie=getattr(response3,'cookie',None)
@@ -217,7 +217,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response1, webresp.WebInterfaceResponse))
         self.assertEqual(response1.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response1.data['aid']), uuid.UUID))
-        for msg in response1.unrouted_messages:
+        for msg in response1.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         agentname2='test_get_agents_config_request_success_2'
@@ -227,7 +227,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response2, webresp.WebInterfaceResponse))
         self.assertEqual(response2.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response2.data['aid']), uuid.UUID))
-        for msg in response2.unrouted_messages:
+        for msg in response2.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response3 = agentapi.get_agents_config_request(passport=psp)
@@ -271,7 +271,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -292,7 +292,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             msgresponse=msgapi.process_message(msg)
             self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         new_agentname=agentname+'_new'
@@ -405,7 +405,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -425,7 +425,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -473,7 +473,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -493,7 +493,7 @@ class InterfaceWebApiAgentTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)

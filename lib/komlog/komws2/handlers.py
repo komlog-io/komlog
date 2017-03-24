@@ -52,7 +52,7 @@ class AgentsHandler(KomlogHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=agent.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
+            asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -85,7 +85,7 @@ class AgentConfigHandler(KomlogHandler):
     @auth.authenticated
     def delete(self, aid):
         response=agent.delete_agent_request(passport=self.passport, aid=aid)
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -94,7 +94,7 @@ class AgentSuspendHandler(KomlogHandler):
     @auth.authenticated
     def post(self, aid):
         response=agent.suspend_agent_request(passport=self.passport, aid=aid)
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -103,7 +103,7 @@ class AgentActivateHandler(KomlogHandler):
     @auth.authenticated
     def post(self, aid):
         response=agent.activate_agent_request(passport=self.passport, aid=aid)
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -145,7 +145,7 @@ class DatasourceConfigHandler(KomlogHandler):
     @auth.authenticated
     def delete(self, did):
         response=datasource.delete_datasource_request(passport=self.passport, did=did)
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -202,7 +202,7 @@ class UserUpgradeHandler(KomlogHandler):
             self.write(json.dumps({'message':'Bad Parameters'}))
         else:
             response=user.upgrade_user_segment_request(passport=self.passport, segment=segment, token=token)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
+            asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -245,7 +245,7 @@ class DatapointConfigHandler(KomlogHandler):
     @auth.authenticated
     def delete(self, pid):
         response=datapoint.delete_datapoint_request(passport=self.passport, pid=pid)
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -265,7 +265,7 @@ class DatapointsHandler(KomlogHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datapoint.new_datasource_datapoint_request(passport=self.passport, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
+            asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -283,7 +283,7 @@ class DatapointPositivesHandler(KomlogHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datapoint.mark_positive_variable_request(passport=self.passport, pid=pid, sequence=sequence, position=position, length=length)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
+            asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -301,7 +301,7 @@ class DatapointNegativesHandler(KomlogHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=datapoint.mark_negative_variable_request(passport=self.passport, pid=pid, sequence=sequence, position=position, length=length)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
+            asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -310,7 +310,7 @@ class DatapointDatasourceHandler(KomlogHandler):
     @auth.authenticated
     def delete(self, pid):
         response=datapoint.dissociate_datapoint_from_datasource_request(passport=self.passport, pid=pid)
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -336,7 +336,7 @@ class UserConfigHandler(KomlogHandler):
     @auth.authenticated
     def delete(self):
         response=user.delete_user_request(passport=self.passport)
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -406,7 +406,7 @@ class WidgetsHandler(KomlogHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=widget.new_widget_request(passport=self.passport, data=data)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
+            asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -433,7 +433,7 @@ class WidgetConfigHandler(KomlogHandler):
     @auth.authenticated
     def delete(self, wid):
         response=widget.delete_widget_request(passport=self.passport, wid=wid)
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -475,7 +475,7 @@ class WidgetSnapshotsHandler(KomlogHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=snapshot.new_snapshot_request(passport=self.passport, wid=wid, user_list=user_list, cid_list=cid_list, its=its, ets=ets, seq=seq)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
+            asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -496,7 +496,7 @@ class DashboardsHandler(KomlogHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=dashboard.new_dashboard_request(passport=self.passport, data=data)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
+            asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -523,7 +523,7 @@ class DashboardConfigHandler(KomlogHandler):
     @auth.authenticated
     def delete(self, bid):
         response=dashboard.delete_dashboard_request(passport=self.passport, bid=bid)
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -574,7 +574,7 @@ class CirclesHandler(KomlogHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=circle.new_users_circle_request(passport=self.passport, circlename=circlename, members_list=members)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
+            asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -615,14 +615,14 @@ class CircleMembersHandler(KomlogHandler):
     @auth.authenticated
     def post(self, cid, member):
         response=circle.add_user_to_circle_request(passport=self.passport, cid=cid, member=member)
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
     @auth.authenticated
     def delete(self, cid, member):
         response=circle.delete_user_from_circle_request(passport=self.passport, cid=cid, member=member)
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.set_status(response.status)
         self.write(json.dumps(response.data))
 
@@ -710,7 +710,7 @@ class UserEventsResponsesHandler(KomlogHandler):
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
             response=events.event_response_request(passport=self.passport, seq=seq, data=req_data)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
+            asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 
@@ -767,7 +767,7 @@ class SignupHandler(KomlogHandler):
             invitation=invitation,
             require_invitation=True
         )
-        asyncio.ensure_future(msgapi.send_response_messages(response))
+        asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
         self.render('signup_post.html', page_title='Komlog', response=response, invitation=invitation)
 
 class ForgetHandler(KomlogHandler):
@@ -791,7 +791,7 @@ class ForgetHandler(KomlogHandler):
             self.redirect('/forget')
         elif account != None:
             response=user.register_forget_request(account=account)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
+            asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
             self.render('forget_post.html', page_title='Komlog', reset=False, response=response)
         else:
             response=user.reset_password_request(code=code, password=password)

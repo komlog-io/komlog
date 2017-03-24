@@ -67,10 +67,13 @@ class Errors(Enum):
 
 # interface websocket protocol v1 model message
 
-    E_IWSPV1MM_SDSD_IURI    = 202000      #: SendDsData. invalid uri
-    E_IWSPV1MM_SDSD_ITS     = 202001      #: SendDsData. invalid ts
-    E_IWSPV1MM_SDSD_ICNT    = 202002      #: SendDsData. invalid content
-    E_IWSPV1MM_SDSD_ELFD    = 202003      #: SendDsData. error loading from dict
+    E_IWSPV1MM_MVC_ISEQ     = 202000      #: MessagesVersionCatalog. invalid sequence
+    E_IWSPV1MM_MVC_IIRT     = 202001      #: MessagesVersionCatalog. invalid in reply to sequence
+
+    E_IWSPV1MM_SDSD_IURI    = 202050      #: SendDsData. invalid uri
+    E_IWSPV1MM_SDSD_ITS     = 202051      #: SendDsData. invalid ts
+    E_IWSPV1MM_SDSD_ICNT    = 202052      #: SendDsData. invalid content
+    E_IWSPV1MM_SDSD_ELFD    = 202053      #: SendDsData. error loading from dict
 
     E_IWSPV1MM_SDPD_IURI    = 202100      #: SendDpData. invalid uri
     E_IWSPV1MM_SDPD_ITS     = 202101      #: SendDpData. invalid ts
@@ -99,6 +102,9 @@ class Errors(Enum):
     E_IWSPV1MM_SDI_IEND     = 202602      #: SendDataInterval. invalid end
     E_IWSPV1MM_SDI_IDATA    = 202603      #: SendDataInterval. invalid data
     E_IWSPV1MM_SDI_ELFD     = 202604      #: SendDataInterval. error loading from dict
+
+    E_IWSPV1MM_GRESP_IS     = 202700      #: GenericResponse. invalid status
+    E_IWSPV1MM_GRESP_IIRT   = 202701      #: GenericResponse. invalid in reply to sequence
 
 # interface websocket protocol v1 model response
 

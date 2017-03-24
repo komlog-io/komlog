@@ -107,7 +107,7 @@ def delete_widget_request(passport, wid):
     wid=uuid.UUID(wid)
     authorization.authorize_request(request=Requests.DELETE_WIDGET,passport=passport,wid=wid)
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
-    resp.add_message(messages.DeleteWidgetMessage(wid=wid))
+    resp.add_imc_message(messages.DeleteWidgetMessage(wid=wid))
     return resp
 
 @exceptions.ExceptionHandler
@@ -137,8 +137,8 @@ def new_widget_request(passport, data):
         try:
             if authupdate.update_resources(operation=authop, params=params):
                 resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'wid':widget['wid'].hex})
-                resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
-                resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_WIDGET, parameters={'wid':widget['wid'].hex}))
+                resp.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                resp.add_imc_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_WIDGET, parameters={'wid':widget['wid'].hex}))
                 return resp
             else:
                 deleteapi.delete_widget(wid=widget['wid'])

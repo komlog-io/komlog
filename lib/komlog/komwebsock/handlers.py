@@ -24,9 +24,10 @@ class WSConnectionHandler(websocket.WebSocketHandler):
         except Exception:
             self.close()
         else:
-            response=wsapi.process_message(passport=self.passport, message=message)
-            asyncio.ensure_future(msgapi.send_response_messages(response))
-            self.write_message(json.dumps({'status':response.status,'reason':response.reason,'error':response.error}))
+            result=wsapi.process_message(passport=self.passport, message=message)
+            asyncio.ensure_future(msgapi.send_messages(result.imc_messages))
+            for msg in result.ws_messages:
+                self.write_message(json.dumps(msg.to_dict()))
 
     def on_connection_close(self):
         psp = getattr(self, 'passport', None)

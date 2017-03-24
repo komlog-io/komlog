@@ -87,7 +87,7 @@ def event_response_request(passport, seq, data):
             else:
                 parameters['identified'].append({'s':reg['s'],'p':reg['p'],'l':reg['l']})
         resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
-        resp.add_message(messages.UserEventResponseMessage(uid=passport.uid,date=date,parameters=parameters))
+        resp.add_imc_message(messages.UserEventResponseMessage(uid=passport.uid,date=date,parameters=parameters))
         return resp
     else:
         raise exceptions.BadParametersException(error=Errors.E_IWAEV_EVRPR_IEVT)

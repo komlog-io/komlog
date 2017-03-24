@@ -223,6 +223,11 @@ def is_valid_timestamp(argument):
 def is_valid_sequence(argument):
     return is_valid_hex_date(argument)
 
+def is_valid_message_sequence(argument):
+    if isinstance(argument,str) and len(argument)==20:
+        return is_valid_hex_date(argument+'010000000000')
+    return False
+
 def is_valid_uuid(argument):
     if isinstance(argument, uuid.UUID) and argument.version==4:
         return True

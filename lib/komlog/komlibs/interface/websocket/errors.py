@@ -34,5 +34,10 @@ class Errors(Enum):
 
 # interface websocket model response
 
-    E_IWSMR_RESP_IS = 351000      #: Response. response status type error
+    E_IWSMR_PR_IS   = 351000      #: ProcessingResult. status type error
+
+    E_IWSMR_GR_IV   = 351100      #: GenericResponse. invalid version
+    E_IWSMR_GR_ISEQ = 351101      #: GenericResponse. invalid sequence
+    E_IWSMR_GR_IS   = 351102      #: GenericResponse. invalid status
+    E_IWSMR_GR_IIRT = 351103      #: GenericResponse. invalid in reply to
 

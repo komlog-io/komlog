@@ -46,16 +46,16 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
             response = loginapi.login_request(username=self.username, password=self.password)
             cookie=getattr(response, 'cookie',None)
@@ -64,12 +64,12 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             aid = response.data['aid']
             cookie = passport.AgentCookie(aid=uuid.UUID(aid), pv=1, sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(uuid.uuid1())).to_dict()
             self.agent_passport = passport.get_agent_passport(cookie)
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
             datasourcename='datasource'
@@ -77,12 +77,12 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
             self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response = loginapi.login_request(username=self.username, password=self.password)
@@ -115,16 +115,16 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -132,12 +132,12 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -159,17 +159,17 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
             uid = uuid.UUID(response.data['uid'])
         response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
@@ -224,7 +224,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -247,12 +247,12 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         cookie = passport.UserCookie(user=username, sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(uuid.uuid1())).to_dict()
@@ -287,7 +287,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -379,7 +379,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -402,12 +402,12 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         response=datasourceapi.new_datasource_request(passport=psp, datasourcename=datasourcename)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['did']),uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         cookie = passport.UserCookie(user=username, sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(uuid.uuid1())).to_dict()
@@ -443,7 +443,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         uid = uuid.UUID(response.data['uid'])
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)

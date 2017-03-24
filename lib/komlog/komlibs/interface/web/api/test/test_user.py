@@ -31,7 +31,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         password = 'password'
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -46,7 +46,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.ACTIVE,response2.data['state'])
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -56,7 +56,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         self.assertTrue(found)
         auth_op=Operations.NEW_USER
@@ -74,7 +74,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -86,7 +86,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.ACTIVE,response2.data['state'])
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -96,7 +96,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         response3 = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response3, webresp.WebInterfaceResponse))
@@ -113,7 +113,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response.error, Errors.OK.value)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -125,7 +125,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username.lower(),response2.data['username'])
         self.assertEqual(email.lower(),response2.data['email'])
         self.assertEqual(UserStates.ACTIVE,response2.data['state'])
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -135,7 +135,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         username = username.lower()
         email = email.lower()
@@ -222,7 +222,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -234,7 +234,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.ACTIVE,response2.data['state'])
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -244,7 +244,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         username=username+'_other'
         email=username+'@komlog.io'
@@ -275,7 +275,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -287,7 +287,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.ACTIVE,response2.data['state'])
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -297,7 +297,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
 
     def test_new_user_request_success_with_invitation_and_token(self):
@@ -319,7 +319,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True, segment=segment, token=token.id)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -332,7 +332,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.ACTIVE,response2.data['state'])
         self.assertEqual(int(segment),response2.data['segment'])
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -342,7 +342,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
 
     def test_new_user_request_failure_already_used_invitation(self):
@@ -355,7 +355,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         response=userapi.new_user_request(username=username, password=password, email=email, invitation=invitation, require_invitation=True)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -367,7 +367,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(username,response2.data['username'])
         self.assertEqual(email,response2.data['email'])
         self.assertEqual(UserStates.ACTIVE,response2.data['state'])
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -377,7 +377,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         username = 'test_new_user_request_failure_already_used_invitation_2'
         password = 'password'
@@ -395,7 +395,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -405,7 +405,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         self.assertEqual(found,True)
         response2=userapi.confirm_user_request(email=msg.email, code=msg.code)
@@ -445,7 +445,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -455,7 +455,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         self.assertEqual(found,True)
         email2='test_confirm_user_request_failure_wrong_email_2@komlog.org'
@@ -473,7 +473,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -483,7 +483,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         self.assertEqual(found,True)
         response2=userapi.confirm_user_request(email=email, code='CUSTOMCODE')
@@ -500,7 +500,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -510,7 +510,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         self.assertEqual(found,True)
         response2=userapi.confirm_user_request(email=msg.email, code=msg.code)
@@ -536,7 +536,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -570,7 +570,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -643,7 +643,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -662,7 +662,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -681,7 +681,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -700,7 +700,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         email = username+'@komlog.org'
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -826,7 +826,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(len(response.data), 1)
         self.assertTrue(isinstance(response.data[0],tuple))
         self.assertEqual(response.data[0][0], email)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -837,7 +837,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         self.assertEqual(found,True)
 
@@ -876,7 +876,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
         self.assertEqual(response3.data['email'],email)
-        msgs=response3.unrouted_messages
+        msgs=response3.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -885,7 +885,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         self.assertEqual(found,True)
 
@@ -902,7 +902,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
         self.assertEqual(response3.data['email'],email)
-        msgs=response3.unrouted_messages
+        msgs=response3.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -911,7 +911,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         self.assertEqual(found,True)
 
@@ -943,7 +943,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
         self.assertEqual(response3.data['email'],email)
-        msgs=response3.unrouted_messages
+        msgs=response3.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -952,7 +952,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         self.assertEqual(found,True)
         code=response3.data['code']
@@ -984,7 +984,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
         self.assertEqual(response3.data['email'],email)
-        msgs=response3.unrouted_messages
+        msgs=response3.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -993,7 +993,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         self.assertEqual(found,True)
         code=response3.data['code']
@@ -1040,7 +1040,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertEqual(response3.status, status.WEB_STATUS_OK)
         self.assertEqual(response3.data['username'], username)
         self.assertEqual(response3.data['email'],email)
-        msgs=response3.unrouted_messages
+        msgs=response3.imc_messages['unrouted']
         found=False
         while len(msgs)>0:
             for msg in msgs:
@@ -1049,7 +1049,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
                     found=True
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         self.assertEqual(found,True)
         code=response3.data['code']
@@ -1079,7 +1079,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -1100,7 +1100,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -1122,7 +1122,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -1142,7 +1142,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -1162,7 +1162,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -1203,7 +1203,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -1251,7 +1251,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
@@ -1273,7 +1273,7 @@ class InterfaceWebApiUserTest(unittest.TestCase):
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
         self.assertTrue(isinstance(uuid.UUID(response.data['uid']), uuid.UUID))
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)

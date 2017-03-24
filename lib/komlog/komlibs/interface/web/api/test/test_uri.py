@@ -42,16 +42,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=self.username, password=self.password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         response = loginapi.login_request(username=self.username, password=self.password)
         cookie=getattr(response, 'cookie',None)
@@ -61,12 +61,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         pubkey=b64encode(crypto.serialize_public_key(crypto.generate_rsa_key().public_key())).decode('utf-8')
         response = agentapi.new_agent_request(passport=self.passport, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         agents_info=agentapi.get_agents_config_request(passport=self.passport)
@@ -164,16 +164,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
@@ -183,12 +183,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         agents_info=agentapi.get_agents_config_request(passport=psp)
@@ -207,16 +207,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
@@ -226,12 +226,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         agents_info=agentapi.get_agents_config_request(passport=psp)
@@ -254,16 +254,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         response = loginapi.login_request(username=username, password=password)
         cookie=getattr(response, 'cookie',None)
@@ -273,12 +273,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         agents_info=agentapi.get_agents_config_request(passport=psp)
@@ -378,16 +378,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         psp = passport.UserPassport(uid=uuid.UUID(response.data['uid']),sid=uuid.uuid4())
         uri='non_existent_uri'
@@ -404,16 +404,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -421,12 +421,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -434,12 +434,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=['non_existent_user']
@@ -456,16 +456,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -473,12 +473,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -487,12 +487,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='uris'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'_dest1',username+'_dest2',username+'_dest3']
@@ -503,17 +503,17 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
@@ -598,16 +598,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         psp = passport.UserPassport(uid=uuid.UUID(response.data['uid']),sid=uuid.uuid4())
         uri='non_existent_uri'
@@ -623,16 +623,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -640,12 +640,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -654,12 +654,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='uris'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -680,16 +680,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -697,12 +697,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -710,12 +710,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'non_existent_user1',username+'non_existent_user2']
@@ -737,16 +737,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -754,12 +754,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -767,12 +767,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'dest_1',username+'dest_2',username+'dest_3']
@@ -783,17 +783,17 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.get_uris_shared_request(passport=psp)
@@ -821,16 +821,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -838,12 +838,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -851,12 +851,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'dest_1',username+'dest_2',username+'dest_3']
@@ -867,17 +867,17 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.get_uris_shared_request(passport=psp)
@@ -921,16 +921,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -938,12 +938,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -951,12 +951,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'dest_1',username+'dest_2',username+'dest_3']
@@ -967,17 +967,17 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.get_uris_shared_request(passport=psp)
@@ -1035,16 +1035,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -1052,12 +1052,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -1065,12 +1065,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='uris.datasource'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'dest_1',username+'dest_2',username+'dest_3']
@@ -1081,17 +1081,17 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.get_uris_shared_request(passport=psp)
@@ -1159,16 +1159,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -1176,12 +1176,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -1190,12 +1190,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='uris'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'_dest1',username+'_dest2',username+'_dest3']
@@ -1206,17 +1206,17 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
@@ -1251,16 +1251,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -1268,12 +1268,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -1282,12 +1282,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uris=['uris','uris.datasources']
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'_dest1',username+'_dest2',username+'_dest3']
@@ -1298,17 +1298,17 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         for uri in uris:
@@ -1349,16 +1349,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -1366,12 +1366,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -1380,12 +1380,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uris=['uris','uris.datasources']
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'_dest1',username+'_dest2',username+'_dest3']
@@ -1396,17 +1396,17 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         for uri in uris:
@@ -1426,12 +1426,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         psp = passport.UserPassport(uid=dest_uids[0],sid=uuid.uuid4())
         response = userapi.delete_user_request(passport=psp)
         if response.status==status.WEB_STATUS_RECEIVED:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         response = userapi.get_user_config_request(passport=psp)
@@ -1502,16 +1502,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         response = userapi.new_user_request(username=username, password=password, email=email)
         self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        for msg in response.unrouted_messages:
+        for msg in response.imc_messages['unrouted']:
             if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                 code = msg.code
                 userapi.confirm_user_request(email=email, code=code)
-        msgs=response.unrouted_messages
+        msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
             for msg in msgs:
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
-                for msg2 in msgresponse.unrouted_messages:
+                for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
         uid = uuid.UUID(response.data['uid'])
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -1519,12 +1519,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         version='test library vX.XX'
         response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         aid = uuid.UUID(response.data['aid'])
@@ -1533,12 +1533,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
         uri='uris'
         response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
         if response.status==status.WEB_STATUS_OK:
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
                     self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'_dest1',username+'_dest2',username+'_dest3']
@@ -1549,17 +1549,17 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
         response=uriapi.share_uri_request(passport=psp, uri=uri, users=users)
@@ -1597,16 +1597,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
             owner_ids.append(uuid.UUID(response.data['uid']))
             uid = uuid.UUID(response.data['uid'])
@@ -1615,12 +1615,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             version='test library vX.XX'
             response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
             if response.status==status.WEB_STATUS_OK:
-                msgs=response.unrouted_messages
+                msgs=response.imc_messages['unrouted']
                 while len(msgs)>0:
                     for msg in msgs:
                         msgs.remove(msg)
                         msgresponse=msgapi.process_message(msg)
-                        for msg2 in msgresponse.unrouted_messages:
+                        for msg2 in msgresponse.imc_messages['unrouted']:
                             msgs.append(msg2)
                         self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
             aid = uuid.UUID(response.data['aid'])
@@ -1629,12 +1629,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             uris=['uris','uris.datasources']
             response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
             if response.status==status.WEB_STATUS_OK:
-                msgs=response.unrouted_messages
+                msgs=response.imc_messages['unrouted']
                 while len(msgs)>0:
                     for msg in msgs:
                         msgs.remove(msg)
                         msgresponse=msgapi.process_message(msg)
-                        for msg2 in msgresponse.unrouted_messages:
+                        for msg2 in msgresponse.imc_messages['unrouted']:
                             msgs.append(msg2)
                         self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'_dest1',username+'_dest2',username+'_dest3']
@@ -1645,17 +1645,17 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         for uid in owner_ids:
             psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -1702,16 +1702,16 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
             owner_ids.append(uuid.UUID(response.data['uid']))
             uid = uuid.UUID(response.data['uid'])
@@ -1720,12 +1720,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             version='test library vX.XX'
             response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
             if response.status==status.WEB_STATUS_OK:
-                msgs=response.unrouted_messages
+                msgs=response.imc_messages['unrouted']
                 while len(msgs)>0:
                     for msg in msgs:
                         msgs.remove(msg)
                         msgresponse=msgapi.process_message(msg)
-                        for msg2 in msgresponse.unrouted_messages:
+                        for msg2 in msgresponse.imc_messages['unrouted']:
                             msgs.append(msg2)
                         self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
             aid = uuid.UUID(response.data['aid'])
@@ -1734,12 +1734,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             uris=['uris','uris.datasources']
             response = datasourceapi.new_datasource_request(passport=psp, datasourcename=ds_uri)
             if response.status==status.WEB_STATUS_OK:
-                msgs=response.unrouted_messages
+                msgs=response.imc_messages['unrouted']
                 while len(msgs)>0:
                     for msg in msgs:
                         msgs.remove(msg)
                         msgresponse=msgapi.process_message(msg)
-                        for msg2 in msgresponse.unrouted_messages:
+                        for msg2 in msgresponse.imc_messages['unrouted']:
                             msgs.append(msg2)
                         self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         users=[username+'_dest1',username+'_dest2',username+'_dest3']
@@ -1750,17 +1750,17 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             response = userapi.new_user_request(username=user, password=password, email=email)
             self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
             self.assertEqual(response.status, status.WEB_STATUS_OK)
-            for msg in response.unrouted_messages:
+            for msg in response.imc_messages['unrouted']:
                 if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
                     code = msg.code
                     userapi.confirm_user_request(email=email, code=code)
             dest_uids.append(uuid.UUID(response.data['uid']))
-            msgs=response.unrouted_messages
+            msgs=response.imc_messages['unrouted']
             while len(msgs)>0:
                 for msg in msgs:
                     msgs.remove(msg)
                     msgresponse=msgapi.process_message(msg)
-                    for msg2 in msgresponse.unrouted_messages:
+                    for msg2 in msgresponse.imc_messages['unrouted']:
                         msgs.append(msg2)
         for uid in owner_ids:
             psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
@@ -1800,12 +1800,12 @@ class InterfaceWebApiUriTest(unittest.TestCase):
             psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
             response = userapi.delete_user_request(passport=psp)
             if response.status==status.WEB_STATUS_RECEIVED:
-                msgs=response.unrouted_messages
+                msgs=response.imc_messages['unrouted']
                 while len(msgs)>0:
                     for msg in msgs:
                         msgs.remove(msg)
                         msgresponse=msgapi.process_message(msg)
-                        for msg2 in msgresponse.unrouted_messages:
+                        for msg2 in msgresponse.imc_messages['unrouted']:
                             msgs.append(msg2)
                         self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
             response = userapi.get_user_config_request(passport=psp)

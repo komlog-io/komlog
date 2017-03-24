@@ -53,16 +53,6 @@ def retrieve_message_from(addr, timeout=0):
 def process_message(message):
     return imcapi.process_message(message=message)
 
-async def send_response_messages(response):
-    for addr,msgs in response.routed_messages.items():
-        for msg in msgs:
-            logging.logger.debug('Sending message to redis server: '+msg._type_.value)
-            await msgbus.msgbus.send_message_to(addr, msg)
-    for msg in response.unrouted_messages:
-        logging.logger.debug('Sending message to redis server: '+msg._type_.value)
-        await msgbus.msgbus.send_message(msg)
-    return True
-
 async def async_send_message(msg):
     return await msgbus.msgbus.send_message(msg)
 
@@ -95,4 +85,14 @@ async def async_retrieve_message_from(addr, timeout=0):
             return None
     else:
         return None
+
+async def send_messages(messages):
+    for addr,msgs in messages['routed'].items():
+        for msg in msgs:
+            logging.logger.debug('Sending message to redis server: '+msg._type_.value)
+            await msgbus.msgbus.send_message_to(addr, msg)
+    for msg in messages['unrouted']:
+        logging.logger.debug('Sending message to redis server: '+msg._type_.value)
+        await msgbus.msgbus.send_message(msg)
+    return True
 

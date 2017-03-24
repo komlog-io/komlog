@@ -590,3 +590,35 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
         for param in params:
             self.assertTrue(arguments.is_valid_isodate(param))
 
+    def test_is_valid_message_sequence_valid(self):
+        ''' is_valid_message_sequence should return True '''
+        params=[
+            uuid.uuid1().hex[0:20],
+            uuid.uuid1().hex[0:20],
+            uuid.uuid1().hex[0:20],
+            uuid.uuid1().hex[0:20],
+            uuid.uuid1().hex[0:20],
+            uuid.uuid1().hex[0:20],
+            uuid.uuid1().hex[0:20],
+        ]
+        for param in params:
+            self.assertTrue(arguments.is_valid_message_sequence(param))
+
+    def test_is_valid_message_sequence_invalid(self):
+        ''' is_valid_message_sequence should return False '''
+        params=[
+            uuid.uuid1(),
+            uuid.uuid4(),
+            uuid.uuid1().hex[0:10],
+            uuid.uuid1().hex[0:30],
+            'string',
+            1,
+            1.1,
+            ['array'],
+            [uuid.uuid1().hex[0:20]],
+            {'set'},
+            {'a':'dict'},
+        ]
+        for param in params:
+            self.assertFalse(arguments.is_valid_message_sequence(param))
+

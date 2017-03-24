@@ -68,8 +68,8 @@ def new_dashboard_request(passport, data):
         try:
             if authupdate.update_resources(operation=authop, params=params):
                 resp = response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'bid':dashboard['bid'].hex})
-                resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
-                resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, parameters={'bid':dashboard['bid'].hex}))
+                resp.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                resp.add_imc_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DASHBOARD, parameters={'bid':dashboard['bid'].hex}))
                 return resp
             else:
                 deleteapi.delete_dashboard(bid=dashboard['bid'])
@@ -87,7 +87,7 @@ def delete_dashboard_request(passport, bid):
     bid=uuid.UUID(bid)
     authorization.authorize_request(request=Requests.DELETE_DASHBOARD,passport=passport,bid=bid)
     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_RECEIVED)
-    resp.add_message(messages.DeleteDashboardMessage(bid=bid))
+    resp.add_imc_message(messages.DeleteDashboardMessage(bid=bid))
     return resp
 
 @exceptions.ExceptionHandler

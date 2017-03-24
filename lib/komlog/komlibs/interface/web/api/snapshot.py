@@ -190,8 +190,8 @@ def new_snapshot_request(passport, wid, user_list=None, cid_list=None, its=None,
                 params=webop.get_params()
                 if authupdate.update_resources(operation=authop, params=params):
                     resp=response.WebInterfaceResponse(status=status.WEB_STATUS_OK,data={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex})
-                    resp.add_message(messages.UpdateQuotesMessage(operation=authop, params=params))
-                    resp.add_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex}))
+                    resp.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
+                    resp.add_imc_message(messages.UserEventMessage(uid=passport.uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_SNAPSHOT_SHARED, parameters={'nid':snapshot['nid'].hex,'tid':ticket['tid'].hex}))
                     return resp
                 else:
                     deleteapi.delete_snapshot(nid=snapshot['nid'])
