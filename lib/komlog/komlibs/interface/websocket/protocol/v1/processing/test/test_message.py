@@ -4699,6 +4699,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.max_uuid_from_time(end))
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
 
     def test__process_request_data_success_no_limitations_ds_with_global_uri_same_user(self):
         ''' _process_request_data should succeed if user want a data range than can access '''
@@ -4734,6 +4735,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.max_uuid_from_time(end))
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
 
     def test__process_request_data_success_no_limitations_ds_with_global_uri_other_user(self):
         ''' _process_request_data should succeed if user want a data range than can access '''
@@ -4775,6 +4777,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.max_uuid_from_time(end))
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
 
     def test__process_request_data_success_no_limitations_ds_count_passed(self):
         ''' _process_request_data should succeed if user want some rows '''
@@ -4809,6 +4812,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
         self.assertEqual(resp.imc_messages['unrouted'][0].sid, psp.sid)
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
         self.assertEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ii),1)
         self.assertNotEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ie),1)
 
@@ -4847,6 +4851,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
         self.assertEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ii),1)
         self.assertNotEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ie),1)
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
 
     def test__process_request_data_success_no_limitations_ds_count_passed_with_global_uri_other_user(self):
         ''' _process_request_data should succeed if user want some rows '''
@@ -4889,6 +4894,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
         self.assertEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ii),1)
         self.assertNotEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ie),1)
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp(self):
         ''' _process_request_data should success if user wants a data range without access limitations '''
@@ -4924,6 +4930,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.max_uuid_from_time(end))
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp_with_global_uri_same_user(self):
         ''' _process_request_data should success if user wants a data range without access limitations '''
@@ -4959,6 +4966,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.max_uuid_from_time(end))
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp_with_global_uri_other_user(self):
         ''' _process_request_data should success if user wants a data range without access limitations '''
@@ -5000,6 +5008,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.min_uuid_from_time(start))
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.max_uuid_from_time(end))
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp_count_passed(self):
         ''' _process_request_data should success if user wants some rows '''
@@ -5036,6 +5045,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ii),1)
         self.assertNotEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ie),1)
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp_count_passed_with_global_uri_same_user(self):
         ''' _process_request_data should success if user wants some rows '''
@@ -5072,6 +5082,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ii),1)
         self.assertNotEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ie),1)
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp_count_passed_with_global_uri_other_user(self):
         ''' _process_request_data should success if user wants some rows '''
@@ -5114,4 +5125,5 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ii),1)
         self.assertNotEqual(timeuuid.get_unix_timestamp(resp.imc_messages['unrouted'][0].ie),1)
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
 

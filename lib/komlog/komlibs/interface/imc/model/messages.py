@@ -1639,12 +1639,13 @@ class HookNewUrisMessage(IMCMessage):
 class DataIntervalRequestMessage(IMCMessage):
     _type_ = Messages.DATA_INTERVAL_REQUEST_MESSAGE
 
-    def __init__(self, sid, uri, ii, ie, count=None):
+    def __init__(self, sid, uri, ii, ie, count=None, irt=None):
         self.sid = sid
         self.uri = uri
         self.ii = ii
         self.ie = ie
         self.count = count
+        self.irt = irt
 
     @property
     def sid(self):
@@ -1708,10 +1709,23 @@ class DataIntervalRequestMessage(IMCMessage):
         else:
             raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_ICOUNT)
 
+    @property
+    def irt(self):
+        return self._irt
+
+    @irt.setter
+    def irt(self, value):
+        if value is None:
+            self._irt = None
+        elif args.is_valid_message_sequence(value):
+            self._irt = value
+        else:
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IIRT)
+
     @classmethod
     def load_from_serialization(cls, msg):
         try:
-            m_type, h_sid, h_ii, h_ie, js_uri, js_count = msg.split('|')
+            m_type, h_sid, h_ii, h_ie, js_uri, js_count, js_irt = msg.split('|')
         except ValueError:
             raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_ELFS)
         except AttributeError:
@@ -1733,14 +1747,18 @@ class DataIntervalRequestMessage(IMCMessage):
                 count=json.loads(js_count)
             except (TypeError,json.JSONDecodeError):
                 raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IJSCOUNT)
+            try:
+                irt=json.loads(js_irt)
+            except (TypeError,json.JSONDecodeError):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IJSIRT)
             sid = uuid.UUID(h_sid)
             ii = uuid.UUID(h_ii)
             ie = uuid.UUID(h_ie)
-            return cls(sid=sid, ii=ii, ie=ie, uri=uri, count=count)
+            return cls(sid=sid, ii=ii, ie=ie, uri=uri, count=count, irt=irt)
 
     def to_serialization(self):
         uri = {'uri':self._uri['uri'],'type':self._uri['type'],'id':self._uri['id'].hex}
-        return '|'.join((self._type_.value, self._sid.hex, self._ii.hex, self._ie.hex, json.dumps(uri),json.dumps(self._count)))
+        return '|'.join((self._type_.value, self._sid.hex, self._ii.hex, self._ie.hex, json.dumps(uri),json.dumps(self._count),json.dumps(self._irt)))
 
 class AnalyzeDTreeMessage(IMCMessage):
     _type_ = Messages.ANALYZE_DTREE_MESSAGE

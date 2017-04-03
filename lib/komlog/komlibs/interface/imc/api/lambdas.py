@@ -216,7 +216,7 @@ def process_message_DATINT(message):
             start=timeuuid.get_isodate_from_uuid(message.ii)
             end=timeuuid.get_isodate_from_uuid(message.ie)
             data=[]
-            msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=data)
+            msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=data, irt=message.irt)
             if msg:
                 imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
                 response.add_imc_message(imc_message,dest=session_info.imc_address)
@@ -226,11 +226,11 @@ def process_message_DATINT(message):
             start=timeuuid.get_isodate_from_uuid(message.ii)
             limit=e.data['date']
             end=timeuuid.get_isodate_from_uuid(limit)
-            msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=[])
+            msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=[], irt=message.irt)
             if msg:
                 imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
                 response.add_imc_message(imc_message,dest=session_info.imc_address)
-            imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=limit, ie=message.ie, count=message.count)
+            imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=limit, ie=message.ie, count=message.count, irt=message.irt)
             response.add_imc_message(imc_message)
             response.status=status.IMC_STATUS_OK
     else:
@@ -257,9 +257,9 @@ def process_message_DATINT(message):
             start=timeuuid.get_isodate_from_uuid(new_ie)
             if message.count != count:
                 new_count = message.count-count if message.count else None
-                imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=message.ii, ie=new_ie, count=new_count)
+                imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=message.ii, ie=new_ie, count=new_count, irt=message.irt)
                 response.add_imc_message(imc_message)
-        msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=resp_data)
+        msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=resp_data, irt=message.irt)
         if msg:
             imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
             response.add_imc_message(imc_message,dest=session_info.imc_address)

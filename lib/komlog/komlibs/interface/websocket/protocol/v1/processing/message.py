@@ -463,7 +463,7 @@ def _process_request_data(passport, message):
         reason='message accepted for processing'
         stat=status.MESSAGE_ACCEPTED_FOR_PROCESSING
     result = WSocketIfaceResponse(status=stat, error=error)
-    result.add_imc_message(messages.DataIntervalRequestMessage(sid=passport.sid, uri={'type':uri_info['type'],'id':uri_info['id'],'uri':local_uri}, ii=ii, ie=ie, count=message.count))
+    result.add_imc_message(messages.DataIntervalRequestMessage(sid=passport.sid, uri={'type':uri_info['type'],'id':uri_info['id'],'uri':local_uri}, ii=ii, ie=ie, count=message.count, irt=message.seq))
     ws_res = modmsg.GenericResponse(status=stat, reason=reason, error=error, irt=message.seq)
     result.add_ws_message(ws_res)
     return result

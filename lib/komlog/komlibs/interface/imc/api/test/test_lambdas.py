@@ -1767,6 +1767,53 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
         self.assertEqual(session_data_msg.data, [])
 
+    def test_process_message_DATINT_success_all_interval_access_no_data_in_datapoint_with_irt(self):
+        ''' process_message_DATINT should succeed, but if no data is found, send an empty list with irt '''
+        username='test_process_message_datint_success_all_interval_access_no_data_in_datapoint_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.data, [])
+
     def test_process_message_DATINT_success_all_interval_access_datapoint(self):
         ''' process_message_DATINT should succeed, retrieve the data and generate the corresponding messages '''
         username='test_process_message_datint_success_all_interval_access_datapoint'
@@ -1812,6 +1859,55 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(len(session_data_msg.data), 498)
+
+    def test_process_message_DATINT_success_all_interval_access_datapoint_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieve the data and generate the corresponding messages with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datapoint_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,500):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(len(session_data_msg.data), 498)
 
     def test_process_message_DATINT_success_all_interval_access_datapoint_foreign_uri(self):
@@ -1871,6 +1967,65 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
         self.assertEqual(len(session_data_msg.data), 498)
 
+    def test_process_message_DATINT_success_all_interval_access_datapoint_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieve the data and generate the corresponding messages with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datapoint_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='uris.datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,500):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid} #uri arrives as local uri
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(len(session_data_msg.data), 498)
+
     def test_process_message_DATINT_success_all_interval_access_no_data_in_datasource(self):
         ''' process_message_DATINT should succeed, and send an empty list if no data is found '''
         username='test_process_message_datint_success_all_interval_access_no_data_in_datasource'
@@ -1911,6 +2066,52 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.data, [])
+
+    def test_process_message_DATINT_success_all_interval_access_no_data_in_datasource_with_irt(self):
+        ''' process_message_DATINT should succeed, and send an empty list if no data is found with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_no_data_in_datasource_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
         self.assertEqual(session_data_msg.data, [])
@@ -1969,6 +2170,62 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
         self.assertEqual(session_data_msg.data, [])
 
+    def test_process_message_DATINT_success_all_interval_access_no_data_in_datasource_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should succeed, and send an empty list if no data is found with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_no_data_in_datasource_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='uris.datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.data, [])
+
     def test_process_message_DATINT_success_all_interval_access_datasource(self):
         ''' process_message_DATINT should succeed, retrieve the data and generate the corresponding messages '''
         username='test_process_message_datint_success_all_interval_access_datasource'
@@ -2018,6 +2275,61 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
         self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
         self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
+        self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
+        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+
+    def test_process_message_DATINT_success_all_interval_access_datasource_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieve the data and generate the corresponding messages with irt '''
+        username='test_process_message_datint_success_all_interval_access_datasource_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,500):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertNotEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(len(session_data_msg.data), 100)
+        self.assertEqual(len(response.imc_messages['unrouted']),1)
+        self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
+        self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
+        self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
         self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
 
@@ -2083,6 +2395,71 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
         self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
 
+    def test_process_message_DATINT_success_all_interval_access_datasource_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieve the data and generate the corresponding messages with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datasource_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='uris.datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,500):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertNotEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(len(session_data_msg.data), 100)
+        self.assertEqual(len(response.imc_messages['unrouted']),1)
+        self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
+        self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
+        self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
+        self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
+        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+
     def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datapoint(self):
         ''' process_message_DATINT should return an empty list if no access to the interval because of bound limitations '''
         username='test_process_message_datint_failure_interval_bound_to_all_interval_datapoint'
@@ -2131,6 +2508,60 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.data, [])
+
+    def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datapoint_with_irt(self):
+        ''' process_message_DATINT should return an empty list if no access to the interval because of bound limitations with associated irt '''
+        username='test_process_message_datint_failure_interval_bound_to_all_interval_datapoint_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,500):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.uuid1(seconds=1001)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
         self.assertEqual(session_data_msg.data, [])
@@ -2197,6 +2628,70 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
         self.assertEqual(session_data_msg.data, [])
 
+    def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datapoint_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should return an empty list if no access to the interval because of bound limitations with associated irt '''
+        username='test_process_message_datint_failure_interval_bound_to_all_interval_datapoint_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='uris.datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,500):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.uuid1(seconds=1001)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.data, [])
+
     def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datasource(self):
         ''' process_message_DATINT should return an empty list if no access to the interval because of bound limitations '''
         username='test_process_message_datint_failure_interval_bound_to_all_interval_datasource'
@@ -2244,6 +2739,57 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(len(session_data_msg.data), 0)
+
+    def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datasource_with_irt(self):
+        ''' process_message_DATINT should return an empty list if no access to the interval because of bound limitations with associated irt '''
+        username='test_process_message_datint_failure_interval_bound_to_all_interval_datasource_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,500):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.uuid1(seconds=1001)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(len(session_data_msg.data), 0)
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datasource_foreign_uri(self):
@@ -2303,6 +2849,67 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
+        self.assertEqual(len(session_data_msg.data), 0)
+
+    def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datasource_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should return an empty list if no access to the interval because of bound limitations with irt '''
+        username='test_process_message_datint_failure_interval_bound_to_all_interval_datasource_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='uris.datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,500):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.uuid1(seconds=1001)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(len(session_data_msg.data), 0)
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datapoint(self):
@@ -2378,6 +2985,87 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(len(session_data_msg.data),50)
+
+    def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datapoint_with_irt(self):
+        ''' process_message_DATINT should return only the data with allowed access with associated irt '''
+        username='test_process_message_datint_failure_interval_bound_to_partial_interval_datapoint_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,500):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.min_uuid_from_time(450)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertNotEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt,irt)
+        new_ii=timeuuid.min_uuid_from_time(450)
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(len(session_data_msg.data), 0)
+        self.assertEqual(len(response.imc_messages['unrouted']),1)
+        self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
+        self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
+        self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
+        self.assertEqual(response.imc_messages['unrouted'][0].ii,new_ii)
+        self.assertEqual(response.imc_messages['unrouted'][0].ie,ie)
+        new_message=response.imc_messages['unrouted'][0]
+        response=lambdas.process_message_DATINT(message=new_message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, new_message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt,irt)
         self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
         self.assertEqual(len(session_data_msg.data),50)
@@ -2469,6 +3157,97 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
         self.assertEqual(len(session_data_msg.data),50)
 
+    def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datapoint_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should return only the data with allowed access with associated irt '''
+        username='test_process_message_datint_failure_interval_bound_to_partial_interval_datapoint_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='uris.datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,500):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.min_uuid_from_time(450)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertNotEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt,irt)
+        new_ii=timeuuid.min_uuid_from_time(450)
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(len(session_data_msg.data), 0)
+        self.assertEqual(len(response.imc_messages['unrouted']),1)
+        self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
+        self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
+        self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
+        self.assertEqual(response.imc_messages['unrouted'][0].ii,new_ii)
+        self.assertEqual(response.imc_messages['unrouted'][0].ie,ie)
+        new_message=response.imc_messages['unrouted'][0]
+        response=lambdas.process_message_DATINT(message=new_message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, new_message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(len(session_data_msg.data),50)
+
     def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datasource(self):
         ''' process_message_DATINT should return only the data with allowed access '''
         username='test_process_message_datint_failure_interval_bound_to_partial_interval_datasource'
@@ -2542,6 +3321,87 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(len(session_data_msg.data),50)
+
+    def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datasource_with_irt(self):
+        ''' process_message_DATINT should return only the data with allowed access with associated irt '''
+        username='test_process_message_datint_failure_interval_bound_to_partial_interval_datasource_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,500):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.min_uuid_from_time(450)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertNotEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        new_ii=timeuuid.min_uuid_from_time(450)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(len(session_data_msg.data), 0)
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(len(session_data_msg.data), 0)
+        self.assertEqual(len(response.imc_messages['unrouted']),1)
+        self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
+        self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
+        self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
+        self.assertEqual(response.imc_messages['unrouted'][0].ii,new_ii)
+        self.assertEqual(response.imc_messages['unrouted'][0].ie,ie)
+        new_message=response.imc_messages['unrouted'][0]
+        response=lambdas.process_message_DATINT(message=new_message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, new_message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
         self.assertEqual(len(session_data_msg.data),50)
@@ -2633,6 +3493,97 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
         self.assertEqual(len(session_data_msg.data),50)
 
+    def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datasource_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should return only the data with allowed access with associated irt '''
+        username='test_process_message_datint_failure_interval_bound_to_partial_interval_datasource_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='uris.datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,500):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        iface=interfaces.User_DataRetrievalMinTimestamp().value
+        minTs=timeuuid.min_uuid_from_time(450)
+        self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertNotEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        new_ii=timeuuid.min_uuid_from_time(450)
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt,irt)
+        self.assertEqual(len(session_data_msg.data), 0)
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(len(session_data_msg.data), 0)
+        self.assertEqual(len(response.imc_messages['unrouted']),1)
+        self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
+        self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
+        self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
+        self.assertEqual(response.imc_messages['unrouted'][0].ii,new_ii)
+        self.assertEqual(response.imc_messages['unrouted'][0].ie,ie)
+        new_message=response.imc_messages['unrouted'][0]
+        response=lambdas.process_message_DATINT(message=new_message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, new_message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
+        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(len(session_data_msg.data),50)
+
     def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param(self):
         ''' process_message_DATINT should succeed, retrieving as many rows as the count param says in the interval '''
         username='test_process_message_datint_success_all_interval_access_datapoint_with_count_param'
@@ -2679,6 +3630,56 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(len(session_data_msg.data), 200)
+
+    def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieving as many rows as the count param says in the interval with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datapoint_with_count_param_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,500):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        count = 200
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(len(session_data_msg.data), 200)
 
     def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param_foreign_uri(self):
@@ -2739,6 +3740,66 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
         self.assertEqual(len(session_data_msg.data), 200)
 
+    def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieving as many rows as the count param says in the interval with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datapoint_with_count_param_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='uris.datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,500):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        count = 200
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(len(session_data_msg.data), 200)
+
     def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param_not_enough_rows(self):
         ''' process_message_DATINT should succeed, retrieving less rows than requested if there are no more rows '''
         username='test_process_message_datint_success_all_interval_access_datapoint_with_count_param_not_enough_rows'
@@ -2785,6 +3846,56 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(len(session_data_msg.data), 48)
+
+    def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param_not_enough_rows_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieving less rows than requested if there are no more rows with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datapoint_with_count_param_not_enough_rows_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,50):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        count = 200
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(len(session_data_msg.data), 48)
 
     def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param_not_enough_rows_foreign_uri(self):
@@ -2845,6 +3956,66 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
         self.assertEqual(len(session_data_msg.data), 48)
 
+    def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param_not_enough_rows_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieving less rows than requested if there are no more rows with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datapoint_with_count_param_not_enough_rows_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='uris.datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,50):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        count = 200
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(len(session_data_msg.data), 48)
+
     def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param_and_pagination(self):
         ''' process_message_DATINT should succeed, retrieving as many rows as the count param says in the interval and paginate if interval count and msg count is greater than 1000 '''
         username='test_process_message_datint_success_all_interval_access_datapoint_with_count_param_with_pagination'
@@ -2897,6 +4068,63 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(len(session_data_msg.data), 1000)
+
+    def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param_and_pagination_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieving as many rows as the count param says in the interval and paginate if interval count and msg count is greater than 1000 with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datapoint_with_count_param_with_pagination_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,1500):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=5000)
+        irt = uuid.uuid1().hex[0:20]
+        count = 2000
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertNotEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(response.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertTrue(response.imc_messages['unrouted'][0].sid, sid)
+        self.assertTrue(response.imc_messages['unrouted'][0].uri, uri)
+        self.assertTrue(response.imc_messages['unrouted'][0].irt, irt)
+        self.assertTrue(response.imc_messages['unrouted'][0].count, count-1000)
+        self.assertTrue(response.imc_messages['unrouted'][0].ii, ii)
+        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(len(session_data_msg.data), 1000)
 
     def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param_and_pagination_foreign_uri(self):
@@ -2963,6 +4191,73 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
         self.assertEqual(len(session_data_msg.data), 1000)
 
+    def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param_and_pagination_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieving as many rows as the count param says in the interval and paginate if interval count and msg count is greater than 1000 with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datapoint_with_count_param_with_pagination_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datapoint_uri='uris.datapoint_uri'
+        datapoint=datapointapi.create_user_datapoint(uid=uid, datapoint_uri=datapoint_uri)
+        self.assertEqual(datapoint['uid'],uid)
+        self.assertEqual(datapoint['datapointname'],datapoint_uri)
+        self.assertTrue('pid' in datapoint)
+        self.assertTrue('color' in datapoint)
+        pid=datapoint['pid']
+        self.assertTrue(isinstance(pid,uuid.UUID))
+        self.assertTrue(resupdate.new_user_datapoint(params={'uid':uid,'pid':pid}))
+        for i in range(2,1500):
+            dp_content=str(i)
+            dp_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datapointapi.store_user_datapoint_value(pid=pid, date=dp_date, content=dp_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=5000)
+        irt = uuid.uuid1().hex[0:20]
+        count = 2000
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertNotEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(response.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertTrue(response.imc_messages['unrouted'][0].sid, sid)
+        self.assertTrue(response.imc_messages['unrouted'][0].uri, uri)
+        self.assertTrue(response.imc_messages['unrouted'][0].irt, irt)
+        self.assertTrue(response.imc_messages['unrouted'][0].count, count-1000)
+        self.assertTrue(response.imc_messages['unrouted'][0].ii, ii)
+        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(len(session_data_msg.data), 1000)
+
     def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param(self):
         ''' process_message_DATINT should succeed, retrieve as much rows as requested by count param '''
         username='test_process_message_datint_success_all_interval_access_datasource_with_count_param'
@@ -3008,6 +4303,55 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(len(session_data_msg.data), 50)
+
+    def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieve as much rows as requested by count param with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datasource_with_count_param_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,500):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        count=50
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(len(session_data_msg.data), 50)
 
     def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_foreign_uri(self):
@@ -3067,6 +4411,65 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
         self.assertEqual(len(session_data_msg.data), 50)
 
+    def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieve as much rows as requested by count param with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datasource_with_count_param_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='uris.datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,500):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        count=50
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(len(session_data_msg.data), 50)
+
     def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_not_enough_rows(self):
         ''' process_message_DATINT should succeed, retrieve less rows than requested if there are no more rows '''
         username='test_process_message_datint_success_all_interval_access_datasource_with_count_param_not_enough'
@@ -3112,6 +4515,55 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(len(session_data_msg.data), 3)
+
+    def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_not_enough_rows_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieve less rows than requested if there are no more rows with associated irt'''
+        username='test_process_message_datint_success_all_interval_access_datasource_with_count_param_not_enough_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,5):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        count=50
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(len(session_data_msg.data), 3)
 
     def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_not_enough_rows_foreign_uri(self):
@@ -3171,6 +4623,65 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
         self.assertEqual(len(session_data_msg.data), 3)
 
+    def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_not_enough_rows_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieve less rows than requested if there are no more rows with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datasource_with_count_param_not_enough_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='uris.datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,5):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        count=50
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(len(session_data_msg.data), 3)
+
     def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_and_pagination(self):
         ''' process_message_DATINT should succeed, retrieve as much rows as requested by count param and paginate results if count and rows are greater than 100 '''
         username='test_process_message_datint_success_all_interval_access_datasource_with_count_param_and_pagination'
@@ -3221,6 +4732,63 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
         self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
         self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
+        self.assertEqual(response.imc_messages['unrouted'][0].count,count-100)
+        self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
+        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+
+    def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_and_pagination_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieve as much rows as requested by count param and paginate results if count and rows are greater than 100 with associated irt '''
+        username='test_process_message_datint_success_all_interval_access_datasource_with_count_param_and_pagination_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,500):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid, uid=uid,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        irt = uuid.uuid1().hex[0:20]
+        count=500
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertNotEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(len(session_data_msg.data), 100)
+        self.assertEqual(len(response.imc_messages['unrouted']),1)
+        self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
+        self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
+        self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
         self.assertEqual(response.imc_messages['unrouted'][0].count,count-100)
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
         self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
@@ -3287,5 +4855,72 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
         self.assertEqual(response.imc_messages['unrouted'][0].count,count-100)
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
+        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+
+    def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_and_pagination_foreign_uri_with_irt(self):
+        ''' process_message_DATINT should succeed, retrieve as much rows as requested by count param and paginate results if count and rows are greater than 100. All data messages generated should be associated to original irt '''
+        username='test_process_message_datint_success_all_interval_access_datasource_with_count_param_and_pagination_foreign_uri_with_irt'
+        password='password'
+        email=username+'@komlog.org'
+        user=userapi.create_user(username=username, password=password, email=email)
+        agentname=username+'_agent'
+        version='v'
+        agent=agentapi.create_agent(uid=user['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid=user['uid']
+        aid=agent['aid']
+        datasource_uri='uris.datasource_uri'
+        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasource_uri)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasource_uri)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        self.assertTrue(isinstance(did,uuid.UUID))
+        self.assertTrue(resupdate.new_datasource(params={'uid':uid,'did':did}))
+        for i in range(2,500):
+            ds_content='data: '+str(i)
+            ds_date=timeuuid.uuid1(seconds=i)
+            self.assertTrue(datasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
+        username_req=username+'_req'
+        password='password'
+        email=username_req+'@komlog.org'
+        user_req=userapi.create_user(username=username_req, password=password, email=email)
+        self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user['uid'], dest_uid=user_req['uid'],uri='uris',perm=permissions.CAN_READ))
+        agentname=username_req+'_agent'
+        version='v'
+        agent_req=agentapi.create_agent(uid=user_req['uid'], agentname=agentname, pubkey=pubkey, version=version)
+        uid_req=user_req['uid']
+        aid_req=agent_req['aid']
+        sid=uuid.uuid4()
+        self.assertTrue(session.set_agent_session(sid=sid, aid=aid_req, uid=uid_req,pv=1))
+        session_info=session.get_agent_session_info(sid=sid)
+        uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
+        ii=timeuuid.uuid1(seconds=1)
+        ie=timeuuid.uuid1(seconds=1000)
+        count=500
+        irt = uuid.uuid1().hex[0:20]
+        message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
+        response=lambdas.process_message_DATINT(message=message)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.message_type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.message_params, message.to_serialization())
+        self.assertNotEqual(response.imc_messages['routed'], {})
+        self.assertNotEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
+        self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
+        self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, sid)
+        recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
+        session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
+        self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
+        self.assertEqual(session_data_msg.irt, irt)
+        self.assertEqual(len(session_data_msg.data), 100)
+        self.assertEqual(len(response.imc_messages['unrouted']),1)
+        self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
+        self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
+        self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
+        self.assertEqual(response.imc_messages['unrouted'][0].count,count-100)
+        self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
+        self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
         self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
 

@@ -334,6 +334,8 @@ class Errors(Enum):
     E_IIMM_DIRM_IJSURI      = 262810    #: DataIntervalRequestMessage. invalid json uri
     E_IIMM_DIRM_ICOUNT      = 262811    #: DataIntervalRequestMessage. invalid count
     E_IIMM_DIRM_IJSCOUNT    = 262812    #: DataIntervalRequestMessage. invalid json count
+    E_IIMM_DIRM_IIRT        = 262813    #: DataIntervalRequestMessage. invalid irt
+    E_IIMM_DIRM_IJSIRT      = 262814    #: DataIntervalRequestMessage. invalid json irt
 
     E_IIMM_ADTREE_IPID      = 262900    #: AnalyzeDTreeMessage. invalid pid
     E_IIMM_ADTREE_ELFS      = 262901    #: AnalyzeDTreeMessage. error loading from string
