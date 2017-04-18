@@ -13,7 +13,7 @@ STATEMENTS=[
 
     "insert into prm_user_segment_quo (sid,quote,value) values (0,'quo_daily_datasource_occupation',100000000)",
     "insert into prm_user_segment_quo (sid,quote,value) values (0,'quo_daily_user_datasources_occupation',100000000)",
-    "insert into prm_user_segment_quo (sid,quote,value) values (0,'quo_daily_user_data_post_counter',5000)",
+    "insert into prm_user_segment_quo (sid,quote,value) values (0,'quo_daily_user_data_post_counter',500)",
     "insert into prm_user_segment_quo (sid,quote,value) values (0,'quo_agent_total_datapoints',50000)",
     "insert into prm_user_segment_quo (sid,quote,value) values (0,'quo_agent_total_datasources',10000)",
     "insert into prm_user_segment_quo (sid,quote,value) values (0,'quo_circle_total_members',256)",
