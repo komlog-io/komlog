@@ -319,7 +319,7 @@ class UserConfigHandler(KomlogHandler):
     @auth.authenticated
     def get(self):
         self.xsrf_token
-        self.render('config.html', page_title='Komlog')
+        self.render('config.html', page_title='Config - Komlog')
 
     @auth.authenticated
     def put(self):
@@ -345,7 +345,7 @@ class UserHomeHandler(KomlogHandler):
     @auth.authenticated
     def get(self):
         self.xsrf_token
-        self.render('home.html', page_title='Komlog')
+        self.render('home.html', page_title='Home - Komlog')
 
 class LoginHandler(KomlogHandler):
 
@@ -353,7 +353,7 @@ class LoginHandler(KomlogHandler):
         pass
 
     def get(self):
-        self.render('login.html',page_title='Komlog', response=None)
+        self.render('login.html',page_title='Login - Komlog', response=None)
 
     def post(self):
         try:
@@ -379,7 +379,7 @@ class LoginHandler(KomlogHandler):
                     self.write(json.dumps(response.data))
                     self.set_header('Content-Type','application/json; charset="utf-8"')
                 else:
-                    self.render('login.html',page_title='Komlog', response=response)
+                    self.render('login.html',page_title='Login - Komlog', response=response)
 
 class LogoutHandler(KomlogHandler):
 
@@ -749,7 +749,7 @@ class SignupHandler(KomlogHandler):
             self.redirect('/invite')
         else:
             response=user.check_invitation_request(invitation=invitation)
-            self.render('signup_get.html', page_title='Komlog', response=response)
+            self.render('signup_get.html', page_title='Signup - Komlog', response=response)
 
     def post(self):
         username=self.get_argument('username',default=None)
@@ -768,7 +768,7 @@ class SignupHandler(KomlogHandler):
             require_invitation=True
         )
         asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
-        self.render('signup_post.html', page_title='Komlog', response=response, invitation=invitation)
+        self.render('signup_post.html', page_title='Signup - Komlog', response=response, invitation=invitation)
 
 class ForgetHandler(KomlogHandler):
 
@@ -778,10 +778,10 @@ class ForgetHandler(KomlogHandler):
     def get(self):
         code=self.get_argument('c',default=None) #c : code
         if code==None:
-            self.render('forget_get.html', page_title='Komlog', reset=False)
+            self.render('forget_get.html', page_title='Forget - Komlog', reset=False)
         else:
             response=user.check_forget_code_request(code=code)
-            self.render('forget_get.html', page_title='Komlog', reset=True, response=response)
+            self.render('forget_get.html', page_title='Forget - Komlog', reset=True, response=response)
 
     def post(self):
         account=self.get_argument('account',default=None)
@@ -792,30 +792,25 @@ class ForgetHandler(KomlogHandler):
         elif account != None:
             response=user.register_forget_request(account=account)
             asyncio.ensure_future(msgapi.send_messages(response.imc_messages))
-            self.render('forget_post.html', page_title='Komlog', reset=False, response=response)
+            self.render('forget_post.html', page_title='Forget - Komlog', reset=False, response=response)
         else:
             response=user.reset_password_request(code=code, password=password)
-            self.render('forget_post.html', page_title='Komlog', reset=True, response=response)
-
-class CareersHandler(KomlogHandler):
-
-    def get(self):
-        self.render('careers.html', page_title='Komlog')
+            self.render('forget_post.html', page_title='Forget - Komlog', reset=True, response=response)
 
 class TermsHandler(KomlogHandler):
 
     def get(self):
-        self.render('terms.html', page_title='Komlog')
+        self.render('terms.html', page_title='Terms - Komlog')
 
 class PrivacyHandler(KomlogHandler):
 
     def get(self):
-        self.render('privacy.html', page_title='Komlog')
+        self.render('privacy.html', page_title='Privacy - Komlog')
 
 class CookiesHandler(KomlogHandler):
 
     def get(self):
-        self.render('cookies.html', page_title='Komlog')
+        self.render('cookies.html', page_title='Cookies - Komlog')
 
 UUID_REGEX='[0-9a-fA-F]{32}'
 USERNAME_REGEX='[0-9a-z\-_]+'
