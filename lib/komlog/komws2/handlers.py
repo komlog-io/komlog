@@ -812,6 +812,11 @@ class CookiesHandler(KomlogHandler):
     def get(self):
         self.render('cookies.html', page_title='Cookies - Komlog')
 
+class PricingHandler(KomlogHandler):
+
+    def get(self):
+        self.render('pricing.html', page_title='Pricing - Komlog')
+
 UUID_REGEX='[0-9a-fA-F]{32}'
 USERNAME_REGEX='[0-9a-z\-_]+'
 
@@ -827,6 +832,7 @@ HANDLERS = [
     (r'/terms/?', TermsHandler),
     (r'/privacy/?', PrivacyHandler),
     (r'/cookies/?', CookiesHandler),
+    (r'/pricing/?', PricingHandler),
     (r'/confirm/', UserConfirmationHandler),
     (r'/etc/ag/?', AgentsHandler),
     (r'/etc/ag/('+UUID_REGEX+')', AgentConfigHandler),
