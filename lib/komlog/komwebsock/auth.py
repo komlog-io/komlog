@@ -29,6 +29,11 @@ def agent_authenticated(method):
             now=time.time()
             logging.c_logger.info(','.join(('komlog.komwebsock.auth.agent_authenticated',e.error.name,str(now),str(now))))
             self.close(code=status.ACCESS_DENIED, reason='Access denied')
+        except AttributeError:
+            now=time.time()
+            error = Errors.E_KWSKA_AA_AE
+            logging.c_logger.info(','.join(('komlog.komwebsock.auth.agent_authenticated',error.name,str(now),str(now))))
+            self.close(code=status.ACCESS_DENIED, reason='Access denied')
         except Exception as e:
             now=time.time()
             error = getattr(e,'error',Errors.UNKNOWN)

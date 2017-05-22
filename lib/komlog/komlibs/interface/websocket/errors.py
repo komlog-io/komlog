@@ -41,3 +41,7 @@ class Errors(Enum):
     E_IWSMR_GR_IS   = 351102      #: GenericResponse. invalid status
     E_IWSMR_GR_IIRT = 351103      #: GenericResponse. invalid in reply to
 
+# komwebsock auth
+
+    E_KWSKA_AA_AE   = 352000      #: agent_authenticated attribute error. Cookie must be None
+
