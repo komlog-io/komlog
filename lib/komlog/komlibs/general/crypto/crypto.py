@@ -101,7 +101,7 @@ def encrypt(key, plaintext):
 
 def get_hash(message):
     try:
-        digest = hashes.Hash(hashes.Whirlpool(), backend=default_backend())
+        digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
         for i in range(0,30):
             digest.update(message)
         return digest.finalize()
@@ -112,7 +112,7 @@ def get_hashed_password(password, salt):
     try:
         password = password.encode('utf-8')
         kdf = PBKDF2HMAC(
-            algorithm=hashes.Whirlpool(),
+            algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
             iterations=100000,
@@ -126,7 +126,7 @@ def verify_password(password, hashed, salt):
     try:
         password = password.encode('utf-8')
         kdf = PBKDF2HMAC(
-            algorithm=hashes.Whirlpool(),
+            algorithm=hashes.SHA256(),
             length=32,
             salt=salt,
             iterations=100000,
@@ -154,10 +154,10 @@ def sign_message(key, message):
         privkey = load_private_key(key)
         signer = privkey.signer(
             padding.PSS(
-                mgf=padding.MGF1(hashes.Whirlpool()),
+                mgf=padding.MGF1(hashes.SHA256()),
                 salt_length=padding.PSS.MAX_LENGTH
             ),
-            hashes.Whirlpool()
+            hashes.SHA256()
         )
         signer.update(message)
         return signer.finalize()
@@ -170,10 +170,10 @@ def verify_signature(key, message, signature):
         verifier = pubkey.verifier(
             signature,
             padding.PSS(
-                mgf=padding.MGF1(hashes.Whirlpool()),
+                mgf=padding.MGF1(hashes.SHA256()),
                 salt_length=padding.PSS.MAX_LENGTH
             ),
-            hashes.Whirlpool()
+            hashes.SHA256()
         )
         verifier.update(message)
         verifier.verify()
