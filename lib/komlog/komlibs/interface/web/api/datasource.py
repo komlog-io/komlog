@@ -25,49 +25,60 @@ from komlog.komlibs.general.time import timeuuid
 
 
 @exceptions.ExceptionHandler
-def get_datasource_data_request(passport, did, seq=None, tid=None):
+def get_datasource_data_request(passport, did, start_date=None, end_date=None, seq=None, tid=None):
     if not isinstance(passport, UserPassport):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_IPSP)
     if not args.is_valid_hex_uuid(did):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_ID)
     if seq and not args.is_valid_sequence(seq):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_IS)
+    if start_date and not args.is_valid_string_float(start_date):
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_ISD)
+    if end_date and not args.is_valid_string_float(end_date):
+        raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_IED)
     if tid and not args.is_valid_hex_uuid(tid):
         raise exceptions.BadParametersException(error=Errors.E_IWADS_GDSDR_IT)
     did=uuid.UUID(did)
     if seq:
         ii=timeuuid.get_uuid1_from_custom_sequence(seq)
         ie=ii
+        count = 1
+    elif start_date or end_date:
+        ii = float(start_date) if start_date else None
+        ie = float(end_date) if end_date else None
+        if ii and ie and ii>ie:
+            ii,ie = ie,ii
+        ii = timeuuid.min_uuid_from_time(timestamp=ii) if ii else None
+        ie = timeuuid.max_uuid_from_time(timestamp=ie) if ie else None
+        count = 10
     else:
         ie=timeuuid.uuid1()
         ii=None
+        count = 2
     tid=uuid.UUID(tid) if tid else None
     try:
         authorization.authorize_request(request=Requests.GET_DATASOURCE_DATA,passport=passport,did=did,ii=ii,ie=ie, tid=tid)
     except authexcept.IntervalBoundsException as e:
-        if ii and ii.time<e.data['date'].time:
-            raise
-        else:
-            if ie.time < e.data['date'].time:
-                e.error=Errors.E_IWADS_GDSDR_ADIF
-                raise e
-            else:
-                data=datasourceapi.get_mapped_datasource_data(did, todate=ie, count=1)
-                if data[0]['date'].time < e.data['date'].time:
-                    e.error=Errors.E_IWADS_GDSDR_LDBL
-                    raise e
-    else:
-        data=datasourceapi.get_mapped_datasource_data(did, fromdate=ii, todate=ie, count=1)
-    datasource={}
-    datasource['did']=did.hex
-    datasource['ts']=timeuuid.get_unix_timestamp(data[0]['date'])
-    datasource['seq']=timeuuid.get_custom_sequence(data[0]['date'])
-    datasource['variables']=data[0]['variables']
-    datasource['content']=data[0]['content']
-    datasource['datapoints']=[]
-    for datapoint in data[0]['datapoints']:
-        datasource['datapoints'].append({'pid':datapoint['pid'].hex,'index':datapoint['position']})
-    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datasource)
+        if ie and ie.time<e.data['date'].time:
+            e.error=Errors.E_IWADS_GDSDR_ADIF
+            raise e
+        if not ii:
+            ii=e.data['date']
+        elif ii and ii.time<e.data['date'].time:
+            ii=e.data['date']
+    data=datasourceapi.get_mapped_datasource_data(did, fromdate=ii, todate=ie, count=count)
+    response_data = []
+    for item in data:
+        sample={}
+        sample['ts']=timeuuid.get_unix_timestamp(item['date'])
+        sample['seq']=timeuuid.get_custom_sequence(item['date'])
+        sample['variables']=item['variables']
+        sample['content']=item['content']
+        sample['datapoints']=[]
+        for datapoint in item['datapoints']:
+            sample['datapoints'].append({'pid':datapoint['pid'].hex,'index':datapoint['position']})
+        response_data.append(sample)
+    return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=response_data)
 
 @exceptions.ExceptionHandler
 def get_datasources_config_request(passport):

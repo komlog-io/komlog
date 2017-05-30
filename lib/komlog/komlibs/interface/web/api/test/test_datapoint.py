@@ -98,8 +98,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasource_config.status, status.WEB_STATUS_OK)
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         amsg=None
@@ -249,8 +249,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasource_config.status, status.WEB_STATUS_OK)
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][1]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][1]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         amsg=None
@@ -276,8 +276,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_update_datapoint_config_request_success_new_datapointname'
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        position,length=datasourcedata.data['variables'][2]
+        sequence=datasourcedata.data[0]['seq']
+        position,length=datasourcedata.data[0]['variables'][2]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -290,7 +290,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
-        for datapoint in datasourceinfo.data['datapoints']:
+        for datapoint in datasourceinfo.data[0]['datapoints']:
             if datapoint['index']==position:
                 pid=datapoint['pid']
         self.assertIsNotNone(pid)
@@ -310,8 +310,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_update_datapoint_config_request_success_new_color'
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        position,length=datasourcedata.data['variables'][3]
+        sequence=datasourcedata.data[0]['seq']
+        position,length=datasourcedata.data[0]['variables'][3]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -324,7 +324,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
-        for datapoint in datasourceinfo.data['datapoints']:
+        for datapoint in datasourceinfo.data[0]['datapoints']:
             if datapoint['index']==position:
                 pid=datapoint['pid']
         self.assertIsNotNone(pid)
@@ -344,8 +344,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_update_datapoint_config_request_success_new_color_and_datapointname'
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        position,length=datasourcedata.data['variables'][4]
+        sequence=datasourcedata.data[0]['seq']
+        position,length=datasourcedata.data[0]['variables'][4]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -358,7 +358,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
-        for datapoint in datasourceinfo.data['datapoints']:
+        for datapoint in datasourceinfo.data[0]['datapoints']:
             if datapoint['index']==position:
                 pid=datapoint['pid']
         self.assertIsNotNone(pid)
@@ -379,8 +379,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_get_datapoint_config_request_success'
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        position,length=datasourcedata.data['variables'][5]
+        sequence=datasourcedata.data[0]['seq']
+        position,length=datasourcedata.data[0]['variables'][5]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -393,13 +393,13 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
-        for datapoint in datasourcedata.data['datapoints']:
+        for datapoint in datasourcedata.data[0]['datapoints']:
             if datapoint['index']==position:
                 pid=datapoint['pid']
         self.assertIsNotNone(pid)
         response=datapointapi.get_datapoint_config_request(passport=psp, pid=pid)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(datasourcedata.data['did'], response.data['did'])
+        self.assertEqual(did, response.data['did'])
         self.assertEqual(pid, response.data['pid'])
         self.assertTrue('datapointname' in response.data)
         self.assertTrue(args.is_valid_datapointname(response.data['datapointname']))
@@ -788,8 +788,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_get_datapoint_data_request_failure_datapoint_data_not_found'
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        position,length=datasourcedata.data['variables'][6]
+        sequence=datasourcedata.data[0]['seq']
+        position,length=datasourcedata.data[0]['variables'][6]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -802,7 +802,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
-        for datapoint in datasourceinfo.data['datapoints']:
+        for datapoint in datasourceinfo.data[0]['datapoints']:
             if datapoint['index']==position:
                 pid=datapoint['pid']
         self.assertIsNotNone(pid)
@@ -819,8 +819,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_get_datapoint_data_request_success_datapoint_data_found'
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        position,length=datasourcedata.data['variables'][7]
+        sequence=datasourcedata.data[0]['seq']
+        position,length=datasourcedata.data[0]['variables'][7]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -833,7 +833,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
-        for datapoint in datasourceinfo.data['datapoints']:
+        for datapoint in datasourceinfo.data[0]['datapoints']:
             if datapoint['index']==position:
                 pid=datapoint['pid']
         self.assertIsNotNone(pid)
@@ -852,8 +852,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_get_datapoint_data_request_failure_datapoint_data_requested_before_interval_bounds_limit'
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        position,length=datasourcedata.data['variables'][8]
+        sequence=datasourcedata.data[0]['seq']
+        position,length=datasourcedata.data[0]['variables'][8]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -866,7 +866,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
-        for datapoint in datasourceinfo.data['datapoints']:
+        for datapoint in datasourceinfo.data[0]['datapoints']:
             if datapoint['index']==position:
                 pid=datapoint['pid']
         self.assertIsNotNone(pid)
@@ -889,8 +889,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         datapointname='test_get_datapoint_data_request_success_datapoint_data_requested_after_interval_bounds_limit'
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        position,length=datasourcedata.data['variables'][9]
+        sequence=datasourcedata.data[0]['seq']
+        position,length=datasourcedata.data[0]['variables'][9]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -903,7 +903,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
         datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         pid=None
-        for datapoint in datasourceinfo.data['datapoints']:
+        for datapoint in datasourceinfo.data[0]['datapoints']:
             if datapoint['index']==position:
                 pid=datapoint['pid']
         self.assertIsNotNone(pid)
@@ -959,8 +959,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasource_config.status, status.WEB_STATUS_OK)
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][10]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][10]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         pid=None
@@ -1008,8 +1008,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         self.assertEqual(datasource_config.status, status.WEB_STATUS_OK)
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][10]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][10]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         pid=None

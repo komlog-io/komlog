@@ -916,8 +916,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_add_datapoint_request_success_widget_linegraph_datapoint'
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -993,8 +993,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_add_datapoint_request_success_widget_histogram_datapoint'
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -1070,8 +1070,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_add_datapoint_request_success_widget_table_datapoint'
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -1148,8 +1148,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_add_datapoint_request_success_widget_multidp_datapoint'
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -1261,8 +1261,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_datapoint_request_success_widget_linegraph_datapoint'
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -1346,8 +1346,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_datapoint_request_success_widget_histogram__datapoint'
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -1431,8 +1431,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_datapoint_request_success_widget_table_datapoint'
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -1517,8 +1517,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_delete_datapoint_request_success_widget_multidp_datapoint'
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -1641,8 +1641,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_update_widget_config_request_success_widget_histogram'
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -1730,8 +1730,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_update_widget_config_request_success_widget_multidp'
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
@@ -1902,8 +1902,8 @@ class InterfaceWebApiWidgetTest(unittest.TestCase):
         datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=response.data['did'])
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         datapointname='test_get_related_widgets_request_success_datapoint'
-        sequence=datasourcedata.data['seq']
-        variable=datasourcedata.data['variables'][0]
+        sequence=datasourcedata.data[0]['seq']
+        variable=datasourcedata.data[0]['variables'][0]
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=response.data['did'], sequence=sequence, position=variable[0], length=variable[1], datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']

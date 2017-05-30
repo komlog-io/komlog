@@ -113,12 +113,14 @@ class DatasourceDataHandler(KomlogHandler):
     def get(self,did):
         try:
             seq=self.get_argument('seq',default=None)
+            start_date=self.get_argument('its',default=None) # start date
+            end_date=self.get_argument('ets',default=None) # end date
             tid=self.get_argument('t',default=None)
         except Exception:
             self.set_status(400)
             self.write(json.dumps({'message':'Bad parameters'}))
         else:
-            response=datasource.get_datasource_data_request(passport=self.passport, did=did, seq=seq, tid=tid)
+            response=datasource.get_datasource_data_request(passport=self.passport, did=did, start_date=start_date, end_date=end_date, seq=seq, tid=tid)
             self.set_status(response.status)
             self.write(json.dumps(response.data))
 

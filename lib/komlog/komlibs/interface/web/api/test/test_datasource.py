@@ -473,6 +473,36 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
             response=datasourceapi.get_datasource_data_request(passport=psp, did=did)
             self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
 
+    def test_get_datasource_data_request_failure_invalid_seq(self):
+        ''' get_datasource_data_request should fail if seq is invalid '''
+        seqs=[ 234234, 23423.02342, 'UserName', {'a':'dict'},['a','list'],('a','tuple'),'a\ninvalid\tusername',uuid.uuid4()]
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        did = uuid.uuid4().hex
+        for seq in seqs:
+            response=datasourceapi.get_datasource_data_request(passport=psp, did=did, seq=seq)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWADS_GDSDR_IS.value)
+
+    def test_get_datasource_data_request_failure_invalid_start_date(self):
+        ''' get_datasource_data_request should fail if start_date is invalid '''
+        start_dates=[234234, 23423.02342, 'UserName', {'a':'dict'},['a','list'],('a','tuple'),'a\ninvalid\tusername',uuid.uuid4()]
+        did = uuid.uuid4().hex
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        for start_date in start_dates:
+            response=datasourceapi.get_datasource_data_request(passport=psp, did=did, start_date=start_date)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWADS_GDSDR_ISD.value)
+
+    def test_get_datasource_data_request_failure_invalid_end_date(self):
+        ''' get_datasource_data_request should fail if end_date is invalid '''
+        end_dates=[234234, 23423.02342, 'UserName', {'a':'dict'},['a','list'],('a','tuple'),'a\ninvalid\tusername',uuid.uuid4()]
+        did = uuid.uuid4().hex
+        psp = passport.UserPassport(uid=uuid.uuid4(), sid=uuid.uuid4())
+        for end_date in end_dates:
+            response=datasourceapi.get_datasource_data_request(passport=psp, did=did, end_date=end_date)
+            self.assertEqual(response.status, status.WEB_STATUS_BAD_PARAMETERS)
+            self.assertEqual(response.error, Errors.E_IWADS_GDSDR_IED.value)
+
     def test_get_datasource_data_request_failure_invalid_tid(self):
         ''' get_datasource_data_request should fail if tid is invalid '''
         tids=[234234, 23423.02342, 'UserName', {'a':'dict'},['a','list'],('a','tuple'),'a\ninvalid\tusername',uuid.uuid4()]
@@ -509,17 +539,94 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         ''' get_datasource_data should return last mapped data '''
         psp = self.passport
         did=self.agents[0]['dids'][0]
-        content='get_datasource_data content 1 2 3'
-        date=timeuuid.uuid1()
-        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date, content=content))
-        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date))
+        content1='get_datasource_data content 1 2 3'
+        date1=timeuuid.uuid1()
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date1, content=content1))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date1))
+        content2='get_datasource_data content 4 5 6'
+        date2=timeuuid.uuid1()
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=uuid.UUID(did), date=date2, content=content2))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=uuid.UUID(did), date=date2))
         response=datasourceapi.get_datasource_data_request(passport=psp, did=did)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(response.data['did'],did)
-        self.assertEqual(response.data['ts'],timeuuid.get_unix_timestamp(date))
-        self.assertEqual(response.data['variables'],[(28,1),(30,1),(32,1)])
-        self.assertEqual(response.data['content'],content)
-        self.assertEqual(response.data['datapoints'],[])
+        self.assertEqual(len(response.data),2)
+        self.assertEqual(response.data[0]['ts'],timeuuid.get_unix_timestamp(date2))
+        self.assertEqual(response.data[0]['variables'],[(28,1),(30,1),(32,1)])
+        self.assertEqual(response.data[0]['content'],content2)
+        self.assertEqual(response.data[0]['datapoints'],[])
+        self.assertEqual(response.data[1]['ts'],timeuuid.get_unix_timestamp(date1))
+        self.assertEqual(response.data[1]['variables'],[(28,1),(30,1),(32,1)])
+        self.assertEqual(response.data[1]['content'],content1)
+        self.assertEqual(response.data[1]['datapoints'],[])
+
+    def test_get_datasource_data_request_success_start_and_end_date(self):
+        ''' get_datasource_data should return last mapped data '''
+        psp = self.passport
+        aid=uuid.UUID(self.agents[0]['aid'])
+        cookie = passport.AgentCookie(aid=aid, pv=1, sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(uuid.uuid1())).to_dict()
+        agent_passport = passport.get_agent_passport(cookie)
+        ds_uri='test_get_datasource_data_request_success_start_and_end_date'
+        response = datasourceapi.new_datasource_request(passport=agent_passport, datasourcename=ds_uri)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        msgs=response.imc_messages['unrouted']
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.imc_messages['unrouted']:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        did=uuid.UUID(response.data['did'])
+        content='get_datasource_data content 1 2 3'
+        ii = timeuuid.get_unix_timestamp(timeuuid.uuid1(1000))
+        ie = timeuuid.get_unix_timestamp(timeuuid.uuid1())
+        date=timeuuid.uuid1(3000)
+        self.assertTrue(gestdatasourceapi.store_datasource_data(did=did, date=date, content=content))
+        self.assertTrue(gestdatasourceapi.generate_datasource_map(did=did, date=date))
+        response=datasourceapi.get_datasource_data_request(passport=psp, did=did.hex, start_date=str(ii), end_date=str(ie))
+        self.assertEqual(response.error, Errors.OK.value)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertEqual(len(response.data),1)
+        self.assertEqual(response.data[0]['ts'],timeuuid.get_unix_timestamp(date))
+        self.assertEqual(response.data[0]['variables'],[(28,1),(30,1),(32,1)])
+        self.assertEqual(response.data[0]['content'],content)
+        self.assertEqual(response.data[0]['datapoints'],[])
+
+    def test_get_datasource_data_request_success_start_and_end_date_max_count_reached(self):
+        ''' get_datasource_data should return mapped data but only as many count as allowed '''
+        psp = self.passport
+        aid=uuid.UUID(self.agents[0]['aid'])
+        cookie = passport.AgentCookie(aid=aid, pv=1, sid=uuid.uuid4(), seq=timeuuid.get_custom_sequence(uuid.uuid1())).to_dict()
+        agent_passport = passport.get_agent_passport(cookie)
+        ds_uri='test_get_datasource_data_request_success_start_and_end_date_max_count_reached'
+        response = datasourceapi.new_datasource_request(passport=agent_passport, datasourcename=ds_uri)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        msgs=response.imc_messages['unrouted']
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.imc_messages['unrouted']:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        did=uuid.UUID(response.data['did'])
+        ii = timeuuid.get_unix_timestamp(timeuuid.uuid1(1000))
+        ie = timeuuid.get_unix_timestamp(timeuuid.uuid1())
+        for i in range(1,15):
+            content='get_datasource_data content 1 2 3'
+            date=timeuuid.uuid1(1000+i)
+            self.assertTrue(gestdatasourceapi.store_datasource_data(did=did, date=date, content=content))
+            self.assertTrue(gestdatasourceapi.generate_datasource_map(did=did, date=date))
+        response=datasourceapi.get_datasource_data_request(passport=psp, did=did.hex, start_date=str(ii), end_date=str(ie))
+        self.assertEqual(response.error, Errors.OK.value)
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertEqual(len(response.data),10)
+        self.assertEqual(response.data[0]['ts'],timeuuid.get_unix_timestamp(timeuuid.uuid1(1000+14)))
+        self.assertEqual(response.data[9]['ts'],timeuuid.get_unix_timestamp(timeuuid.uuid1(1000+5)))
 
     def test_get_datasource_data_request_failure_date_requested_less_than_interval_bound_limit(self):
         ''' get_datasource_data_request should fail if date requested is less than the date set
@@ -536,8 +643,8 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         seq=timeuuid.get_custom_sequence(date)
         response=datasourceapi.get_datasource_data_request(passport=psp, did=did, seq=seq)
         self.assertEqual(response.status, status.WEB_STATUS_NOT_ALLOWED)
-        self.assertEqual(response.error, autherrors.E_AQA_AGDSD_IBE.value)
-        self.assertEqual(response.data, {'error':autherrors.E_AQA_AGDSD_IBE.value})
+        self.assertEqual(response.error, Errors.E_IWADS_GDSDR_ADIF.value)
+        self.assertEqual(response.data, {'error':Errors.E_IWADS_GDSDR_ADIF.value})
         self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
 
     def test_get_datasource_data_request_failure_date_requested_empty_but_last_processed_less_than_interval_bound_limit(self):
@@ -553,9 +660,9 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         minTs=timeuuid.uuid1(seconds=5000)
         self.assertTrue(cassapiiface.insert_user_iface_deny(psp.uid, iface, minTs.hex))
         response=datasourceapi.get_datasource_data_request(passport=psp, did=did)
-        self.assertEqual(response.status, status.WEB_STATUS_NOT_ALLOWED)
-        self.assertEqual(response.error, Errors.E_IWADS_GDSDR_LDBL.value)
-        self.assertEqual(response.data, {'error':Errors.E_IWADS_GDSDR_LDBL.value})
+        self.assertEqual(response.status, status.WEB_STATUS_NOT_FOUND)
+        self.assertEqual(response.error, gesterrors.E_GDA_GMDD_DDNF.value)
+        self.assertEqual(response.data, {'error':gesterrors.E_GDA_GMDD_DDNF.value})
         self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
 
     def test_get_datasource_data_request_failure_date_requested_empty_but_limit_is_in_the_future(self):
