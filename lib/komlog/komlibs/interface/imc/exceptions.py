@@ -1,4 +1,5 @@
 import time
+import json
 import traceback
 from komlog.komfig import logging
 from komlog.komcass import exceptions as cassexcept
@@ -74,38 +75,52 @@ class ExceptionHandler(object):
 
     def __call__(self, *args, **kwargs):
         init=time.time()
+        log = {
+            'func':'.'.join((self.f.__module__,self.f.__qualname__)),
+            'ts':init
+        }
         try:
-            logging.logger.debug('START processing: '+self.f.__module__+'.'+self.f.__name__)
             resp=self.f(*args, **kwargs)
-            logging.logger.debug('END processing: '+self.f.__module__+'.'+self.f.__name__)
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__name__,resp.error.name,str(init),str(end))))
+            log['error']=resp.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return resp
         except BAD_PARAMETERS_STATUS_EXCEPTION_LIST as e:
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            log['error']=e.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_BAD_PARAMETERS,error=e.error)
         except ACCESS_DENIED_STATUS_EXCEPTION_LIST as e:
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            log['error']=e.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_ACCESS_DENIED,error=e.error)
         except NOT_FOUND_STATUS_EXCEPTION_LIST as e:
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            log['error']=e.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_NOT_FOUND,error=e.error)
         except INTERNAL_ERROR_STATUS_EXCEPTION_LIST as e:
             ex_info=traceback.format_exc().splitlines()
             for line in ex_info:
                 logging.logger.error(line)
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            log['error']=e.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR,error=e.error)
         except SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST as e:
             ex_info=traceback.format_exc().splitlines()
             for line in ex_info:
                 logging.logger.error(line)
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            log['error']=e.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_SERVICE_UNAVAILABLE,error=e.error)
         except Exception as e:
             logging.logger.error('IMC Response non treated Exception in: '+'.'.join((self.f.__module__,self.f.__qualname__)))
@@ -114,6 +129,8 @@ class ExceptionHandler(object):
                 logging.logger.error(line)
             error=getattr(e,'error',Errors.UNKNOWN)
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            log['error']=error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return responses.ImcInterfaceResponse(status=status.IMC_STATUS_INTERNAL_ERROR,error=error)
 

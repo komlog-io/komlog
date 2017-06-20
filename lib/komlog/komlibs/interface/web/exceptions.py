@@ -1,9 +1,11 @@
 import time
+import json
 import traceback
 from komlog.komfig import logging
 from komlog.komcass import exceptions as cassexcept
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
+from komlog.komlibs.auth.passport import Passport
 from komlog.komlibs.events import exceptions as eventexcept
 from komlog.komlibs.interface.web import status
 from komlog.komlibs.interface.web.errors import Errors
@@ -79,49 +81,73 @@ class ExceptionHandler(object):
 
     def __call__(self, *args, **kwargs):
         init=time.time()
+        if 'passport' in kwargs and isinstance(kwargs['passport'],Passport):
+            uid = kwargs['passport'].uid.hex
+            sid = kwargs['passport'].sid.hex
+        else:
+            uid = None
+            sid = None
+        log = {
+            'func':'.'.join((self.f.__module__,self.f.__qualname__)),
+            'uid':uid,
+            'sid':sid,
+            'ts':init
+        }
         try:
-            logging.logger.debug('START processing: '+self.f.__module__+'.'+self.f.__name__)
             resp=self.f(*args, **kwargs)
-            logging.logger.debug('END processing: '+self.f.__module__+'.'+self.f.__name__)
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__name__,Errors.OK.name,str(init),str(end))))
+            log['error']=Errors.OK.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             resp.error=resp.error.value
             return resp
         except BAD_PARAMETERS_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            log['error']=error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return response.WebInterfaceResponse(status=status.WEB_STATUS_BAD_PARAMETERS, data=data, error=error.value)
         except NOT_ALLOWED_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            log['error']=error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return response.WebInterfaceResponse(status=status.WEB_STATUS_NOT_ALLOWED, data=data, error=error.value)
         except ACCESS_DENIED_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            log['error']=error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return response.WebInterfaceResponse(status=status.WEB_STATUS_ACCESS_DENIED, data=data, error=error.value)
         except NOT_FOUND_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            log['error']=error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return response.WebInterfaceResponse(status=status.WEB_STATUS_NOT_FOUND, data=data, error=error.value)
         except INTERNAL_ERROR_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            log['error']=error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=error.value)
         except SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST as e:
             error=e.error
             data={'error':error.value}
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            log['error']=error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return response.WebInterfaceResponse(status=status.WEB_STATUS_SERVICE_UNAVAILABLE, data=data, error=error.value)
         except Exception as e:
             logging.logger.error('WEB Response non treated Exception in: '+'.'.join((self.f.__module__,self.f.__qualname__)))
@@ -131,6 +157,8 @@ class ExceptionHandler(object):
             error=getattr(e,'error',Errors.UNKNOWN)
             data={'error':error.value}
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            log['error']=error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return response.WebInterfaceResponse(status=status.WEB_STATUS_INTERNAL_ERROR, data=data, error=error.value)
 

@@ -1,10 +1,12 @@
 import time
+import json
 import traceback
 from komlog.komfig import logging
 from komlog.komcass import exceptions as cassexcept
 from komlog.komlibs.general.validation import arguments
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
+from komlog.komlibs.auth.passport import AgentPassport
 from komlog.komlibs.events import exceptions as eventexcept
 from komlog.komlibs.interface.websocket import status
 from komlog.komlibs.interface.websocket.errors import Errors
@@ -72,16 +74,33 @@ class ExceptionHandler:
 
     def __call__(self, *args, **kwargs):
         init=time.time()
+        if 'passport' in kwargs and isinstance(kwargs['passport'],AgentPassport):
+            uid = kwargs['passport'].uid.hex
+            aid = kwargs['passport'].aid.hex
+            sid = kwargs['passport'].sid.hex
+        else:
+            uid = None
+            aid = None
+            sid = None
+        log = {
+            'func':'.'.join((self.f.__module__,self.f.__qualname__)),
+            'uid':uid,
+            'aid':uid,
+            'sid':sid,
+            'ts':init
+        }
         try:
-            logging.logger.debug('START processing: '+self.f.__module__+'.'+self.f.__name__)
             resp=self.f(*args, **kwargs)
-            logging.logger.debug('END processing: '+self.f.__module__+'.'+self.f.__name__)
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__name__,resp.error.name,str(init),str(end))))
+            log['error']=resp.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             return resp
         except PROTOCOL_ERROR_STATUS_EXCEPTION_LIST as e:
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            log['error']=e.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.PROTOCOL_ERROR, reason='protocol error', error=e.error, irt=irt, v=v)
@@ -90,7 +109,9 @@ class ExceptionHandler:
             return result
         except MESSAGE_EXECUTION_DENIED_STATUS_EXCEPTION_LIST as e:
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            log['error']=e.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.MESSAGE_EXECUTION_DENIED,reason='msg exec denied',  error=e.error, irt=irt, v=v)
@@ -99,7 +120,9 @@ class ExceptionHandler:
             return result
         except RESOURCE_NOT_FOUND_STATUS_EXCEPTION_LIST as e:
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            log['error']=e.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.RESOURCE_NOT_FOUND, reason='resource not found', error=e.error, irt=irt, v=v)
@@ -108,7 +131,9 @@ class ExceptionHandler:
             return result
         except MESSAGE_EXECUTION_ERROR_STATUS_EXCEPTION_LIST as e:
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            log['error']=e.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.MESSAGE_EXECUTION_ERROR, reason='msg exec error', error=e.error, irt=irt, v=v)
@@ -117,7 +142,9 @@ class ExceptionHandler:
             return result
         except SERVICE_UNAVAILABLE_STATUS_EXCEPTION_LIST as e:
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,e.error.name,str(init),str(end))))
+            log['error']=e.error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.SERVICE_UNAVAILABLE, reason='service temporarily unavailable', error=e.error, irt=irt, v=v)
@@ -131,7 +158,9 @@ class ExceptionHandler:
                 logging.logger.error(line)
             error=getattr(e,'error',Errors.UNKNOWN)
             end=time.time()
-            logging.c_logger.info(','.join((self.f.__module__+'.'+self.f.__qualname__,error.name,str(init),str(end))))
+            log['error']=error.name
+            log['duration']=end-init
+            logging.c_logger.info(json.dumps(log))
             irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.MESSAGE_EXECUTION_ERROR, error=error, irt=irt, v=v)
