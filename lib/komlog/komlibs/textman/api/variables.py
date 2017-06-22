@@ -200,12 +200,6 @@ def get_variable_atts(text_hash, text_pos, relative_deep=20, same_line_atts=True
                 var_atts[att]=element['hash']
             else:
                 break
-        if var_order-relative_deep < 0:
-            att=variables.RELATIVE+'_-'+str(var_order)
-            var_atts[att]=variables.DEFAULT_BOF_HASH
-        if var_order+relative_deep > text_elements[-1]['order']:
-            att=variables.RELATIVE+'_'+str(text_elements[-1]['order']-var_order+1)
-            var_atts[att]=variables.DEFAULT_EOF_HASH
     if up_col_atts:
         if not len(text_hash['header_lines'])>0:
             att=variables.COLUMN+'_-1'
