@@ -8,6 +8,7 @@ import uuid, json
 from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import events as cassapievents
 from komlog.komcass.model.orm import events as ormevents
+from komlog.komfig import logging
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.gestaccount import exceptions as gestexcept
@@ -62,28 +63,38 @@ def _process_event_response_user_event_intervention_datapoint_identification(eve
         'mark_failed':[]
     }
     pending_dtree_updates=set()
+    logging.logger.debug('Applying event identification info')
     for reg in response_data['identified']:
+        logging.logger.debug('Register to apply: '+str(reg))
         try:
             ds_date=timeuuid.get_uuid1_from_custom_sequence(reg['s'])
             if reg['p'] is None and reg['l'] is None:
+                logging.logger.debug('marking missing datapoint')
                 mark_result=datapointapi.mark_missing_datapoint(pid=pid, date=ds_date, dtree_update=False)
             else:
+                logging.logger.debug('marking positive variable')
                 mark_result=datapointapi.mark_positive_variable(pid=pid, date=ds_date, position=reg['p'], length=reg['l'], dtree_update=False)
-            for pid in mark_result['dtree_pending']:
-                pending_dtree_updates.add(pid)
-        except gestexcept.GestaccountException:
+            for p_pid in mark_result['dtree_pending']:
+                logging.logger.debug('adding pid to pending dtree generation '+p_pid.hex)
+                pending_dtree_updates.add(p_pid)
+        except gestexcept.GestaccountException as e:
+            logging.logger.error('Exception detected. Error '+e.error.name)
             processing_result['mark_failed'].append(reg['s'])
             response['mark_failed'].append(reg['s'])
     for pid in pending_dtree_updates:
+        logging.logger.debug('Updating pending dtrees: '+pid.hex)
         try:
             datapointapi.generate_decision_tree(pid=pid)
             datapointapi.generate_inverse_decision_tree(pid=pid)
-        except gestexcept.GestaccountException:
+        except gestexcept.GestaccountException as e:
+            logging.logger.error('Exception detected. Error '+e.error.name)
             processing_result['dtree_gen_failed'].append(pid.hex)
             response['dtree_gen_failed'].append(pid)
         else:
+            logging.logger.debug('Success updating dtree: '+pid.hex)
             processing_result['dtree_gen_success'].append(pid.hex)
             response['dtree_gen_success'].append(pid)
+    logging.logger.debug('Event processing result: '+str(processing_result))
     event_response=ormevents.UserEventResponseInterventionDatapointIdentification(
         uid=event.uid,
         date=event.date,
