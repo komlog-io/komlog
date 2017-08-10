@@ -635,12 +635,12 @@ def store_datasource_values(did, date):
     if not datasource:
         raise exceptions.DatasourceNotFoundException(error=Errors.E_GPA_SDSV_DSNF)
     ds_info={'did':datasource.did, 'uri':datasource.datasourcename}
-    dshash=cassapidatasource.get_datasource_hash(did=did, date=date)
-    if dshash==None:
-        dshash=generate_datasource_hash(did=did, date=date)
     pids=cassapidatapoint.get_datapoints_pids(did=did)
     if pids==[]:
         return {'dp_not_found':pids, 'dp_found':pids,'ds_info':ds_info}
+    dshash=cassapidatasource.get_datasource_hash(did=did, date=date)
+    if dshash==None:
+        dshash=generate_datasource_hash(did=did, date=date)
     datapoints_info={}
     for pid in pids:
         datapoint_stats=cassapidatapoint.get_datapoint_stats(pid=pid)
