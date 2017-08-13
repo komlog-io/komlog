@@ -1,6 +1,5 @@
 import uuid
 import decimal
-import pandas as pd
 from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.interface.websocket import exceptions
@@ -65,10 +64,10 @@ class GenericResponse(response.GenericResponse):
 class SendDsData(MessagesVersionCatalog):
     _action_ = Messages.SEND_DS_DATA
 
-    def __init__(self, uri, ts, content, seq=None, irt=None):
+    def __init__(self, uri, t, content, seq=None, irt=None):
         super().__init__(seq=seq, irt=irt)
         self.uri=uri
-        self.ts=ts
+        self.t=t
         self.content=content
 
     @property
@@ -83,13 +82,13 @@ class SendDsData(MessagesVersionCatalog):
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSD_IURI)
 
     @property
-    def ts(self):
-        return self._ts
+    def t(self):
+        return self._t
 
-    @ts.setter
-    def ts(self, ts):
-        if args.is_valid_isodate(ts):
-            self._ts=pd.Timestamp(ts,tz='utc') if pd.Timestamp(ts).tz is None else pd.Timestamp(ts)
+    @t.setter
+    def t(self, t):
+        if args.is_valid_date(t):
+            self._t=t
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSD_ITS)
 
@@ -117,12 +116,12 @@ class SendDsData(MessagesVersionCatalog):
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']
-            and 'ts' in msg['payload']
+            and 't' in msg['payload'] and args.is_valid_hex_date(msg['payload']['t'])
             and 'content' in msg['payload']):
             uri=msg['payload']['uri']
-            ts=msg['payload']['ts']
+            t=uuid.UUID(msg['payload']['t'])
             content=msg['payload']['content']
-            return cls(uri=uri, ts=ts, content=content, seq=msg['seq'], irt=msg['irt'])
+            return cls(uri=uri, t=t, content=content, seq=msg['seq'], irt=msg['irt'])
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSD_ELFD)
 
@@ -135,7 +134,7 @@ class SendDsData(MessagesVersionCatalog):
             'irt':self.irt,
             'payload':{
                 'uri':self.uri,
-                'ts':self.ts.isoformat(),
+                't':self.t.hex,
                 'content':self.content
             }
         }
@@ -143,10 +142,10 @@ class SendDsData(MessagesVersionCatalog):
 class SendDpData(MessagesVersionCatalog):
     _action_ = Messages.SEND_DP_DATA
 
-    def __init__(self, uri, ts, content, seq=None, irt=None):
+    def __init__(self, uri, t, content, seq=None, irt=None):
         super().__init__(seq=seq, irt=irt)
         self.uri=uri
-        self.ts=ts
+        self.t=t
         self.content=content
 
     @property
@@ -161,13 +160,13 @@ class SendDpData(MessagesVersionCatalog):
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_IURI)
 
     @property
-    def ts(self):
-        return self._ts
+    def t(self):
+        return self._t
 
-    @ts.setter
-    def ts(self, ts):
-        if args.is_valid_isodate(ts):
-            self._ts=pd.Timestamp(ts,tz='utc') if pd.Timestamp(ts).tz is None else pd.Timestamp(ts)
+    @t.setter
+    def t(self, t):
+        if args.is_valid_date(t):
+            self._t=t
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_ITS)
 
@@ -195,12 +194,12 @@ class SendDpData(MessagesVersionCatalog):
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']
-            and 'ts' in msg['payload']
+            and 't' in msg['payload'] and args.is_valid_hex_date(msg['payload']['t'])
             and 'content' in msg['payload']):
             uri=msg['payload']['uri']
-            ts=msg['payload']['ts']
+            t=uuid.UUID(msg['payload']['t'])
             content=msg['payload']['content']
-            return cls(uri=uri, ts=ts, content=content, seq=msg['seq'], irt=msg['irt'])
+            return cls(uri=uri, t=t, content=content, seq=msg['seq'], irt=msg['irt'])
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_ELFD)
 
@@ -213,7 +212,7 @@ class SendDpData(MessagesVersionCatalog):
             'irt':self.irt,
             'payload':{
                 'uri':self.uri,
-                'ts':self.ts.isoformat(),
+                't':self.t.hex,
                 'content':str(self.content)
             }
         }
@@ -221,9 +220,9 @@ class SendDpData(MessagesVersionCatalog):
 class SendMultiData(MessagesVersionCatalog):
     _action_ = Messages.SEND_MULTI_DATA
 
-    def __init__(self, ts, uris, seq=None, irt=None):
+    def __init__(self, t, uris, seq=None, irt=None):
         super().__init__(seq=seq, irt=irt)
-        self.ts=ts
+        self.t=t
         self.uris=uris
 
     @property
@@ -248,13 +247,13 @@ class SendMultiData(MessagesVersionCatalog):
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTD_IURIS)
 
     @property
-    def ts(self):
-        return self._ts
+    def t(self):
+        return self._t
 
-    @ts.setter
-    def ts(self, ts):
-        if args.is_valid_isodate(ts):
-            self._ts=pd.Timestamp(ts,tz='utc') if pd.Timestamp(ts).tz is None else pd.Timestamp(ts)
+    @t.setter
+    def t(self, t):
+        if args.is_valid_date(t):
+            self._t=t
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTD_ITS)
 
@@ -269,11 +268,11 @@ class SendMultiData(MessagesVersionCatalog):
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
-            and 'ts' in msg['payload']
+            and 't' in msg['payload'] and args.is_valid_hex_date(msg['payload']['t'])
             and 'uris' in msg['payload']):
-            ts=msg['payload']['ts']
+            t=uuid.UUID(msg['payload']['t'])
             uris=msg['payload']['uris']
-            return cls(ts=ts, uris=uris, seq=msg['seq'], irt=msg['irt'])
+            return cls(t=t, uris=uris, seq=msg['seq'], irt=msg['irt'])
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTD_ELFD)
 
@@ -287,7 +286,7 @@ class SendMultiData(MessagesVersionCatalog):
             'seq':self.seq,
             'irt':self.irt,
             'payload':{
-                'ts':self.ts.isoformat(),
+                't':self.t.hex,
                 'uris':ds_uris+dp_uris
             }
         }
@@ -417,8 +416,8 @@ class RequestData(MessagesVersionCatalog):
     def start(self, start):
         if start is None:
             self._start = None
-        elif args.is_valid_isodate(start):
-            self._start=pd.Timestamp(start,tz='utc') if pd.Timestamp(start).tz is None else pd.Timestamp(start)
+        elif args.is_valid_date(start):
+            self._start=start
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDT_ISTART)
 
@@ -430,8 +429,8 @@ class RequestData(MessagesVersionCatalog):
     def end(self, end):
         if end is None:
             self._end = None
-        elif args.is_valid_isodate(end):
-            self._end=pd.Timestamp(end,tz='utc') if pd.Timestamp(end).tz is None else pd.Timestamp(end)
+        elif args.is_valid_date(end):
+            self._end=end
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDT_IEND)
 
@@ -460,12 +459,12 @@ class RequestData(MessagesVersionCatalog):
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']
-            and 'start' in msg['payload']
-            and 'end' in msg['payload']
+            and 'start' in msg['payload'] and (msg['payload']['start'] is None or args.is_valid_hex_date(msg['payload']['start']))
+            and 'end' in msg['payload'] and (msg['payload']['end'] is None or args.is_valid_hex_date(msg['payload']['end']))
             and 'count' in msg['payload']):
             uri=msg['payload']['uri']
-            start=msg['payload']['start']
-            end=msg['payload']['end']
+            start=uuid.UUID(msg['payload']['start']) if msg['payload']['start'] else None
+            end=uuid.UUID(msg['payload']['end']) if msg['payload']['end'] else None
             count=msg['payload']['count']
             return cls(uri=uri, start=start, end=end, count=count, seq=msg['seq'], irt=msg['irt'])
         else:
@@ -480,8 +479,8 @@ class RequestData(MessagesVersionCatalog):
             'irt':self.irt,
             'payload':{
                 'uri':self.uri,
-                'start':self._start.isoformat() if self._start else None,
-                'end':self._end.isoformat() if self._end else None,
+                'start':self._start.hex if self._start else None,
+                'end':self._end.hex if self._end else None,
                 'count':self._count,
             }
         }
@@ -493,7 +492,7 @@ class SendDataInterval(MessagesVersionCatalog):
         super().__init__(seq=seq, irt=irt)
         self.uri = uri
         self.start = start
-        self.end = end 
+        self.end = end
         self.data = data
 
     @property
@@ -517,8 +516,8 @@ class SendDataInterval(MessagesVersionCatalog):
 
     @start.setter
     def start(self, start):
-        if args.is_valid_isodate(start):
-            self._start=pd.Timestamp(start,tz='utc') if pd.Timestamp(start).tz is None else pd.Timestamp(start)
+        if args.is_valid_date(start):
+            self._start=start
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDI_ISTART)
 
@@ -528,8 +527,8 @@ class SendDataInterval(MessagesVersionCatalog):
 
     @end.setter
     def end(self, end):
-        if args.is_valid_isodate(end):
-            self._end=pd.Timestamp(end,tz='utc') if pd.Timestamp(end).tz is None else pd.Timestamp(end)
+        if args.is_valid_date(end):
+            self._end=end
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDI_IEND)
 
@@ -543,9 +542,7 @@ class SendDataInterval(MessagesVersionCatalog):
             and all(
                 isinstance(item,tuple)
                 and len(item)==2
-                and args.is_valid_isodate(item[0])
-                and isinstance(item[0],str)
-                and pd.Timestamp(item[0]).tz is not None
+                and args.is_valid_hex_date(item[0])
                 and isinstance(item[1],str) for item in data)
             ):
             self._data=data
@@ -564,12 +561,12 @@ class SendDataInterval(MessagesVersionCatalog):
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']
-            and 'start' in msg['payload']
-            and 'end' in msg['payload']
+            and 'start' in msg['payload'] and args.is_valid_hex_date(msg['payload']['start'])
+            and 'end' in msg['payload'] and args.is_valid_hex_date(msg['payload']['end'])
             and 'data' in msg['payload']):
             uri=msg['payload']['uri']
-            start=msg['payload']['start']
-            end=msg['payload']['end']
+            start=uuid.UUID(msg['payload']['start'])
+            end=uuid.UUID(msg['payload']['end'])
             data=msg['payload']['data']
             return cls(uri=uri, start=start, end=end, data=data, seq=msg['seq'], irt=msg['irt'])
         else:
@@ -584,8 +581,8 @@ class SendDataInterval(MessagesVersionCatalog):
             'irt':self.irt,
             'payload':{
                 'uri':self.uri,
-                'start':self.start.isoformat(),
-                'end':self.end.isoformat(),
+                'start':self.start.hex,
+                'end':self.end.hex,
                 'data':self.data
             }
         }

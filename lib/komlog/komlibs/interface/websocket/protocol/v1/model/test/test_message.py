@@ -3,7 +3,6 @@ import time
 import uuid
 import json
 import decimal
-import pandas as pd
 from komlog.komfig import logging
 from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.general.time import timeuuid
@@ -65,7 +64,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_version_cannot_be_modified(self):
         ''' if we create a new SendDsData message, the version param cannot be modified  '''
-        msg=message.SendDsData(uri='uri',ts=pd.Timestamp('now',tz='utc'),content='ds_content')
+        msg=message.SendDsData(uri='uri',t=timeuuid.uuid1(),content='ds_content')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
         self.assertFalse(getattr(msg,'payload', False))
@@ -75,7 +74,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_action_cannot_be_modified(self):
         ''' if we create a new SendDsData message, the action param cannot be modified  '''
-        msg=message.SendDsData(uri='uri',ts=pd.Timestamp('now',tz='utc'),content='ds_content')
+        msg=message.SendDsData(uri='uri',t=timeuuid.uuid1(),content='ds_content')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
         self.assertFalse(getattr(msg,'payload', False))
@@ -85,7 +84,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_seq_cannot_be_modified(self):
         ''' if we create a new SendDsData message, the seq param cannot be modified  '''
-        msg=message.SendDsData(uri='uri',ts=pd.Timestamp('now',tz='utc'),content='ds_content')
+        msg=message.SendDsData(uri='uri',t=timeuuid.uuid1(),content='ds_content')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
         self.assertTrue(args.is_valid_message_sequence(msg.seq))
@@ -97,86 +96,57 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_success_generating_serializable_dict(self):
         ''' SendDsData.to_dict() method should generate a valid serializable dict '''
-        ts=pd.Timestamp('now',tz='utc')
-        msg=message.SendDsData(uri='uri',ts=ts,content='content')
+        t=timeuuid.uuid1()
+        msg=message.SendDsData(uri='uri',t=t,content='content')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':None, 'seq':msg.seq, 'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}})
-        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
-
-    def test_SendDsData_success_generating_serializable_dict_with_no_timezone_ts(self):
-        ''' SendDsData.to_dict() method should generate a valid serializable dict '''
-        ts='2016-07-18T17:15:00'
-        ts2=pd.Timestamp(ts,tz='utc')
-        msg=message.SendDsData(uri='uri',ts=ts,content='content')
-        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
-        self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':None, 'seq':msg.seq, 'payload':{'uri':'uri','ts':ts2.isoformat(),'content':'content'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':None, 'seq':msg.seq, 'payload':{'uri':'uri','t':t.hex,'content':'content'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDsData_success_generating_serializable_dict_with_global_uri(self):
         ''' SendDsData.to_dict() method should generate a valid serializable dict '''
-        ts=pd.Timestamp('now',tz='utc')
-        msg=message.SendDsData(uri='user:uri',ts=ts,content='content')
+        t=timeuuid.uuid1()
+        msg=message.SendDsData(uri='user:uri',t=t,content='content')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':None, 'seq':msg.seq, 'payload':{'uri':'user:uri','ts':ts.isoformat(),'content':'content'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':None, 'seq':msg.seq, 'payload':{'uri':'user:uri','t':t.hex,'content':'content'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDsData_success_generating_serializable_dict_with_irt(self):
         ''' SendDsData.to_dict() method should generate a valid serializable dict '''
-        ts=pd.Timestamp('now',tz='utc')
-        msg=message.SendDsData(uri='user:uri',ts=ts,content='content', irt=uuid.uuid1().hex[0:20])
+        t=timeuuid.uuid1()
+        msg=message.SendDsData(uri='user:uri',t=t,content='content', irt=uuid.uuid1().hex[0:20])
         self.assertIsNotNone(msg.irt)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':msg.irt, 'seq':msg.seq, 'payload':{'uri':'user:uri','ts':ts.isoformat(),'content':'content'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':msg.irt, 'seq':msg.seq, 'payload':{'uri':'user:uri','t':t.hex,'content':'content'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDsData_success_loading_from_dict(self):
         ''' SendDsData.load_from_dict() method should generate a valid SendDsData object '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
+            'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
         msg=message.SendDsData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.to_dict(),dict_msg)
-        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
-
-    def test_SendDsData_success_loading_from_dict_with_no_timezone_ts(self):
-        ''' SendDsData.load_from_dict() method should generate a valid SendDsData object '''
-        ts='2016-07-18T17:15:00'
-        ts2=pd.Timestamp(ts, tz='utc')
-        dict_msg={
-            'v':message.MessagesVersionCatalog._version_,
-            'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
-            'irt':None,
-            'payload':{'uri':'uri','ts':ts,'content':'content'}
-        }
-        msg=message.SendDsData.load_from_dict(dict_msg)
-        dict_msg['payload']['ts']=ts2.isoformat()
-        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
-        self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.ts.timestamp(), ts2.timestamp())
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDsData_success_loading_from_dict_with_global_uri(self):
         ''' SendDsData.load_from_dict() method should generate a valid SendDsData object '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'my_user:uri','ts':ts.isoformat(),'content':'content'}
+            'payload':{'uri':'my_user:uri','t':t.hex,'content':'content'}
         }
         msg=message.SendDsData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
@@ -186,13 +156,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_success_loading_from_dict_with_non_none_irt(self):
         ''' SendDsData.load_from_dict() method should generate a valid SendDsData object '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':uuid.uuid1().hex[0:20],
-            'payload':{'uri':'my_user:uri','ts':ts.isoformat(),'content':'content'}
+            'payload':{'uri':'my_user:uri','t':t.hex,'content':'content'}
         }
         msg=message.SendDsData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
@@ -202,13 +172,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_version(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':2,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
+            'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -216,13 +186,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_action(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
+            'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -230,13 +200,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_non_seq(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'iseq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
+            'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -244,13 +214,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_seq(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:10],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
+            'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -258,13 +228,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_non_irt(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'eirt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
+            'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -272,13 +242,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_irt(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':'invalidirt',
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'content'}
+            'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -286,13 +256,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_payload_type(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':uuid.uuid1().hex[0:20],
-            'payload':['uri','uri','ts',ts.isoformat(),'content','content']
+            'payload':['uri','uri','t',t.hex,'content','content']
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -300,26 +270,26 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_payload_uri_not_found(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'ari':'uri','ts':ts.isoformat(),'content':'content'}
+            'payload':{'ari':'uri','t':t.hex,'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ELFD)
 
-    def test_SendDsData_failure_loading_from_dict_invalid_payload_ts_not_found(self):
+    def test_SendDsData_failure_loading_from_dict_invalid_payload_t_not_found(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','its':1,'content':'content'}
+            'payload':{'uri':'uri','it':1,'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -327,13 +297,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_payload_content_not_found(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'contents':'content'}
+            'payload':{'uri':'uri','t':t.hex,'contents':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -341,40 +311,40 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDsData_failure_loading_from_dict_invalid_payload_uri_invalid(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'ñññinvalid uri','ts':ts.isoformat(),'content':'content'}
+            'payload':{'uri':'ñññinvalid uri','t':t.hex,'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_IURI)
 
-    def test_SendDsData_failure_loading_from_dict_invalid_payload_ts_invalid(self):
+    def test_SendDsData_failure_loading_from_dict_invalid_payload_t_invalid(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':'1','content':'content'}
+            'payload':{'uri':'uri','t':uuid.uuid4().hex,'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ITS)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ELFD)
 
     def test_SendDsData_failure_loading_from_dict_invalid_payload_content_invalid(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':{'a':'dict'}}
+            'payload':{'uri':'uri','t':t.hex,'content':{'a':'dict'}}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
@@ -382,85 +352,56 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_success_generating_serializable_dict(self):
         ''' SendDpData.to_dict() method should generate a valid serializable dict '''
-        ts=pd.Timestamp('now',tz='utc')
-        msg=message.SendDpData(uri='uri',ts=ts,content='33.33')
+        t=timeuuid.uuid1()
+        msg=message.SendDpData(uri='uri',t=t,content='33.33')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}})
-        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
-
-    def test_SendDpData_success_generating_serializable_dict_with_no_timezone_ts(self):
-        ''' SendDpData.to_dict() method should generate a valid serializable dict '''
-        ts='2016-07-18T17:15:00'
-        ts2=pd.Timestamp(ts,tz='utc')
-        msg=message.SendDpData(uri='uri',ts=ts,content='33.33')
-        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
-        self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uri':'uri','ts':ts2.isoformat(),'content':'33.33'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uri':'uri','t':t.hex,'content':'33.33'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDpData_success_generating_serializable_dict_with_global_uri(self):
         ''' SendDpData.to_dict() method should generate a valid serializable dict '''
-        ts=pd.Timestamp('now',tz='utc')
-        msg=message.SendDpData(uri='user:uri',ts=ts,content='33.33')
+        t=timeuuid.uuid1()
+        msg=message.SendDpData(uri='user:uri',t=t,content='33.33')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uri':'user:uri','ts':ts.isoformat(),'content':'33.33'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uri':'user:uri','t':t.hex,'content':'33.33'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDpData_success_generating_serializable_dict_with_irt(self):
         ''' SendDpData.to_dict() method should generate a valid serializable dict '''
-        ts=pd.Timestamp('now',tz='utc')
-        msg=message.SendDpData(uri='user:uri',ts=ts,content='33.33', irt=uuid.uuid1().hex[0:20])
+        t=timeuuid.uuid1()
+        msg=message.SendDpData(uri='user:uri',t=t,content='33.33', irt=uuid.uuid1().hex[0:20])
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq, 'irt':msg.irt, 'payload':{'uri':'user:uri','ts':ts.isoformat(),'content':'33.33'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq, 'irt':msg.irt, 'payload':{'uri':'user:uri','t':t.hex,'content':'33.33'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDpData_success_loading_from_dict(self):
         ''' SendDpData.load_from_dict() method should generate a valid SendDpData object '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
+            'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
         msg=message.SendDpData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.to_dict(),dict_msg)
-        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
-
-    def test_SendDpData_success_loading_from_dict_with_no_timezone_ts(self):
-        ''' SendDpData.load_from_dict() method should generate a valid SendDpData object '''
-        ts='2016-07-18T17:15:00'
-        ts2=pd.Timestamp(ts,tz='utc')
-        dict_msg={
-            'v':message.MessagesVersionCatalog._version_,
-            'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
-            'irt':None,
-            'payload':{'uri':'uri','ts':ts,'content':'33.33'}
-        }
-        msg=message.SendDpData.load_from_dict(dict_msg)
-        dict_msg['payload']['ts']=ts2.isoformat()
-        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
-        self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.ts.timestamp(), ts2.timestamp())
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDpData_success_loading_from_dict_with_global_uri(self):
         ''' SendDpData.load_from_dict() method should generate a valid SendDpData object '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'the_user:uri','ts':ts.isoformat(),'content':'33.33'}
+            'payload':{'uri':'the_user:uri','t':t.hex,'content':'33.33'}
         }
         msg=message.SendDpData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
@@ -470,13 +411,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_success_loading_from_dict_with_irt(self):
         ''' SendDpData.load_from_dict() method should generate a valid SendDpData object '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':uuid.uuid1().hex[0:20],
-            'payload':{'uri':'the_user:uri','ts':ts.isoformat(),'content':'33.33'}
+            'payload':{'uri':'the_user:uri','t':t.hex,'content':'33.33'}
         }
         msg=message.SendDpData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
@@ -486,13 +427,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_version(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':2,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
+            'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -500,13 +441,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_action(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
+            'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -514,13 +455,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_non_seq(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'iseq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
+            'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -528,13 +469,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_seq(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:19],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
+            'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -542,13 +483,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_non_irt(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'iirt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
+            'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -556,13 +497,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_irt(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':23,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':'33.33'}
+            'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -570,13 +511,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_payload_type(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':['uri','uri','ts',ts.isoformat(),'content','33.33']
+            'payload':['uri','uri','t',t.hex,'content','33.33']
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -584,26 +525,26 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_payload_uri_not_found(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'ari':'uri','ts':ts.isoformat(),'content':'33.33'}
+            'payload':{'ari':'uri','t':t.hex,'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ELFD)
 
-    def test_SendDpData_failure_loading_from_dict_invalid_payload_ts_not_found(self):
+    def test_SendDpData_failure_loading_from_dict_invalid_payload_t_not_found(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','its':1,'content':'33.33'}
+            'payload':{'uri':'uri','it':1,'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -611,13 +552,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_payload_content_not_found(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'contents':'33.33'}
+            'payload':{'uri':'uri','t':t.hex,'contents':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -625,40 +566,40 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendDpData_failure_loading_from_dict_invalid_payload_uri_invalid(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'ñññinvalid uri','ts':ts.isoformat(),'content':'33.33'}
+            'payload':{'uri':'ñññinvalid uri','t':t.hex,'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_IURI)
 
-    def test_SendDpData_failure_loading_from_dict_invalid_payload_ts_invalid(self):
+    def test_SendDpData_failure_loading_from_dict_invalid_payload_t_invalid(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':'1','content':'33.33'}
+            'payload':{'uri':'uri','t':'1','content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ITS)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ELFD)
 
     def test_SendDpData_failure_loading_from_dict_invalid_payload_content_invalid(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uri':'uri','ts':ts.isoformat(),'content':{'a':'dict'}}
+            'payload':{'uri':'uri','t':t.hex,'content':{'a':'dict'}}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
@@ -666,85 +607,56 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_success_generating_serializable_dict(self):
         ''' SendMultiData.to_dict() method should generate a valid serializable dict '''
-        ts=pd.Timestamp('now',tz='utc')
-        msg=message.SendMultiData(uris=[{'uri':'uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],ts=ts)
+        t=timeuuid.uuid1()
+        msg=message.SendMultiData(uris=[{'uri':'uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],t=t)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}})
-        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
-
-    def test_SendMultiData_success_generating_serializable_dict_with_no_timezone_ts(self):
-        ''' SendMultiData.to_dict() method should generate a valid serializable dict '''
-        ts='2016-07-18T17:15:00'
-        ts2=pd.Timestamp(ts, tz='utc')
-        msg=message.SendMultiData(uris=[{'uri':'uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],ts=ts)
-        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
-        self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts2.isoformat()}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendMultiData_success_generating_serializable_dict_with_global_uri(self):
         ''' SendMultiData.to_dict() method should generate a valid serializable dict '''
-        ts=pd.Timestamp('now',tz='utc')
-        msg=message.SendMultiData(uris=[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],ts=ts)
+        t=timeuuid.uuid1()
+        msg=message.SendMultiData(uris=[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],t=t)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uris':[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uris':[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendMultiData_success_generating_serializable_dict_with_irt(self):
         ''' SendMultiData.to_dict() method should generate a valid serializable dict '''
-        ts=pd.Timestamp('now',tz='utc')
-        msg=message.SendMultiData(uris=[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],ts=ts, irt=uuid.uuid1().hex[0:20])
+        t=timeuuid.uuid1()
+        msg=message.SendMultiData(uris=[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],t=t, irt=uuid.uuid1().hex[0:20])
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq, 'irt':msg.irt, 'payload':{'uris':[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq, 'irt':msg.irt, 'payload':{'uris':[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendMultiData_success_loading_from_dict(self):
         ''' SendMultiData.load_from_dict() method should generate a valid SendMultiData object '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
         msg=message.SendMultiData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.to_dict(),dict_msg)
-        self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
-
-    def test_SendMultiData_success_loading_from_dict_with_no_timezone_ts(self):
-        ''' SendMultiData.load_from_dict() method should generate a valid SendMultiData object '''
-        ts='2016-07-18T17:15:00'
-        ts2=pd.Timestamp(ts, tz='utc')
-        dict_msg={
-            'v':message.MessagesVersionCatalog._version_,
-            'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
-            'irt':None,
-            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts}
-        }
-        msg=message.SendMultiData.load_from_dict(dict_msg)
-        dict_msg['payload']['ts']=ts2.isoformat()
-        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
-        self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.ts.timestamp(),ts2.timestamp())
         self.assertEqual(msg.to_dict(),dict_msg)
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendMultiData_success_loading_from_dict_with_global_uri(self):
         ''' SendMultiData.load_from_dict() method should generate a valid SendMultiData object '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uris':[{'uri':'user2:uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
+            'payload':{'uris':[{'uri':'user2:uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
         msg=message.SendMultiData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
@@ -754,13 +666,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_success_loading_from_dict_with_irt(self):
         ''' SendMultiData.load_from_dict() method should generate a valid SendMultiData object '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':uuid.uuid1().hex[0:20],
-            'payload':{'uris':[{'uri':'user2:uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
+            'payload':{'uris':[{'uri':'user2:uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
         msg=message.SendMultiData.load_from_dict(dict_msg)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
@@ -770,13 +682,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_version(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':2,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -784,13 +696,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_action(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -798,13 +710,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_non_seq(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'iseq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -812,13 +724,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_seq(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':10,
             'irt':None,
-            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -826,13 +738,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_non_irt(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'iirt':None,
-            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -840,13 +752,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_irt(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':332,
-            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'ts':ts.isoformat()}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -854,13 +766,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_type(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':['uri','uri','ts',ts.isoformat(),'content','33.33']
+            'payload':['uri','uri','t',t.hex,'content','33.33']
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -868,26 +780,26 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_not_found(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'aris':[{'uri':'uri','type':vertex.DATAPOINT, 'content':'33.33'}],'ts':ts.isoformat()}
+            'payload':{'aris':[{'uri':'uri','type':vertex.DATAPOINT, 'content':'33.33'}],'t':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_ELFD)
 
-    def test_SendMultiData_failure_loading_from_dict_invalid_payload_ts_not_found(self):
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_t_not_found(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'its':1}
+            'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'it':1}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -895,13 +807,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_invalid_type(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uris':{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},'ts':ts.isoformat()}
+            'payload':{'uris':{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},'t':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -909,13 +821,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_invalid_item_type(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
             'seq':uuid.uuid1().hex[0:20],
             'irt':None,
-            'payload':{'uris':['string','other','trhee'],'ts':ts.isoformat()}
+            'payload':{'uris':['string','other','trhee'],'t':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -923,7 +835,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_without_uri(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
@@ -934,7 +846,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
                     {'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},
                     {'content':'ds content'},
                 ],
-                'ts':ts.isoformat()}
+                't':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -942,7 +854,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_uri_invalid(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
@@ -953,7 +865,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
                     {'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},
                     {'uri':'Ñot valid','type':vertex.DATASOURCE,'content':'ds content'},
                 ],
-                'ts':ts.isoformat()}
+                't':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -961,7 +873,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_no_content(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
@@ -972,7 +884,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
                     {'uri':'uri','type':vertex.DATAPOINT, 'content':'33.33'},
                     {'type':vertex.DATAPOINT, 'uri':'valid_uri'},
                 ],
-                'ts':ts.isoformat()}
+                't':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -980,7 +892,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_content_invalid(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
@@ -991,7 +903,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
                     {'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},
                     {'uri':'valid_uri','type':vertex.DATAPOINT,'content':'non dp content'},
                 ],
-                'ts':ts.isoformat()}
+                't':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -999,7 +911,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_no_type(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
@@ -1010,7 +922,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
                     {'uri':'uri','type':vertex.DATAPOINT, 'content':'33.33'},
                     {'uri':'valid_uri', 'content':'5'},
                 ],
-                'ts':ts.isoformat()}
+                't':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -1018,7 +930,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_uris_item_type_invalid(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
-        ts=pd.Timestamp('now',tz='utc')
+        t=timeuuid.uuid1()
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
@@ -1029,13 +941,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
                     {'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},
                     {'uri':'valid_uri','type':vertex.USER,'content':'content'},
                 ],
-                'ts':ts.isoformat()}
+                't':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_IURIS)
 
-    def test_SendMultiData_failure_loading_from_dict_invalid_payload_ts_invalid(self):
+    def test_SendMultiData_failure_loading_from_dict_invalid_payload_t_invalid(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
@@ -1047,11 +959,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
                     {'uri':'uri','type':vertex.DATAPOINT, 'content':'33.33'},
                     {'uri':'valid_uri','type':vertex.DATASOURCE, 'content':'valid ds content'},
                 ],
-                'ts':'1'}
+                't':'1'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_ITS)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_ELFD)
 
     def test_HookToUri_success_generating_serializable_dict(self):
         ''' HookToUri.to_dict() method should generate a valid serializable dict '''
@@ -1428,8 +1340,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_success(self):
         ''' Creating a RequestData object should succeed '''
         uri='valid.uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1(200)
         count=123
         msg=message.RequestData(uri=uri, start=start, end=end, count=count)
         self.assertTrue(isinstance(msg, message.RequestData))
@@ -1446,8 +1358,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'count':count
             }
         }
@@ -1482,8 +1394,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_success_no_count(self):
         ''' Creating a RequestData object should succeed '''
         uri='valid.uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1(200)
         msg=message.RequestData(uri=uri, start=start, end=end)
         self.assertTrue(isinstance(msg, message.RequestData))
         self.assertEqual(msg.uri, uri)
@@ -1499,8 +1411,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'count':None
             }
         }
@@ -1509,8 +1421,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_success_with_global_uri(self):
         ''' Creating a RequestData object should succeed '''
         uri='remote_user:valid.uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1(200)
         count=123
         msg=message.RequestData(uri=uri, start=start, end=end, count=count)
         self.assertTrue(isinstance(msg, message.RequestData))
@@ -1527,8 +1439,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'count':count
             }
         }
@@ -1537,8 +1449,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_success_with_irt(self):
         ''' Creating a RequestData object should succeed '''
         uri='remote_user:valid.uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         count=123
         msg=message.RequestData(uri=uri, start=start, end=end, count=count, irt=uuid.uuid1().hex[0:20])
         self.assertTrue(isinstance(msg, message.RequestData))
@@ -1555,8 +1467,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':msg.irt,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'count':count
             }
         }
@@ -1565,7 +1477,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_no_count_no_complete_interval(self):
         ''' Creating a RequestData object should fail if no count and no complete interval is passed'''
         uri='valid.uri'
-        end=pd.Timestamp('now',tz='utc')
+        end=timeuuid.uuid1()
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.RequestData(uri=uri, end=end)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ECOIN)
@@ -1573,8 +1485,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_invalid_uri(self):
         ''' Creating a RequestData object fail if uri is invalid '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.RequestData(uri=uri, start=start, end=end)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_IURI)
@@ -1582,8 +1494,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_invalid_start(self):
         ''' Creating a RequestData object fail if start is invalid '''
         uri='valid.uri'
-        start=timeuuid.uuid1()
-        end=pd.Timestamp('now',tz='utc')
+        start=uuid.uuid4()
+        end=timeuuid.uuid1()
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.RequestData(uri=uri, start=start, end=end)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ISTART)
@@ -1591,7 +1503,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_invalid_end(self):
         ''' Creating a RequestData object fail if end is invalid '''
         uri='valid.uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        start=timeuuid.uuid1(100)
         end=time.time()
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.RequestData(uri=uri, start=start, end=end)
@@ -1624,8 +1536,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_no_dict(self):
         ''' Creating a RequestData object should fail if msg is not a dict '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial=[{
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1633,9 +1545,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }]
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1645,8 +1557,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_no_version(self):
         ''' Creating a RequestData object should fail if v is not found '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'va':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1654,9 +1566,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1666,8 +1578,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_no_action(self):
         ''' Creating a RequestData object should fail if action is not found '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'theaction':Messages.REQUEST_DATA.value,
@@ -1675,9 +1587,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1687,8 +1599,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_no_seq(self):
         ''' Creating a RequestData object should fail if seq is not found '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1696,9 +1608,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1708,8 +1620,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_invalid_seq(self):
         ''' Creating a RequestData object should fail if seq is invalid '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1717,9 +1629,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1729,8 +1641,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_no_irt(self):
         ''' Creating a RequestData object should fail if irt is not found '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1738,9 +1650,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'iirt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1750,8 +1662,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_invalid_irt(self):
         ''' Creating a RequestData object should fail if irt is invalid '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1759,9 +1671,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':90,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1771,8 +1683,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_no_payload(self):
         ''' Creating a RequestData object should fail if payload is not found '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1780,9 +1692,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'fayload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1792,8 +1704,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_invalid_version(self):
         ''' Creating a RequestData object should fail if version is not an int '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.REQUEST_DATA.value,
@@ -1801,9 +1713,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1813,8 +1725,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_wrong_version(self):
         ''' Creating a RequestData object should fail if version is not the expected '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':9999999999999,
             'action':Messages.REQUEST_DATA.value,
@@ -1822,9 +1734,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1834,8 +1746,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_invalid_action(self):
         ''' Creating a RequestData object should fail if action is invalid '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':[Messages.REQUEST_DATA.value],
@@ -1843,9 +1755,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1855,8 +1767,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_wrong_action(self):
         ''' Creating a RequestData object should fail if action is not the expected '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
@@ -1864,9 +1776,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1876,8 +1788,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_invalid_payload(self):
         ''' Creating a RequestData object should fail if payload is not a dict '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1885,9 +1797,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':[{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }]
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1897,8 +1809,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_payload_uri_not_found(self):
         ''' Creating a RequestData object should fail if payload uri is not found '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1906,9 +1818,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'ari':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1918,8 +1830,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_payload_start_not_found(self):
         ''' Creating a RequestData object should fail if payload start is not found '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1927,9 +1839,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'estart':start.isoformat(),
+                'estart':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1939,8 +1851,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_payload_end_not_found(self):
         ''' Creating a RequestData object should fail if payload end is not found '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1948,9 +1860,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'fin':end.isoformat()
+                'fin':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1960,8 +1872,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_failure_error_loading_from_dict_payload_count_not_found(self):
         ''' Creating a RequestData object should fail if payload count is not found '''
         uri='non valid uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1969,9 +1881,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'mount':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -1981,8 +1893,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_success_loading_from_dict(self):
         ''' Creating a RequestData object should succeed '''
         uri='valid.uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -1990,9 +1902,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':33,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         msg=message.RequestData.load_from_dict(serial)
@@ -2004,8 +1916,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_success_loading_from_dict_with_global_uri(self):
         ''' Creating a RequestData object should succeed '''
         uri='the_remote_master:valid.uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -2013,9 +1925,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':None,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         msg=message.RequestData.load_from_dict(serial)
@@ -2027,8 +1939,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_RequestData_success_loading_from_dict_with_irt(self):
         ''' Creating a RequestData object should succeed '''
         uri='the_remote_master:valid.uri'
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
@@ -2036,9 +1948,9 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':uuid.uuid1().hex[0:20],
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
+                'start':start.hex,
                 'count':None,
-                'end':end.isoformat()
+                'end':end.hex
             }
         }
         msg=message.RequestData.load_from_dict(serial)
@@ -2052,18 +1964,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_success(self):
         ''' Creating a SendDataInterval object should succeed '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1(101).hex,'243'),
+            (timeuuid.uuid1(102).hex,'223'),
+            (timeuuid.uuid1(103).hex,'273.32'),
+            (timeuuid.uuid1(104).hex,'243'),
+            (timeuuid.uuid1(105).hex,'283'),
+            (timeuuid.uuid1(106).hex,'223.44'),
+            (timeuuid.uuid1(107).hex,'213'),
+            (timeuuid.uuid1(108).hex,'743'),
+            (timeuuid.uuid1(109).hex,'283'),
         ]
         msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
         self.assertTrue(isinstance(msg, message.SendDataInterval))
@@ -2080,8 +1992,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2090,18 +2002,17 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_success_with_global_uri(self):
         ''' Creating a SendDataInterval object should succeed '''
         uri={'uri':'other_group:valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1(102).hex,'223'),
+            (timeuuid.uuid1(103).hex,'273.32'),
+            (timeuuid.uuid1(104).hex,'243'),
+            (timeuuid.uuid1(105).hex,'283'),
+            (timeuuid.uuid1(106).hex,'223.44'),
+            (timeuuid.uuid1(107).hex,'213'),
+            (timeuuid.uuid1(108).hex,'743'),
+            (timeuuid.uuid1(109).hex,'283'),
         ]
         msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
         self.assertTrue(isinstance(msg, message.SendDataInterval))
@@ -2118,8 +2029,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2128,18 +2039,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_success_with_irt(self):
         ''' Creating a SendDataInterval object should succeed '''
         uri={'uri':'other_group:valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1(101).hex,'243'),
+            (timeuuid.uuid1(102).hex,'223'),
+            (timeuuid.uuid1(103).hex,'273.32'),
+            (timeuuid.uuid1(104).hex,'243'),
+            (timeuuid.uuid1(105).hex,'283'),
+            (timeuuid.uuid1(106).hex,'223.44'),
+            (timeuuid.uuid1(107).hex,'213'),
+            (timeuuid.uuid1(108).hex,'743'),
+            (timeuuid.uuid1(109).hex,'283'),
         ]
         msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data, irt=uuid.uuid1().hex[0:20])
         self.assertTrue(isinstance(msg, message.SendDataInterval))
@@ -2156,8 +2067,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':msg.irt,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2166,18 +2077,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_uri_type(self):
         ''' Creating a SendDataInterval object should fail if uri is not a dict '''
         uri=[{'uri':'valid.uri','type':vertex.DATAPOINT}]
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1(101).hex,'243'),
+            (timeuuid.uuid1(102).hex,'223'),
+            (timeuuid.uuid1(103).hex,'273.32'),
+            (timeuuid.uuid1(104).hex,'243'),
+            (timeuuid.uuid1(105).hex,'283'),
+            (timeuuid.uuid1(106).hex,'223.44'),
+            (timeuuid.uuid1(107).hex,'213'),
+            (timeuuid.uuid1(108).hex,'743'),
+            (timeuuid.uuid1(109).hex,'283'),
         ]
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2186,18 +2097,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_uri_dict_has_no_uri(self):
         ''' Creating a SendDataInterval object should fail if uri dict has no uri '''
         uri={'ari':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1(101).hex,'243'),
+            (timeuuid.uuid1(102).hex,'223'),
+            (timeuuid.uuid1(103).hex,'273.32'),
+            (timeuuid.uuid1(104).hex,'243'),
+            (timeuuid.uuid1(105).hex,'283'),
+            (timeuuid.uuid1(106).hex,'223.44'),
+            (timeuuid.uuid1(107).hex,'213'),
+            (timeuuid.uuid1(108).hex,'743'),
+            (timeuuid.uuid1(109).hex,'283'),
         ]
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2206,18 +2117,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_uri_dict_invalid_uri(self):
         ''' Creating a SendDataInterval object should fail if uri dict has invalid uri '''
         uri={'uri':'in valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1(101).hex,'243'),
+            (timeuuid.uuid1(102).hex,'223'),
+            (timeuuid.uuid1(103).hex,'273.32'),
+            (timeuuid.uuid1(104).hex,'243'),
+            (timeuuid.uuid1(105).hex,'283'),
+            (timeuuid.uuid1(106).hex,'223.44'),
+            (timeuuid.uuid1(107).hex,'213'),
+            (timeuuid.uuid1(108).hex,'743'),
+            (timeuuid.uuid1(109).hex,'283'),
         ]
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2226,18 +2137,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_uri_dict_has_no_type(self):
         ''' Creating a SendDataInterval object should fail if uri dict has no type '''
         uri={'uri':'valid.uri','taip':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1(100)
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1(101).hex,'243'),
+            (timeuuid.uuid1(102).hex,'223'),
+            (timeuuid.uuid1(103).hex,'273.32'),
+            (timeuuid.uuid1(104).hex,'243'),
+            (timeuuid.uuid1(105).hex,'283'),
+            (timeuuid.uuid1(106).hex,'223.44'),
+            (timeuuid.uuid1(107).hex,'213'),
+            (timeuuid.uuid1(108).hex,'743'),
+            (timeuuid.uuid1(109).hex,'283'),
         ]
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2246,18 +2157,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_uri_dict_has_invalid_type(self):
         ''' Creating a SendDataInterval object should fail if uri dict has invalid type '''
         uri={'uri':'valid.uri','type':vertex.WIDGET}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2266,18 +2177,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_start(self):
         ''' Creating a SendDataInterval object should fail if start is invalid '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=timeuuid.uuid1()
-        end=pd.Timestamp('now',tz='utc')
+        start=uuid.uuid4()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2286,18 +2197,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_end(self):
         ''' Creating a SendDataInterval object should fail if end is invalid '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
+        start=timeuuid.uuid1()
         end=time.time()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2306,18 +2217,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_data_not_a_list(self):
         ''' Creating a SendDataInterval object should fail if data is not a list '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=(
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         )
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2326,18 +2237,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_data_not_item_tuple(self):
         ''' Creating a SendDataInterval object should fail if data has a non tuple item '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=(
-            [(pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'],
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            [timeuuid.uuid1().hex,'243'],
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         )
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2346,18 +2257,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_data_tuple_not_two_elements(self):
         ''' Creating a SendDataInterval object should fail if data has tuple without two items '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=(
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243','third'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243','third'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         )
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2366,18 +2277,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_data_item0_not_isodate(self):
         ''' Creating a SendDataInterval object should fail if data an item[0] that is not an isodate '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=(
             (time.time(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         )
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2386,18 +2297,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_data_item0_not_isodate_string(self):
         ''' Creating a SendDataInterval object should fail if data an item[0] isodate but not in string form '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=(
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            (pd.Timestamp('now',tz='utc')-pd.Timedelta('8m'),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         )
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2406,18 +2317,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_data_item0_not_tz_in_isodate_string(self):
         ''' Creating a SendDataInterval object should fail if data an item[0] isodate string without timezone '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=(
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         )
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2426,18 +2337,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_data_item1_not_a_string(self):
         ''' Creating a SendDataInterval object should fail if data an item[1] is not a string '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=(
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),243),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,243),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         )
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data)
@@ -2446,17 +2357,17 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_irt(self):
         ''' Creating a SendDataInterval object should fail if irt is invalid '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=(
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         )
         irt=123
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -2466,17 +2377,17 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_invalid_seq(self):
         ''' Creating a SendDataInterval object should fail if seq is invalid '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=(
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         )
         seq=9234
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -2486,18 +2397,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_failure_not_a_dict(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg is not a dict '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial=[{
             'v':message.MessagesVersionCatalog._version_,
@@ -2506,8 +2417,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }]
@@ -2518,18 +2429,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_failure_not_v(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg has no version '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'vi':message.MessagesVersionCatalog._version_,
@@ -2538,8 +2449,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2550,18 +2461,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_failure_no_action(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg has no action '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2570,8 +2481,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2582,18 +2493,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_failure_no_seq(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg has no seq '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2602,8 +2513,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2614,18 +2525,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_failure_invalid_seq(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg has invalid seq '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2634,8 +2545,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2646,18 +2557,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_failure_no_irt(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg has no irt '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2666,8 +2577,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'iirt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2678,18 +2589,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_failure_invalid_irt(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg has invalid irt '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2698,8 +2609,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':12,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2710,18 +2621,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_failure_no_payload(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg has no payload '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2730,8 +2641,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'iipayload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2742,18 +2653,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_invalid_v(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg v is invalid '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':[message.MessagesVersionCatalog._version_],
@@ -2762,8 +2673,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2774,18 +2685,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_wrong_v(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg v is not the expected '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_+1,
@@ -2794,8 +2705,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2806,18 +2717,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_invalid_action(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg action is invalid '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2826,8 +2737,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2838,18 +2749,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_wrong_action(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg action is not the expected '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2858,8 +2769,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2870,18 +2781,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_payload_not_a_dict(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg payload is not a dict '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2890,8 +2801,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':[{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }]
         }
@@ -2902,18 +2813,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_payload_without_uri(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg payload has no uri '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2922,8 +2833,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'iuri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2934,18 +2845,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_payload_without_start(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg payload has no start '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2954,8 +2865,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'estart':start.isoformat(),
-                'end':end.isoformat(),
+                'estart':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -2966,18 +2877,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_payload_without_end(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg payload has no end '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -2986,8 +2897,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'theend':end.isoformat(),
+                'start':start.hex,
+                'theend':end.hex,
                 'data':data,
             }
         }
@@ -2998,18 +2909,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_failure_load_from_dict_payload_without_data(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg payload has no data '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -3018,8 +2929,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'idata':data,
             }
         }
@@ -3030,18 +2941,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_success_load_from_dict(self):
         ''' Creating a SendDataInterval object from a dict should succeed '''
         uri={'uri':'valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -3050,8 +2961,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -3067,18 +2978,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_success_load_from_dict_with_global_uri(self):
         ''' Creating a SendDataInterval object from a dict should succeed '''
         uri={'uri':'other_user:valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -3087,8 +2998,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':None,
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }
@@ -3104,18 +3015,18 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
     def test_SendDataInterval_success_load_from_dict_with_irt(self):
         ''' Creating a SendDataInterval object from a dict should succeed '''
         uri={'uri':'other_user:valid.uri','type':vertex.DATAPOINT}
-        start=pd.Timestamp('now',tz='utc')-pd.Timedelta('10m')
-        end=pd.Timestamp('now',tz='utc')
+        start=timeuuid.uuid1()
+        end=timeuuid.uuid1()
         data=[
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('9m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('8m')).isoformat(),'223'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('7m')).isoformat(),'273.32'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('6m')).isoformat(),'243'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('5m')).isoformat(),'283'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('4m')).isoformat(),'223.44'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('3m')).isoformat(),'213'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('2m')).isoformat(),'743'),
-            ((pd.Timestamp('now',tz='utc')-pd.Timedelta('1m')).isoformat(),'283'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'223'),
+            (timeuuid.uuid1().hex,'273.32'),
+            (timeuuid.uuid1().hex,'243'),
+            (timeuuid.uuid1().hex,'283'),
+            (timeuuid.uuid1().hex,'223.44'),
+            (timeuuid.uuid1().hex,'213'),
+            (timeuuid.uuid1().hex,'743'),
+            (timeuuid.uuid1().hex,'283'),
         ]
         serial={
             'v':message.MessagesVersionCatalog._version_,
@@ -3124,8 +3035,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             'irt':uuid.uuid1().hex[0:20],
             'payload':{
                 'uri':uri,
-                'start':start.isoformat(),
-                'end':end.isoformat(),
+                'start':start.hex,
+                'end':end.hex,
                 'data':data,
             }
         }

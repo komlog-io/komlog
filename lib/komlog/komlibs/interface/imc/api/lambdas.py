@@ -96,8 +96,7 @@ def process_message_URISUPDT(message):
                         gestexcept.UserNotFoundException):
                         pass
                 if len(data)>0:
-                    ts=timeuuid.get_isodate_from_uuid(date)
-                    msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_MULTI_DATA, ts=ts, uris=data)
+                    msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_MULTI_DATA, t=date, uris=data)
                     if msg:
                         message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
                         response.add_imc_message(message,dest=session_info.imc_address)
@@ -213,8 +212,8 @@ def process_message_DATINT(message):
     except authexcept.IntervalBoundsException as e:
         if message.ie.time<e.data['date'].time:
             uri={'uri':item_uri,'type':message.uri['type']}
-            start=timeuuid.get_isodate_from_uuid(message.ii)
-            end=timeuuid.get_isodate_from_uuid(message.ie)
+            start=message.ii
+            end=message.ie
             data=[]
             msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=data, irt=message.irt)
             if msg:
@@ -223,9 +222,9 @@ def process_message_DATINT(message):
             response.status=status.IMC_STATUS_ACCESS_DENIED
         else:
             uri={'uri':item_uri,'type':message.uri['type']}
-            start=timeuuid.get_isodate_from_uuid(message.ii)
+            start=message.ii
             limit=e.data['date']
-            end=timeuuid.get_isodate_from_uuid(limit)
+            end=limit
             msg=MessagesCatalog.get_message(version=session_info.pv, action=Messages.SEND_DATA_INTERVAL, uri=uri, start=start, end=end, data=[], irt=message.irt)
             if msg:
                 imc_message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
@@ -235,26 +234,26 @@ def process_message_DATINT(message):
             response.status=status.IMC_STATUS_OK
     else:
         uri={'uri':item_uri,'type':message.uri['type']}
-        start=timeuuid.get_isodate_from_uuid(message.ii)
-        end=timeuuid.get_isodate_from_uuid(message.ie)
+        start=message.ii
+        end=message.ie
         resp_data=[]
         try:
             if uri['type']==vertex.DATAPOINT:
                 count=message.count if message.count and message.count < 1000 else 1000
                 data=datapointapi.get_datapoint_data(pid=message.uri['id'],fromdate=message.ii, todate=message.ie, count=count)
                 for row in data:
-                    resp_data.append((timeuuid.get_isodate_from_uuid(row['date']),str(row['value'])))
+                    resp_data.append((row['date'].hex,str(row['value'])))
             elif uri['type']==vertex.DATASOURCE:
                 count=message.count if message.count and message.count < 100 else 100
                 data=datasourceapi.get_datasource_data(did=message.uri['id'],fromdate=message.ii, todate=message.ie, count=count)
                 for row in data:
-                    resp_data.append((timeuuid.get_isodate_from_uuid(row['date']),str(row['content'])))
+                    resp_data.append((row['date'].hex,str(row['content'])))
         except (gestexcept.DatapointDataNotFoundException,
             gestexcept.DatasourceDataNotFoundException):
             pass
         if len(resp_data)==count:
             new_ie=data[-1]['date']
-            start=timeuuid.get_isodate_from_uuid(new_ie)
+            start=new_ie
             if message.count != count:
                 new_count = message.count-count if message.count else None
                 imc_message=messages.DataIntervalRequestMessage(sid=sid, uri=message.uri, ii=message.ii, ie=new_ie, count=new_count, irt=message.irt)

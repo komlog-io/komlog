@@ -1,8 +1,8 @@
 import unittest
 import time
 import uuid
-import pandas as pd
 from komlog.komfig import logging
+from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.auth.passport import AgentPassport
 from komlog.komlibs.interface.websocket import exceptions, status
 from komlog.komlibs.interface.websocket.model import response
@@ -81,7 +81,7 @@ class InterfaceWebSocketProtocolV1ApiTest(unittest.TestCase):
     def test_process_message_failure_username_not_found(self):
         ''' process_message should fail if username is not found '''
         psp = AgentPassport(uid=uuid.uuid4(), aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'action':Messages.SEND_DS_DATA.value,'payload':{'ts':pd.Timestamp('now',tz='utc').isoformat(),'content':'content', 'uri':'uri'}}
+        msg={'v':1,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'action':Messages.SEND_DS_DATA.value,'payload':{'t':timeuuid.uuid1().hex,'content':'content', 'uri':'uri'}}
         resp=api.process_message(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED) #E_ARA_ANDS_RE

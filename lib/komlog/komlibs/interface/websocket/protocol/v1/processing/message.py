@@ -71,7 +71,7 @@ def _process_send_ds_data(passport, message):
         return result
     result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_OK, error=Errors.OK)
     try:
-        date=timeuuid.get_uuid1_from_isodate(message.ts, predictable=True)
+        date=message.t
         datasourceapi.store_datasource_data(did=did, date=date, content=message.content)
         op=modop.DatasourceDataStoredOperation(uid=passport.uid, did=did, date=date)
         op_msgs=operation.process_operation(op)
@@ -102,7 +102,7 @@ def _process_send_ds_data(passport, message):
 def _process_send_dp_data(passport, message):
     message = modmsg.SendDpData.load_from_dict(message)
     new_datapoint=False
-    date=timeuuid.get_uuid1_from_isodate(message.ts, predictable=True)
+    date=message.t
     if args.is_valid_global_uri(message.uri):
         username,local_uri=message.uri.split(':')
         try:
@@ -162,7 +162,7 @@ def _process_send_dp_data(passport, message):
 @exceptions.ExceptionHandler
 def _process_send_multi_data(passport, message):
     message = modmsg.SendMultiData.load_from_dict(message)
-    date=timeuuid.get_uuid1_from_isodate(message.ts, predictable=True)
+    date=message.t
     existing_uris=[]
     pending_ds_creations=[]
     pending_dp_creations=[]
@@ -432,15 +432,10 @@ def _process_request_data(passport, message):
         ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='operation not allowed on this uri: '+message.uri, irt=message.seq)
         result.add_ws_message(ws_res)
         return result
-    if message.start is None and message.end is None:
-        ii=timeuuid.min_uuid_from_time(1)
-        ie=timeuuid.min_uuid_from_time(timeuuid.get_unix_timestamp(timeuuid.uuid1()))
-    elif message.start <= message.end:
-        ii=timeuuid.min_uuid_from_time(message.start.timestamp())
-        ie=timeuuid.max_uuid_from_time(message.end.timestamp())
-    else:
-        ii=timeuuid.min_uuid_from_time(message.end.timestamp())
-        ie=timeuuid.max_uuid_from_time(message.start.timestamp())
+    ii=timeuuid.LOWEST_TIME_UUID if message.start is None else message.start
+    ie=timeuuid.HIGHEST_TIME_UUID if message.end is None else message.end
+    if ii.time > ie.time:
+        ii,ie = ie,ii
     try:
         if uri_info['type'] == vertex.DATASOURCE:
             authorization.authorize_request(request=Requests.GET_DATASOURCE_DATA,passport=passport,did=uri_info['id'], ii=ii, ie=ie, tid=None)

@@ -1,7 +1,6 @@
 import unittest
 import uuid
 import json
-import pandas as pd
 from komlog.komlibs.auth import session
 from komlog.komlibs.auth.resources import update as resupdate
 from komlog.komlibs.auth import exceptions as authexcept
@@ -561,8 +560,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, associated_sid)
-        ts=timeuuid.get_isodate_from_uuid(date)
-        expected_data=wsmsgv1.SendMultiData(ts=ts, uris=[
+        expected_data=wsmsgv1.SendMultiData(t=date, uris=[
             {'uri':datasource_uri,'type':vertex.DATASOURCE,'content':ds_content},
         ]).to_dict()
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
@@ -638,8 +636,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, associated_sid)
-        ts=timeuuid.get_isodate_from_uuid(date)
-        expected_data=wsmsgv1.SendMultiData(ts=ts, uris=[
+        expected_data=wsmsgv1.SendMultiData(t=date, uris=[
             {'uri':':'.join((username,datasource_uri)),'type':vertex.DATASOURCE,'content':ds_content},
         ]).to_dict()
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
@@ -706,8 +703,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, associated_sid)
-        ts=timeuuid.get_isodate_from_uuid(date)
-        expected_data=wsmsgv1.SendMultiData(ts=ts, uris=[
+        expected_data=wsmsgv1.SendMultiData(t=date, uris=[
             {'uri':datapoint_uri,'type':vertex.DATAPOINT,'content':dp_content},
         ]).to_dict()
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
@@ -784,8 +780,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, associated_sid)
-        ts=timeuuid.get_isodate_from_uuid(date)
-        expected_data=wsmsgv1.SendMultiData(ts=ts, uris=[
+        expected_data=wsmsgv1.SendMultiData(t=date, uris=[
             {'uri':':'.join((username,datapoint_uri)),'type':vertex.DATAPOINT,'content':dp_content},
         ]).to_dict()
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
@@ -862,7 +857,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, associated_sid)
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         self.assertTrue(recv_data['action'],wsmsgv1.SendMultiData._action_.value)
-        self.assertTrue(recv_data['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
+        self.assertTrue(recv_data['payload']['t'],date)
         self.assertEqual(sorted(recv_data['payload']['uris'], key=lambda x: x['uri']),sorted(data, key=lambda x: x['uri']))
         valid_message=wsmsgv1.SendMultiData.load_from_dict(recv_data)
 
@@ -945,7 +940,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].sid, associated_sid)
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         self.assertTrue(recv_data['action'],wsmsgv1.SendMultiData._action_.value)
-        self.assertTrue(recv_data['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
+        self.assertTrue(recv_data['payload']['t'],date)
         self.assertEqual(sorted(recv_data['payload']['uris'], key=lambda x: x['uri']),sorted(data, key=lambda x: x['uri']))
         valid_message=wsmsgv1.SendMultiData.load_from_dict(recv_data)
 
@@ -1035,8 +1030,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         msg2=response.imc_messages['routed'][session_info1.imc_address][1].data
         self.assertEqual(msg1['action'],wsmsgv1.SendMultiData._action_.value)
         self.assertEqual(msg2['action'],wsmsgv1.SendMultiData._action_.value)
-        self.assertEqual(msg1['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
-        self.assertEqual(msg2['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
+        self.assertEqual(msg1['payload']['t'],date.hex)
+        self.assertEqual(msg2['payload']['t'],date.hex)
         self.assertEqual(sorted(msg1['payload']['uris'], key=lambda x: x['uri']),sorted(data, key=lambda x: x['uri']))
         self.assertEqual(sorted(msg2['payload']['uris'], key=lambda x: x['uri']),sorted(data, key=lambda x: x['uri']))
         valid_message=wsmsgv1.SendMultiData.load_from_dict(msg1)
@@ -1132,8 +1127,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         msg_foreign=response.imc_messages['routed'][session_own.imc_address][0].data if response.imc_messages['routed'][session_own.imc_address][0].sid == sid_foreign else response.imc_messages['routed'][session_own.imc_address][1].data
         self.assertEqual(msg_own['action'],wsmsgv1.SendMultiData._action_.value)
         self.assertEqual(msg_foreign['action'],wsmsgv1.SendMultiData._action_.value)
-        self.assertEqual(msg_own['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
-        self.assertEqual(msg_foreign['payload']['ts'],timeuuid.get_isodate_from_uuid(date))
+        self.assertEqual(msg_own['payload']['t'],date.hex)
+        self.assertEqual(msg_foreign['payload']['t'],date.hex)
         self.assertEqual(sorted(msg_own['payload']['uris'], key=lambda x: x['uri']),sorted(data_own, key=lambda x: x['uri']))
         self.assertEqual(sorted(msg_foreign['payload']['uris'], key=lambda x: x['uri']),sorted(data_foreign, key=lambda x: x['uri']))
         valid_message=wsmsgv1.SendMultiData.load_from_dict(msg_own)
@@ -1530,12 +1525,12 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
     def test_process_message_SSDATA_failure_non_existing_session(self):
         ''' process_message_SSDATA should fail if sid is not associated to this module '''
         sid=uuid.uuid4()
-        ts=timeuuid.get_isodate_from_uuid(uuid.uuid1())
+        t=timeuuid.uuid1()
         data=[
             {'uri':'uri','type':vertex.DATASOURCE,'content':'content'},
             {'uri':'uri2','type':vertex.DATAPOINT, 'content':'2323.434'}
         ]
-        msg=wsmsgv1.SendMultiData(ts=ts, uris=data)
+        msg=wsmsgv1.SendMultiData(t=t, uris=data)
         message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
         response=lambdas.process_message_SSDATA(message=message)
         self.assertEqual(response.error, Errors.E_IIALD_SSDT_SNF)
@@ -1548,12 +1543,12 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
     def test_process_message_SSDATA_success(self):
         ''' process_message_SSDATA should succeed '''
         sid=uuid.uuid4()
-        ts=timeuuid.get_isodate_from_uuid(uuid.uuid1())
+        t=timeuuid.uuid1()
         data=[
             {'uri':'uri','type':vertex.DATASOURCE,'content':'content'},
             {'uri':'uri2','type':vertex.DATAPOINT, 'content':'333'}
         ]
-        msg=wsmsgv1.SendMultiData(ts=ts, uris=data)
+        msg=wsmsgv1.SendMultiData(t=t, uris=data)
         message=messages.SendSessionDataMessage(sid=sid, data=msg.to_dict())
         class FakeWSSession:
             def __init__(self):
@@ -1763,8 +1758,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(session_data_msg.data, [])
 
     def test_process_message_DATINT_success_all_interval_access_no_data_in_datapoint_with_irt(self):
@@ -1810,8 +1805,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         self.assertEqual(session_data_msg.irt, irt)
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(session_data_msg.data, [])
 
     def test_process_message_DATINT_success_all_interval_access_datapoint(self):
@@ -2066,8 +2061,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(session_data_msg.data, [])
 
     def test_process_message_DATINT_success_all_interval_access_no_data_in_datasource_with_irt(self):
@@ -2112,8 +2107,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(session_data_msg.irt, irt)
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(session_data_msg.data, [])
 
     def test_process_message_DATINT_success_all_interval_access_no_data_in_datasource_foreign_uri(self):
@@ -2166,8 +2161,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(session_data_msg.data, [])
 
     def test_process_message_DATINT_success_all_interval_access_no_data_in_datasource_foreign_uri_with_irt(self):
@@ -2222,8 +2217,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
         self.assertEqual(session_data_msg.irt, irt)
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(session_data_msg.data, [])
 
     def test_process_message_DATINT_success_all_interval_access_datasource(self):
@@ -2276,7 +2271,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
         self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
 
     def test_process_message_DATINT_success_all_interval_access_datasource_with_irt(self):
         ''' process_message_DATINT should succeed, retrieve the data and generate the corresponding messages with irt '''
@@ -2331,7 +2326,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
         self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
 
     def test_process_message_DATINT_success_all_interval_access_datasource_foreign_uri(self):
         ''' process_message_DATINT should succeed, retrieve the data and generate the corresponding messages '''
@@ -2393,7 +2388,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].sid,sid)
         self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
 
     def test_process_message_DATINT_success_all_interval_access_datasource_foreign_uri_with_irt(self):
         ''' process_message_DATINT should succeed, retrieve the data and generate the corresponding messages with associated irt '''
@@ -2458,7 +2453,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
         self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datapoint(self):
         ''' process_message_DATINT should return an empty list if no access to the interval because of bound limitations '''
@@ -2508,8 +2503,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(session_data_msg.data, [])
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datapoint_with_irt(self):
@@ -2562,8 +2557,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         self.assertEqual(session_data_msg.irt, irt)
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(session_data_msg.data, [])
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datapoint_foreign_uri(self):
@@ -2624,8 +2619,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(session_data_msg.data, [])
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datapoint_foreign_uri_with_irt(self):
@@ -2688,8 +2683,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
         self.assertEqual(session_data_msg.irt, irt)
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(session_data_msg.data, [])
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_all_interval_datasource(self):
@@ -2961,8 +2956,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         new_ii=timeuuid.min_uuid_from_time(450)
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, new_ii)
         self.assertEqual(len(session_data_msg.data), 0)
         self.assertEqual(len(response.imc_messages['unrouted']),1)
         self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -2985,8 +2980,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, new_ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(len(session_data_msg.data),50)
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datapoint_with_irt(self):
@@ -3040,8 +3035,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         self.assertEqual(session_data_msg.irt,irt)
         new_ii=timeuuid.min_uuid_from_time(450)
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, new_ii)
         self.assertEqual(len(session_data_msg.data), 0)
         self.assertEqual(len(response.imc_messages['unrouted']),1)
         self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -3066,8 +3061,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datapoint_uri, 'type':vertex.DATAPOINT})
         self.assertEqual(session_data_msg.irt,irt)
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, new_ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(len(session_data_msg.data),50)
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datapoint_foreign_uri(self):
@@ -3129,8 +3124,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
         new_ii=timeuuid.min_uuid_from_time(450)
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, new_ii)
         self.assertEqual(len(session_data_msg.data), 0)
         self.assertEqual(len(response.imc_messages['unrouted']),1)
         self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -3153,8 +3148,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, new_ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(len(session_data_msg.data),50)
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datapoint_foreign_uri_with_irt(self):
@@ -3218,8 +3213,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
         self.assertEqual(session_data_msg.irt,irt)
         new_ii=timeuuid.min_uuid_from_time(450)
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, new_ii)
         self.assertEqual(len(session_data_msg.data), 0)
         self.assertEqual(len(response.imc_messages['unrouted']),1)
         self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -3244,8 +3239,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datapoint_uri)), 'type':vertex.DATAPOINT})
         self.assertEqual(session_data_msg.irt, irt)
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, new_ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(len(session_data_msg.data),50)
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datasource(self):
@@ -3297,8 +3292,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(len(session_data_msg.data), 0)
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, new_ii)
         self.assertEqual(len(session_data_msg.data), 0)
         self.assertEqual(len(response.imc_messages['unrouted']),1)
         self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -3321,8 +3316,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, new_ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(len(session_data_msg.data),50)
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datasource_with_irt(self):
@@ -3376,8 +3371,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(session_data_msg.irt, irt)
         self.assertEqual(len(session_data_msg.data), 0)
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, new_ii)
         self.assertEqual(len(session_data_msg.data), 0)
         self.assertEqual(len(response.imc_messages['unrouted']),1)
         self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -3402,8 +3397,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':datasource_uri, 'type':vertex.DATASOURCE})
         self.assertEqual(session_data_msg.irt, irt)
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, new_ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(len(session_data_msg.data),50)
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datasource_foreign_uri(self):
@@ -3465,8 +3460,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
         self.assertEqual(len(session_data_msg.data), 0)
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, new_ii)
         self.assertEqual(len(session_data_msg.data), 0)
         self.assertEqual(len(response.imc_messages['unrouted']),1)
         self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -3489,8 +3484,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         recv_data=response.imc_messages['routed'][session_info.imc_address][0].data
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, new_ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(len(session_data_msg.data),50)
 
     def test_process_message_DATINT_failure_interval_bound_exception_to_partial_interval_datasource_foreign_uri_with_irt(self):
@@ -3554,8 +3549,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
         self.assertEqual(session_data_msg.irt,irt)
         self.assertEqual(len(session_data_msg.data), 0)
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(ii)))
+        self.assertEqual(session_data_msg.start, ii)
+        self.assertEqual(session_data_msg.end, new_ii)
         self.assertEqual(len(session_data_msg.data), 0)
         self.assertEqual(len(response.imc_messages['unrouted']),1)
         self.assertEqual(response.imc_messages['unrouted'][0].type,messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -3580,8 +3575,8 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         session_data_msg=wsmsgv1.SendDataInterval.load_from_dict(recv_data)
         self.assertEqual(session_data_msg.uri, {'uri':':'.join((username,datasource_uri)), 'type':vertex.DATASOURCE})
         self.assertEqual(session_data_msg.irt, irt)
-        self.assertEqual(session_data_msg.start, pd.Timestamp(timeuuid.get_isodate_from_uuid(new_ii)))
-        self.assertEqual(session_data_msg.end, pd.Timestamp(timeuuid.get_isodate_from_uuid(ie)))
+        self.assertEqual(session_data_msg.start, new_ii)
+        self.assertEqual(session_data_msg.end, ie)
         self.assertEqual(len(session_data_msg.data),50)
 
     def test_process_message_DATINT_success_all_interval_access_datapoint_with_count_param(self):
@@ -4060,7 +4055,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(response.imc_messages['unrouted'][0].uri, uri)
         self.assertTrue(response.imc_messages['unrouted'][0].count, count-1000)
         self.assertTrue(response.imc_messages['unrouted'][0].ii, ii)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
         self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
         self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
@@ -4116,7 +4111,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(response.imc_messages['unrouted'][0].irt, irt)
         self.assertTrue(response.imc_messages['unrouted'][0].count, count-1000)
         self.assertTrue(response.imc_messages['unrouted'][0].ii, ii)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
         self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
         self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
@@ -4181,7 +4176,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(response.imc_messages['unrouted'][0].uri, uri)
         self.assertTrue(response.imc_messages['unrouted'][0].count, count-1000)
         self.assertTrue(response.imc_messages['unrouted'][0].ii, ii)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
         self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
         self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
@@ -4247,7 +4242,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertTrue(response.imc_messages['unrouted'][0].irt, irt)
         self.assertTrue(response.imc_messages['unrouted'][0].count, count-1000)
         self.assertTrue(response.imc_messages['unrouted'][0].ii, ii)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
         self.assertTrue(session_info.imc_address in response.imc_messages['routed'])
         self.assertTrue(len(response.imc_messages['routed'][session_info.imc_address]) == 1)
         self.assertEqual(response.imc_messages['routed'][session_info.imc_address][0].type, messages.Messages.SEND_SESSION_DATA_MESSAGE)
@@ -4734,7 +4729,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
         self.assertEqual(response.imc_messages['unrouted'][0].count,count-100)
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
 
     def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_and_pagination_with_irt(self):
         ''' process_message_DATINT should succeed, retrieve as much rows as requested by count param and paginate results if count and rows are greater than 100 with associated irt '''
@@ -4791,7 +4786,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
         self.assertEqual(response.imc_messages['unrouted'][0].count,count-100)
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
 
     def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_and_pagination_foreign_uri(self):
         ''' process_message_DATINT should succeed, retrieve as much rows as requested by count param and paginate results if count and rows are greater than 100 '''
@@ -4855,7 +4850,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].uri,uri)
         self.assertEqual(response.imc_messages['unrouted'][0].count,count-100)
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
 
     def test_process_message_DATINT_success_all_interval_access_datasource_with_count_param_and_pagination_foreign_uri_with_irt(self):
         ''' process_message_DATINT should succeed, retrieve as much rows as requested by count param and paginate results if count and rows are greater than 100. All data messages generated should be associated to original irt '''
@@ -4922,5 +4917,5 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'][0].count,count-100)
         self.assertEqual(response.imc_messages['unrouted'][0].ii,ii)
         self.assertEqual(response.imc_messages['unrouted'][0].irt,irt)
-        self.assertEqual(timeuuid.get_isodate_from_uuid(response.imc_messages['unrouted'][0].ie), response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
+        self.assertEqual(response.imc_messages['unrouted'][0].ie.hex, response.imc_messages['routed'][session_info.imc_address][0].data['payload']['start'])
 
