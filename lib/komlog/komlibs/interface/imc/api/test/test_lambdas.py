@@ -1788,7 +1788,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
         self.assertEqual(response.error, Errors.OK)
@@ -1886,7 +1886,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
         self.assertEqual(response.error, Errors.OK)
@@ -2002,7 +2002,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid} #uri arrives as local uri
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
         self.assertEqual(response.error, Errors.OK)
@@ -2090,7 +2090,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
         self.assertEqual(response.error, Errors.OK)
@@ -2200,7 +2200,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
         self.assertEqual(response.error, Errors.OK)
@@ -2302,7 +2302,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
         self.assertEqual(response.error, Errors.OK)
@@ -2429,7 +2429,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
         self.assertEqual(response.error, Errors.OK)
@@ -2537,7 +2537,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.uuid1(seconds=1001)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -2663,7 +2663,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.uuid1(seconds=1001)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -2765,7 +2765,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.uuid1(seconds=1001)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -2885,7 +2885,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.uuid1(seconds=1001)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -3014,7 +3014,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(450)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -3192,7 +3192,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(450)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -3349,7 +3349,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(450)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -3527,7 +3527,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         iface=interfaces.User_DataRetrievalMinTimestamp().value
         minTs=timeuuid.min_uuid_from_time(450)
         self.assertTrue(cassapiiface.insert_user_iface_deny(uid, iface, minTs.hex))
@@ -3657,7 +3657,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         count = 200
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
@@ -3775,7 +3775,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         count = 200
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
@@ -3873,7 +3873,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         count = 200
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
@@ -3991,7 +3991,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         count = 200
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
@@ -4095,7 +4095,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=5000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         count = 2000
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
@@ -4226,7 +4226,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datapoint_uri,'type':vertex.DATAPOINT, 'id':pid}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=5000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         count = 2000
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
@@ -4329,7 +4329,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         count=50
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
@@ -4445,7 +4445,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         count=50
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
@@ -4541,7 +4541,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         count=50
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
@@ -4657,7 +4657,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         count=50
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
@@ -4760,7 +4760,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         uri={'uri':datasource_uri,'type':vertex.DATASOURCE, 'id':did}
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         count=500
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
@@ -4892,7 +4892,7 @@ class InterfaceImcApiLambdasTest(unittest.TestCase):
         ii=timeuuid.uuid1(seconds=1)
         ie=timeuuid.uuid1(seconds=1000)
         count=500
-        irt = uuid.uuid1().hex[0:20]
+        irt = timeuuid.TimeUUID()
         message=messages.DataIntervalRequestMessage(sid=sid, uri=uri, ii=ii, ie=ie, count=count, irt=irt)
         response=lambdas.process_message_DATINT(message=message)
         self.assertEqual(response.error, Errors.OK)

@@ -3,6 +3,7 @@ import time
 import uuid
 import json
 from komlog.komfig import logging
+from komlog.komlibs.general.time.timeuuid import TimeUUID
 from komlog.komlibs.interface.websocket import exceptions
 from komlog.komlibs.interface.websocket.errors import Errors
 from komlog.komlibs.interface.websocket.model import response
@@ -59,7 +60,7 @@ class InterfaceWebSocketModelResponseTest(unittest.TestCase):
 
     def test_GenericResponse_to_dict_success(self):
         ''' a new GenericResponse object should be created. and to_dict should succeed '''
-        resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v=7, irt=uuid.uuid1().hex[0:20])
+        resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v=7, irt=TimeUUID())
         self.assertTrue(isinstance(resp,response.GenericResponse))
         self.assertEqual(resp.status,1)
         self.assertEqual(resp.error,Errors.OK)
@@ -68,8 +69,8 @@ class InterfaceWebSocketModelResponseTest(unittest.TestCase):
         expected_dict ={
             'action':Messages.GENERIC_RESPONSE.value,
             'v':7,
-            'seq':resp.seq,
-            'irt':resp.irt,
+            'seq':resp.seq.hex,
+            'irt':resp.irt.hex,
             'payload':{
                 'status':1,
                 'error':Errors.OK.value,
@@ -80,14 +81,14 @@ class InterfaceWebSocketModelResponseTest(unittest.TestCase):
 
     def test_GenericResponse_failure_action_cannot_be_modified(self):
         ''' Trying to modify a GenericResponse action should fail '''
-        resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v=7, irt=uuid.uuid1().hex[0:20])
+        resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v=7, irt=TimeUUID())
         with self.assertRaises(TypeError) as cm:
             resp.action='whatever'
         self.assertEqual(str(cm.exception), 'Action cannot be modified')
 
     def test_GenericResponse_failure_version_cannot_be_modified(self):
         ''' Trying to modify a GenericResponse version should fail '''
-        resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v=7, irt=uuid.uuid1().hex[0:20])
+        resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v=7, irt=TimeUUID())
         with self.assertRaises(TypeError) as cm:
             resp.v=9
         self.assertEqual(str(cm.exception), 'Version cannot be modified')
@@ -95,12 +96,12 @@ class InterfaceWebSocketModelResponseTest(unittest.TestCase):
     def test_GenericResponse_failure_invalid_version(self):
         ''' Should get an exception if GenericResponse version is invalid '''
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v='version', irt=uuid.uuid1().hex[0:20])
+            resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v='version', irt=TimeUUID())
         self.assertEqual(cm.exception.error, Errors.E_IWSMR_GR_IV)
 
     def test_GenericResponse_failure_sequence_cannot_be_modified(self):
         ''' Trying to modify a GenericResponse sequence should fail '''
-        resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v=7, irt=uuid.uuid1().hex[0:20])
+        resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v=7, irt=TimeUUID())
         with self.assertRaises(TypeError) as cm:
             resp.seq=uuid.uuid1().hex[0:20]
         self.assertEqual(str(cm.exception), 'Sequence cannot be modified')
@@ -108,18 +109,18 @@ class InterfaceWebSocketModelResponseTest(unittest.TestCase):
     def test_GenericResponse_failure_invalid_sequence(self):
         ''' Should get an exception if GenericResponse version is invalid '''
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v=1, irt=uuid.uuid1().hex[0:20], seq=uuid.uuid1())
+            resp=response.GenericResponse(status=1,error=Errors.OK,reason='reason', v=1, irt=TimeUUID(), seq=uuid.uuid1())
         self.assertEqual(cm.exception.error, Errors.E_IWSMR_GR_ISEQ)
 
     def test_GenericResponse_failure_invalid_status(self):
         ''' Should get an exception if GenericResponse status is invalid '''
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            resp=response.GenericResponse(status='23',error=Errors.OK,reason='reason', v=1, irt=uuid.uuid1().hex[0:20])
+            resp=response.GenericResponse(status='23',error=Errors.OK,reason='reason', v=1, irt=TimeUUID())
         self.assertEqual(cm.exception.error, Errors.E_IWSMR_GR_IS)
 
     def test_GenericResponse_failure_invalid_irt(self):
         ''' Should get an exception if GenericResponse irt is invalid '''
         with self.assertRaises(exceptions.MessageValidationException) as cm:
-            resp=response.GenericResponse(status=4000 ,error=Errors.OK,reason='reason', v=1, irt=uuid.uuid1().hex[0:21])
+            resp=response.GenericResponse(status=4000, error=Errors.OK, reason='reason', v=1, irt=uuid.uuid1())
         self.assertEqual(cm.exception.error, Errors.E_IWSMR_GR_IIRT)
 

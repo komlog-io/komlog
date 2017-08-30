@@ -59,7 +59,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
     def test__process_send_ds_data_failure_user_not_found(self):
         ''' _process_send_ds_data should fail if user does not exist '''
         psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'content'}}
         resp=message._process_send_ds_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ANDS_RE)
@@ -69,7 +69,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_ds_data_failure_agent_not_found(self):
         ''' _process_send_ds_data should fail if user does not exist '''
@@ -80,7 +80,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         psp = AgentPassport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'content'}}
         resp=message._process_send_ds_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ANDS_RE)
@@ -107,7 +107,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri=username_owner+':some_uri'
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':uri,'t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':uri,'t':timeuuid.uuid1().hex,'content':'content'}}
         resp=message._process_send_ds_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDSD_EUGURI)
@@ -117,7 +117,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_ds_data_failure_no_permission_to_modify_foreign_global_uris(self):
         ''' _process_send_ds_data should fail if user tries send data for a foreign global uri '''
@@ -139,7 +139,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri=username_owner+':some_uri'
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':uri,'t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':uri,'t':timeuuid.uuid1().hex,'content':'content'}}
         resp=message._process_send_ds_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
@@ -149,7 +149,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_ds_data_failure_no_permission_for_ds_creation(self):
         ''' _process_send_ds_data should fail if user has no permission for ds creation '''
@@ -165,7 +165,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'content'}}
         resp=message._process_send_ds_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ANDS_RE)
@@ -190,7 +190,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'content'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_VOID_RELATION))
         resp=message._process_send_ds_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -216,7 +216,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'content'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_DATASOURCE_RELATION))
         resp=message._process_send_ds_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -242,7 +242,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'content'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_DATAPOINT_RELATION))
         resp=message._process_send_ds_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -253,7 +253,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_ds_data_failure_error_creating_ds(self):
         ''' _process_send_ds_data should fail if ds creationg fails '''
@@ -269,7 +269,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'content'}}
         auth_req_bck=authorization.authorize_request
         ds_creation_bck=datasourceapi.create_datasource
         def auth_mock(request, passport):
@@ -287,7 +287,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         authorization.authorize_request = auth_req_bck
         datasourceapi.create_datasource = ds_creation_bck
 
@@ -305,7 +305,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
         auth_req_bck=authorization.authorize_request
         operation_bck=operation.process_operation
         def auth_mock(request, passport):
@@ -323,7 +323,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         authorization.authorize_request = auth_req_bck
         operation.process_operation = operation_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
@@ -343,7 +343,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
         auth_req_bck=authorization.authorize_request
         storing_bck=datasourceapi.store_datasource_data
         def auth_mock(request, passport):
@@ -363,7 +363,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         authorization.authorize_request = auth_req_bck
         datasourceapi.store_datasource_data=storing_bck
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
@@ -383,7 +383,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         resp=message._process_send_ds_data(passport=psp, message=msg)
@@ -398,7 +398,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:2,
             messages.Messages.NEW_DS_WIDGET_MESSAGE.value:1,
@@ -430,7 +430,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         resp=message._process_send_ds_data(passport=psp, message=msg)
@@ -472,7 +472,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
         self.assertTrue(datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri']))
         auth_req_bck=authorization.authorize_request
         operation_bck=operation.process_operation
@@ -517,7 +517,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
         self.assertTrue(datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='system.ds'))
         auth_req_bck=authorization.authorize_request
         operation_bck=operation.process_operation
@@ -565,7 +565,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
     def test__process_send_dp_data_failure_different_message_passed(self):
         ''' _process_send_dp_data should fail if message is not of type SEND_DP_DATA '''
         psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
         resp=message._process_send_dp_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
@@ -579,7 +579,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
     def test__process_send_dp_data_failure_user_not_found(self):
         ''' _process_send_dp_data should fail if user does not exist '''
         psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'89'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'89'}}
         resp=message._process_send_dp_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ANUDP_RE)
@@ -599,7 +599,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         psp = AgentPassport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'79'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'79'}}
         resp=message._process_send_dp_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ANUDP_RE)
@@ -626,7 +626,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'],sid=uuid.uuid4(), aid=agent['aid'],pv=1)
         uri=username_owner+':uri'
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':uri,'t':timeuuid.uuid1().hex,'content':'70'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':uri,'t':timeuuid.uuid1().hex,'content':'70'}}
         resp=message._process_send_dp_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDPD_EUGURI)
@@ -636,7 +636,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_dp_data_failure_no_permission_for_modifying_foreign_uri_of_existing_user(self):
         ''' _process_send_dp_data should fail if uri is global from other user '''
@@ -658,7 +658,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'],sid=uuid.uuid4(), aid=agent['aid'],pv=1)
         uri=username_owner+':uri'
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':uri,'t':timeuuid.uuid1().hex,'content':'70'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':uri,'t':timeuuid.uuid1().hex,'content':'70'}}
         resp=message._process_send_dp_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDPD_EUGURI)
@@ -668,7 +668,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_dp_data_failure_no_permission_for_dp_creation(self):
         ''' _process_send_dp_data should fail if agent has no permission for dp creation '''
@@ -684,7 +684,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'],sid=uuid.uuid4(), aid=agent['aid'],pv=1)
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'70'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'70'}}
         resp=message._process_send_dp_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ANUDP_RE)
@@ -709,7 +709,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'70'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'70'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_VOID_RELATION))
         resp=message._process_send_dp_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -735,7 +735,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'70'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'70'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_DATAPOINT_RELATION))
         resp=message._process_send_dp_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -761,7 +761,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'70'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.void','t':timeuuid.uuid1().hex,'content':'70'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_DATASOURCE_RELATION))
         resp=message._process_send_dp_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -772,7 +772,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_dp_data_failure_error_creating_dp(self):
         ''' _process_send_dp_data should fail if dp creationg fails '''
@@ -788,7 +788,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'70'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'70'}}
         res_msg=messages. ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         dp_creation_bck=datapointapi.create_user_datapoint
@@ -820,7 +820,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri','t':timeuuid.uuid1().hex,'content':'content'}}
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         resp=message._process_send_dp_data(passport=psp, message=msg)
@@ -851,7 +851,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.dp','t':timeuuid.uuid1().hex,'content':'-1.3e8'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.dp','t':timeuuid.uuid1().hex,'content':'-1.3e8'}}
         operation_bck=operation.process_operation
         def operation_mock(op):
             raise Exception()
@@ -885,7 +885,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.dp','t':timeuuid.uuid1().hex,'content':'77.5'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.dp','t':timeuuid.uuid1().hex,'content':'77.5'}}
         resp=message._process_send_dp_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -896,7 +896,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
         self.assertIsNotNone(uri_info)
         expected_messages={
@@ -931,7 +931,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri='system.dp'
         global_uri=username+':'+uri
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':global_uri,'t':timeuuid.uuid1().hex,'content':'77.5'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':global_uri,'t':timeuuid.uuid1().hex,'content':'77.5'}}
         resp=message._process_send_dp_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -942,7 +942,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=uri)
         self.assertIsNotNone(uri_info)
         expected_messages={
@@ -975,7 +975,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.dp','t':timeuuid.uuid1().hex,'content':'-32.0'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.dp','t':timeuuid.uuid1().hex,'content':'-32.0'}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
         self.assertIsNotNone(datapoint)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
@@ -990,7 +990,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.URIS_UPDATED_MESSAGE.value:1,
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:1
@@ -1025,7 +1025,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri='system.dp'
         global_uri=username+':'+uri
-        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':global_uri,'t':timeuuid.uuid1().hex,'content':'-32.0'}}
+        msg={'v':1,'action':Messages.SEND_DP_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':global_uri,'t':timeuuid.uuid1().hex,'content':'-32.0'}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=uri)
         self.assertIsNotNone(datapoint)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
@@ -1040,7 +1040,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.URIS_UPDATED_MESSAGE.value:1,
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:1
@@ -1075,7 +1075,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
     def test__process_send_multi_data_failure_different_message_passed(self):
         ''' _process_send_multi_data should fail if message is not of type SEND_MULTI_DATA '''
         psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
@@ -1086,12 +1086,12 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_multi_data_failure_user_not_found_new_datasource_auth_failed(self):
         ''' _process_send_multi_data should fail if user does not exist and a new ds uri has to be created '''
         psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri','type':vertex.DATASOURCE,'content':'content'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri','type':vertex.DATASOURCE,'content':'content'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
@@ -1102,7 +1102,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_multi_data_failure_agent_not_found_new_datasource_auth_failed(self):
         ''' _process_send_multi_data should fail if agent does not exist '''
@@ -1113,7 +1113,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         psp = AgentPassport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri','type':vertex.DATASOURCE,'content':'content'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri','type':vertex.DATASOURCE,'content':'content'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ANDS_RE)
@@ -1124,12 +1124,12 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_multi_data_failure_user_not_found_new_datapoint_auth_failed(self):
         ''' _process_send_multi_data should fail if user does not exist '''
         psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'44'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
@@ -1140,7 +1140,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_multi_data_failure_agent_not_found_new_datapoint_auth_failed(self):
         ''' _process_send_multi_data should fail if agent does not exist '''
@@ -1151,7 +1151,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(user_reg)
         self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
         psp = AgentPassport(uid=user_reg['uid'],aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'44'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ANUDP_RE)
@@ -1162,7 +1162,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_multi_data_failure_global_uri_of_non_existent_user(self):
         ''' _process_send_multi_data should fail if uri is a global uri from a non existent user '''
@@ -1180,7 +1180,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri=username_owner+':uri'
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':uri,'type':vertex.DATAPOINT,'content':'44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':uri,'type':vertex.DATAPOINT,'content':'44'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSMTD_EUGURI)
@@ -1191,7 +1191,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_multi_data_failure_global_uri_of_foreign_existent_user(self):
         ''' _process_send_multi_data should fail if uri is a global uri from a foreign existent user '''
@@ -1213,7 +1213,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         uri=username_owner+':uri'
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':uri,'type':vertex.DATAPOINT,'content':'44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':uri,'type':vertex.DATAPOINT,'content':'44'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSMTD_EUGURI)
@@ -1224,7 +1224,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_multi_data_failure_operation_not_allowed_for_uri_type(self):
         ''' _process_send_multi_data should fail if uri type is not datasource nor datapoint '''
@@ -1240,7 +1240,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.widget','type':vertex.DATAPOINT,'content':'44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.widget','type':vertex.DATAPOINT,'content':'44'}]}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -1252,7 +1252,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_multi_data_failure_no_permission_for_post_datapoint_data(self):
         ''' _process_send_multi_data should fail if user has no permission to post datapoint data'''
@@ -1276,7 +1276,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         #res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         #self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.dp','type':vertex.DATAPOINT, 'content':'44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.dp','type':vertex.DATAPOINT, 'content':'44'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ATDPD_RE)
@@ -1287,7 +1287,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_multi_data_failure_no_permission_for_post_datasource_data(self):
         ''' _process_send_multi_data should fail if user has no permission to post datasource data'''
@@ -1311,7 +1311,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         #res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         #self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.ds','type':vertex.DATASOURCE, 'content':'44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.ds','type':vertex.DATASOURCE, 'content':'44'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ATDSD_RE)
@@ -1322,7 +1322,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_multi_data_success_new_datasource(self):
         ''' _process_send_multi_data should succeed and create the new datasource '''
@@ -1340,7 +1340,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.ds','type':vertex.DATASOURCE, 'content':'content 5'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.ds','type':vertex.DATASOURCE, 'content':'content 5'}]}}
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
         self.assertIsNone(uri_info)
         resp=message._process_send_multi_data(passport=psp, message=msg)
@@ -1353,7 +1353,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:2,
             messages.Messages.NEW_DS_WIDGET_MESSAGE.value:1,
@@ -1392,7 +1392,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         local_uri='uri.ds'
         global_uri=':'.join((username,local_uri))
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':global_uri,'type':vertex.DATASOURCE, 'content':'content 5'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':global_uri,'type':vertex.DATASOURCE, 'content':'content 5'}]}}
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=local_uri)
         self.assertIsNone(uri_info)
         resp=message._process_send_multi_data(passport=psp, message=msg)
@@ -1405,7 +1405,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:2,
             messages.Messages.NEW_DS_WIDGET_MESSAGE.value:1,
@@ -1442,7 +1442,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_AGENT, params={'uid':user_reg['uid'],'aid':agent['aid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.dp','type':vertex.DATAPOINT,'content':'5'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.dp','type':vertex.DATAPOINT,'content':'5'}]}}
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.dp')
         self.assertIsNone(uri_info)
         resp=message._process_send_multi_data(passport=psp, message=msg)
@@ -1455,7 +1455,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:2,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.value:1,
@@ -1491,7 +1491,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         local_uri='uri.dp'
         global_uri=':'.join((username,local_uri))
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':global_uri,'type':vertex.DATAPOINT,'content':'5'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':global_uri,'type':vertex.DATAPOINT,'content':'5'}]}}
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri=local_uri)
         self.assertIsNone(uri_info)
         resp=message._process_send_multi_data(passport=psp, message=msg)
@@ -1504,7 +1504,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:2,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.value:1,
@@ -1544,7 +1544,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.ds','type':vertex.DATASOURCE, 'content':'44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.ds','type':vertex.DATASOURCE, 'content':'44'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -1555,7 +1555,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,
             messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
@@ -1594,7 +1594,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':global_uri,'type':vertex.DATASOURCE, 'content':'44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':global_uri,'type':vertex.DATASOURCE, 'content':'44'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -1605,7 +1605,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,
             messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
@@ -1642,7 +1642,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.dp','type':vertex.DATAPOINT, 'content':'44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.dp','type':vertex.DATAPOINT, 'content':'44'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -1653,7 +1653,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.URIS_UPDATED_MESSAGE.value:1
         }
@@ -1687,7 +1687,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.dp','type':vertex.DATASOURCE, 'content':'value: 44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':'uri.dp','type':vertex.DATASOURCE, 'content':'value: 44'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSMTD_UCNV)
@@ -1698,7 +1698,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_send_multi_data_success_datapoint_already_existed_with_global_uri(self):
         ''' _process_send_multi_data should and store content in datapoint '''
@@ -1724,7 +1724,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':global_uri,'type':vertex.DATAPOINT, 'content':'44'}]}}
+        msg={'v':1,'action':Messages.SEND_MULTI_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'t':timeuuid.uuid1().hex,'uris':[{'uri':global_uri,'type':vertex.DATAPOINT, 'content':'44'}]}}
         resp=message._process_send_multi_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -1735,7 +1735,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.URIS_UPDATED_MESSAGE.value:1
         }
@@ -1778,7 +1778,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         msg={
             'v':1,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 't':timeuuid.uuid1().hex,
@@ -1800,7 +1800,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:6,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.value:1,
@@ -1886,7 +1886,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         msg={
             'v':1,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 't':timeuuid.uuid1().hex,
@@ -1908,7 +1908,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:6,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.value:1,
@@ -1994,7 +1994,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         msg={
             'v':1,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 't':timeuuid.uuid1().hex,
@@ -2016,7 +2016,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.new_ds')
         self.assertIsNone(uri_info)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.new_dp')
@@ -2048,7 +2048,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
     def test__process_hook_to_uri_failure_different_message_passed(self):
         ''' _process_hook_to_uri should fail if message is not of type HOOK_TO_URI '''
         psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
+        msg={'v':1,'action':Messages.SEND_DS_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','t':timeuuid.uuid1().hex,'content':'content'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
@@ -2059,12 +2059,12 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_hook_to_uri_failure_user_not_found(self):
         ''' _process_hook_to_uri should fail if user does not exist '''
         psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, gesterrors.E_GUA_RPH_UNF)
@@ -2075,7 +2075,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_hook_to_uri_failure_global_uri_owner_does_not_exist(self):
         ''' _process_hook_to_uri should fail if uri is global and owner does not exist '''
@@ -2093,7 +2093,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         local_uri='system.ds'
         global_uri=':'.join((username_owner,local_uri))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':global_uri}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':global_uri}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error,Errors.E_IWSPV1PM_PHTU_OUNF)
@@ -2104,7 +2104,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_hook_to_uri_success_uri_does_not_exist(self):
         ''' _process_hook_to_uri should register a pending hook for the unexistent uri '''
@@ -2119,7 +2119,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error.value, Errors.OK.value)
@@ -2130,7 +2130,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.ws_messages[0].reason, 'Operation registered, but uri does not exist yet')
 
     def test__process_hook_to_uri_failure_global_uri_not_shared(self):
@@ -2151,7 +2151,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':system.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':system.ds'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ARPH_RE)
@@ -2162,7 +2162,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_hook_to_uri_success_uri_does_not_exist_global_uri_shared(self):
         ''' _process_hook_to_uri should register a pending hook for the unexistent uri '''
@@ -2183,7 +2183,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error.value, Errors.OK.value)
@@ -2195,7 +2195,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
         self.assertEqual(resp.ws_messages[0].reason, 'Operation registered, but uri does not exist yet')
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_hook_to_uri_failure_operation_not_allowed_for_uri_type(self):
         ''' _process_hook_to_uri should fail if uri type is not datasource nor datapoint '''
@@ -2211,7 +2211,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.widget'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.widget'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -2223,7 +2223,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_hook_to_uri_failure_no_read_permission_for_datasource(self):
         ''' _process_hook_to_uri should fail if uri type is datasource and no read perm is found'''
@@ -2245,7 +2245,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         #res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         #self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AHTDS_RE)
@@ -2256,7 +2256,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_hook_to_uri_success_datasource_uri(self):
         ''' _process_hook_to_uri should succeed if uri type is ds and read perm is found'''
@@ -2278,7 +2278,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -2288,7 +2288,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp.sid])
 
     def test__process_hook_to_uri_success_datasource_uri_with_global_uri(self):
@@ -2311,7 +2311,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -2321,7 +2321,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp.sid])
 
     def test__process_hook_to_uri_success_datasource_uri_with_global_uri_from_other_user(self):
@@ -2357,7 +2357,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':uri.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':uri.ds'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -2367,7 +2367,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp.sid])
 
     def test__process_hook_to_uri_success_datasource_uri_multiple_sessions(self):
@@ -2392,7 +2392,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds'}}
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -2402,7 +2402,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -2413,7 +2413,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -2424,7 +2424,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid,psp3.sid]))
         #if the same session resend the message, it has no efect over hooked sids
         resp=message._process_hook_to_uri(psp3, msg)
@@ -2436,7 +2436,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid,psp3.sid]))
 
     def test__process_hook_to_uri_failure_no_read_permission_for_datapoint(self):
@@ -2461,7 +2461,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         #res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         #self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AHTDP_RE)
@@ -2472,7 +2472,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_hook_to_uri_success_datapoint_uri(self):
         ''' _process_hook_to_uri should succeed if uri is dp and we have read perm over it'''
@@ -2496,7 +2496,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -2506,7 +2506,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp.sid])
 
     def test__process_hook_to_uri_success_datapoint_uri_with_global_uri(self):
@@ -2531,7 +2531,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -2541,7 +2541,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp.sid])
 
     def test__process_hook_to_uri_success_datapoint_uri_global_uri_from_other_user(self):
@@ -2579,7 +2579,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':uri.dp'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':uri.dp'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -2589,7 +2589,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp.sid])
 
     def test__process_hook_to_uri_success_datapoint_uri_multiple_sessions(self):
@@ -2616,7 +2616,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp'}}
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -2626,7 +2626,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -2637,7 +2637,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -2648,7 +2648,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid,psp3.sid]))
 
     def test__process_unhook_from_uri_failure_invalid_message(self):
@@ -2670,7 +2670,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
     def test__process_unhook_from_uri_failure_different_message_passed(self):
         ''' _process_unhook_from_uri should fail if message is not of type UNHOOK_FROM_URI '''
         psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds'}}
         resp=message._process_unhook_from_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.PROTOCOL_ERROR)
@@ -2681,12 +2681,12 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_unhook_from_uri_success_uri_does_not_exist(self):
         ''' _process_unhook_from_uri should succeed even if uri does not exist '''
         psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds'}}
         resp=message._process_unhook_from_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -2697,7 +2697,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_unhook_from_uri_failure_global_uri_owner_does_not_exist(self):
         ''' _process_unhook_from_uri should fail if uri is global and owner does not exist '''
@@ -2714,7 +2714,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':system.ds'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':system.ds'}}
         resp=message._process_unhook_from_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PUHFU_OUNF)
@@ -2725,7 +2725,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_unhook_from_uri_failure_global_uri_not_shared(self):
         ''' _process_unhook_from_uri should fail if uri is global and is not shared '''
@@ -2747,7 +2747,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':system.ds'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':system.ds'}}
         resp=message._process_unhook_from_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_ADPH_RE)
@@ -2758,7 +2758,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_unhook_from_uri_success_global_uri_does_not_exist_but_shared(self):
         ''' _process_unhook_from_uri should succeed if global uri does not exist but is shared '''
@@ -2781,7 +2781,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':system.ds'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':system.ds'}}
         resp=message._process_unhook_from_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -2793,7 +2793,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
         self.assertEqual(resp.ws_messages[0].reason, 'Unhooked')
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_unhook_from_uri_failure_operation_not_allowed_for_uri_type(self):
         ''' _process_unhook_from_uri should fail if uri type is not datasource nor datapoint '''
@@ -2809,7 +2809,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.widget'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.widget'}}
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
         resp=message._process_unhook_from_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -2821,7 +2821,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_unhook_from_uri_failure_no_read_permission_for_datasource(self):
         ''' _process_unhook_from_uri should fail if uri type is datasource and no read perm is found'''
@@ -2841,7 +2841,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(datasource)
         uri_info=graphuri.get_id(ido=user_reg['uid'], uri='uri.ds')
         self.assertIsNotNone(uri_info)
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds'}}
         resp=message._process_unhook_from_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AUHFDS_RE)
@@ -2852,7 +2852,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_unhook_from_uri_success_datasource_uri(self):
         ''' _process_unhook_from_uri should succeed if uri type is ds and read perm is found'''
@@ -2876,7 +2876,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds'}}
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -2886,7 +2886,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -2897,7 +2897,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -2908,9 +2908,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid,psp3.sid]))
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds'}}
         resp=message._process_unhook_from_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -2920,7 +2920,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp3.sid,psp2.sid]))
         resp=message._process_unhook_from_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -2931,7 +2931,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp3.sid])
         # if we receive the same unhook, no problem
         resp=message._process_unhook_from_uri(psp2, msg)
@@ -2943,7 +2943,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp3.sid])
         resp=message._process_unhook_from_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -2954,7 +2954,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[])
 
     def test__process_unhook_from_uri_success_datasource_uri_with_global_uri(self):
@@ -2979,7 +2979,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_DATASOURCE, params={'uid':user_reg['uid'],'aid':agent['aid'],'did':datasource['did']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds'}}
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -2989,7 +2989,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3000,7 +3000,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3011,9 +3011,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid,psp3.sid]))
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds'}}
         resp=message._process_unhook_from_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -3023,7 +3023,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp3.sid,psp2.sid]))
         resp=message._process_unhook_from_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3034,7 +3034,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp3.sid])
         # if we receive the same unhook, no problem
         resp=message._process_unhook_from_uri(psp2, msg)
@@ -3046,7 +3046,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp3.sid])
         resp=message._process_unhook_from_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3057,7 +3057,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[])
 
     def test__process_unhook_from_uri_success_datasource_uri_with_global_uri_from_other_user(self):
@@ -3093,7 +3093,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp1 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         psp2 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         psp3 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':uri.ds'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':uri.ds'}}
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -3103,7 +3103,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3114,7 +3114,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3125,9 +3125,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp1.sid,psp2.sid,psp3.sid]))
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':uri.ds'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':uri.ds'}}
         resp=message._process_unhook_from_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -3137,7 +3137,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),sorted([psp3.sid,psp2.sid]))
         resp=message._process_unhook_from_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3148,7 +3148,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp3.sid])
         # if we receive the same unhook, no problem
         resp=message._process_unhook_from_uri(psp2, msg)
@@ -3160,7 +3160,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[psp3.sid])
         resp=message._process_unhook_from_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3171,7 +3171,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[])
 
     def test__process_unhook_from_uri_failure_no_read_permission_for_datapoint(self):
@@ -3196,7 +3196,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         #res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         #self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp'}}
         resp=message._process_unhook_from_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AUHFDP_RE)
@@ -3207,7 +3207,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_unhook_from_uri_success_datapoint_uri(self):
         ''' _process_unhook_from_uri should succeed if uri is dp and we have read perm over it'''
@@ -3233,7 +3233,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp'}}
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -3243,7 +3243,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3254,7 +3254,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3265,9 +3265,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid,psp3.sid]))
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp'}}
         resp=message._process_unhook_from_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -3277,7 +3277,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp3.sid,psp2.sid]))
         resp=message._process_unhook_from_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3288,7 +3288,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp3.sid])
         # if we receive the same unhook, no problem
         resp=message._process_unhook_from_uri(psp2, msg)
@@ -3300,7 +3300,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp3.sid])
         resp=message._process_unhook_from_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3311,7 +3311,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[])
 
     def test__process_unhook_from_uri_success_datapoint_uri_with_global_uri(self):
@@ -3338,7 +3338,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(uri_info)
         res_msg=messages.ResourceAuthorizationUpdateMessage(operation=Operations.NEW_USER_DATAPOINT, params={'uid':user_reg['uid'],'pid':datapoint['pid']})
         self.assertIsNotNone(msgapi.process_message(res_msg))
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp'}}
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -3348,7 +3348,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3359,7 +3359,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3370,9 +3370,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid,psp3.sid]))
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp'}}
         resp=message._process_unhook_from_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -3382,7 +3382,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp3.sid,psp2.sid]))
         resp=message._process_unhook_from_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3393,7 +3393,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp3.sid])
         # if we receive the same unhook, no problem
         resp=message._process_unhook_from_uri(psp2, msg)
@@ -3405,7 +3405,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp3.sid])
         resp=message._process_unhook_from_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3416,7 +3416,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[])
 
     def test__process_unhook_from_uri_success_datapoint_uri_with_global_uri_from_other_user(self):
@@ -3454,7 +3454,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp1 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         psp2 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         psp3 = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':uri.dp'}}
+        msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':uri.dp'}}
         resp=message._process_hook_to_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -3464,7 +3464,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp1.sid])
         resp=message._process_hook_to_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3475,7 +3475,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid]))
         resp=message._process_hook_to_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3486,9 +3486,9 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp1.sid,psp2.sid,psp3.sid]))
-        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':uri.dp'}}
+        msg={'v':1,'action':Messages.UNHOOK_FROM_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':uri.dp'}}
         resp=message._process_unhook_from_uri(psp1, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
@@ -3498,7 +3498,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),sorted([psp3.sid,psp2.sid]))
         resp=message._process_unhook_from_uri(psp2, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3509,7 +3509,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp3.sid])
         # if we receive the same unhook, no problem
         resp=message._process_unhook_from_uri(psp2, msg)
@@ -3521,7 +3521,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[psp3.sid])
         resp=message._process_unhook_from_uri(psp3, msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
@@ -3532,7 +3532,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[])
 
     def test__process_request_data_failure_uri_does_not_exist(self):
@@ -3548,7 +3548,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'system.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_UNF)
@@ -3560,7 +3560,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
         self.assertEqual(resp.ws_messages[0].reason, 'uri system.ds does not exist')
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_global_uri_owner_does_not_exist(self):
         ''' _process_request_data should fail if uri owner does not exist '''
@@ -3576,7 +3576,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':system.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':system.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_OUNF)
@@ -3587,7 +3587,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_global_uri_is_not_shared(self):
         ''' _process_request_data should fail if uri owner does not exist '''
@@ -3607,7 +3607,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username_owner+':system.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username_owner+':system.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AGU_RE)
@@ -3618,7 +3618,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_operation_not_allowed_for_uri_type(self):
         ''' _process_request_data should fail if uri type is not valid '''
@@ -3634,7 +3634,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.widget',type=vertex.USER_WIDGET_RELATION))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.widget','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.widget','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ONA)
@@ -3646,7 +3646,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
         self.assertEqual(resp.ws_messages[0].reason, 'operation not allowed on this uri: uri.widget')
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_operation_not_allowed_for_uri_type_global_uri_from_other_user_shared(self):
         ''' _process_request_data should fail if uri type is not valid '''
@@ -3673,7 +3673,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_req['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.widget','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.widget','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ONA)
@@ -3684,7 +3684,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_operation_not_allowed_for_uri_type_global_uri_from_other_user_not_shared(self):
         ''' _process_request_data should fail if uri type is not valid '''
@@ -3710,7 +3710,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertIsNotNone(agent)
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_req['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.widget','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.widget','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AGU_RE)
@@ -3721,7 +3721,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_access_denied_to_ds_uri(self):
         ''' _process_request_data should fail if user has no access to uri'''
@@ -3737,7 +3737,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.ds',type=vertex.USER_DATASOURCE_RELATION))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AGDSD_RE)
@@ -3749,7 +3749,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
         self.assertEqual(resp.ws_messages[0].reason, 'msg exec denied')
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_access_denied_to_ds_uri_with_global_uri_same_user(self):
         ''' _process_request_data should fail if user has no access to uri'''
@@ -3765,7 +3765,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.ds',type=vertex.USER_DATASOURCE_RELATION))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AGDSD_RE)
@@ -3777,7 +3777,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
         self.assertEqual(resp.ws_messages[0].reason, 'msg exec denied')
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_access_denied_to_ds_uri_with_global_uri_other_user(self):
         ''' _process_request_data should fail if user has no access to uri'''
@@ -3799,7 +3799,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AGDSD_RE)
@@ -3810,7 +3810,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_access_denied_to_dp_uri(self):
         ''' _process_request_data should fail if user has no access to uri'''
@@ -3826,7 +3826,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.dp',type=vertex.USER_DATAPOINT_RELATION))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AGDPD_RE)
@@ -3838,7 +3838,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
         self.assertEqual(resp.ws_messages[0].reason, 'msg exec denied')
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_access_denied_to_dp_uri_with_global_uri_same_user(self):
         ''' _process_request_data should fail if user has no access to uri'''
@@ -3854,7 +3854,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='uri.dp',type=vertex.USER_DATAPOINT_RELATION))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AGDPD_RE)
@@ -3866,7 +3866,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
         self.assertEqual(resp.ws_messages[0].reason, 'msg exec denied')
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_access_denied_to_dp_uri_with_global_uri_other_user(self):
         ''' _process_request_data should fail if user has no access to uri'''
@@ -3888,7 +3888,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         user_req=userapi.create_user(username=username_req, password=password, email=email)
         self.assertIsNotNone(user_req)
         psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':timeuuid.uuid1().hex,'end':timeuuid.uuid1().hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, autherrors.E_ARA_AGDPD_RE)
@@ -3900,7 +3900,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
         self.assertEqual(resp.ws_messages[0].reason, 'msg exec denied')
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
 
     def test__process_request_data_failure_access_to_data_range_not_allowed_ds(self):
         ''' _process_request_data should fail if user wants to access a non reachable data range because of limitations '''
@@ -3917,7 +3917,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds','start':start.hex,'end':end.hex,'count':None}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         #se the date limit for data retrieval
@@ -3933,7 +3933,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.ws_messages[0].reason, 'Your interval requested for uri uri.ds is wider than the limit allowed: '+timeuuid.get_isodate_from_uuid(min_ts)+'. Access to data is not allowed before that date.')
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
@@ -3958,7 +3958,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         #se the date limit for data retrieval
@@ -3975,7 +3975,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
         self.assertEqual(resp.ws_messages[0].reason, 'Your interval requested for uri '+username+':uri.ds is wider than the limit allowed: '+timeuuid.get_isodate_from_uuid(min_ts)+'. Access to data is not allowed before that date.')
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4012,7 +4012,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ANA)
@@ -4021,7 +4021,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.ws_messages[0].reason, 'Your interval requested for uri '+username+':uri.ds is wider than the limit allowed: '+timeuuid.get_isodate_from_uuid(min_ts)+'. Access to data is not allowed before that date.')
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
@@ -4046,7 +4046,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp','start':start.hex,'end':end.hex,'count':None}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         #se the date limit for data retrieval
@@ -4062,7 +4062,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.ws_messages[0].reason, 'Your interval requested for uri uri.dp is wider than the limit allowed: '+timeuuid.get_isodate_from_uuid(min_ts)+'. Access to data is not allowed before that date.')
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
@@ -4087,7 +4087,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         #se the date limit for data retrieval
@@ -4103,7 +4103,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.ws_messages[0].reason, 'Your interval requested for uri '+username+':uri.dp is wider than the limit allowed: '+timeuuid.get_isodate_from_uuid(min_ts)+'. Access to data is not allowed before that date.')
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
@@ -4141,7 +4141,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ANA)
@@ -4150,7 +4150,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.ws_messages[0].reason, 'Your interval requested for uri '+username+':uri.dp is wider than the limit allowed: '+timeuuid.get_isodate_from_uuid(min_ts)+'. Access to data is not allowed before that date.')
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
@@ -4175,7 +4175,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds','start':start.hex,'end':end.hex,'count':None}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         #se the date limit for data retrieval
@@ -4191,7 +4191,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4215,7 +4215,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         #se the date limit for data retrieval
@@ -4231,7 +4231,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4268,7 +4268,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP)
@@ -4277,7 +4277,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4300,7 +4300,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         count=100
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds','start':None,'end':None,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds','start':None,'end':None,'count':count}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         #se the date limit for data retrieval
@@ -4316,7 +4316,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4339,7 +4339,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         count=100
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':None,'end':None,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':None,'end':None,'count':count}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         #se the date limit for data retrieval
@@ -4355,7 +4355,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4391,7 +4391,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(cassapiperm.insert_user_shared_uri_perm(uid=user_reg['uid'], dest_uid=user_req['uid'], uri='uri.ds',perm=permissions.CAN_READ))
         psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         count=100
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':None,'end':None,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':None,'end':None,'count':count}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP)
@@ -4400,7 +4400,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4424,7 +4424,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp','start':start.hex,'end':end.hex,'count':None}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         #se the date limit for data retrieval
@@ -4440,7 +4440,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4464,7 +4464,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         #se the date limit for data retrieval
@@ -4480,7 +4480,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4517,7 +4517,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP)
@@ -4526,7 +4526,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4551,7 +4551,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         start=None
         end=None
         count=200
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp','start':start,'end':end,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp','start':start,'end':end,'count':count}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         #se the date limit for data retrieval
@@ -4567,7 +4567,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4592,7 +4592,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         start=None
         end=None
         count=200
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':start,'end':end,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':start,'end':end,'count':count}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         #se the date limit for data retrieval
@@ -4608,7 +4608,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4646,7 +4646,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         start=None
         end=None
         count=200
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':start,'end':end,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':start,'end':end,'count':count}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.E_IWSPV1PM_PRDI_ALP)
@@ -4655,7 +4655,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4679,7 +4679,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds','start':start.hex,'end':end.hex,'count':None}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         resp=message._process_request_data(passport=psp, message=msg)
@@ -4690,7 +4690,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4698,7 +4698,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, start)
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, end)
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
 
     def test__process_request_data_success_no_limitations_ds_with_global_uri_same_user(self):
         ''' _process_request_data should succeed if user want a data range than can access '''
@@ -4715,7 +4715,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         resp=message._process_request_data(passport=psp, message=msg)
@@ -4726,7 +4726,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4734,7 +4734,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, start)
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, end)
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
 
     def test__process_request_data_success_no_limitations_ds_with_global_uri_other_user(self):
         ''' _process_request_data should succeed if user want a data range than can access '''
@@ -4759,7 +4759,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':start.hex,'end':end.hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -4768,7 +4768,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4776,7 +4776,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, start)
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, end)
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
 
     def test__process_request_data_success_no_limitations_ds_count_passed(self):
         ''' _process_request_data should succeed if user want some rows '''
@@ -4794,7 +4794,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         start=None
         end=None
         count=400
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.ds','start':start,'end':end,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.ds','start':start,'end':end,'count':count}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         resp=message._process_request_data(passport=psp, message=msg)
@@ -4805,13 +4805,13 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
         self.assertEqual(resp.imc_messages['unrouted'][0].sid, psp.sid)
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.LOWEST_TIME_UUID)
         self.assertNotEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.LOWEST_TIME_UUID)
 
@@ -4831,7 +4831,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         start=None
         end=None
         count=400
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':start,'end':end,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':start,'end':end,'count':count}}
         datasource=datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='uri.ds')
         self.assertTrue(resupdate.new_datasource({'uid':datasource['uid'],'did':datasource['did']}))
         resp=message._process_request_data(passport=psp, message=msg)
@@ -4842,7 +4842,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4850,7 +4850,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.LOWEST_TIME_UUID)
         self.assertNotEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.LOWEST_TIME_UUID)
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
 
     def test__process_request_data_success_no_limitations_ds_count_passed_with_global_uri_other_user(self):
         ''' _process_request_data should succeed if user want some rows '''
@@ -4876,7 +4876,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         start=None
         end=None
         count=400
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.ds','start':start,'end':end,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.ds','start':start,'end':end,'count':count}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -4885,7 +4885,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4893,7 +4893,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.ds','type':vertex.DATASOURCE,'id':datasource['did']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.LOWEST_TIME_UUID)
         self.assertNotEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.LOWEST_TIME_UUID)
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp(self):
         ''' _process_request_data should success if user wants a data range without access limitations '''
@@ -4910,7 +4910,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp','start':start.hex,'end':end.hex,'count':None}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         resp=message._process_request_data(passport=psp, message=msg)
@@ -4921,7 +4921,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4929,7 +4929,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, start)
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, end)
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp_with_global_uri_same_user(self):
         ''' _process_request_data should success if user wants a data range without access limitations '''
@@ -4946,7 +4946,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         resp=message._process_request_data(passport=psp, message=msg)
@@ -4957,7 +4957,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -4965,7 +4965,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, start)
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, end)
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp_with_global_uri_other_user(self):
         ''' _process_request_data should success if user wants a data range without access limitations '''
@@ -4990,7 +4990,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         psp = AgentPassport(uid=user_req['uid'], aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
         start=timeuuid.uuid1(seconds=time.time()-86400)
         end=timeuuid.uuid1(seconds=time.time()+86400)
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':start.hex,'end':end.hex,'count':None}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -4999,7 +4999,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -5007,7 +5007,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, start)
         self.assertEqual(resp.imc_messages['unrouted'][0].ie, end)
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp_count_passed(self):
         ''' _process_request_data should success if user wants some rows '''
@@ -5025,7 +5025,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         start=None
         end=None
         count=2332
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':'uri.dp','start':start,'end':end,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri.dp','start':start,'end':end,'count':count}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri=msg['payload']['uri'])
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         resp=message._process_request_data(passport=psp, message=msg)
@@ -5036,7 +5036,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -5044,7 +5044,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.LOWEST_TIME_UUID)
         self.assertNotEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.LOWEST_TIME_UUID)
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp_count_passed_with_global_uri_same_user(self):
         ''' _process_request_data should success if user wants some rows '''
@@ -5062,7 +5062,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         start=None
         end=None
         count=2332
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':start,'end':end,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':start,'end':end,'count':count}}
         datapoint=datapointapi.create_user_datapoint(uid=user_reg['uid'], datapoint_uri='uri.dp')
         self.assertTrue(resupdate.new_user_datapoint({'uid':datapoint['uid'],'pid':datapoint['pid']}))
         resp=message._process_request_data(passport=psp, message=msg)
@@ -5073,7 +5073,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -5081,7 +5081,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.LOWEST_TIME_UUID)
         self.assertNotEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.LOWEST_TIME_UUID)
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
 
     def test__process_request_data_success_no_limitations_dp_count_passed_with_global_uri_other_user(self):
         ''' _process_request_data should success if user wants some rows '''
@@ -5107,7 +5107,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         start=None
         end=None
         count=2332
-        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':uuid.uuid1().hex[0:20], 'irt':None, 'payload':{'uri':username+':uri.dp','start':start,'end':end,'count':count}}
+        msg={'v':1,'action':Messages.REQUEST_DATA.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':uri.dp','start':start,'end':end,'count':count}}
         resp=message._process_request_data(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
         self.assertEqual(resp.error, Errors.OK)
@@ -5116,7 +5116,7 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
         self.assertEqual(resp.ws_messages[0].status,resp.status)
         self.assertEqual(resp.ws_messages[0].error, resp.error)
-        self.assertEqual(resp.ws_messages[0].irt, msg['seq'])
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         self.assertEqual(resp.imc_messages['routed'],{})
         self.assertEqual(len(resp.imc_messages['unrouted']),1)
         self.assertEqual(resp.imc_messages['unrouted'][0].type, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
@@ -5124,5 +5124,5 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['unrouted'][0].uri, {'uri':'uri.dp','type':vertex.DATAPOINT,'id':datapoint['pid']})
         self.assertEqual(resp.imc_messages['unrouted'][0].ii, timeuuid.LOWEST_TIME_UUID)
         self.assertNotEqual(resp.imc_messages['unrouted'][0].ie, timeuuid.LOWEST_TIME_UUID)
-        self.assertEqual(resp.imc_messages['unrouted'][0].irt, msg['seq'])
+        self.assertEqual(resp.imc_messages['unrouted'][0].irt.hex, msg['seq'])
 

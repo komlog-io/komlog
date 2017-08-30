@@ -4,6 +4,7 @@ import traceback
 from komlog.komfig import logging
 from komlog.komcass import exceptions as cassexcept
 from komlog.komlibs.general.validation import arguments
+from komlog.komlibs.general.time.timeuuid import TimeUUID
 from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.auth import exceptions as authexcept
 from komlog.komlibs.auth.passport import AgentPassport
@@ -101,7 +102,7 @@ class ExceptionHandler:
             log['error']=e.error.name
             log['duration']=end-init
             logging.c_logger.info(json.dumps(log))
-            irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
+            irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.PROTOCOL_ERROR, reason='protocol error', error=e.error, irt=irt, v=v)
             result = modresp.WSocketIfaceResponse(status=status.PROTOCOL_ERROR, error=e.error)
@@ -112,7 +113,7 @@ class ExceptionHandler:
             log['error']=e.error.name
             log['duration']=end-init
             logging.c_logger.info(json.dumps(log))
-            irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
+            irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.MESSAGE_EXECUTION_DENIED,reason='msg exec denied',  error=e.error, irt=irt, v=v)
             result = modresp.WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=e.error)
@@ -123,7 +124,7 @@ class ExceptionHandler:
             log['error']=e.error.name
             log['duration']=end-init
             logging.c_logger.info(json.dumps(log))
-            irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
+            irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.RESOURCE_NOT_FOUND, reason='resource not found', error=e.error, irt=irt, v=v)
             result = modresp.WSocketIfaceResponse(status=status.RESOURCE_NOT_FOUND, error=e.error)
@@ -134,7 +135,7 @@ class ExceptionHandler:
             log['error']=e.error.name
             log['duration']=end-init
             logging.c_logger.info(json.dumps(log))
-            irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
+            irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.MESSAGE_EXECUTION_ERROR, reason='msg exec error', error=e.error, irt=irt, v=v)
             result = modresp.WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_ERROR, error=e.error)
@@ -145,7 +146,7 @@ class ExceptionHandler:
             log['error']=e.error.name
             log['duration']=end-init
             logging.c_logger.info(json.dumps(log))
-            irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
+            irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.SERVICE_UNAVAILABLE, reason='service temporarily unavailable', error=e.error, irt=irt, v=v)
             result = modresp.WSocketIfaceResponse(status=status.SERVICE_UNAVAILABLE, error=e.error)
@@ -161,7 +162,7 @@ class ExceptionHandler:
             log['error']=error.name
             log['duration']=end-init
             logging.c_logger.info(json.dumps(log))
-            irt = kwargs['message']['seq'] if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence(kwargs['message']['seq']) else None
+            irt = TimeUUID(s=kwargs['message']['seq']) if 'message' in kwargs and 'seq' in kwargs['message'] and arguments.is_valid_message_sequence_string(kwargs['message']['seq']) else None
             v = kwargs['message']['v'] if 'message' in kwargs and 'v' in kwargs['message'] and arguments.is_valid_int(kwargs['message']['v']) else 0
             ws_res = modresp.GenericResponse(status=status.MESSAGE_EXECUTION_ERROR, error=error, irt=irt, v=v)
             result = modresp.WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_ERROR, error=error)

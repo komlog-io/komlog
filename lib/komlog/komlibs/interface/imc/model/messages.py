@@ -12,6 +12,7 @@ import uuid
 import json
 from enum import Enum, unique
 from komlog.komlibs.auth.model.operations import Operations
+from komlog.komlibs.general.time.timeuuid import TimeUUID
 from komlog.komlibs.interface.imc import exceptions
 from komlog.komlibs.interface.imc.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
@@ -1748,8 +1749,8 @@ class DataIntervalRequestMessage(IMCMessage):
             except (TypeError,json.JSONDecodeError):
                 raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IJSCOUNT)
             try:
-                irt=json.loads(js_irt)
-            except (TypeError,json.JSONDecodeError):
+                irt=TimeUUID(s=json.loads(js_irt)) if json.loads(js_irt) != None else None
+            except (TypeError, ValueError,json.JSONDecodeError):
                 raise exceptions.BadParametersException(error=Errors.E_IIMM_DIRM_IJSIRT)
             sid = uuid.UUID(h_sid)
             ii = uuid.UUID(h_ii)
@@ -1758,7 +1759,7 @@ class DataIntervalRequestMessage(IMCMessage):
 
     def to_serialization(self):
         uri = {'uri':self._uri['uri'],'type':self._uri['type'],'id':self._uri['id'].hex}
-        return '|'.join((self._type_.value, self._sid.hex, self._ii.hex, self._ie.hex, json.dumps(uri),json.dumps(self._count),json.dumps(self._irt)))
+        return '|'.join((self._type_.value, self._sid.hex, self._ii.hex, self._ie.hex, json.dumps(uri),json.dumps(self._count),json.dumps(self._irt.hex if self._irt != None else None)))
 
 class AnalyzeDTreeMessage(IMCMessage):
     _type_ = Messages.ANALYZE_DTREE_MESSAGE

@@ -7,6 +7,8 @@ This file implement the v1 api of the websocket protocol
 import time
 import json
 from komlog.komfig import logging
+from komlog.komlibs.auth.passport import AgentPassport
+from komlog.komlibs.general.time.timeuuid import TimeUUID
 from komlog.komlibs.interface.websocket import status, exceptions
 from komlog.komlibs.interface.websocket.model.response import GenericResponse, WSocketIfaceResponse
 from komlog.komlibs.interface.websocket.model.types import Messages
@@ -31,7 +33,8 @@ def process_message(passport, message):
             'duration':0,
         }
         logging.c_logger.info(json.dumps(log))
-        ws_res = GenericResponse(status=status.PROTOCOL_ERROR, error=error,reason='unsupported action', irt=message['seq'], v=message['v'])
+        irt = TimeUUID(s=message['seq'])
+        ws_res = GenericResponse(status=status.PROTOCOL_ERROR, error=error,reason='unsupported action', irt=irt, v=message['v'])
         result = WSocketIfaceResponse(status=status.PROTOCOL_ERROR, error=error)
         result.add_ws_message(ws_res)
         return result

@@ -593,13 +593,12 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
     def test_is_valid_message_sequence_valid(self):
         ''' is_valid_message_sequence should return True '''
         params=[
-            uuid.uuid1().hex[0:20],
-            uuid.uuid1().hex[0:20],
-            uuid.uuid1().hex[0:20],
-            uuid.uuid1().hex[0:20],
-            uuid.uuid1().hex[0:20],
-            uuid.uuid1().hex[0:20],
-            uuid.uuid1().hex[0:20],
+            timeuuid.TimeUUID(),
+            timeuuid.TimeUUID(s=uuid.uuid1().hex),
+            timeuuid.TimeUUID(t=1),
+            timeuuid.TimeUUID(highest=True),
+            timeuuid.TimeUUID(lowest=True),
+            timeuuid.TimeUUID(random=False),
         ]
         for param in params:
             self.assertTrue(arguments.is_valid_message_sequence(param))
@@ -607,8 +606,11 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
     def test_is_valid_message_sequence_invalid(self):
         ''' is_valid_message_sequence should return False '''
         params=[
+            uuid.uuid1().hex[0:20],
             uuid.uuid1(),
+            uuid.uuid1().hex,
             uuid.uuid4(),
+            uuid.uuid4().hex,
             uuid.uuid1().hex[0:10],
             uuid.uuid1().hex[0:30],
             'string',
@@ -621,4 +623,38 @@ class GeneralValidationArgumentsTest(unittest.TestCase):
         ]
         for param in params:
             self.assertFalse(arguments.is_valid_message_sequence(param))
+
+    def test_is_valid_message_sequence_string_valid(self):
+        ''' is_valid_message_sequence should return True '''
+        params=[
+            timeuuid.TimeUUID().hex,
+            timeuuid.TimeUUID(s=uuid.uuid1().hex).hex,
+            timeuuid.TimeUUID(t=1).hex,
+            timeuuid.TimeUUID(highest=True).hex,
+            timeuuid.TimeUUID(lowest=True).hex,
+            timeuuid.TimeUUID(random=False).hex,
+            uuid.uuid1().hex
+        ]
+        for param in params:
+            self.assertTrue(arguments.is_valid_message_sequence_string(param))
+
+    def test_is_valid_message_sequence_string_invalid(self):
+        ''' is_valid_message_sequence should return False '''
+        params=[
+            uuid.uuid1().hex[0:20],
+            uuid.uuid1(),
+            uuid.uuid4(),
+            uuid.uuid4().hex,
+            uuid.uuid1().hex[0:10],
+            uuid.uuid1().hex[0:30],
+            'string',
+            1,
+            1.1,
+            ['array'],
+            [uuid.uuid1().hex[0:20]],
+            {'set'},
+            {'a':'dict'},
+        ]
+        for param in params:
+            self.assertFalse(arguments.is_valid_message_sequence_string(param))
 

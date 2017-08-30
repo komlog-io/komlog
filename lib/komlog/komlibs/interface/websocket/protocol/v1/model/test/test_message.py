@@ -25,7 +25,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_GenericResponse_version_cannot_be_modified(self):
         ''' if we create a new GenericResponse message, the version param cannot be modified  '''
-        msg=message.GenericResponse(status=1,irt=uuid.uuid1().hex[0:20])
+        msg=message.GenericResponse(status=1,irt=timeuuid.TimeUUID())
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.GENERIC_RESPONSE)
         self.assertFalse(getattr(msg,'payload', False))
@@ -35,7 +35,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_GenericResponse_action_cannot_be_modified(self):
         ''' if we create a new GenericResponse message, the action param cannot be modified  '''
-        msg=message.GenericResponse(status=1,irt=uuid.uuid1().hex[0:20])
+        msg=message.GenericResponse(status=1,irt=timeuuid.TimeUUID())
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.GENERIC_RESPONSE)
         self.assertFalse(getattr(msg,'payload', False))
@@ -45,7 +45,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_GenericResponse_seq_cannot_be_modified(self):
         ''' if we create a new GenericResponse message, the version param cannot be modified  '''
-        msg=message.GenericResponse(status=1,irt=uuid.uuid1().hex[0:20])
+        msg=message.GenericResponse(status=1,irt=timeuuid.TimeUUID())
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.GENERIC_RESPONSE)
         self.assertFalse(getattr(msg,'payload', False))
@@ -55,11 +55,11 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
 
     def test_GenericResponse_success_generating_serializable_dict_with_irt(self):
         ''' GenericResponse.to_dict() method should generate a valid serializable dict '''
-        msg=message.GenericResponse(status=1,irt=uuid.uuid1().hex[0:20])
+        msg=message.GenericResponse(status=1,irt=timeuuid.TimeUUID())
         self.assertIsNotNone(msg.irt)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.GENERIC_RESPONSE)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.GENERIC_RESPONSE.value,'irt':msg.irt, 'seq':msg.seq, 'payload':{'status':1,'error':Errors.OK.value,'reason':None}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.GENERIC_RESPONSE.value,'irt':msg.irt.hex, 'seq':msg.seq.hex, 'payload':{'status':1,'error':Errors.OK.value,'reason':None}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDsData_version_cannot_be_modified(self):
@@ -100,7 +100,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         msg=message.SendDsData(uri='uri',t=t,content='content')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':None, 'seq':msg.seq, 'payload':{'uri':'uri','t':t.hex,'content':'content'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':None, 'seq':msg.seq.hex, 'payload':{'uri':'uri','t':t.hex,'content':'content'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDsData_success_generating_serializable_dict_with_global_uri(self):
@@ -109,17 +109,17 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         msg=message.SendDsData(uri='user:uri',t=t,content='content')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':None, 'seq':msg.seq, 'payload':{'uri':'user:uri','t':t.hex,'content':'content'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':None, 'seq':msg.seq.hex, 'payload':{'uri':'user:uri','t':t.hex,'content':'content'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDsData_success_generating_serializable_dict_with_irt(self):
         ''' SendDsData.to_dict() method should generate a valid serializable dict '''
         t=timeuuid.uuid1()
-        msg=message.SendDsData(uri='user:uri',t=t,content='content', irt=uuid.uuid1().hex[0:20])
+        msg=message.SendDsData(uri='user:uri',t=t,content='content', irt=timeuuid.TimeUUID())
         self.assertIsNotNone(msg.irt)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DS_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':msg.irt, 'seq':msg.seq, 'payload':{'uri':'user:uri','t':t.hex,'content':'content'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DS_DATA.value,'irt':msg.irt.hex, 'seq':msg.seq.hex, 'payload':{'uri':'user:uri','t':t.hex,'content':'content'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDsData_success_loading_from_dict(self):
@@ -128,7 +128,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
@@ -144,7 +144,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'my_user:uri','t':t.hex,'content':'content'}
         }
@@ -160,8 +160,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
-            'irt':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
             'payload':{'uri':'my_user:uri','t':t.hex,'content':'content'}
         }
         msg=message.SendDsData.load_from_dict(dict_msg)
@@ -176,7 +176,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':2,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
@@ -190,7 +190,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
@@ -204,7 +204,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'iseq':uuid.uuid1().hex[0:20],
+            'iseq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
@@ -224,7 +224,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_ISEQ)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ELFD)
 
     def test_SendDsData_failure_loading_from_dict_non_irt(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
@@ -232,7 +232,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'eirt':None,
             'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
@@ -246,13 +246,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':'invalidirt',
             'payload':{'uri':'uri','t':t.hex,'content':'content'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDsData.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_IIRT)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ELFD)
 
     def test_SendDsData_failure_loading_from_dict_invalid_payload_type(self):
         ''' SendDsData.load_from_dict() method should fail is passed argument is invalid '''
@@ -260,8 +260,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
-            'irt':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
             'payload':['uri','uri','t',t.hex,'content','content']
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
@@ -274,7 +274,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'ari':'uri','t':t.hex,'content':'content'}
         }
@@ -287,7 +287,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','it':1,'content':'content'}
         }
@@ -301,7 +301,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'contents':'content'}
         }
@@ -315,7 +315,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'ñññinvalid uri','t':t.hex,'content':'content'}
         }
@@ -328,7 +328,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':uuid.uuid4().hex,'content':'content'}
         }
@@ -342,7 +342,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'content':{'a':'dict'}}
         }
@@ -356,7 +356,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         msg=message.SendDpData(uri='uri',t=t,content='33.33')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uri':'uri','t':t.hex,'content':'33.33'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq.hex, 'irt':None, 'payload':{'uri':'uri','t':t.hex,'content':'33.33'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDpData_success_generating_serializable_dict_with_global_uri(self):
@@ -365,16 +365,16 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         msg=message.SendDpData(uri='user:uri',t=t,content='33.33')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uri':'user:uri','t':t.hex,'content':'33.33'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq.hex, 'irt':None, 'payload':{'uri':'user:uri','t':t.hex,'content':'33.33'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDpData_success_generating_serializable_dict_with_irt(self):
         ''' SendDpData.to_dict() method should generate a valid serializable dict '''
         t=timeuuid.uuid1()
-        msg=message.SendDpData(uri='user:uri',t=t,content='33.33', irt=uuid.uuid1().hex[0:20])
+        msg=message.SendDpData(uri='user:uri',t=t,content='33.33', irt=timeuuid.TimeUUID())
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DP_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq, 'irt':msg.irt, 'payload':{'uri':'user:uri','t':t.hex,'content':'33.33'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_DP_DATA.value,'seq':msg.seq.hex, 'irt':msg.irt.hex, 'payload':{'uri':'user:uri','t':t.hex,'content':'33.33'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendDpData_success_loading_from_dict(self):
@@ -383,7 +383,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
@@ -399,7 +399,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'the_user:uri','t':t.hex,'content':'33.33'}
         }
@@ -415,8 +415,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
-            'irt':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
             'payload':{'uri':'the_user:uri','t':t.hex,'content':'33.33'}
         }
         msg=message.SendDpData.load_from_dict(dict_msg)
@@ -431,7 +431,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':2,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
@@ -445,7 +445,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
@@ -459,7 +459,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'iseq':uuid.uuid1().hex[0:20],
+            'iseq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
@@ -479,7 +479,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_ISEQ)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ELFD)
 
     def test_SendDpData_failure_loading_from_dict_non_irt(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
@@ -487,7 +487,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'iirt':None,
             'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
@@ -501,13 +501,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':23,
             'payload':{'uri':'uri','t':t.hex,'content':'33.33'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDpData.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_IIRT)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDPD_ELFD)
 
     def test_SendDpData_failure_loading_from_dict_invalid_payload_type(self):
         ''' SendDpData.load_from_dict() method should fail is passed argument is invalid '''
@@ -515,7 +515,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':['uri','uri','t',t.hex,'content','33.33']
         }
@@ -529,7 +529,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'ari':'uri','t':t.hex,'content':'33.33'}
         }
@@ -542,7 +542,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','it':1,'content':'33.33'}
         }
@@ -556,7 +556,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'contents':'33.33'}
         }
@@ -570,7 +570,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'ñññinvalid uri','t':t.hex,'content':'33.33'}
         }
@@ -583,7 +583,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':'1','content':'33.33'}
         }
@@ -597,7 +597,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri','t':t.hex,'content':{'a':'dict'}}
         }
@@ -611,7 +611,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         msg=message.SendMultiData(uris=[{'uri':'uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],t=t)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq.hex, 'irt':None, 'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendMultiData_success_generating_serializable_dict_with_global_uri(self):
@@ -620,16 +620,16 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         msg=message.SendMultiData(uris=[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],t=t)
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq, 'irt':None, 'payload':{'uris':[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq.hex, 'irt':None, 'payload':{'uris':[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendMultiData_success_generating_serializable_dict_with_irt(self):
         ''' SendMultiData.to_dict() method should generate a valid serializable dict '''
         t=timeuuid.uuid1()
-        msg=message.SendMultiData(uris=[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],t=t, irt=uuid.uuid1().hex[0:20])
+        msg=message.SendMultiData(uris=[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':decimal.Decimal('33.33')}],t=t, irt=timeuuid.TimeUUID())
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_MULTI_DATA)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq, 'irt':msg.irt, 'payload':{'uris':[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.SEND_MULTI_DATA.value,'seq':msg.seq.hex, 'irt':msg.irt.hex, 'payload':{'uris':[{'uri':'user1:uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_SendMultiData_success_loading_from_dict(self):
@@ -638,7 +638,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
@@ -654,7 +654,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uris':[{'uri':'user2:uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
@@ -670,8 +670,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
-            'irt':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
             'payload':{'uris':[{'uri':'user2:uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
         msg=message.SendMultiData.load_from_dict(dict_msg)
@@ -686,7 +686,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':2,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
@@ -700,7 +700,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DP_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
@@ -714,7 +714,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'iseq':uuid.uuid1().hex[0:20],
+            'iseq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
@@ -734,7 +734,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_ISEQ)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_ELFD)
 
     def test_SendMultiData_failure_loading_from_dict_non_irt(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
@@ -742,7 +742,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'iirt':None,
             'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
@@ -756,13 +756,13 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':332,
             'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'t':t.hex}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendMultiData.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_IIRT)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SMTD_ELFD)
 
     def test_SendMultiData_failure_loading_from_dict_invalid_payload_type(self):
         ''' SendMultiData.load_from_dict() method should fail is passed argument is invalid '''
@@ -770,7 +770,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':['uri','uri','t',t.hex,'content','33.33']
         }
@@ -784,7 +784,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'aris':[{'uri':'uri','type':vertex.DATAPOINT, 'content':'33.33'}],'t':t.hex}
         }
@@ -797,7 +797,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uris':[{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'}],'it':1}
         }
@@ -811,7 +811,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uris':{'uri':'uri','type':vertex.DATAPOINT,'content':'33.33'},'t':t.hex}
         }
@@ -825,7 +825,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uris':['string','other','trhee'],'t':t.hex}
         }
@@ -839,7 +839,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uris':[
@@ -858,7 +858,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uris':[
@@ -877,7 +877,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uris':[
@@ -896,7 +896,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uris':[
@@ -915,7 +915,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uris':[
@@ -934,7 +934,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uris':[
@@ -952,7 +952,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uris':[
@@ -970,7 +970,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         msg=message.HookToUri(uri='uri')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.HOOK_TO_URI)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.HOOK_TO_URI.value,'seq':msg.seq, 'irt':None, 'payload':{'uri':'uri'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.HOOK_TO_URI.value,'seq':msg.seq.hex, 'irt':None, 'payload':{'uri':'uri'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_HookToUri_success_generating_serializable_dict_with_global_uri(self):
@@ -978,15 +978,15 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         msg=message.HookToUri(uri='user1:uri')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.HOOK_TO_URI)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.HOOK_TO_URI.value,'seq':msg.seq, 'irt':None, 'payload':{'uri':'user1:uri'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.HOOK_TO_URI.value,'seq':msg.seq.hex, 'irt':None, 'payload':{'uri':'user1:uri'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_HookToUri_success_generating_serializable_dict_with_irt(self):
         ''' HookToUri.to_dict() method should generate a valid serializable dict '''
-        msg=message.HookToUri(uri='user1:uri', irt=uuid.uuid1().hex[0:20])
+        msg=message.HookToUri(uri='user1:uri', irt=timeuuid.TimeUUID())
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.HOOK_TO_URI)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.HOOK_TO_URI.value,'seq':msg.seq, 'irt':msg.irt, 'payload':{'uri':'user1:uri'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.HOOK_TO_URI.value,'seq':msg.seq.hex, 'irt':msg.irt.hex, 'payload':{'uri':'user1:uri'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_HookToUri_success_loading_from_dict(self):
@@ -994,7 +994,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri'}
         }
@@ -1009,7 +1009,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'the_user:uri'}
         }
@@ -1024,8 +1024,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
-            'irt':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
             'payload':{'uri':'the_user:uri'}
         }
         msg=message.HookToUri.load_from_dict(dict_msg)
@@ -1039,7 +1039,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':2,
             'action':Messages.HOOK_TO_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri'}
         }
@@ -1052,7 +1052,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_MULTI_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri'}
         }
@@ -1065,7 +1065,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':1,
             'action':Messages.HOOK_TO_URI.value,
-            'iseq':uuid.uuid1().hex[0:20],
+            'iseq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri'}
         }
@@ -1084,14 +1084,14 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.HookToUri.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_ISEQ)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTU_ELFD)
 
     def test_HookToUri_failure_loading_from_dict_non_irt(self):
         ''' HookToUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
             'v':1,
             'action':Messages.HOOK_TO_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'iirt':None,
             'payload':{'uri':'uri'}
         }
@@ -1104,20 +1104,20 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':1,
             'action':Messages.HOOK_TO_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':'hi',
             'payload':{'uri':'uri'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.HookToUri.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_IIRT)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_HTU_ELFD)
 
     def test_HookToUri_failure_loading_from_dict_invalid_payload_type(self):
         ''' HookToUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':['uri','uri']
         }
@@ -1130,7 +1130,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'ari':'uri'}
         }
@@ -1143,7 +1143,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':['uri']}
         }
@@ -1156,7 +1156,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         msg=message.UnHookFromUri(uri='uri')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.UNHOOK_FROM_URI)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.UNHOOK_FROM_URI.value,'seq':msg.seq, 'irt':None, 'payload':{'uri':'uri'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.UNHOOK_FROM_URI.value,'seq':msg.seq.hex, 'irt':None, 'payload':{'uri':'uri'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_UnHookFromUri_success_generating_serializable_dict_with_global_uri(self):
@@ -1164,15 +1164,15 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         msg=message.UnHookFromUri(uri='my_superuser:uri')
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.UNHOOK_FROM_URI)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.UNHOOK_FROM_URI.value,'seq':msg.seq, 'irt':None, 'payload':{'uri':'my_superuser:uri'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.UNHOOK_FROM_URI.value,'seq':msg.seq.hex, 'irt':None, 'payload':{'uri':'my_superuser:uri'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_UnHookFromUri_success_generating_serializable_dict_with_irt(self):
         ''' UnHookFromUri.to_dict() method should generate a valid serializable dict '''
-        msg=message.UnHookFromUri(uri='my_superuser:uri', irt=uuid.uuid1().hex[0:20])
+        msg=message.UnHookFromUri(uri='my_superuser:uri', irt=timeuuid.TimeUUID())
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.UNHOOK_FROM_URI)
-        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.UNHOOK_FROM_URI.value,'seq':msg.seq, 'irt':msg.irt, 'payload':{'uri':'my_superuser:uri'}})
+        self.assertEqual(msg.to_dict(), {'v':message.MessagesVersionCatalog._version_,'action':Messages.UNHOOK_FROM_URI.value,'seq':msg.seq.hex, 'irt':msg.irt.hex, 'payload':{'uri':'my_superuser:uri'}})
         self.assertTrue(isinstance(json.dumps(msg.to_dict()),str))
 
     def test_UnHookFromUri_success_loading_from_dict(self):
@@ -1180,7 +1180,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.UNHOOK_FROM_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri'}
         }
@@ -1195,7 +1195,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.UNHOOK_FROM_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'root:uri'}
         }
@@ -1210,8 +1210,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.UNHOOK_FROM_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
-            'irt':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
             'payload':{'uri':'root:uri'}
         }
         msg=message.UnHookFromUri.load_from_dict(dict_msg)
@@ -1225,7 +1225,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':2,
             'action':Messages.UNHOOK_FROM_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri'}
         }
@@ -1238,7 +1238,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.HOOK_TO_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri'}
         }
@@ -1251,7 +1251,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':1,
             'action':Messages.UNHOOK_FROM_URI.value,
-            'iseq':uuid.uuid1().hex[0:20],
+            'iseq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':'uri'}
         }
@@ -1270,14 +1270,14 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.UnHookFromUri.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_ISEQ)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFU_ELFD)
 
     def test_UnHookFromUri_failure_loading_from_dict_no_irt(self):
         ''' UnHookFromUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
             'v':1,
             'action':Messages.UNHOOK_FROM_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'iirt':None,
             'payload':{'uri':'uri'}
         }
@@ -1290,20 +1290,20 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':1,
             'action':Messages.UNHOOK_FROM_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':uuid.uuid1().hex[0:10],
             'payload':{'uri':'uri'}
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.UnHookFromUri.load_from_dict(dict_msg)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_IIRT)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_UHFU_ELFD)
 
     def test_UnHookFromUri_failure_loading_from_dict_invalid_payload_type(self):
         ''' UnHookFromUri.load_from_dict() method should fail is passed argument is invalid '''
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.UNHOOK_FROM_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':['uri','uri']
         }
@@ -1316,7 +1316,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.UNHOOK_FROM_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'ari':'uri'}
         }
@@ -1329,7 +1329,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         dict_msg={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.UNHOOK_FROM_URI.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{'uri':['uri']}
         }
@@ -1354,7 +1354,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         expected_dict={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':msg.seq,
+            'seq':msg.seq.hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1380,7 +1380,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         expected_dict={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':msg.seq,
+            'seq':msg.seq.hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1407,7 +1407,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         expected_dict={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':msg.seq,
+            'seq':msg.seq.hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1435,7 +1435,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         expected_dict={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':msg.seq,
+            'seq':msg.seq.hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1452,7 +1452,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         start=timeuuid.uuid1(100)
         end=timeuuid.uuid1()
         count=123
-        msg=message.RequestData(uri=uri, start=start, end=end, count=count, irt=uuid.uuid1().hex[0:20])
+        msg=message.RequestData(uri=uri, start=start, end=end, count=count, irt=timeuuid.TimeUUID())
         self.assertTrue(isinstance(msg, message.RequestData))
         self.assertEqual(msg.uri, uri)
         self.assertEqual(msg.start, start)
@@ -1463,8 +1463,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         expected_dict={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':msg.seq,
-            'irt':msg.irt,
+            'seq':msg.seq.hex,
+            'irt':msg.irt.hex,
             'payload':{
                 'uri':uri,
                 'start':start.hex,
@@ -1541,7 +1541,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial=[{
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1562,7 +1562,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'va':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1583,7 +1583,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'theaction':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1604,7 +1604,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'iseq':uuid.uuid1().hex[0:20],
+            'iseq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1636,7 +1636,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.RequestData.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_ISEQ)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
     def test_RequestData_failure_error_loading_from_dict_no_irt(self):
         ''' Creating a RequestData object should fail if irt is not found '''
@@ -1646,7 +1646,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'iirt':None,
             'payload':{
                 'uri':uri,
@@ -1667,7 +1667,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':90,
             'payload':{
                 'uri':uri,
@@ -1678,7 +1678,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.RequestData.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_IIRT)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_RQDT_ELFD)
 
     def test_RequestData_failure_error_loading_from_dict_no_payload(self):
         ''' Creating a RequestData object should fail if payload is not found '''
@@ -1688,7 +1688,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'fayload':{
                 'uri':uri,
@@ -1709,7 +1709,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1730,7 +1730,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':9999999999999,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1751,7 +1751,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':[Messages.REQUEST_DATA.value],
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1772,7 +1772,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DS_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1793,7 +1793,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':[{
                 'uri':uri,
@@ -1814,7 +1814,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'ari':uri,
@@ -1835,7 +1835,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1856,7 +1856,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1877,7 +1877,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1898,7 +1898,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1921,7 +1921,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -1944,8 +1944,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
-            'irt':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
             'payload':{
                 'uri':uri,
                 'start':start.hex,
@@ -1955,8 +1955,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         }
         msg=message.RequestData.load_from_dict(serial)
         self.assertEqual(msg.uri,uri)
-        self.assertEqual(msg.seq, serial['seq'])
-        self.assertEqual(msg.irt, serial['irt'])
+        self.assertEqual(msg.seq.hex, serial['seq'])
+        self.assertEqual(msg.irt.hex, serial['irt'])
         self.assertEqual(msg.start,start)
         self.assertEqual(msg.end,end)
         self.assertEqual(msg.count,None)
@@ -1988,7 +1988,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         expected_dict={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':msg.seq,
+            'seq':msg.seq.hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2025,7 +2025,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         expected_dict={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':msg.seq,
+            'seq':msg.seq.hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2052,7 +2052,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             (timeuuid.uuid1(108).hex,'743'),
             (timeuuid.uuid1(109).hex,'283'),
         ]
-        msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data, irt=uuid.uuid1().hex[0:20])
+        msg=message.SendDataInterval(uri=uri, start=start, end=end, data=data, irt=timeuuid.TimeUUID())
         self.assertTrue(isinstance(msg, message.SendDataInterval))
         self.assertEqual(msg.uri, uri)
         self.assertEqual(msg.start, start)
@@ -2063,8 +2063,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         expected_dict={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':msg.seq,
-            'irt':msg.irt,
+            'seq':msg.seq.hex,
+            'irt':msg.irt.hex,
             'payload':{
                 'uri':uri,
                 'start':start.hex,
@@ -2413,7 +2413,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial=[{
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2445,7 +2445,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'vi':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2477,7 +2477,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'theaction':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2509,7 +2509,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'iseq':uuid.uuid1().hex[0:20],
+            'iseq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2552,7 +2552,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_ISEQ)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
 
     def test_SendDataInterval_failure_load_from_dict_failure_no_irt(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg has no irt '''
@@ -2573,7 +2573,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'iirt':None,
             'payload':{
                 'uri':uri,
@@ -2605,7 +2605,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':12,
             'payload':{
                 'uri':uri,
@@ -2616,7 +2616,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         }
         with self.assertRaises(exceptions.MessageValidationException) as cm:
             msg=message.SendDataInterval.load_from_dict(serial)
-        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_IIRT)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDI_ELFD)
 
     def test_SendDataInterval_failure_load_from_dict_failure_no_payload(self):
         ''' Creating a SendDataInterval object from a dict should fail if msg has no payload '''
@@ -2637,7 +2637,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'iipayload':{
                 'uri':uri,
@@ -2669,7 +2669,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':[message.MessagesVersionCatalog._version_],
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2701,7 +2701,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_+1,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2733,7 +2733,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2765,7 +2765,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.REQUEST_DATA.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2797,7 +2797,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':[{
                 'uri':uri,
@@ -2829,7 +2829,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'iuri':uri,
@@ -2861,7 +2861,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2893,7 +2893,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2925,7 +2925,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2957,7 +2957,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -2994,7 +2994,7 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
             'irt':None,
             'payload':{
                 'uri':uri,
@@ -3031,8 +3031,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         serial={
             'v':message.MessagesVersionCatalog._version_,
             'action':Messages.SEND_DATA_INTERVAL.value,
-            'seq':uuid.uuid1().hex[0:20],
-            'irt':uuid.uuid1().hex[0:20],
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
             'payload':{
                 'uri':uri,
                 'start':start.hex,
@@ -3045,8 +3045,8 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
         self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
         self.assertEqual(msg.action, Messages.SEND_DATA_INTERVAL)
         self.assertEqual(msg.uri, uri)
-        self.assertEqual(msg.seq, serial['seq'])
-        self.assertEqual(msg.irt, serial['irt'])
+        self.assertEqual(msg.seq.hex, serial['seq'])
+        self.assertEqual(msg.irt.hex, serial['irt'])
         self.assertEqual(msg.start, start)
         self.assertEqual(msg.end,end)
         self.assertEqual(msg.data,data)

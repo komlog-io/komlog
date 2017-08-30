@@ -9,6 +9,7 @@ import time
 import json
 from komlog.komfig import logging
 from komlog.komlibs.general.validation import arguments as args
+from komlog.komlibs.general.time.timeuuid import TimeUUID
 from komlog.komlibs.auth.passport import AgentPassport
 from komlog.komlibs.interface.websocket.model import response
 from komlog.komlibs.interface.websocket import status
@@ -26,7 +27,8 @@ def process_message(passport, message):
             'duration':0,
         }
         logging.c_logger.info(json.dumps(log))
-        ws_res = response.GenericResponse(status=status.INTERNAL_ERROR, reason='Ups... Internal error', error=error, irt=message['seq'], v=message['v'])
+        irt = TimeUUID(s=message['seq']) if args.is_valid_dict(message) and 'seq' in message and args.is_valid_message_sequence_string(message['seq']) else None
+        ws_res = response.GenericResponse(status=status.INTERNAL_ERROR, reason='Ups... Internal error', error=error, irt=irt, v=message['v'])
         result = response.WSocketIfaceResponse(status=status.INTERNAL_ERROR, error=error)
         result.add_ws_message(ws_res)
         return result
@@ -36,7 +38,7 @@ def process_message(passport, message):
         and 'seq' in message
         and args.is_valid_int(message['v'])
         and args.is_valid_string(message['action'])
-        and args.is_valid_message_sequence(message['seq'])):
+        and args.is_valid_message_sequence_string(message['seq'])):
         t=time.time()
         error=Errors.E_IWSA_PM_IVA
         log = {
@@ -50,7 +52,7 @@ def process_message(passport, message):
         }
         logging.c_logger.info(json.dumps(log))
         v = message['v'] if 'v' in message and args.is_valid_int(message['v']) else 0
-        irt = message['seq'] if 'seq' in message and args.is_valid_message_sequence(message['seq']) else None
+        irt = TimeUUID(s=message['seq']) if 'seq' in message and args.is_valid_message_sequence_string(message['seq']) else None
         ws_res = response.GenericResponse(status=status.PROTOCOL_ERROR, reason='Malformed message', error=error, irt=irt, v=v)
         result = response.WSocketIfaceResponse(status=status.PROTOCOL_ERROR, error=error)
         result.add_ws_message(ws_res)
@@ -70,7 +72,8 @@ def process_message(passport, message):
             'duration':0,
         }
         logging.c_logger.info(json.dumps(log))
-        ws_res = response.GenericResponse(status=status.PROTOCOL_ERROR, reason='Unsupported protocol version', error=error, irt=message['seq'], v=message['v'])
+        irt = TimeUUID(s=message['seq'])
+        ws_res = response.GenericResponse(status=status.PROTOCOL_ERROR, reason='Unsupported protocol version', error=error, irt=irt, v=message['v'])
         result = response.WSocketIfaceResponse(status=status.PROTOCOL_ERROR, error=error)
         result.add_ws_message(ws_res)
         return result

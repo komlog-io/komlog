@@ -9,6 +9,7 @@ import uuid
 import decimal
 import pandas as pd
 from komlog.komlibs.general.crypto import crypto
+from komlog.komlibs.general.time.timeuuid import TimeUUID
 
 
 STR_MAX_LENGTH=256
@@ -224,9 +225,16 @@ def is_valid_sequence(argument):
     return is_valid_hex_date(argument)
 
 def is_valid_message_sequence(argument):
-    if isinstance(argument,str) and len(argument)==20:
-        return is_valid_hex_date(argument+'010000000000')
-    return False
+    if isinstance(argument,TimeUUID) and argument.version == 1:
+        return True
+    else:
+        return False
+
+def is_valid_message_sequence_string(argument):
+    if isinstance(argument,str):
+        return is_valid_hex_date(argument)
+    else:
+        return False
 
 def is_valid_uuid(argument):
     if isinstance(argument, uuid.UUID) and argument.version==4:

@@ -2,6 +2,7 @@ import uuid
 import decimal
 from komlog.komlibs.graph.relations import vertex
 from komlog.komlibs.general.validation import arguments as args
+from komlog.komlibs.general.time.timeuuid import TimeUUID
 from komlog.komlibs.interface.websocket import exceptions
 from komlog.komlibs.interface.websocket.model import message, response
 from komlog.komlibs.interface.websocket.model.types import Messages
@@ -16,7 +17,7 @@ class MessagesVersionCatalog(message.MessagesCatalog):
         return object.__new__(cls)
 
     def __init__(self, seq=None, irt=None):
-        self.seq = seq if seq else uuid.uuid1().hex[0:20]
+        self.seq = seq if seq != None else TimeUUID()
         self.irt = irt
 
     @property
@@ -109,8 +110,8 @@ class SendDsData(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
-            and 'seq' in msg
-            and 'irt' in msg
+            and 'seq' in msg and args.is_valid_message_sequence_string(msg['seq'])
+            and 'irt' in msg and (msg['irt'] == None or args.is_valid_message_sequence_string(msg['irt']))
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
@@ -121,7 +122,9 @@ class SendDsData(MessagesVersionCatalog):
             uri=msg['payload']['uri']
             t=uuid.UUID(msg['payload']['t'])
             content=msg['payload']['content']
-            return cls(uri=uri, t=t, content=content, seq=msg['seq'], irt=msg['irt'])
+            seq = TimeUUID(s=msg['seq'])
+            irt = TimeUUID(s=msg['irt']) if msg['irt'] != None else None
+            return cls(uri=uri, t=t, content=content, seq=seq, irt=irt)
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSD_ELFD)
 
@@ -130,8 +133,8 @@ class SendDsData(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
-            'seq':self.seq,
-            'irt':self.irt,
+            'seq':self.seq.hex,
+            'irt':self.irt.hex if self.irt != None else None,
             'payload':{
                 'uri':self.uri,
                 't':self.t.hex,
@@ -187,8 +190,8 @@ class SendDpData(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
-            and 'seq' in msg
-            and 'irt' in msg
+            and 'seq' in msg and args.is_valid_message_sequence_string(msg['seq'])
+            and 'irt' in msg and (msg['irt'] == None or args.is_valid_message_sequence_string(msg['irt']))
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
@@ -199,7 +202,9 @@ class SendDpData(MessagesVersionCatalog):
             uri=msg['payload']['uri']
             t=uuid.UUID(msg['payload']['t'])
             content=msg['payload']['content']
-            return cls(uri=uri, t=t, content=content, seq=msg['seq'], irt=msg['irt'])
+            seq = TimeUUID(s=msg['seq'])
+            irt = TimeUUID(s=msg['irt']) if msg['irt'] != None else None
+            return cls(uri=uri, t=t, content=content, seq=seq, irt=irt)
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDPD_ELFD)
 
@@ -208,8 +213,8 @@ class SendDpData(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
-            'seq':self.seq,
-            'irt':self.irt,
+            'seq':self.seq.hex,
+            'irt':self.irt.hex if self.irt != None else None,
             'payload':{
                 'uri':self.uri,
                 't':self.t.hex,
@@ -262,8 +267,8 @@ class SendMultiData(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
-            and 'seq' in msg
-            and 'irt' in msg
+            and 'seq' in msg and args.is_valid_message_sequence_string(msg['seq'])
+            and 'irt' in msg and (msg['irt'] == None or args.is_valid_message_sequence_string(msg['irt']))
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
@@ -272,7 +277,9 @@ class SendMultiData(MessagesVersionCatalog):
             and 'uris' in msg['payload']):
             t=uuid.UUID(msg['payload']['t'])
             uris=msg['payload']['uris']
-            return cls(t=t, uris=uris, seq=msg['seq'], irt=msg['irt'])
+            seq = TimeUUID(s=msg['seq'])
+            irt = TimeUUID(s=msg['irt']) if msg['irt'] != None else None
+            return cls(t=t, uris=uris, seq=seq, irt=irt)
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SMTD_ELFD)
 
@@ -283,8 +290,8 @@ class SendMultiData(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
-            'seq':self.seq,
-            'irt':self.irt,
+            'seq':self.seq.hex,
+            'irt':self.irt.hex if self.irt != None else None,
             'payload':{
                 't':self.t.hex,
                 'uris':ds_uris+dp_uris
@@ -314,15 +321,17 @@ class HookToUri(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
-            and 'seq' in msg
-            and 'irt' in msg
+            and 'seq' in msg and args.is_valid_message_sequence_string(msg['seq'])
+            and 'irt' in msg and (msg['irt'] == None or args.is_valid_message_sequence_string(msg['irt']))
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']):
             uri=msg['payload']['uri']
-            return cls(uri=uri, seq=msg['seq'], irt=msg['irt'])
+            seq = TimeUUID(s=msg['seq'])
+            irt = TimeUUID(s=msg['irt']) if msg['irt'] != None else None
+            return cls(uri=uri, seq=seq, irt=irt)
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_HTU_ELFD)
 
@@ -331,8 +340,8 @@ class HookToUri(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
-            'seq':self.seq,
-            'irt':self.irt,
+            'seq':self.seq.hex,
+            'irt':self.irt.hex if self.irt != None else None,
             'payload':{
                 'uri':self.uri
             }
@@ -361,15 +370,17 @@ class UnHookFromUri(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
-            and 'seq' in msg
-            and 'irt' in msg
+            and 'seq' in msg and args.is_valid_message_sequence_string(msg['seq'])
+            and 'irt' in msg and (msg['irt'] == None or args.is_valid_message_sequence_string(msg['irt']))
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
             and args.is_valid_dict(msg['payload'])
             and 'uri' in msg['payload']):
             uri=msg['payload']['uri']
-            return cls(uri=uri, seq=msg['seq'], irt=msg['irt'])
+            seq = TimeUUID(s=msg['seq'])
+            irt = TimeUUID(s=msg['irt']) if msg['irt'] != None else None
+            return cls(uri=uri, seq=seq, irt=irt)
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_UHFU_ELFD)
 
@@ -378,8 +389,8 @@ class UnHookFromUri(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
-            'seq':self.seq,
-            'irt':self.irt,
+            'seq':self.seq.hex,
+            'irt':self.irt.hex if self.irt != None else None,
             'payload':{
                 'uri':self.uri
             }
@@ -452,8 +463,8 @@ class RequestData(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
-            and 'seq' in msg
-            and 'irt' in msg
+            and 'seq' in msg and args.is_valid_message_sequence_string(msg['seq'])
+            and 'irt' in msg and (msg['irt'] == None or args.is_valid_message_sequence_string(msg['irt']))
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
@@ -466,7 +477,9 @@ class RequestData(MessagesVersionCatalog):
             start=uuid.UUID(msg['payload']['start']) if msg['payload']['start'] else None
             end=uuid.UUID(msg['payload']['end']) if msg['payload']['end'] else None
             count=msg['payload']['count']
-            return cls(uri=uri, start=start, end=end, count=count, seq=msg['seq'], irt=msg['irt'])
+            seq = TimeUUID(s=msg['seq'])
+            irt = TimeUUID(s=msg['irt']) if msg['irt'] != None else None
+            return cls(uri=uri, start=start, end=end, count=count, seq=seq, irt=irt)
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_RQDT_ELFD)
 
@@ -475,8 +488,8 @@ class RequestData(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
-            'seq':self.seq,
-            'irt':self.irt,
+            'seq':self.seq.hex,
+            'irt':self.irt.hex if self.irt != None else None,
             'payload':{
                 'uri':self.uri,
                 'start':self._start.hex if self._start else None,
@@ -554,8 +567,8 @@ class SendDataInterval(MessagesVersionCatalog):
         if (isinstance(msg,dict)
             and 'v' in msg
             and 'action' in msg
-            and 'seq' in msg
-            and 'irt' in msg
+            and 'seq' in msg and args.is_valid_message_sequence_string(msg['seq'])
+            and 'irt' in msg and (msg['irt'] == None or args.is_valid_message_sequence_string(msg['irt']))
             and 'payload' in msg
             and args.is_valid_int(msg['v']) and msg['v']==cls._version_
             and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
@@ -568,7 +581,9 @@ class SendDataInterval(MessagesVersionCatalog):
             start=uuid.UUID(msg['payload']['start'])
             end=uuid.UUID(msg['payload']['end'])
             data=msg['payload']['data']
-            return cls(uri=uri, start=start, end=end, data=data, seq=msg['seq'], irt=msg['irt'])
+            seq = TimeUUID(s=msg['seq'])
+            irt = TimeUUID(s=msg['irt']) if msg['irt'] != None else None
+            return cls(uri=uri, start=start, end=end, data=data, seq=seq, irt=irt)
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDI_ELFD)
 
@@ -577,8 +592,8 @@ class SendDataInterval(MessagesVersionCatalog):
         return {
             'v':self.v,
             'action':self.action.value,
-            'seq':self.seq,
-            'irt':self.irt,
+            'seq':self.seq.hex,
+            'irt':self.irt.hex if self.irt != None else None,
             'payload':{
                 'uri':self.uri,
                 'start':self.start.hex,

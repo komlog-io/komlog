@@ -1,5 +1,6 @@
 import uuid
 from komlog.komlibs.general.validation import arguments as args
+from komlog.komlibs.general.time.timeuuid import TimeUUID
 from komlog.komlibs.interface.websocket import exceptions
 from komlog.komlibs.interface.websocket.errors import Errors
 from komlog.komlibs.interface.websocket.model.types import Messages
@@ -57,7 +58,7 @@ class GenericResponse:
 
     def __init__(self, status, error, reason=None, irt=None, v=0, seq=None):
         self.v = v
-        self.seq = seq if seq else uuid.uuid1().hex[0:20]
+        self.seq = seq if seq else TimeUUID()
         self.status=status
         self.error=error
         self.reason=reason
@@ -124,8 +125,8 @@ class GenericResponse:
         return {
             'v':self.v,
             'action':self.action.value,
-            'seq':self.seq,
-            'irt':self.irt,
+            'seq':self.seq.hex,
+            'irt':self.irt.hex if self.irt != None else None,
             'payload':{
                 'status':self.status,
                 'error':self.error.value,
