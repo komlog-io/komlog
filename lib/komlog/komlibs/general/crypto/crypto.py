@@ -19,7 +19,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 def load_public_key(key):
     try:
-        pubkey = serialization.load_pem_public_key(
+        pubkey = serialization.load_ssh_public_key(
             key,
             backend=default_backend()
         )
@@ -63,8 +63,8 @@ def serialize_private_key(key):
 def serialize_public_key(key):
     try:
         pem = key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo
+            encoding=serialization.Encoding.OpenSSH,
+            format=serialization.PublicFormat.OpenSSH
         )
         return pem
     except Exception:
