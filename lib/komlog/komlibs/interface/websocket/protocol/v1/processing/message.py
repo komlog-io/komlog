@@ -343,8 +343,8 @@ def _process_hook_to_uri(passport, message):
     if not uri_info or uri_info['type'] == vertex.VOID:
         authorization.authorize_request(request=Requests.REGISTER_PENDING_HOOK,passport=passport,uri=message.uri)
         userapi.register_pending_hook(uid=user_uid, uri=local_uri, sid=passport.sid)
-        result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_OK, error=Errors.OK)
-        ws_res = modmsg.GenericResponse(status=result.status, reason='Operation registered, but uri does not exist yet', irt=message.seq)
+        result = WSocketIfaceResponse(status=status.RESOURCE_NOT_FOUND, error=Errors.E_IWSPV1PM_PHTU_UNF)
+        ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='Operation registered, but uri does not exist yet', irt=message.seq)
         result.add_ws_message(ws_res)
         return result
     elif uri_info['type'] not in (vertex.DATASOURCE,vertex.DATAPOINT):

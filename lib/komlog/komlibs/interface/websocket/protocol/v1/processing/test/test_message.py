@@ -2122,8 +2122,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
-        self.assertEqual(resp.error.value, Errors.OK.value)
-        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.error.value, Errors.E_IWSPV1PM_PHTU_UNF.value)
+        self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
         self.assertEqual(resp.imc_messages['routed'], {})
         self.assertEqual(resp.imc_messages['unrouted'], [])
         self.assertTrue(len(resp.ws_messages),1)
@@ -2186,8 +2186,8 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         msg={'v':1,'action':Messages.HOOK_TO_URI.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds'}}
         resp=message._process_hook_to_uri(passport=psp, message=msg)
         self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
-        self.assertEqual(resp.error.value, Errors.OK.value)
-        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(resp.error.value, Errors.E_IWSPV1PM_PHTU_UNF.value)
+        self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
         self.assertEqual(resp.imc_messages['routed'], {})
         self.assertEqual(resp.imc_messages['unrouted'], [])
         self.assertTrue(len(resp.ws_messages),1)
