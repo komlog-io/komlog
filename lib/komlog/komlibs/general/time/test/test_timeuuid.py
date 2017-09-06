@@ -46,6 +46,12 @@ class GeneralTimeTimeuuidTest(unittest.TestCase):
             u2 = timeuuid.uuid1(predictable=False, seconds=t)
             self.assertNotEqual(u1,u2)
 
+    def test_uuid1_with_seconds_equals_0_is_valid(self):
+        ''' uuid1 should generate always the same uuid1 for a specific timestamp and be
+            between max and min uuid for that timestamp '''
+        t = timeuuid.uuid1(seconds=0)
+        self.assertEqual(timeuuid.get_unix_timestamp(t),0)
+
     def test_isodates_always_produce_the_same_uuids_and_viceversa_if_requested(self):
         ''' generating a uuid from an isodate should be reproducible if param predictable is True'''
         for i in range(1,10000):

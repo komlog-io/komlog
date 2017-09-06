@@ -39,7 +39,7 @@ def get_isodate_from_uuid(u):
     return date.isoformat()
 
 def uuid1(seconds=None, predictable=False):
-    if not seconds:
+    if seconds == None:
         seconds=time.time()
     if predictable:
         clock_seq = (int(seconds)|129)&2047
