@@ -17,6 +17,14 @@ from komlog.komlibs.interface.websocket.protocol.v1.model import operation as mo
 class InterfaceWebSocketProtocolV1ApiTest(unittest.TestCase):
     ''' komlibs.interface.websocket.protocol.v1.api tests '''
 
+    def test_every_processing_function_should_be_linked_to_a_protocol_message(self):
+        ''' every function in the processing module should be linked to a message in api '''
+        items = dir(message)
+        api_links = list(api._processing_funcs.values())
+        for item in items:
+            if isinstance(getattr(message,item,None), exceptions.ExceptionHandler):
+                self.assertTrue(getattr(message,item,None) in api_links)
+
     def test_process_message_failure_non_existent_action(self):
         ''' process_message should fail if action is invalid '''
         action=999999999999

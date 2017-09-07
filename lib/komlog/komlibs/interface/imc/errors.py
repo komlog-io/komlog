@@ -343,4 +343,9 @@ class Errors(Enum):
     E_IIMM_ADTREE_IST       = 262903    #: AnalyzeDTreeMessage. invalid serialization type
     E_IIMM_ADTREE_IHPID     = 262904    #: AnalyzeDTreeMessage. invalid hex pid
 
+    E_IIMM_IDNEWDPS_IDID    = 262950    #: IdentifyNewDatapoints. invalid did
+    E_IIMM_IDNEWDPS_ELFS    = 262951    #: IdentifyNewDatapoints. error loading from string
+    E_IIMM_IDNEWDPS_MINS    = 262952    #: IdentifyNewDatapoints. msg is not string
+    E_IIMM_IDNEWDPS_IST     = 262953    #: IdentifyNewDatapoints. invalid serialization type
+    E_IIMM_IDNEWDPS_IHDID   = 262954    #: IdentifyNewDatapoints. invalid hex did
 

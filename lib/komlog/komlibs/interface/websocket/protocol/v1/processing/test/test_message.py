@@ -548,6 +548,447 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
                 retrieved_messages[msg._type_.value]=1
         self.assertEqual(expected_messages,retrieved_messages)
 
+    def test__process_send_ds_info_failure_invalid_message(self):
+        ''' _process_send_ds_info should fail if message is invalid '''
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        msg={'key':'a message malformed'}
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.status, status.PROTOCOL_ERROR)
+        self.assertEqual(resp.error, Errors.E_IWSPV1MM_SDSI_ELFD)
+        self.assertEqual(resp.imc_messages,{'routed':{},'unrouted':[]})
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt, None)
+
+    def test__process_send_ds_info_failure_user_not_found(self):
+        ''' _process_send_ds_info should fail if user does not exist '''
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri','supplies':None}}
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDSI_UNF)
+        self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
+        self.assertEqual(resp.imc_messages,{'routed':{},'unrouted':[]})
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
+
+    def test__process_send_ds_info_failure_user_not_found_in_global_uri(self):
+        ''' _process_send_ds_info should fail if user does not exist '''
+        psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'process_send_ds_info_failure_user_not_found_in_global_uri:uri','supplies':None}}
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDSI_EUGURI)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.imc_messages,{'routed':{},'unrouted':[]})
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
+
+    def test__process_send_ds_info_failure_no_permission_to_modify_foreign_global_uris(self):
+        ''' _process_send_ds_info should fail if user tries send info for a foreign global uri '''
+        username_owner='test__process_send_ds_info_failure_no_permission_to_modify_foreign_global_uris_owner'
+        password='password_for_the_user'
+        email=username_owner+'@komlog.org'
+        user_owner=userapi.create_user(username=username_owner, password=password, email=email)
+        self.assertIsNotNone(user_owner)
+        username='test__process_send_ds_info_failure_no_permission_to_modify_foreign_global_uris'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        uri=username_owner+':some_uri'
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':uri,'supplies':['some.uri','other.uri']}}
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDSI_EUGURI)
+        self.assertEqual(resp.imc_messages,{'routed':{},'unrouted':[]})
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
+
+    def test__process_send_ds_info_failure_ds_not_found(self):
+        ''' _process_send_ds_info should fail if ds does not exist '''
+        username='test__process_send_ds_info_failure_ds_not_found'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'uri','supplies':None}}
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDSI_UNF)
+        self.assertEqual(resp.status, status.RESOURCE_NOT_FOUND)
+        self.assertEqual(resp.imc_messages,{'routed':{},'unrouted':[]})
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+
+    def test__process_send_ds_info_failure_uri_type_is_not_datasource(self):
+        ''' _process_send_ds_info should fail if uri exists and is not a ds type '''
+        username='test_process_send_ds_info_failure_uri_type_is_not_datasource'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.void','supplies':['uri']}}
+        self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.void',type=vertex.USER_VOID_RELATION))
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.error, Errors.E_IWSPV1PM_PSDSI_IURI)
+        self.assertEqual(resp.imc_messages,{'routed':{},'unrouted':[]})
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], v1msg.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
+
+    def test__process_send_ds_info_failure_no_permission_for_post_ds_info(self):
+        ''' _process_send_ds_info should fail if user has no permission for posting over this ds '''
+        username='test_process_send_ds_info_failure_no_permission_for_post_ds_info'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':None}}
+        self.assertTrue(graphuri.new_uri(ido=user_reg['uid'], idd=uuid.uuid4(), uri='system.ds',type=vertex.USER_DATASOURCE_RELATION))
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_DENIED)
+        self.assertEqual(resp.error, autherrors.E_ARA_ATDSD_RE)
+        self.assertEqual(resp.imc_messages,{'routed':{},'unrouted':[]})
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+
+    def test__process_send_ds_info_success_msg_supplies_none(self):
+        ''' _process_send_ds_info should succeed. if no supplies are sent, no action is done. '''
+        username='test__process_send_ds_info_success_msg_supplies_none'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':None}}
+        ds = datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
+        auth_req_bck=authorization.authorize_request
+        operation_bck=operation.process_operation
+        def auth_mock(request, passport, did):
+            return True
+        authorization.authorize_request = auth_mock
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.OK)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_last_datasource_supplies_count(did=ds['did']),[])
+        authorization.authorize_request = auth_req_bck
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
+        self.assertIsNotNone(uri_info)
+        self.assertEqual(resp.imc_messages['unrouted'],[])
+        self.assertEqual(resp.imc_messages['routed'],{})
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg['seq']))
+
+    def test__process_send_ds_info_success_msg_supplies_none_with_global_uri(self):
+        ''' _process_send_ds_info should succeed. if no supplies are sent, no action is done. '''
+        username='test__process_send_ds_info_success_msg_supplies_none_with_global_uri'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':username+':system.ds','supplies':None}}
+        ds = datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename='system.ds')
+        auth_req_bck=authorization.authorize_request
+        operation_bck=operation.process_operation
+        def auth_mock(request, passport, did):
+            return True
+        authorization.authorize_request = auth_mock
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.OK)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        self.assertEqual(cassapidatasource.get_last_datasource_supplies_count(did=ds['did']),[])
+        authorization.authorize_request = auth_req_bck
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri='system.ds')
+        self.assertIsNotNone(uri_info)
+        self.assertEqual(resp.imc_messages['unrouted'],[])
+        self.assertEqual(resp.imc_messages['routed'],{})
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg['seq']))
+
+    def test__process_send_ds_info_success_msg_supplies_some_uris(self):
+        ''' _process_send_ds_info should succeed and set ds supplies for first time. '''
+        username='test__process_send_ds_info_success_msg_supplies_some_uris'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':['uri.1','uri.2','uri.3']}}
+        ds = datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
+        auth_req_bck=authorization.authorize_request
+        operation_bck=operation.process_operation
+        def auth_mock(request, passport, did):
+            return True
+        authorization.authorize_request = auth_mock
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.OK)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        ds_supplies_list = cassapidatasource.get_last_datasource_supplies_count(did=ds['did'], count=10)
+        self.assertTrue(len(ds_supplies_list),1)
+        self.assertEqual(ds_supplies_list[0].supplies, msg['payload']['supplies'])
+        authorization.authorize_request = auth_req_bck
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
+        self.assertIsNotNone(uri_info)
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg['seq']))
+        self.assertNotEqual(resp.imc_messages['unrouted'],[])
+        self.assertEqual(resp.imc_messages['routed'],{})
+        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.IdentifyNewDatapointsMessage))
+        self.assertEqual(resp.imc_messages['unrouted'][0].did, ds['did'])
+
+    def test__process_send_ds_info_success_msg_supplies_some_uris_ds_has_the_same_uris_already(self):
+        ''' _process_send_ds_info should succeed, but if ds already has the same supplies, dont set them again '''
+        username='test__process_send_ds_info_success_msg_supplies_some_uris_ds_has_the_same_uris_already'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':['uri.1','uri.2','uri.3']}}
+        ds = datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
+        self.assertIsNotNone(uri_info)
+        auth_req_bck=authorization.authorize_request
+        operation_bck=operation.process_operation
+        def auth_mock(request, passport, did):
+            return True
+        authorization.authorize_request = auth_mock
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.OK)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        ds_supplies_list = cassapidatasource.get_last_datasource_supplies_count(did=ds['did'], count=10)
+        self.assertTrue(len(ds_supplies_list),1)
+        self.assertEqual(ds_supplies_list[0].supplies, msg['payload']['supplies'])
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg['seq']))
+        self.assertNotEqual(resp.imc_messages['unrouted'],[])
+        self.assertEqual(resp.imc_messages['routed'],{})
+        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.IdentifyNewDatapointsMessage))
+        self.assertEqual(resp.imc_messages['unrouted'][0].did, ds['did'])
+        msg2={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':['uri.1','uri.2','uri.3']}}
+        resp=message._process_send_ds_info(passport=psp, message=msg2)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.OK)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        ds_supplies_list = cassapidatasource.get_last_datasource_supplies_count(did=ds['did'], count=10)
+        self.assertTrue(len(ds_supplies_list),1)
+        self.assertEqual(ds_supplies_list[0].supplies, msg2['payload']['supplies'])
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg2['seq']))
+        self.assertEqual(resp.imc_messages['unrouted'],[])
+        self.assertEqual(resp.imc_messages['routed'],{})
+        authorization.authorize_request = auth_req_bck
+
+    def test__process_send_ds_info_success_msg_supplies_some_uris_ds_has_different_uris(self):
+        ''' _process_send_ds_info should succeed, and update supplies if ds has a different set '''
+        username='test__process_send_ds_info_success_msg_supplies_some_uris_ds_has_different_uris'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':['uri.1','uri.2','uri.3']}}
+        ds = datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
+        self.assertIsNotNone(uri_info)
+        auth_req_bck=authorization.authorize_request
+        operation_bck=operation.process_operation
+        def auth_mock(request, passport, did):
+            return True
+        authorization.authorize_request = auth_mock
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.OK)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        ds_supplies_list = cassapidatasource.get_last_datasource_supplies_count(did=ds['did'], count=10)
+        self.assertTrue(len(ds_supplies_list),1)
+        self.assertEqual(ds_supplies_list[0].supplies, msg['payload']['supplies'])
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg['seq']))
+        self.assertNotEqual(resp.imc_messages['unrouted'],[])
+        self.assertEqual(resp.imc_messages['routed'],{})
+        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.IdentifyNewDatapointsMessage))
+        self.assertEqual(resp.imc_messages['unrouted'][0].did, ds['did'])
+        msg2={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':['uri.1']}}
+        resp=message._process_send_ds_info(passport=psp, message=msg2)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.OK)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        ds_supplies_list = cassapidatasource.get_last_datasource_supplies_count(did=ds['did'], count=10)
+        self.assertTrue(len(ds_supplies_list),2)
+        self.assertEqual(ds_supplies_list[0].supplies, msg2['payload']['supplies'])
+        self.assertEqual(ds_supplies_list[1].supplies, msg['payload']['supplies'])
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg2['seq']))
+        self.assertNotEqual(resp.imc_messages['unrouted'],[])
+        self.assertEqual(resp.imc_messages['routed'],{})
+        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.IdentifyNewDatapointsMessage))
+        self.assertEqual(resp.imc_messages['unrouted'][0].did, ds['did'])
+        authorization.authorize_request = auth_req_bck
+
+    def test__process_send_ds_info_success_msg_supplies_none_ds_has_some_uris_already(self):
+        ''' _process_send_ds_info should succeed, but if msg has no supplies, no update should be made '''
+        username='test__process_send_ds_info_success_msg_supplies_none_ds_has_some_uris_already'
+        password='password_for_the_user'
+        email=username+'@komlog.org'
+        user_reg=userapi.create_user(username=username, password=password, email=email)
+        self.assertIsNotNone(user_reg)
+        self.assertTrue(userapi.confirm_user(email=email, code=user_reg['code']))
+        agentname=username+'_agent'
+        version='agent_version'
+        agent=agentapi.create_agent(uid=user_reg['uid'],agentname=agentname, pubkey=pubkey, version=version)
+        self.assertIsNotNone(agent)
+        self.assertTrue(agentapi.activate_agent(aid=agent['aid']))
+        psp = AgentPassport(uid=user_reg['uid'], aid=agent['aid'],sid=uuid.uuid4(),pv=1)
+        msg={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':['uri.1','uri.2','uri.3']}}
+        ds = datasourceapi.create_datasource(uid=user_reg['uid'], aid=agent['aid'], datasourcename=msg['payload']['uri'])
+        uri_info=graphuri.get_id(ido=user_reg['uid'], uri=msg['payload']['uri'])
+        self.assertIsNotNone(uri_info)
+        auth_req_bck=authorization.authorize_request
+        operation_bck=operation.process_operation
+        def auth_mock(request, passport, did):
+            return True
+        authorization.authorize_request = auth_mock
+        resp=message._process_send_ds_info(passport=psp, message=msg)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.OK)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        ds_supplies_list = cassapidatasource.get_last_datasource_supplies_count(did=ds['did'], count=10)
+        self.assertTrue(len(ds_supplies_list),1)
+        self.assertEqual(ds_supplies_list[0].supplies, msg['payload']['supplies'])
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg['seq']))
+        self.assertNotEqual(resp.imc_messages['unrouted'],[])
+        self.assertEqual(resp.imc_messages['routed'],{})
+        self.assertTrue(isinstance(resp.imc_messages['unrouted'][0], messages.IdentifyNewDatapointsMessage))
+        self.assertEqual(resp.imc_messages['unrouted'][0].did, ds['did'])
+        msg2={'v':1,'action':Messages.SEND_DS_INFO.value,'seq':timeuuid.TimeUUID().hex, 'irt':None, 'payload':{'uri':'system.ds','supplies':None}}
+        resp=message._process_send_ds_info(passport=psp, message=msg2)
+        self.assertTrue(isinstance(resp, response.WSocketIfaceResponse))
+        self.assertEqual(resp.error, Errors.OK)
+        self.assertEqual(resp.status, status.MESSAGE_EXECUTION_OK)
+        ds_supplies_list = cassapidatasource.get_last_datasource_supplies_count(did=ds['did'], count=10)
+        self.assertTrue(len(ds_supplies_list),1)
+        self.assertEqual(ds_supplies_list[0].supplies, msg['payload']['supplies'])
+        self.assertTrue(len(resp.ws_messages),1)
+        self.assertTrue(isinstance(resp.ws_messages[0], response.GenericResponse))
+        self.assertEqual(resp.ws_messages[0].status,resp.status)
+        self.assertEqual(resp.ws_messages[0].error, resp.error)
+        self.assertEqual(resp.ws_messages[0].irt, uuid.UUID(msg2['seq']))
+        self.assertEqual(resp.imc_messages['unrouted'],[])
+        self.assertEqual(resp.imc_messages['routed'],{})
+        authorization.authorize_request = auth_req_bck
+
     def test__process_send_dp_data_failure_invalid_message(self):
         ''' _process_send_dp_data should fail if message is invalid '''
         psp = AgentPassport(uid=uuid.uuid4(),aid=uuid.uuid4(),sid=uuid.uuid4(),pv=1)

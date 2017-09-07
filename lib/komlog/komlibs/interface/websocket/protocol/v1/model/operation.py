@@ -205,6 +205,47 @@ class DatasourceDataStoredOperation(WSIFaceOperation):
         else:
             raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_DSDSTO_IDATE)
 
+class DatasourceInfoStoredOperation(WSIFaceOperation):
+    def __init__(self, uid, did):
+        self._uid = None
+        self._did = None
+        self.uid = uid
+        self.did = did
+        super().__init__(oid=Operations.DATASOURCE_INFO_STORED)
+
+    @property
+    def params(self):
+        return {
+            'uid':self._uid,
+            'did':self._did,
+        }
+
+    @params.setter
+    def params(self, value):
+        raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_WSIO_PMNA)
+
+    @property
+    def uid(self):
+        return self._uid
+
+    @uid.setter
+    def uid(self, value):
+        if args.is_valid_uuid(value):
+            self._uid = value
+        else:
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_DSISTO_IUID)
+
+    @property
+    def did(self):
+        return self._did
+
+    @did.setter
+    def did(self, value):
+        if args.is_valid_uuid(value):
+            self._did = value
+        else:
+            raise exceptions.OperationValidationException(error=Errors.E_IWSPV1MO_DSISTO_IDID)
+
 class DatapointDataStoredOperation(WSIFaceOperation):
     def __init__(self, uid, pid, date):
         self._uid = None

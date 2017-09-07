@@ -270,4 +270,33 @@ def get_datasource_hooks(did):
         raise exceptions.DatasourceNotFoundException(error=Errors.E_GDA_GDSH_DSNF)
     return cassapidatasource.get_datasource_hooks_sids(did=did)
 
+def get_datasource_supplies(did, count=1):
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_GDSSUP_IDID)
+    if not isinstance(count, int) or count < 1:
+        raise exceptions.BadParametersException(error=Errors.E_GDA_GDSSUP_ICNT)
+    supplies = set()
+    ds_supplies_list = cassapidatasource.get_last_datasource_supplies_count(did, count=count)
+    for item in ds_supplies_list:
+        for uri in item.supplies:
+            supplies.add(uri)
+    return sorted(list(supplies))
+
+def update_datasource_supplies(did, supplies):
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_UDSSUP_IDID)
+    if not isinstance(supplies, list):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_UDSSUP_ISUPT)
+    for item in supplies:
+        if not args.is_valid_uri(item):
+            raise exceptions.BadParametersException(error=Errors.E_GDA_UDSSUP_ISUPI)
+    datasource=cassapidatasource.get_datasource(did=did)
+    if datasource is None:
+        raise exceptions.DatasourceNotFoundException(error=Errors.E_GDA_UDSSUP_DSNF)
+    current = cassapidatasource.get_last_datasource_supplies_count(did, count=1)
+    if current == [] or current[0].supplies != sorted(supplies):
+        now = timeuuid.uuid1()
+        return cassapidatasource.insert_datasource_supplies(did, now, supplies)
+    else:
+        return False
 

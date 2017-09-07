@@ -84,6 +84,23 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
                 message_retrieved[msg._type_.value]=1
         self.assertEqual(sorted(message_retrieved), sorted(message_expected))
 
+    def test_process_operation_datasource_info_stored_success(self):
+        ''' _process_operation_datasource_info_stored should succeed and send the corresponding messages '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        op=modop.DatasourceInfoStoredOperation(uid=uid, did=did)
+        msgs=operation.process_operation(operation=op)
+        message_expected={
+            messages.Messages.IDENTIFY_NEW_DATAPOINTS_MESSAGE.value:1,
+        }
+        message_retrieved={}
+        for msg in msgs:
+            try:
+                message_retrieved[msg._type_.value]+=1
+            except KeyError:
+                message_retrieved[msg._type_.value]=1
+        self.assertEqual(sorted(message_retrieved), sorted(message_expected))
+
     def test_process_operation_datapoint_data_stored_success(self):
         ''' _process_operation_datapoint_data_stored should succeed and send the corresponding messages '''
         uid=uuid.uuid4()

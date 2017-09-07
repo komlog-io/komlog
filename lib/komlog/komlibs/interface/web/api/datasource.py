@@ -112,6 +112,7 @@ def get_datasource_config_request(passport, did):
         datasource['pids']=[pid.hex for pid in data['pids']]
     if 'wid' in data:
         datasource['wid']=data['wid'].hex
+    datasource['supplies'] = datasourceapi.get_datasource_supplies(did=did, count=10)
     return response.WebInterfaceResponse(status=status.WEB_STATUS_OK, data=datasource)
 
 @exceptions.ExceptionHandler

@@ -139,6 +139,9 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertEqual(widget['type'],widget2['type'])
         hooks=datasourceapi.get_datasource_hooks(did=datasource['did'])
         self.assertEqual(hooks,[sid])
+        self.assertTrue(datasourceapi.update_datasource_supplies(did=datasource['did'], supplies=['a','b']))
+        ds_sups = cassapidatasource.get_last_datasource_supplies_count(did=datasource['did'])
+        self.assertEqual(len(ds_sups),1)
         self.assertTrue(deleteapi.delete_datasource(did=datasource['did']))
         self.assertIsNone(cassapidatasource.get_datasource(did=datasource['did']))
         self.assertIsNone(cassapidatasource.get_datasource_stats(did=datasource['did']))
@@ -147,6 +150,7 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertEqual(cassapidatasource.get_datasource_text_summaries(did=datasource['did'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
         self.assertEqual(cassapidatasource.get_datasource_hooks_sids(did=datasource['did']),[])
         self.assertEqual(userapi.get_uri_pending_hooks(uid=datasource['uid'],uri=datasource['datasourcename']),[sid])
+        self.assertEqual(cassapidatasource.get_last_datasource_supplies_count(did=datasource['did']),[])
 
     def test_delete_datapoint_failure_bad_parameters(self):
         ''' delete_datapoint should fail if we pass incorrect parameters '''

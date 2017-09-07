@@ -1221,3 +1221,179 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertEqual(len(sids),4)
         self.assertFalse(sid in sids)
 
+    def test_insert_datasource_supplies_success_some_supplies(self):
+        ''' insert_datasource_supplies should insert the values successfully '''
+        did = uuid.uuid4()
+        date = timeuuid.uuid1()
+        supplies = ['a','b','c','d']
+        self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        supobj = datasourceapi.get_datasource_supplies_at(did, date)
+        self.assertEqual(supobj.did, did)
+        self.assertEqual(supobj.date, date)
+        self.assertEqual(supobj.supplies, supplies)
+
+    def test_insert_datasource_supplies_success_no_supplies(self):
+        ''' insert_datasource_supplies should insert the values successfully '''
+        did = uuid.uuid4()
+        date = timeuuid.uuid1()
+        supplies = []
+        self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        supobj = datasourceapi.get_datasource_supplies_at(did, date)
+        self.assertEqual(supobj.did, did)
+        self.assertEqual(supobj.date, date)
+        self.assertEqual(supobj.supplies, supplies)
+
+    def test_insert_datasource_supplies_success_dup_supplies(self):
+        ''' insert_datasource_supplies should insert the values successfully '''
+        did = uuid.uuid4()
+        date = timeuuid.uuid1()
+        supplies = ['a','b','c','d','a']
+        self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        supobj = datasourceapi.get_datasource_supplies_at(did, date)
+        self.assertEqual(supobj.did, did)
+        self.assertEqual(supobj.date, date)
+        self.assertEqual(supobj.supplies, sorted(list(set(supplies))))
+
+    def test_get_datasource_supplies_success_some_supplies(self):
+        ''' get_datasource_supplies should return a list with the supplies entries found '''
+        did = uuid.uuid4()
+        supplies = ['a','b','c','d']
+        for i in range(1,101):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        for i in range(200,300):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        suplist = datasourceapi.get_datasource_supplies(did, timeuuid.uuid1(199),timeuuid.uuid1(301))
+        self.assertTrue(len(suplist),100)
+        for item in suplist:
+            self.assertEqual(item.did, did)
+            self.assertEqual(item.supplies, supplies)
+
+    def test_get_datasource_supplies_success_no_supplies(self):
+        ''' get_datasource_supplies should return a list with the supplies entries found '''
+        did = uuid.uuid4()
+        supplies = ['a','b','c','d']
+        for i in range(1,101):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        for i in range(200,300):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        suplist = datasourceapi.get_datasource_supplies(did, timeuuid.uuid1(1990),timeuuid.uuid1(20000))
+        self.assertEqual(len(suplist),0)
+
+    def test_get_datasource_supplies_at_success_supplies_exist(self):
+        ''' get_datasource_supplies_at should return the supplies entry if exists '''
+        did = uuid.uuid4()
+        sel_supplies = ['a','b','c','d','e']
+        sel_date = timeuuid.uuid1(250)
+        self.assertTrue(datasourceapi.insert_datasource_supplies(did, sel_date, sel_supplies))
+        supplies = ['a','b','c','d']
+        for i in range(1,101):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        for i in range(200,300):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        supobj = datasourceapi.get_datasource_supplies_at(did, sel_date)
+        self.assertEqual(supobj.did, did)
+        self.assertEqual(supobj.date, sel_date)
+        self.assertEqual(supobj.supplies, sel_supplies)
+
+    def test_get_datasource_supplies_at_success_supplies_does_not_exist(self):
+        ''' get_datasource_supplies_at should return None if the supplies entry does not exist '''
+        did = uuid.uuid4()
+        sel_date = timeuuid.uuid1(250)
+        supplies = ['a','b','c','d']
+        for i in range(1,101):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        for i in range(200,300):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        self.assertIsNone(datasourceapi.get_datasource_supplies_at(did, sel_date))
+
+    def test_get_last_datasource_supplies_count_no_row_exist(self):
+        ''' get_last_datasource_supplies_count should return an empty list if no row exists '''
+        did = uuid.uuid4()
+        self.assertEqual(datasourceapi.get_last_datasource_supplies_count(did),[])
+
+    def test_get_last_datasource_supplies_count_exist(self):
+        ''' get_last_datasource_supplies_count should return as many elements as requested if they exist '''
+        did = uuid.uuid4()
+        last_date = timeuuid.uuid1()
+        supplies = ['a','b','c','d']
+        for i in range(1,101):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        self.assertTrue(datasourceapi.insert_datasource_supplies(did, last_date, supplies))
+        for i in range(200,300):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        suplist = datasourceapi.get_last_datasource_supplies_count(did)
+        self.assertEqual(len(suplist),1)
+        self.assertEqual(suplist[0].did, did)
+        self.assertEqual(suplist[0].date, last_date)
+        self.assertEqual(suplist[0].supplies, supplies)
+
+    def test_delete_datasource_supplies_success_rows_deleted(self):
+        ''' delete_datasource_supplies should delete all did supplies rows '''
+        did = uuid.uuid4()
+        supplies = ['a','b','c','d']
+        for i in range(1,101):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        fromdate = timeuuid.uuid1(0)
+        todate = timeuuid.uuid1()
+        suplist = datasourceapi.get_datasource_supplies(did, fromdate, todate)
+        self.assertEqual(len(suplist),100)
+        self.assertTrue(datasourceapi.delete_datasource_supplies(did))
+        suplist = datasourceapi.get_datasource_supplies(did, fromdate, todate)
+        self.assertEqual(len(suplist),0)
+
+    def test_delete_datasource_supplies_success_no_rows_deleted(self):
+        ''' delete_datasource_supplies should delete all did supplies rows '''
+        did = uuid.uuid4()
+        fromdate = timeuuid.uuid1(0)
+        todate = timeuuid.uuid1()
+        suplist = datasourceapi.get_datasource_supplies(did, fromdate, todate)
+        self.assertEqual(len(suplist),0)
+        self.assertTrue(datasourceapi.delete_datasource_supplies(did))
+        suplist = datasourceapi.get_datasource_supplies(did, fromdate, todate)
+        self.assertEqual(len(suplist),0)
+
+    def test_delete_datasource_supplies_at_success_row_deleted(self):
+        ''' delete_datasource_supplies_at should delete the selected row if exists '''
+        did = uuid.uuid4()
+        sel_date = timeuuid.uuid1(50)
+        supplies = ['a','b','c','d']
+        for i in range(1,101):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        self.assertTrue(datasourceapi.insert_datasource_supplies(did, sel_date, supplies))
+        fromdate = timeuuid.uuid1(0)
+        todate = timeuuid.uuid1()
+        suplist = datasourceapi.get_datasource_supplies(did, fromdate, todate)
+        self.assertEqual(len(suplist),101)
+        self.assertTrue(datasourceapi.delete_datasource_supplies_at(did, sel_date))
+        suplist = datasourceapi.get_datasource_supplies(did, fromdate, todate)
+        self.assertEqual(len(suplist),100)
+
+    def test_delete_datasource_supplies_at_success_no_row_deleted(self):
+        ''' delete_datasource_supplies_at should delete the selected row if exists '''
+        did = uuid.uuid4()
+        sel_date = timeuuid.uuid1(50)
+        supplies = ['a','b','c','d']
+        for i in range(1,101):
+            date = timeuuid.uuid1(i)
+            self.assertTrue(datasourceapi.insert_datasource_supplies(did, date, supplies))
+        #self.assertTrue(datasourceapi.insert_datasource_supplies(did, sel_date, supplies))
+        fromdate = timeuuid.uuid1(0)
+        todate = timeuuid.uuid1()
+        suplist = datasourceapi.get_datasource_supplies(did, fromdate, todate)
+        self.assertEqual(len(suplist),100)
+        self.assertTrue(datasourceapi.delete_datasource_supplies_at(did, sel_date))
+        suplist = datasourceapi.get_datasource_supplies(did, fromdate, todate)
+        self.assertEqual(len(suplist),100)
+

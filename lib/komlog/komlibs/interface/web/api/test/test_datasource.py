@@ -104,6 +104,7 @@ class InterfaceWebApiDatasourceTest(unittest.TestCase):
         self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
         self.assertTrue(isinstance(uuid.UUID(response.data['aid']), uuid.UUID))
         self.assertEqual(self.agents[0]['aid'], response.data['aid'])
+        self.assertEqual(response.data['supplies'],[])
 
     def test_get_datasource_config_request_success_remote_datasource(self):
         ''' get_datasource_config_request should succeed, returning datasource info

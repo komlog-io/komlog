@@ -64,3 +64,10 @@ class DatasourceMetadata:
         self.date=date
         self.size=size
 
+class DatasourceSupplies:
+
+    def __init__(self, did, date, supplies):
+        self.did = did
+        self.date = date
+        self.supplies = list(supplies) if supplies != None else []
+

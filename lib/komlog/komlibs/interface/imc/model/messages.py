@@ -22,36 +22,54 @@ from komlog.komfig import logging
 #MESSAGE LIST
 @unique
 class Messages(Enum):
+    # Datapoint related
+
     MAP_VARS_MESSAGE                        = 'MAPVARS'
     MON_VAR_MESSAGE                         = 'MONVAR'
     GDTREE_MESSAGE                          = 'GDTREE'
-    FILL_DATAPOINT_MESSAGE                  = 'FILLDP'
-    FILL_DATASOURCE_MESSAGE                 = 'FILLDS'
     NEG_VAR_MESSAGE                         = 'NEGVAR'
     POS_VAR_MESSAGE                         = 'POSVAR'
+    MISSING_DATAPOINT_MESSAGE               = 'MISSINGDP'
+    ANALYZE_DTREE_MESSAGE                   = 'ADTREE'
+    IDENTIFY_NEW_DATAPOINTS_MESSAGE         = 'IDNEWDPS'
+
+    # Datasource related
+
+    FILL_DATAPOINT_MESSAGE                  = 'FILLDP'
+    FILL_DATASOURCE_MESSAGE                 = 'FILLDS'
+    GENERATE_TEXT_SUMMARY_MESSAGE           = 'GENTEXTSUMMARY'
+    URIS_UPDATED_MESSAGE                    = 'URISUPDT'
+
+    # Notifications related
+
+    FORGET_MAIL_MESSAGE                     = 'FORGETMAIL'
     NEW_USR_NOTIF_MESSAGE                   = 'NEWUSR'
-    UPDATE_QUOTES_MESSAGE                   = 'UPDQUO'
+    NEW_INV_MAIL_MESSAGE                    = 'NEWINV'
+    USER_EVENT_MESSAGE                      = 'USEREV'
+    USER_EVENT_RESPONSE_MESSAGE             = 'USEREVRESP'
+
+    # authorization related
+
     RESOURCE_AUTHORIZATION_UPDATE_MESSAGE   = 'RESAUTH'
-    NEW_DP_WIDGET_MESSAGE                   = 'NEWDPW'
-    NEW_DS_WIDGET_MESSAGE                   = 'NEWDSW'
+    UPDATE_QUOTES_MESSAGE                   = 'UPDQUO'
+
+    # User management related
+
     DELETE_USER_MESSAGE                     = 'DELUSER'
     DELETE_AGENT_MESSAGE                    = 'DELAGENT'
     DELETE_DATASOURCE_MESSAGE               = 'DELDS'
     DELETE_DATAPOINT_MESSAGE                = 'DELDP'
     DELETE_WIDGET_MESSAGE                   = 'DELWIDGET'
     DELETE_DASHBOARD_MESSAGE                = 'DELDASHB'
-    USER_EVENT_MESSAGE                      = 'USEREV'
-    USER_EVENT_RESPONSE_MESSAGE             = 'USEREVRESP'
-    GENERATE_TEXT_SUMMARY_MESSAGE           = 'GENTEXTSUMMARY'
-    MISSING_DATAPOINT_MESSAGE               = 'MISSINGDP'
-    NEW_INV_MAIL_MESSAGE                    = 'NEWINV'
-    FORGET_MAIL_MESSAGE                     = 'FORGETMAIL'
-    URIS_UPDATED_MESSAGE                    = 'URISUPDT'
+    NEW_DP_WIDGET_MESSAGE                   = 'NEWDPW'
+    NEW_DS_WIDGET_MESSAGE                   = 'NEWDSW'
+
+    # websocket iface related
+
     SEND_SESSION_DATA_MESSAGE               = 'SSDATA'
     CLEAR_SESSION_HOOKS_MESSAGE             = 'CLSHOOKS'
     HOOK_NEW_URIS_MESSAGE                   = 'HOOKNEW'
     DATA_INTERVAL_REQUEST_MESSAGE           = 'DATINT'
-    ANALYZE_DTREE_MESSAGE                   = 'ADTREE'
 
 class Catalog(type):
     def __init__(cls, name, bases, dct):
@@ -1796,5 +1814,42 @@ class AnalyzeDTreeMessage(IMCMessage):
 
     def to_serialization(self):
         return '|'.join((self._type_.value, self._pid.hex))
+
+
+class IdentifyNewDatapointsMessage(IMCMessage):
+    _type_ = Messages.IDENTIFY_NEW_DATAPOINTS_MESSAGE
+
+    def __init__(self, did):
+        self.did = did
+
+    @property
+    def did(self):
+        return self._did
+
+    @did.setter
+    def did(self, did):
+        if args.is_valid_uuid(did):
+            self._did = did
+        else:
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_IDNEWDPS_IDID)
+
+    @classmethod
+    def load_from_serialization(cls, msg):
+        try:
+            m_type, h_did = msg.split('|')
+        except ValueError:
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_IDNEWDPS_ELFS)
+        except AttributeError:
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_IDNEWDPS_MINS)
+        else:
+            if not m_type == cls._type_.value:
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_IDNEWDPS_IST)
+            if not args.is_valid_hex_uuid(h_did):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_IDNEWDPS_IHDID)
+            did = uuid.UUID(h_did)
+            return cls(did=did)
+
+    def to_serialization(self):
+        return '|'.join((self._type_.value, self._did.hex))
 
 

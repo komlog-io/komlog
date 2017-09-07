@@ -350,6 +350,415 @@ class InterfaceWebSocketProtocolV1ModelMessageTest(unittest.TestCase):
             msg=message.SendDsData.load_from_dict(dict_msg)
         self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSD_ICNT)
 
+    def test_SendDsInfo_version_cannot_be_modified(self):
+        ''' if we create a new SendDsInfo message, the version param cannot be modified  '''
+        msg=message.SendDsInfo(uri='uri',supplies=['uri1','uri2'])
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertFalse(getattr(msg,'payload', False))
+        with self.assertRaises(TypeError) as cm:
+            msg.v=3
+        self.assertEqual(str(cm.exception),'Version cannot be modified')
+
+    def test_SendDsInfo_action_cannot_be_modified(self):
+        ''' if we create a new SendDsInfo message, the action param cannot be modified  '''
+        msg=message.SendDsInfo(uri='uri',supplies=None)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertFalse(getattr(msg,'payload', False))
+        with self.assertRaises(TypeError) as cm:
+            msg.action=3
+        self.assertEqual(str(cm.exception),'Action cannot be modified')
+
+    def test_SendDsInfo_seq_cannot_be_modified(self):
+        ''' if we create a new SendDsInfo message, the seq param cannot be modified  '''
+        msg=message.SendDsInfo(uri='uri',supplies=['one.uri'])
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertTrue(args.is_valid_message_sequence(msg.seq))
+        self.assertEqual(msg.irt, None)
+        self.assertFalse(getattr(msg,'payload', False))
+        with self.assertRaises(TypeError) as cm:
+            msg.seq=timeuuid.TimeUUID()
+        self.assertEqual(str(cm.exception),'Sequence cannot be modified')
+
+    def test_SendDsInfo_irt_cannot_be_modified(self):
+        ''' if we create a new SendDsInfo message, the seq param cannot be modified  '''
+        msg=message.SendDsInfo(uri='uri',supplies=['one.uri'])
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertTrue(args.is_valid_message_sequence(msg.seq))
+        self.assertEqual(msg.irt, None)
+        self.assertFalse(getattr(msg,'payload', False))
+        with self.assertRaises(TypeError) as cm:
+            msg.irt=timeuuid.TimeUUID()
+        self.assertEqual(str(cm.exception),'irt cannot be modified')
+
+    def test_SendDsInfo_success_local_uri(self):
+        ''' creating a SendDsInfo object should succeed if uri is a local one'''
+        uri = 'local.uri'
+        msg=message.SendDsInfo(uri=uri)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.supplies, None)
+        self.assertNotEqual(msg.seq, None)
+        self.assertEqual(msg.irt, None)
+
+    def test_SendDsInfo_success_global_uri(self):
+        ''' creating a SendDsInfo object should succeed if uri is a global one'''
+        uri = 'user:uri'
+        msg=message.SendDsInfo(uri=uri)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.supplies, None)
+        self.assertNotEqual(msg.seq, None)
+        self.assertEqual(msg.irt, None)
+
+    def test_SendDsInfo_success_empty_supplies(self):
+        ''' creating a SendDsInfo object should succeed if supplies is an empty list '''
+        uri = 'user:uri'
+        msg=message.SendDsInfo(uri=uri, supplies=[])
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.supplies, [])
+        self.assertNotEqual(msg.seq, None)
+        self.assertEqual(msg.irt, None)
+
+    def test_SendDsInfo_success_some_supplies(self):
+        ''' creating a SendDsInfo object should succeed if supplies is a list with local uris '''
+        uri = 'user:uri'
+        supplies = ['uri1','uri.2','the.third.uri']
+        msg=message.SendDsInfo(uri=uri, supplies=supplies)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.supplies, supplies)
+        self.assertNotEqual(msg.seq, None)
+        self.assertEqual(msg.irt, None)
+
+    def test_SendDsInfo_success_with_seq(self):
+        ''' creating a SendDsInfo object should succeed if we set the sequence manually '''
+        uri = 'user:uri'
+        supplies = ['uri1','uri.2','the.third.uri']
+        seq = timeuuid.TimeUUID()
+        msg=message.SendDsInfo(uri=uri, supplies=supplies, seq=seq)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.supplies, supplies)
+        self.assertEqual(msg.seq, seq)
+        self.assertEqual(msg.irt, None)
+
+    def test_SendDsInfo_success_with_irt(self):
+        ''' creating a SendDsInfo object should succeed if we set the irt manually '''
+        uri = 'user:uri'
+        supplies = ['uri1','uri.2','the.third.uri']
+        seq = timeuuid.TimeUUID()
+        irt = timeuuid.TimeUUID()
+        msg=message.SendDsInfo(uri=uri, supplies=supplies, seq=seq, irt=irt)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertEqual(msg.uri, uri)
+        self.assertEqual(msg.supplies, supplies)
+        self.assertEqual(msg.seq, seq)
+        self.assertEqual(msg.irt, irt)
+
+    def test_SendDsInfo_failure_invalid_uri(self):
+        ''' creating a SendDsInfo object should fail if uri is invalid '''
+        uri = 'not a valid one'
+        supplies = ['uri1','uri.2','the.third.uri']
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo(uri=uri, supplies=supplies)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_IURI)
+
+    def test_SendDsInfo_failure_invalid_supplies_item(self):
+        ''' creating a SendDsInfo object should fail if a supplies uri is invalid '''
+        uri = 'uri'
+        supplies_uris = [
+            'invalid uri',
+            'user:uri',
+            '.uri',
+            'uri.',
+            timeuuid.TimeUUID(),
+            dict(),
+            list(),
+            set(),
+            3,
+            3.1,
+            None,
+        ]
+        for item in supplies_uris:
+            supplies = [item]
+            with self.assertRaises(exceptions.MessageValidationException) as cm:
+                msg=message.SendDsInfo(uri=uri, supplies=supplies)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ISUPPI)
+
+    def test_SendDsInfo_failure_invalid_supplies_type(self):
+        ''' creating a SendDsInfo object should fail if a supplies is not a list '''
+        uri = 'uri'
+        suppliess = [
+            'invalid uri',
+            'user:uri',
+            '.uri',
+            'uri.',
+            timeuuid.TimeUUID(),
+            dict(),
+            set(),
+            3,
+            3.1,
+            'valid.uri'
+        ]
+        for supplies in suppliess:
+            with self.assertRaises(exceptions.MessageValidationException) as cm:
+                msg=message.SendDsInfo(uri=uri, supplies=supplies)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ISUPPT)
+
+    def test_SendDsInfo_failure_invalid_seq(self):
+        ''' creating a SendDsInfo object should fail if seq is invalid '''
+        uri = 'valid.one'
+        supplies = ['uri1','uri.2','the.third.uri']
+        seq = 'something'
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo(uri=uri, supplies=supplies, seq=seq)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_ISEQ)
+
+    def test_SendDsInfo_failure_invalid_irt(self):
+        ''' creating a SendDsInfo object should fail if irt is invalid '''
+        uri = 'valid.one'
+        supplies = ['uri1','uri.2','the.third.uri']
+        seq = timeuuid.TimeUUID()
+        irt = 'this is not an irt'
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo(uri=uri, supplies=supplies, seq=seq, irt=irt)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_MVC_IIRT)
+
+    def test_SendDsInfo_success_loading_from_dict(self):
+        ''' SendDsInfo.load_from_dict() method should generate a valid SendDsInfo object '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
+            'payload':{'uri':'uri','supplies':['uri1','uri2','uri3']}
+        }
+        msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertEqual(msg.seq, timeuuid.TimeUUID(s=dict_msg['seq']))
+        self.assertEqual(msg.irt, timeuuid.TimeUUID(s=dict_msg['irt']))
+        self.assertEqual(msg.uri, dict_msg['payload']['uri'])
+        self.assertEqual(msg.supplies, dict_msg['payload']['supplies'])
+
+    def test_SendDsInfo_success_loading_from_dict_global_uri(self):
+        ''' SendDsInfo.load_from_dict() method should generate a valid SendDsInfo object '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
+            'payload':{'uri':'user:uri','supplies':['uri1','uri2','uri3']}
+        }
+        msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertEqual(msg.seq, timeuuid.TimeUUID(s=dict_msg['seq']))
+        self.assertEqual(msg.irt, timeuuid.TimeUUID(s=dict_msg['irt']))
+        self.assertEqual(msg.uri, dict_msg['payload']['uri'])
+        self.assertEqual(msg.supplies, dict_msg['payload']['supplies'])
+
+    def test_SendDsInfo_success_loading_from_dict_with_none_irt(self):
+        ''' SendDsInfo.load_from_dict() method should generate a valid SendDsInfo object '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':None,
+            'payload':{'uri':'user:uri','supplies':['uri1','uri2','uri3']}
+        }
+        msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertEqual(msg.seq, timeuuid.TimeUUID(s=dict_msg['seq']))
+        self.assertEqual(msg.irt, None)
+        self.assertEqual(msg.uri, dict_msg['payload']['uri'])
+        self.assertEqual(msg.supplies, dict_msg['payload']['supplies'])
+
+    def test_SendDsInfo_success_loading_from_dict_with_none_supplies(self):
+        ''' SendDsInfo.load_from_dict() method should generate a valid SendDsInfo object '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':None,
+            'payload':{'uri':'user:uri','supplies':None}
+        }
+        msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(msg.v, message.MessagesVersionCatalog._version_)
+        self.assertEqual(msg.action, Messages.SEND_DS_INFO)
+        self.assertEqual(msg.seq, timeuuid.TimeUUID(s=dict_msg['seq']))
+        self.assertEqual(msg.irt, None)
+        self.assertEqual(msg.uri, dict_msg['payload']['uri'])
+        self.assertEqual(msg.supplies, dict_msg['payload']['supplies'])
+
+    def test_SendDsInfo_failure_loading_from_dict_invalid_version(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':2,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':None,
+            'payload':{'uri':'user:uri','supplies':['uri1','uri2','uri3']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ELFD)
+
+    def test_SendDsInfo_failure_loading_from_dict_invalid_action(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_DATA.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':None,
+            'payload':{'uri':'user:uri','supplies':['uri1','uri2','uri3']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ELFD)
+
+    def test_SendDsInfo_failure_loading_from_dict_non_seq(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'iseq':timeuuid.TimeUUID().hex,
+            'irt':None,
+            'payload':{'uri':'user:uri','supplies':['uri1','uri2','uri3']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ELFD)
+
+    def test_SendDsInfo_failure_loading_from_dict_invalid_seq(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex[0:10],
+            'irt':None,
+            'payload':{'uri':'user:uri','supplies':['uri1','uri2','uri3']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ELFD)
+
+    def test_SendDsInfo_failure_loading_from_dict_non_irt(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'iirt':None,
+            'payload':{'uri':'user:uri','supplies':['uri1','uri2','uri3']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ELFD)
+
+    def test_SendDsInfo_failure_loading_from_dict_invalid_irt(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex[0:10],
+            'payload':{'uri':'user:uri','supplies':['uri1','uri2','uri3']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ELFD)
+
+    def test_SendDsInfo_failure_loading_from_dict_invalid_payload_type(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
+            'payload':['uri','user:uri','supplies','uri1','uri2','uri3']
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ELFD)
+
+    def test_SendDsInfo_failure_loading_from_dict_invalid_payload_uri_not_found(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
+            'payload':{'ari':'user:uri','supplies':['uri1','uri2','uri3']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ELFD)
+
+    def test_SendDsInfo_failure_loading_from_dict_invalid_payload_supplies_not_found(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
+            'payload':{'uri':'user:uri','sulies':['uri1','uri2','uri3']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ELFD)
+
+    def test_SendDsInfo_failure_loading_from_dict_invalid_payload_uri_invalid(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
+            'payload':{'uri':'user::uri','supplies':['uri1','uri2','uri3']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_IURI)
+
+    def test_SendDsInfo_failure_loading_from_dict_invalid_payload_supplies_invalid_type(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
+            'payload':{'uri':'user:uri','supplies':{'uri1','uri2','uri3'}}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ISUPPT)
+
+    def test_SendDsInfo_failure_loading_from_dict_invalid_payload_supplies_invalid_item(self):
+        ''' SendDsInfo.load_from_dict() method should fail is passed argument is invalid '''
+        dict_msg={
+            'v':message.MessagesVersionCatalog._version_,
+            'action':Messages.SEND_DS_INFO.value,
+            'seq':timeuuid.TimeUUID().hex,
+            'irt':timeuuid.TimeUUID().hex,
+            'payload':{'uri':'user:uri','supplies':['uri1','uri2','user:uri3']}
+        }
+        with self.assertRaises(exceptions.MessageValidationException) as cm:
+            msg=message.SendDsInfo.load_from_dict(dict_msg)
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MM_SDSI_ISUPPI)
+
     def test_SendDpData_success_generating_serializable_dict(self):
         ''' SendDpData.to_dict() method should generate a valid serializable dict '''
         t=timeuuid.uuid1()

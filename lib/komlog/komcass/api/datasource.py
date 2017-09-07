@@ -414,3 +414,41 @@ def delete_datasource_hook(did,sid):
     connection.session.execute(stmtdatasource.D_A_MSTDATASOURCEHOOKS_B_DID_SID,(did,sid))
     return True
 
+@exceptions.ExceptionHandler
+def get_datasource_supplies(did, fromdate, todate):
+    data = []
+    row = connection.session.execute(stmtdatasource.S_A_DATDATASOURCESUPPLIES_B_DID_INITDATE_ENDDATE,(did, fromdate, todate))
+    if row:
+        for d in row:
+            data.append(ormdatasource.DatasourceSupplies(**d))
+    return data
+
+@exceptions.ExceptionHandler
+def get_datasource_supplies_at(did, date):
+    row = connection.session.execute(stmtdatasource.S_A_DATDATASOURCESUPPLIES_B_DID_DATE,(did, date))
+    return ormdatasource.DatasourceSupplies(**row[0]) if row else None
+
+@exceptions.ExceptionHandler
+def get_last_datasource_supplies_count(did, count=1):
+    data = []
+    row = connection.session.execute(stmtdatasource.S_A_DATDATASOURCESUPPLIES_B_DID_COUNT,(did, count))
+    if row:
+        for d in row:
+            data.append(ormdatasource.DatasourceSupplies(**d))
+    return data
+
+@exceptions.ExceptionHandler
+def insert_datasource_supplies(did, date, supplies):
+    connection.session.execute(stmtdatasource.I_A_DATDATASOURCESUPPLIES,(did, date, supplies))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_datasource_supplies(did):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCESUPPLIES_B_DID,(did,))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_datasource_supplies_at(did, date):
+    connection.session.execute(stmtdatasource.D_A_DATDATASOURCESUPPLIES_B_DID_DATE,(did, date))
+    return True
+

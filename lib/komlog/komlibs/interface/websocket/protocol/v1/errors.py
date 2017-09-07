@@ -36,6 +36,10 @@ class Errors(Enum):
     E_IWSPV1PM_PSDSD_ECDS   = 201101    #: error creating datasource
     E_IWSPV1PM_PSDSD_EUGURI = 201102    #: user tried to modify a foreign global uri
 
+    E_IWSPV1PM_PSDSI_IURI   = 201150    #: uri is not a datasource
+    E_IWSPV1PM_PSDSI_UNF    = 201151    #: uri not found
+    E_IWSPV1PM_PSDSI_EUGURI = 201152    #: user tried to modify a foreign global uri
+
     E_IWSPV1PM_PSDPD_IURI   = 201200    #: uri is not a datapoint
     E_IWSPV1PM_PSDPD_ECDP   = 201201    #: error creating datapoint
     E_IWSPV1PM_PSDPD_EUGURI = 201202    #: user tried to modify a foreign global uri
@@ -79,6 +83,11 @@ class Errors(Enum):
     E_IWSPV1MM_SDPD_ITS     = 202101      #: SendDpData. invalid ts
     E_IWSPV1MM_SDPD_ICNT    = 202102      #: SendDpData. invalid content
     E_IWSPV1MM_SDPD_ELFD    = 202103      #: SendDpData. error loading from dict
+
+    E_IWSPV1MM_SDSI_IURI    = 202150      #: SendDsInfo. invalid uri
+    E_IWSPV1MM_SDSI_ISUPPI  = 202151      #: SendDsInfo. invalid supplies item
+    E_IWSPV1MM_SDSI_ISUPPT  = 202152      #: SendDsInfo. invalid supplies type
+    E_IWSPV1MM_SDSI_ELFD    = 202153      #: SendDsInfo. error loading from dict
 
     E_IWSPV1MM_SMTD_IURIS   = 202200      #: SendMultiData. invalid uris
     E_IWSPV1MM_SMTD_ITS     = 202201      #: SendMultiData. invalid ts
@@ -129,6 +138,9 @@ class Errors(Enum):
     E_IWSPV1MO_DSDSTO_IDID   = 204300      #: DatasourceDataStoredOperation. invalid did
     E_IWSPV1MO_DSDSTO_IDATE  = 204301      #: DatasourceDataStoredOperation. invalid date
     E_IWSPV1MO_DSDSTO_IUID   = 204302      #: DatasourceDataStoredOperation. invalid uid
+
+    E_IWSPV1MO_DSISTO_IDID   = 204350      #: DatasourceInfoStoredOperation. invalid did
+    E_IWSPV1MO_DSISTO_IUID   = 204351      #: DatasourceInfoStoredOperation. invalid uid
 
     E_IWSPV1MO_DPDSTO_IPID   = 204400      #: DatapointDataStoredOperation. invalid pid
     E_IWSPV1MO_DPDSTO_IDATE  = 204401      #: DatapointDataStoredOperation. invalid date

@@ -3690,3 +3690,71 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         self.assertTrue(isinstance(obj, messages.IMCMessage))
         self.assertEqual(obj.to_serialization(),msg)
 
+    def test_IdentifyNewDatapointsMessage_failure_invalid_did(self):
+        ''' IdentifyNewDatapointsMessage creation should fail if did is invalid '''
+        dids=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.IdentifyNewDatapointsMessage(did=did)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_IDNEWDPS_IDID)
+
+    def test_IdentifyNewDatapointsMessage_failure_load_from_serialization_invalid_field_number(self):
+        ''' IdentifyNewDatapointsMessage creation should fail if we pass a string without the exact number of fields '''
+        msg='|'.join((messages.IdentifyNewDatapointsMessage._type_.value,))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.IdentifyNewDatapointsMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_IDNEWDPS_ELFS)
+
+    def test_IdentifyNewDatapointsMessage_failure_load_from_serialization_invalid_message(self):
+        ''' IdentifyNewDatapointsMessage creation should fail if we pass a non string message '''
+        msg=['not a string']
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.IdentifyNewDatapointsMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_IDNEWDPS_MINS)
+
+    def test_IdentifyNewDatapointsMessage_failure_load_from_serialization_invalid_serialization_type(self):
+        ''' IdentifyNewDatapointsMessage creation should fail if we pass a string with not the expected type '''
+        msg='|'.join(('WHATEVER','1'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.IdentifyNewDatapointsMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_IDNEWDPS_IST)
+
+    def test_IdentifyNewDatapointsMessage_failure_load_from_serialization_invalid_hex_did(self):
+        ''' IdentifyNewDatapointsMessage creation should fail if we pass a string with invalid did '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.IdentifyNewDatapointsMessage._type_.value,'did.hex'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.IdentifyNewDatapointsMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_IDNEWDPS_IHDID)
+
+    def test_IdentifyNewDatapointsMessage_success_load_from_serialization(self):
+        ''' IdentifyNewDatapointsMessage creation should succeed calling the classmethod load_from_serialization '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.IdentifyNewDatapointsMessage._type_.value,did.hex))
+        obj=messages.IdentifyNewDatapointsMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj._type_, messages.Messages.IDENTIFY_NEW_DATAPOINTS_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.IdentifyNewDatapointsMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_IdentifyNewDatapointsMessage_success_load_from_serialization_base_class(self):
+        '''  IdentifyNewDatapointsMessage creation should succeed calling the classmethod load_from_serialization from the base class '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.IdentifyNewDatapointsMessage._type_.value,did.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj._type_, messages.Messages.IDENTIFY_NEW_DATAPOINTS_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.IdentifyNewDatapointsMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_IdentifyNewDatapointsMessage_to_serialization_success(self):
+        ''' IdentifyNewDatapointsMessage.to_serialization should succeed '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.IdentifyNewDatapointsMessage._type_.value, did.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj._type_, messages.Messages.IDENTIFY_NEW_DATAPOINTS_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.IdentifyNewDatapointsMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+        self.assertEqual(obj.to_serialization(),msg)
+

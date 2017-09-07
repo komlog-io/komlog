@@ -51,6 +51,9 @@ STATEMENTS={
     20702:'select did,date,size from dat_datasource_metadata where did=? and date>=? and date<=?',
     20703:'select did,date,size from dat_datasource_metadata where did=? and date>=? and date<=? limit ?',
     20800:'select sid from mst_datasource_hooks where did=?',
+    20900:'select did,date,supplies from dat_datasource_supplies where did=? and date=?',
+    20901:'select did,date,supplies from dat_datasource_supplies where did=? and date>=? and date<=?',
+    20902:'select did,date,supplies from dat_datasource_supplies where did=? limit ?',
     25000:'insert into mst_datasource (did,aid,uid,datasourcename,creation_date) values (?,?,?,?,?)',
     25001:'insert into mst_datasource (did,aid,uid,datasourcename,creation_date) values (?,?,?,?,?) if not exists',
     25100:'insert into mst_datasource_stats (did,last_received) values (?,?)',
@@ -62,6 +65,7 @@ STATEMENTS={
     25600:'insert into dat_datasource_hash (did,date,content) values (?,?,?)',
     25700:'insert into dat_datasource_metadata (did,date,size) values (?,?,?)',
     25800:'insert into mst_datasource_hooks (did,sid) values (?,?)',
+    25900:'insert into dat_datasource_supplies (did,date,supplies) values (?,?,?)',
     27000:'delete from mst_datasource where did=?',
     27100:'delete from mst_datasource_stats where did=?',
     27200:'delete from dat_datasource where did=?',
@@ -80,6 +84,8 @@ STATEMENTS={
     27701:'delete from dat_datasource_metadata where did=? and date=?',
     27800:'delete from mst_datasource_hooks where did=?',
     27801:'delete from mst_datasource_hooks where did=? and sid=?',
+    27900:'delete from dat_datasource_supplies where did=?',
+    27901:'delete from dat_datasource_supplies where did=? and date=?',
     29300:'update dat_datasource_map set variables[?]=? where did=? and date=?',
     29301:'update dat_datasource_map set datapoints[?]=? where did=? and date=?'
 }
@@ -133,7 +139,6 @@ S_A_DATDATASOURCETEXTSUMMARY_B_DID_INITDATE_ENDDATE=20401
 
 # dat_datasource_novelty_detector_datapoint
 
-
 S_LAST_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID=20500
 S_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID=20501
 
@@ -153,6 +158,12 @@ S_A_DATDATASOURCEMETADATA_B_DID_INITDATE_ENDDATE_COUNT=20703
 # mst_datasource_hooks
 
 S_SID_MSTDATASOURCEHOOKS_B_DID  =   20800
+
+# dat_datasource_supplies
+
+S_A_DATDATASOURCESUPPLIES_B_DID_DATE                =   20900
+S_A_DATDATASOURCESUPPLIES_B_DID_INITDATE_ENDDATE    =   20901
+S_A_DATDATASOURCESUPPLIES_B_DID_COUNT               =   20902
 
 # Inserts (25000 - 26999)
 
@@ -193,6 +204,10 @@ I_A_DATDATASOURCEMETADATA=25700
 # mst_datasource_hooks
 
 I_A_MSTDATASOURCEHOOKS  =   25800
+
+# dat_datasource_supplies
+
+I_A_DATDATASOURCESUPPLIES   =   25900
 
 # Deletes (27000 - 28999)
 
@@ -241,6 +256,11 @@ D_A_DATDATASOURCEMETADATA_B_DID_DATE=27701
 D_A_MSTDATASOURCEHOOKS_B_DID        =   27800
 D_A_MSTDATASOURCEHOOKS_B_DID_SID    =   27801
 
+# dat_datasource_supplies
+
+D_A_DATDATASOURCESUPPLIES_B_DID     =   27900
+D_A_DATDATASOURCESUPPLIES_B_DID_DATE=   27901
+
 # Updates (29000 - 29999)
 
 # mst_datasource
@@ -263,4 +283,6 @@ U_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE=29301
 # dat_datasource_metadata
 
 # mst_datasource_hooks
+
+# dat_datasource_supplies
 

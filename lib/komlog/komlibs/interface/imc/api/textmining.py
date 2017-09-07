@@ -110,3 +110,8 @@ def process_message_ADTREE(message):
     response.status=status.IMC_STATUS_OK
     return response
 
+@exceptions.ExceptionHandler
+def process_message_IDNEWDPS(message):
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_OK, message_type=message._type_, message_params=message.to_serialization())
+    return response
+

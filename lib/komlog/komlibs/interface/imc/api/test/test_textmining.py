@@ -159,3 +159,13 @@ class InterfaceImcApiTextminingTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['unrouted'],[])
         self.assertEqual(response.imc_messages['routed'],{})
 
+    def test_process_message_IDNEWDPS_success_dummy_example(self):
+        ''' process_message_IDNEWDPS dummy test. '''
+        did=uuid.uuid4()
+        message=messages.IdentifyNewDatapointsMessage(did=did)
+        response=textmining.process_message_IDNEWDPS(message=message)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.imc_messages['unrouted'],[])
+        self.assertEqual(response.imc_messages['routed'],{})
+

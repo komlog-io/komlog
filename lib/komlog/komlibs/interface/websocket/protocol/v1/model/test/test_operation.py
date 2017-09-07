@@ -209,6 +209,49 @@ class InterfaceWebSocketProtocolV1ModelOperationTest(unittest.TestCase):
         self.assertEqual(op.date, date)
         self.assertEqual(op.params, {'uid':uid, 'did':did, 'date':date})
 
+    def test_new_DatasourceInfoStoredOperation_failure_invalid_uid(self):
+        ''' the creation of a DatasourceInfoStoredOperation object should fail if uid is not a UUID4 '''
+        uids=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid1()]
+        did=uuid.uuid4()
+        for uid in uids:
+            with self.assertRaises(exceptions.OperationValidationException) as cm:
+                operation.DatasourceInfoStoredOperation(uid=uid, did=did)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_DSISTO_IUID)
+
+    def test_new_DatasourceInfoStoredOperation_failure_invalid_did(self):
+        ''' the creation of a DatasourceInfoStoredOperation object should fail if uid is not a UUID4 '''
+        dids=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid1()]
+        uid=uuid.uuid4()
+        for did in dids:
+            with self.assertRaises(exceptions.OperationValidationException) as cm:
+                operation.DatasourceInfoStoredOperation(uid=uid, did=did)
+            self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_DSISTO_IDID)
+
+    def test_new_DatasourceInfoStoredOperation_success_cannot_modify_params_property(self):
+        ''' the creation of a DatasourceInfoStoredOperation object should succeed and params property cannot be modified directly'''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        op=operation.DatasourceInfoStoredOperation(uid=uid, did=did)
+        self.assertTrue(isinstance(op, operation.DatasourceInfoStoredOperation))
+        self.assertEqual(op.oid, Operations.DATASOURCE_INFO_STORED)
+        self.assertEqual(op.did, did)
+        self.assertEqual(op.params, {'uid':uid, 'did':did})
+        with self.assertRaises(exceptions.OperationValidationException) as cm:
+            op.params={'uid':uuid.uuid4(), 'did':uuid.uuid4(),'what':'yes','number':3}
+        self.assertEqual(cm.exception.error, Errors.E_IWSPV1MO_WSIO_PMNA)
+
+    def test_new_DatasourceInfoStoredOperation_success(self):
+        ''' the creation of a DatasourceInfoStoredOperation object should succeed '''
+        uid=uuid.uuid4()
+        did=uuid.uuid4()
+        date=uuid.uuid1()
+        op=operation.DatasourceInfoStoredOperation(uid=uid, did=did)
+        self.assertTrue(isinstance(op, operation.DatasourceInfoStoredOperation))
+        self.assertEqual(op.oid, Operations.DATASOURCE_INFO_STORED)
+        self.assertEqual(op.uid, uid)
+        self.assertEqual(op.did, did)
+        self.assertEqual(op.params, {'uid':uid, 'did':did})
+
     def test_new_DatapointDataStoredOperation_failure_invalid_uid(self):
         ''' the creation of a DatapointDataStoredOperation object should fail if uid is not a UUID4 '''
         uids=['adas',None,-2,1.1,{'set','a'},('a','tuple'),['array',0,1],uuid.uuid1()]

@@ -39,7 +39,9 @@ class MessagesVersionCatalog(message.MessagesCatalog):
 
     @irt.setter
     def irt(self, value):
-        if value is None or args.is_valid_message_sequence(value):
+        if hasattr(self, '_irt'):
+            raise TypeError('irt cannot be modified')
+        elif value is None or args.is_valid_message_sequence(value):
             self._irt = value
         else:
             raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_MVC_IIRT)
@@ -141,6 +143,63 @@ class SendDsData(MessagesVersionCatalog):
                 'content':self.content
             }
         }
+
+class SendDsInfo(MessagesVersionCatalog):
+    _action_ = Messages.SEND_DS_INFO
+
+    def __init__(self, uri, supplies=None, seq=None, irt=None):
+        super().__init__(seq=seq, irt=irt)
+        self.uri = uri
+        self.supplies = supplies
+
+    @property
+    def uri(self):
+        return self._uri
+
+    @uri.setter
+    def uri(self, uri):
+        if (args.is_valid_uri(uri) or args.is_valid_global_uri(uri)):
+            self._uri=uri
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSI_IURI)
+
+    @property
+    def supplies(self):
+        return self._supplies
+
+    @supplies.setter
+    def supplies(self, uris):
+        if uris is None:
+            self._supplies = None
+        elif isinstance(uris, list):
+            for uri in uris:
+                if not args.is_valid_uri(uri):
+                    raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSI_ISUPPI)
+            self._supplies = uris
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSI_ISUPPT)
+
+    @classmethod
+    def load_from_dict(cls, msg):
+        ''' create instance from JSON loaded dict '''
+        if (isinstance(msg,dict)
+            and 'v' in msg
+            and 'action' in msg
+            and 'seq' in msg and args.is_valid_message_sequence_string(msg['seq'])
+            and 'irt' in msg and (msg['irt'] == None or args.is_valid_message_sequence_string(msg['irt']))
+            and 'payload' in msg
+            and args.is_valid_int(msg['v']) and msg['v']==cls._version_
+            and args.is_valid_string(msg['action']) and msg['action']==cls._action_.value
+            and args.is_valid_dict(msg['payload'])
+            and 'uri' in msg['payload']
+            and 'supplies' in msg['payload']):
+            uri = msg['payload']['uri']
+            supplies = msg['payload']['supplies']
+            seq = TimeUUID(s=msg['seq'])
+            irt = TimeUUID(s=msg['irt']) if msg['irt'] != None else None
+            return cls(uri=uri, supplies=supplies, seq=seq, irt=irt)
+        else:
+            raise exceptions.MessageValidationException(error=Errors.E_IWSPV1MM_SDSI_ELFD)
 
 class SendDpData(MessagesVersionCatalog):
     _action_ = Messages.SEND_DP_DATA

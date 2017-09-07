@@ -17,14 +17,15 @@ class AutoEnum(Enum):
 
 @unique
 class Messages(Enum):
+    GENERIC_RESPONSE        = 'generic_response'
     HOOK_TO_URI             = 'hook_to_uri'
-    SEND_MULTI_DATA         = 'send_multi_data'
-    SEND_DP_DATA            = 'send_dp_data'
-    SEND_DS_DATA            = 'send_ds_data'
-    UNHOOK_FROM_URI         = 'unhook_from_uri'
     REQUEST_DATA            = 'request_data'
     SEND_DATA_INTERVAL      = 'send_data_interval'
-    GENERIC_RESPONSE        = 'generic_response'
+    SEND_DP_DATA            = 'send_dp_data'
+    SEND_DS_DATA            = 'send_ds_data'
+    SEND_DS_INFO            = 'send_ds_info'
+    SEND_MULTI_DATA         = 'send_multi_data'
+    UNHOOK_FROM_URI         = 'unhook_from_uri'
 
 # OPERATION TYPES
 
@@ -33,6 +34,7 @@ class Operations(AutoEnum):
     NEW_DATASOURCE          = ()
     NEW_USER_DATAPOINT      = ()
     DATASOURCE_DATA_STORED  = ()
+    DATASOURCE_INFO_STORED  = ()
     DATAPOINT_DATA_STORED   = ()
 
 

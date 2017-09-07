@@ -16,6 +16,7 @@ OBJECTS=[
     'DAT_DATASOURCE_NOVELTY_DETECTOR_DATAPOINT',
     'DAT_DATASOURCE_METADATA',
     'MST_DATASOURCE_HOOKS',
+    'DAT_DATASOURCE_SUPPLIES',
 ]
 
 MST_DATASOURCE='''
@@ -112,5 +113,14 @@ MST_DATASOURCE_HOOKS='''
         sid uuid,
         PRIMARY KEY (did,sid)
     );
+'''
+
+DAT_DATASOURCE_SUPPLIES='''
+    CREATE TABLE dat_datasource_supplies (
+        did uuid,
+        date timeuuid,
+        supplies set<text>,
+        PRIMARY KEY (did,date)
+    ) WITH CLUSTERING ORDER BY (date desc);
 '''
 

@@ -400,3 +400,205 @@ class GestaccountDatasourceApiTest(unittest.TestCase):
         did_hooks=api.get_datasource_hooks(did=did)
         self.assertEqual(did_hooks,[])
 
+    def test_update_datasource_supplies_failure_invalid_did(self):
+        ''' update_datasource_supplies should fail if did is invalid '''
+        dids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        supplies = []
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_datasource_supplies(did=did, supplies=supplies)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_UDSSUP_IDID)
+
+    def test_update_datasource_supplies_failure_invalid_supplies_type(self):
+        ''' update_datasource_supplies should fail if supplies is not a list '''
+        did = uuid.uuid4()
+        supplies_s=['asdfasd',234234,234234.234,{'a':'dict'},None,{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for supplies in supplies_s:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_datasource_supplies(did=did, supplies=supplies)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_UDSSUP_ISUPT)
+
+    def test_update_datasource_supplies_failure_invalid_supplies_item(self):
+        ''' update_datasource_supplies should fail if any supplies item is not a valid local uri '''
+        did = uuid.uuid4()
+        items = [
+            'invalid uri'
+            'global:uri',
+            234234,
+            234234.234,
+            {'a':'dict'},
+            None,
+            {'set'},
+            ('tupl','e'),
+            timeuuid.uuid1(),
+            uuid.uuid4()
+        ]
+        for item in items:
+            supplies = [item]
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.update_datasource_supplies(did=did, supplies=supplies)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_UDSSUP_ISUPI)
+
+    def test_update_datasource_supplies_failure_datasource_not_found(self):
+        ''' update_datasource_supplies should fail if datasource does not exist '''
+        did = uuid.uuid4()
+        supplies = ['uri','other_uri']
+        with self.assertRaises(exceptions.DatasourceNotFoundException) as cm:
+            api.update_datasource_supplies(did=did, supplies=supplies)
+        self.assertEqual(cm.exception.error, Errors.E_GDA_UDSSUP_DSNF)
+
+    def test_update_datasource_supplies_success_previous_supplies_did_not_exist(self):
+        ''' update_datasource_supplies should succeed and insert the new info '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_update_datasource_supplies_success_previous_supplies_did_not_exist'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        supplies = ['uri1','uri2']
+        self.assertTrue(api.update_datasource_supplies(did, supplies))
+        current_sups = cassapidatasource.get_last_datasource_supplies_count(did, count=1)
+        self.assertEqual(current_sups[0].supplies, supplies)
+
+    def test_update_datasource_supplies_success_previous_supplies_was_different_now_other_items(self):
+        ''' update_datasource_supplies should succeed and insert the new info '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_update_datasource_supplies_success_previous_supplies_was_different_now_other_items'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        supplies = ['uri1','uri2']
+        self.assertTrue(api.update_datasource_supplies(did, supplies))
+        current_sups = cassapidatasource.get_last_datasource_supplies_count(did, count=1)
+        self.assertEqual(current_sups[0].supplies, supplies)
+        new_supplies = ['uri1','uri3','uri4']
+        self.assertTrue(api.update_datasource_supplies(did, new_supplies))
+        current_sups = cassapidatasource.get_last_datasource_supplies_count(did, count=1)
+        self.assertEqual(current_sups[0].supplies, new_supplies)
+
+    def test_update_datasource_supplies_success_previous_supplies_was_different_now_none(self):
+        ''' update_datasource_supplies should succeed and insert the new info '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_update_datasource_supplies_success_previous_supplies_was_different_now_none'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        supplies = ['uri1','uri2']
+        self.assertTrue(api.update_datasource_supplies(did, supplies))
+        current_sups = cassapidatasource.get_last_datasource_supplies_count(did, count=1)
+        self.assertEqual(current_sups[0].supplies, supplies)
+        new_supplies = []
+        self.assertTrue(api.update_datasource_supplies(did, new_supplies))
+        current_sups = cassapidatasource.get_last_datasource_supplies_count(did, count=1)
+        self.assertEqual(current_sups[0].supplies, new_supplies)
+
+    def test_update_datasource_supplies_failure_previous_supplies_equal(self):
+        ''' update_datasource_supplies should return False if previous supplies are equal '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_update_datasource_supplies_failure_previous_supplies_equal'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        supplies = ['uri1','uri2']
+        self.assertTrue(api.update_datasource_supplies(did, supplies))
+        current_sups = cassapidatasource.get_last_datasource_supplies_count(did, count=1)
+        self.assertEqual(current_sups[0].supplies, supplies)
+        new_supplies = ['uri2','uri1']
+        self.assertFalse(api.update_datasource_supplies(did, new_supplies))
+        current_sups = cassapidatasource.get_last_datasource_supplies_count(did, count=1)
+        self.assertEqual(current_sups[0].supplies, sorted(new_supplies))
+
+    def test_get_datasource_supplies_failure_invalid_did(self):
+        ''' get_datasource_supplies should fail if did is invalid '''
+        dids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datasource_supplies(did=did)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GDSSUP_IDID)
+
+    def test_get_datasource_supplies_failure_invalid_count(self):
+        ''' get_datasource_supplies should fail if count is not an integer or is less than 1'''
+        did = uuid.uuid4()
+        counts=['asdfasd',-234234,234234.234,{'a':'dict'},None,{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]
+        for count in counts:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                api.get_datasource_supplies(did=did, count=count)
+            self.assertEqual(cm.exception.error, Errors.E_GDA_GDSSUP_ICNT)
+
+    def test_get_datasource_supplies_success_none_found(self):
+        ''' get_datasource_supplies should succeed and return the supplies list '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_get_datasource_supplies_success_none_found'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        count = 1
+        supplies = api.get_datasource_supplies(did, count)
+        self.assertEqual(supplies, [])
+
+    def test_get_datasource_supplies_success_some_found_no_dups(self):
+        ''' get_datasource_supplies should succeed and return the supplies list '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_get_datasource_supplies_success_some_found_no_dups'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        count = 1
+        supplies = ['uri1','uri2']
+        self.assertTrue(api.update_datasource_supplies(did, supplies))
+        supplies = api.get_datasource_supplies(did, count)
+        self.assertEqual(supplies, supplies)
+
+    def test_get_datasource_supplies_success_some_found_not_previous(self):
+        ''' get_datasource_supplies should succeed and return the supplies list '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_get_datasource_supplies_success_some_found_not_previous'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        count = 1
+        supplies1 = ['uri1','uri2']
+        self.assertTrue(api.update_datasource_supplies(did, supplies1))
+        supplies2 = ['uri3','uri4']
+        self.assertTrue(api.update_datasource_supplies(did, supplies2))
+        supplies = api.get_datasource_supplies(did, count)
+        self.assertEqual(supplies, supplies2)
+
+    def test_get_datasource_supplies_success_some_found_merge_and_delete_dups(self):
+        ''' get_datasource_supplies should succeed and return the supplies list '''
+        uid=self.user['uid']
+        aid=self.agent['aid']
+        datasourcename='test_get_datasource_supplies_success_some_found_merge_and_delete_dups'
+        datasource=api.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename)
+        self.assertEqual(datasource['uid'],uid)
+        self.assertEqual(datasource['datasourcename'],datasourcename)
+        self.assertTrue('did' in datasource)
+        did=datasource['did']
+        count = 10
+        supplies1 = ['uri1','uri2','uri3']
+        self.assertTrue(api.update_datasource_supplies(did, supplies1))
+        supplies2 = ['uri2','uri3','uri4']
+        self.assertTrue(api.update_datasource_supplies(did, supplies2))
+        supplies = api.get_datasource_supplies(did, count)
+        self.assertEqual(supplies, sorted(set(supplies1+supplies2)))
+

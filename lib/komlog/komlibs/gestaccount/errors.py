@@ -256,9 +256,17 @@ class Errors(Enum):
 
     E_GDA_UHFDS_IDID    =   4550    #: unhook_from_datasource. invalid did
     E_GDA_UHFDS_ISID    =   4551    #: unhook_from_datasource. invalid sid
-    
+
     E_GDA_GDSH_IDID     =   4600    #: get_datasource_hooks. invalid sid
     E_GDA_GDSH_DSNF     =   4601    #: get_datasource_hooks. datasource not found
+
+    E_GDA_UDSSUP_IDID   =   4650    #: update_datasource_supplies. invalid did
+    E_GDA_UDSSUP_ISUPT  =   4651    #: update_datasource_supplies. invalid supplies type
+    E_GDA_UDSSUP_ISUPI  =   4652    #: update_datasource_supplies. invalid supplies item
+    E_GDA_UDSSUP_DSNF   =   4653    #: update_datasource_supplies. datasource not found
+
+    E_GDA_GDSSUP_IDID   =   4700    #: get_datasource_supplies. invalid did
+    E_GDA_GDSSUP_ICNT   =   4701    #: get_datasource_supplies. invalid count
 
 # gestaccount datapoint api
 

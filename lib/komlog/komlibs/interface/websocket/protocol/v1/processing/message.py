@@ -99,6 +99,47 @@ def _process_send_ds_data(passport, message):
     return result
 
 @exceptions.ExceptionHandler
+def _process_send_ds_info(passport, message):
+    message = modmsg.SendDsInfo.load_from_dict(message)
+    did = None
+    if args.is_valid_global_uri(message.uri):
+        username,local_uri=message.uri.split(':')
+        try:
+            user_uid = userapi.get_uid(username.lower())
+        except gestexcept.UserNotFoundException:
+            user_uid = None
+        if user_uid != passport.uid:
+            result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PSDSI_EUGURI)
+            ws_res = modmsg.GenericResponse(status=status.MESSAGE_EXECUTION_DENIED, reason="Access denied to other user's uris", error=Errors.E_IWSPV1PM_PSDSI_EUGURI, irt=message.seq)
+            result.add_ws_message(ws_res)
+            return result
+        else:
+            message.uri = local_uri
+    uri_info = graphuri.get_id(ido=passport.uid, uri=message.uri)
+    if uri_info is None:
+        result = WSocketIfaceResponse(status=status.RESOURCE_NOT_FOUND, error=Errors.E_IWSPV1PM_PSDSI_UNF)
+        ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='resource not found', irt=message.seq)
+        result.add_ws_message(ws_res)
+        return result
+    elif uri_info['type'] != vertex.DATASOURCE:
+        result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_DENIED, error=Errors.E_IWSPV1PM_PSDSI_IURI)
+        ws_res = modmsg.GenericResponse(status=result.status, error=result.error, reason='URI is not a datasource', irt=message.seq)
+        result.add_ws_message(ws_res)
+        return result
+    else:
+        did = uri_info['id']
+        authorization.authorize_request(request=Requests.POST_DATASOURCE_DATA,passport=passport,did=did)
+    result = WSocketIfaceResponse(status=status.MESSAGE_EXECUTION_OK, error=Errors.OK)
+    if message.supplies != None and datasourceapi.update_datasource_supplies(did=did, supplies=message.supplies):
+        op=modop.DatasourceInfoStoredOperation(uid=passport.uid, did=did)
+        op_msgs=operation.process_operation(op)
+        for msg in op_msgs:
+            result.add_imc_message(msg)
+    ws_res = modmsg.GenericResponse(status=result.status, irt=message.seq)
+    result.add_ws_message(ws_res)
+    return result
+
+@exceptions.ExceptionHandler
 def _process_send_dp_data(passport, message):
     message = modmsg.SendDpData.load_from_dict(message)
     new_datapoint=False
