@@ -71,3 +71,42 @@ class DatasourceSupplies:
         self.date = date
         self.supplies = list(supplies) if supplies != None else []
 
+class DatasourceDataFeatures:
+
+    def __init__(self, did, date, features):
+        self.did = did
+        self.date = date
+        self.features = list(features) if features != None else []
+
+class DatasourceFeatures:
+
+    def __init__(self, did, features):
+        self.did = did
+        self.features = list(features) if features != None else []
+
+class DatasourceSupplyFeatures:
+
+    def __init__(self, did, supply, features):
+        self.did = did
+        self.supply = supply
+        self.features = list(features) if features != None else []
+
+class DatasourceSuppliesGuessed:
+
+    def __init__(self, did, supplies):
+        self.did = did
+        self.supplies = list(supplies) if supplies != None else []
+
+class DatasourceByFeature:
+
+    def __init__(self, feature, did):
+        self.feature = feature
+        self.did = did
+
+class DatasourceBySupplyFeature:
+
+    def __init__(self, feature, supply, did):
+        self.feature = feature
+        self.supply = supply
+        self.did = did
+

@@ -4,6 +4,8 @@ Created on 01/10/2014
 @author: komlog crew
 '''
 
+import asyncio
+from functools import partial
 from cassandra.cluster import Cluster
 from cassandra.policies import RetryPolicy
 from cassandra.query import dict_factory
@@ -14,14 +16,27 @@ session = None
 
 class Session:
     def __init__(self, cluster, keyspace=None):
+        self._loop = asyncio.get_event_loop()
         self.cluster = Cluster(cluster, default_retry_policy=RetryPolicy())
         self.session = self.cluster.connect(keyspace)
         self.session.row_factory = dict_factory
         self.stmts={}
 
+    def _asyncio_result(self, fut, result):
+        self._loop.call_soon_threadsafe(fut.set_result, result)
+
+    def _asyncio_exception(self, fut, exc):
+        self._loop.call_soon_threadsafe(fut.set_exception, exc)
+
     def execute(self,stmt,parameters):
         try:
-            return self.session.execute(self.stmts[stmt],parameters)
+            c_fut = self.session.execute_async(self.stmts[stmt], parameters)
+            a_fut = self._loop.create_future()
+            c_fut.add_callbacks(
+                partial(self._asyncio_result, a_fut),
+                partial(self._asyncio_exception, a_fut)
+            )
+            return self._loop.run_until_complete(a_fut)
         except KeyError:
             self.stmts[stmt]=self.session.prepare(statement.get_statement(stmt))
             return self.execute(stmt,parameters)
@@ -43,3 +58,4 @@ def terminate_session():
     global session
     if session:
         session.cluster.shutdown()
+

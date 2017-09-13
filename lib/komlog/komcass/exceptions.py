@@ -1,3 +1,4 @@
+import traceback
 from cassandra import (DriverException, RequestExecutionException, Unavailable, Timeout,
     ReadTimeout, WriteTimeout, CoordinationFailure, ReadFailure, WriteFailure, FunctionFailure,
     RequestValidationException, ConfigurationException, AlreadyExists, InvalidRequest,
@@ -87,4 +88,9 @@ class ExceptionHandler(object):
         except DriverException:
             error=Errors.E_KCE_EH_DRE
             raise CassandraException(error=error)
+        except:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
+            raise
 

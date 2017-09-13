@@ -115,3 +115,43 @@ def process_message_IDNEWDPS(message):
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_OK, message_type=message._type_, message_params=message.to_serialization())
     return response
 
+@exceptions.ExceptionHandler
+def process_message_FEATDPUPD(message):
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_OK, message_type=message._type_, message_params=message.to_serialization())
+    result = datasourceapi.update_datapoint_features(message.pid)
+    ressponse.status = status.IMC_STATUS_OK
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_FEATDSUPD(message):
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_OK, message_type=message._type_, message_params=message.to_serialization())
+    result = datasourceapi.update_datasource_features(message.did)
+    if result['supplies_not_found'] == True:
+        msg = messages.IdentifySuppliesMessage(message.did)
+        response.add_imc_message(msg)
+    elif result['pending_supplies_found'] == True:
+        msg = messages.IdentifyNewDatapointsMessage(message.did)
+        response.add_imc_message(msg)
+    response.status = status.IMC_STATUS_OK
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_IDSUPP(message):
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_OK, message_type=message._type_, message_params=message.to_serialization())
+    result = datasourceapi.identify_supplies(message.did)
+    if result['supplies_found'] == True:
+        msg = messages.IdentifyNewDatapointsMessage(message.did)
+        response.add_imc_message(msg)
+    response.status = status.IMC_STATUS_OK
+    return response
+
+@exceptions.ExceptionHandler
+def process_message_SMPCLASS(message):
+    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
+    result = datasourceapi.classify_sample(message.did, message.date)
+    if result['new_ds_features'] == True:
+        msg = messages.UpdateDatasourceFeaturesMessage(message.did)
+        response.add_imc_message(msg)
+    response.status = status.IMC_STATUS_OK
+    return response
+

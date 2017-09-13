@@ -349,3 +349,29 @@ class Errors(Enum):
     E_IIMM_IDNEWDPS_IST     = 262953    #: IdentifyNewDatapoints. invalid serialization type
     E_IIMM_IDNEWDPS_IHDID   = 262954    #: IdentifyNewDatapoints. invalid hex did
 
+    E_IIMM_FEATDPUPD_IPID   = 263000    #: UpdateDatapointFeaturesMessage. invalid pid
+    E_IIMM_FEATDPUPD_ELFS   = 263001    #: UpdateDatapointFeaturesMessage. error loading from string
+    E_IIMM_FEATDPUPD_MINS   = 263002    #: UpdateDatapointFeaturesMessage. msg is not string
+    E_IIMM_FEATDPUPD_IST    = 263003    #: UpdateDatapointFeaturesMessage. invalid serialization type
+    E_IIMM_FEATDPUPD_IHPID  = 263004    #: UpdateDatapointFeaturesMessage. invalid hex pid
+
+    E_IIMM_FEATDSUPD_IDID   = 263050    #: UpdateDatasourceFeaturesMessage. invalid did
+    E_IIMM_FEATDSUPD_ELFS   = 263051    #: UpdateDatasourceFeaturesMessage. error loading from string
+    E_IIMM_FEATDSUPD_MINS   = 263052    #: UpdateDatasourceFeaturesMessage. msg is not string
+    E_IIMM_FEATDSUPD_IST    = 263053    #: UpdateDatasourceFeaturesMessage. invalid serialization type
+    E_IIMM_FEATDSUPD_IHDID  = 263054    #: UpdateDatasourceFeaturesMessage. invalid hex did
+
+    E_IIMM_IDSUPP_IDID      = 263100    #: IdentifySuppliesMessage. invalid did
+    E_IIMM_IDSUPP_ELFS      = 263101    #: IdentifySuppliesMessage. error loading from string
+    E_IIMM_IDSUPP_MINS      = 263102    #: IdentifySuppliesMessage. msg is not string
+    E_IIMM_IDSUPP_IST       = 263103    #: IdentifySuppliesMessage. invalid serialization type
+    E_IIMM_IDSUPP_IHDID     = 263104    #: IdentifySuppliesMessage. invalid hex did
+
+    E_IIMM_SMPCLASS_IDID    = 263150    #: ClassifySampleMessage. invalid did
+    E_IIMM_SMPCLASS_IDT     = 263151    #: ClassifySampleMessage. invalid date
+    E_IIMM_SMPCLASS_ELFS    = 263152    #: ClassifySampleMessage. error loading from string
+    E_IIMM_SMPCLASS_MINS    = 263153    #: ClassifySampleMessage. msg is not string
+    E_IIMM_SMPCLASS_IST     = 263154    #: ClassifySampleMessage. invalid serialization type
+    E_IIMM_SMPCLASS_IHDID   = 263155    #: ClassifySampleMessage. invalid hex did
+    E_IIMM_SMPCLASS_IHDATE  = 263156    #: ClassifySampleMessage. invalid hex date
+

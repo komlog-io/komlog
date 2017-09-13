@@ -54,6 +54,13 @@ STATEMENTS={
     20900:'select did,date,supplies from dat_datasource_supplies where did=? and date=?',
     20901:'select did,date,supplies from dat_datasource_supplies where did=? and date>=? and date<=?',
     20902:'select did,date,supplies from dat_datasource_supplies where did=? limit ?',
+    21000:'select did,date,features from dat_datasource_features where did=? and date=?',
+    21001:'select date,features from dat_datasource_features where did=? limit ?',
+    21100:'select features from mst_datasource_features where did=?',
+    21150:'select features from mst_datasource_supply_features where did=? and supply=?',
+    21200:'select supplies from mst_datasource_supplies_guessed where did=?',
+    21300:'select did from mst_datasource_by_feature where feature=? limit ?',
+    21400:'select did from mst_datasource_by_supply_feature where feature=? and supply=? limit ?',
     25000:'insert into mst_datasource (did,aid,uid,datasourcename,creation_date) values (?,?,?,?,?)',
     25001:'insert into mst_datasource (did,aid,uid,datasourcename,creation_date) values (?,?,?,?,?) if not exists',
     25100:'insert into mst_datasource_stats (did,last_received) values (?,?)',
@@ -66,6 +73,12 @@ STATEMENTS={
     25700:'insert into dat_datasource_metadata (did,date,size) values (?,?,?)',
     25800:'insert into mst_datasource_hooks (did,sid) values (?,?)',
     25900:'insert into dat_datasource_supplies (did,date,supplies) values (?,?,?)',
+    26000:'insert into dat_datasource_features (did,date,features) values (?,?,?)',
+    26100:'insert into mst_datasource_features (did,features) values (?,?)',
+    26150:'insert into mst_datasource_supply_features (did,supply,features) values (?,?,?)',
+    26200:'insert into mst_datasource_supplies_guessed (did,supplies) values (?,?)',
+    26300:'insert into mst_datasource_by_feature (feature, did) values (?,?)',
+    26400:'insert into mst_datasource_by_supply_feature (feature, supply, did) values (?,?,?)',
     27000:'delete from mst_datasource where did=?',
     27100:'delete from mst_datasource_stats where did=?',
     27200:'delete from dat_datasource where did=?',
@@ -86,6 +99,14 @@ STATEMENTS={
     27801:'delete from mst_datasource_hooks where did=? and sid=?',
     27900:'delete from dat_datasource_supplies where did=?',
     27901:'delete from dat_datasource_supplies where did=? and date=?',
+    28000:'delete from dat_datasource_features where did=?',
+    28001:'delete from dat_datasource_features where did=? and date=?',
+    28100:'delete from mst_datasource_features where did=?',
+    28150:'delete from mst_datasource_supply_features where did=?',
+    28151:'delete from mst_datasource_supply_features where did=? and supply=?',
+    28200:'delete from mst_datasource_supplies_guessed where did=?',
+    28300:'delete from mst_datasource_by_feature where feature=? and did=?',
+    28400:'delete from mst_datasource_by_supply_feature where feature=? and supply=? and did=?',
     29300:'update dat_datasource_map set variables[?]=? where did=? and date=?',
     29301:'update dat_datasource_map set datapoints[?]=? where did=? and date=?'
 }
@@ -165,6 +186,30 @@ S_A_DATDATASOURCESUPPLIES_B_DID_DATE                =   20900
 S_A_DATDATASOURCESUPPLIES_B_DID_INITDATE_ENDDATE    =   20901
 S_A_DATDATASOURCESUPPLIES_B_DID_COUNT               =   20902
 
+# dat_datasource_features
+
+S_A_DATDATASOURCEFEATURES_B_DID_DATE                =   21000
+S_DATEFEATURES_DATDATASOURCEFEATURES_B_DID_COUNT    =   21001
+
+# mst_datasource_features
+
+S_FEATURES_MSTDATASOURCEFEATURES_B_DID              =   21100
+
+# mst_datasource_supply_features
+
+S_FEATURES_MSTDATASOURCESUPPLYFEATURES_B_DID_SUPPLY =   21150
+# mst_datasource_supplies_guessed
+
+S_SUPPLIES_MSTDATASOURCESUPPLIESGUESSED_B_DID       =   21200
+
+# mst_datasource_by_feature
+
+S_DID_MSTDATASOURCEBYFEATURE_B_FEATURE_COUNT        =   21300
+
+# mst_datasource_by_supply_feature
+
+S_DID_MSTDATASOURCEBYSUPPLYFEATURE_B_FEATURE_SUPPLY_COUNT   =   21400
+
 # Inserts (25000 - 26999)
 
 # mst_datasource
@@ -208,6 +253,30 @@ I_A_MSTDATASOURCEHOOKS  =   25800
 # dat_datasource_supplies
 
 I_A_DATDATASOURCESUPPLIES   =   25900
+
+# dat_datasource_features
+
+I_A_DATDATASOURCEFEATURES   =   26000
+
+# mst_datasource_features
+
+I_A_MSTDATASOURCEFEATURES   =   26100
+
+# mst_datasource_supply_features
+
+I_A_MSTDATASOURCESUPPLYFEATURES   =   26150
+
+# mst_datasource_supplies_guessed
+
+I_A_MSTDATASOURCESUPPLIESGUESSED    = 26200
+
+# mst_datasource_by_feature
+
+I_A_MSTDATASOURCEBYFEATURE  =   26300
+
+# mst_datasource_by_supply_feature
+
+I_A_MSTDATASOURCEBYSUPPLYFEATURE    = 26400
 
 # Deletes (27000 - 28999)
 
@@ -261,6 +330,32 @@ D_A_MSTDATASOURCEHOOKS_B_DID_SID    =   27801
 D_A_DATDATASOURCESUPPLIES_B_DID     =   27900
 D_A_DATDATASOURCESUPPLIES_B_DID_DATE=   27901
 
+# dat_datasource_features
+
+D_A_DATDATASOURCEFEATURES_B_DID     =   28000
+D_A_DATDATASOURCEFEATURES_B_DID_DATE=   28001
+
+# mst_datasource_features
+
+D_A_MSTDATASOURCEFEATURES_B_DID     =   28100
+
+# mst_datasource_supply_features
+
+D_A_MSTDATASOURCESUPPLYFEATURES_B_DID       = 28150
+D_A_MSTDATASOURCESUPPLYFEATURES_B_DID_SUPPLY= 28151
+
+# mst_datasource_supplies_guessed
+
+D_A_MSTDATASOURCESUPPLIESGUESSED_B_DID      = 28200
+
+# mst_datasource_by_feature
+
+D_A_MSTDATASOURCEBYFEATURE_B_FEATURE_DID    = 28300
+
+# mst_datasource_by_supply_feature
+
+D_A_MSTDATASOURCEBYSUPPLYFEATURE_B_FEATURE_SUPPLY_DID   = 28400
+
 # Updates (29000 - 29999)
 
 # mst_datasource
@@ -285,4 +380,16 @@ U_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE=29301
 # mst_datasource_hooks
 
 # dat_datasource_supplies
+
+# dat_datasource_features
+
+# mst_datasource_features
+
+# mst_datasource_supply_features
+
+# mst_datasource_supplies_guessed
+
+# mst_datasource_by_feature
+
+# mst_datasource_by_supply_feature
 

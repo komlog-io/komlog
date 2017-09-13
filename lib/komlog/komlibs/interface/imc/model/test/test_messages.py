@@ -3758,3 +3758,298 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         self.assertTrue(isinstance(obj, messages.IMCMessage))
         self.assertEqual(obj.to_serialization(),msg)
 
+    def test_UpdateDatapointFeaturesMessage_failure_invalid_pid(self):
+        ''' UpdateDatapointFeaturesMessage creation should fail if pid is invalid '''
+        pids=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]
+        for pid in pids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.UpdateDatapointFeaturesMessage(pid=pid)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_FEATDPUPD_IPID)
+
+    def test_UpdateDatapointFeaturesMessage_failure_load_from_serialization_invalid_field_number(self):
+        ''' UpdateDatapointFeaturesMessage creation should fail if we pass a string without the exact number of fields '''
+        msg='|'.join((messages.UpdateDatapointFeaturesMessage._type_.value,))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.UpdateDatapointFeaturesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_FEATDPUPD_ELFS)
+
+    def test_UpdateDatapointFeaturesMessage_failure_load_from_serialization_invalid_message(self):
+        ''' UpdateDatapointFeaturesMessage creation should fail if we pass a non string message '''
+        msg=['not a string']
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.UpdateDatapointFeaturesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_FEATDPUPD_MINS)
+
+    def test_UpdateDatapointFeaturesMessage_failure_load_from_serialization_invalid_serialization_type(self):
+        ''' UpdateDatapointFeaturesMessage creation should fail if we pass a string with not the expected type '''
+        msg='|'.join(('WHATEVER','1'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.UpdateDatapointFeaturesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_FEATDPUPD_IST)
+
+    def test_UpdateDatapointFeaturesMessage_failure_load_from_serialization_invalid_hex_pid(self):
+        ''' UpdateDatapointFeaturesMessage creation should fail if we pass a string with invalid pid '''
+        pid=uuid.uuid4()
+        msg='|'.join((messages.UpdateDatapointFeaturesMessage._type_.value,'pid.hex'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.UpdateDatapointFeaturesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_FEATDPUPD_IHPID)
+
+    def test_UpdateDatapointFeaturesMessage_success_load_from_serialization(self):
+        ''' UpdateDatapointFeaturesMessage creation should succeed calling the classmethod load_from_serialization '''
+        pid=uuid.uuid4()
+        msg='|'.join((messages.UpdateDatapointFeaturesMessage._type_.value,pid.hex))
+        obj=messages.UpdateDatapointFeaturesMessage.load_from_serialization(msg)
+        self.assertEqual(obj.pid, pid)
+        self.assertEqual(obj._type_, messages.Messages.UPDATE_DATAPOINT_FEATURES_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.UpdateDatapointFeaturesMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_UpdateDatapointFeaturesMessage_success_load_from_serialization_base_class(self):
+        '''  UpdateDatapointFeaturesMessage creation should succeed calling the classmethod load_from_serialization from the base class '''
+        pid=uuid.uuid4()
+        msg='|'.join((messages.UpdateDatapointFeaturesMessage._type_.value,pid.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.pid, pid)
+        self.assertEqual(obj._type_, messages.Messages.UPDATE_DATAPOINT_FEATURES_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.UpdateDatapointFeaturesMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_UpdateDatapointFeaturesMessage_to_serialization_success(self):
+        ''' UpdateDatapointFeaturesMessage.to_serialization should succeed '''
+        pid=uuid.uuid4()
+        msg='|'.join((messages.UpdateDatapointFeaturesMessage._type_.value, pid.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.pid, pid)
+        self.assertEqual(obj._type_, messages.Messages.UPDATE_DATAPOINT_FEATURES_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.UpdateDatapointFeaturesMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+        self.assertEqual(obj.to_serialization(),msg)
+
+    def test_UpdateDatasourceFeaturesMessage_failure_invalid_did(self):
+        ''' UpdateDatasourceFeaturesMessage creation should fail if did is invalid '''
+        dids=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.UpdateDatasourceFeaturesMessage(did=did)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_FEATDSUPD_IDID)
+
+    def test_UpdateDatasourceFeaturesMessage_failure_load_from_serialization_invalid_field_number(self):
+        ''' UpdateDatasourceFeaturesMessage creation should fail if we pass a string without the exact number of fields '''
+        msg='|'.join((messages.UpdateDatasourceFeaturesMessage._type_.value,))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.UpdateDatasourceFeaturesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_FEATDSUPD_ELFS)
+
+    def test_UpdateDatasourceFeaturesMessage_failure_load_from_serialization_invalid_message(self):
+        ''' UpdateDatasourceFeaturesMessage creation should fail if we pass a non string message '''
+        msg=['not a string']
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.UpdateDatasourceFeaturesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_FEATDSUPD_MINS)
+
+    def test_UpdateDatasourceFeaturesMessage_failure_load_from_serialization_invalid_serialization_type(self):
+        ''' UpdateDatasourceFeaturesMessage creation should fail if we pass a string with not the expected type '''
+        msg='|'.join(('WHATEVER','1'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.UpdateDatasourceFeaturesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_FEATDSUPD_IST)
+
+    def test_UpdateDatasourceFeaturesMessage_failure_load_from_serialization_invalid_hex_did(self):
+        ''' UpdateDatasourceFeaturesMessage creation should fail if we pass a string with invalid did '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.UpdateDatasourceFeaturesMessage._type_.value,'did.hex'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.UpdateDatasourceFeaturesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_FEATDSUPD_IHDID)
+
+    def test_UpdateDatasourceFeaturesMessage_success_load_from_serialization(self):
+        ''' UpdateDatasourceFeaturesMessage creation should succeed calling the classmethod load_from_serialization '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.UpdateDatasourceFeaturesMessage._type_.value,did.hex))
+        obj=messages.UpdateDatasourceFeaturesMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj._type_, messages.Messages.UPDATE_DATASOURCE_FEATURES_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.UpdateDatasourceFeaturesMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_UpdateDatasourceFeaturesMessage_success_load_from_serialization_base_class(self):
+        '''  UpdateDatasourceFeaturesMessage creation should succeed calling the classmethod load_from_serialization from the base class '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.UpdateDatasourceFeaturesMessage._type_.value,did.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj._type_, messages.Messages.UPDATE_DATASOURCE_FEATURES_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.UpdateDatasourceFeaturesMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_UpdateDatasourceFeaturesMessage_to_serialization_success(self):
+        ''' UpdateDatasourceFeaturesMessage.to_serialization should succeed '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.UpdateDatasourceFeaturesMessage._type_.value, did.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj._type_, messages.Messages.UPDATE_DATASOURCE_FEATURES_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.UpdateDatasourceFeaturesMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+        self.assertEqual(obj.to_serialization(),msg)
+
+    def test_IdentifySuppliesMessage_failure_invalid_did(self):
+        ''' IdentifySuppliesMessage creation should fail if did is invalid '''
+        dids=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.IdentifySuppliesMessage(did=did)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_IDSUPP_IDID)
+
+    def test_IdentifySuppliesMessage_failure_load_from_serialization_invalid_field_number(self):
+        ''' IdentifySuppliesMessage creation should fail if we pass a string without the exact number of fields '''
+        msg='|'.join((messages.IdentifySuppliesMessage._type_.value,))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.IdentifySuppliesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_IDSUPP_ELFS)
+
+    def test_IdentifySuppliesMessage_failure_load_from_serialization_invalid_message(self):
+        ''' IdentifySuppliesMessage creation should fail if we pass a non string message '''
+        msg=['not a string']
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.IdentifySuppliesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_IDSUPP_MINS)
+
+    def test_IdentifySuppliesMessage_failure_load_from_serialization_invalid_serialization_type(self):
+        ''' IdentifySuppliesMessage creation should fail if we pass a string with not the expected type '''
+        msg='|'.join(('WHATEVER','1'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.IdentifySuppliesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_IDSUPP_IST)
+
+    def test_IdentifySuppliesMessage_failure_load_from_serialization_invalid_hex_did(self):
+        ''' IdentifySuppliesMessage creation should fail if we pass a string with invalid did '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.IdentifySuppliesMessage._type_.value,'did.hex'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.IdentifySuppliesMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_IDSUPP_IHDID)
+
+    def test_IdentifySuppliesMessage_success_load_from_serialization(self):
+        ''' IdentifySuppliesMessage creation should succeed calling the classmethod load_from_serialization '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.IdentifySuppliesMessage._type_.value,did.hex))
+        obj=messages.IdentifySuppliesMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj._type_, messages.Messages.IDENTIFY_SUPPLIES_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.IdentifySuppliesMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_IdentifySuppliesMessage_success_load_from_serialization_base_class(self):
+        '''  IdentifySuppliesMessage creation should succeed calling the classmethod load_from_serialization from the base class '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.IdentifySuppliesMessage._type_.value,did.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj._type_, messages.Messages.IDENTIFY_SUPPLIES_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.IdentifySuppliesMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_IdentifySuppliesMessage_to_serialization_success(self):
+        ''' IdentifySuppliesMessage.to_serialization should succeed '''
+        did=uuid.uuid4()
+        msg='|'.join((messages.IdentifySuppliesMessage._type_.value, did.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj._type_, messages.Messages.IDENTIFY_SUPPLIES_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.IdentifySuppliesMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+        self.assertEqual(obj.to_serialization(),msg)
+
+    def test_ClassifySampleMessage_failure_invalid_did(self):
+        ''' ClassifySampleMessage creation should fail if did is invalid '''
+        dids=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]
+        date=timeuuid.uuid1()
+        for did in dids:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.ClassifySampleMessage(did=did, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_SMPCLASS_IDID)
+
+    def test_ClassifySampleMessage_failure_invalid_date(self):
+        ''' ClassifySampleMessage creation should fail if date is invalid '''
+        dates=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1().hex, uuid.uuid4()]
+        did=uuid.uuid4()
+        for date in dates:
+            with self.assertRaises(exceptions.BadParametersException) as cm:
+                messages.ClassifySampleMessage(did=did, date=date)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_SMPCLASS_IDT)
+
+    def test_ClassifySampleMessage_failure_load_from_serialization_invalid_field_number(self):
+        ''' ClassifySampleMessage creation should fail if we pass a string without the exact number of fields '''
+        msg='|'.join((messages.ClassifySampleMessage._type_.value,'1','2','3'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.ClassifySampleMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_SMPCLASS_ELFS)
+
+    def test_ClassifySampleMessage_failure_load_from_serialization_invalid_message(self):
+        ''' ClassifySampleMessage creation should fail if we pass a non string message '''
+        msg=['not a string']
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.ClassifySampleMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_SMPCLASS_MINS)
+
+    def test_ClassifySampleMessage_failure_load_from_serialization_invalid_serialization_type(self):
+        ''' ClassifySampleMessage creation should fail if we pass a string with not the expected type '''
+        msg='|'.join(('WHATEVER','1','2'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.ClassifySampleMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_SMPCLASS_IST)
+
+    def test_ClassifySampleMessage_failure_load_from_serialization_invalid_hex_did(self):
+        ''' ClassifySampleMessage creation should fail if we pass a string with invalid did '''
+        msg='|'.join((messages.ClassifySampleMessage._type_.value,'1',timeuuid.uuid1().hex))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.ClassifySampleMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_SMPCLASS_IHDID)
+
+    def test_ClassifySampleMessage_failure_load_from_serialization_invalid_hex_date(self):
+        ''' ClassifySampleMessage creation should fail if we pass a string with not the expected type '''
+        msg='|'.join((messages.ClassifySampleMessage._type_.value,uuid.uuid4().hex,'2'))
+        with self.assertRaises(exceptions.BadParametersException) as cm:
+            messages.ClassifySampleMessage.load_from_serialization(msg)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_SMPCLASS_IHDATE)
+
+    def test_ClassifySampleMessage_success_load_from_serialization(self):
+        ''' ClassifySampleMessage creation should succeed calling the classmethod load_from_serialization '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        msg='|'.join((messages.ClassifySampleMessage._type_.value,did.hex,date.hex))
+        obj=messages.ClassifySampleMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj.date, date)
+        self.assertEqual(obj._type_, messages.Messages.CLASSIFY_SAMPLE_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.ClassifySampleMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_ClassifySampleMessage_success_load_from_serialization_base_class(self):
+        ''' ClassifySampleMessage creation should succeed calling the classmethod load_from_serialization from the base class '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        msg='|'.join((messages.ClassifySampleMessage._type_.value,did.hex,date.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj.date, date)
+        self.assertEqual(obj._type_, messages.Messages.CLASSIFY_SAMPLE_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.ClassifySampleMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+
+    def test_ClassifySampleMessage_to_serialization_success(self):
+        ''' ClassifySampleMessage to_serialization should succeed '''
+        did=uuid.uuid4()
+        date=timeuuid.uuid1()
+        msg='|'.join((messages.ClassifySampleMessage._type_.value,did.hex,date.hex))
+        obj=messages.IMCMessage.load_from_serialization(msg)
+        self.assertEqual(obj.did, did)
+        self.assertEqual(obj.date, date)
+        self.assertEqual(obj._type_, messages.Messages.CLASSIFY_SAMPLE_MESSAGE)
+        self.assertTrue(isinstance(obj, messages.ClassifySampleMessage))
+        self.assertTrue(isinstance(obj, messages.IMCMessage))
+        self.assertEqual(obj.to_serialization(),msg)
+
+

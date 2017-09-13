@@ -27,6 +27,7 @@ from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.textman.api import variables as textmanvar
+from komlog.komlibs.textman.api import summary as textsumm
 from komlog.komlibs.graph.api import uri as graphuri
 
 def create_datasource(uid,aid,datasourcename):
@@ -299,4 +300,21 @@ def update_datasource_supplies(did, supplies):
         return cassapidatasource.insert_datasource_supplies(did, now, supplies)
     else:
         return False
+
+def classify_sample(did, date):
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_CLSMP_IDID)
+    if not args.is_valid_date(date):
+        raise exceptions.BadParametersException(error=Errors.E_GDA_CLSMP_IDT)
+    dsdata=cassapidatasource.get_datasource_data_at(did=did, date=item.date)
+    if dsdata == None:
+        raise exceptions.DatasourceDataNotFoundException(error=Errors.E_GDA_CLSMP_DSDNF)
+    features = textsumm.get_content_features([dsdata], max_features=25)
+    ds_features = cassapidatasource.get_datasource_features(did=did)
+    response = {'new_ds_features':False}
+    for feature in features:
+        if not feature in ds_features.features:
+            response['new_ds_features']=True
+            break
+    return response
 

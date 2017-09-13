@@ -17,6 +17,12 @@ OBJECTS=[
     'DAT_DATASOURCE_METADATA',
     'MST_DATASOURCE_HOOKS',
     'DAT_DATASOURCE_SUPPLIES',
+    'DAT_DATASOURCE_FEATURES',
+    'MST_DATASOURCE_FEATURES',
+    'MST_DATASOURCE_SUPPLY_FEATURES',
+    'MST_DATASOURCE_SUPPLIES_GUESSED',
+    'MST_DATASOURCE_BY_FEATURE',
+    'MST_DATASOURCE_BY_SUPPLY_FEATURE',
 ]
 
 MST_DATASOURCE='''
@@ -122,5 +128,56 @@ DAT_DATASOURCE_SUPPLIES='''
         supplies set<text>,
         PRIMARY KEY (did,date)
     ) WITH CLUSTERING ORDER BY (date desc);
+'''
+
+DAT_DATASOURCE_FEATURES='''
+    CREATE TABLE dat_datasource_features (
+        did uuid,
+        date timeuuid,
+        features set<text>,
+        PRIMARY KEY (did,date)
+    ) WITH CLUSTERING ORDER BY (date desc);
+'''
+
+MST_DATASOURCE_FEATURES='''
+    CREATE TABLE mst_datasource_features (
+        did uuid,
+        features set<text>,
+        PRIMARY KEY (did)
+    );
+'''
+
+MST_DATASOURCE_SUPPLY_FEATURES='''
+    CREATE TABLE mst_datasource_supply_features (
+        did uuid,
+        supply text,
+        features set<text>,
+        PRIMARY KEY (did, supply)
+    );
+'''
+
+MST_DATASOURCE_SUPPLIES_GUESSED='''
+    CREATE TABLE mst_datasource_supplies_guessed (
+        did uuid,
+        supplies set<text>,
+        PRIMARY KEY (did)
+    );
+'''
+
+MST_DATASOURCE_BY_FEATURE='''
+    CREATE TABLE mst_datasource_by_feature (
+        feature text,
+        did uuid,
+        PRIMARY KEY (feature, did)
+    );
+'''
+
+MST_DATASOURCE_BY_SUPPLY_FEATURE='''
+    CREATE TABLE mst_datasource_by_supply_feature (
+        feature text,
+        supply text,
+        did uuid,
+        PRIMARY KEY (feature, supply, did)
+    );
 '''
 
