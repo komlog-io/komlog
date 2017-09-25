@@ -391,12 +391,6 @@ class KomcassApiDatapointTest(unittest.TestCase):
         last_received=timeuuid.uuid1()
         self.assertTrue(datapointapi.set_datapoint_last_received(pid=pid, last_received=last_received))
  
-    def test_set_datapoint_dtree_success(self):
-        ''' set_datapoint_dtree should succeed '''
-        pid=uuid.uuid4()
-        dtree='valid string'
-        self.assertTrue(datapointapi.set_datapoint_dtree(pid=pid, dtree=dtree))
- 
     def test_set_datapoint_decimal_separator_success(self):
         ''' set_datapoint_decimal_separator should succeed if decimal separator is , or . '''
         pid=uuid.uuid4()

@@ -41,8 +41,6 @@ STATEMENTS={
     20311:'select did,date,variables,datapoints from dat_datasource_map where did=?',
     20400:'select did,date,content_length,num_lines,num_words,word_frecuency from dat_datasource_text_summary where did=? and date=?',
     20401:'select did,date,content_length,num_lines,num_words,word_frecuency from dat_datasource_text_summary where did=? and date>=? and date<=?',
-    20500:'select did,pid,date,nd,features from dat_datasource_novelty_detector_datapoint where did=? and pid=? limit 1',
-    20501:'select did,pid,date,nd,features from dat_datasource_novelty_detector_datapoint where did=? and pid=?',
     20600:'select did,date,content from dat_datasource_hash where did=? and date=?',
     20601:'select did,date,content from dat_datasource_hash where did=? and date>=? and date<=?',
     20602:'select did,date,content from dat_datasource_hash where did=? and date>=? and date<=? limit ?',
@@ -61,6 +59,7 @@ STATEMENTS={
     21200:'select supplies from mst_datasource_supplies_guessed where did=?',
     21300:'select did from mst_datasource_by_feature where feature=? limit ?',
     21400:'select did from mst_datasource_by_supply_feature where feature=? and supply=? limit ?',
+    21500:'select dtree from mst_datapoint_classifier_dtree where did=?',
     25000:'insert into mst_datasource (did,aid,uid,datasourcename,creation_date) values (?,?,?,?,?)',
     25001:'insert into mst_datasource (did,aid,uid,datasourcename,creation_date) values (?,?,?,?,?) if not exists',
     25100:'insert into mst_datasource_stats (did,last_received) values (?,?)',
@@ -68,7 +67,6 @@ STATEMENTS={
     25200:'insert into dat_datasource (did,date,content) values (?,?,?)',
     25300:'insert into dat_datasource_map (did,date,variables,datapoints) values (?,?,?,?)',
     25400:'insert into dat_datasource_text_summary (did,date,content_length,num_lines, num_words, word_frecuency) values (?,?,?,?,?,?)',
-    25500:'insert into dat_datasource_novelty_detector_datapoint (did,pid,date,nd,features) values (?,?,?,?,?)',
     25600:'insert into dat_datasource_hash (did,date,content) values (?,?,?)',
     25700:'insert into dat_datasource_metadata (did,date,size) values (?,?,?)',
     25800:'insert into mst_datasource_hooks (did,sid) values (?,?)',
@@ -79,6 +77,7 @@ STATEMENTS={
     26200:'insert into mst_datasource_supplies_guessed (did,supplies) values (?,?)',
     26300:'insert into mst_datasource_by_feature (feature, did) values (?,?)',
     26400:'insert into mst_datasource_by_supply_feature (feature, supply, did) values (?,?,?)',
+    26500:'insert into mst_datapoint_classifier_dtree (did,dtree) values (?,?)',
     27000:'delete from mst_datasource where did=?',
     27100:'delete from mst_datasource_stats where did=?',
     27200:'delete from dat_datasource where did=?',
@@ -88,9 +87,6 @@ STATEMENTS={
     27302:'delete datapoints[?] from dat_datasource_map where did=? and date=?',
     27400:'delete from dat_datasource_text_summary where did=?',
     27401:'delete from dat_datasource_text_summary where did=? and date=?',
-    27500:'delete from dat_datasource_novelty_detector_datapoint where did=?',
-    27501:'delete from dat_datasource_novelty_detector_datapoint where did=? and pid=?',
-    27502:'delete from dat_datasource_novelty_detector_datapoint where did=? and pid=? and date=?',
     27600:'delete from dat_datasource_hash where did=? and date=?',
     27601:'delete from dat_datasource_hash where did=?',
     27700:'delete from dat_datasource_metadata where did=?',
@@ -107,6 +103,7 @@ STATEMENTS={
     28200:'delete from mst_datasource_supplies_guessed where did=?',
     28300:'delete from mst_datasource_by_feature where feature=? and did=?',
     28400:'delete from mst_datasource_by_supply_feature where feature=? and supply=? and did=?',
+    28500:'delete from mst_datapoint_classifier_dtree where did=?',
     29300:'update dat_datasource_map set variables[?]=? where did=? and date=?',
     29301:'update dat_datasource_map set datapoints[?]=? where did=? and date=?'
 }
@@ -158,11 +155,6 @@ S_A_DATDATASOURCEMAP_B_DID=20311
 S_A_DATDATASOURCETEXTSUMMARY_B_DID_DATE=20400
 S_A_DATDATASOURCETEXTSUMMARY_B_DID_INITDATE_ENDDATE=20401
 
-# dat_datasource_novelty_detector_datapoint
-
-S_LAST_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID=20500
-S_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID=20501
-
 # dat_datasource_hash
 
 S_A_DATDATASOURCEHASH_B_DID_DATE=20600
@@ -210,6 +202,10 @@ S_DID_MSTDATASOURCEBYFEATURE_B_FEATURE_COUNT        =   21300
 
 S_DID_MSTDATASOURCEBYSUPPLYFEATURE_B_FEATURE_SUPPLY_COUNT   =   21400
 
+# mst_datapoint_classifier_dtree
+
+S_DTREE_MSTDATAPOINTCLASSIFIERDTREE_B_DID           =   21500
+
 # Inserts (25000 - 26999)
 
 # mst_datasource
@@ -233,10 +229,6 @@ I_A_DATDATASOURCEMAP_B_DID_DATE=25300
 # dat_datasource_text_summary
 
 I_A_DATDATASOURCETEXTSUMMARY=25400
-
-# dat_datasource_novelty_detector_datapoint
-
-I_A_DATDATASOURCENOVELTYDETECTORDATAPOINT=25500
 
 # dat_datasource_hash
 
@@ -278,6 +270,10 @@ I_A_MSTDATASOURCEBYFEATURE  =   26300
 
 I_A_MSTDATASOURCEBYSUPPLYFEATURE    = 26400
 
+# mst_datapoint_classifier_dtree
+
+I_A_MSTDATAPOINTCLASSIFIERDTREE                 =   26500
+
 # Deletes (27000 - 28999)
 
 # mst_datasource
@@ -303,12 +299,6 @@ D_DATAPOINT_DATDATASOURCEMAP_B_PID_DID_DATE=27302
 
 D_A_DATDATASOURCETEXTSUMMARY_B_DID=27400
 D_A_DATDATASOURCETEXTSUMMARY_B_DID_DATE=27401
-
-# dat_datasource_novelty_detector_datapoint
-
-D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID=27500
-D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID=27501
-D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID_DATE=27502
 
 # dat_datasource_hash
 
@@ -356,6 +346,10 @@ D_A_MSTDATASOURCEBYFEATURE_B_FEATURE_DID    = 28300
 
 D_A_MSTDATASOURCEBYSUPPLYFEATURE_B_FEATURE_SUPPLY_DID   = 28400
 
+# mst_datapoint_classifier_dtree
+
+D_A_MSTDATAPOINTCLASSIFIERDTREE_B_DID           =   28500
+
 # Updates (29000 - 29999)
 
 # mst_datasource
@@ -370,8 +364,6 @@ U_VARIABLES_DATDATASOURCEMAP_B_DID_DATE=29300
 U_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE=29301
 
 # dat_datasource_text_summary
-
-# dat_datasource_novelty_detector_datapoint
 
 # dat_datasource_hash
 
@@ -392,4 +384,6 @@ U_DATAPOINTS_DATDATASOURCEMAP_B_DID_DATE=29301
 # mst_datasource_by_feature
 
 # mst_datasource_by_supply_feature
+
+# mst_datapoint_classifier_dtree
 

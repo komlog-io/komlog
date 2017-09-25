@@ -68,11 +68,10 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.imc_messages['routed'], {})
         self.assertNotEqual(response.imc_messages['unrouted'], [])
-        self.assertTrue(len(response.imc_messages['unrouted']) == 6)
+        self.assertTrue(len(response.imc_messages['unrouted']) == 5)
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
             messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
-            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
             messages.Messages.USER_EVENT_MESSAGE.name:1,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
@@ -116,11 +115,10 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.imc_messages['routed'], {})
         self.assertNotEqual(response.imc_messages['unrouted'], [])
-        self.assertTrue(len(response.imc_messages['unrouted']) == 6)
+        self.assertTrue(len(response.imc_messages['unrouted']) == 5)
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
             messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
-            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
             messages.Messages.USER_EVENT_MESSAGE.name:1,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
@@ -146,11 +144,10 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['routed'], {})
         self.assertNotEqual(response.imc_messages['unrouted'], [])
         #the main change is that two FILLDP messages are generated
-        self.assertTrue(len(response.imc_messages['unrouted']) == 7)
+        self.assertTrue(len(response.imc_messages['unrouted']) == 5)
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
             messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
-            messages.Messages.FILL_DATAPOINT_MESSAGE.name:2,
             messages.Messages.USER_EVENT_MESSAGE.name:1,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
@@ -194,11 +191,10 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.imc_messages['routed'], {})
         self.assertNotEqual(response.imc_messages['unrouted'], [])
-        self.assertTrue(len(response.imc_messages['unrouted']) == 6)
+        self.assertTrue(len(response.imc_messages['unrouted']) == 5)
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
             messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
-            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
             messages.Messages.USER_EVENT_MESSAGE.name:1,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
@@ -213,10 +209,15 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
         message=messages.MonitorVariableMessage(uid=uid, did=did, date=ds_date, position=position, length=length, datapointname=datapoint_uri)
         response=gestconsole.process_message_MONVAR(message=message)
-        self.assertEqual(response.error, gesterrors.E_GPA_CRD_AAD)
-        self.assertEqual(response.status, status.IMC_STATUS_INTERNAL_ERROR)
+        # it does not have to fail, because it belongs to the same ds, we consider this message as a POSVAR
+        self.assertEqual(response.error, Errors.OK)
+        self.assertEqual(response.status, status.IMC_STATUS_OK)
         self.assertEqual(response.imc_messages['routed'], {})
-        self.assertEqual(response.imc_messages['unrouted'], [])
+        self.assertTrue(len(response.imc_messages['unrouted']) == 2)
+        expected_messages={
+            messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
+            messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
+        }
 
     def test_process_message_NEGVAR_failure_non_existent_datapoint(self):
         ''' process_message_NEGVAR should fail if datapoint does not exists '''
@@ -260,11 +261,10 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.imc_messages['routed'], {})
         self.assertNotEqual(response.imc_messages['unrouted'], [])
-        self.assertTrue(len(response.imc_messages['unrouted']) == 6)
+        self.assertTrue(len(response.imc_messages['unrouted']) == 5)
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
             messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
-            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
             messages.Messages.USER_EVENT_MESSAGE.name:1,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
@@ -273,7 +273,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         pid = None
         msgs=response.imc_messages['unrouted']
         for msg in msgs:
-            if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+            if msg._type_ == messages.Messages.NEW_DP_WIDGET_MESSAGE:
                 pid = msg.pid
             try:
                 retrieved_messages[msg._type_.name]+=1
@@ -287,19 +287,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.message_type, messages.Messages.NEG_VAR_MESSAGE)
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.imc_messages['routed'], {})
-        self.assertNotEqual(response.imc_messages['unrouted'], [])
-        self.assertTrue(len(response.imc_messages['unrouted']) == 1)
-        expected_messages={
-            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
-        }
-        retrieved_messages={}
-        msgs=response.imc_messages['unrouted']
-        for msg in msgs:
-            try:
-                retrieved_messages[msg._type_.name]+=1
-            except KeyError:
-                retrieved_messages[msg._type_.name]=1
-        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        self.assertEqual(response.imc_messages['unrouted'], [])
 
     def test_process_message_NEGVAR_success_requested_twice(self):
         ''' process_message_NEGVAR should succeed, and if requested twice, dont request FILLDP if no new info is added '''
@@ -331,11 +319,10 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.imc_messages['routed'], {})
         self.assertNotEqual(response.imc_messages['unrouted'], [])
-        self.assertTrue(len(response.imc_messages['unrouted']) == 6)
+        self.assertTrue(len(response.imc_messages['unrouted']) == 5)
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
             messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
-            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
             messages.Messages.USER_EVENT_MESSAGE.name:1,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
@@ -344,7 +331,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         pid = None
         msgs=response.imc_messages['unrouted']
         for msg in msgs:
-            if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+            if msg._type_ == messages.Messages.NEW_DP_WIDGET_MESSAGE:
                 pid = msg.pid
             try:
                 retrieved_messages[msg._type_.name]+=1
@@ -358,19 +345,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.message_type, messages.Messages.NEG_VAR_MESSAGE)
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.imc_messages['routed'], {})
-        self.assertNotEqual(response.imc_messages['unrouted'], [])
-        self.assertTrue(len(response.imc_messages['unrouted']) == 1)
-        expected_messages={
-            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
-        }
-        retrieved_messages={}
-        msgs=response.imc_messages['unrouted']
-        for msg in msgs:
-            try:
-                retrieved_messages[msg._type_.name]+=1
-            except KeyError:
-                retrieved_messages[msg._type_.name]=1
-        self.assertEqual(sorted(expected_messages),sorted(retrieved_messages))
+        self.assertEqual(response.imc_messages['unrouted'], [])
         message=messages.NegativeVariableMessage(pid=pid, date=ds_date, position=position, length=length)
         response=gestconsole.process_message_NEGVAR(message=message)
         self.assertEqual(response.error, Errors.OK)
@@ -422,11 +397,10 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.imc_messages['routed'], {})
         self.assertNotEqual(response.imc_messages['unrouted'], [])
-        self.assertTrue(len(response.imc_messages['unrouted']) == 6)
+        self.assertTrue(len(response.imc_messages['unrouted']) == 5)
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
             messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
-            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
             messages.Messages.USER_EVENT_MESSAGE.name:1,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
@@ -435,7 +409,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         pid = None
         msgs=response.imc_messages['unrouted']
         for msg in msgs:
-            if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+            if msg._type_ == messages.Messages.NEW_DP_WIDGET_MESSAGE:
                 pid = msg.pid
             try:
                 retrieved_messages[msg._type_.name]+=1
@@ -482,11 +456,10 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.message_params, message.to_serialization())
         self.assertEqual(response.imc_messages['routed'], {})
         self.assertNotEqual(response.imc_messages['unrouted'], [])
-        self.assertTrue(len(response.imc_messages['unrouted']) == 6)
+        self.assertTrue(len(response.imc_messages['unrouted']) == 5)
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.name:1,
             messages.Messages.RESOURCE_AUTHORIZATION_UPDATE_MESSAGE.name:1,
-            messages.Messages.FILL_DATAPOINT_MESSAGE.name:1,
             messages.Messages.USER_EVENT_MESSAGE.name:1,
             messages.Messages.NEW_DP_WIDGET_MESSAGE.name:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.name:1,
@@ -495,7 +468,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         pid = None
         msgs=response.imc_messages['unrouted']
         for msg in msgs:
-            if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+            if msg._type_ == messages.Messages.NEW_DP_WIDGET_MESSAGE:
                 pid = msg.pid
             try:
                 retrieved_messages[msg._type_.name]+=1
@@ -519,7 +492,7 @@ class InterfaceImcApiGestconsoleTest(unittest.TestCase):
         self.assertEqual(response.imc_messages['routed'], {})
         #in the future a new message will be generated to analize the error and generate a notification for the user to be able to identify again the right variable
         self.assertEqual(len(response.imc_messages['unrouted']), 1)
-        self.assertEqual(response.imc_messages['unrouted'][0]._type_, messages.Messages.ANALYZE_DTREE_MESSAGE)
+        self.assertEqual(response.imc_messages['unrouted'][0]._type_, messages.Messages.USER_EVENT_MESSAGE)
 
     def test_process_message_NEWDSW_failure_non_existent_user(self):
         ''' process_message_NEWDSW should fail if user does not exist '''

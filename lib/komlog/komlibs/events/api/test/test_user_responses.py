@@ -330,7 +330,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         ]}
         result=user_responses._process_event_response_user_event_intervention_datapoint_identification(event=event, response_data=response_data)
         self.assertEqual(sorted(result['mark_failed']),[])
-        self.assertEqual(result['dtree_gen_success'],[datapoint1['pid']])
+        self.assertEqual(result['dtree_gen_success'],[did])
         self.assertEqual(result['dtree_gen_failed'],[])
         self.assertEqual(result['type'],types.USER_EVENT_RESPONSE_INTERVENTION_DATAPOINT_IDENTIFICATION)
 
@@ -380,7 +380,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         result=user_responses._process_event_response_user_event_intervention_datapoint_identification(event=event, response_data=response_data)
         self.assertEqual(sorted(result['mark_failed']),[])
         self.assertEqual(result['dtree_gen_success'],[])
-        self.assertEqual(result['dtree_gen_failed'],[datapoint1['pid']])
+        self.assertEqual(result['dtree_gen_failed'],[did])
         self.assertEqual(result['type'],types.USER_EVENT_RESPONSE_INTERVENTION_DATAPOINT_IDENTIFICATION)
 
     def test__process_event_response_user_event_intervention_datapoint_identification_success_some_datapoints(self):
@@ -438,7 +438,7 @@ class EventsApiUserResponsesTest(unittest.TestCase):
         ]}
         result=user_responses._process_event_response_user_event_intervention_datapoint_identification(event=event, response_data=response_data)
         self.assertEqual(sorted(result['mark_failed']),[seq3])
-        self.assertEqual(sorted(result['dtree_gen_success']),sorted([pid1,pid2]))
+        self.assertEqual(sorted(result['dtree_gen_success']),[did])
         self.assertEqual(result['dtree_gen_failed'],[])
         self.assertEqual(result['type'],types.USER_EVENT_RESPONSE_INTERVENTION_DATAPOINT_IDENTIFICATION)
 

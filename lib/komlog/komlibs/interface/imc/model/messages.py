@@ -29,8 +29,6 @@ class Messages(Enum):
     GDTREE_MESSAGE                          = 'GDTREE'
     NEG_VAR_MESSAGE                         = 'NEGVAR'
     POS_VAR_MESSAGE                         = 'POSVAR'
-    MISSING_DATAPOINT_MESSAGE               = 'MISSINGDP'
-    ANALYZE_DTREE_MESSAGE                   = 'ADTREE'
     IDENTIFY_NEW_DATAPOINTS_MESSAGE         = 'IDNEWDPS'
     UPDATE_DATAPOINT_FEATURES_MESSAGE       = 'FEATDPUPD'
 
@@ -272,24 +270,24 @@ class MonitorVariableMessage(IMCMessage):
 class GenerateDTreeMessage(IMCMessage):
     _type_ = Messages.GDTREE_MESSAGE
 
-    def __init__(self, pid):
-        self.pid = pid
+    def __init__(self, did):
+        self.did = did
 
     @property
-    def pid(self):
-        return self._pid
+    def did(self):
+        return self._did
 
-    @pid.setter
-    def pid(self, pid):
-        if args.is_valid_uuid(pid):
-            self._pid = pid
+    @did.setter
+    def did(self, did):
+        if args.is_valid_uuid(did):
+            self._did = did
         else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_GDTREE_IPID)
+            raise exceptions.BadParametersException(error=Errors.E_IIMM_GDTREE_IDID)
 
     @classmethod
     def load_from_serialization(cls, msg):
         try:
-            m_type, h_pid = msg.split('|')
+            m_type, h_did = msg.split('|')
         except ValueError:
             raise exceptions.BadParametersException(error=Errors.E_IIMM_GDTREE_ELFS)
         except AttributeError:
@@ -297,13 +295,13 @@ class GenerateDTreeMessage(IMCMessage):
         else:
             if not m_type == cls._type_.value:
                 raise exceptions.BadParametersException(error=Errors.E_IIMM_GDTREE_IST)
-            if not args.is_valid_hex_uuid(h_pid):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_GDTREE_IHPID)
-            pid = uuid.UUID(h_pid)
-            return cls(pid=pid)
+            if not args.is_valid_hex_uuid(h_did):
+                raise exceptions.BadParametersException(error=Errors.E_IIMM_GDTREE_IHDID)
+            did = uuid.UUID(h_did)
+            return cls(did=did)
 
     def to_serialization(self):
-        return '|'.join((self._type_.value, self._pid.hex))
+        return '|'.join((self._type_.value, self._did.hex))
 
 class FillDatapointMessage(IMCMessage):
     _type_ = Messages.FILL_DATAPOINT_MESSAGE
@@ -1264,57 +1262,6 @@ class GenerateTextSummaryMessage(IMCMessage):
     def to_serialization(self):
         return '|'.join((self._type_.value, self._did.hex, self._date.hex))
 
-class MissingDatapointMessage(IMCMessage):
-    _type_ = Messages.MISSING_DATAPOINT_MESSAGE
-
-    def __init__(self, did, date):
-        self.did = did
-        self.date = date
-
-    @property
-    def did(self):
-        return self._did
-
-    @did.setter
-    def did(self, did):
-        if args.is_valid_uuid(did):
-            self._did = did
-        else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_MISSDP_IDID)
-
-    @property
-    def date(self):
-        return self._date
-
-    @date.setter
-    def date(self, date):
-        if args.is_valid_date(date):
-            self._date = date
-        else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_MISSDP_IDT)
-
-    @classmethod
-    def load_from_serialization(cls, msg):
-        try:
-            m_type, h_did, h_date = msg.split('|')
-        except ValueError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_MISSDP_ELFS)
-        except AttributeError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_MISSDP_MINS)
-        else:
-            if not m_type == cls._type_.value:
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_MISSDP_IST)
-            if not args.is_valid_hex_uuid(h_did):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_MISSDP_IHDID)
-            if not args.is_valid_hex_date(h_date):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_MISSDP_IHDATE)
-            did = uuid.UUID(h_did)
-            date = uuid.UUID(h_date)
-            return cls(did=did, date=date)
-
-    def to_serialization(self):
-        return '|'.join((self._type_.value, self._did.hex, self._date.hex))
-
 class NewInvitationMailMessage(IMCMessage):
     _type_ = Messages.NEW_INV_MAIL_MESSAGE
 
@@ -1782,43 +1729,6 @@ class DataIntervalRequestMessage(IMCMessage):
     def to_serialization(self):
         uri = {'uri':self._uri['uri'],'type':self._uri['type'],'id':self._uri['id'].hex}
         return '|'.join((self._type_.value, self._sid.hex, self._ii.hex, self._ie.hex, json.dumps(uri),json.dumps(self._count),json.dumps(self._irt.hex if self._irt != None else None)))
-
-class AnalyzeDTreeMessage(IMCMessage):
-    _type_ = Messages.ANALYZE_DTREE_MESSAGE
-
-    def __init__(self, pid):
-        self.pid = pid
-
-    @property
-    def pid(self):
-        return self._pid
-
-    @pid.setter
-    def pid(self, pid):
-        if args.is_valid_uuid(pid):
-            self._pid = pid
-        else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_ADTREE_IPID)
-
-    @classmethod
-    def load_from_serialization(cls, msg):
-        try:
-            m_type, h_pid = msg.split('|')
-        except ValueError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_ADTREE_ELFS)
-        except AttributeError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_ADTREE_MINS)
-        else:
-            if not m_type == cls._type_.value:
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_ADTREE_IST)
-            if not args.is_valid_hex_uuid(h_pid):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_ADTREE_IHPID)
-            pid = uuid.UUID(h_pid)
-            return cls(pid=pid)
-
-    def to_serialization(self):
-        return '|'.join((self._type_.value, self._pid.hex))
-
 
 class IdentifyNewDatapointsMessage(IMCMessage):
     _type_ = Messages.IDENTIFY_NEW_DATAPOINTS_MESSAGE

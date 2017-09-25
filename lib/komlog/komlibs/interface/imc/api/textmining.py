@@ -15,10 +15,10 @@ from komlog.komlibs.interface.imc import status, exceptions
 @exceptions.ExceptionHandler
 def process_message_GDTREE(message):
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
-    pid=message.pid
-    if not args.is_valid_uuid(pid):
-        raise exceptions.BadParametersException(error=Errors.E_IAATM_GDTREE_IP)
-    if datapointapi.generate_decision_tree(pid=pid):
+    did=message.did
+    if not args.is_valid_uuid(did):
+        raise exceptions.BadParametersException(error=Errors.E_IAATM_GDTREE_IDID)
+    if datapointapi.generate_decision_tree(did=did):
         response.status=status.IMC_STATUS_OK
     else:
         response.error=Errors.E_IAATM_GDTREE_EGDT
@@ -71,8 +71,6 @@ def process_message_FILLDS(message):
     store_info=datapointapi.store_datasource_values(did=did, date=date)
     if store_info:
         response.status=status.IMC_STATUS_OK
-        if len(store_info['dp_not_found'])>0:
-            response.add_imc_message(messages.MissingDatapointMessage(did=did,date=date))
         if len(store_info['dp_found'])>0:
             uris=[]
             for dp in store_info['dp_found']:
@@ -97,17 +95,6 @@ def process_message_GENTEXTSUMMARY(message):
     else:
         response.error=Errors.E_IAATM_GTXS_EGDSTXS
         response.status=status.IMC_STATUS_INTERNAL_ERROR
-    return response
-
-@exceptions.ExceptionHandler
-def process_message_ADTREE(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
-    result = datapointapi.get_datapoint_controversial_samples(pid=message.pid)
-    if 'controversial_samples' in result and len(result['controversial_samples'])>0:
-        params={'pid':message.pid.hex, 'did':result['did'].hex, 'dates':[date.hex for date in result['controversial_samples']]}
-        msg=messages.UserEventMessage(uid=result['uid'], event_type=eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters=params)
-        response.add_imc_message(msg)
-    response.status=status.IMC_STATUS_OK
     return response
 
 @exceptions.ExceptionHandler

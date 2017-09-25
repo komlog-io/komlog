@@ -345,10 +345,9 @@ class Errors(Enum):
     E_GPA_MPV_VAE   = 6508
     E_GPA_MPV_DSNF  = 6509 #: datapoint is not associated to a datasource
 
-    E_GPA_GDT_IP    = 6550
-    E_GPA_GDT_DNF   = 6551
+    E_GPA_GDT_IDID  = 6550 #: generate_decision_tree: invalid did
+    E_GPA_GDT_DSNF  = 6551 #: generate_decision_tree: datasource not found
     E_GPA_GDT_ETS   = 6552 #: generate_decision_tree: empty training set
-    E_GPA_GDT_DSNF  = 6553 #: generate_decision_tree: datapoint is not associated to a datasource
     E_GPA_GDT_EGDT  = 6554 #: generate_decision_tree: error generating decision tree
 
     E_GPA_GIDT_IP   = 6600
@@ -362,14 +361,14 @@ class Errors(Enum):
     E_GPA_MND_IPO   = 6652
     E_GPA_MND_IL    = 6653
     E_GPA_MND_IDN   = 6654
+    E_GPA_MND_DTE   = 6655  #: monitor new datapoint: error generating datasource dtree
 
     E_GPA_SDPV_IP   = 6700
     E_GPA_SDPV_IDT  = 6701
     E_GPA_SDPV_DNF  = 6702
     E_GPA_SDPV_DTNF = 6703
-    E_GPA_SDPV_DMNF = 6704
-    E_GPA_SDPV_IDDE = 6705
-    E_GPA_SDPV_DSNF = 6706 #: datapoint is not associated to a datasource
+    E_GPA_SDPV_IDDE = 6704
+    E_GPA_SDPV_DSNF = 6705 #: datapoint is not associated to a datasource
 
     E_GPA_SDSV_ID   = 6750
     E_GPA_SDSV_IDT  = 6751

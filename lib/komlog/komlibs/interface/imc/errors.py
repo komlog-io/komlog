@@ -60,7 +60,7 @@ class Errors(Enum):
 
 # komlibs.interface.imc.api.textmining
 
-    E_IIATM_GDTREE_IP       = 255000    #: proccess_message_GDTREE. invalid pid
+    E_IIATM_GDTREE_IDID     = 255000    #: proccess_message_GDTREE. invalid did
     E_IIATM_GDTREE_EGDT     = 255001    #: proccess_message_GDTREE. error generating decision tree
 
     E_IIATM_MAPVARS_IDID    = 255100    #: proccess_message_MAPVARS. invalid did
@@ -118,11 +118,11 @@ class Errors(Enum):
     E_IIMM_MONVAR_ISPOS     = 260212    #: MonitorVariableMessage. invalid string position
     E_IIMM_MONVAR_ISLEN     = 260213    #: MonitorVariableMessage. invalid string length
 
-    E_IIMM_GDTREE_IPID      = 260300    #: GenerateDTreeMessage. invalid pid
+    E_IIMM_GDTREE_IDID      = 260300    #: GenerateDTreeMessage. invalid did
     E_IIMM_GDTREE_ELFS      = 260301    #: GenerateDTreeMessage. error loading from string
     E_IIMM_GDTREE_MINS      = 260302    #: GenerateDTreeMessage. msg is not string
     E_IIMM_GDTREE_IST       = 260303    #: GenerateDTreeMessage. invalid serialization type
-    E_IIMM_GDTREE_IHPID     = 260304    #: GenerateDTreeMessage. invalid hex pid
+    E_IIMM_GDTREE_IHDID     = 260304    #: GenerateDTreeMessage. invalid hex did
 
     E_IIMM_FILLDP_IPID      = 260400    #: FillDatapointMessage. invalid pid
     E_IIMM_FILLDP_IDT       = 260401    #: FillDatapointMessage. invalid date
@@ -266,14 +266,6 @@ class Errors(Enum):
     E_IIMM_GTXS_IHDID       = 262005    #: GenerateTextSummaryMessage. invalid hex did
     E_IIMM_GTXS_IHDATE      = 262006    #: GenerateTextSummaryMessage. invalid hex date
 
-    E_IIMM_MISSDP_IDID      = 262100    #: MissingDatapointMessage. invalid did
-    E_IIMM_MISSDP_IDT       = 262101    #: MissingDatapointMessage. invalid date
-    E_IIMM_MISSDP_ELFS      = 262102    #: MissingDatapointMessage. error loading from string
-    E_IIMM_MISSDP_MINS      = 262103    #: MissingDatapointMessage. msg is not string
-    E_IIMM_MISSDP_IST       = 262104    #: MissingDatapointMessage. invalid serialization type
-    E_IIMM_MISSDP_IHDID     = 262105    #: MissingDatapointMessage. invalid hex did
-    E_IIMM_MISSDP_IHDATE    = 262106    #: MissingDatapointMessage. invalid hex date
-
     E_IIMM_NEWINV_IEMAIL    = 262200    #: NewInvitationMailMessage. invalid email
     E_IIMM_NEWINV_IINV      = 262201    #: NewInvitationMailMessage. invalid invitation id
     E_IIMM_NEWINV_ELFS      = 262202    #: NewInvitationMailMessage. error loading from string
@@ -336,12 +328,6 @@ class Errors(Enum):
     E_IIMM_DIRM_IJSCOUNT    = 262812    #: DataIntervalRequestMessage. invalid json count
     E_IIMM_DIRM_IIRT        = 262813    #: DataIntervalRequestMessage. invalid irt
     E_IIMM_DIRM_IJSIRT      = 262814    #: DataIntervalRequestMessage. invalid json irt
-
-    E_IIMM_ADTREE_IPID      = 262900    #: AnalyzeDTreeMessage. invalid pid
-    E_IIMM_ADTREE_ELFS      = 262901    #: AnalyzeDTreeMessage. error loading from string
-    E_IIMM_ADTREE_MINS      = 262902    #: AnalyzeDTreeMessage. msg is not string
-    E_IIMM_ADTREE_IST       = 262903    #: AnalyzeDTreeMessage. invalid serialization type
-    E_IIMM_ADTREE_IHPID     = 262904    #: AnalyzeDTreeMessage. invalid hex pid
 
     E_IIMM_IDNEWDPS_IDID    = 262950    #: IdentifyNewDatapoints. invalid did
     E_IIMM_IDNEWDPS_ELFS    = 262951    #: IdentifyNewDatapoints. error loading from string
