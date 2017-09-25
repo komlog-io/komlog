@@ -18,7 +18,7 @@ STATEMENTS={
     30004:'select count(*) from mst_datapoint where uid=?',
     30005:'select pid from mst_datapoint where did=?',
     30006:'select pid from mst_datapoint where uid=?',
-    30100:'select pid,dtree,dtree_inv,decimal_separator,last_received from mst_datapoint_stats where pid=?',
+    30100:'select pid,decimal_separator,last_received from mst_datapoint_stats where pid=?',
     30200:'select pid,date,value from dat_datapoint  where pid=? and date=?',
     30201:'select pid,date,value from dat_datapoint where pid=? and date>=? and date<=? limit ?',
     30202:'select pid,date,value from dat_datapoint where pid=? and date>=? and date<=?',
@@ -48,10 +48,8 @@ STATEMENTS={
     37500:'delete from mst_datapoint_hooks where pid=?',
     37501:'delete from mst_datapoint_hooks where pid=? and sid=?',
     39000:'update mst_datapoint set did=? where pid=?',
-    39100:'update mst_datapoint_stats set dtree=? where pid=?',
-    39101:'update mst_datapoint_stats set decimal_separator=? where pid=?',
+    39100:'update mst_datapoint_stats set decimal_separator=? where pid=?',
     39102:'update mst_datapoint_stats set last_received=? where pid=?',
-    39103:'update mst_datapoint_stats set dtree_inv=? where pid=?',
     39300:'update dat_datapoint_dtree_positives set position=?,length=? where pid=? and date=?',
     39301:'update dat_datapoint_dtree_positives set position=? where pid=? and date=? if position != ?',
     39302:'update dat_datapoint_dtree_positives set length=? where pid=? and date=? if length != ?',
@@ -162,10 +160,8 @@ U_DID_MSTDATAPOINT = 39000
 
 # mst_datapoint_stats
 
-U_DTREE_MSTDATAPOINTSTATS=39100
-U_DECIMALSEPARATOR_MSTDATAPOINTSTATS=39101
+U_DECIMALSEPARATOR_MSTDATAPOINTSTATS=39100
 U_LASTRECEIVED_MSTDATAPOINTSTATS=39102
-U_DTREEINV_MSTDATAPOINTSTATS=39103
 
 # dat_datapoint
 

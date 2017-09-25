@@ -190,7 +190,6 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         data=datapointapi.get_datapoint_data(pid=datapoint['pid'], fromdate=date, todate=date)
         self.assertEqual(len(data),1)
         datapointapi.generate_datasource_text_summary(did=datasource['did'], date=date)
-        datapointapi.generate_datasource_novelty_detector_for_datapoint(pid=datapoint['pid'])
         dsdata=datasourceapi.get_mapped_datasource_data(did=did, fromdate=date, todate=date)
         self.assertTrue({'pid':datapoint['pid'],'position':8} in dsdata[0]['datapoints'])
         self.assertIsNotNone(cassapidatapoint.get_datapoint(pid=datapoint['pid']))
@@ -198,7 +197,6 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertNotEqual(cassapidatapoint.get_datapoint_dtree_positives(pid=datapoint['pid']),[])
         self.assertNotEqual(cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid']),[])
         self.assertNotEqual(cassapidatapoint.get_datapoint_data(pid=datapoint['pid'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
-        self.assertNotEqual(cassapidatasource.get_datasource_novelty_detectors_for_datapoint(pid=datapoint['pid'], did=datapoint['did']),[])
         self.assertTrue(deleteapi.delete_datapoint(pid=datapoint['pid']))
         dsdata=datasourceapi.get_mapped_datasource_data(did=did, fromdate=date, todate=date)
         self.assertFalse({'pid':datapoint['pid'],'position':8} in dsdata[0]['datapoints'])
@@ -207,7 +205,6 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertEqual(cassapidatapoint.get_datapoint_dtree_positives(pid=datapoint['pid']),[])
         self.assertEqual(cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid']),[])
         self.assertEqual(cassapidatapoint.get_datapoint_data(pid=datapoint['pid'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
-        self.assertEqual(cassapidatasource.get_datasource_novelty_detectors_for_datapoint(pid=datapoint['pid'], did=datapoint['did']),[])
 
     def test_delete_datapoint_success_widgets(self):
         ''' delete_datapoint should succeed, and delete it from the widgets where it appears '''
@@ -240,7 +237,6 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertEqual(cassapidatapoint.get_datapoint_dtree_positives(pid=datapoint['pid']),[])
         self.assertEqual(cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid']),[])
         self.assertEqual(cassapidatapoint.get_datapoint_data(pid=datapoint['pid'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
-        self.assertEqual(cassapidatasource.get_datasource_novelty_detectors_for_datapoint(pid=datapoint['pid'], did=datapoint['did']),[])
 
     def test_delete_datapoint_success_register_pending_hooks(self):
         ''' delete_datapoint should succeed, and register any hook is had as pending hooks '''
@@ -277,7 +273,6 @@ class GestaccountCommonDeleteTest(unittest.TestCase):
         self.assertEqual(cassapidatapoint.get_datapoint_dtree_positives(pid=datapoint['pid']),[])
         self.assertEqual(cassapidatapoint.get_datapoint_dtree_negatives(pid=datapoint['pid']),[])
         self.assertEqual(cassapidatapoint.get_datapoint_data(pid=datapoint['pid'],fromdate=timeuuid.uuid1(seconds=1),todate=timeuuid.uuid1()),[])
-        self.assertEqual(cassapidatasource.get_datasource_novelty_detectors_for_datapoint(pid=datapoint['pid'], did=datapoint['did']),[])
         self.assertEqual(cassapidatapoint.get_datapoint_hooks_sids(pid=datapoint['pid']),[])
         self.assertEqual(userapi.get_uri_pending_hooks(uid=datapoint['uid'], uri=datapoint['datapointname']),[sid])
 

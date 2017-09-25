@@ -1,141 +1,140 @@
 import math
 import copy
-from komlog.komlibs.ai.decisiontree.model import decisiontree
+import uuid
+import traceback
+from komlog.komlibs.ai import exceptions, errors
+from komlog.komlibs.ai.decisiontree.model.decisiontree import DecisionTree, DecisionTreeNode
 from komlog.komlibs.textman.model import variables
 from komlog.komfig import logging
 
-ATT_PRIORITY = {
+FEAT_WEIGHT = {
     variables.LINE:1,
-    variables.COLUMN:2,
-    variables.NUMERIC:3,
-    variables.RELATIVE:4
+    variables.COLUMN:0.75,
+    variables.NUMERIC:0.5,
+    variables.RELATIVE:0.3
 }
 
-def generate_decision_tree(training_set):
-    keys=set()
-    for row in training_set:
-        if 'result' in row and row['result']==True:
-            for key in list(row.keys()):
-                keys.add(key)
-    if 'result' in keys:
-        keys.remove('result')
-    try:
-        tree_nodes =_learn_tree(rows=training_set, attributes=keys)
-        return decisiontree.DecisionTree(nodes=tree_nodes)
-    except Exception:
-        return None
+def get_dtree_classifier(data, labels=None, conflicts=None, ignore_features=None):
+    return DecisionTree.train(trainf=_train_multi_classifier, data=data, labels=labels, conflicts=conflicts, ignore_features=ignore_features)
 
-def get_decision_tree_from_serialized_data(serialization):
-    dtree=decisiontree.DecisionTree(serialization=serialization)
-    return dtree
+def load_dtree(serialization):
+    return DecisionTree.load(serialization)
 
-def _learn_tree(rows, attributes, parent_id=1):
-    result_found=None
-    next_node_id=parent_id+1
-    node_list=[]
-    total_rows=len(rows)
-    positives=0
-    negatives=0
-    if len(rows)==0:
-        return [decisiontree.DecisionTreeNode(attribute='', value=1, node_id=next_node_id, parent_id=parent_id, end_node=True, result=False)]
-    for row in rows:
-        if row['result'] is True:
-            positives=positives+1
-        elif row['result'] is False:
-            negatives=negatives+1
-    if positives>0 and negatives==0:
-        result_found=True
-        #return [decisiontree.DecisionTreeNode(attribute='', value=1, node_id=next_node_id, parent_id=parent_id, end_node=True, result=True)]
-    elif negatives>0 and positives==0:
-        result_found=False
-        #return [decisiontree.DecisionTreeNode(attribute='', value=1, node_id=next_node_id, parent_id=parent_id, end_node=True, result=False)]
-    #else:
-    if len(attributes)==0:
-        ''' No more atts to compare, should generate more relations for comparing '''
-        if result_found is not None:
-            return [decisiontree.DecisionTreeNode(attribute='', value=1, node_id=next_node_id, parent_id=parent_id, end_node=True, result=result_found)]
+def _train_multi_classifier(data, labels=None, features=None, conflicts=None, ignore_features=None):
+    '''
+    params:
+    - data: dataframe with training set. labels will be set using the 'label' column.
+    - labels: list of labels to generate dtree nodes from this level (this param is modified in each iteration).
+       You can set it at the beggining to indicate the labels you want to classify. by default, all data labels will be classified.
+    - conflicts: Because classification is multi-labeled, you can indicate incompatibilities between labels.
+    - features: for internal use only (this function calls itself recursively). If features is None, will generate a feature list per label.
+    '''
+    if features == None or labels == None:
+        if data.shape[0] == 0:
+            raise exceptions.DTreeGenerationException(error=errors.Errors.E_ADA_TMCL_EDF)
+        label_groups = data.groupby('label').groups
+        labels = list(label_groups.keys()) if labels == None else labels
+        features = {key:data.columns[data.loc[index].notnull().any()].drop('label').tolist() for key,index in label_groups.items()} if features == None else features
+        feats_to_delete = ignore_features if ignore_features else []
+        for value in features.values():
+            for feat in feats_to_delete:
+                try:
+                    value.remove(feat)
+                except ValueError:
+                    pass
+    nodes = []
+    for feat, value, fv_data in _get_iteration_values(data, features, labels):
+        fv_labels = fv_data.label.unique()
+        req_lbls = set([label for label in fv_labels if label in labels])
+        req_lbls_rownum = fv_data.loc[fv_data['label'].isin(req_lbls)].shape[0]
+        stats = {label:fv_data.loc[fv_data['label'] == label].shape[0]/req_lbls_rownum for label in req_lbls}
+        conflict_l = set()
+        last_feat_l = set()
+        identified_l = set()
+        n_features = copy.deepcopy(features)
+        n_features = {label:fv_data[[f for f in n_features[label] if fv_data[f].notnull().any()]].columns.tolist() for label in fv_labels}
+        for label in req_lbls:
+            n_features[label].remove(feat)
+            last_feature = True if not n_features[label] else False
+            identified = True if stats[label] == 1 else False
+            if last_feature:
+                if conflicts is not None and conflicts.loc[conflicts.index == label,fv_labels].sum(axis=1).item() > 0:
+                    raise exceptions.DTreeGenerationException(error = errors.Errors.E_ADA_TMCL_UCFL, extra={'conflicts':fv_data})
+                    #l = conflicts[fv_labels].columns[conflicts.loc[conflicts.index == label, fv_labels].any()].tolist()
+                    #conflict_l.update([label,*l])
+                else:
+                    last_feat_l.add(label)
+            elif identified:
+                if not(conflicts is not None and conflicts.loc[conflicts.index == label,fv_labels].sum(axis=1).item() > 0):
+                    identified_l.add(label)
+        #if conflict_l:
+            #raise exceptions.DTreeGenerationException(error = errors.Errors.E_ADA_TMCL_UCFL, extra={'conflicts':conflict_l})
+        nid = uuid.uuid4().hex
+        req_lbls = list(req_lbls - last_feat_l - identified_l)
+        if not req_lbls:
+            nodes.append(DecisionTreeNode(feature=feat, value=value, leaf_node=True, result=stats))
         else:
-            return [decisiontree.DecisionTreeNode(attribute='', value=1, node_id=next_node_id, parent_id=parent_id, end_node=True, result=False)]
-    next_att=_get_attribute(rows,attributes)
-    if result_found is not None and not next_att.split('_')[0] in (variables.LINE,variables.COLUMN):
-        return [decisiontree.DecisionTreeNode(attribute='', value=1, node_id=next_node_id, parent_id=parent_id, end_node=True, result=result_found)]
-    attributes.remove(next_att)
-    next_att_values=[]
-    for row in rows:
-        if row['result']:
-            next_att_values.append(row[next_att])
-    next_att_values=list(set(next_att_values))
-    for value in next_att_values:
-        selected_rows=[]
-        for row in rows:
-            if row[next_att]==value:
-                selected_rows.append(row)
-        if len(selected_rows)==1:
-            node_list.append(decisiontree.DecisionTreeNode(attribute=next_att,value=value, node_id=next_node_id, parent_id=parent_id,end_node=True,result=selected_rows[0]['result']))
-            next_node_id+=1
-        else:
-            new_node=decisiontree.DecisionTreeNode(attribute=next_att,value=value,node_id=next_node_id, parent_id=parent_id, end_node=False)
-            next_node_id+=1
-            node_list.append(new_node)
-            next_round_attributes=copy.deepcopy(attributes)
-            for node in _learn_tree(rows=selected_rows, attributes=next_round_attributes, parent_id=new_node.node_id):
-                node_list.append(node)
-                next_node_id+=1
-    return node_list
+            try:
+                children = _train_multi_classifier(data=fv_data, labels=req_lbls, features=n_features, conflicts=conflicts)
+            except exceptions.DTreeGenerationException as e:
+                if e.error == errors.Errors.E_ADA_GIV_ESF:
+                    nodes.append(DecisionTreeNode(feature=feat, value=value, leaf_node=True, result=stats))
+                else:
+                    raise
+            else:
+                nodes.append(DecisionTreeNode(feature=feat, value=value, leaf_node=False, children=children, result=stats))
+    return nodes
 
-def _get_attribute(rows, attributes):
-    gain={}
-    for attribute in attributes:
-        gain[attribute]=__G(rows,attribute)
-    gains = sorted(gain.items(), key= lambda x: -x[1])
-    filter_gain=gains[0][1]*0.5
-    candidates=[]
-    for i, g in enumerate(gains):
-        if g[1]>filter_gain:
-            candidates.append(g[0])
-        else:
-            break;
-    try:
-        scores= sorted(candidates, key=lambda x: (ATT_PRIORITY[x.split('_')[0]],abs(int(x.split('_')[1]))))
-        att = scores[0]
-    except Exception:
-        att = ''
-    return att
-
-def __G(rows, attribute):
-    return __B(rows,attribute)-__R(rows,attribute)
-
-def __B(rows, attribute):
-    p=0.0
-    t=len(rows)
-    for i in range(t):
-        if rows[i]['result']:
-            p+=1
-    q=p/t
-    try:
-        result=-(q*math.log(q,2)+(1-q)*math.log(1-q,2))
-    except ValueError:
-        result=0
-    return result
-
-def __R(rows, attribute):
-    values=set()
-    tk=0.0
-    result=0.0
-    tr=len(rows)
-    for i in range(tr):
+def _get_iteration_values(data, features, labels):
+    label_best_feats = {}
+    for label in labels:
+        if not label in features:
+            raise exceptions.DTreeGenerationException(error = errors.Errors.E_ADA_GIV_LNF, extra={'no_features':[label]})
+        elif not features[label]:
+            raise exceptions.DTreeGenerationException(error = errors.Errors.E_ADA_GIV_FEX)
+        gain = {feat:__G(data, feat, label) for feat in features[label]}
         try:
-            values.add(rows[i][attribute])
-        except KeyError:
-            rows[i][attribute]=None
-    d=list(values)
-    for k in d:
-        tk=0
-        selected_rows=[]
-        for row in rows:
-            if row[attribute]==k:
-                tk+=1
-                selected_rows.append(row)
-        result+=tk/tr*__B(selected_rows,attribute)
-    return result
+            scores = sorted(list(gain.items()), key=lambda x: (x[1]*FEAT_WEIGHT[x[0].split('_')[0]]), reverse=True)
+            label_best_feats.setdefault(scores[0][0],[]).append(label)
+        except Exception as e:
+            ex_info=traceback.format_exc().splitlines()
+            for line in ex_info:
+                logging.logger.error(line)
+            raise exceptions.DTreeGenerationException(error = errors.Errors.E_ADA_GIV_ESF) # error sorting feats
+    for feat, labels in label_best_feats.items():
+        f_data = data.loc[data['label'].isin(labels), feat]
+        f_values = f_data[f_data.notnull()].unique()
+        for value in f_values:
+            v_data = data[data[feat] == value]
+            yield (feat,value,v_data)
+
+def __G(data, feat, label):
+    return __B(data, label) - __R(data, feat, label)
+
+def __B(data, label):
+    try:
+        q = data[data['label'] == label].shape[0]/data.shape[0]
+        return -(q*math.log2(q)+(1-q)*math.log2(1-q))
+    except (KeyError, ValueError):
+        return 0
+
+def __R(data, feat, label):
+    result = 0
+    try:
+        f_data = data[feat]
+    except KeyError:
+        return __B(data, label)
+    else:
+        tr = data.shape[0]
+        f_values = f_data.unique()
+        for v in f_values:
+            v_rows = data[f_data == v]
+            tk = v_rows.shape[0]
+            try:
+                result += tk / tr * __B(v_rows, label)
+            except ZeroDivisionError:
+                v_rows = data[f_data.isnull()]
+                tk = v_rows.shape[0]
+                result += tk / tr * __B(v_rows, label)
+        return result
 

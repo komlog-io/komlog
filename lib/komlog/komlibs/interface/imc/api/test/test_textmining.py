@@ -21,8 +21,8 @@ class InterfaceImcApiTextminingTest(unittest.TestCase):
 
     def test_process_message_GDTREE_failure_non_existent_pid(self):
         ''' process_message_GDTREE should fail if pid does not exist '''
-        pid=uuid.uuid4()
-        message=messages.GenerateDTreeMessage(pid=pid)
+        did=uuid.uuid4()
+        message=messages.GenerateDTreeMessage(did=did)
         response=textmining.process_message_GDTREE(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
         self.assertEqual(response.imc_messages['unrouted'],[])
@@ -146,16 +146,6 @@ class InterfaceImcApiTextminingTest(unittest.TestCase):
         message=messages.GenerateTextSummaryMessage(did=did,date=date)
         response=textmining.process_message_GENTEXTSUMMARY(message=message)
         self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
-        self.assertEqual(response.imc_messages['unrouted'],[])
-        self.assertEqual(response.imc_messages['routed'],{})
-
-    def test_process_message_ADTREE_failure_non_existent_pid(self):
-        ''' process_message_ADTREE should fail if pid does not exist '''
-        pid=uuid.uuid4()
-        message=messages.AnalyzeDTreeMessage(pid=pid)
-        response=textmining.process_message_ADTREE(message=message)
-        self.assertEqual(response.status, status.IMC_STATUS_NOT_FOUND)
-        self.assertEqual(response.error, gesterrors.E_GPA_GDCS_DPNF)
         self.assertEqual(response.imc_messages['unrouted'],[])
         self.assertEqual(response.imc_messages['routed'],{})
 

@@ -9,6 +9,7 @@ from komlog.komlibs.auth.model.operations import Operations
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.events.model import types as eventstypes
+from komlog.komlibs.gestaccount import exceptions as gestexcept
 from komlog.komlibs.gestaccount.common import delete as deleteapi
 from komlog.komlibs.gestaccount.user import api as userapi
 from komlog.komlibs.gestaccount.agent import api as agentapi
@@ -41,19 +42,24 @@ def process_message_MONVAR(message):
     position=message.position
     length=message.length
     datapointname=message.datapointname
-    result=datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+    result = datapointapi.monitor_new_datapoint(did=did, date=date, position=position, length=length, datapointname=datapointname)
+    # if dtree update failed, send user notification to train dataset
+    if result['dtree'] == None:
+        for conflict in result['conflicts']:
+            datapoint = datapointapi.get_datapoint_config(pid=conflict['pid'])
+            if datapoint:
+                params={'pid':datapoint['pid'].hex, 'did':datapoint['did'].hex, 'dates':[date.hex for date in conflict['dates']]}
+                msg=messages.UserEventMessage(uid=datapoint['uid'], event_type=eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters=params)
+                response.add_imc_message(msg)
+                break # only one notif to user
     datasource=datasourceapi.get_datasource_config(did=did)
     webop=operation.NewDatasourceDatapointOperation(uid=datasource['uid'],aid=datasource['aid'],did=did,pid=result['pid'])
     authop=webop.get_auth_operation()
     params=webop.get_params()
     response.add_imc_message(messages.UpdateQuotesMessage(operation=authop, params=params))
     response.add_imc_message(messages.ResourceAuthorizationUpdateMessage(operation=authop, params=params))
-    response.add_imc_message(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':result['pid'].hex}))
-    for pid in result['dtree_gen_success']:
-        response.add_imc_message(messages.FillDatapointMessage(pid=pid,date=date))
-    for pid in result['dtree_gen_failed']:
-        response.add_imc_message(messages.AnalyzeDTreeMessage(pid=pid))
-    if result['previously_existed'] is False:
+    if result['previously_existed'] == False:
+        response.add_imc_message(messages.UserEventMessage(uid=uid,event_type=eventstypes.USER_EVENT_NOTIFICATION_NEW_DATAPOINT, parameters={'pid':result['pid'].hex}))
         response.add_imc_message(messages.NewDPWidgetMessage(uid=uid,pid=result['pid']))
         uris=[{'type':vertex.DATAPOINT, 'id':result['pid'], 'uri':result['datapointname']}]
         response.add_imc_message(messages.HookNewUrisMessage(uid=uid, uris=uris, date=date))
@@ -71,11 +77,15 @@ def process_message_NEGVAR(message):
     position=message.position
     length=message.length
     pid=message.pid
-    result=datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
-    for a_pid in result['dtree_gen_success']:
-        response.add_imc_message(messages.FillDatapointMessage(pid=a_pid,date=date))
-    for a_pid in result['dtree_gen_failed']:
-        response.add_imc_message(messages.AnalyzeDTreeMessage(pid=a_pid))
+    result = datapointapi.mark_negative_variable(pid=pid, date=date, position=position, length=length)
+    if result.get('dtree',-1) == None:
+        for conflict in result['conflicts']:
+            datapoint = datapointapi.get_datapoint_config(pid=conflict['pid'])
+            if datapoint:
+                params={'pid':datapoint['pid'].hex, 'did':datapoint['did'].hex, 'dates':[date.hex for date in conflict['dates']]}
+                msg=messages.UserEventMessage(uid=datapoint['uid'], event_type=eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters=params)
+                response.add_imc_message(msg)
+                break # only one notif to user
     response.status=status.IMC_STATUS_OK
     return response
 
@@ -92,10 +102,14 @@ def process_message_POSVAR(message):
     length=message.length
     pid=message.pid
     result=datapointapi.mark_positive_variable(date=date, position=position, length=length, pid=pid)
-    for a_pid in result['dtree_gen_success']:
-        response.add_imc_message(messages.FillDatapointMessage(pid=a_pid,date=date))
-    for a_pid in result['dtree_gen_failed']:
-        response.add_imc_message(messages.AnalyzeDTreeMessage(pid=a_pid))
+    if result.get('dtree',-1) == None:
+        for conflict in result['conflicts']:
+            datapoint = datapointapi.get_datapoint_config(pid=conflict['pid'])
+            if datapoint:
+                params={'pid':datapoint['pid'].hex, 'did':datapoint['did'].hex, 'dates':[date.hex for date in conflict['dates']]}
+                msg=messages.UserEventMessage(uid=datapoint['uid'], event_type=eventstypes.USER_EVENT_INTERVENTION_DATAPOINT_IDENTIFICATION, parameters=params)
+                response.add_imc_message(msg)
+                break # only one notif to user
     response.status=status.IMC_STATUS_OK
     return response
 

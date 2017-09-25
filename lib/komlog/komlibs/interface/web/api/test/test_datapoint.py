@@ -602,7 +602,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         pid = None
         while len(msgs)>0:
             for msg in msgs:
-                if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+                if msg._type_ == messages.Messages.NEW_DP_WIDGET_MESSAGE:
                     pid = msg.pid
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
@@ -691,7 +691,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         sequence=timeuuid.get_custom_sequence(ds_date)
         self.assertTrue(gestdatasourceapi.store_datasource_data(did=did, date=ds_date, content=ds_content))
         self.assertTrue(gestdatasourceapi.generate_datasource_map(did=did, date=ds_date))
-        position=3
+        position=10
         length=2
         datapoint_uri='negative_datapoint_x'
         response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did.hex, sequence=sequence, position=position, length=length, datapointname=datapoint_uri)
@@ -701,7 +701,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         pid = None
         while len(msgs)>0:
             for msg in msgs:
-                if msg._type_ == messages.Messages.FILL_DATAPOINT_MESSAGE:
+                if msg._type_ == messages.Messages.NEW_DP_WIDGET_MESSAGE:
                     pid = msg.pid
                 msgs.remove(msg)
                 msgresponse=msgapi.process_message(msg)
@@ -814,14 +814,71 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
 
     def test_get_datapoint_data_request_success_datapoint_data_found(self):
         ''' get_datapoint_data_request should succeed and return the data found '''
-        psp = self.passport
-        did=self.agents[0]['dids'][0]
+        username='test_get_datapoint_data_request_success_datapoint_data_found'
+        password='password'
+        email = username+'@komlog.org'
+        response = userapi.new_user_request(username=username, password=password, email=email)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        for msg in response.imc_messages['unrouted']:
+            if msg.type == messages.Messages.NEW_USR_NOTIF_MESSAGE:
+                code = msg.code
+                userapi.confirm_user_request(email=email, code=code)
+        msgs=response.imc_messages['unrouted']
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.imc_messages['unrouted']:
+                    msgs.append(msg2)
+        uid = uuid.UUID(response.data['uid'])
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
+        agentname='agent'
+        version='test library vX.XX'
+        response = agentapi.new_agent_request(passport=psp, agentname=agentname, pubkey=pubkey, version=version)
+        if response.status==status.WEB_STATUS_OK:
+            msgs=response.imc_messages['unrouted']
+            while len(msgs)>0:
+                for msg in msgs:
+                    msgs.remove(msg)
+                    msgresponse=msgapi.process_message(msg)
+                    for msg2 in msgresponse.imc_messages['unrouted']:
+                        msgs.append(msg2)
+                    self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        aid = uuid.UUID(response.data['aid'])
+        psp = passport.UserPassport(uid=uid,sid=uuid.uuid4())
+        cookie = passport.AgentCookie(aid=aid, sid=uuid.uuid4(), pv=1, seq=timeuuid.get_custom_sequence(timeuuid.uuid1())).to_dict()
+        agent_passport = passport.get_agent_passport(cookie)
+        datasourcename='datasource'
+        response = datasourceapi.new_datasource_request(passport=agent_passport, datasourcename=datasourcename)
+        self.assertTrue(isinstance(response, webresp.WebInterfaceResponse))
+        self.assertEqual(response.status, status.WEB_STATUS_OK)
+        self.assertTrue(isinstance(uuid.UUID(response.data['did']), uuid.UUID))
+        did = uuid.UUID(response.data['did'])
+        msgs=response.imc_messages['unrouted']
+        while len(msgs)>0:
+            for msg in msgs:
+                msgs.remove(msg)
+                msgresponse=msgapi.process_message(msg)
+                for msg2 in msgresponse.imc_messages['unrouted']:
+                    msgs.append(msg2)
+                self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
+        response = loginapi.login_request(username=username, password=password)
+        cookie=getattr(response, 'cookie',None)
+        psp = passport.get_user_passport(cookie)
+        response = agentapi.get_agents_config_request(passport=psp)
+        agents = response.data
+        for i in range(1,20):
+            content='DATAPOINT x = '+str(i)
+            date=timeuuid.uuid1()
+            self.assertTrue(gestdatasourceapi.store_datasource_data(did=did, date=date, content=content))
+            self.assertTrue(gestdatasourceapi.generate_datasource_map(did=did, date=date))
         datapointname='test_get_datapoint_data_request_success_datapoint_data_found'
-        datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        datasourcedata=datasourceapi.get_datasource_data_request(passport=psp, did=did.hex)
         self.assertEqual(datasourcedata.status, status.WEB_STATUS_OK)
         sequence=datasourcedata.data[0]['seq']
-        position,length=datasourcedata.data[0]['variables'][7]
-        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did, sequence=sequence, position=position, length=length, datapointname=datapointname)
+        position,length=datasourcedata.data[0]['variables'][0]
+        response=datapointapi.new_datasource_datapoint_request(passport=psp, did=did.hex, sequence=sequence, position=position, length=length, datapointname=datapointname)
         self.assertEqual(response.status, status.WEB_STATUS_RECEIVED)
         msgs=response.imc_messages['unrouted']
         while len(msgs)>0:
@@ -831,7 +888,7 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
                 for msg2 in msgresponse.imc_messages['unrouted']:
                     msgs.append(msg2)
                 self.assertEqual(msgresponse.status, imcstatus.IMC_STATUS_OK)
-        datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did)
+        datasourceinfo=datasourceapi.get_datasource_data_request(passport=psp, did=did.hex)
         pid=None
         for datapoint in datasourceinfo.data[0]['datapoints']:
             if datapoint['index']==position:
@@ -841,8 +898,8 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         end_date=None
         response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(len(response.data),5) # 5 because monitor_datapoint tries to store 5 sampls
-        self.assertEqual(response.data[0]['value'],7)
+        self.assertEqual(len(response.data),15) # 15 because monitor_datapoint tries to store 15 sampls
+        self.assertEqual(response.data[0]['value'],19)
 
     def test_get_datapoint_data_request_failure_date_requested_before_interval_bounds_limit(self):
         ''' get_datapoint_data_request should fail if data requested interval is before
@@ -914,12 +971,12 @@ class InterfaceWebApiDatapointTest(unittest.TestCase):
         end_date=str(timeuuid.get_unix_timestamp(timeuuid.uuid1()))
         response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=start_date, end_date=end_date)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(len(response.data),5) # 5 because monitor_datapoint tries to store 5 sampls
+        self.assertEqual(len(response.data),15) # 15 because monitor_datapoint tries to store 15 sampls
         self.assertEqual(response.data[0]['value'],9)
         #the same query without setting start_date
         response=datapointapi.get_datapoint_data_request(passport=psp, pid=pid, start_date=None, end_date=end_date)
         self.assertEqual(response.status, status.WEB_STATUS_OK)
-        self.assertEqual(len(response.data),5)
+        self.assertEqual(len(response.data),15)
         self.assertEqual(response.data[0]['value'],9)
         self.assertTrue(cassapiiface.delete_user_iface_deny(psp.uid, iface))
 

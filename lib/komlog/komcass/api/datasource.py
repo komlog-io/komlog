@@ -276,40 +276,6 @@ def delete_datasource_text_summaries(did):
     return True
 
 @exceptions.ExceptionHandler
-def get_datasource_novelty_detectors_for_datapoint(did,pid):
-    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID,(did,pid))
-    data=[]
-    if row:
-        for d in row:
-            data.append(ormdatasource.DatasourceNoveltyDetector(**d))
-    return data
-
-@exceptions.ExceptionHandler
-def get_last_datasource_novelty_detector_for_datapoint(did,pid):
-    row=connection.session.execute(stmtdatasource.S_LAST_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID,(did,pid))
-    if row:
-        return ormdatasource.DatasourceNoveltyDetector(**row[0])
-    else:
-        return None
-
-@exceptions.ExceptionHandler
-def insert_datasource_novelty_detector_for_datapoint(obj):
-    if not isinstance(obj, ormdatasource.DatasourceNoveltyDetector):
-        return False
-    connection.session.execute(stmtdatasource.I_A_DATDATASOURCENOVELTYDETECTORDATAPOINT,(obj.did,obj.pid,obj.date,obj.nd,obj.features))
-    return True
-
-@exceptions.ExceptionHandler
-def delete_datasource_novelty_detector_for_datapoint(did, pid, date=None):
-    if did and pid and date:
-        connection.session.execute(stmtdatasource.D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID_DATE,(did,pid,date))
-        return True
-    elif did and pid:
-        connection.session.execute(stmtdatasource.D_A_DATDATASOURCENOVELTYDETECTORDATAPOINT_B_DID_PID,(did,pid))
-        return True
-    return False
-
-@exceptions.ExceptionHandler
 def get_datasource_hash(did, date):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_DATE,(did,date))
     if not row:
@@ -450,5 +416,20 @@ def delete_datasource_supplies(did):
 @exceptions.ExceptionHandler
 def delete_datasource_supplies_at(did, date):
     connection.session.execute(stmtdatasource.D_A_DATDATASOURCESUPPLIES_B_DID_DATE,(did, date))
+    return True
+
+@exceptions.ExceptionHandler
+def get_datapoint_classifier_dtree(did):
+    row=connection.session.execute(stmtdatasource.S_DTREE_MSTDATAPOINTCLASSIFIERDTREE_B_DID,(did,))
+    return row[0]['dtree'] if row else None
+
+@exceptions.ExceptionHandler
+def insert_datapoint_classifier_dtree(did, dtree):
+    connection.session.execute(stmtdatasource.I_A_MSTDATAPOINTCLASSIFIERDTREE,(did, dtree))
+    return True
+
+@exceptions.ExceptionHandler
+def delete_datapoint_classifier_dtree(did):
+    connection.session.execute(stmtdatasource.D_A_MSTDATAPOINTCLASSIFIERDTREE_B_DID,(did,))
     return True
 

@@ -13,10 +13,10 @@ OBJECTS=[
     'DAT_DATASOURCE_MAP',
     'DAT_DATASOURCE_HASH',
     'DAT_DATASOURCE_TEXT_SUMMARY',
-    'DAT_DATASOURCE_NOVELTY_DETECTOR_DATAPOINT',
     'DAT_DATASOURCE_METADATA',
     'MST_DATASOURCE_HOOKS',
     'DAT_DATASOURCE_SUPPLIES',
+    'MST_DATAPOINT_CLASSIFIER_DTREE'
 ]
 
 MST_DATASOURCE='''
@@ -87,17 +87,6 @@ DAT_DATASOURCE_TEXT_SUMMARY='''
     ) WITH CLUSTERING ORDER BY (date desc);
 '''
 
-DAT_DATASOURCE_NOVELTY_DETECTOR_DATAPOINT='''
-    CREATE TABLE dat_datasource_novelty_detector_datapoint (
-        did uuid,
-        pid uuid,
-        date timeuuid,
-        nd blob,
-        features set<text>,
-        PRIMARY KEY ((did,pid),date)
-    ) WITH CLUSTERING ORDER BY (date desc);
-'''
-
 DAT_DATASOURCE_METADATA='''
     CREATE TABLE dat_datasource_metadata (
         did uuid,
@@ -122,5 +111,13 @@ DAT_DATASOURCE_SUPPLIES='''
         supplies set<text>,
         PRIMARY KEY (did,date)
     ) WITH CLUSTERING ORDER BY (date desc);
+'''
+
+MST_DATAPOINT_CLASSIFIER_DTREE='''
+    CREATE TABLE mst_datapoint_classifier_dtree(
+        did uuid,
+        dtree blob,
+        PRIMARY KEY (did)
+    );
 '''
 

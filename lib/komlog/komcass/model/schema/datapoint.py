@@ -38,8 +38,6 @@ MST_DATAPOINT_INDEX_02='''
 MST_DATAPOINT_STATS='''
     CREATE TABLE mst_datapoint_stats (
         pid uuid,
-        dtree text,
-        dtree_inv text,
         decimal_separator text,
         last_received timeuuid,
         PRIMARY KEY (pid)

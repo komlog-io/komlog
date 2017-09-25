@@ -74,26 +74,28 @@ def _process_event_response_user_event_intervention_datapoint_identification(eve
             else:
                 logging.logger.debug('marking positive variable')
                 mark_result=datapointapi.mark_positive_variable(pid=pid, date=ds_date, position=reg['p'], length=reg['l'], dtree_update=False)
-            for p_pid in mark_result['dtree_pending']:
-                logging.logger.debug('adding pid to pending dtree generation '+p_pid.hex)
-                pending_dtree_updates.add(p_pid)
+            for did in mark_result['pending']:
+                pending_dtree_updates.add(did)
         except gestexcept.GestaccountException as e:
             logging.logger.error('Exception detected. Error '+e.error.name)
             processing_result['mark_failed'].append(reg['s'])
             response['mark_failed'].append(reg['s'])
-    for pid in pending_dtree_updates:
-        logging.logger.debug('Updating pending dtrees: '+pid.hex)
+    for did in pending_dtree_updates:
+        logging.logger.debug('Updating dtree: '+did.hex)
         try:
-            datapointapi.generate_decision_tree(pid=pid)
-            datapointapi.generate_inverse_decision_tree(pid=pid)
+            result = datapointapi.generate_decision_tree(did=did)
         except gestexcept.GestaccountException as e:
             logging.logger.error('Exception detected. Error '+e.error.name)
-            processing_result['dtree_gen_failed'].append(pid.hex)
-            response['dtree_gen_failed'].append(pid)
+            processing_result['dtree_gen_failed'].append(did.hex)
+            response['dtree_gen_failed'].append(did)
         else:
-            logging.logger.debug('Success updating dtree: '+pid.hex)
-            processing_result['dtree_gen_success'].append(pid.hex)
-            response['dtree_gen_success'].append(pid)
+            if result['dtree'] == None:
+                processing_result['dtree_gen_failed'].append(did.hex)
+                response['dtree_gen_failed'].append(did)
+            else:
+                logging.logger.debug('Success updating dtree: '+did.hex)
+                processing_result['dtree_gen_success'].append(did.hex)
+                response['dtree_gen_success'].append(did)
     logging.logger.debug('Event processing result: '+str(processing_result))
     event_response=ormevents.UserEventResponseInterventionDatapointIdentification(
         uid=event.uid,

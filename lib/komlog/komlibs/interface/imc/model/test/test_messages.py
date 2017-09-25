@@ -327,13 +327,13 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         self.assertTrue(isinstance(obj, messages.IMCMessage))
         self.assertEqual(obj.to_serialization(),msg)
 
-    def test_GenerateDTreeMessage_failure_invalid_pid(self):
-        ''' GenerateDTreeMessage creation should fail if pid is invalid '''
-        pids=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]
-        for pid in pids:
+    def test_GenerateDTreeMessage_failure_invalid_did(self):
+        ''' GenerateDTreeMessage creation should fail if did is invalid '''
+        dids=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]
+        for did in dids:
             with self.assertRaises(exceptions.BadParametersException) as cm:
-                messages.GenerateDTreeMessage(pid=pid)
-            self.assertEqual(cm.exception.error, Errors.E_IIMM_GDTREE_IPID)
+                messages.GenerateDTreeMessage(did=did)
+            self.assertEqual(cm.exception.error, Errors.E_IIMM_GDTREE_IDID)
 
     def test_GenerateDTreeMessage_failure_load_from_serialization_invalid_field_number(self):
         ''' GenerateDTreeMessage creation should fail if we pass a string without the exact number of fields '''
@@ -358,38 +358,38 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
 
     def test_GenerateDTreeMessage_failure_load_from_serialization_invalid_hex_pid(self):
         ''' GenerateDTreeMessage creation should fail if we pass a string with invalid pid '''
-        pid=uuid.uuid4()
-        msg='|'.join((messages.GenerateDTreeMessage._type_.value,'pid.hex'))
+        did=uuid.uuid4()
+        msg='|'.join((messages.GenerateDTreeMessage._type_.value,'did.hex'))
         with self.assertRaises(exceptions.BadParametersException) as cm:
             messages.GenerateDTreeMessage.load_from_serialization(msg)
-        self.assertEqual(cm.exception.error, Errors.E_IIMM_GDTREE_IHPID)
+        self.assertEqual(cm.exception.error, Errors.E_IIMM_GDTREE_IHDID)
 
     def test_GenerateDTreeMessage_success_load_from_serialization(self):
         ''' GenerateDTreeMessage creation should succeed calling the classmethod load_from_serialization '''
-        pid=uuid.uuid4()
-        msg='|'.join((messages.GenerateDTreeMessage._type_.value,pid.hex))
+        did=uuid.uuid4()
+        msg='|'.join((messages.GenerateDTreeMessage._type_.value,did.hex))
         obj=messages.GenerateDTreeMessage.load_from_serialization(msg)
-        self.assertEqual(obj.pid, pid)
+        self.assertEqual(obj.did, did)
         self.assertEqual(obj._type_, messages.Messages.GDTREE_MESSAGE)
         self.assertTrue(isinstance(obj, messages.GenerateDTreeMessage))
         self.assertTrue(isinstance(obj, messages.IMCMessage))
 
     def test_GenerateDTreeMessage_success_load_from_serialization_base_class(self):
         '''  GenerateDTreeMessage creation should succeed calling the classmethod load_from_serialization from the base class '''
-        pid=uuid.uuid4()
-        msg='|'.join((messages.GenerateDTreeMessage._type_.value,pid.hex))
+        did=uuid.uuid4()
+        msg='|'.join((messages.GenerateDTreeMessage._type_.value,did.hex))
         obj=messages.IMCMessage.load_from_serialization(msg)
-        self.assertEqual(obj.pid, pid)
+        self.assertEqual(obj.did, did)
         self.assertEqual(obj._type_, messages.Messages.GDTREE_MESSAGE)
         self.assertTrue(isinstance(obj, messages.GenerateDTreeMessage))
         self.assertTrue(isinstance(obj, messages.IMCMessage))
 
     def test_GenerateDTreeMessage_to_serialization_success(self):
         ''' GenerateDTreeMessage.to_serialization should succeed '''
-        pid=uuid.uuid4()
-        msg='|'.join((messages.GenerateDTreeMessage._type_.value, pid.hex))
+        did=uuid.uuid4()
+        msg='|'.join((messages.GenerateDTreeMessage._type_.value, did.hex))
         obj=messages.IMCMessage.load_from_serialization(msg)
-        self.assertEqual(obj.pid, pid)
+        self.assertEqual(obj.did, did)
         self.assertEqual(obj._type_, messages.Messages.GDTREE_MESSAGE)
         self.assertTrue(isinstance(obj, messages.GenerateDTreeMessage))
         self.assertTrue(isinstance(obj, messages.IMCMessage))
@@ -2216,108 +2216,6 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         self.assertTrue(isinstance(obj, messages.IMCMessage))
         self.assertEqual(obj.to_serialization(),msg)
 
-    def test_MissingDatapointMessage_failure_invalid_did(self):
-        ''' MissingDatapointMessage creation should fail if did is invalid '''
-        dids=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4().hex, uuid.uuid1(), json.dumps('username'), 'user\nname','user\tname']
-        date=timeuuid.uuid1()
-        for did in dids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                messages.MissingDatapointMessage(did=did, date=date)
-            self.assertEqual(cm.exception.error, Errors.E_IIMM_MISSDP_IDID)
-
-    def test_MissingDatapointMessage_failure_invalid_date(self):
-        ''' MissingDatapointMessage creation should fail if date is invalid '''
-        dates=[None, 23423, 2323.2342, 'Username',{'a','dict'},['a','list'],('a','tuple'),'userñame',uuid.uuid4().hex, uuid.uuid4(), json.dumps('username'), 'user\nname','user\tname']
-        did=uuid.uuid4()
-        for date in dates:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                messages.MissingDatapointMessage(did=did, date=date)
-            self.assertEqual(cm.exception.error, Errors.E_IIMM_MISSDP_IDT)
-
-    def test_MissingDatapointMessage_success(self):
-        ''' MissingDatapointMessage creation should succeed '''
-        did=uuid.uuid4()
-        date=timeuuid.uuid1()
-        msg=messages.MissingDatapointMessage(did=did, date=date)
-        self.assertTrue(isinstance(msg, messages.MissingDatapointMessage))
-        self.assertEqual(msg._type_, messages.Messages.MISSING_DATAPOINT_MESSAGE)
-
-    def test_MissingDatapointMessage_failure_load_from_serialization_invalid_field_number(self):
-        ''' MissingDatapointMessage creation should fail if we pass a string without the exact number of fields '''
-        msg='|'.join((messages.MissingDatapointMessage._type_.value,))
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            messages.MissingDatapointMessage.load_from_serialization(msg)
-        self.assertEqual(cm.exception.error, Errors.E_IIMM_MISSDP_ELFS)
-
-    def test_MissingDatapointMessage_failure_load_from_serialization_invalid_message(self):
-        ''' MissingDatapointMessage creation should fail if we pass a non string message '''
-        msg=['not a string']
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            messages.MissingDatapointMessage.load_from_serialization(msg)
-        self.assertEqual(cm.exception.error, Errors.E_IIMM_MISSDP_MINS)
-
-    def test_MissingDatapointMessage_failure_load_from_serialization_invalid_serialization_type(self):
-        ''' MissingDatapointMessage creation should fail if we pass a string with not the expected type '''
-        msg='|'.join(('WHATEVER','1','2'))
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            messages.MissingDatapointMessage.load_from_serialization(msg)
-        self.assertEqual(cm.exception.error, Errors.E_IIMM_MISSDP_IST)
-
-    def test_MissingDatapointMessage_failure_load_from_serialization_invalid_hex_did(self):
-        ''' MissingDatapointMessage creation should fail if we pass a string with invalid did '''
-        did=uuid.uuid4()
-        date=timeuuid.uuid1()
-        msg='|'.join((messages.MissingDatapointMessage._type_.value,'uid.hex',date.hex))
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            messages.MissingDatapointMessage.load_from_serialization(msg)
-        self.assertEqual(cm.exception.error, Errors.E_IIMM_MISSDP_IHDID)
-
-    def test_MissingDatapointMessage_failure_load_from_serialization_invalid_hex_date(self):
-        ''' MissingDatapointMessage creation should fail if we pass a string with invalid date '''
-        did=uuid.uuid4()
-        date=timeuuid.uuid1()
-        msg='|'.join((messages.MissingDatapointMessage._type_.value,did.hex,'date.hex'))
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            messages.MissingDatapointMessage.load_from_serialization(msg)
-        self.assertEqual(cm.exception.error, Errors.E_IIMM_MISSDP_IHDATE)
-
-    def test_MissingDatapointMessage_success_load_from_serialization(self):
-        ''' MissingDatapointMessage creation should succeed calling the classmethod load_from_serialization '''
-        did=uuid.uuid4()
-        date=timeuuid.uuid1()
-        msg='|'.join((messages.MissingDatapointMessage._type_.value,did.hex,date.hex))
-        obj=messages.MissingDatapointMessage.load_from_serialization(msg)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.date, date)
-        self.assertEqual(obj._type_, messages.Messages.MISSING_DATAPOINT_MESSAGE)
-        self.assertTrue(isinstance(obj, messages.MissingDatapointMessage))
-        self.assertTrue(isinstance(obj, messages.IMCMessage))
-
-    def test_MissingDatapointMessage_success_load_from_serialization_base_class(self):
-        '''  MissingDatapointMessage creation should succeed calling the classmethod load_from_serialization from the base class '''
-        did=uuid.uuid4()
-        date=timeuuid.uuid1()
-        msg='|'.join((messages.MissingDatapointMessage._type_.value,did.hex,date.hex))
-        obj=messages.IMCMessage.load_from_serialization(msg)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.date,date)
-        self.assertEqual(obj._type_, messages.Messages.MISSING_DATAPOINT_MESSAGE)
-        self.assertTrue(isinstance(obj, messages.MissingDatapointMessage))
-        self.assertTrue(isinstance(obj, messages.IMCMessage))
-
-    def test_MissingDatapointMessage_to_serialization_success(self):
-        '''MissingDatapointMessage .to_serialization should succeed '''
-        did=uuid.uuid4()
-        date=timeuuid.uuid1()
-        msg='|'.join((messages.MissingDatapointMessage._type_.value,did.hex,date.hex))
-        obj=messages.IMCMessage.load_from_serialization(msg)
-        self.assertEqual(obj.did, did)
-        self.assertEqual(obj.date,date)
-        self.assertEqual(obj._type_, messages.Messages.MISSING_DATAPOINT_MESSAGE)
-        self.assertTrue(isinstance(obj, messages.MissingDatapointMessage))
-        self.assertTrue(isinstance(obj, messages.IMCMessage))
-        self.assertEqual(obj.to_serialization(),msg)
-
     def test_NewInvitationMailMessage_failure_invalid_email(self):
         ''' NewInvitationMailMessage creation should fail if email is invalid '''
         emails=[None, -23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1(),'CAPITAL@email.com','adfañdasdf@email.com','email@eamil@email','email@domain','email@email@domain.com','.@.com','email@.com']
@@ -3621,74 +3519,6 @@ class InterfaceImcModelMessagesTest(unittest.TestCase):
         self.assertEqual(obj._type_, messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE)
         self.assertTrue(isinstance(obj2, messages.DataIntervalRequestMessage))
         self.assertTrue(isinstance(obj2, messages.IMCMessage))
-
-    def test_AnalyzeDTreeMessage_failure_invalid_pid(self):
-        ''' AnalyzeDTreeMessage creation should fail if pid is invalid '''
-        pids=[None, 23423, 2323.2342, 'User/name',{'a','dict'},['a','list'],('a','tuple'),'userñame',json.dumps('username'), 'user\nname','user\tname', timeuuid.uuid1()]
-        for pid in pids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                messages.AnalyzeDTreeMessage(pid=pid)
-            self.assertEqual(cm.exception.error, Errors.E_IIMM_ADTREE_IPID)
-
-    def test_AnalyzeDTreeMessage_failure_load_from_serialization_invalid_field_number(self):
-        ''' AnalyzeDTreeMessage creation should fail if we pass a string without the exact number of fields '''
-        msg='|'.join((messages.AnalyzeDTreeMessage._type_.value,))
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            messages.AnalyzeDTreeMessage.load_from_serialization(msg)
-        self.assertEqual(cm.exception.error, Errors.E_IIMM_ADTREE_ELFS)
-
-    def test_AnalyzeDTreeMessage_failure_load_from_serialization_invalid_message(self):
-        ''' AnalyzeDTreeMessage creation should fail if we pass a non string message '''
-        msg=['not a string']
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            messages.AnalyzeDTreeMessage.load_from_serialization(msg)
-        self.assertEqual(cm.exception.error, Errors.E_IIMM_ADTREE_MINS)
-
-    def test_AnalyzeDTreeMessage_failure_load_from_serialization_invalid_serialization_type(self):
-        ''' AnalyzeDTreeMessage creation should fail if we pass a string with not the expected type '''
-        msg='|'.join(('WHATEVER','1'))
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            messages.AnalyzeDTreeMessage.load_from_serialization(msg)
-        self.assertEqual(cm.exception.error, Errors.E_IIMM_ADTREE_IST)
-
-    def test_AnalyzeDTreeMessage_failure_load_from_serialization_invalid_hex_pid(self):
-        ''' AnalyzeDTreeMessage creation should fail if we pass a string with invalid pid '''
-        pid=uuid.uuid4()
-        msg='|'.join((messages.AnalyzeDTreeMessage._type_.value,'pid.hex'))
-        with self.assertRaises(exceptions.BadParametersException) as cm:
-            messages.AnalyzeDTreeMessage.load_from_serialization(msg)
-        self.assertEqual(cm.exception.error, Errors.E_IIMM_ADTREE_IHPID)
-
-    def test_AnalyzeDTreeMessage_success_load_from_serialization(self):
-        ''' AnalyzeDTreeMessage creation should succeed calling the classmethod load_from_serialization '''
-        pid=uuid.uuid4()
-        msg='|'.join((messages.AnalyzeDTreeMessage._type_.value,pid.hex))
-        obj=messages.AnalyzeDTreeMessage.load_from_serialization(msg)
-        self.assertEqual(obj.pid, pid)
-        self.assertEqual(obj._type_, messages.Messages.ANALYZE_DTREE_MESSAGE)
-        self.assertTrue(isinstance(obj, messages.AnalyzeDTreeMessage))
-        self.assertTrue(isinstance(obj, messages.IMCMessage))
-
-    def test_AnalyzeDTreeMessage_success_load_from_serialization_base_class(self):
-        '''  AnalyzeDTreeMessage creation should succeed calling the classmethod load_from_serialization from the base class '''
-        pid=uuid.uuid4()
-        msg='|'.join((messages.AnalyzeDTreeMessage._type_.value,pid.hex))
-        obj=messages.IMCMessage.load_from_serialization(msg)
-        self.assertEqual(obj.pid, pid)
-        self.assertEqual(obj._type_, messages.Messages.ANALYZE_DTREE_MESSAGE)
-        self.assertTrue(isinstance(obj, messages.AnalyzeDTreeMessage))
-        self.assertTrue(isinstance(obj, messages.IMCMessage))
-
-    def test_AnalyzeDTreeMessage_to_serialization_success(self):
-        ''' AnalyzeDTreeMessage.to_serialization should succeed '''
-        pid=uuid.uuid4()
-        msg='|'.join((messages.AnalyzeDTreeMessage._type_.value, pid.hex))
-        obj=messages.IMCMessage.load_from_serialization(msg)
-        self.assertEqual(obj.pid, pid)
-        self.assertEqual(obj._type_, messages.Messages.ANALYZE_DTREE_MESSAGE)
-        self.assertTrue(isinstance(obj, messages.AnalyzeDTreeMessage))
-        self.assertTrue(isinstance(obj, messages.IMCMessage))
-        self.assertEqual(obj.to_serialization(),msg)
 
     def test_IdentifyNewDatapointsMessage_failure_invalid_did(self):
         ''' IdentifyNewDatapointsMessage creation should fail if did is invalid '''

@@ -3,6 +3,8 @@ from komlog.komfig import logging
 
 
 MODULES = [
+    'komlog.komlibs.ai.decisiontree.test.test_api.AiDecisiontreeApiTest',
+    'komlog.komlibs.ai.decisiontree.model.test.test_decisiontree.AiDecisiontreeModelDecisiontreeTest',
     'komlog.komlibs.textman.api.test.test_variables.TextmanApiVariablesTest',
     'komlog.komlibs.textman.api.test.test_summary.TextmanApiSummaryTest',
     'komlog.komlibs.textman.model.test.test_patterns.TextmanModelPatternsTest',
@@ -56,7 +58,6 @@ MODULES = [
     'komlog.komlibs.interface.imc.api.test.test_rescontrol.InterfaceImcApiRescontrolTest',
     'komlog.komlibs.interface.imc.api.test.test_textmining.InterfaceImcApiTextminingTest',
     'komlog.komlibs.interface.imc.api.test.test_events.InterfaceImcApiEventsTest',
-    'komlog.komlibs.interface.imc.api.test.test_anomalies.InterfaceImcApiAnomaliesTest',
     'komlog.komlibs.interface.imc.api.test.test_lambdas.InterfaceImcApiLambdasTest',
     'komlog.komlibs.interface.web.api.test.test_login.InterfaceWebApiLoginTest',
     'komlog.komlibs.interface.web.api.test.test_user.InterfaceWebApiUserTest',

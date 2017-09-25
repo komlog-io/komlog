@@ -2,6 +2,7 @@ import unittest
 import time
 import uuid
 import json
+import pickle
 from komlog.komlibs.general.time import timeuuid
 from komlog.komcass.api import datasource as datasourceapi
 from komlog.komcass.model.orm import datasource as ormdatasource
@@ -1396,4 +1397,42 @@ class KomcassApiDatasourceTest(unittest.TestCase):
         self.assertTrue(datasourceapi.delete_datasource_supplies_at(did, sel_date))
         suplist = datasourceapi.get_datasource_supplies(did, fromdate, todate)
         self.assertEqual(len(suplist),100)
+
+    def test_get_datapoint_classifier_dtree_no_data(self):
+        ''' get_datapoint_classifier_dtree should return None if no data is found '''
+        did = uuid.uuid4()
+        self.assertIsNone(datasourceapi.get_datapoint_classifier_dtree(did))
+
+    def test_get_datapoint_classifier_dtree_no_dtree(self):
+        ''' get_datapoint_classifier_dtree should return None if no data is found '''
+        did = uuid.uuid4()
+        self.assertTrue(datasourceapi.insert_datapoint_classifier_dtree(did,None))
+        self.assertIsNone(datasourceapi.get_datapoint_classifier_dtree(did))
+
+    def test_get_datapoint_classifier_dtree_data_found(self):
+        ''' get_datapoint_classifier_dtree should return None if no data is found '''
+        did = uuid.uuid4()
+        dtree = pickle.dumps('some data')
+        self.assertTrue(datasourceapi.insert_datapoint_classifier_dtree(did,dtree))
+        dbtree = datasourceapi.get_datapoint_classifier_dtree(did)
+        self.assertEqual(dtree, dbtree)
+
+    def test_insert_datapoint_classifier_dtree_success(self):
+        ''' set_last_received should succeed '''
+        did = uuid.uuid4()
+        dtree = pickle.dumps('some data')
+        self.assertTrue(datasourceapi.insert_datapoint_classifier_dtree(did,dtree))
+        dbtree = datasourceapi.get_datapoint_classifier_dtree(did)
+        self.assertEqual(dtree, dbtree)
+
+    def test_delete_datapoint_classifier_dtree_success(self):
+        ''' delete_datapoint_classifier_dtree should delete the associated entry of the did '''
+        did=uuid.uuid4()
+        dtree = pickle.dumps('some data')
+        self.assertTrue(datasourceapi.insert_datapoint_classifier_dtree(did,dtree))
+        dbtree = datasourceapi.get_datapoint_classifier_dtree(did)
+        self.assertEqual(dtree, dbtree)
+        self.assertTrue(datasourceapi.delete_datapoint_classifier_dtree(did))
+        self.assertIsNone(datasourceapi.get_datapoint_classifier_dtree(did))
+        self.assertIsNone(datasourceapi.get_datapoint_classifier_dtree(did))
 

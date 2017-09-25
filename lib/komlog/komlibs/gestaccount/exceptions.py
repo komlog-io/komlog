@@ -1,6 +1,7 @@
 class GestaccountException(Exception):
-    def __init__(self, error):
-        self.error=error
+    def __init__(self, error, extra=None):
+        self.error = error
+        self.extra = extra
 
     def __str__(self):
         return str(self.__class__)
@@ -32,7 +33,7 @@ class EmailAlreadyExistsException(GestaccountException):
 class UserConfirmationException(GestaccountException):
     def __init__(self, error):
         super().__init__(error=error)
-    
+
 class UserCreationException(GestaccountException):
     def __init__(self, error):
         super().__init__(error=error)
@@ -107,8 +108,8 @@ class DatapointDTreeNotFoundException(GestaccountException):
         super().__init__(error=error)
 
 class DatapointDTreeGenerationException(GestaccountException):
-    def __init__(self, error):
-        super().__init__(error=error)
+    def __init__(self, error, extra):
+        super().__init__(error=error, extra=extra)
 
 class DatapointUnsupportedOperationException(GestaccountException):
     def __init__(self, error):

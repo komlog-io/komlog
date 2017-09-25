@@ -19,7 +19,6 @@ TEXTMINING='Textmining'
 GESTCONSOLE='Gestconsole'
 RESCONTROL='Rescontrol'
 EVENTS='Events'
-ANOMALIES='Anomalies'
 WEBSOCKETSERVER='Websocketserver'
 LAMBDAS='Lambdas'
 
@@ -46,14 +45,12 @@ MESSAGE_TO_ADDRESS_MAPPING={
     messages.Messages.DELETE_DASHBOARD_MESSAGE:GESTCONSOLE,
     messages.Messages.USER_EVENT_MESSAGE:EVENTS,
     messages.Messages.USER_EVENT_RESPONSE_MESSAGE:EVENTS,
-    messages.Messages.MISSING_DATAPOINT_MESSAGE:ANOMALIES,
     messages.Messages.NEW_INV_MAIL_MESSAGE:GESTCONSOLE,
     messages.Messages.FORGET_MAIL_MESSAGE:GESTCONSOLE,
     messages.Messages.URIS_UPDATED_MESSAGE:LAMBDAS,
     messages.Messages.CLEAR_SESSION_HOOKS_MESSAGE:LAMBDAS,
     messages.Messages.HOOK_NEW_URIS_MESSAGE:LAMBDAS,
     messages.Messages.DATA_INTERVAL_REQUEST_MESSAGE:LAMBDAS,
-    messages.Messages.ANALYZE_DTREE_MESSAGE:TEXTMINING,
     messages.Messages.IDENTIFY_NEW_DATAPOINTS_MESSAGE:TEXTMINING,
 }
 
@@ -64,7 +61,6 @@ MODULE_TO_ADDRESS_MAPPING={
     GESTCONSOLE:['%m','%m.%i'],
     RESCONTROL:['%m','%m.%i'],
     EVENTS:['%m','%m.%i'],
-    ANOMALIES:['%m','%m.%i'],
     WEBSOCKETSERVER: ['%m.%i'],
     LAMBDAS:['%m','%m.%i'],
 }

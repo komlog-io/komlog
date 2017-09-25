@@ -151,7 +151,6 @@ def delete_datapoint(pid):
         delete_widget(wid=widget.wid)
     graphuri.dissociate_vertex(ido=pid)
     if datapoint and datapoint.did:
-        cassapidatasource.delete_datasource_novelty_detector_for_datapoint(did=datapoint.did,pid=pid)
         fromdate=timeuuid.LOWEST_TIME_UUID
         todate=timeuuid.uuid1()
         dsmap_dates=cassapidatasource.get_datasource_map_dates(did=datapoint.did, fromdate=fromdate, todate=todate)
@@ -174,12 +173,9 @@ def dissociate_datapoint_from_datasource(pid):
     if not datapoint:
         raise exceptions.DatapointNotFoundException(error=Errors.E_GCD_DDPFDS_DPNF)
     cassapidatapoint.dissociate_datapoint_from_datasource(pid=pid)
-    cassapidatapoint.set_datapoint_dtree(pid=pid, dtree=None)
-    cassapidatapoint.set_datapoint_dtree_inv(pid=pid, dtree=None)
     cassapidatapoint.delete_datapoint_dtree_positives(pid=pid)
     cassapidatapoint.delete_datapoint_dtree_negatives(pid=pid)
     if datapoint.did:
-        cassapidatasource.delete_datasource_novelty_detector_for_datapoint(did=datapoint.did,pid=pid)
         dpwidget=cassapiwidget.get_widget_dp(pid=pid)
         dswidget=cassapiwidget.get_widget_ds(did=datapoint.did)
         if dswidget and dpwidget:

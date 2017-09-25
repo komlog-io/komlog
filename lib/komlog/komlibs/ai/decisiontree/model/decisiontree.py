@@ -1,75 +1,72 @@
-import json
+import pickle
 from komlog.komfig import logging
 
 class DecisionTreeNode:
-    def __init__(self, attribute=None, value=None, node_id=None, parent_id=None, end_node=False, result=False, serialization=None):
-        if serialization:
-            self.node_id=None
-            self._deserialize(serialized_content=serialization)
-        else:
-            self.attribute=attribute
-            self.value=value
-            self.node_id=node_id
-            self.parent_id=parent_id
-            self.end_node=end_node
-            self.result=result
+    def __init__(self, feature, value, leaf_node=False, children=None, result=None):
+        self._feature = feature
+        self._value = value
+        self._children = [] if not children else children
+        self._leaf_node = True if leaf_node else False
+        self._result = result
 
-    def serialize(self):
-        serialization={}
-        serialization['a']=self.attribute
-        serialization['v']=self.value
-        serialization['pi']=self.parent_id
-        serialization['ni']=self.node_id
-        serialization['en']=1 if self.end_node else 0
-        serialization['r']=1 if self.result else 0
-        return json.dumps(serialization)
+    @property
+    def feature(self):
+        return self._feature
 
-    def _deserialize(self, serialized_content):
-        if not self.node_id is None:
-            return
-        serialized_dict=json.loads(serialized_content)
-        for key in ['a','v','pi','ni','en','r']:
-            if key not in serialized_dict:
-                return
-        self.attribute=serialized_dict['a']
-        self.value=serialized_dict['v']
-        self.parent_id=serialized_dict['pi']
-        self.node_id=serialized_dict['ni']
-        self.end_node=True if serialized_dict['en']==1 else False
-        self.result=True if serialized_dict['r']==1 else False
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def children(self):
+        return self._children
+
+    @property
+    def leaf_node(self):
+        return self._leaf_node
+
+    @property
+    def result(self):
+        return self._result
 
 class DecisionTree:
-    def __init__(self, nodes=None, serialization=None):
-        if serialization:
-            self.nodes=None
-            self._deserialize(serialized_content=serialization)
-        else:
-            self.nodes=nodes if nodes else []
+
+    def __init__(self, children=None):
+        self._children = [] if not children else children
+
+    @property
+    def children(self):
+        return self._children
 
     def serialize(self):
-        elements=[]
-        for element in self.nodes:
-            elements.append(element.serialize())
-        return json.dumps(elements)
+        serial = pickle.dumps(self)
+        return serial
 
-    def _deserialize(self, serialized_content):
-        if not self.nodes is None:
-            return
-        self.nodes=[]
-        for node in json.loads(serialized_content):
-            self.nodes.append(DecisionTreeNode(serialization=node))
+    @classmethod
+    def load(cls, serialization):
+        obj = pickle.loads(serialization)
+        if isinstance(obj, cls):
+            return obj
+        else:
+            raise TypeError
 
-    def evaluate_row(self,row):
-        def eval_node(parent_id=1):
-            for node in self.nodes:
-                if node.parent_id==parent_id:
-                    if node.attribute in row and row[node.attribute]==node.value:
-                        if node.end_node==True:
-                            return node.result
-                        else:
-                            return eval_node(parent_id=node.node_id)
-                    elif node.attribute=='' and node.end_node:
-                        return node.result
-            return False
-        return eval_node()
+    @classmethod
+    def train(cls, trainf, **train_kwargs):
+        children = trainf(**train_kwargs)
+        return cls(children)
+
+    def classify(self, features):
+        def evaluate(children):
+            result = None
+            for node in children:
+                if node.feature in features and features[node.feature] == node.value:
+                    if node.leaf_node:
+                        result = node.result
+                    else:
+                        result = evaluate(node.children)
+                        if not result:
+                            result = node.result
+                    break
+            return result
+        return evaluate(self.children)
 

@@ -50,14 +50,6 @@ class DatasourceTextSummary:
         self.num_words=num_words
         self.word_frecuency=word_frecuency
 
-class DatasourceNoveltyDetector:
-    def __init__(self, did, pid, date, nd, features):
-        self.did=did
-        self.pid=pid
-        self.date=date
-        self.nd=nd
-        self.features=features
-
 class DatasourceMetadata:
     def __init__(self, did, date, size):
         self.did=did
@@ -70,4 +62,10 @@ class DatasourceSupplies:
         self.did = did
         self.date = date
         self.supplies = list(supplies) if supplies != None else []
+
+class DatapointClassifierDtree:
+
+    def __init__(self, did, dtree):
+        self.did = did
+        self.dtree = dtree
 
