@@ -10,9 +10,7 @@ author: jcazor
 
 import uuid
 import json
-import pickle
 import pandas as pd
-from tabulate import tabulate
 from komlog.komcass import exceptions as cassexcept
 from komlog.komcass.api import user as cassapiuser
 from komlog.komcass.api import datasource as cassapidatasource
@@ -519,25 +517,26 @@ def store_datasource_values(did, date):
     if not datasource:
         raise exceptions.DatasourceNotFoundException(error=Errors.E_GPA_SDSV_DSNF)
     ds_info = {'did':datasource.did, 'uri':datasource.datasourcename}
-    pids = cassapidatapoint.get_datapoints_pids(did=did)
-    if not pids:
-        return {'dp_not_found':pids, 'dp_found':pids,'ds_info':ds_info}
+    datapoints = cassapidatapoint.get_datapoints(did=did)
+    if not datapoints:
+        return {'dp_not_found':[], 'dp_found':[], 'ds_info':ds_info}
     dshash = cassapidatasource.get_datasource_hash(did=did, date=date)
     if dshash == None:
         dshash = generate_datasource_hash(did=did, date=date)
     s_dtree = cassapidatasource.get_datapoint_classifier_dtree(did=did)
     if s_dtree == None:
         generate_decision_tree(did)
-        s_dtree = cassapidatasource.get_datapoint_classifier_dtre(did=did)
+        s_dtree = cassapidatasource.get_datapoint_classifier_dtree(did=did)
     dtree = dtreeapi.load_dtree(s_dtree)
     datapoints_info={}
-    for pid in pids:
-        datapoint = cassapidatapoint.get_datapoint(pid=pid)
-        uri = datapoint.datapointname.split(datasource.datasourcename+'.')[1]
-        datapoint_stats = cassapidatapoint.get_datapoint_stats(pid=pid)
+    pids = []
+    for dp in datapoints:
+        pids.append(dp.pid)
+        uri = dp.datapointname.split(datasource.datasourcename+'.')[1]
+        datapoint_stats = cassapidatapoint.get_datapoint_stats(pid=dp.pid)
         datapoints_info[uri]={
-            'pid':pid,
-            'datapointname':datapoint.datapointname,
+            'pid':dp.pid,
+            'datapointname':dp.datapointname,
             'decsep':datapoint_stats.decimal_separator if datapoint_stats else None,
             'last_received':datapoint_stats.last_received if datapoint_stats else None
         }
