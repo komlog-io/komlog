@@ -6,7 +6,6 @@ MODULES = [
     'komlog.komlibs.ai.decisiontree.test.test_api.AiDecisiontreeApiTest',
     'komlog.komlibs.ai.decisiontree.model.test.test_decisiontree.AiDecisiontreeModelDecisiontreeTest',
     'komlog.komlibs.textman.api.test.test_variables.TextmanApiVariablesTest',
-    'komlog.komlibs.textman.api.test.test_summary.TextmanApiSummaryTest',
     'komlog.komlibs.textman.model.test.test_patterns.TextmanModelPatternsTest',
     'komlog.komlibs.events.api.test.test_user.EventsApiUserTest',
     'komlog.komlibs.events.api.test.test_user_responses.EventsApiUserResponsesTest',

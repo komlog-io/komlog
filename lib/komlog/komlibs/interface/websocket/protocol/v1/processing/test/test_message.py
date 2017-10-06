@@ -403,7 +403,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:2,
             messages.Messages.NEW_DS_WIDGET_MESSAGE.value:1,
             messages.Messages.USER_EVENT_MESSAGE.value:1,
-            messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
             messages.Messages.MAP_VARS_MESSAGE.value:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.value:1,
         }
@@ -445,7 +444,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:2,
             messages.Messages.NEW_DS_WIDGET_MESSAGE.value:1,
             messages.Messages.USER_EVENT_MESSAGE.value:1,
-            messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
             messages.Messages.MAP_VARS_MESSAGE.value:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.value:1,
         }
@@ -490,7 +488,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['routed'],{})
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,
-            messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
             messages.Messages.MAP_VARS_MESSAGE.value:1,
             messages.Messages.URIS_UPDATED_MESSAGE.value:1,
         }
@@ -535,7 +532,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.imc_messages['routed'],{})
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,
-            messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
             messages.Messages.MAP_VARS_MESSAGE.value:1,
             messages.Messages.URIS_UPDATED_MESSAGE.value:1,
         }
@@ -1799,7 +1795,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:2,
             messages.Messages.NEW_DS_WIDGET_MESSAGE.value:1,
             messages.Messages.USER_EVENT_MESSAGE.value:1,
-            messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
             messages.Messages.MAP_VARS_MESSAGE.value:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.value:1
         }
@@ -1851,7 +1846,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:2,
             messages.Messages.NEW_DS_WIDGET_MESSAGE.value:1,
             messages.Messages.USER_EVENT_MESSAGE.value:1,
-            messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
             messages.Messages.MAP_VARS_MESSAGE.value:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.value:1
         }
@@ -1999,7 +1993,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,
-            messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
             messages.Messages.MAP_VARS_MESSAGE.value:1,
             messages.Messages.URIS_UPDATED_MESSAGE.value:1
         }
@@ -2049,7 +2042,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
         self.assertEqual(resp.ws_messages[0].irt.hex, msg['seq'])
         expected_messages={
             messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,
-            messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
             messages.Messages.MAP_VARS_MESSAGE.value:1,
             messages.Messages.URIS_UPDATED_MESSAGE.value:1
         }
@@ -2247,7 +2239,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.Messages.NEW_DP_WIDGET_MESSAGE.value:1,
             messages.Messages.NEW_DS_WIDGET_MESSAGE.value:1,
             messages.Messages.USER_EVENT_MESSAGE.value:1,
-            messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:2,
             messages.Messages.MAP_VARS_MESSAGE.value:2,
             messages.Messages.URIS_UPDATED_MESSAGE.value:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.value:1,
@@ -2355,7 +2346,6 @@ class InterfaceWebSocketProtocolV1ProcessingMessageTest(unittest.TestCase):
             messages.Messages.NEW_DP_WIDGET_MESSAGE.value:1,
             messages.Messages.NEW_DS_WIDGET_MESSAGE.value:1,
             messages.Messages.USER_EVENT_MESSAGE.value:1,
-            messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:2,
             messages.Messages.MAP_VARS_MESSAGE.value:2,
             messages.Messages.URIS_UPDATED_MESSAGE.value:1,
             messages.Messages.HOOK_NEW_URIS_MESSAGE.value:1,

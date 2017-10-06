@@ -73,7 +73,7 @@ class InterfaceWebSocketProtocolV1ProcessingOperationTest(unittest.TestCase):
         date=uuid.uuid1()
         op=modop.DatasourceDataStoredOperation(uid=uid, did=did, date=date)
         msgs=operation.process_operation(operation=op)
-        message_expected={messages.Messages.GENERATE_TEXT_SUMMARY_MESSAGE.value:1,
+        message_expected={
                           messages.Messages.UPDATE_QUOTES_MESSAGE.value:1,
                           messages.Messages.MAP_VARS_MESSAGE.value:1}
         message_retrieved={}

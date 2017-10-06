@@ -12,7 +12,6 @@ OBJECTS=[
     'DAT_DATASOURCE',
     'DAT_DATASOURCE_MAP',
     'DAT_DATASOURCE_HASH',
-    'DAT_DATASOURCE_TEXT_SUMMARY',
     'DAT_DATASOURCE_METADATA',
     'MST_DATASOURCE_HOOKS',
     'DAT_DATASOURCE_SUPPLIES',
@@ -73,18 +72,6 @@ DAT_DATASOURCE_HASH='''
         did uuid,
         date timeuuid,
         content text,
-        PRIMARY KEY (did,date)
-    ) WITH CLUSTERING ORDER BY (date desc);
-'''
-
-DAT_DATASOURCE_TEXT_SUMMARY='''
-    CREATE TABLE dat_datasource_text_summary (
-        did uuid,
-        date timeuuid,
-        content_length varint,
-        num_lines int,
-        num_words int,
-        word_frecuency map<text,int>,
         PRIMARY KEY (did,date)
     ) WITH CLUSTERING ORDER BY (date desc);
 '''

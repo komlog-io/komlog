@@ -93,22 +93,6 @@ def process_message_FILLDS(message):
     return response
 
 @exceptions.ExceptionHandler
-def process_message_GENTEXTSUMMARY(message):
-    response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_PROCESSING, message_type=message._type_, message_params=message.to_serialization())
-    did=message.did
-    date=message.date
-    if not args.is_valid_uuid(did):
-        raise exceptions.BadParametersException(error=Errors.E_IAAATM_GTXS_IDID)
-    if not args.is_valid_date(date):
-        raise exceptions.BadParametersException(error=Errors.E_IAAATM_GTXS_IDT)
-    if datapointapi.generate_datasource_text_summary(did=did, date=date):
-        response.status=status.IMC_STATUS_OK
-    else:
-        response.error=Errors.E_IAATM_GTXS_EGDSTXS
-        response.status=status.IMC_STATUS_INTERNAL_ERROR
-    return response
-
-@exceptions.ExceptionHandler
 def process_message_AEDTREE(message):
     response=responses.ImcInterfaceResponse(status=status.IMC_STATUS_OK, message_type=message._type_, message_params=message.to_serialization())
     result = datapointapi.select_dtree_for_datasource(message.did)

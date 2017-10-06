@@ -263,41 +263,6 @@ def delete_datasource_maps(did):
     return True
 
 @exceptions.ExceptionHandler
-def get_datasource_text_summary(did, date):
-    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCETEXTSUMMARY_B_DID_DATE,(did,date))
-    if row:
-        return ormdatasource.DatasourceTextSummary(**row[0])
-    else:
-        return None
-
-@exceptions.ExceptionHandler
-def get_datasource_text_summaries(did, fromdate, todate):
-    row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCETEXTSUMMARY_B_DID_INITDATE_ENDDATE,(did,fromdate,todate))
-    data=[]
-    if row:
-        for m in row:
-            data.append(ormdatasource.DatasourceTextSummary(**m))
-    return data
-
-@exceptions.ExceptionHandler
-def insert_datasource_text_summary(dstextsummaryobj):
-    if not isinstance(dstextsummaryobj, ormdatasource.DatasourceTextSummary):
-        return False
-    else:
-        connection.session.execute(stmtdatasource.I_A_DATDATASOURCETEXTSUMMARY,(dstextsummaryobj.did,dstextsummaryobj.date,dstextsummaryobj.content_length,dstextsummaryobj.num_lines,dstextsummaryobj.num_words, dstextsummaryobj.word_frecuency))
-        return True
-
-@exceptions.ExceptionHandler
-def delete_datasource_text_summary(did, date):
-    connection.session.execute(stmtdatasource.D_A_DATDATASOURCETEXTSUMMARY_B_DID_DATE,(did,date))
-    return True
-
-@exceptions.ExceptionHandler
-def delete_datasource_text_summaries(did):
-    connection.session.execute(stmtdatasource.D_A_DATDATASOURCETEXTSUMMARY_B_DID,(did,))
-    return True
-
-@exceptions.ExceptionHandler
 def get_datasource_hash(did, date):
     row=connection.session.execute(stmtdatasource.S_A_DATDATASOURCEHASH_B_DID_DATE,(did,date))
     if not row:

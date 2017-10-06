@@ -41,15 +41,6 @@ class DatasourceHash:
         self.date=date
         self.content=content
 
-class DatasourceTextSummary:
-    def __init__(self, did, date, content_length, num_lines, num_words, word_frecuency):
-        self.did=did
-        self.date=date
-        self.content_length=content_length
-        self.num_lines=num_lines
-        self.num_words=num_words
-        self.word_frecuency=word_frecuency
-
 class DatasourceMetadata:
     def __init__(self, did, date, size):
         self.did=did

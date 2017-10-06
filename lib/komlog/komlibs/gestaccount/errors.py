@@ -279,10 +279,6 @@ class Errors(Enum):
     E_GPA_CRUD_UAE  = 6003 #: uri already used
     E_GPA_CRUD_IDE  = 6004 #: error inserting to database
 
-    E_GPA_GDTS_ID   = 6050
-    E_GPA_GDTS_IDT  = 6051
-    E_GPA_GDTS_DDNF = 6052
-
     E_GPA_GDNDFD_IP     = 6100
     E_GPA_GDNDFD_DNF    = 6101
     E_GPA_GDNDFD_NDF    = 6102

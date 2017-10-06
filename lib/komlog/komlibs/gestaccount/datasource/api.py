@@ -27,7 +27,6 @@ from komlog.komlibs.gestaccount.errors import Errors
 from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.textman.api import variables as textmanvar
-from komlog.komlibs.textman.api import summary as textsumm
 from komlog.komlibs.textman.api import features as textfeat
 from komlog.komlibs.graph.api import uri as graphuri
 

@@ -34,7 +34,6 @@ class Messages(Enum):
 
     FILL_DATAPOINT_MESSAGE                  = 'FILLDP'
     FILL_DATASOURCE_MESSAGE                 = 'FILLDS'
-    GENERATE_TEXT_SUMMARY_MESSAGE           = 'GENTEXTSUMMARY'
     URIS_UPDATED_MESSAGE                    = 'URISUPDT'
     ASSOCIATE_EXISTING_DTREE_MESSAGE        = 'AEDTREE'
     UPDATE_DATASOURCE_FEATURES_MESSAGE      = 'DSFEATUPD'
@@ -1208,57 +1207,6 @@ class UserEventResponseMessage(IMCMessage):
 
     def to_serialization(self):
         return '|'.join((self._type_.value, self._uid.hex, self._date.hex, json.dumps(self._parameters)))
-
-class GenerateTextSummaryMessage(IMCMessage):
-    _type_ = Messages.GENERATE_TEXT_SUMMARY_MESSAGE
-
-    def __init__(self, did, date):
-        self.did = did
-        self.date = date
-
-    @property
-    def did(self):
-        return self._did
-
-    @did.setter
-    def did(self, did):
-        if args.is_valid_uuid(did):
-            self._did = did
-        else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_GTXS_IDID)
-
-    @property
-    def date(self):
-        return self._date
-
-    @date.setter
-    def date(self, date):
-        if args.is_valid_date(date):
-            self._date = date
-        else:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_GTXS_IDT)
-
-    @classmethod
-    def load_from_serialization(cls, msg):
-        try:
-            m_type, h_did, h_date = msg.split('|')
-        except ValueError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_GTXS_ELFS)
-        except AttributeError:
-            raise exceptions.BadParametersException(error=Errors.E_IIMM_GTXS_MINS)
-        else:
-            if not m_type == cls._type_.value:
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_GTXS_IST)
-            if not args.is_valid_hex_uuid(h_did):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_GTXS_IHDID)
-            if not args.is_valid_hex_date(h_date):
-                raise exceptions.BadParametersException(error=Errors.E_IIMM_GTXS_IHDATE)
-            did = uuid.UUID(h_did)
-            date = uuid.UUID(h_date)
-            return cls(did=did, date=date)
-
-    def to_serialization(self):
-        return '|'.join((self._type_.value, self._did.hex, self._date.hex))
 
 class NewInvitationMailMessage(IMCMessage):
     _type_ = Messages.NEW_INV_MAIL_MESSAGE

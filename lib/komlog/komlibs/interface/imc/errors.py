@@ -75,11 +75,6 @@ class Errors(Enum):
     E_IIATM_FILLDS_IDT      = 255301    #: proccess_message_FILLDS. invalid date
     E_IIATM_FILLDS_ESDSV    = 255302    #: proccess_message_FILLDS. error storing datasource values
 
-    E_IIATM_GTXS_IDID       = 255400    #: proccess_message_GENTEXTSUMMARY. invalid did
-    E_IIATM_GTXS_IDT        = 255401    #: proccess_message_GENTEXTSUMMARY. invalid date
-    E_IIATM_GTXS_EGDSTXS    = 255402    #: proccess_message_GENTEXTSUMMARY. error gen ds text summ
-
-
 # komlibs.interface.imc.api.lambdas
 
     E_IIALD_SSDT_MRE        = 256000    #: process_message_SSDATA. message routing error
@@ -257,14 +252,6 @@ class Errors(Enum):
     E_IIMM_USEREVR_IHUID    = 261906    #: UserEventResponseMessage. invalid hex uid
     E_IIMM_USEREVR_IHDATE   = 261907    #: UserEventResponseMessage. invalid hex date
     E_IIMM_USEREVR_IJSPRM   = 261908    #: UserEventResponseMessage. invalid json parameters
-
-    E_IIMM_GTXS_IDID        = 262000    #: GenerateTextSummaryMessage. invalid did
-    E_IIMM_GTXS_IDT         = 262001    #: GenerateTextSummaryMessage. invalid date
-    E_IIMM_GTXS_ELFS        = 262002    #: GenerateTextSummaryMessage. error loading from string
-    E_IIMM_GTXS_MINS        = 262003    #: GenerateTextSummaryMessage. msg is not string
-    E_IIMM_GTXS_IST         = 262004    #: GenerateTextSummaryMessage. invalid serialization type
-    E_IIMM_GTXS_IHDID       = 262005    #: GenerateTextSummaryMessage. invalid hex did
-    E_IIMM_GTXS_IHDATE      = 262006    #: GenerateTextSummaryMessage. invalid hex date
 
     E_IIMM_NEWINV_IEMAIL    = 262200    #: NewInvitationMailMessage. invalid email
     E_IIMM_NEWINV_IINV      = 262201    #: NewInvitationMailMessage. invalid invitation id

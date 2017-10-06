@@ -1665,55 +1665,6 @@ class GestaccountDatapointApiTest(unittest.TestCase):
         self.assertEqual(int(data[0]['value']),23)
         self.assertEqual(data[0]['date'], date)
 
-    def test_generate_datasource_text_summary_failure_invalid_did(self):
-        ''' generate_datasource_text_summary should fail if did is not valid '''
-        dids=[None, '234234',23423,233.2324,{'a':'dict'},['a','list'],{'set'},('a','tuple'),timeuuid.uuid1(), uuid.uuid4().hex]
-        date=timeuuid.uuid1()
-        for did in dids:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                api.generate_datasource_text_summary(did=did, date=date)
-            self.assertEqual(cm.exception.error, Errors.E_GPA_GDTS_ID)
-
-    def test_generate_datasource_text_summary_failure_invalid_date(self):
-        ''' generate_datasource_text_summary should fail if date is not valid '''
-        dates=[None, '234234',23423,233.2324,{'a':'dict'},['a','list'],{'set'},('a','tuple'),uuid.uuid4(), uuid.uuid4().hex]
-        did=uuid.uuid4()
-        for date in dates:
-            with self.assertRaises(exceptions.BadParametersException) as cm:
-                api.generate_datasource_text_summary(did=did, date=date)
-            self.assertEqual(cm.exception.error, Errors.E_GPA_GDTS_IDT)
-
-    def test_generate_datasource_text_summary_non_existent_datasource(self):
-        ''' generate_datasource_text_summary should fail if did does not exist '''
-        did=uuid.uuid4()
-        date=timeuuid.uuid1()
-        with self.assertRaises(exceptions.DatasourceDataNotFoundException) as cm:
-            api.generate_datasource_text_summary(did=did, date=date)
-        self.assertEqual(cm.exception.error, Errors.E_GPA_GDTS_DDNF)
-
-    def test_generate_datasource_text_summary_non_existent_data_at_given_timeuuid(self):
-        ''' generate_datasource_text_summary should fail if did has no sample at given timeuuid '''
-        uid=self.user['uid']
-        aid=self.agent['aid']
-        datasourcename='test_generate_datasource_text_summary_non_existent_data_at_given_timeuuid'
-        datasource=datasourceapi.create_datasource(uid=uid, aid=aid, datasourcename=datasourcename) 
-        date=timeuuid.uuid1()
-        with self.assertRaises(exceptions.DatasourceDataNotFoundException) as cm:
-            api.generate_datasource_text_summary(did=datasource['did'],date=date)
-        self.assertEqual(cm.exception.error, Errors.E_GPA_GDTS_DDNF)
-
-    def test_generate_datasource_text_summary_success(self):
-        ''' generate_datasource_text_summary should generate and store the summary successfully '''
-        did=uuid.uuid4()
-        date=timeuuid.uuid1()
-        content='generate_datasource_text_summary content with ññññ and 23 32 554 and \nnew lines\ttabs\tetc..'
-        self.assertTrue(datasourceapi.store_datasource_data(did=did, date=date, content=content))
-        data=datasourceapi.get_datasource_data(did=did, fromdate=date, todate=date)
-        self.assertEqual(len(data),1)
-        self.assertEqual(data[0]['date'], date)
-        self.assertEqual(data[0]['content'], content)
-        self.assertTrue(api.generate_datasource_text_summary(did=did, date=date))
-
     def test_hook_to_datapoint_failure_invalid_pid(self):
         ''' hook_to_datapoint should fail if pid is not valid '''
         pids=['asdfasd',234234,234234.234,{'a':'dict'},None,['a','list'],{'set'},('tupl','e'),timeuuid.uuid1(),uuid.uuid4().hex]

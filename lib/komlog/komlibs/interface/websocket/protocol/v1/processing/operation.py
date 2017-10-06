@@ -52,7 +52,6 @@ def _process_operation_new_user_datapoint(operation):
 def _process_operation_datasource_data_stored(operation):
     return [
         messages.UpdateQuotesMessage(operation=operation.auth_operation,params=operation.params),
-        messages.GenerateTextSummaryMessage(did=operation.did,date=operation.date),
         messages.MapVarsMessage(did=operation.did,date=operation.date)
     ]
 

@@ -116,7 +116,6 @@ def delete_datasource(did, delete_datapoints=True):
     cassapidatasource.delete_datasource_metadata(did=did)
     cassapidatasource.delete_datasource_maps(did=did)
     cassapidatasource.delete_datasource_hashes(did=did)
-    cassapidatasource.delete_datasource_text_summaries(did=did)
     cassapidatasource.delete_datasource_supplies(did=did)
     cassapiquote.delete_datasource_quotes(did=did)
     cassapiquote.delete_datasource_ts_quotes(did=did)

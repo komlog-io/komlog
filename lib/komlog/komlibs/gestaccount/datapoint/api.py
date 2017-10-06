@@ -28,7 +28,6 @@ from komlog.komlibs.general.validation import arguments as args
 from komlog.komlibs.general.time import timeuuid
 from komlog.komlibs.general import colors
 from komlog.komlibs.textman.api import variables as textmanvar
-from komlog.komlibs.textman.api import summary as textmansummary
 from komlog.komlibs.textman.api import features as textfeat
 from komlog.komlibs.graph.api import uri as graphuri
 from komlog.komlibs.graph.api import kin as graphkin
@@ -605,21 +604,6 @@ def generate_datasource_hash(did, date):
             raise exceptions.DatasourceHashGenerationException(error=Errors.E_GPA_GDH_EIDB)
     else:
         raise exceptions.DatasourceHashGenerationException(error=Errors.E_GPA_GDH_NHO)
-
-def generate_datasource_text_summary(did, date):
-    if not args.is_valid_uuid(did):
-        raise exceptions.BadParametersException(error=Errors.E_GPA_GDTS_ID)
-    if not args.is_valid_date(date):
-        raise exceptions.BadParametersException(error=Errors.E_GPA_GDTS_IDT)
-    dsdata=cassapidatasource.get_datasource_data_at(did=did, date=date)
-    if dsdata:
-        summary=textmansummary.get_summary_from_text(text=dsdata.content)
-        obj=ormdatasource.DatasourceTextSummary(did=did,date=date,content_length=summary.content_length, num_lines=summary.num_lines, num_words=summary.num_words, word_frecuency=summary.word_frecuency)
-        if cassapidatasource.insert_datasource_text_summary(dstextsummaryobj=obj):
-            return True
-        return False
-    else:
-        raise exceptions.DatasourceDataNotFoundException(error=Errors.E_GPA_GDTS_DDNF)
 
 def hook_to_datapoint(pid, sid):
     if not args.is_valid_uuid(pid):
